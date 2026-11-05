@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 777 of 777 screened at the report's current pin.**
+**Progress: 778 of 778 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 367 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 339 |
-| Repositories with build-time execution (`EXEC`) | 565 |
+| Repositories with an auto-run surface (`RUNS`) | 368 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 340 |
+| Repositories with build-time execution (`EXEC`) | 566 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -219,6 +219,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`memesh`](../../content/systems/memesh.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`memex-zero-rag`](../../content/systems/memex-zero-rag.md) | `.mcp.json` |
 | [`memex-zettel`](../../content/systems/memex-zettel.md) | `.claude-plugin/`, `.cursorrules`, `hooks/`, `hooks/hooks.json`, `server.json`, `smithery.yaml` |
+| [`memgraph-ai-toolkit`](../../content/systems/memgraph-ai-toolkit.md) | `.claude-plugin/`, `context-graph/plugins/memgraph-context-graph-claude/.claude-plugin/plugin.json`, `context-graph/plugins/memgraph-context-graph-claude/.mcp.json`, `context-graph/plugins/memgraph-context-graph-claude/hooks/`, `context-graph/plugins/memgraph-context-graph-claude/hooks/hooks.json` |
 | [`memini`](../../content/systems/memini.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.claude.json` |
 | [`memo-local`](../../content/systems/memo-local.md) | `-` |
 | [`memoir`](../../content/systems/memoir.md) | `.claude-plugin/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json` |

@@ -1608,6 +1608,20 @@ model that is deliberate, and it is the case this pattern's derived-key
 advice needs a second clause for: deriving the key from the credential
 protects nothing if the path without a credential falls back to the key
 the caller names.</p>
+<p><strong><a href="../../systems/memgraph-ai-toolkit/">Memgraph Context
+Graph</a> decides ownership at the source turn, because the content is
+shared.</strong> Chunks are content-addressed, so two users' identical
+text lands in one chunk; recall counts an entity as the user's only when
+a <code>MENTIONED_IN</code> edge lists one of the user's turns in
+<code>sources</code>, and a fact only when its <code>source_id</code> is
+one
+(<code>context-graph/sessions-graph/src/sessions_graph/recall.py:271-307</code>).
+A committed case gives two users facts on one shared Paris entity and
+asserts each sees their own companion and not the other's
+(<code>context-graph/sessions-graph/tests/test_e2e_recall.py:109-121</code>).
+In Community the user is a config-file string over an unauthenticated
+loopback Memgraph; the Enterprise edition replaces the key with a
+database per member under Memgraph's grants.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

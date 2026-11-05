@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 777 reports.**
+**This page covers all 778 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7112,3 +7112,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 2,800 lines of Node.js in the runtime, 46 commits from one author, 4 March – 6 October 2026, published to npm; no test suite, and the benchmark scripts read an uncommitted corpus and do not exercise the shipped write or housekeep paths. No marks.
 - Study when: you want review findings from a cheap model to accumulate as rules a coding agent sees before it writes, with no service to run.
 - Do not copy when: projects or people must not share rules, scanned material may be hostile, or a rule must be deletable and stay deleted.
+
+### [`memgraph-ai-toolkit`](../systems/memgraph-ai-toolkit/)
+- Best idea: **every read is rooted at the owner, not at the content.** Chunks are content-addressed and shared across users, so recall counts an entity as the user's only when a mention lists one of the user's turns in `sources`, and a fact only when its `source_id` is one; a committed two-user case fails if that predicate goes.
+- Second idea: a forget that follows provenance, removing exactly the edges a session's turns produced and then whatever nothing else backs, with an id marker checked inside the session MERGE and again after extraction, so a forget that races reconciliation wins.
+- Biggest risk: **deleting a memory file keeps its text.** `delete` copies the text into a `MemoryVersion` marked `deleted` before removing the node, nothing removes versions but the 20-per-file prune, and forgetting the session that wrote the file only unlinks the session.
+- Second risk: a model-written `pin: true` file prints in full at every session start; setup turns off Codex's per-call approval for the plugin's tools, `memory` included; and the benchmarked graph lanes need a reconciliation extra the installer does not add.
+- Most reusable component: `forget_sources` in `context-graph/sessions-graph/src/sessions_graph/forgetting.py:34-110`, with the ownership predicates in `context-graph/sessions-graph/src/sessions_graph/recall.py:271-375`.
+- Maturity impression: MIT; 33,926 lines of Python in `context-graph/` outside tests, 204 commits there from one author, 23 April – 5 November 2026; 1,202 pytest functions, mostly against a live Memgraph in CI, not run here. Two marks, both on recall. The LongMemEval-S 87.4% and BEAM 100K 63.1% headlines recompute from the committed per-question rows.
+- Study when: you want every coding-agent session across several harnesses captured into one graph with no model on the write path, and per-user recall over it.
+- Do not copy when: forgetting must mean erasure, memory must be reviewed before it lands, or you will not run Memgraph.

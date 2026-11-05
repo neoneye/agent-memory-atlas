@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Memgraph's coding-agent memory:
+hooks capture every session into a graph, the agent curates memory files
+through the memory tool, and recall runs six per-user lanes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memgraph Context
+Graph — Agent Memory Atlas">
+    <meta property="og:description" content="Memgraph's coding-agent
+memory: hooks capture every session into a graph, the agent curates
+memory files through the memory tool, and recall runs six per-user
+lanes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memgraph Context
+Graph — Agent Memory Atlas">
+    <meta name="twitter:description" content="Memgraph's coding-agent
+memory: hooks capture every session into a graph, the agent curates
+memory files through the memory tool, and recall runs six per-user
+lanes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memgraph Context Graph — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memgraph Context Graph",
+      "description": "Memgraph's coding-agent memory: hooks capture every session into a graph, the agent curates memory files through the memory tool, and recall runs six per-user lanes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Every read rooted at the user, every delete
+kept as a version</p>
+          <h1>Memgraph Context Graph</h1>
+          <p class="document-deck">Memgraph's coding-agent memory: hooks
+capture every session into a graph, the agent curates memory files
+through the memory tool, and recall runs six per-user lanes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/memgraph/ai-toolkit">
+              <span>Source</span>
+              <strong>memgraph/ai-toolkit</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/memgraph/ai-toolkit/commit/2e9af39fa42326b9daf795244579eafefe8f1cbc" title="2e9af39fa42326b9daf795244579eafefe8f1cbc">
+              <span>Analyzed revision</span>
+              <code>2e9af39f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/memgraph--ai-toolkit" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>memgraph--ai-toolkit</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>33,926
+lines of Python outside tests in context-graph/: 12,594 in the CLI,
+adapters and MCP server, 6,438 in sessions-graph, 5,060 in eval;
+unstructured2graph adds 4,188</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>204
+commits touching context-graph/, all from one author, 23 April – 5
+November 2026; 368 in the whole repository at the pin</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,202
+pytest functions in 121 files under context-graph/, most against a live
+Memgraph that CI starts; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Context Graph is the agent-memory family inside Memgraph's AI
+toolkit: hooks record every Claude Code, Codex and Copilot session into
+one Memgraph graph, the agent keeps curated files under
+<code>/memories</code> through the Claude memory tool, and a
+<code>recall</code> tool answers from both. Its read side is the notable
+part. Every lane is rooted at the configured user's own nodes, down to
+entities whose content-addressed chunks two users share. Its deletion is
+weaker than it reads: deleting a memory file keeps the text as a
+version, the version cap drops the oldest history, and nothing purges
+either.</p>
+<p>The report covers the <code>context-graph/</code> packages and the
+<code>unstructured2graph</code> extractor they call. The rest of the
+monorepo is out of scope: <code>langchain-memgraph</code>,
+<code>lightrag-memgraph</code> and <code>mcp-memgraph</code> are
+adapters and a query server over Memgraph that store no agent memory of
+their own, <code>sql2graph</code> migrates relational schemas, and
+<code>memgraph-toolbox</code> and <code>hygm</code> are the client and
+ontology libraries Context Graph imports.</p>
+<p>Capture and recall need no LLM key. Extraction is local GLiNER2 and
+opt-in. Two marks are earned, <code>scope_enforced</code> and
+<code>negative_eval</code>, both on recall. The published LongMemEval-S
+and BEAM figures recompute exactly from the committed per-question
+baselines, and they measure a configuration with graph lanes the default
+setup does not install.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The family defines its own vocabulary and holds to it
+(<code>context-graph/CONTEXT-MAP.md</code>). <strong>History</strong> is
+every turn a hook captured, kept as evidence rather than distilled.
+<strong>Memory</strong> is a file the agent saved on purpose with the
+<code>memory</code> tool, and is the only thing called memory. The
+<strong>Index</strong> is the chunks, entities and typed facts GLiNER2
+extracts from both, which recall uses to find turns and files; it is not
+a third kind of memory.</p>
+<p>A turn becomes retrievable by being captured. There is no admission
+step: the capture policy redacts and clips it, a connector writes it,
+and the detached embed gives it vectors
+(<code>memgraph_context_graph/capture_policy.py:1-17</code>,
+<code>sessions_graph/connector.py:148-150</code>). It stops being
+retrievable only when the user forgets its whole session, from the
+CLI.</p>
+<p>A memory file becomes a belief when the model writes it. Each
+discarding write first copies the old text into a
+<code>MemoryVersion</code> in the same query
+(<code>sessions_graph/memory_store.py:664-674</code>). An edit is
+compare-and-set on the text it read, so a stale edit fails instead of
+overwriting another session (<code>:535-604</code>). A file stops being
+one when the model or an SDK caller deletes it, and its text then lives
+on as a version marked <code>deleted</code>.</p>
+<p>Nothing is treated as verified. No field on a memory, a turn or a
+fact says whether it may be acted on. Recall returns evidence, and the
+harness's own model answers from it under reading rules that put memory
+files first and call the most recent row current
+(<code>sessions_graph/recall.py:188</code>, <code>:195</code>).</p>
+<p>A forgotten session leaves a
+<code>(:ForgottenSession {session_id})</code> marker that every later
+write for that id consults
+(<code>memgraph_context_graph/session.py:41-76</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — turns become evidence by being captured and memory files by being written; recall reads both through the configured user, and only a whole session can be forgotten</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: turns become evidence by being captured and memory files by being written; recall reads both through the configured user, and only a whole session can be forgotten
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    HOOK[&quot;hook on every event&lt;br/&gt;redacted, clipped&lt;br/&gt;no model&quot;]
+    TOOL[&quot;memory tool&lt;br/&gt;create, str_replace,&lt;br/&gt;insert, delete, rename&quot;]
+    HOOK ~~~ TOOL
+  end
+  HOOK --&gt; HIST[&quot;History: Action nodes&lt;br/&gt;User to Session to Action&quot;]
+  TOOL --&gt; MEM[&quot;Memory file&lt;br/&gt;unique user_id + path&quot;]
+  MEM --&gt;|&quot;text replaced&quot;| VER[&quot;MemoryVersion&lt;br/&gt;newest 20 kept&quot;]
+  HIST --&gt; EMB[&quot;detached embed&lt;br/&gt;per turn, in MAGE&quot;]
+  HIST --&gt; REC[&quot;reconcile --pending&lt;br/&gt;GLiNER2, opt-in extra&quot;]
+  MEM --&gt; REC
+  REC --&gt; IDX[&quot;Index: chunks,&lt;br/&gt;entities, facts&quot;]
+  EMB --&gt; RECALL{&quot;recall: every lane&lt;br/&gt;starts at the user&quot;}
+  IDX --&gt; RECALL
+  MEM --&gt; RECALL
+  RECALL --&gt; CTX[&quot;memory notes first&lt;br/&gt;then exchanges&lt;br/&gt;6,000 tokens&quot;]
+  FORGET[&quot;forget session&lt;br/&gt;CLI only&quot;] --&gt; TOMB[&quot;ForgottenSession&lt;br/&gt;keyed on session_id&quot;]
+  TOMB --&gt;|&quot;ensure refuses&quot;| HIST
+  FORGET ~~~ DEL[&quot;memory delete&quot;]
+  DEL --&gt; VER</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nine Python packages share one graph and join on
+<code>(:Session {session_id})</code>.
+<code>memgraph-context-graph</code> holds the CLI, seven runtime
+adapters, the hook runner, the capture policy and the stdio MCP server.
+<code>actions-graph</code> writes messages, tool calls, results and
+subagents. <code>skills-graph</code> records which sessions used a
+skill, and <code>resources-graph</code>, opt-in, records GitHub issues
+and pull requests an agent read. <code>sessions-graph</code> owns users,
+memory files, reconciliation and recall. <code>viewer</code> is a
+read-only terminal UI, <code>spaces</code> is the Enterprise edition,
+and <code>eval</code> holds the benchmarks.</p>
+<p>Components are entry points. A connector registers under
+<code>memgraph_context_graph.connectors</code> and a tool under
+<code>memgraph_context_graph.tools</code>; the MCP server loads every
+registered tool and reads the config file again on each listing and
+call, so turning memory on takes effect in the next session
+(<code>mcp_server.py:33-89</code>). Three tools are registered:
+<code>recall</code> and <code>memory</code> from sessions-graph,
+<code>resource</code> from resources-graph.</p>
+<p>Retrieval runs inside Memgraph. MAGE's <code>embeddings</code> module
+computes vectors in the database process with
+<code>BAAI/bge-small-en-v1.5</code> by default, and recall scores them
+with <code>vector_search.cosine_similarity</code> over the user's own
+rows rather than a global index, because an unfiltered top-k could crowd
+one user out (<code>sessions_graph/embeddings.py:1-23</code>,
+<code>recall.py:25-29</code>). Full text uses Memgraph text indexes on
+<code>Action.text</code> and <code>Memory.content</code>.</p>
+<p>Extraction is <code>unstructured2graph</code>'s GLiNER2 backend over
+the user's adopted ontology version. Its one LLM use is ontology
+derivation, which needs <code>ANTHROPIC_API_KEY</code> or
+<code>OPENAI_API_KEY</code> from the config file
+(<code>sessions_graph/derive_llm.py:1-9</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Memgraph 3.6 or later has to be running, with MAGE for vectors. Setup
+starts <code>memgraph/memgraph-mage:3.13.1</code> as a Docker container
+bound to <code>127.0.0.1</code> and keeps it across runs
+(<code>setup/memgraph.py:27</code>, <code>:230</code>). Without MAGE,
+recall falls back to text search and says so in its result.</p>
+<p>The install is <code>curl … install.sh | bash</code> or the plugin's
+<code>bootstrap.sh</code>, which runs <code>uv tool install</code> with
+<code>&gt;=</code> floors on the four packages and
+<code>--upgrade</code>, so every bootstrap takes whatever is newest on
+PyPI
+(<code>plugins/memgraph-context-graph-claude/scripts/bootstrap.sh:19-27</code>).
+Reconciliation is a further extra that setup does not install. It works
+offline once the image and models are present, needs no API key to store
+or recall anything, and the store is inspectable from Memgraph Lab or
+any Bolt client but not repairable as files.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> A runtime hook runs
+<code>memgraph-context-graph hook run &lt;runtime&gt;</code>; the Claude
+plugin registers it on 13 events, from SessionStart through PostToolUse
+to SessionEnd, each with a 30-second timeout
+(<code>plugins/memgraph-context-graph-claude/hooks/hooks.json</code>).
+The adapter normalises the payload into an event,
+<code>AgentLink.emit</code> applies the capture policy, and every
+supporting connector persists it (<code>link.py:74-77</code>).</li>
+<li><strong>Session bookkeeping.</strong>
+<code>SessionsGraphConnector</code> merges User and Session on start,
+links a memory-tool write's paths to the session on
+<code>TOOL_END</code>, and on each turn end marks the session
+<code>pending</code> and spawns a detached embed
+(<code>sessions_graph/connector.py:122-150</code>).</li>
+<li><strong>Memory writes.</strong> <code>MemoryTool.call</code> routes
+a path under <code>/memories/spaces/&lt;name&gt;/</code> to that shared
+space and anything else to the personal store;
+<code>MemoryStore.execute</code> dispatches the six commands
+(<code>sessions_graph/tool.py:287-322</code>,
+<code>memory_store.py:131-156</code>).</li>
+<li><strong>Session-start context.</strong> <code>render_index</code>
+lists root files and the current project's files, prints
+<code>pin: true</code> files in full first, and fits both into the
+harness's 10,000-character budget (<code>memory_index.py:69-96</code>,
+<code>memgraph_context_graph/tools.py:46</code>). The recall tool adds a
+brief of the last sessions in the same project
+(<code>resume.py:51-89</code>).</li>
+<li><strong>Recall.</strong> <code>recall</code> embeds the question,
+runs the lanes, and packs the result as exchanges
+(<code>recall.py:387-454</code>, <code>recall_exchanges.py</code>).</li>
+<li><strong>Reconciliation.</strong>
+<code>sessions-graph reconcile --pending</code> takes memory files whose
+<code>extraction_status</code> is pending, then sessions, each up to 100
+(<code>sessions_graph/cli.py:455-489</code>).
+<code>Reconciler.reconcile</code> extracts one document per session and
+links chunks back to their source Actions
+(<code>reconciler.py:206-320</code>).</li>
+<li><strong>Forget.</strong> <code>forget_session</code> writes the
+marker, runs each component's <code>forget_session</code> twice in a
+fixed order, then deletes the Session node
+(<code>memgraph_context_graph/forget.py:58-72</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memory file is
+<code>(:Memory {memory_id, user_id, path, content, created_at, updated_at, author, updated_by, extraction_status})</code>,
+unique on <code>(user_id, path)</code>, owned through
+<code>(:User)-[:HAS_MEMORY]-&gt;</code>, linked from each session that
+wrote it by <code>PRODUCED_MEMORY</code>, and from a project folder path
+by <code>ABOUT</code> (<code>sessions_graph/core.py:3-18</code>,
+<code>:68-89</code>). A file holds at most 100 KiB
+(<code>memory_store.py:39</code>). Directories are path prefixes, not
+nodes.</p>
+<p>A <code>MemoryVersion</code> holds the replaced text with
+<code>replaced_at</code>, <code>session_id</code>,
+<code>replaced_by</code> and <code>deleted</code>, hung off both the
+user and the file so a deleted file's history outlives it
+(<code>memory_store.py:664-674</code>). The newest 20 per
+<code>memory_id</code> survive each write (<code>:44</code>,
+<code>:606-616</code>).</p>
+<p>History is actions-graph's Action nodes: user and assistant messages,
+tool calls, results, errors and subagents, under the Session or under an
+Agent. Any captured string is clipped at 100,000 characters
+(<code>capture_policy.py:38</code>).</p>
+<p>The Index is unstructured2graph's. A <code>Chunk</code> is
+content-addressed by hash, so two users' identical text shares one
+chunk. An entity's <code>MENTIONED_IN</code> edge to a chunk lists its
+source turns in <code>sources</code>, and each extracted relationship
+carries <code>source_id</code>, <code>confidence</code>, the sentence,
+the speaker and <code>valid_at</code>
+(<code>unstructured2graph/memgraph.py:492-552</code>).
+<code>valid_at</code> is the source turn's timestamp, or a memory file's
+<code>created_at</code> (<code>reconciliation.py:198</code>,
+<code>:208</code>). A fact stated in two sessions is two edges with
+their own <code>valid_at</code>, so a superseded value is kept and
+ordered, never closed.</p>
+<p><strong>Scope</strong> is the user. Every Memory carries
+<code>user_id</code>, every Action is reached through
+<code>User -&gt; Session</code>, and the session also records a
+<code>project_key</code> from its git remote. In Enterprise, each
+member's data is a database <code>u_&lt;login&gt;</code> and each shared
+space <code>space_&lt;name&gt;</code>, with roles granted per database
+(<code>spaces/src/context_graph_spaces/provision.py:1-30</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>recall</code> runs six lanes, each started at the user's own
+nodes (<code>recall.py:1-30</code>, <code>:271-375</code>):</p>
+<ul>
+<li><strong>memories</strong>: up to 5 files, by passage vector and by
+full text, both filtered on <code>user_id</code>;</li>
+<li><strong>turns</strong>: up to 8 messages by passage vector over the
+user's Actions;</li>
+<li><strong>text</strong>: up to 8 by full text, post-filtered to the
+user's action ids;</li>
+<li><strong>entities</strong>: up to 15 nearest entities with a mention
+from the user's own turn, then up to 6 of each one's facts read from the
+user's turns;</li>
+<li><strong>facts</strong> and <strong>user_facts</strong>: nearest
+facts, and every fact of the two relation types nearest the
+question.</li>
+</ul>
+<p>The ownership checks are the design's strength. A shared chunk does
+not grant its facts: an entity is the user's only when a mention's
+<code>sources</code> include the user's turn, and a fact only when its
+<code>source_id</code> is one (<code>:296-307</code>). The text lane
+widens <code>search_all</code> to the whole action count first, because
+the default 1,000-hit cap would drop the user's turns before the filter
+saw them (<code>:494-506</code>).</p>
+<p>The default <code>exchanges</code> packing groups each hit with its
+neighbouring turns, uses facts for ranking only, and budgets whole
+groups with the memory notes into 6,000 <code>cl100k_base</code> tokens
+(<code>:84-89</code>, <code>recall_exchanges.py:46-48</code>).
+Supplemental discovery adds problem-resolution episodes from the
+sessions the vector lane chose. With several spaces readable, recall
+fans out in parallel under a 10-second deadline and names any space that
+missed it (<code>tool.py:159-187</code>).</p>
+<p>Recall is pull-only: a tool call. The session-start index and brief
+are automatic, but they list files and quote recent turns rather than
+answer a question.</p>
+<p>Two failure modes follow from the lanes. In a default install the
+graph lanes return nothing, because no extraction has run, and a memory
+file has no vector: <code>embed_memory</code>'s only caller is
+<code>reconcile_memory</code> (<code>reconciler.py:571</code>). So
+memory files are found by full text alone until the extra is installed
+and the sweep runs. And an edited file keeps the chunks and facts of its
+old text until the next sweep, which affects ranking but not the
+rendered note, read from the current <code>content</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Capture is complete and model-free. Every message, tool input and
+tool output reaches the graph after the capture policy has stripped
+<code>&lt;private&gt;</code> blocks, replaced ten built-in credential
+shapes, configured patterns and the config file's own secrets, and
+clipped each string (<code>capture_policy.py:1-17</code>,
+<code>:41-52</code>). <code>[capture] exclude_tools</code> and
+<code>exclude_projects</code> drop events or whole projects. The policy
+filters by tool, project and pattern, never by whether a turn is worth
+keeping.</p>
+<p>Memory files are the model's call. The tool description tells it what
+to save, where, and with what frontmatter, and to update a file rather
+than add a near-duplicate (<code>tool.py:190-218</code>). Every write
+marks the file <code>extraction_status = 'pending'</code>; a delete
+removes what extraction derived from the file, except in a shared space,
+where members may not touch chunks
+(<code>memory_store.py:271-315</code>).</p>
+<p>Two writers bypass all of this.
+<code>SessionsGraph.update_memory</code> and <code>delete_memory</code>
+match on <code>memory_id</code> alone, write no version and leave the
+derived index in place (<code>core.py:409-444</code>); their callers are
+tests and a docstring.</p>
+<p>Reconciliation is extractive. It deduplicates a session's texts,
+joins them in recorded order into one document so GLiNER2 sees spans
+across turns, and writes chunks, entities and relationships keyed on
+chunk and source turn, so re-ingesting is idempotent
+(<code>reconciler.py:206-320</code>). It writes no summary and never
+creates a Memory.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The hook path blocks the agent for one Bolt round trip per connector,
+under a deadline five seconds short of the hook's timeout
+(<code>hooks/runner.py:37-50</code>). No model is on it. A turn is
+full-text searchable once the hook returns and vector searchable once
+the detached embed finishes, seconds later on a warm Memgraph. Graph
+lanes and memory-file vectors wait for the next
+<code>reconcile --pending</code>, manual or scheduled;
+<code>auto_reconcile</code> fires only on session end and is off by
+default (<code>connector.py:140-146</code>).</p>
+<p>No pass rewrites the store; re-extraction under a new ontology covers
+only the derivation's delta. Injection is bounded at 10,000 characters
+at session start and 6,000 tokens per recall, and the session-start text
+sits in the hook's context block ahead of the first user turn.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Claude Code and Codex get user-wide plugins. Copilot CLI, Cursor,
+OpenCode, Antigravity CLI and Grok Build get project hooks and an MCP
+server in their user configuration, and Grok receives the session-start
+text through the MCP server's <code>instructions</code> because its
+hooks cannot reach the model (<code>mcp_server.py:12-15</code>). Apps on
+the Claude Agent SDK or OpenAI Agents SDK get capture, context and
+memory tools in-process, and Anthropic SDK apps get
+<code>MemgraphMemoryTool</code> with the user fixed by the application
+(<code>sessions_graph/anthropic_memory.py:1-26</code>).</p>
+<p>Memory is opt-in per user.
+<code>setup --memory-backend context-graph</code> turns the harness's
+own memory off in its config, imports its existing memories, and makes
+the <code>memory</code> tool available;
+<code>--memory-backend native</code> hands them back
+(<code>memgraph_context_graph/memory_backend.py:1-14</code>). Until then
+the tool is neither listed nor callable
+(<code>tool.py:283-285</code>).</p>
+<p>The model holds every memory verb, including <code>delete</code>, and
+cannot name a user: identity and connection come from the config file
+(<code>memgraph_context_graph/tools.py:11-13</code>). It cannot forget a
+session; that is a CLI command that lists first and requires a terminal
+or <code>--yes</code> (<code>cli.py:87</code>, <code>:142</code>).</p>
+<p>For Codex, setup writes
+<code>default_tools_approval_mode = "approve"</code> for the plugin's
+MCP server unless the user set a mode, so Codex stops asking before each
+call. The docstring calls the tools <em>"read-only over the user's own
+memory"</em> in the same sentence that says <code>memory</code> writes
+<code>/memories</code> files
+(<code>adapters/codex_memory.py:199-215</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="deleted-text-stays-in-the-graph">Deleted text stays in the
+graph</h3>
+<p>The memory tool's <code>delete</code> copies the file's text into a
+<code>MemoryVersion</code> with <code>deleted: true</code> before
+<code>DETACH DELETE</code> (<code>memory_store.py:290-310</code>).
+Pruning runs per <code>memory_id</code>, and a re-created path gets a
+new id, so the deleted file's last 20 versions never age out. The one
+<code>DETACH DELETE v</code> in the tree is the prune
+(<code>:613</code>). A session forget keeps the memory files the session
+wrote and only nulls <code>session_id</code> on their versions
+(<code>core.py:110-118</code>); the configuration guide says so. A
+secret saved into a memory file survives both deleting the file and
+forgetting the session, and needs a Cypher query or
+<code>uninstall --all</code> to go.</p>
+<h3
+id="the-version-history-is-capped-and-has-no-reader-for-the-user">The
+version history is capped, and has no reader for the user</h3>
+<p>The same cap that keeps deleted text also drops a busy file's oldest
+history: the 21st write deletes the first version. The module docstring
+calls a stale write <em>"recoverable"</em>, and no CLI, tool or viewer
+reads versions back; the only caller of <code>versions()</code> is the
+native-memory export, which uses them to tell a descendant from a
+conflicting edit (<code>adapters/claude_code_memory.py:164</code>).</p>
+<h3 id="forgetting-is-provenance-exact">Forgetting is
+provenance-exact</h3>
+<p><code>forget_sources</code> removes relationships whose
+<code>source_id</code> is one of the session's turns, strips those ids
+from each mention's <code>sources</code>, and deletes an entity or chunk
+only when nothing else backs it (<code>forgetting.py:34-110</code>). The
+marker then stops a hook in flight, a reconciliation mid-run, or a
+resume from writing the session again, checked inside
+<code>ensure</code>, inside actions-graph's writes and twice inside
+<code>reconcile</code> (<code>session.py:41-60</code>,
+<code>actions_graph/core.py:479</code>, <code>reconciler.py:257</code>,
+<code>:296</code>).</p>
+<h3
+id="pinned-files-are-standing-instructions-the-model-can-write">Pinned
+files are standing instructions the model can write</h3>
+<p>A file whose frontmatter says <code>pin: true</code> is printed in
+full at every session start, ahead of the index, up to 25,000 characters
+or half the budget (<code>memory_index.py:44</code>,
+<code>:88-92</code>). The model can write that frontmatter. A prompt
+injection that persuades it to save a pinned file has a channel into
+every later session, and the only defence is the tool description's line
+that contents are notes, not user instructions.</p>
+<h3 id="identity">Identity</h3>
+<p>In Community the user is <code>identity.user_id</code>, a string in a
+local config file. The container setup starts is bound to loopback and
+configured with no Memgraph user
+(<code>setup/memgraph.py:260-263</code>), so any local client of it
+reads every user. Enterprise moves the boundary into Memgraph: a
+database per member, roles hashed from their grants, and a service
+account for what members may not write
+(<code>spaces/CONTEXT.md</code>).</p>
+<h3 id="marks">Marks</h3>
+<p>Earned:</p>
+<ul>
+<li><strong><code>scope_enforced</code></strong> — the stored
+<code>user_id</code> and the <code>User -&gt; Session</code> path root
+every recall lane, the session-start index and the resume brief
+(<code>recall.py:271-375</code>, <code>memory_store.py:490-495</code>,
+<code>resume.py:68-77</code>).</li>
+<li><strong><code>negative_eval</code></strong> — a populated cross-user
+case; see section 10.</li>
+</ul>
+<p>Withheld:</p>
+<ul>
+<li><strong><code>tombstone</code></strong> —
+<code>ForgottenSession</code> is keyed on <code>session_id</code>. It
+refuses the same session and nothing else; the same text captured in
+another session, or written into a memory file, is new. Deleting a
+memory file leaves no marker the agent's next <code>create</code>
+consults.</li>
+<li><strong><code>trust_state</code></strong> — no status on a memory,
+turn or fact. Ontology versions carry <code>adopted</code>,
+<code>rejected</code> and <code>superseded</code> behind a held-out gate
+(<code>ontology.py:221-270</code>, <code>derivation.py:1-24</code>), but
+a version is a relation vocabulary, not a claim that could be
+false.</li>
+<li><strong><code>bitemporal</code></strong> — <code>valid_at</code> is
+when the turn was said; no edge records when a fact stopped
+holding.</li>
+<li><strong><code>audit_log</code></strong> — <code>MemoryVersion</code>
+is written in the mutation's own query, but the prune deletes all but
+20, a new file leaves no record, forget nulls the session, and the
+Python update and delete bypass it.</li>
+<li><strong><code>human_review</code></strong> — no memory waits in any
+state; the agent writes and deletes directly. Codex's per-call prompt is
+the nearest gate, and setup turns it off.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suites test persistence against a live Memgraph by policy, with
+mocks only for event translation and error branches
+(<code>context-graph/CONTEXT-MAP.md</code>). A test without Memgraph or
+MAGE skips, and CI starts <code>memgraph-mage:latest</code> for each
+package job (<code>.github/workflows/tests.yaml</code>). I did not run
+them.</p>
+<p><code>negative_eval</code> rests on
+<code>test_every_lane_reads_only_the_asking_users_history</code>
+(<code>sessions-graph/tests/test_e2e_recall.py:109-121</code>). Two
+users each say they visited Paris with a different companion; the two
+facts share one Paris entity. For each user the case asserts their own
+companion is in the rows and the other is not, so it fails if the
+mention-source predicate goes. Beside it,
+<code>test_other_users_files_are_never_recalled</code>
+(<code>:317-322</code>) asserts only that the memories list is empty, in
+a fixture that gives the asking user no file, and passes against a
+memory lane that returns nothing.</p>
+<p>The forget suite is populated in the same way, over graph queries
+rather than recall. Forgetting one of two sessions removes
+<code>uv</code> and keeps <code>pip</code>
+(<code>sessions-graph/tests/test_e2e_forget.py:57-75</code>). A
+forgotten session is not reconciled again (<code>:78-88</code>), a
+forget landing mid-reconciliation leaves no chunk or entity
+(<code>:91-107</code>), and memory files a forgotten session wrote stay
+(<code>:110-120</code>).</p>
+<p>The eval package runs LongMemEval-S and BEAM 100K through the shipped
+read path and commits each official run's per-question rows under
+<code>context-graph/eval/baselines/</code>. I recomputed both headlines
+from those rows with a separate script, reading and not running the
+harness. The mean of the 500 LongMemEval-S scores is 0.874, mean
+evidence recall 0.957 over 470 scored questions, mean retrieval 5,862.7
+tokens and mean recall 1.56 seconds.</p>
+<p>BEAM 100K's 400 scores average 0.631, with evidence recall 0.701 over
+354. The LongMemEval run used <code>gpt-4o-2024-08-06</code> as judge
+and the BEAM run <code>gpt-4.1-mini</code>, with <code>gpt-4.1</code>
+answering both. The BEAM baseline records its commit as
+<code>e31e945-dirty</code>, an uncommitted working tree. Both were built
+with GLiNER2 extraction, which a default install does not run. No paper
+is associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Root every read at the owner, not at the content.</strong>
+When content is addressed by hash and shared, carry the source turn on
+each mention and fact, and decide ownership there. Then test it with two
+users sharing one entity.</li>
+<li><strong>Forget by provenance, then sweep the unbacked.</strong>
+Remove exactly the edges a source produced, then the entities and chunks
+nothing else backs. A per-source forget then never takes another
+session's fact with it.</li>
+<li><strong>Check the tombstone inside the write.</strong>
+<code>ensure</code> refuses inside its own MERGE, and reconciliation
+checks again after extraction, so a forget that races a background job
+wins.</li>
+<li><strong>Make edits compare-and-set against the text read.</strong>
+It turns two sessions editing one file into an error the model can
+retry, instead of a lost write.</li>
+<li><strong>Commit the per-question rows behind every headline</strong>,
+with the judge and the revision, so the number can be recomputed without
+the harness.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Keeping deleted text as history under the same cap as
+edits.</strong> Either purge on delete, or give deleted versions their
+own retention and a verb to erase them; a capped log is neither an audit
+nor a recycle bin.</li>
+<li><strong>Letting the model mark its own memory as
+always-injected.</strong> Keep pinning a person's decision, or frame
+pinned text as untrusted the way recall frames its rows.</li>
+<li><strong>Benchmarking a configuration the installer does not
+produce.</strong> Publish the default install's number beside the tuned
+one.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a developer or a small team willing to run Memgraph, who
+wants every session across several coding agents kept and searchable
+without an LLM bill, and who will read Cypher when something looks
+wrong. The engineering is careful where concurrency and ownership are
+concerned, and the benchmark figures are checkable. Walk away if
+forgetting must mean erasure, if a single machine's plain files are
+enough, or if memory must be reviewed before it lands. Its first commit
+under <code>context-graph/</code> is dated 23 April 2026, every commit
+there is one author's, and each bootstrap installs whatever is newest on
+PyPI.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How large the graph grows per month of full tool-output capture at
+the 100,000-character clip, and how recall latency scales with it.</li>
+<li>Whether a default install's recall, without extraction or
+memory-file vectors, has been measured on either benchmark.</li>
+<li>Whether a purge for <code>MemoryVersion</code> text, or a restore
+verb, is planned.</li>
+<li>How often agents write <code>pin: true</code>, and whether any guard
+is intended.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p>Paths are under <code>context-graph/</code> unless they name another
+package.</p>
+<ul>
+<li>Storage and schema:
+<code>sessions-graph/src/sessions_graph/core.py</code>,
+<code>memory_store.py</code>, <code>models.py</code>;
+<code>memgraph-context-graph/src/memgraph_context_graph/session.py</code>;
+<code>unstructured2graph/src/unstructured2graph/memgraph.py</code></li>
+<li>Capture:
+<code>memgraph-context-graph/src/memgraph_context_graph/hooks/runner.py</code>,
+<code>link.py</code>, <code>capture_policy.py</code>,
+<code>adapters/</code>;
+<code>actions-graph/src/actions_graph/core.py</code></li>
+<li>Retrieval and context:
+<code>sessions-graph/src/sessions_graph/recall.py</code>,
+<code>recall_exchanges.py</code>, <code>memory_index.py</code>,
+<code>resume.py</code>, <code>embeddings.py</code></li>
+<li>Background:
+<code>sessions-graph/src/sessions_graph/reconciler.py</code>,
+<code>reconciliation.py</code>, <code>derivation.py</code>,
+<code>ontology.py</code>, <code>cli.py</code></li>
+<li>Forget:
+<code>memgraph-context-graph/src/memgraph_context_graph/forget.py</code>,
+<code>sessions-graph/src/sessions_graph/forgetting.py</code></li>
+<li>MCP, tools, SDK:
+<code>memgraph-context-graph/src/memgraph_context_graph/mcp_server.py</code>,
+<code>tools.py</code>, <code>sdk/</code>;
+<code>sessions-graph/src/sessions_graph/tool.py</code>,
+<code>anthropic_memory.py</code></li>
+<li>Setup and plugins:
+<code>memgraph-context-graph/src/memgraph_context_graph/setup/</code>,
+<code>plugins/</code>, <code>scripts/install.sh</code></li>
+<li>Enterprise: <code>spaces/src/context_graph_spaces/</code></li>
+<li>Tests and evals: <code>*/tests/</code>,
+<code>eval/src/context_graph_eval/</code>,
+<code>eval/baselines/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No end of validity.</strong>
+<code>git grep -n -E 'invalid_at|valid_to|valid_until|expired_at' -- context-graph/sessions-graph context-graph/memgraph-context-graph context-graph/actions-graph unstructured2graph</code>
+returns nothing; <code>valid_at</code> in the same command matches
+<code>reconciliation.py</code> and <code>memgraph.py</code>.</li>
+<li><strong>No status on a memory file.</strong>
+<code>git grep -n -E 'status' -- context-graph/sessions-graph/src/sessions_graph/memory_store.py</code>
+returns the two <code>extraction_status = 'pending'</code> writes
+only.</li>
+<li><strong>Versions are deleted only by the prune.</strong>
+<code>git grep -n -E 'DETACH DELETE v' -- context-graph</code> returns
+<code>memory_store.py:613</code> only.</li>
+<li><strong>No restore path for versions.</strong>
+<code>git grep -n -E '\.versions\(' -- context-graph ':!**/tests/**'</code>
+returns the two calls in <code>adapters/claude_code_memory.py</code> and
+a line of <code>sessions-graph/docs/python-api.md</code>.</li>
+<li><strong>No review state or approve verb.</strong>
+<code>git grep -n -i -E 'approve|pending_review|needs_review|quarantine' -- context-graph ':!context-graph/eval' ':!**/tests/**'</code>
+returns Codex and Copilot tool-approval configuration and docs
+only.</li>
+<li><strong>Three registered tools.</strong>
+<code>git grep -n -A3 'memgraph_context_graph.tools"\]' -- '*.toml'</code>
+lists <code>resource</code>, <code>recall</code> and
+<code>memory</code>.</li>
+<li><strong>The legacy memory API has no product caller.</strong>
+<code>git grep -n -E '\.(update_memory|delete_memory|save_memory)\(' -- '*.py'</code>
+returns tests and the package docstring.</li>
+<li><strong>Memory-file vectors come only from reconciliation.</strong>
+<code>git grep -n -E 'embed_memory\(' -- context-graph ':!**/tests/**'</code>
+returns its definition and <code>reconciler.py:571</code>.</li>
+<li><strong>The LangChain integration keeps no memory.</strong>
+<code>git grep -n -i -E 'ChatMessageHistory|BaseStore|memory' -- integrations/langchain-memgraph</code>
+returns nothing.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- .</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/memgraph/ai-toolkit/commit/2e9af39fa42326b9daf795244579eafefe8f1cbc"><code class="commit-id" title="2e9af39fa42326b9daf795244579eafefe8f1cbc">2e9af39f…</code></a>.
+First reading, from a shallow clone, scoped to
+<code>context-graph/</code> and the <code>unstructured2graph</code>
+extractor; commit counts from the GitHub API. Screened first: five
+auto-run surfaces, all the Claude plugin's own (the marketplace
+manifest, the plugin manifest, its <code>.mcp.json</code> starting
+<code>memgraph-context-graph mcp</code>, its <code>hooks/</code>
+directory, and <code>hooks/hooks.json</code> registering 13 events);
+fifteen manifests with no lockfile beside them, and every manifest
+inside the cooldown because a shallow clone dates each file to the tip.
+MIT, no rider. Nothing installed, built or run; the benchmark headlines
+were recomputed from committed rows. Two marks, both on recall (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

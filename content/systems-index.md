@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **777 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **778 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -477,6 +477,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/memex/"><span class="az-id">memex</span><span class="az-what">A tool whose description promises an update its own input cannot request</span><code class="az-repo">phanijapps/memex</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/memex-zettel/"><span class="az-id">Memex</span><span class="az-what">A secret gate that will not quote the secret</span><code class="az-repo">iamtouchskyer/memex</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/memex-zero-rag/"><span class="az-id">MeMex Zero-RAG</span><span class="az-what">Enforcement by instruction</span><code class="az-repo">JPeetz/MeMex-Zero-RAG</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/memgraph-ai-toolkit/"><span class="az-id">Memgraph Context Graph</span><span class="az-what">Every read rooted at the user, every delete kept as a version</span><code class="az-repo">memgraph/ai-toolkit</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/memharness/"><span class="az-id">MemHarness</span><span class="az-what">A prior that updates from outcomes</span><code class="az-repo">KnowledgeXLab/MemHarness</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/memhop/"><span class="az-id">MemHop</span><span class="az-what">A six-layer keyword memory in one embedded Go file</span><code class="az-repo">qyiun666/MemHop</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/memhtml/"><span class="az-id">memhtml</span><span class="az-what">An empty result tells you whether the address never existed or was archived</span><code class="az-repo">memhtml/memhtml</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Negative evals</span></span></a></li>
