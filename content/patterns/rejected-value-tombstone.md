@@ -157,6 +157,11 @@ rather than filtering the read like Provem, and arms the mechanism only on a
 candidate review — discussed below.
 [Perseus Vault](../../systems/perseus-vault/) refuses a value by its digest
 without storing it — discussed below.
+[Kibisis](../../systems/kibisis/) stores an exact and an NFKC-folded digest,
+both keyed by an HMAC when the vault has a passphrase, checks them inside the
+write transaction under any key in the scope, and deletes every existing copy
+when it tombstones; its agent can also tombstone a value a person verified,
+because the forget tool consults no review.
 [PLUR1BUS](../../systems/plur1bus/) does the same with a SHA-256 fingerprint of
 the normalised text, checked as step zero of every capture.
 [Universal Memory Engine](../../systems/universal-memory-engine/) keeps a

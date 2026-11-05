@@ -44,7 +44,9 @@ matrix:
 [`agent-memory-atlas-archive/Perseus-Computing-LLC--perseus-vault`](https://github.com/agent-memory-atlas-archive/Perseus-Computing-LLC--perseus-vault)
 was taken on 2026-09-09 with every branch, so `9c829207` and every file path below
 are readable there. Links in the body point at the dead upstream because that is
-where the reading happened; the archive is the working route.
+where the reading happened; the archive is the working route. The same
+company's later memory vault, [Kibisis](../kibisis/), is a separate codebase
+with no shared history or files, and has its own report.
 
 The deletion also cost the project its identity in GitHub's own records. An
 orphaned fork network is reparented onto a surviving sibling rather than left

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 775 reports.</strong></p>
+<p><strong>This page covers all 776 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32268,6 +32268,49 @@ anything heavier.</li>
 <li>Do not copy when: the agent must write its own memory, a replaced
 fact must stop being returned, or several projects or people share one
 index.</li>
+</ul>
+<h3 id="kibisis"><a
+href="../systems/kibisis/"><code>kibisis</code></a></h3>
+<ul>
+<li>Best idea: <strong>one insert path, with the tombstone inside its
+transaction.</strong> Every writer reaches <code>_put</code>, which
+takes <code>BEGIN IMMEDIATE</code> before its first read and refuses a
+value whose keyed exact or NFKC-folded digest is tombstoned in the
+scope, under any key; tombstoning deletes every copy of the value, and
+no method removes a tombstone.</li>
+<li>Second idea: trust comes from the write path. The MCP server stamps
+origin <code>model</code> and author <code>mcp-agent</code>, refuses and
+journals nine authority arguments, and files a model's supersession of a
+reviewed entry as a proposal that only a person's approval applies.</li>
+<li>Biggest risk: <strong>the agent's forget tool can tombstone a
+person's verified entry.</strong> <code>_is_reviewed</code> guards
+overwrite and supersession inside <code>_put</code> only;
+<code>kibisis_forget</code> deletes the entry and its copies, and the
+person's own later write of that value is refused. The suite asserts
+this as intended.</li>
+<li>Second risk: the review CLI checks no terminal and counts distinct
+<code>--reviewer</code> strings toward a default quorum of two;
+<code>admit</code>, which does check a TTY, defaults to a different
+database file and scope from the server; and the gated
+<code>recall</code> has no caller, since the MCP tool calls
+<code>search</code>.</li>
+<li>Most reusable component:
+<code>src/kibisis/_vault_tombstone.py</code> with
+<code>canonicalize_text</code> and the keyed digests in
+<code>src/kibisis/_vault_crypto.py:45-83</code>, <code>:246-252</code> —
+value tombstones that refuse look-alikes, purge copies and do not reveal
+short values.</li>
+<li>Maturity impression: MIT; 9,658 lines of Python and 2,158 of Rust
+outside tests, 163 commits from 8 October to 5 November 2026,
+pre-release 0.1.0-alpha.14; 411 Python and 31 Rust test functions run in
+CI, not run here. All seven marks, written with this atlas's rubric in
+view and each tested against the code.</li>
+<li>Study when: you want a local encrypted memory in which a model
+proposes and only a person confirms, with rejections that survive
+changes of case, spacing and look-alike characters.</li>
+<li>Do not copy when: earlier versions must stay readable as text, the
+agent has a general shell and review must mean a person, or a reviewed
+entry must be safe from the agent's delete.</li>
 </ul>
         </article>
       </div>

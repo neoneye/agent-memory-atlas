@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Python memory vault over
+SQLite with sealed entries, value tombstones, trust states and a
+hash-chained journal, served to agents over MCP.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Kibisis — Agent Memory Atlas">
+    <meta property="og:description" content="A local Python memory vault
+over SQLite with sealed entries, value tombstones, trust states and a
+hash-chained journal, served to agents over MCP.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Kibisis — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Python memory
+vault over SQLite with sealed entries, value tombstones, trust states
+and a hash-chained journal, served to agents over MCP.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Kibisis — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Kibisis",
+      "description": "A local Python memory vault over SQLite with sealed entries, value tombstones, trust states and a hash-chained journal, served to agents over MCP.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Sealed memory the model can only propose
+to</p>
+          <h1>Kibisis</h1>
+          <p class="document-deck">A local Python memory vault over
+SQLite with sealed entries, value tombstones, trust states and a
+hash-chained journal, served to agents over MCP.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Perseus-Computing-LLC/kibisis">
+              <span>Source</span>
+              <strong>Perseus-Computing-LLC/kibisis</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Perseus-Computing-LLC/kibisis/commit/e9ddf6112a3dd39478d762bf291645e6833952bf" title="e9ddf6112a3dd39478d762bf291645e6833952bf">
+              <span>Analyzed revision</span>
+              <code>e9ddf611…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Perseus-Computing-LLC--kibisis" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Perseus-Computing-LLC--kibisis</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>9,658
+lines of Python under src/kibisis, 4,489 of them in the vault and its
+six mixins, 2,367 in the OKF bundle code and 608 in a leaderboard
+adapter; 2,158 lines of Rust outside test modules</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>163
+commits under five author names plus Dependabot, 8 October – 5 November
+2026; the pin is six commits past the v0.1.0-alpha.14 tag</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>411
+Python test functions in 35 files and 31 Rust #[test] functions, run in
+CI on Ubuntu and macOS; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Kibisis is a local memory vault for agents. Its Python
+<code>SQLiteMemoryVault</code> seals each entry with AES-256-GCM, signs
+it over its scope, category and key, and serves it through a five-tool
+stdio MCP server. Its strength is what it refuses. A tombstoned value is
+matched by keyed digests of its exact and NFKC-folded forms under any
+key in its scope, and every copy is deleted. A model's write lands as a
+<code>candidate</code> that cannot overwrite or retire an entry a person
+verified. The weak side is review and forgetting: the review CLI checks
+no terminal and counts free-text names toward a default quorum of two,
+and the agent's own forget tool can tombstone what a person
+verified.</p>
+<p>It is a separate codebase from <a href="../perseus-vault/">Perseus
+Vault</a>, published by the same company. Its history starts at a commit
+titled <em>"initial clean-room scaffold"</em> on 8 October 2026, no file
+in it is byte-identical to one in Perseus Vault's pinned tree, and the
+shared names are a table name, <code>rejected_value_tombstones</code>,
+and a column name, <code>epistemic_state</code>. The schemas behind both
+differ, and the state vocabularies differ.</p>
+<p>All seven marks are earned. The code is written with this atlas's
+rubric in view: three model fields carry the comment <em>"Atlas Rubric
+Mark"</em> (<code>src/kibisis/models.py:31</code>, <code>:37</code>,
+<code>:47</code>), and <code>tests/test_atlas_acceptance.py</code> names
+its cases after the atlas's acceptance tests. Each mark was tested
+against the code rather than against those names. The two limits that
+matter most are behaviour the suite asserts as intended:
+<code>tests/test_mcp_server.py:136-160</code> forgets a person's
+verified entry through the MCP tool, and <code>:280-282</code> approves
+through the review CLI with no terminal.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an entry at <code>(scope, category, key)</code>, one row
+per key (<code>vault.py:524</code>). What the vault believes about it is
+<code>epistemic_state</code> — <code>candidate</code>,
+<code>verified</code>, <code>disputed</code> or <code>revoked</code>
+(<code>models.py:11-16</code>) — and that state is a function of the
+write path, not of the payload.</p>
+<ul>
+<li><strong>A model's write is a candidate.</strong> The MCP server
+writes with <code>origin="model"</code> and
+<code>trust_ceiling="candidate"</code>
+(<code>mcp_server.py:446-459</code>), and <code>_put</code> caps any
+state the gate or caller asked for (<code>vault.py:767-769</code>,
+<code>:808-824</code>). The origin also fixes an
+<code>origin_class</code> — <code>principal</code>, <code>agent</code>
+or <code>external</code> — that a lower class cannot overwrite
+(<code>vault.py:890-900</code>).</li>
+<li><strong>A person's <code>verified</code> is an attestation, not a
+state.</strong> A <code>user</code> or <code>import</code> write asking
+for <code>verified</code>, and each person's <code>verified</code>
+review, adds a name to <code>attestations</code>. The entry turns
+<code>verified</code> only when the count reaches
+<code>verification_quorum</code>, which defaults to 2
+(<code>vault.py:108</code>, <code>:935-956</code>;
+<code>_vault_review.py:456-469</code>).</li>
+<li><strong>Retirement is an explicit edge.</strong> A write naming
+<code>supersedes_key</code> revokes the target and closes its
+<code>valid_until</code>, or, when the writer is outranked or the target
+was reviewed, records a proposal that a person's approval applies
+(<code>vault.py:967-1061</code>). Entries <code>derived_from</code> a
+retired one become <code>disputed</code>
+(<code>_vault_review.py:205-241</code>).</li>
+<li><strong>Rejection is a tombstone.</strong> A review verdict of
+<code>revoked</code>, and the MCP forget tool, delete the entry and
+every copy of its value in the scope, and refuse the value afterwards
+(<code>_vault_review.py:428-451</code>,
+<code>_vault_tombstone.py:111-176</code>).</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Every writer reaches one transaction in _put, where trust is set from the path and the tombstone is checked; people review outside the MCP surface, while the agent's forget tool reaches the tombstone directly</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Every writer reaches one transaction in _put, where trust is set from the path and the tombstone is checked; people review outside the MCP surface, while the agent&#39;s forget tool reaches the tombstone directly
+flowchart TD
+    subgraph W[&quot;Writers&quot;]
+        direction TB
+        M[&quot;MCP kibisis_remember&lt;br/&gt;origin model, author&lt;br/&gt;mcp-agent, cap candidate&quot;]
+        L[&quot;Library put / store&lt;br/&gt;origin named by caller&quot;]
+        I[&quot;OKF import, snapshot&lt;br/&gt;import, review re-write&quot;]
+        M ~~~ L ~~~ I
+    end
+    P[&quot;_put in BEGIN IMMEDIATE&lt;br/&gt;fence, origin class,&lt;br/&gt;reviewed-entry check,&lt;br/&gt;quorum, supersession&quot;]
+    T{&quot;Keyed exact or NFKC&lt;br/&gt;digest tombstoned&lt;br/&gt;in scope or &#39;*&#39;?&quot;}
+    R[&quot;Refused; rolled back;&lt;br/&gt;refuse event journaled&quot;]
+    S[&quot;Seal, sign, INSERT or&lt;br/&gt;UPDATE in place;&lt;br/&gt;journal event, same tx&quot;]
+    E[(&quot;entities: candidate,&lt;br/&gt;verified, disputed,&lt;br/&gt;revoked; valid window&quot;)]
+    Q[&quot;search / MCP recall:&lt;br/&gt;scope = ?, not revoked,&lt;br/&gt;inside valid window&quot;]
+    V[&quot;kibisis-review approve,&lt;br/&gt;dispute, reject (no TTY)&lt;br/&gt;kibisis admit (TTY)&quot;]
+    F[&quot;MCP kibisis_forget&lt;br/&gt;no reviewed check&quot;]
+    X[&quot;tombstone: keyed digests,&lt;br/&gt;delete every copy&quot;]
+    W --&gt; P
+    P --&gt; T
+    T --&gt;|yes| R
+    T --&gt;|no| S
+    S --&gt; E
+    E --&gt; Q
+    Q ~~~ V
+    V ~~~ F
+    V --&gt;|approve, dispute| E
+    V --&gt;|reject| X
+    F --&gt; X
+    X --&gt;|deletes rows| E</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Python package over one SQLite file, with an optional SQLCipher
+driver (<code>vault.py:11-14</code>). The vault is one class composed of
+six mixins split by concern: journal (<code>_vault_audit.py</code>),
+sealing and digests (<code>_vault_crypto.py</code>), admission and
+review (<code>_vault_review.py</code>), search
+(<code>_vault_search.py</code>), tombstones
+(<code>_vault_tombstone.py</code>) and snapshots
+(<code>_vault_snapshot.py</code>). <code>vault.py</code> keeps the
+schema, the write lock, fencing and the put family.</p>
+<p>Keys come from a passphrase, from
+<code>KIBISIS_PASSPHRASE_FILE</code> or <code>KIBISIS_PASSPHRASE</code>,
+stretched with PBKDF2-HMAC-SHA256 into separate signing, digest and term
+keys (<code>vault.py:354-360</code>). An on-disk vault refuses to open
+without one unless <code>allow_plaintext=True</code>
+(<code>vault.py:279-283</code>). When SQLCipher loads, the whole file is
+encrypted. When it does not, entry text is still sealed, but categories,
+keys and metadata are plain, and a warning says so
+(<code>vault.py:305-310</code>).</p>
+<p>The Rust crate is a second, smaller thing.
+<code>InMemoryMemoryVault</code> keeps entries in a
+<code>Mutex&lt;HashMap&gt;</code> and persists nothing
+(<code>src/lib.rs:583-1133</code>). The Python package reaches the crate
+only through <code>kibisis_native</code>, which exports the file lease
+coordinator and the format-3 journal hash and head MAC
+(<code>bindings/python/src/lib.rs:223-231</code>). No Python path runs
+the Rust vault.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install kibisis</code>, create a key file with
+<code>python -m kibisis.keys</code>, and run
+<code>python -m kibisis.mcp_server</code>. The server opens its vault in
+the per-user data directory and serves one scope:
+<code>KIBISIS_SCOPE</code> if set, else a scope derived from the git
+checkout it runs in, else <code>default</code>
+(<code>config.py:51-57</code>, <code>:113-127</code>). No service, no
+model, no network code in the vault.</p>
+<p>Leases with fencing tokens coordinate writers across processes
+through a lock directory (<code>src/file_lease.rs</code>,
+<code>src/kibisis/lease.py</code>). They are opt-in: a vault checks
+tokens only with <code>enforce_fencing=True</code> or when a call passes
+one, and the MCP server opens its vault without a coordinator
+(<code>config.py:136-149</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="one-write-path-with-the-tombstone-inside-its-transaction">One
+write path, with the tombstone inside its transaction</h3>
+<p>Every entity write reaches <code>_put</code>. The only
+<code>INSERT INTO entities</code> in the tree is
+<code>vault.py:1099</code>, and the other <code>UPDATE entities</code>
+statements change state or metadata, never content. <code>_put</code>
+opens <code>BEGIN IMMEDIATE</code> before its first read
+(<code>vault.py:435-459</code>, <code>:838</code>), so the tombstone
+check and the insert cannot be separated by another connection's commit.
+The check runs on every write against the database, not a cached flag
+(<code>vault.py:1063-1077</code>).</p>
+<p><code>_find_tombstone</code> keys on the value alone:
+<code>(scope = ? OR scope = '*') AND (value_sha256 = ? OR canonical_sha256 = ?)</code>
+(<code>_vault_tombstone.py:56-64</code>). The canonical form is NFKC,
+then <code>casefold</code>, then Unicode format and control characters
+dropped, punctuation and symbols turned into spaces, whitespace
+collapsed (<code>_vault_crypto.py:45-71</code>). With a passphrase, both
+digests are stored as HMACs under a key derived from it, so a tombstone
+on a four-digit PIN does not reveal the PIN
+(<code>_vault_crypto.py:246-252</code>). A refused write is journaled as
+a <code>refuse</code> event in its own transaction after the rollback
+(<code>vault.py:1272-1283</code>).</p>
+<p>Tombstoning also deletes. <code>_purge_value_copies</code> opens
+every entry in the scope, or in every scope for <code>'*'</code>,
+compares digests and deletes each match with its own <code>purge</code>
+event (<code>_vault_tombstone.py:67-109</code>).
+<code>import_snapshot</code> imports tombstones first and refuses any
+entity whose value matches (<code>_vault_snapshot.py:264-275</code>),
+and the OKF importer reports a tombstoned concept as a conflict before
+writing (<code>okf/importer.py:385</code>, <code>:465</code>).</p>
+<h3 id="trust-from-the-path-not-the-payload">Trust from the path, not
+the payload</h3>
+<p>The MCP server decides what a model may claim.
+<code>_check_args</code> refuses, and journals, any of nine authority
+arguments — <code>epistemic_state</code>, <code>auto_gate</code>,
+<code>trust_ceiling</code>, <code>author_id</code>,
+<code>reviewer_id</code>, <code>tenant_id</code>,
+<code>principal_id</code>, <code>include_unverified</code>,
+<code>verdict</code> (<code>mcp_server.py:179-191</code>,
+<code>:407-415</code>). Model metadata is stored under
+<code>agent_metadata</code>, and <code>_put</code> drops reserved keys
+such as <code>human_reviews</code> and <code>origin_class</code> from
+any caller's metadata (<code>vault.py:95-100</code>,
+<code>:772-779</code>).</p>
+<p>Inside <code>_put</code>, a write with <code>origin="model"</code> is
+capped at candidate. A capped write that targets a verified or reviewed
+entry raises <code>ReviewedEntryError</code>
+(<code>vault.py:959-965</code>). A non-principal entry takes the lowest
+class along its <code>supersedes</code> and <code>derived_from</code>
+links, so trust is not laundered through a rewrite
+(<code>vault.py:902-926</code>). An <code>act</code> class, meaning the
+entry may drive an action, is capped at <code>inform</code> unless the
+writer is a principal (<code>vault.py:928-933</code>).</p>
+<h3 id="the-two-review-commands">The two review commands</h3>
+<p><code>kibisis-review</code> lists candidates in the current scope and
+approves, disputes or rejects one by calling <code>review_entity</code>
+with <code>reviewer_origin</code> left at its default,
+<code>"user"</code> (<code>review.py:74-83</code>,
+<code>_vault_review.py:373</code>). It checks no terminal. The reviewer
+recorded is <code>--reviewer</code> or the login name.</p>
+<p><code>python -m kibisis admit --by user</code> is the stricter door.
+<code>_require_tty</code> refuses when stdin is not a terminal, with no
+environment escape (<code>__main__.py:24-33</code>), and
+<code>admit</code> refuses any <code>--by</code> other than
+<code>user</code> (<code>_vault_review.py:320-327</code>). The
+<code>--by user</code> value is an argparse choice the caller types, so
+the terminal check is the guard. The command's defaults differ from the
+server's: <code>--db</code> defaults to
+<code>~/.hermes/kibisis/vault.sqlite</code>
+(<code>__main__.py:17</code>, <code>:199</code>) and
+<code>--scope</code> to <code>default</code> (<code>:202</code>), while
+the MCP server writes to the per-user data directory under a scope
+derived from the git checkout (<code>config.py:51-57</code>,
+<code>:113-127</code>). Run without both flags, <code>admit</code> opens
+a different file.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>entities</code> holds one row per
+<code>(category, key, scope)</code> with <code>content</code>, the
+envelope, <code>metadata_json</code>, <code>version</code>,
+<code>archived</code>, <code>created_at</code>, <code>updated_at</code>,
+<code>epistemic_state</code>, <code>valid_from</code>,
+<code>valid_until</code>, <code>tenant_sig</code>,
+<code>supersedes</code>, <code>superseded_by</code>, <code>origin</code>
+(CHECK-constrained to five values), <code>source_ref</code> and
+<code>confidence</code> (<code>vault.py:500-527</code>). The trust facts
+the vault sets itself — <code>origin_class</code>,
+<code>act_class</code>, <code>attestations</code>,
+<code>verification_pending</code>, <code>human_reviews</code>,
+<code>conflicts_with</code> — live in <code>metadata_json</code>.</p>
+<p>An update is an <code>UPDATE</code> of that row with the version
+incremented (<code>vault.py:1125-1142</code>). No table keeps the
+earlier text. The journal keeps the digest of each version and the
+action, so the history of <em>which</em> value held is recoverable as
+digests, and the value itself is not.</p>
+<p><code>rejected_value_tombstones</code> carries both digests, reason,
+author, scope, time and the plain digests sealed for transport in a
+snapshot (<code>vault.py:620-643</code>). <code>audit_journal</code> and
+the one-row <code>audit_head</code> are the journal
+(<code>vault.py:670-705</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>search</code> ranks by BM25 through one of three indexes: FTS5
+over the entities table for a plaintext vault, an FTS5 index inside the
+encrypted file under SQLCipher, or, without SQLCipher, an index of HMAC
+tokens of each word under a per-scope key that reproduces FTS5's BM25
+without writing any word to disk (<code>_vault_search.py:401-435</code>,
+<code>:530-623</code>). The filters are SQL in every mode:
+<code>archived = 0</code>, <code>scope = ?</code>, a state predicate and
+the validity window (<code>_vault_search.py:438-472</code>). An entry
+whose signature fails is skipped rather than returned
+(<code>_vault_search.py:194-196</code>).</p>
+<p>The state predicate is
+<code>IN ('verified', 'disputed', 'candidate')</code> unless a caller
+names one state, and <code>include_unverified</code> is accepted and
+ignored (<code>_vault_search.py:459-465</code>). The README's
+<em>"Search returns verified memories unless you ask for more"</em>
+holds for <code>list_entities</code>, whose default is
+<code>IN ('verified', 'disputed')</code>
+(<code>vault.py:1576-1580</code>), and not for <code>search</code>.</p>
+<p><code>recall</code> — <em>"Model-facing recall"</em> in its docstring
+— wraps <code>search</code> in three withholding rules: a verified pair
+in conflict is withheld from both sides, a hit below a coverage or
+z-score gate is withheld, and an entry older than a per-class TTL is
+withheld; each call gets a receipt
+(<code>_vault_search.py:202-358</code>). No code in <code>src/</code>
+calls it. The MCP recall tool calls <code>search</code>
+(<code>mcp_server.py:502-511</code>), so none of the three rules reaches
+the model.</p>
+<p>The keyed term index computes each word's document frequency over
+every indexed entry in every scope
+(<code>_vault_search.py:567-594</code>). Content does not cross scopes.
+Scores do: how common a word is in another tenant's entries shifts the
+ranking in this one.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and block the caller until the transaction
+commits. A written entry is searchable at once: triggers maintain the
+FTS5 table, and under SQLCipher a queue of changed rows is drained
+before the next search (<code>_vault_search.py:509-516</code>). No
+background pass rewrites the store. The one scheduled deletion is in the
+leaderboard adapter, which removes whole per-user vault files idle past
+<code>--retention-days</code> (<code>aml_adapter.py:260-285</code>).</p>
+<p>A write that names no state runs <code>MemoryAdmissionGate</code>, a
+set of regular expressions that routes hedged text to candidate and
+gives text matching a transient pattern a 24-hour
+<code>valid_until</code> (<code>admission.py:50-68</code>,
+<code>vault.py:790-802</code>). Whatever it routes, the cap and quorum
+rules apply after it, so the gate never mints <code>verified</code> on
+its own.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>PBKDF2 at 600,000 iterations runs once per open. Each write seals and
+signs one entry and appends one journal row. A vault without SQLCipher
+and with <code>term_index=False</code> opens every entry on every
+search, at a cost the docstring states grows with the vault
+(<code>vault.py:254-257</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server offers <code>kibisis_remember</code>,
+<code>kibisis_recall</code>, <code>kibisis_forget</code>,
+<code>kibisis_verify_ledger</code> and <code>kibisis_health</code>
+(<code>mcp_server.py:56-173</code>). Recall returns a
+<code>&lt;kibisis-recall&gt;</code> envelope with each entry's text
+XML-escaped and its state, author and reviewer as attributes, under a
+notice that stored text is data, not instructions
+(<code>mcp_server.py:234-259</code>). <code>include_candidates</code>
+defaults to true, with the reason in a comment: every MCP write is a
+candidate, so leaving them out would hide the agent's own memories until
+a person reviewed them (<code>mcp_server.py:494-496</code>).</p>
+<p><code>python -m kibisis okf-export</code> and <code>okf-import</code>
+move rows to and from Open Knowledge Format bundles; an import writes
+model-origin candidates through <code>put</code>
+(<code>okf/importer.py:398-424</code>).
+<code>python -m kibisis aml-serve</code> serves the Agent Memory
+Leaderboard's Add/Search contract over one vault file per
+<code>user_id</code>. A Hermes plugin with its own
+<code>kibisis_admit</code> tool is exercised by
+<code>tests/test_plugin_integration.py</code>, which skips unless a path
+to the plugin is set; the plugin is not in this repository.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-agent-can-forget-what-a-person-verified">The agent can
+forget what a person verified</h3>
+<p><code>kibisis_forget</code> calls <code>tombstone</code> on the named
+entry in the server's scope (<code>mcp_server.py:525-544</code>).
+<code>tombstone</code> checks the fence and nothing else
+(<code>_vault_tombstone.py:111-176</code>); <code>_is_reviewed</code>,
+the check that stops a model overwriting a verified entry, is called
+only from <code>_put</code> (<code>vault.py:961</code>,
+<code>:989</code>). So the agent cannot replace a person's verified
+entry, and it can delete it, purge every copy of its value in the scope
+and leave a tombstone.</p>
+<p>After that, the person's own <code>put</code> of the same value
+raises <code>TombstonedValueError</code>, because the tombstone check
+does not look at origin, and no method removes a tombstone: the table is
+only ever inserted into or re-keyed
+(<code>_vault_tombstone.py:150</code>,
+<code>_vault_snapshot.py:216</code>, <code>_vault_crypto.py:376</code>).
+The journal records the deletion under <code>mcp-agent</code>. The suite
+asserts this as intended: <code>tests/test_mcp_server.py:136-160</code>
+has a person verify an entry, forgets it through the MCP tool, and
+expects the deletion and a refused re-write.</p>
+<h3 id="review-is-guarded-on-one-door-and-not-the-other">Review is
+guarded on one door and not the other</h3>
+<p><code>admit</code> refuses without a terminal;
+<code>kibisis-review</code> does not (<code>__main__.py:24-33</code>,
+<code>review.py:74-83</code>). The README states the second plainly: the
+reviewer name <em>"is not an authentication boundary: anything that can
+run commands as that user can run it."</em> An agent whose host gives it
+a shell, running as the user with the key file in its environment, can
+approve its own candidates. Nothing points it there: the MCP surface has
+no review verb, and a model's attempt to send one is refused and
+journaled.</p>
+<h3 id="the-quorum-counts-names">The quorum counts names</h3>
+<p>With the default quorum of two, one
+<code>kibisis-review approve</code> of an MCP candidate leaves it a
+candidate with <code>verification_pending: {have: 1, need: 2}</code>
+(<code>_vault_review.py:456-469</code>). A second approval under another
+<code>--reviewer</code> string mints <code>verified</code>.
+<code>test_same_principal_twice_is_not_independent</code> asserts that
+the same name twice does not count
+(<code>tests/test_origin_bound_admission.py:90-94</code>); a different
+name from the same person does. Most of the suite opens its vaults with
+<code>verification_quorum=1</code>, and the CLI tests set
+<code>KIBISIS_VERIFICATION_QUORUM=1</code>
+(<code>tests/test_mcp_server.py:269</code>,
+<code>tests/test_provenance.py:163</code>). The README's <em>"Approving
+stores the entry as verified"</em> holds at quorum one.</p>
+<h3 id="candidates-are-served-labelled">Candidates are served,
+labelled</h3>
+<p>Library search and MCP recall return candidates by default. The label
+is in the envelope, and the decision about what an unreviewed entry is
+worth sits with the model reading it. What a candidate cannot do is
+overwrite or retire a reviewed entry, be raised to <code>act</code>, or
+appear in <code>list_entities</code> without asking. A disputed entry,
+including one disputed by a cascade, is returned by default too.</p>
+<h3
+id="validity-is-set-by-the-writer-and-an-update-erases-the-old-one">Validity
+is set by the writer, and an update erases the old one</h3>
+<p>The MCP remember tool takes <code>valid_from</code> and
+<code>valid_until</code> from the model, and a library caller may pass
+both. That is valid time from a source other than the write clock. Three
+things narrow it. Supersession closes the target's interval at the write
+time (<code>vault.py:1031-1045</code>) and opens the replacement at it
+unless given one (<code>:832-833</code>). An update of the same key
+writes whatever interval the call passed, <code>None</code> included,
+over the old one (<code>vault.py:1125-1142</code>). And there is no read
+by record time: the one reader of <code>updated_at</code> is
+<code>recall</code>'s staleness rule
+(<code>_vault_search.py:312-320</code>), which has no caller in
+<code>src/</code>.</p>
+<h3 id="rust-and-python-fold-text-differently">Rust and Python fold text
+differently</h3>
+<p>The README says the Rust vault <em>"matches values the same
+way"</em>. Its <code>canonicalize_text</code> maps fullwidth ASCII and
+drops a fixed list of invisible code points, then lower-cases
+(<code>src/lib.rs:195-233</code>); Python applies NFKC and
+<code>casefold</code> (<code>_vault_crypto.py:57</code>). A ligature
+such as <code>ﬁ</code>, or <code>ß</code> against <code>ss</code>, folds
+in Python and not in Rust. The two vaults share no store, so this is a
+difference in what each refuses, not a gap between them.</p>
+<h3 id="marks">Marks</h3>
+<p>All seven are awarded, each record naming its limit.
+<code>tombstone</code> rests on the single write path and the
+in-transaction check, with the forget gap above.
+<code>trust_state</code> rests on <code>revoked</code> being filtered
+from every search path and candidates from <code>list_entities</code>;
+it is the weaker polarity, a default that admits unreviewed entries.
+<code>bitemporal</code> rests on writer-supplied valid time reaching the
+MCP tool. <code>scope_enforced</code> holds on every read.
+<code>audit_log</code> holds with a signed head; its one rewrite is the
+0.1.0a5 key upgrade, which records the old head.
+<code>human_review</code> passes because the agent's tool surface cannot
+reach review; the shell and the quorum are its limits.
+<code>negative_eval</code> rests on cases with positive controls in the
+same result.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>411 Python test functions in 35 files and 31 Rust
+<code>#[test]</code> functions. CI runs <code>pytest tests</code> on
+Ubuntu and macOS and <code>cargo test</code>, clippy and a Miri run of
+the lease test (<code>.github/workflows/ci.yml</code>). I read the
+suites named below and ran none of them: the screen found every
+dependency manifest and lockfile inside the seven-day cooldown, so
+nothing was installed.</p>
+<p><code>tests/test_atlas_acceptance.py</code> is the strongest file.
+Its docstring states the rule: cases asserting that material must not
+come back <em>"carry a positive control, so an empty or broken store
+cannot pass them"</em>. They do. The scope case asserts scope B's text
+absent from scope A's MCP recall and A's present
+(<code>:365-383</code>). The deletion case restores a backup taken
+before the tombstone, twice, and asserts the value absent while a
+neighbour returns and an archived entry comes back archived
+(<code>:182-204</code>). The tombstone case refuses ten variants of a
+rejected value across keys and categories, then stores and recalls a
+paraphrase (<code>:60-85</code>). The journal case installs a trigger
+that makes the journal unwritable and asserts five mutations change
+nothing (<code>:210-252</code>).</p>
+<p>What is not covered: a single person meeting the quorum under two
+names, and <code>recall</code>'s withholding rules on the path the MCP
+server uses, which is <code>search</code>. The review CLI's absent
+terminal check is exercised rather than tested against:
+<code>tests/test_mcp_server.py:280-282</code> calls
+<code>kibisis-review approve</code> from the test process and expects it
+to succeed. The deprecated <code>evaluate_epistemic_abstention</code>
+case asserts abstention on unanswerable probes alone
+(<code>tests/test_negative_probe_abstention.py:16-48</code>); its
+replacement, <code>evaluate_abstention</code>, refuses to call an empty
+store or a probe set with nothing answerable <code>perfect</code>
+(<code>_vault_review.py:518-594</code>).</p>
+<p>The README's measured table covers lease coordination only, from a
+separate repository, <code>telarch-benchmarks</code>, whose
+<code>reports/</code> directory holds the JSON. I did not recompute
+those figures, and no committed artifact here measures recall. There is
+no paper. Two module docstrings cite arXiv preprints as design sources
+for the admission gate and the post-retrieval bounds
+(<code>admission.py:5-6</code>, <code>_vault_search.py:108</code>); they
+were not followed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One insert, and the tombstone inside its
+transaction.</strong> Route every write through one function, take the
+write lock before its first read, and check the rejection there. Then
+"every write path" is a fact about one line.</li>
+<li><strong>Key the tombstone's digests.</strong> An HMAC under a vault
+key keeps a rejected PIN or phone number from being recovered from the
+rejection record.</li>
+<li><strong>Purge the copies when you tombstone.</strong> Refusing the
+value going forward leaves every existing copy under other keys
+retrievable unless the same act deletes them.</li>
+<li><strong>Set trust from the write path.</strong> The MCP server
+stamps origin and author and refuses authority arguments by name, so
+nothing in the payload can raise the state.</li>
+<li><strong>Turn a model's supersession of a reviewed entry into a
+proposal</strong> that the person's approval applies, rather than
+refusing it or letting it land.</li>
+<li><strong>Write the positive control into every must-not
+test.</strong> This suite's docstring states the rule and its cases
+follow it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A delete verb with weaker checks than the write
+verb.</strong> Protecting a verified entry from overwrite and leaving it
+open to forget gives the model the destructive half of the
+operation.</li>
+<li><strong>Two review doors with different guards.</strong> If one
+approval command checks for a terminal, the other should, or the check
+protects nothing.</li>
+<li><strong>A quorum that counts strings.</strong> Two
+<code>--reviewer</code> values from one person are two attestations.
+Count something the caller cannot type.</li>
+<li><strong>A gated recall the agent never calls.</strong> The
+withholding rules are written, tested and documented as model-facing,
+and the MCP tool calls the ungated search.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Kibisis suits one person, or a small team on one machine, who wants
+an agent's memory encrypted at rest, scoped per project, and unable to
+override what a person confirmed. It is small enough to read in an
+afternoon and the trust rules are in two files. It does not suit memory
+whose history must be readable as text, since updates overwrite;
+multi-machine use, since leases are local and there is no sync; or a
+deployment where the agent has a general shell and review must mean a
+person, until the review CLI checks for a terminal. The Rust crate is a
+reference and a lease library, not a second store.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should <code>kibisis_forget</code> refuse a verified or reviewed
+entry, or turn the request into a proposal the way supersession
+does?</li>
+<li>Is <code>recall</code> meant to back the MCP recall tool, and if so,
+which of its withholding rules should apply to candidates?</li>
+<li>Is the default quorum of two meant to require two people, and if so,
+what identifies a person to the review CLI?</li>
+<li>Should <code>admit</code> read its database path and scope from
+<code>kibisis.config</code> like the server and
+<code>kibisis-review</code> do?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>src/kibisis/vault.py</code> — schema, write lock, fencing,
+<code>_put</code>, <code>get</code>, <code>archive</code>,
+<code>list_entities</code>, persona slot.</li>
+<li><code>src/kibisis/_vault_tombstone.py</code> —
+<code>tombstone</code>, <code>_find_tombstone</code>, copy purge,
+<code>scrub</code>.</li>
+<li><code>src/kibisis/_vault_crypto.py</code> —
+<code>canonicalize_text</code>, digests, sealing, signing, the integrity
+upgrade.</li>
+<li><code>src/kibisis/_vault_review.py</code> — origin classes,
+<code>admit</code>, <code>review_entity</code>, cascade, abstention
+evaluation.</li>
+<li><code>src/kibisis/_vault_search.py</code> — <code>search</code>,
+<code>recall</code>, <code>search_keys</code>, the three indexes.</li>
+<li><code>src/kibisis/_vault_audit.py</code> — journal append, head MAC,
+verification.</li>
+<li><code>src/kibisis/_vault_snapshot.py</code> — export and
+import.</li>
+<li><code>src/kibisis/mcp_server.py</code>, <code>config.py</code>,
+<code>review.py</code>, <code>__main__.py</code> — the MCP server,
+settings, the review CLI and the admit, OKF and AML commands.</li>
+<li><code>src/kibisis/admission.py</code> — the regex admission
+gate.</li>
+<li><code>src/lib.rs</code>, <code>src/journal.rs</code>,
+<code>src/file_lease.rs</code>, <code>bindings/python/src/lib.rs</code>
+— the Rust crate and its Python extension.</li>
+<li><code>tests/test_atlas_acceptance.py</code>,
+<code>tests/test_origin_bound_admission.py</code>,
+<code>tests/test_provenance.py</code>,
+<code>tests/test_negative_probe_abstention.py</code>,
+<code>tests/test_mcp_server.py</code>,
+<code>tests/test_review_2026_10_28.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run at the pin, from the repository root.</p>
+<pre class="sh"><code># the only INSERT into entities is vault.py:1099; the other UPDATEs set state or metadata
+git grep -n -E &#39;INSERT( OR [A-Z]+)? INTO entities[[:space:](]|UPDATE entities&#39; -- src
+
+# _is_reviewed is read only inside _put; tombstone and the MCP forget never consult it
+git grep -n -w &#39;_is_reviewed&#39; -- src
+
+# only the admit command checks for a terminal; the one test of the review CLI calls it in-process
+git grep -n -E &#39;isatty&#39; -- src
+git grep -n -E &#39;kibisis\.review|review_main&#39; -- tests
+
+# the MCP forget calls in the suite; tests/test_mcp_server.py:147 forgets an entry verified at :136
+git grep -n -E &#39;kibisis_forget&#39; -- tests
+
+# the MCP server registers five tools and no review verb
+git grep -n -E &#39;&quot;name&quot;: &quot;kibisis_&#39; -- src/kibisis/mcp_server.py
+
+# recall() has no caller in src; the MCP recall calls search()
+git grep -n -E &#39;\.recall\(&#39; -- src
+
+# nothing removes a tombstone: the table is inserted into, re-keyed, never deleted from or overridden
+git grep -n -E &#39;rejected_value_tombstones&#39; -- src | grep -v -E &#39;SELECT|CREATE|INDEX|PRAGMA|ALTER&#39;
+git grep -n -i -E &#39;allow_rejected|untombstone|remove_tombstone|delete_tombstone&#39; -- src
+
+# nothing deletes journal rows (positive control: the INSERT matches)
+git grep -n -E &#39;DELETE FROM audit_journal&#39; -- src
+git grep -n -E &#39;INSERT INTO audit_journal&#39; -- src
+
+# no table keeps earlier entry versions
+git grep -h -o -E &#39;CREATE (VIRTUAL )?TABLE (IF NOT EXISTS )?[a-z_]+&#39; -- src/kibisis | sort -u
+
+# no read by record time
+git grep -n -i -E &#39;as_of_record|recorded_at|transaction_time|system_time&#39; -- src/kibisis
+
+# callers that pass valid_from
+git grep -n -E &#39;valid_from=&#39; -- src/kibisis &#39;:!src/kibisis/vault.py&#39;
+
+# the Rust fold has no NFKC (positive control: the Python one does)
+git grep -n -i -E &#39;nfkc|unicode_normalization|unicode-normalization&#39; -- src/lib.rs Cargo.toml
+git grep -n -i &#39;nfkc&#39; -- src/kibisis
+
+# the Python extension exports leases and journal hashing, no vault
+git grep -n -E &#39;add_class|add_function&#39; -- bindings/python/src/lib.rs
+
+# the Rust vault does no file I/O (positive control: the file lease does)
+git grep -n -E &#39;std::fs|File::|OpenOptions&#39; -- src/lib.rs
+git grep -n -E &#39;std::fs|File::|OpenOptions&#39; -- src/file_lease.rs
+
+# the Hermes plugin is not shipped, and no benchmark artifact is committed
+git ls-files | grep -i -E &#39;plugin|bench|result|report&#39;
+
+# most tests lower the quorum to one
+git grep -n -E &#39;verification_quorum=1|VERIFICATION_QUORUM&#39; -- tests
+
+# no paper of the project&#39;s own; two docstrings cite preprints
+git grep -n -i -E &#39;arxiv|bibtex|@article|@misc|citation|doi\.org&#39; -- . &#39;:!uv.lock&#39; &#39;:!*.lock&#39;
+
+# no Perseus Vault identifiers in this tree, and one root commit
+git grep -n -E &#39;normalize_rejected_value|workspace_hash|valid_from_unix_ms|admission_decide|remember_impl|entity_history&#39; -- .
+git rev-list --max-parents=0 HEAD</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/Perseus-Computing-LLC/kibisis/commit/e9ddf6112a3dd39478d762bf291645e6833952bf"><code class="commit-id" title="e9ddf6112a3dd39478d762bf291645e6833952bf">e9ddf611…</code></a>
+— first report, at the head of <code>main</code>, six commits past the
+v0.1.0-alpha.14 tag; those six add the leaderboard adapter and change
+the CLIs' default reviewer name; no vault module moved. Screened before
+reading: no auto-run surface, one execution point on pytest collection
+(<code>tests/conftest.py</code>), and seven manifests and lockfiles
+inside the seven-day cooldown. MIT. Nothing was installed, built or run,
+and no test was run. All seven marks, each with its limit in its record
+and in section 9; the forget gap and the review CLI are the two that
+matter. Compared against Perseus Vault's pinned tree from the atlas
+archive: no shared history or file, so this is a new report rather than
+a rename.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

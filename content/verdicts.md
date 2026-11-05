@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 775 reports.**
+**This page covers all 776 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7092,3 +7092,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 2,310 lines in the package and 3,175 in the bench, eval and scripts; 133 commits, 3 July – 4 November 2026, mostly the maintainer's; 202 pytest functions run in CI on five Python versions, not run here. No marks. Recall@5 of 0.85 with the hop and 0.88 without recomputes from the committed outputs.
 - Study when: you have a well-linked markdown vault and want to measure whether following links helps recall on it before building anything heavier.
 - Do not copy when: the agent must write its own memory, a replaced fact must stop being returned, or several projects or people share one index.
+
+### [`kibisis`](../systems/kibisis/)
+- Best idea: **one insert path, with the tombstone inside its transaction.** Every writer reaches `_put`, which takes `BEGIN IMMEDIATE` before its first read and refuses a value whose keyed exact or NFKC-folded digest is tombstoned in the scope, under any key; tombstoning deletes every copy of the value, and no method removes a tombstone.
+- Second idea: trust comes from the write path. The MCP server stamps origin `model` and author `mcp-agent`, refuses and journals nine authority arguments, and files a model's supersession of a reviewed entry as a proposal that only a person's approval applies.
+- Biggest risk: **the agent's forget tool can tombstone a person's verified entry.** `_is_reviewed` guards overwrite and supersession inside `_put` only; `kibisis_forget` deletes the entry and its copies, and the person's own later write of that value is refused. The suite asserts this as intended.
+- Second risk: the review CLI checks no terminal and counts distinct `--reviewer` strings toward a default quorum of two; `admit`, which does check a TTY, defaults to a different database file and scope from the server; and the gated `recall` has no caller, since the MCP tool calls `search`.
+- Most reusable component: `src/kibisis/_vault_tombstone.py` with `canonicalize_text` and the keyed digests in `src/kibisis/_vault_crypto.py:45-83`, `:246-252` — value tombstones that refuse look-alikes, purge copies and do not reveal short values.
+- Maturity impression: MIT; 9,658 lines of Python and 2,158 of Rust outside tests, 163 commits from 8 October to 5 November 2026, pre-release 0.1.0-alpha.14; 411 Python and 31 Rust test functions run in CI, not run here. All seven marks, written with this atlas's rubric in view and each tested against the code.
+- Study when: you want a local encrypted memory in which a model proposes and only a person confirms, with rejections that survive changes of case, spacing and look-alike characters.
+- Do not copy when: earlier versions must stay readable as text, the agent has a general shell and review must mean a person, or a reviewed entry must be safe from the agent's delete.
