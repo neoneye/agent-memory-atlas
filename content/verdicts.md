@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 785 reports.**
+**This page covers all 786 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7192,3 +7192,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0 with an MIT MCP server; 13,707 lines of Python in `core/`, 880 commits under 27 author names, 10 May – 4 November 2026; 727 core pytest functions, 175 of them against a real Postgres in CI, not run here. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you want one Postgres store to be both the audit record of what your agents did and the memory the next run reads, with a chain you can verify.
 - Do not copy when: memory must distil facts or reconcile contradictions, corrections must survive a migration, or several agents in one tenant must not affect each other's recall.
+
+### [`mnemosyne-28naem-del`](../systems/mnemosyne-28naem-del/)
+- Best idea: **a correction reaches every declared dependent and leaves the past answerable.** `correct()` supersedes the target and marks every record reachable over declared dependencies `invalidated` in one transaction, and `asOf` and `knownAt` replay either clock, so a question about the time before the correction gets the old belief.
+- Second idea: evidence eligibility walked before top-k, withholding a candidate whose provenance holds a failed outcome, an untrusted source or a disagreeing fact key; and consolidation kept only when a replay of recorded retrieval outcomes does not regress, under ed25519-signed receipts chained by digest.
+- Biggest risk: **the premise nobody declared.** Co-use inference proposes the missing edge and writes nothing; accepting it takes `mnemosy dependencies --review` with a reviewer name the caller types, and the premise guard that would hold a stale procedure in between has no caller outside the evaluation runner.
+- Second risk: `forget()` cascades away the record's ledger and audit history and reaches other agents' private records built on it; `memory_recall` lets the agent pass `includeUntrusted`; and the Claude Code plugin runs whatever the npm `next` tag names.
+- Most reusable component: `correct()` with `#descendants` and `#at` in `src/local/index.ts:2756-2834` and `:1044-1088`, with the late-correction test at `tests/local-advanced.test.ts:77-90`.
+- Maturity impression: MIT; 27,440 lines of TypeScript in src/ outside tests, plus an 11,815-line legacy engine; 330 commits, 23 February – 3 November 2026, the SQLite engine from 12 September; 1,236 Vitest cases run in CI, not run here. Five marks, all but tombstone and human_review. The README's LoCoMo recall@10 of 73.57 against Mem0's 63.72 recomputes from the committed per-question files; its LongMemEval-S answer accuracy has no committed per-question file.
+- Study when: you need an embeddable, offline store where a corrected premise must stop the advice built on it, and questions about the past must be answered as of then.
+- Do not copy when: memory must organise itself from conversation, a person must approve what the agent learns, or erasure must leave an audit trail of what was forgotten.

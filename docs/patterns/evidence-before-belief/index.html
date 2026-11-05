@@ -179,6 +179,26 @@ so it needs to be run regularly rather than kept for emergencies.</p>
 somewhere you control (a transcript store, a git history) and you can
 reference it rather than copying it.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<h3 id="read-these-first">Read these first</h3>
+<ul>
+<li><a href="../../systems/sift-kg/">sift-kg</a> — a retained extraction
+layer the graph is rebuilt from, and the rebuild that undoes every
+correction applied to the artifact instead of its input.</li>
+<li><a href="../../systems/memmachine/">MemMachine</a> — one citations
+array on every derived feature, pointing at retained episodes: the
+cheapest backward link, and how merging turns it into a
+bibliography.</li>
+<li><a href="../../systems/elizaos/">elizaOS</a> — the source revision
+each fact was read from, so an edited source withholds the fact from
+every reader and queues it for re-extraction.</li>
+<li><a href="../../systems/daimon/">Daimon</a> — evidence referenced
+rather than copied, with the quote checked against the cited message at
+write time.</li>
+<li><a href="../../systems/memobase/">Memobase</a> — the counterexample:
+the transcript is hard-deleted once the profile is written, so the lossy
+derivation is the only copy.</li>
+</ul>
+<h3 id="every-instance">Every instance</h3>
 <p><a href="../../systems/sift-kg/">sift-kg</a> is the pattern
 implemented without being named, and the case that shows what it does
 not cover. Extraction output is kept per document under
@@ -431,6 +451,19 @@ the write if a shown source has gone. Every derived row carries
 <code>derived_from = (run_id, *citations)</code>, the graph erasure
 walks. The limit: its agent-memory catalog records supersession only as
 an id array on the newer row, so the stale belief stays in recall.</p>
+<p><a href="../../systems/mnemosyne-28naem-del/">Mnemosyne
+(28naem-del)</a> makes the evidence graph the eligibility rule. A record
+declares its dependencies, <code>correct()</code> marks every record
+reachable over them <code>invalidated</code> in the same transaction,
+and the context compiler walks each candidate's provenance before top-k,
+withholding it when any ancestor is untrusted, inactive, has a failed
+outcome or holds a disagreeing fact key
+(<code>src/local/index.ts:2797-2834</code>, <code>:1151-1190</code>,
+<code>:3144-3165</code>). The limit is the edge nobody declared. Co-use
+inference proposes it and writes nothing until
+<code>mnemosy dependencies --review</code> accepts it under a typed
+reviewer name, and the premise guard that would hold a procedure in
+between is called only by the evaluation runner.</p>
 <h3 id="related-admission-gates-rather-than-evidence">Related: admission
 gates rather than evidence</h3>
 <p>These decide what may become a belief — a shared derivation, a

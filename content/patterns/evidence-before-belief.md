@@ -67,6 +67,16 @@ it.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [sift-kg](../../systems/sift-kg/) — a retained extraction layer the graph is rebuilt from, and the rebuild that undoes every correction applied to the artifact instead of its input.
+- [MemMachine](../../systems/memmachine/) — one citations array on every derived feature, pointing at retained episodes: the cheapest backward link, and how merging turns it into a bibliography.
+- [elizaOS](../../systems/elizaos/) — the source revision each fact was read from, so an edited source withholds the fact from every reader and queues it for re-extraction.
+- [Daimon](../../systems/daimon/) — evidence referenced rather than copied, with the quote checked against the cited message at write time.
+- [Memobase](../../systems/memobase/) — the counterexample: the transcript is hard-deleted once the profile is written, so the lossy derivation is the only copy.
+
+### Every instance
+
 [sift-kg](../../systems/sift-kg/) is the pattern implemented without being
 named, and the case that shows what it does not cover. Extraction output is kept
 per document under `extractions/`, every entity node carries `source_documents`,
@@ -254,6 +264,8 @@ new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
 [Emulo](../../systems/emulo/) retains evidence strictly, and shows the same gap. Every rule reaches verbatim quotes bound to the dated message they came from, and the profile is rebuilt from cached, content-addressed worker reports. There is no correction in the retained layer: a hand edit to the active profile fails its hash, and re-mining over unchanged reports reactivates the same version. The rebuild also consumes the host's log retention, so evidence that rolls off disk takes its rules with it at the next update — deletion upstream acts as a forgetting policy nobody chose.
 
 [Memseek](../../systems/memseek/) enforces the pattern at the write boundary. `compile_candidate_set` rejects any citation outside the rows a derivation was shown, and the commit refuses the write if a shown source has gone. Every derived row carries `derived_from = (run_id, *citations)`, the graph erasure walks. The limit: its agent-memory catalog records supersession only as an id array on the newer row, so the stale belief stays in recall.
+
+[Mnemosyne (28naem-del)](../../systems/mnemosyne-28naem-del/) makes the evidence graph the eligibility rule. A record declares its dependencies, `correct()` marks every record reachable over them `invalidated` in the same transaction, and the context compiler walks each candidate's provenance before top-k, withholding it when any ancestor is untrusted, inactive, has a failed outcome or holds a disagreeing fact key (`src/local/index.ts:2797-2834`, `:1151-1190`, `:3144-3165`). The limit is the edge nobody declared. Co-use inference proposes it and writes nothing until `mnemosy dependencies --review` accepts it under a typed reviewer name, and the premise guard that would hold a procedure in between is called only by the evaluation runner.
 
 ### Related: admission gates rather than evidence
 

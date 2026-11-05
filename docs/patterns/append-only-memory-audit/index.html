@@ -949,6 +949,19 @@ bookkeeping surface skips bookkeeping, so rewriting the log leaves no
 line (<code>:50</code>, <code>:788-791</code>). Writes made with the
 agent's own file tools, which is how the commands write, are logged only
 when the model follows the prompt. The report withholds the mark.</p>
+<p><strong><a href="../../systems/mnemosyne-28naem-del/">Mnemosyne
+(28naem-del)</a> keeps two logs, and only the narrower one survives
+erasure.</strong> Every store, correction, promotion and dependency
+review appends to <code>local_ledger</code> in its own transaction, and
+those entries carry <code>memory_id</code> with
+<code>ON DELETE CASCADE</code>, so <code>forget()</code> removes them
+and leaves one erasure entry holding a count
+(<code>src/local/ledger.ts:23-58</code>). Consolidation receipts are
+appended with no <code>memory_id</code>, carry hashes rather than text,
+are ed25519-signed and chained by <code>prevDigest</code>, and
+<code>verifyConsolidationChain</code> with a retained head catches a
+deleted tail (<code>src/consolidation/gate.ts:325-336</code>,
+<code>:556-596</code>). The report rests the mark on that chain.</p>
 <p><strong><a href="../../systems/zizkadb/">ZizkaDB</a> makes the memory
 table its own log and chains the deletions into it.</strong> No path
 rewrites an event's content in <code>events</code>, and a correction is

@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A TypeScript SQLite memory engine,
+published as mnemosy-ai, whose corrections retire every declared
+dependent and whose consolidation must survive a replay of recorded
+outcomes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mnemosyne
+(28naem-del) — Agent Memory Atlas">
+    <meta property="og:description" content="A TypeScript SQLite memory
+engine, published as mnemosy-ai, whose corrections retire every declared
+dependent and whose consolidation must survive a replay of recorded
+outcomes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mnemosyne
+(28naem-del) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A TypeScript SQLite memory
+engine, published as mnemosy-ai, whose corrections retire every declared
+dependent and whose consolidation must survive a replay of recorded
+outcomes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mnemosyne (28naem-del) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mnemosyne (28naem-del)",
+      "description": "A TypeScript SQLite memory engine, published as mnemosy-ai, whose corrections retire every declared dependent and whose consolidation must survive a replay of recorded outcomes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Corrections that reach every declared
+dependent</p>
+          <h1>Mnemosyne (28naem-del)</h1>
+          <p class="document-deck">A TypeScript SQLite memory engine,
+published as mnemosy-ai, whose corrections retire every declared
+dependent and whose consolidation must survive a replay of recorded
+outcomes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/28naem-del/mnemosyne">
+              <span>Source</span>
+              <strong>28naem-del/mnemosyne</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/28naem-del/mnemosyne/commit/1bead7fa974faaaa4ff1a6fce6660388d99f3815" title="1bead7fa974faaaa4ff1a6fce6660388d99f3815">
+              <span>Analyzed revision</span>
+              <code>1bead7fa…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/28naem-del--mnemosyne" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>28naem-del--mnemosyne</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>27,440
+lines of TypeScript in src/ outside tests, 9,041 of them the local
+engine and 7,697 the evaluation harnesses; 11,815 more in the legacy
+Qdrant engine under packages/legacy, and a 101-line Python
+client</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>330
+commits on main, 23 February – 3 November 2026, under the 28naem-del,
+Naem and Mnemosyne Team identities plus Dependabot; the SQLite engine
+arrived on 12 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>110
+Vitest files with 1,236 cases, plus 111 cases for the legacy package and
+9 Python tests, run in CI; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mnemosyne (28naem-del) is a local memory engine for agents, published
+on npm as <code>mnemosy-ai</code>: one SQLite file served over a
+TypeScript SDK, an MCP server, a CLI and authenticated HTTP. Its
+distinguishing move is that a correction is structural. A record
+declares the records it depends on, and <code>correct()</code>
+supersedes the target and marks every declared descendant
+<code>invalidated</code>, while <code>asOf</code> and
+<code>knownAt</code> keep answering what was believed before. The weak
+half is the dependencies nobody declared: the inference that proposes
+them writes nothing until a CLI caller accepts, and the guard that would
+hold a stale procedure meanwhile has no in-tree caller outside the
+evaluation harness.</p>
+<p>This is not the atlas's <a href="../mnemosyne/">Mnemosyne</a> from
+<code>mnemosyne-oss</code>, a Python SQLite engine, nor <a
+href="../mnemosyne-nabzx/">Mnemosyne (Nabzx)</a>, a Rust commit graph.
+The three share a name and no history: none is a fork, the pinned
+commits of the other two are absent from this repository, and its root
+commit <code>7d12c23</code> is dated 23 February 2026. The README names
+<code>mnemosyne-oss</code> as a separate project
+(<code>README.md:35-37</code>); nothing in the tree mentions Nabzx.</p>
+<p>Two engines ship in the tree. The SQLite engine under
+<code>src/local</code> arrived on 12 September 2026 and is what this
+report reads. The original vector engine, over Qdrant with Redis and
+FalkorDB options, moved to <code>packages/legacy</code> on 28 October
+2026 as <code>mnemosy-ai-legacy</code> and is not traced here.</p>
+<p>Around the engine sits more machinery than the core needs: a
+provenance ledger, a bisect that re-executes recall to find the record
+that pushed a known answer out, outcome-gated consolidation,
+ancestry-disjoint trust promotion, and skill trials. It needs no model
+and no API key to store or recall; the bundled embedder and reranker are
+optional, digest-pinned downloads.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>record</strong>: text, a <code>kind</code>
+(<code>fact</code>, <code>preference</code>, <code>decision</code>,
+<code>procedure</code>, <code>observation</code>,
+<code>checkpoint</code>), a <code>source</code>, a trust tier, a
+lifecycle status, a visibility, a list of <code>dependencies</code>, an
+optional fact <code>key</code> and an optional validity interval
+(<code>src/local/types.ts</code>,
+<code>src/local/validation.ts:114-148</code>). Records are immutable
+apart from their status. Everything else the runtime keeps — jobs,
+skills, project models, traces, tombstones, branch state — is a record
+too, marked <code>metadata.advisory: false</code> so that no read serves
+it as advice.</p>
+<p>Two axes decide whether a record is a belief. <strong>Trust</strong>
+is <code>untrusted</code>, <code>observed</code> or
+<code>verified</code> (<code>src/local/index.ts:131</code>). The SDK
+default is <code>untrusted</code>, and every default read drops it. MCP
+and HTTP writes are forced to <code>observed</code>
+(<code>src/mcp/server.ts:132</code>,
+<code>src/http/index.ts:150</code>). <code>verified</code> requires an
+<code>evidence</code> string and is reachable only from the SDK or the
+CLI. A record may not depend on a record of lower trust
+(<code>:605-612</code>).</p>
+<p><strong>Status</strong> is <code>active</code>,
+<code>superseded</code> or <code>invalidated</code>.
+<code>correct(id)</code> writes a successor with
+<code>supersedes: id</code>, moves the target to <code>superseded</code>
+and moves every record reachable over <code>dependencies</code> to
+<code>invalidated</code>, stamping the correction that caused it
+(<code>:2797-2834</code>, <code>#descendants</code> at
+<code>:2756-2789</code>). An invalidated record stays invalidated:
+<code>correct()</code> accepts only an active target, so a dependent is
+replaced by a new record rather than revised.</p>
+<p>On top of both, the context compiler applies <strong>evidence
+eligibility</strong> before ranking. A candidate is withheld when it or
+anything it transitively depends on is untrusted, inactive, has a failed
+outcome, or holds a fact <code>key</code> whose active texts disagree
+(<code>#hasFailedEvidence</code>, <code>#conflictingPeers</code>,
+<code>:1151-1190</code>). Keyed conflicts are surfaced together with no
+winner picked.</p>
+<p>Time is two clocks. <code>asOf</code> is when a fact applied,
+<code>knownAt</code> what had been recorded; <code>#at</code> projects
+any record onto both and hides a later status change from a historical
+read (<code>:1044-1063</code>). A record dies in one way,
+<code>forget</code>, a hard delete of the record, its versions and its
+descendants.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — trust and status decide what a read may serve; a correction invalidates declared dependents, and the two clocks read the old belief</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: trust and status decide what a read may serve; a correction invalidates declared dependents, and the two clocks read the old belief
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    SDK[&quot;SDK store&lt;br/&gt;default untrusted&quot;]
+    MCP[&quot;MCP / HTTP store&lt;br/&gt;forced observed&quot;]
+    CTL[&quot;controller&lt;br/&gt;verified needs evidence&quot;]
+    SDK ~~~ MCP ~~~ CTL
+  end
+  writers --&gt; ACT[&quot;active record&lt;br/&gt;trust + dependencies&quot;]
+  ACT --&gt; GATE{&quot;untrusted?&lt;br/&gt;inactive?&lt;br/&gt;outside asOf / knownAt?&quot;}
+  GATE --&gt;|&quot;no&quot;| ELIG{&quot;compile only:&lt;br/&gt;failed outcome,&lt;br/&gt;keyed conflict or&lt;br/&gt;bad provenance?&quot;}
+  GATE --&gt;|&quot;yes&quot;| HID[&quot;withheld&quot;]
+  ELIG --&gt;|&quot;no&quot;| CTX[&quot;recall / context packet&quot;]
+  ELIG --&gt;|&quot;yes&quot;| HID
+  CTX ~~~ COR
+  ACT --&gt; COR[&quot;correct id&quot;]
+  COR --&gt; SUP[&quot;target: superseded&lt;br/&gt;successor: active&quot;]
+  COR --&gt; INV[&quot;declared descendants:&lt;br/&gt;invalidated&quot;]
+  SUP --&gt; PAST[&quot;asOf / knownAt before&lt;br/&gt;the correction:&lt;br/&gt;old record served&quot;]
+  INFER[&quot;co-use inference&lt;br/&gt;proposals, not stored&quot;] --&gt; REV[&quot;CLI review&lt;br/&gt;--reviewer string&quot;]
+  REV --&gt;|&quot;accept&quot;| COR
+  INV ~~~ FGT
+  ACT --&gt; FGT[&quot;forget&quot;]
+  FGT --&gt; DEL[&quot;record, versions and&lt;br/&gt;descendants deleted&lt;br/&gt;ledger rows cascade&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The engine is one class, <code>LocalMemory</code> in
+<code>src/local/index.ts</code>, over Node's built-in
+<code>node:sqlite</code> (Node 22.16 or later). The constructor creates
+the file <code>0600</code> in a <code>0700</code> directory, refuses a
+symlink, and sets <code>busy_timeout</code>, <code>foreign_keys</code>,
+<code>secure_delete</code> and WAL (<code>:253-340</code>). Every
+mutation runs in <code>BEGIN IMMEDIATE</code> or a savepoint, and
+<code>atomic()</code> refuses an async callback so no await can split a
+transaction (<code>:450-484</code>).</p>
+<p><strong>Storage.</strong> <code>memories</code> holds the scope
+columns and the full record as JSON; <code>dependencies</code>,
+<code>outcomes</code>, <code>idempotency</code> and <code>audit</code>
+reference it with <code>ON DELETE CASCADE</code>
+(<code>:369-414</code>). The schema also creates an FTS5 table that no
+read queries; lexical recall uses the engine's own
+<code>local_terms</code> and <code>local_search</code> postings
+(<code>:515-551</code>). <code>local_embeddings</code> stores packed
+float32 vectors per record and model, stamped with the source text's
+hash, so a vector whose text changed is recomputed. The ledger is
+<code>local_ledger</code> with result and candidate side tables
+(<code>src/local/ledger.ts:49-80</code>).</p>
+<p><strong>Retrieval stack.</strong> Hybrid is the default when the
+bundled model is present: <code>Xenova/bge-small-en-v1.5</code> int8
+ONNX, pinned to one revision and verified by sha256
+(<code>src/local/embedding/model-assets.ts:18-33</code>). The reranker
+is <code>Xenova/ms-marco-MiniLM-L-6-v2</code>. Without them recall
+degrades to lexical and says so through <code>retrieval.degraded</code>.
+Dense search is an exact scan unless <code>indexMode</code> selects
+sqlite-vec or an HNSW sidecar file.</p>
+<p><strong>Processes.</strong> None by default.
+<code>MemoryRuntime</code> keeps a durable job queue that a host drains
+with its own model callback (<code>src/runtime/index.ts:278-412</code>),
+and <code>MemoryAgent</code> joins before-turn context, after-turn
+capture and an optional background drain
+(<code>src/agent/index.ts</code>). Nothing is scheduled.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> nothing. A file, Node 22.16+, and
+<code>npx</code>.</li>
+<li><strong>Offline:</strong> fully, once the two models are fetched by
+<code>setup:embedder</code> and <code>setup:reranker</code>; the only
+network access is that opt-in fetch.</li>
+<li><strong>API key:</strong> none to store or recall. A provider config
+is needed only for host-run observation jobs, model refresh and an
+external embedder.</li>
+<li><strong>First run:</strong>
+<code>claude mcp add mnemosyne -- npx -y -p mnemosy-ai@next mnemosy mcp --db … --workspace … --agent …</code>,
+or the plugin marketplace.</li>
+<li><strong>Repair by hand:</strong> the SQLite file is inspectable, but
+each row's truth is its <code>data</code> JSON, and the derived
+postings, vectors and ledger references must agree with it.
+<code>mnemosy operations</code> backs up and restores whole databases,
+optionally passphrase-encrypted with the consolidation signing key.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture/write.</strong> <code>store()</code> validates,
+applies an idempotency key bound to the canonical payload, checks
+dependencies, and calls <code>#insert</code>, which writes the row, the
+postings, the dependency edges, an <code>audit</code> row and a
+<code>store</code> ledger entry with provenance and a text hash
+(<code>src/local/index.ts:820-839</code>, <code>:619-641</code>).
+Transcript capture stores each message as an <code>observation</code>
+keyed by <code>capture:</code> plus a hash of adapter, session and
+message id (<code>src/runtime/index.ts:158-168</code>). Document ingest
+corrects the previous revision of the same URI, so a changed document
+invalidates what was built from it (<code>:233-259</code>).</p>
+<p><strong>Extraction/consolidation.</strong> <code>enqueue</code>
+stores a job record; <code>runJobs</code> leases it, calls the host's
+proposer under byte and time budgets, rechecks the sources at dispatch
+and at commit, and stores each proposal as an <code>observation</code>
+depending on its sources, at their trust (<code>:278-412</code>). The
+consolidation gate in <code>src/consolidation/gate.ts</code> proposes a
+signed diff and replays recorded retrieval outcomes on scratch copies
+with and without it. It keeps the pass only if coverage does not drop on
+the replay set or a deterministic 20% hold-out and no invariant breaks
+(<code>:24-31</code>, <code>:364-456</code>).
+<code>rollbackConsolidation</code> undoes a kept pass nothing has
+changed since (<code>:491-531</code>).</p>
+<p><strong>Retrieval.</strong> <code>recall()</code> routes an optional
+time phrase, then runs <code>#hybridRecall</code> or
+<code>#lexicalRecall</code> and records the retrieval in the ledger with
+every stage's candidates (<code>src/local/index.ts:1217-1240</code>,
+<code>:670-711</code>). <code>#bm25Recall</code> selects candidates
+through the term index under the scope, lifecycle, validity, trust and
+advisory predicates, computes BM25 from scoped corpus statistics, and
+multiplies by an outcome factor (<code>:2111-2187</code>). Hybrid fuses
+lexical and dense ranks by RRF with <code>k = 10</code> and reranks the
+top 50.</p>
+<p><strong>Context assembly.</strong> <code>#compile</code> fills a
+packet under a token budget, UTF-8 bytes by default, rendering a JSON
+envelope that tells the reader retrieved memory is data
+(<code>:3107-3219</code>). Conflicting keyed facts enter as a group or
+not at all, and every exclusion is listed with its reason.</p>
+<p><strong>Update/delete.</strong> <code>correct()</code> is at
+<code>:2797-2834</code>. <code>forget()</code> at
+<code>:2987-3014</code> deletes the record, its correction lineage and
+every descendant, redacts promotion verdicts that named them, and
+appends an <code>erasure</code> entry with a count; it then strikes HNSW
+vectors and truncates the WAL. <code>rollbackUnchangedRecords</code>
+deletes an exact private record set only if no fingerprint changed and
+nothing outside the set depends on it (<code>:3027-3085</code>).</p>
+<p><strong>Trust changes.</strong> <code>promote()</code> raises trust
+only with two active corroborators of at least the target trust whose
+ancestry is disjoint from the candidate's and from each other's. It
+supersedes the candidate with a copy at the new tier; any failure is a
+<code>quarantined</code> ledger verdict (<code>:2881-2961</code>).</p>
+<p><strong>Dependency inference.</strong> <code>inferDependencies</code>
+reads co-use from successful traces and retrieval outcomes and returns
+proposals with Wilson bounds, lift and a digest; it writes nothing
+(<code>src/dependencies/index.ts:1-17</code>, <code>:448-486</code>).
+<code>reviewDependency</code> appends a <code>dependency</code> receipt
+and, on accept, declares the edge through <code>correct()</code>
+(<code>:566-648</code>). Its one product caller is
+<code>mnemosy dependencies --review DIGEST --accept|--reject --reviewer NAME</code>
+(<code>src/cli/index.ts:286-306</code>, <code>:788</code>).</p>
+<p><strong>MCP.</strong> <code>createMemoryServer</code> registers 11
+read tools and 5 write tools, plus <code>memory_forget</code> behind
+<code>--allow-destructive</code>
+(<code>src/mcp/server.ts:60-171</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> carries <code>workspace_id</code>,
+<code>agent_id</code>, <code>visibility</code>, <code>trust</code>,
+<code>status</code>, <code>kind</code>, <code>text</code>,
+<code>fact_key</code>, <code>supersedes</code>, <code>created_at</code>
+and <code>data</code> (<code>src/local/index.ts:369-374</code>).
+Validity, <code>updatedAt</code>, <code>evidence</code>,
+<code>invalidation</code> (<code>sourceId</code>,
+<code>correctionId</code>, <code>recordedAt</code>) and metadata live in
+<code>data</code>. <code>outcomes</code> is unique per memory and task
+and per memory and evidence string, so the same verification cannot be
+counted twice.</p>
+<p><strong>Scope</strong> is a workspace plus an owning agent, with
+<code>private</code> or <code>workspace</code> visibility. A shared
+record may not depend on a private one, and an export carries only the
+caller's own records.</p>
+<p><strong>Provenance</strong> is <code>source</code> (<code>uri</code>,
+<code>author</code>, <code>observedAt</code>, <code>revision</code>)
+plus the dependency graph, and the ledger's <code>store</code> entry
+adds the origin, a text hash and byte length. A checkpoint is typed task
+state whose JSON text must equal its metadata, and conflicting active
+checkpoints for one task make <code>resume</code> throw rather than pick
+one (<code>:3221-3282</code>).</p>
+<p><strong>Episodic and semantic</strong> are not separate stores.
+Captured messages and documents are <code>observation</code> records
+marked <code>runtimeType: 'source'</code>; host-generated observations
+and project models depend on them; skills are <code>procedure</code>
+records whose state lives in their JSON.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical recall is BM25 over the engine's own tokenizer, with document
+statistics computed over the documents the caller may see under the same
+trust, kind and time filters
+(<code>src/local/index.ts:2118-2150</code>). Hidden workspaces therefore
+do not shift a visible score, and a test pins that
+(<code>tests/local-memory.test.ts:275-284</code>). Outcomes adjust the
+score: up to three successes add 5% each, and each failure divides it by
+11 (<code>:2182</code>).</p>
+<p>Dense recall scans stored vectors for the bundled model in the same
+scope. Before each hybrid recall the engine embeds any pending or
+changed record inline, 64 at a time, and remembers that it has drained
+until a local write or another connection's commit says otherwise
+(<code>:1725-1780</code>). Hybrid results are RRF-fused and reranked by
+the cross-encoder over the top 50.</p>
+<p>Opt-in precision controls add score floors, a names gate, single-edit
+fuzzy expansion and metadata filters, and an empty answer carries an
+abstention reason (<code>src/local/precision.ts</code>,
+<code>src/local/fuzzy.ts</code>). Temporal routing, off by default,
+turns an exclusionary phrase into a bound and a scoping phrase into a
+ranking window only.</p>
+<p>Recall and compile differ on one point that matters.
+<code>recall()</code> is documented in its own comment as a diagnostic
+view and passes no eligibility predicate, so a record with a failed
+outcome is demoted rather than dropped and a keyed conflict comes back
+as separate hits (<code>:1653-1658</code>). <code>compile()</code> and
+the async <code>recallHybrid()</code> withhold both before ranking, so
+rejected high scorers cannot starve a valid candidate further down
+(<code>:2607</code>, <code>:3144-3165</code>). The MCP
+<code>memory_recall</code> tool calls <code>recall()</code> unless the
+host configured a hybrid provider.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous. An MCP <code>memory_store</code>
+is one transaction: row, postings, dependency edges, audit row and
+ledger entry. Similar text is never merged, and near-duplicates are kept
+(<code>tests/local-memory.test.ts:298</code>). Model involvement is
+opt-in and host-driven: an agent can only queue an observation or model
+job (<code>memory_observe</code>), and only the host runs the model.</p>
+<p>Correction is append plus status change. Forgetting is deletion:
+rows, derived postings and vectors go through the foreign-key cascade,
+the FTS table is set to <code>secure-delete</code>, and the WAL is
+truncated outside a nested transaction. Forgetting a captured source
+first stores a tombstone record keyed on a hash of its ingest key, so
+replaying the same capture identity throws
+(<code>src/runtime/index.ts:261-277</code>).</p>
+<p>Agent-generated facts carry no extra marking beyond
+<code>observed</code>, which the MCP server's instructions define as
+recorded by an agent and not independently verified. Text is not scanned
+for injection at write time; the defences are the trust tiers, the
+evidence eligibility walk and the consolidation gate's
+<code>no-untrusted-to-policy</code> invariant.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Blocking:</strong> a write blocks on SQLite only. No model
+runs on the write path.</li>
+<li><strong>Lag:</strong> a record is lexically retrievable when its
+transaction commits. Its vector is computed on the next hybrid recall,
+which pays the embedding cost.</li>
+<li><strong>Whole-store passes:</strong> none scheduled. The
+consolidation proposer and dependency inference scan bounded pages when
+called.</li>
+<li><strong>Read cost:</strong> BM25 statistics scan the scoped document
+set per recall unless cached, and the README states that its
+one-million-record latency target is not met. Injection size is set by
+<code>maxTokens</code>, default 4,096 on the MCP tool, and the packet is
+a separate tool result, so the prompt prefix is the host's concern.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server exposes <code>memory_recall</code>,
+<code>memory_context</code>, <code>memory_inspect</code>,
+<code>memory_resume</code>, <code>memory_source</code>,
+<code>memory_model</code>, <code>memory_skill</code>,
+<code>memory_jobs</code>, <code>memory_entity</code>,
+<code>memory_traverse</code> and <code>memory_branch_preview</code>, and
+the writes <code>memory_store</code>, <code>memory_capture</code>,
+<code>memory_observe</code>, <code>memory_checkpoint</code> and
+<code>memory_correct</code> (<code>src/mcp/server.ts:72-161</code>). The
+agent cannot assert a verified outcome, import, promote, review a
+dependency, run a consolidation or merge a branch.
+<code>memory_correct</code> refuses a verified record and runtime
+artifacts (<code>:150-161</code>).</p>
+<p>Scope is fixed by the host: <code>mnemosy mcp</code> requires
+<code>--db</code>, <code>--workspace</code> and <code>--agent</code>,
+and no tool argument names either
+(<code>src/cli/index.ts:538-542</code>). The Claude Code plugin ships
+only <code>.mcp.json</code>, starting
+<code>npx -y -p mnemosy-ai@next mnemosy mcp</code> with one database per
+project. It registers no hooks, so recall and capture happen when the
+model calls them.</p>
+<p>For hosts that want automatic memory,
+<code>MemoryAgent.beforeTurn</code> builds and validates a context
+packet and <code>afterTurn</code> captures the turn, by default as
+<code>untrusted</code> (<code>src/agent/index.ts:97</code>,
+<code>:105-160</code>). Under that default, captured turns stay out of
+every default read until something raises their trust.
+<code>prepareAction</code> binds an action to the dependency state it
+was planned on and revalidates it before dispatch.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="inferred-dependencies-wait-on-a-typed-name">Inferred
+dependencies wait on a typed name</h3>
+<p>The correction cascade reaches only declared edges, and the project's
+answer to undeclared ones is inference plus review. A proposal is not
+stored; it is recomputed from the ledger each time and identified by a
+digest. Accepting one takes <code>--reviewer NAME</code>, a string
+recorded in the receipt and checked against no identity
+(<code>src/cli/index.ts:300-306</code>). The premise guard, a blanket
+hold on procedures co-used with a changed premise, is exported, and its
+one in-tree caller is the evaluation runner
+(<code>src/evaluation/dependencies/runner.ts:152</code>). Between a
+correction and a review, a procedure built on an undeclared premise
+stays eligible.</p>
+<h3 id="erasure-takes-the-history-with-it">Erasure takes the history
+with it</h3>
+<p><code>forget()</code> deletes the record's ledger entries and audit
+rows by cascade, and redacts promotion verdicts that named it
+(<code>src/local/index.ts:2970-3014</code>). The design is stated in
+<code>src/local/ledger.ts:23-46</code>, and it means the store cannot
+say why it believed a forgotten record. The forget also reaches every
+descendant in the workspace, including other agents' private records
+built on the forgotten one, without revealing their ids to the
+caller.</p>
+<h3 id="the-consolidation-chain">The consolidation chain</h3>
+<p>Receipts are ed25519-signed by a key file beside the database, and
+the gate refuses a diff signed by any other key unless the caller passes
+<code>trustedKeyIds: 'any'</code>, documented as unsafe
+(<code>src/consolidation/gate.ts:309-320</code>). A database restored
+without its key cannot verify or roll back its chain, and the CLI warns
+when it sees that state.</p>
+<h3 id="supply-chain">Supply chain</h3>
+<p>The plugin and <code>server.json</code> run
+<code>mnemosy-ai@next</code> through <code>npx</code>, so an
+installation runs whatever that dist-tag names on its next start. The
+two model downloads are digest-pinned and fail closed.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code></strong> — withheld. The runtime
+tombstone is keyed on a hash of the capture identity (adapter, session
+and message id) or of a document's URI and revision, so a forgotten
+capture cannot be replayed. The same text from another message, or
+written through <code>memory_store</code>, passes, and
+<code>forget()</code> keeps no value to key on.</li>
+<li><strong><code>trust_state</code></strong> — earned.
+<code>untrusted</code> and <code>invalidated</code> both withhold a
+record from default reads, and product paths move rows between
+values.</li>
+<li><strong><code>bitemporal</code></strong> — earned on
+<code>validFrom</code> and <code>validUntil</code> beside
+<code>createdAt</code>, with both clocks on every read and a
+late-correction test.</li>
+<li><strong><code>scope_enforced</code></strong> — earned on the
+<code>SCOPE</code> predicate.</li>
+<li><strong><code>audit_log</code></strong> — earned on the
+consolidation receipt chain, which nothing deletes or rewrites. The
+general ledger alone would not carry it, because erasure removes a
+record's entries.</li>
+<li><strong><code>human_review</code></strong> — withheld. Nothing a
+person resolves is stored as waiting: dependency proposals are
+recomputed, the premise guard is derived per call, the reviewer is a
+caller-typed string, and a branch is staged and merged by the same owner
+through the same HTTP token.</li>
+<li><strong><code>negative_eval</code></strong> — earned on the scope
+and trust cases in section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>npm run check</code> runs typecheck and 110 Vitest files. CI
+adds the legacy package's suite, the Python client tests, docs and
+public-metadata checks, a packed-tarball smoke install and eleven
+example programs (<code>.github/workflows/ci.yml</code>). I did not run
+them. Tests that need the native HNSW addon or a downloaded model are
+wrapped by <code>tests/env-gates.ts</code>, which tags their names so
+<code>scripts/check-env-gated-tests.mjs</code> can fail a run where a
+gate contributed nothing, a guard against the suite that skips
+itself.</p>
+<p>The exclusion cases are strong.
+<code>tests/local-memory.test.ts:100-120</code> asserts bob's recall
+equals <code>[shared.id]</code> with alice's private record in the same
+file; <code>tests/local-advanced.test.ts:157-170</code> does the same on
+the hybrid path against four excluded records. <code>:77-90</code>
+answers one late correction at four clock pairs, the present
+included.</p>
+<p><strong>Recomputed.</strong> I parsed <code>attempts</code> in the
+committed
+<code>reports/matched-run-2026-09-14/locomo-k{5,10,20}.json.gz</code>
+and <code>longmemeval-stride10-k20.json.gz</code>, averaging
+<code>retrieval.recall</code> over annotated questions per condition.
+LoCoMo recall@10 comes out 73.57 for hybrid with reranking and 63.72 for
+Mem0 OSS 3.1.8 with extraction off, matching the README's badge; without
+the reranker it is 62.99. The LongMemEval-S tie at 96.67 covers a
+50-question subset, 46 of them annotated.
+<code>reports/matched-run-2026-10-29-zep/locomo-k10.json.gz</code>
+reproduces both figures and gives Zep 52.83. These measure retrieval
+coverage, not answers.</p>
+<p><strong>Not recomputed.</strong> The README's LongMemEval-S
+answer-accuracy headline rests on
+<code>reports/t1-targets/evidence/t17/full500-b16384.stats.txt</code>, a
+summary whose first line names a per-question file under
+<code>&lt;job-dir&gt;</code> that is not committed. Its category counts
+are internally consistent. The demo's PROOF lines and the poisoning,
+dependency and consolidation suites run on synthetic corpora the
+repository generates; their committed reports were not recomputed.</p>
+<p>The project publishes no paper; <code>CITATION.cff</code> cites the
+software.</p>
+<p>Missing: a case asserting that a forgotten record is absent from a
+populated result, and an end-to-end case where an undeclared premise is
+corrected and a procedure built on it is served before review.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make dependencies part of the record and walk them on
+correction.</strong> A correction that marks every declared descendant
+<code>invalidated</code> turns "the premise changed" into a filter.</li>
+<li><strong>Inherit the corrected record's start time.</strong> A
+correction with no stated validity is a retroactive repair at the new
+knowledge time, so the old belief stays answerable at the old
+clock.</li>
+<li><strong>Check eligibility before top-k.</strong> Walking provenance
+for failed outcomes and keyed conflicts before ranking stops withheld
+high scorers from crowding out a valid answer.</li>
+<li><strong>Fix scope at launch, force trust at the tool
+boundary.</strong> No MCP argument names the workspace, the agent or the
+trust tier.</li>
+<li><strong>Chain consolidation receipts with no foreign key.</strong> A
+receipt of hashes survives the erasure of what it describes, and a
+retained head catches a deleted tail.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A review gate whose reviewer is an argument.</strong>
+Recording the name a caller typed is a log, not an approval.</li>
+<li><strong>A safety guard only the benchmark calls.</strong> If the
+hold matters, put it on the read path or the action ticket.</li>
+<li><strong>Cascading the audit trail with the record.</strong> Erasure
+can redact text and keep the event.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Suits a team that wants an embeddable, offline store where
+corrections must propagate and history must stay queryable, and that
+will declare dependencies or run the review step. The SDK surface is
+large and strict: <code>atomic()</code> with synchronous callbacks,
+typed checkpoints, envelopes validated on every read. Expect to read
+code, not configure. Walk away if you want memory that extracts and
+organises itself from conversation, or a hosted multi-tenant service;
+the HTTP layer authenticates principals and leaves TLS, identity and
+quotas to you.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often hosts declare dependencies in practice, given that the MCP
+agent can declare them on <code>memory_store</code> and the cascade
+depends on it.</li>
+<li>Whether the premise guard is meant to reach <code>compile</code> or
+<code>prepareAction</code>, and what the high false-hold rate the
+project reports for it would cost in use.</li>
+<li>How BM25 corpus statistics behave at scale for a scope with many
+trust and kind subsets, since each subset has its own cache key.</li>
+<li>How the stable 2.0.0 release differs in the paths a plain
+<code>npm install mnemosy-ai</code> reaches.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>src/local/index.ts</code>
+(<code>#migrate</code>, <code>#advancedSchema</code>),
+<code>src/local/ledger.ts</code>, <code>src/local/vector/</code>,
+<code>src/local/granularity.ts</code></li>
+<li>Write path: <code>src/local/index.ts</code> (<code>store</code>,
+<code>#insert</code>, <code>correct</code>, <code>forget</code>,
+<code>checkpoint</code>, <code>import</code>),
+<code>src/local/validation.ts</code>,
+<code>src/runtime/index.ts</code></li>
+<li>Retrieval: <code>src/local/index.ts</code> (<code>recall</code>,
+<code>#bm25Recall</code>, <code>recallHybrid</code>),
+<code>src/local/bm25-corpus-stats.ts</code>,
+<code>src/local/precision.ts</code>,
+<code>src/local/temporal-query.ts</code>,
+<code>src/local/embedding/</code>,
+<code>src/local/reranking/</code></li>
+<li>Context: <code>src/local/index.ts</code> (<code>#compile</code>),
+<code>src/context/index.ts</code>, <code>src/agent/index.ts</code></li>
+<li>Trust and correction: <code>src/local/index.ts</code>
+(<code>promote</code>, <code>#eligibleAt</code>, <code>#at</code>),
+<code>src/dependencies/index.ts</code>,
+<code>src/consolidation/</code></li>
+<li>MCP, HTTP, CLI: <code>src/mcp/server.ts</code>,
+<code>src/http/index.ts</code>, <code>src/cli/index.ts</code>,
+<code>integrations/claude-code/</code></li>
+<li>Tests and evals: <code>tests/</code>,
+<code>tests/env-gates.ts</code>, <code>src/evaluation/</code>,
+<code>benchmarks/</code>, <code>reports/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No validity time on the MCP, HTTP or CLI stores.</strong>
+<code>git grep -n -E 'validFrom|validUntil' -- src/mcp src/http/index.ts src/cli</code>
+returns nothing; the same pattern on <code>src/relations/index.ts</code>
+matches <code>relate</code>.</li>
+<li><strong>No review, promote or approve verb on the MCP
+surface.</strong>
+<code>git grep -n -i -E 'approve|review|promote|accept' -- src/mcp/server.ts</code>
+returns only <code>memory_branch_preview</code>, a read.</li>
+<li><strong>The premise guard's only in-tree caller is the evaluation
+runner.</strong>
+<code>git grep -n -E 'createPremiseGuard' -- src ':!src/dependencies'</code>
+returns <code>src/evaluation/dependencies/runner.ts</code> and the
+export in <code>src/index.ts</code>.</li>
+<li><strong><code>reviewDependency</code> has one product
+caller.</strong>
+<code>git grep -n -E 'reviewDependency\(' -- src ':!src/dependencies' ':!src/evaluation'</code>
+returns <code>src/cli/index.ts:788</code>.</li>
+<li><strong>No interactive-terminal check on the review path.</strong>
+<code>git grep -n -E 'isTTY|isatty' -- src</code> returns nothing.</li>
+<li><strong><code>promote()</code> has no caller outside the evaluation
+harness.</strong>
+<code>git grep -n -E '\.promote\(' -- src ':!src/local/index.ts'</code>
+returns <code>src/evaluation/breakthrough/moment-4.ts</code> and
+<code>src/evaluation/poisoning/runner.ts</code>.</li>
+<li><strong>The ledger is rewritten in two places.</strong>
+<code>git grep -n -E '(DELETE FROM|UPDATE) (local_ledger|audit)' -- src packages</code>
+returns the verifier fill and the promotion redaction in
+<code>src/local/index.ts</code>.</li>
+<li><strong>The only tombstone writer is the runtime's forget.</strong>
+<code>git grep -n -E "runtimeType: 'tombstone'" -- src</code> returns
+<code>src/runtime/index.ts:274</code> as the writer, and readers in
+<code>src/migration/</code> and the learning demo.</li>
+<li><strong>No read queries the FTS5 table.</strong>
+<code>git grep -n 'memories_fts' -- src</code> returns the schema and
+its triggers in <code>src/local/index.ts:400-411</code> only.</li>
+<li><strong>The 500-question answer file is not committed.</strong>
+<code>git ls-files | grep -E 'full500'</code> returns the stats text and
+a mock run.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- README.md CITATION.cff</code>
+returns nothing.</li>
+<li><strong>No mention of the Nabzx project.</strong>
+<code>git grep -n -i 'nabzx' -- .</code> returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/28naem-del/mnemosyne/commit/1bead7fa974faaaa4ff1a6fce6660388d99f3815"><code class="commit-id" title="1bead7fa974faaaa4ff1a6fce6660388d99f3815">1bead7fa…</code></a>.
+First reading, from a full clone. Screened first: five auto-run surfaces
+(the <code>.claude-plugin/</code> marketplace,
+<code>.devcontainer/devcontainer.json</code>'s
+<code>postCreateCommand</code>,
+<code>integrations/claude-code/.claude-plugin/plugin.json</code>,
+<code>integrations/claude-code/.mcp.json</code> and
+<code>server.json</code>, the last two launching <code>npx</code>
+packages), seven manifests and lockfiles inside the cooldown, one
+build-time <code>prepublishOnly</code>, and four unpinned surfaces
+including two consumer-lock packages on a local <code>.tgz</code>. MIT.
+Nothing installed, built or run. Five marks. Tombstone is withheld
+because the runtime tombstone is keyed on a capture identity rather than
+a value; human_review because nothing a person resolves is stored as
+waiting and the dependency reviewer is a typed string (<a
+href="#marks">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
