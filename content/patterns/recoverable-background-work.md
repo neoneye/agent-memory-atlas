@@ -211,6 +211,8 @@ columns does this pass have no input for, and what happens to them.
 
 [Cindy](../../systems/cindy/) makes its nightly memory tidy reversible item by item. The run is registered before the first change, each change's before and after are written to `learning-history/<runId>.json` as it lands, and the watermark and turn count advance only when the run succeeds, so a failed model call leaves the conversations for the next night (`apps/desktop/src/main/maker-ipc/botNightlyLearning.ts:340-356`, `:441-451`). Undo refuses when the live memory no longer matches the recorded side rather than overwriting a later edit (`:592-631`). Retention is the weak edge: runs past the 30th are dropped with their backup files (`botNightlyLearningState.ts:151-163`).
 
+[ZettelForge](../../systems/zettelforge/) writes the outbox and never reads it. Each causal-extraction, NER and neighbour-evolution job gets a row in an SQLite `enrichment_jobs` ledger, with a state, an attempt count and an error code, and is then put on an in-process queue of 500 (`src/zettelforge/memory_manager.py:1261-1288`). A full queue marks the row failed; a crash leaves rows `queued` or `running`. The ledger's two readers are called only from tests, so no path replays a row, and the atexit drain gives the queue 10 seconds (`:1480-1514`). The module docstring defers a ledger-aware `flush()` to later releases (`enrichment_ledger.py:1-7`). The durable half of the pattern is built; the worker that reads it back is the missing half.
+
 ## Tests to require
 
 - Crash before, during, and after each state mutation.

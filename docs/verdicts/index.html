@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 779 reports.</strong></p>
+<p><strong>This page covers all 780 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32432,6 +32432,51 @@ rather than by a database.</li>
 <li>Do not copy when: a retracted fact must stop being returned, the
 audit trail must be out of the agent's reach, or a person's decision
 must be one the agent cannot make.</li>
+</ul>
+<h3 id="zettelforge"><a
+href="../systems/zettelforge/"><code>zettelforge</code></a></h3>
+<ul>
+<li>Best idea: <strong>a write-time anomaly gate calibrated on the
+domain's own recent notes.</strong> <code>MemoryAnomalyGate</code>
+scores a candidate's embedding similarity and n-gram divergence against
+up to 50 recent notes in its domain, flags anything past the calibration
+mean plus two standard deviations, and offers audit, block and
+quarantine as one setting; below 50 calibration notes it declines to
+judge.</li>
+<li>Second idea: an injection guard at every boundary where untrusted
+text meets a model, each prompt framing its inputs as evidence, with a
+second scan when stored notes are formatted for injection; and a fan-out
+cap that drops entities pointing at too many notes before graph
+expansion.</li>
+<li>Biggest risk: <strong>one shared entity value supersedes an older
+note, and the agent's surface ignores supersession.</strong>
+<code>_check_supersession</code> fires on a single shared CVE, named
+tool or city; <code>recall()</code> then hides the older note, while the
+MCP and web recall pass <code>exclude_superseded=False</code> and return
+it with no field saying so.</li>
+<li>Second risk: nothing sets a note's persistence class, so every note
+drops out of <code>recall()</code> 30 days after its last rewrite; the
+background evolver rewrites neighbours' text in SQLite without
+re-indexing LanceDB; and read as written, an MCP remember on an install
+without the <code>ollama</code> package keeps only the first 500
+characters.</li>
+<li>Most reusable component:
+<code>src/zettelforge/memory_defense.py:105-271</code> — the calibrated
+score, its three modes and the forensic quarantine record — with the
+fan-out gate <code>_filter_low_signal_entities</code> in
+<code>memory_manager.py:996-1023</code>.</li>
+<li>Maturity impression: MIT; 22,415 lines of Python in the package,
+13,220 of them the memory core; 414 commits on master, 6 April – 10 July
+2026, 373 from one author; 846 pytest functions run in CI with mock
+embeddings, not run here. No marks. The README's CTI 75.0% recomputes
+from the committed per-category results; its LoCoMo 22.0% is in no
+committed file.</li>
+<li>Study when: you are building threat-intelligence memory and want
+regex entity extraction, alias tables, Sigma and YARA ingest and
+write-time poisoning defences to borrow.</li>
+<li>Do not copy when: notes must stay current and correct over time, an
+agent must know what was superseded, or tenants and an audit trail must
+live in the store.</li>
 </ul>
         </article>
       </div>

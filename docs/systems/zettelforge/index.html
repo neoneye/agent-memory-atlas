@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python CTI memory library and
+MCP server over SQLite and LanceDB, blending vector and entity-graph
+recall with entity-overlap supersession and LLM neighbour evolution.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ZettelForge — Agent Memory Atlas">
+    <meta property="og:description" content="A Python CTI memory library
+and MCP server over SQLite and LanceDB, blending vector and entity-graph
+recall with entity-overlap supersession and LLM neighbour evolution.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ZettelForge — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python CTI memory
+library and MCP server over SQLite and LanceDB, blending vector and
+entity-graph recall with entity-overlap supersession and LLM neighbour
+evolution.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ZettelForge — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ZettelForge",
+      "description": "A Python CTI memory library and MCP server over SQLite and LanceDB, blending vector and entity-graph recall with entity-overlap supersession and LLM neighbour evolution.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Superseded by one shared entity, then
+served anyway</p>
+          <h1>ZettelForge</h1>
+          <p class="document-deck">A Python CTI memory library and MCP
+server over SQLite and LanceDB, blending vector and entity-graph recall
+with entity-overlap supersession and LLM neighbour evolution.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ThreatRecall/zettelforge">
+              <span>Source</span>
+              <strong>ThreatRecall/zettelforge</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ThreatRecall/zettelforge/commit/d1484ea66466bfadf7f61864300cbb00cab49877" title="d1484ea66466bfadf7f61864300cbb00cab49877">
+              <span>Analyzed revision</span>
+              <code>d1484ea6…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ThreatRecall--zettelforge" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ThreatRecall--zettelforge</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>22,415
+lines of Python in the package: 13,220 in the top-level memory modules,
+3,806 in an OSINT layer, 2,209 in Sigma and YARA ingest; 7,047 lines in
+the web UI and 5,051 in benchmark scripts</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>414
+commits on master, 6 April – 10 July 2026, 373 by Patrick Roland and the
+rest from Dependabot, coding agents and two one-commit contributors;
+package version 2.8.0; transferred from
+rolandpg/zettelforge</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>846
+pytest functions in 69 files, 13,618 lines, run in CI with mock
+embeddings and a 67% coverage floor; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ZettelForge is a Python memory library for cyber threat intelligence,
+with a stdio MCP server and a FastAPI UI, over one SQLite file and a
+LanceDB table per domain. It extracts CVEs, intrusion sets, tools and
+IOCs by regex, links them in an SQLite knowledge graph, and blends
+vector, graph and entity-index recall under a cross-encoder. The write
+path is well defended: governance, a prompt-injection guard and a
+calibrated anomaly gate run before anything is stored. The correction
+path is the weak part. A note supersedes an older one when the two share
+a single CVE, tool or location value, and the MCP and web recall
+surfaces then return the superseded note anyway, unlabelled.</p>
+<p>Two defaults decide more than the README says. No writer sets a
+note's persistence class, so every note carries the 30-day class, and
+<code>recall()</code> hides it 30 days after its last rewrite; reads do
+not reset the clock. The background evolver lets a model rewrite
+neighbouring notes in SQLite while their LanceDB rows keep the old
+vectors. No capability mark is earned. Supersession is a link with no
+rejected-value record, the epistemic tier is <code>A</code> on every
+constructed note, and note mutations reach only a rotating application
+log.</p>
+<p>Multi-tenant auth, the TypeDB backend and OpenCTI sync are an
+enterprise package discovered at import
+(<code>extensions.py:28-30</code>) and absent from this tree; the report
+covers the community code. The repository moved from
+<code>rolandpg/zettelforge</code>, which redirects to it, and the MCP
+manifest names the old owner. No paper accompanies it, and the README's
+A-Mem link (<a
+href="https://arxiv.org/abs/2602.10715">arXiv:2602.10715</a>) resolves
+to a different paper, Locomo-Plus; the evolver's docstring carries
+A-Mem's correct id, <a
+href="https://arxiv.org/abs/2502.12110">arXiv:2502.12110</a>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <code>MemoryNote</code>
+(<code>note_schema.py:103-117</code>): raw text with a source type and
+reference, regex entities, keywords, a fastembed vector, supersession
+links, and metadata for domain, tier, confidence, TLP and persistence
+class. Every write makes one note per call, or with
+<code>evolve=True</code> one note per LLM-extracted fact. Notes are
+treated as true. Nothing is a candidate.</p>
+<p>A note can hold four conditions, none of them a status column.</p>
+<ul>
+<li><strong>Live</strong>: stored, indexed, <code>superseded_by</code>
+empty.</li>
+<li><strong>Superseded</strong>: <code>superseded_by</code> names a
+later note. <code>mark_note_superseded</code> sets it, removes the old
+note's entity mappings and adds a <code>SUPERSEDES</code> edge
+(<code>memory_manager.py:1549-1577</code>). Its text, vector and LanceDB
+row stay.</li>
+<li><strong>Expired</strong>: derived at read time from the persistence
+class and the later of <code>created_at</code> and
+<code>updated_at</code> (<code>note_schema.py:137-168</code>). Nothing
+is written.</li>
+<li><strong>Evolved</strong>: a model replaced <code>content.raw</code>;
+the prior text is in <code>previous_raw</code>, one level deep, and
+<code>rollback</code> has no caller
+(<code>memory_evolver.py:153-212</code>).</li>
+</ul>
+<p>Three actors move a note. The write path supersedes on entity overlap
+with no model (<code>_check_supersession</code>,
+<code>memory_manager.py:1579-1650</code>). With <code>evolve=True</code>
+an LLM decides ADD, UPDATE, DELETE or NOOP per fact, and UPDATE and
+DELETE both supersede the nearest vector hit
+(<code>memory_updater.py:60-102</code>). The background evolver rewrites
+neighbours. A note never dies: <code>delete_note</code> has no caller,
+and neither the MCP server nor the web API exposes a delete.</p>
+<p>The tier field is labelled epistemic, <em>"A (authoritative) | B
+(operational) | C (support)"</em> (<code>note_schema.py:95</code>), and
+<code>NoteConstructor</code> sets <code>A</code> on every note it builds
+(<code>note_constructor.py:65-74</code>); Sigma and YARA ingest pass
+<code>A</code> too. <code>confidence</code> starts at 1.0 and is capped
+at 0.95 after an evolution. <code>should_flag_for_review</code>
+(<code>note_schema.py:133-135</code>) has no caller.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a note is superseded by any later note sharing one entity value; recall() filters that and a 30-day expiry, the MCP and web surfaces pass exclude_superseded=False, and get_context filters neither</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a note is superseded by any later note sharing one entity value; recall() filters that and a 30-day expiry, the MCP and web surfaces pass exclude_superseded=False, and get_context filters neither
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    MCP[&quot;MCP remember&lt;br/&gt;evolve=true by default&quot;]
+    API[&quot;remember(), web API,&lt;br/&gt;Sigma and YARA ingest&quot;]
+    MCP ~~~ API
+  end
+  writers --&gt; GATE[&quot;governance, injection&lt;br/&gt;guard, anomaly gate&lt;br/&gt;(audit mode)&quot;]
+  GATE --&gt; NOTE[&quot;note in SQLite&lt;br/&gt;tier A, class memory&quot;]
+  NOTE --&gt; SUP{&quot;shares one CVE, tool,&lt;br/&gt;actor, person or&lt;br/&gt;location value?&quot;}
+  SUP --&gt;|&quot;yes&quot;| HIDE[&quot;older note gets&lt;br/&gt;superseded_by&quot;]
+  SUP --&gt;|&quot;no&quot;| LIVE[&quot;live note&quot;]
+  LIVE ~~~ EVO[&quot;background evolver:&lt;br/&gt;LLM rewrites neighbour&lt;br/&gt;text in SQLite only&quot;]
+  EVO --&gt; STALE[&quot;LanceDB row keeps&lt;br/&gt;the old vector&quot;]
+  HIDE --&gt; READ{&quot;which reader?&quot;}
+  STALE --&gt; READ
+  READ --&gt;|&quot;recall() default&quot;| R1[&quot;drops superseded,&lt;br/&gt;and notes 30 days&lt;br/&gt;past last rewrite&quot;]
+  READ --&gt;|&quot;MCP, web recall&quot;| R2[&quot;superseded returned,&lt;br/&gt;with no field saying so&quot;]
+  READ --&gt;|&quot;get_context()&quot;| R3[&quot;neither filter;&lt;br/&gt;injection scan only&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>MemoryManager</code> (<code>memory_manager.py:101-182</code>)
+is the whole system in one process. It opens the SQLite backend, keeps a
+<code>MemoryStore</code> only for LanceDB indexing, preloads the
+embedding model, and starts a daemon thread over an in-process
+enrichment queue of 500 jobs. The MCP server
+(<code>mcp/server.py</code>) and the web app (<code>web/app.py</code>)
+each hold one manager.</p>
+<p><strong>Storage.</strong> <code>sqlite_backend.py:42-145</code>
+creates <code>notes</code>, <code>kg_nodes</code>,
+<code>kg_edges</code>, <code>entity_index</code> and
+<code>enrichment_jobs</code> in WAL mode, with
+<code>synchronous=NORMAL</code>, whose header warns that the last
+transaction before an OS crash can be lost. Vectors live in one LanceDB
+table per domain, <code>notes_&lt;domain&gt;</code>, holding the id, the
+vector and the first 500 characters
+(<code>memory_store.py:194-258</code>). A process-global JSONL knowledge
+graph is kept for <code>ingest_relationship</code>
+(<code>memory_manager.py:1698-1702</code>). The default data directory
+is <code>~/.amem</code> (<code>memory_store.py:32-37</code>).</p>
+<p><strong>Models.</strong> Embeddings are nomic-embed-text-v1.5-Q
+through fastembed's ONNX runtime, in process. The reranker is a
+fastembed <code>TextCrossEncoder</code>
+(<code>memory_manager.py:70-84</code>). Extraction, NER, evolution,
+intent fallback and synthesis call an LLM through
+<code>llm_client.generate</code>, whose configured default is Ollama on
+localhost with <code>qwen3.5:9b</code>
+(<code>config.default.yaml:211-219</code>). The <code>ollama</code>
+client package is imported inside the provider
+(<code>ollama_provider.py:57</code>) and is not a declared dependency in
+<code>pyproject.toml</code>.</p>
+<p><strong>Background.</strong> The enrichment thread runs causal-triple
+extraction, LLM NER and neighbour evolution per note
+(<code>memory_manager.py:1306-1340</code>). A consolidation thread
+starts when the shift detector fires
+(<code>consolidation.py:432-480</code>). One LanceDB version-cleanup
+thread per table runs hourly (<code>lance_maintenance.py:1-30</code>).
+An atexit hook drains the queue for at most 10 seconds
+(<code>memory_manager.py:1480-1514</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install zettelforge</code> gives <code>remember</code> and
+<code>recall</code> with no service and no API key; the embedding model,
+about 80 MB, downloads on first use. Extraction, evolution and synthesis
+need an LLM; without one they log and fall back. The web UI refuses
+non-loopback clients until <code>ZETTELFORGE_WEB_API_KEY</code> is set
+(<code>web/app.py:156-180</code>), and <code>web/auth.py:15-27</code> is
+a single-tenant stub. The store is SQLite with one column per field,
+readable and repairable with the <code>sqlite3</code> shell, but a hand
+edit does not reach LanceDB.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Direct write.</strong> <code>remember</code> →
+<code>_remember_inner</code> (<code>memory_manager.py:184-511</code>):
+governance and the injection guard
+(<code>governance_validator.py:103-167</code>),
+<code>NoteConstructor.construct</code>, the anomaly gate
+(<code>memory_defense.py:213-239</code>), <code>write_note</code>,
+LanceDB indexing, regex entities and alias resolution, the consolidation
+observer, <code>_check_supersession</code>, heuristic graph edges, then
+up to three enrichment jobs.</li>
+<li><strong>Extraction write.</strong>
+<code>remember_with_extraction</code>
+(<code>memory_manager.py:576-636</code>):
+<code>FactExtractor.extract</code> returns scored facts, those under
+importance 3 are dropped, and <code>MemoryUpdater</code> finds the three
+nearest vector hits, asks for an operation, and applies it.
+<code>remember_report</code> chunks at 3,000 characters and passes the
+publication date into the prompt context only
+(<code>:638-701</code>).</li>
+<li><strong>Recall.</strong> <code>recall</code> →
+<code>_recall_inner</code> (<code>memory_manager.py:703-994</code>):
+intent classification, vector retrieval, a temporal date-string boost,
+graph retrieval over the store's own graph, blend, causal-edge additions
+for causal intent, entity-index augmentation, a cross-encoder over the
+head, then the superseded and expiry filters, cap at <code>k</code>, and
+access tracking.</li>
+<li><strong>Prompt context.</strong> <code>get_context</code> →
+<code>VectorRetriever.get_memory_context</code>
+(<code>vector_retriever.py:356-405</code>): vector retrieval, an
+injection scan per note, Markdown formatting, truncation at four
+characters per budget token.</li>
+<li><strong>Correction.</strong> <code>mark_note_superseded</code>
+(<code>memory_manager.py:1549-1577</code>), called from
+<code>_check_supersession</code> and from
+<code>MemoryUpdater.apply</code>.</li>
+<li><strong>Evolution.</strong> <code>_run_evolution</code> →
+<code>MemoryEvolver.evolve_neighbors</code>
+(<code>memory_evolver.py:216-276</code>): five neighbours by
+<code>recall</code>, one LLM call each, <code>apply_evolution</code> on
+<code>evolve</code>.</li>
+<li><strong>Consolidation.</strong>
+<code>ConsolidationEngine.consolidate</code>
+(<code>consolidation.py:204-339</code>).</li>
+<li><strong>MCP.</strong> <code>handle_tool_call</code>
+(<code>mcp/server.py:37-144</code>): remember, recall, synthesize,
+entity, graph, stats and an enterprise-only sync.</li>
+<li><strong>Tests.</strong>
+<code>tests/test_recall_integration.py</code>,
+<code>test_sqlite_integration.py</code>,
+<code>test_memory_updater.py</code>, <code>test_two_phase_e2e.py</code>,
+<code>test_memory_evolver.py</code>,
+<code>test_memory_defense.py</code>,
+<code>test_graph_scoping.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>notes</code> table carries one column per field
+(<code>sqlite_backend.py:43-80</code>): content and its source,
+<code>previous_raw</code>, keywords, tags and entities as JSON, the
+embedding as a JSON array, domain, tier, importance, confidence, access
+count, TLP, STIX confidence, persistence class, TTL fields, supersession
+links, <code>related</code>, <code>causal_chain</code>, version,
+<code>evolved_from</code> and <code>evolved_by</code>, and JSON blobs
+for CVSS and detection-rule metadata. Ids are
+<code>note_YYYYMMDD_HHMMSS_xxxx</code>
+(<code>sqlite_backend.py:387-389</code>).</p>
+<p><code>kg_edges</code> is unique on source, target, relationship and
+note id, with an <code>edge_type</code> and a JSON property bag
+(<code>:99-110</code>). Heuristic edges carry
+<code>first_observed</code> and the note's confidence
+(<code>memory_manager.py:1130-1255</code>). <code>SUPERSEDES</code>
+edges carry a <code>timestamp</code> of the moment of supersession.</p>
+<p><strong>Time.</strong> <code>created_at</code> and
+<code>updated_at</code> are record time. The only world-time inputs are
+a report's <code>published_date</code>, which becomes prompt text, and
+STIX <code>first_seen</code>/<code>last_seen</code> in the ontology
+tables (<code>ontology.py:78</code>), which no note column receives.</p>
+<p><strong>Persistence class.</strong> <code>is_expired</code> maps
+<code>knowledge</code> to never, <code>memory</code> to 30 days,
+<code>wisdom</code> to 90 and <code>intelligence</code> to 7
+(<code>note_schema.py:144-149</code>). <code>infer_persistence</code>,
+which would assign <code>knowledge</code> to CTI ingestion, has no
+caller, and nothing assigns the field, so every note is
+<code>memory</code>. The anchor is the later of <code>created_at</code>
+and <code>updated_at</code>; the comment says <em>"TTL resets on
+access"</em> (<code>:163</code>), but access writes
+<code>last_accessed</code> through <code>mark_access_dirty</code>
+(<code>sqlite_backend.py:493-504</code>). A note is refreshed only when
+something rewrites it. The per-note <code>ttl</code> column has no
+reader.</p>
+<p><strong>Scope.</strong> <code>domain</code> is a caller-chosen label
+(<code>general</code>, <code>cti</code>, <code>incident</code>). It
+names the LanceDB table and filters the vector arm
+(<code>vector_retriever.py:144-162</code>). The graph stage takes no
+domain (<code>memory_manager.py:857-859</code>), and
+<code>recall_entity</code> takes none either (<code>:1061-1078</code>),
+so both add notes from every domain to a domain-filtered recall.
+Isolation between users is a separate data directory per
+<code>MemoryManager</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Arms.</strong> The vector arm searches each domain table for
+<code>2k</code> hits, converts distance to similarity, multiplies by an
+entity-overlap boost and an exact-match boost, and keeps <code>k</code>
+(<code>vector_retriever.py:137-203</code>). Its link expansion reads
+<code>links.related</code>, which nothing writes. The graph arm walks
+two hops from the query's regex entities over the store's own graph.
+Entities whose note fan-out exceeds
+<code>retrieval.entity_max_fanout</code> are dropped first, so a LoCoMo
+speaker name in every session does not flood recall
+(<code>memory_manager.py:996-1023</code>).</p>
+<p><strong>Fusion.</strong> Intent comes from keyword scores, with an
+LLM fallback when ambiguous (<code>intent_classifier.py:140-186</code>).
+The policy table carries <code>vector</code>, <code>entity_index</code>,
+<code>graph</code> and <code>temporal</code> weights per intent
+(<code>:188-238</code>); <code>BlendedRetriever.blend</code> reads
+<code>vector</code> and <code>graph</code>
+(<code>blended_retriever.py:59-60</code>). If the blend returns fewer
+notes than the vector arm did, the vector list replaces it
+(<code>memory_manager.py:871-874</code>). Causal intent then appends
+notes reached over causal edges, and every query appends up to three
+entity-index notes per entity (<code>:876-918</code>).</p>
+<p><strong>Rerank and filters.</strong> The cross-encoder scores the
+first 8 results on their first 256 characters, and the tail keeps blend
+order (<code>:920-943</code>). The superseded and expiry filters run
+after the rerank and before the cap at <code>k</code>
+(<code>:945-958</code>).</p>
+<p><strong>Who gets which filter.</strong> <code>recall()</code>
+defaults to <code>exclude_superseded=True</code> and
+<code>include_expired=False</code>. The MCP
+<code>zettelforge_recall</code> tool and the web
+<code>/api/recall</code> route both pass
+<code>exclude_superseded=False</code> (<code>mcp/server.py:65</code>,
+<code>web/app.py:206</code>). Neither response includes
+<code>superseded_by</code>, so the agent and the UI cannot tell a
+superseded note from a live one. The LangChain retriever and synthesis
+use the default. <code>get_context</code> calls the vector retriever
+directly and applies neither filter; it drops notes the injection guard
+flags (<code>vector_retriever.py:367-386</code>).</p>
+<p><strong>Synthesis.</strong>
+<code>SynthesisGenerator._retrieve_notes</code> filters by tier
+(<code>synthesis_generator.py:124</code>), defaulting to all three tiers
+(<code>:66</code>). The config's <code>synthesis.tier_filter</code> of
+<code>["A", "B"]</code> (<code>config.py:222</code>) is loaded and has
+no reader.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Gates.</strong>
+<code>GovernanceValidator.validate_remember</code> enforces a size
+limit, the injection guard and optional Presidio PII redaction or
+blocking (<code>governance_validator.py:103-167</code>). The anomaly
+gate then scores the candidate against the domain's recent notes. It
+combines a MemSAD-style similarity score with a weighted lexical
+Jensen-Shannon divergence, and flags anything above the calibration mean
+plus 2.0 standard deviations (<code>memory_defense.py:183-191</code>).
+It stays silent under 50 calibration notes and defaults to
+<code>audit</code> mode (<code>config.default.yaml:410-420</code>). In
+<code>quarantine</code> mode the write raises and a record, raw content
+included, is appended to <code>quarantine/memory_anomalies.jsonl</code>
+(<code>memory_defense.py:241-271</code>). No code reads that file.</p>
+<p><strong>Supersession.</strong> <code>_check_supersession</code>
+collects every note sharing a value of <code>cve</code>,
+<code>actor</code>, <code>tool</code>, <code>campaign</code>,
+<code>asset</code>, <code>person</code>, <code>location</code>,
+<code>organization</code>, <code>event</code>, <code>activity</code> or
+<code>temporal</code> with the new note. It scores each by shared-value
+count plus up to 1.0 for age, and supersedes the best at a score of 1.0
+(<code>memory_manager.py:1584-1648</code>). One shared value is
+enough.</p>
+<p>On the regex path the live keys are a CVE, three named actors, seven
+named tools, an <code>operation X</code> campaign, a dialogue speaker
+and 43 place names (<code>entity_indexer.py:60-77</code>,
+<code>:175</code>, <code>:306-313</code>). So <em>"APT41 scanned for
+CVE-2024-3094"</em> supersedes <em>"CVE-2024-3094 is the XZ Utils
+backdoor"</em>. <code>intrusion_set</code> is not a key, so two APT28
+notes do not collide. A comment at
+<code>entity_indexer.py:171-172</code> records that wider speaker
+extraction <em>"reshuffled supersession chains"</em> and cut LoCoMo
+accuracy from 11% to 5%.</p>
+<p><strong>Extraction path.</strong> With <code>evolve=True</code> only
+extracted facts are stored, up to five per call with source refs
+<code>&lt;ref&gt;:extraction:&lt;i&gt;</code>; the submitted text is not
+kept. When <code>generate</code> raises,
+<code>FactExtractor.extract</code> returns the first 500 characters as
+one fact (<code>fact_extractor.py:56-58</code>), and <code>decide</code>
+defaults to ADD (<code>memory_updater.py:56-58</code>). An unreachable
+Ollama returns an empty string instead, and the text is stored whole. A
+missing <code>ollama</code> package raises an <code>ImportError</code>
+that <code>generate</code> re-raises
+(<code>llm_client.py:232-235</code>). Reading these paths, an MCP
+<code>remember</code> on an install without that package keeps only the
+first 500 characters; I did not run it to confirm.</p>
+<p><strong>Evolution.</strong> For each new note, five neighbours come
+from <code>recall</code> and one LLM call each decides
+<code>evolve</code> or <code>keep</code>. On <code>evolve</code>,
+<code>apply_evolution</code> copies the text to
+<code>previous_raw</code>, writes the model's text, re-embeds into the
+note's SQLite row and rewrites it
+(<code>memory_evolver.py:153-188</code>). It does not call
+<code>_index_in_lance</code>, so LanceDB keeps the old vector and the
+old 500 characters. The model's text bypasses the governance validator
+and PII redaction that guarded the original. The injection guard runs on
+both inputs (<code>:94-95</code>) and not on the output.</p>
+<p><strong>Consolidation.</strong> On a semantic shift, notes since the
+last run that share an entity with another are checked for a
+negation-word mismatch; the older of each pair is counted as
+contradicted (<code>consolidation.py:341-384</code>). The rest are set
+to tier <code>A</code>, which every note is, and rewritten
+(<code>:294-305</code>). The count goes into a log event and nothing
+else.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The direct write is synchronous and model-free. Embedding, SQLite,
+LanceDB, regex entities, supersession and heuristic edges run inline;
+the README cites about 45 ms with fastembed, a figure I did not
+reproduce. A note is recallable when <code>remember</code> returns. LLM
+work is deferred to the one enrichment thread: causal triples for CTI
+domains or text over 200 characters, NER, and five evolution calls once
+the store holds three notes. A queue past 500 jobs drops the job and
+marks its ledger row failed (<code>memory_manager.py:1261-1288</code>).
+Consolidation reads every note created since its last run.
+<code>get_context</code> is bounded by <code>token_budget</code>;
+<code>recall</code> returns up to <code>k</code> notes, truncated per
+surface to 500 characters.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server is hand-written stdio JSON-RPC
+(<code>mcp/server.py:268-337</code>) with seven tools.
+<code>zettelforge_remember</code> defaults to domain <code>cti</code>
+and <code>evolve=True</code> (<code>:46-58</code>).
+<code>zettelforge_recall</code> returns id, 500 characters, context,
+entities, tier and confidence. <code>zettelforge_entity</code> and
+<code>zettelforge_graph</code> expose the entity index and a capped
+graph walk. There is no forget, correct or delete tool, so the agent can
+add and supersede and cannot remove. The agent supplies the domain on
+every call, and any domain is accepted.</p>
+<p>Integration is pull-only: nothing injects context at session start,
+and the tool descriptions do not tell the model when to save.
+<code>get_context</code> is the documented path for a host that wants
+injection (<code>docs/how-to/integrate-llm-agent.md</code>). LangChain
+and CrewAI adapters wrap <code>recall</code> and
+<code>synthesize</code>. The web UI has dashboard, search, ingest,
+entities, graph, history, logs and configuration views. Its routes
+remember, recall, synthesize, bulk-ingest and edit config, and none
+edits or removes a note.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="supersession-that-the-agents-surface-ignores">Supersession that
+the agent's surface ignores</h3>
+<p>The correction mechanism and its main reader disagree. A single
+shared entity value hides the older note from <code>recall()</code>,
+which a user calling the library gets by default, and removes it from
+the entity index. The agent, through MCP, sees it again with no marker.
+An analyst whose first note was wrongly superseded loses it from
+LangChain and synthesis results; an agent asked to prefer current
+intelligence gets both and cannot rank them. No test exercises either
+surface's supersession behaviour.</p>
+<h3 id="expiry-nobody-set">Expiry nobody set</h3>
+<p>Every note is in the 30-day class because nothing assigns another. A
+CTI report remembered once and never rewritten drops out of
+<code>recall()</code> 30 days later, on the MCP and web surfaces too,
+since neither passes <code>include_expired</code>. It appears in
+<code>get_context</code> and <code>recall_entity</code>. The intent
+visible in <code>infer_persistence</code> was that CTI ingestion never
+expires. The expiry tests assert only that a list comes back
+(<code>tests/test_core.py:243-267</code>).</p>
+<h3 id="two-stores-that-drift">Two stores that drift</h3>
+<p>An evolved note has new text in SQLite and the old vector in LanceDB,
+so it is found by its old text and returned with its new text.
+<code>reindex_vector</code> exists on the backend and updates SQLite
+only (<code>sqlite_backend.py:625-645</code>); no caller uses it. A
+pending NER job for a note superseded meanwhile re-adds its entity
+mappings, since <code>_run_llm_ner</code> does not check
+<code>superseded_by</code>
+(<code>memory_manager.py:1386-1451</code>).</p>
+<h3 id="poisoning-defences">Poisoning defences</h3>
+<p>This is the strongest part of the code. Every LLM prompt builder
+calls the injection guard on its untrusted inputs and frames them as
+evidence, the write path refuses matching text, and
+<code>get_context</code> drops stored notes that match. The anomaly gate
+is real, calibrated per domain and configurable to block. It ships in
+audit mode, its quarantine has no release path, and the guard is a regex
+set a paraphrase can avoid
+(<code>prompt_injection_guard.py:31-90</code>).</p>
+<h3 id="audit">Audit</h3>
+<p><code>log_file_activity</code> emits an OCSF 1001 event for each note
+create, update and delete, with the note id and the backend method as
+actor (<code>ocsf.py:267-297</code>). Those events go to
+<code>logs/zettelforge.log</code>, rotated at 10 MB with nine backups
+(<code>log.py:89-97</code>). The separate <code>audit.log</code>, kept
+for 52 rotations, accepts only authentication, authorization, account
+and config events (<code>log.py:20-25</code>, <code>:99-108</code>). It
+does receive one authorization event per <code>remember</code>, with
+<code>actor="system"</code> and no note id
+(<code>memory_manager.py:260-266</code>). No event records the text an
+evolution replaced.</p>
+<h3 id="marks">Marks</h3>
+<p>None is carried.</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — supersession is a
+<code>superseded_by</code> link on the record, and the updater's DELETE
+stores the contradicting fact as a new note. Nothing keyed on a rejected
+value stops extraction from adding it again.</li>
+<li><strong><code>trust_state</code></strong> — <code>tier</code> is
+<code>A</code> on every note any writer constructs, and consolidation
+sets <code>A</code>. Synthesis can filter on it, so it is shaped like a
+state; it never varies. <code>confidence</code> is a float.</li>
+<li><strong><code>bitemporal</code></strong> — <code>created_at</code>
+and <code>updated_at</code> are record time; a report's publication date
+reaches only prompt text.</li>
+<li><strong><code>scope_enforced</code></strong> — <code>domain</code>
+is a topic label the caller picks, applied to the vector arm and not to
+the graph or entity arms. User isolation is a data directory per
+manager, a physical partition.</li>
+<li><strong><code>audit_log</code></strong> — note mutations reach a
+rotating application log at INFO level, outside the store, with no prior
+content; the retained audit file takes no mutation event.</li>
+<li><strong><code>human_review</code></strong> — no route or tool holds
+a note pending a person; <code>should_flag_for_review</code> has no
+caller, and the quarantine file has no reader.</li>
+<li><strong><code>negative_eval</code></strong> — the exclusion cases
+can pass on an empty result; see section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 846 pytest functions in 69 files. CI runs them with
+mock embeddings, Ollama as the LLM provider, and a 67% coverage floor
+(<code>.github/workflows/ci.yml:126-135</code>,
+<code>tests/conftest.py:8-13</code>). I did not run them.</p>
+<p>Coverage of the defences is direct. The anomaly gate is tested in
+audit and quarantine modes, including the forensic record
+(<code>tests/test_memory_defense.py</code>), and the evolver's evaluate,
+apply and rollback are tested with a mocked model
+(<code>tests/test_memory_evolver.py</code>). The injection guard's
+wiring is tested by checking that each module's source text contains the
+guard call (<code>tests/test_prompt_injection_guard.py:61-93</code>).
+That asserts the line exists, not that a hostile note is refused.</p>
+<p><code>negative_eval</code> is withheld because each exclusion case
+can pass on nothing.</p>
+<ul>
+<li><code>test_recall_integration.py:45-54</code> asserts the superseded
+id is absent from <code>recall</code>, and never that the superseding
+note is present.</li>
+<li><code>test_graph_scoping.py:96</code> asserts
+<code>all("APT28" not in ...)</code> over a result list it does not
+require to be non-empty.</li>
+<li><code>test_sqlite_integration.py:113</code> asserts supersession
+only inside <code>if old_note.links.superseded_by:</code>, so it passes
+when supersession does not happen.</li>
+</ul>
+<p>Adding <code>assert note_new.id in result_ids</code> to the first
+would earn the mark.</p>
+<p><strong>Benchmarks.</strong> <code>benchmarks/</code> holds harnesses
+and committed results for a CTI retrieval set, LoCoMo, RAGAS, CTIBench
+and others. The README's CTI figure, 75.0%, recomputes from
+<code>cti_retrieval_results.json</code>: the per-category accuracies
+over 5, 4, 5, 3 and 3 questions give 15 of 20, against eight ingested
+reports. Its RAGAS 78.1% is <code>keyword_presence</code> over 100
+LoCoMo samples at v2.0.0, scored by <code>manual_fallback</code>
+(<code>ragas_results.json</code>). Its LoCoMo 22.0% appears in no
+committed result file. <code>locomo_results.json</code>, at v2.7.0 with
+a keyword judge, records 13.0% over 100 questions, and the 2026-06-09
+session file records 11.0%. I read these files and ran nothing.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Calibrate a write-time anomaly score on the domain's own
+recent notes</strong>, with audit, block and quarantine as one setting,
+and refuse to judge below a calibration floor rather than guess.</li>
+<li><strong>Drop high-fan-out entities before graph expansion.</strong>
+An IDF-style cap on how many notes an entity points to keeps speaker
+names and boilerplate from flooding the candidate set.</li>
+<li><strong>Rerank a bounded head on truncated text</strong> and leave
+the tail in fused order; the cost is fixed regardless of
+<code>k</code>.</li>
+<li><strong>Frame every untrusted input as evidence in the
+prompt</strong>, and scan stored text again when it is formatted for
+injection, not only when it arrives.</li>
+<li><strong>Emit per-phase timings on every write event.</strong> They
+make a latency regression attributable without a profiler.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Superseding on one shared entity value.</strong> A CVE or a
+city is a topic, not an identity; supersession needs the same claim
+about the same subject.</li>
+<li><strong>One correction flag with different defaults per
+surface.</strong> Put the predicate in the store's read method, or
+return the flag so the caller can see what it is looking at.</li>
+<li><strong>Rewriting text in one store and not the index beside
+it.</strong> Every writer of content must re-index, or the index must be
+derived.</li>
+<li><strong>A lifecycle class with a reader and no writer.</strong> A
+TTL filter fed by a default turns a default into a deletion policy.</li>
+<li><strong>Storing a truncation when the model is unavailable.</strong>
+Fall back to the input, or refuse the write.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single analyst or a small team who want CTI-aware entity
+extraction, alias tables, Sigma and YARA ingest and graph-assisted
+recall on one machine, with an LLM optional. The code treats both
+incoming and stored text as hostile, and does so consistently. Walk away
+if notes must stay correct over time: supersession fires on coincidence,
+the agent's surface ignores it, notes expire on a default nobody chose,
+and nothing can be deleted. Walk away too if you need tenants or an
+audit trail in the store; the first is in a package outside this tree,
+and the second is a rotating log.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the enterprise package changes supersession, expiry or the
+MCP recall flags, or only adds backends.</li>
+<li>How often single-entity supersession fires on a real CTI corpus, and
+whether any user relies on the MCP recall seeing superseded notes.</li>
+<li>Whether the 30-day expiry of every note is intended;
+<code>infer_persistence</code> suggests it is not.</li>
+<li>What an MCP <code>remember</code> stores on a plain
+<code>pip install</code> with no <code>ollama</code> package; the
+reading says 500 characters, unconfirmed by a run.</li>
+<li>Which artifact the README's LoCoMo 22.0% comes from.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>src/zettelforge/sqlite_backend.py</code>,
+<code>note_schema.py</code>, <code>memory_store.py</code>,
+<code>storage_backend.py</code>, <code>enrichment_ledger.py</code></li>
+<li>Write path: <code>memory_manager.py</code>
+(<code>_remember_inner</code>, <code>remember_with_extraction</code>,
+<code>_check_supersession</code>), <code>note_constructor.py</code>,
+<code>fact_extractor.py</code>, <code>memory_updater.py</code>,
+<code>entity_indexer.py</code>, <code>alias_resolver.py</code></li>
+<li>Defences: <code>governance_validator.py</code>,
+<code>prompt_injection_guard.py</code>, <code>memory_defense.py</code>,
+<code>pii_validator.py</code></li>
+<li>Retrieval: <code>vector_retriever.py</code>,
+<code>graph_retriever.py</code>, <code>blended_retriever.py</code>,
+<code>intent_classifier.py</code>,
+<code>synthesis_generator.py</code></li>
+<li>Background: <code>memory_evolver.py</code>,
+<code>consolidation.py</code>, <code>lance_maintenance.py</code></li>
+<li>Logging: <code>ocsf.py</code>, <code>log.py</code>,
+<code>telemetry.py</code></li>
+<li>MCP, web, adapters: <code>mcp/server.py</code>,
+<code>web/app.py</code>, <code>web/auth.py</code>,
+<code>integrations/langchain_retriever.py</code>,
+<code>integrations/crewai.py</code></li>
+<li>Tests and benchmarks: <code>tests/</code>,
+<code>benchmarks/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No caller of <code>delete_note</code>.</strong>
+<code>git grep -n -E 'delete_note\(' -- src web</code> returns the two
+definitions, <code>sqlite_backend.py:481</code> and
+<code>storage_backend.py:74</code>.</li>
+<li><strong>No writer of the persistence class.</strong>
+<code>git grep -n -E 'persistence_semantics|infer_persistence' -- src web</code>
+returns the schema default, the read in <code>is_expired</code>, the
+definition of <code>infer_persistence</code> and the SQLite column
+mapping; no assignment and no call.</li>
+<li><strong>No caller of <code>rollback</code>.</strong>
+<code>git grep -n -E '\.rollback\(' -- src web</code> returns nothing;
+<code>git grep -n -E 'def rollback' -- src</code> returns
+<code>memory_evolver.py:190</code>.</li>
+<li><strong>No reader of the quarantine file.</strong>
+<code>git grep -n -E 'memory_anomalies|quarantine_path' -- src web</code>
+returns the config field and the writer in
+<code>memory_defense.py</code>.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_(from|to|until)|validfrom|validto|valid_time|event_time|occurred_at|observed_at' -- src</code>
+returns nothing;
+<code>git grep -c -E 'created_at' -- src/zettelforge/note_schema.py</code>
+returns 2.</li>
+<li><strong>No writer of tier B or C.</strong>
+<code>git grep -n -E 'tier[[:space:]]*=[[:space:]]*"[BC]"|tier="[BC]"' -- src web</code>
+returns nothing; <code>git grep -n -E 'Metadata\(' -- src</code> shows
+<code>tier="A"</code> in <code>note_constructor.py</code>,
+<code>sigma/ingest.py</code> and <code>yara/ingest.py</code>.</li>
+<li><strong>No caller of <code>should_flag_for_review</code>.</strong>
+<code>git grep -n -E 'should_flag_for_review' -- src web</code> returns
+the definition.</li>
+<li><strong>No reader of <code>synthesis.tier_filter</code>.</strong>
+<code>git grep -n -E 'synthesis\.tier_filter' -- src web</code> returns
+nothing; <code>config.py:222</code> declares it.</li>
+<li><strong>Ledger readers only in tests.</strong>
+<code>git grep -n -E 'list_enrichment_jobs|count_enrichment_jobs_by_state' -- src web</code>
+returns the two definitions.</li>
+<li><strong>No writer of <code>links.related</code>.</strong>
+<code>git grep -n -E 'links\.related' -- src web</code> returns the
+SQLite serialiser and four reads in
+<code>vector_retriever.py</code>.</li>
+<li><strong>Rewrites do not re-index LanceDB.</strong>
+<code>git grep -n -E '_index_in_lance\(|reindex_vector\(' -- src web</code>
+returns the <code>remember</code> call at
+<code>memory_manager.py:396</code>, <code>MemoryStore.write</code>, the
+definitions and comments; no call from <code>rewrite_note</code> or the
+evolver.</li>
+<li><strong>The surfaces that skip supersession.</strong>
+<code>git grep -n -E 'exclude_superseded=False' -- src web</code>
+returns <code>mcp/server.py:65</code> and
+<code>web/app.py:206</code>.</li>
+<li><strong><code>ollama</code> is not declared.</strong>
+<code>git grep -n -i 'ollama' -- pyproject.toml</code> returns nothing;
+<code>git grep -n -i 'fastembed' -- pyproject.toml</code> returns line
+38.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'bibtex|@article|@misc|@inproceedings|doi\.org' -- .</code>
+returns one NIST URL inside the vendored ATT&amp;CK JSON.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/ThreatRecall/zettelforge/commit/d1484ea66466bfadf7f61864300cbb00cab49877"><code class="commit-id" title="d1484ea66466bfadf7f61864300cbb00cab49877">d1484ea6…</code></a>.
+First reading, from a shallow clone of <code>master</code>; commit
+counts from the GitHub API. Screened first: one auto-run surface
+(<code>server.json</code>, an MCP Registry manifest), one execution
+point on pytest collection (<code>tests/conftest.py</code>), and
+<code>pyproject.toml</code> unpinned with no lockfile. MIT, no rider.
+Nothing installed, built or run. No marks: supersession is a record
+link, the tier never varies, and the exclusion tests can pass on an
+empty result (<a href="#9-reliability-safety-and-trust">section
+9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

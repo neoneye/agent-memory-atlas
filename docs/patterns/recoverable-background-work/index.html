@@ -452,6 +452,19 @@ matches the recorded side rather than overwriting a later edit
 (<code>:592-631</code>). Retention is the weak edge: runs past the 30th
 are dropped with their backup files
 (<code>botNightlyLearningState.ts:151-163</code>).</p>
+<p><a href="../../systems/zettelforge/">ZettelForge</a> writes the
+outbox and never reads it. Each causal-extraction, NER and
+neighbour-evolution job gets a row in an SQLite
+<code>enrichment_jobs</code> ledger, with a state, an attempt count and
+an error code, and is then put on an in-process queue of 500
+(<code>src/zettelforge/memory_manager.py:1261-1288</code>). A full queue
+marks the row failed; a crash leaves rows <code>queued</code> or
+<code>running</code>. The ledger's two readers are called only from
+tests, so no path replays a row, and the atexit drain gives the queue 10
+seconds (<code>:1480-1514</code>). The module docstring defers a
+ledger-aware <code>flush()</code> to later releases
+(<code>enrichment_ledger.py:1-7</code>). The durable half of the pattern
+is built; the worker that reads it back is the missing half.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>

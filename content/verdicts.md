@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 779 reports.**
+**This page covers all 780 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7132,3 +7132,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 20,043 lines of Python outside tests, a quarter of it the research toolkit, plus 4,464 of shell and 2,554 of command prompts; 653 commits, 24 March – 4 November 2026, 480 of them the maintainer's; 908 pytest functions run in CI on Ubuntu and Windows, not run here. No marks. The retrieval benchmark table does not recompute from the tree, since no run output is committed.
 - Study when: several agent CLIs should share one plain-markdown vault, with conventions enforced by hooks, lints and guarded edits rather than by a database.
 - Do not copy when: a retracted fact must stop being returned, the audit trail must be out of the agent's reach, or a person's decision must be one the agent cannot make.
+
+### [`zettelforge`](../systems/zettelforge/)
+- Best idea: **a write-time anomaly gate calibrated on the domain's own recent notes.** `MemoryAnomalyGate` scores a candidate's embedding similarity and n-gram divergence against up to 50 recent notes in its domain, flags anything past the calibration mean plus two standard deviations, and offers audit, block and quarantine as one setting; below 50 calibration notes it declines to judge.
+- Second idea: an injection guard at every boundary where untrusted text meets a model, each prompt framing its inputs as evidence, with a second scan when stored notes are formatted for injection; and a fan-out cap that drops entities pointing at too many notes before graph expansion.
+- Biggest risk: **one shared entity value supersedes an older note, and the agent's surface ignores supersession.** `_check_supersession` fires on a single shared CVE, named tool or city; `recall()` then hides the older note, while the MCP and web recall pass `exclude_superseded=False` and return it with no field saying so.
+- Second risk: nothing sets a note's persistence class, so every note drops out of `recall()` 30 days after its last rewrite; the background evolver rewrites neighbours' text in SQLite without re-indexing LanceDB; and read as written, an MCP remember on an install without the `ollama` package keeps only the first 500 characters.
+- Most reusable component: `src/zettelforge/memory_defense.py:105-271` — the calibrated score, its three modes and the forensic quarantine record — with the fan-out gate `_filter_low_signal_entities` in `memory_manager.py:996-1023`.
+- Maturity impression: MIT; 22,415 lines of Python in the package, 13,220 of them the memory core; 414 commits on master, 6 April – 10 July 2026, 373 from one author; 846 pytest functions run in CI with mock embeddings, not run here. No marks. The README's CTI 75.0% recomputes from the committed per-category results; its LoCoMo 22.0% is in no committed file.
+- Study when: you are building threat-intelligence memory and want regex entity extraction, alias tables, Sigma and YARA ingest and write-time poisoning defences to borrow.
+- Do not copy when: notes must stay current and correct over time, an agent must know what was superseded, or tenants and an audit trail must live in the store.
