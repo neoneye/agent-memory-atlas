@@ -1,19 +1,22 @@
 ---
 title: "kube-coder"
 eyebrow: "Scope on every retrieval arm"
-description: "A per-workspace SQLite memory shared by a dashboard and an MCP server, whose namespace filter is applied to the FTS arm, the LIKE degradation and the vector hits alike — and whose upsert clears the deletion flag it wrote."
+description: "A per-workspace SQLite memory behind a dashboard and MCP server, whose namespace filter holds on every retrieval arm, and whose upsert revives what was deleted."
 root: ../..
 page_kind: system
 source_name: "imran31415/kube-coder"
 source_url: https://github.com/imran31415/kube-coder
 archive_name: "imran31415--kube-coder"
-revision: 6707237fc961c9f878bc1d7789c980c49b92d39f
-revision_url: https://github.com/imran31415/kube-coder/commit/6707237fc961c9f878bc1d7789c980c49b92d39f
-analyzed_at: 2026-09-19
-capabilities: "scope_enforced, audit_log, negative_eval"
+revision: 8a4e1ed27046063436153cb14f40a6b0e001013c
+revision_url: https://github.com/imran31415/kube-coder/commit/8a4e1ed27046063436153cb14f40a6b0e001013c
+analyzed_at: 2026-11-05
+licence: "MIT"
+size: "3,101 lines of Python in charts/workspace/memory/, a 608-line MCP server in charts/workspace/mcp_memory.py and 461 lines of dashboard routes in charts/workspace/handlers/memory.py, inside a Helm chart that is mostly infrastructure"
+activity: "934 commits, 18 August 2025 – 4 November 2026; 24 contributors on the GitHub API, the largest a maintainer account and a bot account"
+tests: "227 test functions across ten memory test files under charts/workspace/tests/; none run for this reading"
+capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "the memory store, every retrieval arm | charts/workspace/memory/manager.py | search applies the namespaces allow-list and namespace_scope root to the FTS pass, the LIKE degradation and the ids loaded by _fetch_by_ids, so an out-of-scope hit cannot be fused back in | charts/workspace/tests/memory_scope_test.py"
-  audit_log: "the memory store | charts/workspace/memory/manager.py | memory_history takes a row carrying version, op and updated_by from upsert, update_partial and soft_delete, capped at HISTORY_CAP_PER_MEMORY = 100 per memory by _prune_history | charts/workspace/tests/memory_lifecycle_test.py"
   negative_eval: "the memory read path | charts/workspace/tests/memory_scope_test.py | test_scope_excludes_prefix_sharing_sibling, test_sibling_project_is_still_out_of_scope and test_scoped_injection_excludes_other_projects, with the LIKE degradation and vector-only arms asserted separately | charts/workspace/tests/memory_scope_test.py"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -36,10 +39,10 @@ matrix:
 
 kube-coder is a Helm chart that turns a Kubernetes cluster into a fleet of
 browser-reachable dev workspaces — code-server, a persistent tmux, an in-pod
-browser, and pluggable coding agents, one pod per developer. MIT, 752 commits.
+browser, and pluggable coding agents, one pod per developer.
 Most of it is infrastructure. The part this atlas reads is
-`charts/workspace/memory/` — 3,101 lines of Python plus a 575-line MCP server,
-covered by 223 test cases across nine test files.
+`charts/workspace/memory/`, the MCP server in front of it and the dashboard routes
+over the same rows.
 
 **One SQLite file per workspace, two entry points.** The dashboard reaches it
 over HTTP on the pod; Claude reaches it through an MCP stdio server spawned per
@@ -70,7 +73,7 @@ kept only for anyone who wants to wire it manually. A project that built
 automatic injection, retired it, and then actively removes it on each start has
 taken a position most systems here leave implicit.
 
-**Four of seven marks**, and the one that is missing matters most. `soft_delete`
+**Two of seven marks**, `scope_enforced` and `negative_eval`, and the one that is missing matters most. `soft_delete`
 sets `deleted_at` and appends a history row recording the removal. `upsert` on
 the same `(namespace, key)` sets `deleted_at=NULL`. So a deleted memory is
 revived by writing it again, and the audit trail that already records the
@@ -137,10 +140,15 @@ certificate, PVC and OAuth allowlist per developer, all from the chart.
 
 `memory_history` carries `memory_id`, `version`, the value, tags, importance,
 confidence, `updated_at`, **`updated_by`** and **`op`** — a per-memory mutation
-log with the operation and the actor. That earns `audit_log`, with one property
-stated rather than glossed: `_prune_history` keeps the newest
-`HISTORY_CAP_PER_MEMORY = 100` versions per memory and deletes the rest, so the
-record is bounded rather than append-only forever.
+log with the operation and the actor, written in the same transaction as each
+change. It does not earn `audit_log`, because it is not append-only:
+`_prune_history` keeps the newest `HISTORY_CAP_PER_MEMORY = 100` versions per
+memory and deletes the rest on every upsert and partial update
+(`charts/workspace/memory/manager.py:62`, `:378`, `:449`, `:482-489`). The cap
+is a constant with no setting, so a memory rewritten 101 times has lost its
+first version. Purging a soft-deleted memory also drops its history through
+`ON DELETE CASCADE`; that runs only on request or under `KC_MEMORY_GC_DAYS`,
+which defaults to off (`charts/workspace/server.py:17127-17150`).
 
 There is no epistemic status. `confidence` is a float used in ranking, `kind` is
 a taxonomy (`semantic` by default), and no value of either withholds a row from
@@ -241,9 +249,11 @@ byte-identical.
 
 ## 10. Tests, Evals, and Benchmarks
 
-223 test cases across nine memory test files: scope, lifecycle, the MCP surface,
-the pending embeddings queue, rollback compatibility, summarization, and the DB
-path. There is no paper. The repository links an external
+227 test functions across ten memory test files: scope, lifecycle, the MCP
+surface, the pending embeddings queue, rollback compatibility, summarization, the
+DB path, the manager's remaining branches, and the dashboard's route table
+(`memory_routes_test.py`, whose end-to-end cases stop at a 401 that proves a
+route matched). There is no paper. The repository links an external
 `kubecoder-bench` for aider-polyglot coding scores, which measures the agent
 rather than the memory; no memory evaluation is committed here.
 
@@ -290,9 +300,10 @@ I did not run the suite.
   re-write makes deletion a suggestion. The history row recording the delete is
   already there; consulting it is the difference between a soft delete and a
   refusal.
-- **A bounded audit used as an unbounded one.** 100 versions per memory is a
-  sensible cap, and it means "why does it believe this" has a horizon. Say which
-  it is before relying on it.
+- **A version log with a count cap.** 100 versions per memory bounds the
+  table, and it means "why does it believe this" has a horizon that moves with
+  every write. If the history is meant to answer that question, keep it whole
+  and bound something else.
 - **Identity on `(namespace, key)` with no contradiction detection.** The same
   fact under two keys is two live memories, and nothing notices.
 
@@ -351,6 +362,8 @@ library you would vendor on its own.
   `memory_pending_queue_test.py`, `memory_rollback_compat_test.py` and four more
 
 ## History
+
+**2026-11-05** — re-pinned to [`8a4e1ed27046063436153cb14f40a6b0e001013c`](https://github.com/imran31415/kube-coder/commit/8a4e1ed27046063436153cb14f40a6b0e001013c), 934 commits. `charts/workspace/memory/` has the same tree hash at both pins. The sixteen dashboard memory handlers moved from `server.py` to `handlers/memory.py` byte-identical apart from a module prefix, and `mcp_memory.py` gained MCP protocol-version negotiation and `server/discover`. `audit_log` is **withdrawn**: `_prune_history` deletes all but the newest 100 versions of a memory on every upsert and partial update, and a default-on count cap fails the mark as it does elsewhere in the atlas. The summary's *four of seven marks*, stale since the previous entry, now reads two. Test functions counted per file with `grep -c 'def test'`, which gives 227 across ten files. Screened again; nothing was installed, built or run.
 
 **2026-09-19** — re-pinned to [`6707237fc961c9f878bc1d7789c980c49b92d39f`](https://github.com/imran31415/kube-coder/commit/6707237fc961c9f878bc1d7789c980c49b92d39f). `human_review` is **withdrawn**. Section 8 already said what settles it — *"an editing surface rather than an approval queue — nothing is held pending a decision"* — and carried the mark anyway, on a clause of the definition that no longer exists. Adjudicating after the fact is not the test; waiting is. The tree was searched at this pin for any admission state and has none: the only `pending` values are devcontainer build states and board task states. The Memory tab keeps its credit as a correction surface. The other three marks stand. Screened again first; nothing was installed, built or run.
 
