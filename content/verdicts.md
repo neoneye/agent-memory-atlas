@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 783 reports.**
+**This page covers all 784 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7172,3 +7172,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 7,772 lines of Rust in src/ outside tests; 245 commits from one author, 22 July – 3 November 2026, release 0.3.3; 230 Rust test functions and 14 CI scripts, not run here. One mark, `negative_eval`. The README's search-quality table has no committed base or results.
 - Study when: you want an operations team's agents to share what they learn about hosts, deploys and incidents in a git repository a person can read and revert, with correct answers about the past.
 - Do not copy when: tenants or projects must not read each other's memory, two writers to one key must detect the conflict, or an agent's claim must be checked before others act on it.
+
+### [`friday`](../systems/friday/)
+- Best idea: **a fact id that hashes its scope and text, looked up across every state before an insert.** On the opt-in SQLite gateway a revoked fact keeps its row, and re-adding the same text in the same project returns that row instead of a fresh one, so the revocation holds.
+- Second idea: an opt-in gateway that requires a non-empty project on every route and filters on it in SQL, refuses to start on a default key, and decays from the last application so a repeated pass does not compound.
+- Biggest risk: **the default gateway re-admits a revoked fact as active.** Its duplicate check skips superseded entries, so the same text appends an active copy under the same id, and a later revoke by that id re-marks the old entry and reports success.
+- Second risk: the Compose decay pass rewrites a revoked fact's status to active and compounds on every run; episodic memories go to the hosted Mem0 platform; the blast-radius Cypher calls `toLower()` with no argument and fails on every call, and its test accepts the failure.
+- Most reusable component: `LocalStorage` in `storage/local.py:136-279` — the status-blind dedup in `add` and the non-compounding `decay` — with the request models in `gateway/serverless.py:19-103`.
+- Maturity impression: MIT; 5,612 lines of Python outside tests; 61 commits, 16 September – 4 October 2026, 55 from one maintainer; 67 pytest functions run in CI, not run here. Four marks: `tombstone` and `scope_enforced` on the opt-in gateway, `trust_state` on the facts ledger, `negative_eval`. The README's DeepEval table is a dictionary of constants.
+- Study when: you want a short list of project constants that every coding agent reads at session start, served from one SQLite file, with a revocation that sticks.
+- Do not copy when: memories must stay on your machine, the dependency graph is the reason you came, or more than one person shares the server under one key.

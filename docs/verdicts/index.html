@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 783 reports.</strong></p>
+<p><strong>This page covers all 784 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32592,6 +32592,45 @@ can read and revert, with correct answers about the past.</li>
 <li>Do not copy when: tenants or projects must not read each other's
 memory, two writers to one key must detect the conflict, or an agent's
 claim must be checked before others act on it.</li>
+</ul>
+<h3 id="friday"><a
+href="../systems/friday/"><code>friday</code></a></h3>
+<ul>
+<li>Best idea: <strong>a fact id that hashes its scope and text, looked
+up across every state before an insert.</strong> On the opt-in SQLite
+gateway a revoked fact keeps its row, and re-adding the same text in the
+same project returns that row instead of a fresh one, so the revocation
+holds.</li>
+<li>Second idea: an opt-in gateway that requires a non-empty project on
+every route and filters on it in SQL, refuses to start on a default key,
+and decays from the last application so a repeated pass does not
+compound.</li>
+<li>Biggest risk: <strong>the default gateway re-admits a revoked fact
+as active.</strong> Its duplicate check skips superseded entries, so the
+same text appends an active copy under the same id, and a later revoke
+by that id re-marks the old entry and reports success.</li>
+<li>Second risk: the Compose decay pass rewrites a revoked fact's status
+to active and compounds on every run; episodic memories go to the hosted
+Mem0 platform; the blast-radius Cypher calls <code>toLower()</code> with
+no argument and fails on every call, and its test accepts the
+failure.</li>
+<li>Most reusable component: <code>LocalStorage</code> in
+<code>storage/local.py:136-279</code> — the status-blind dedup in
+<code>add</code> and the non-compounding <code>decay</code> — with the
+request models in <code>gateway/serverless.py:19-103</code>.</li>
+<li>Maturity impression: MIT; 5,612 lines of Python outside tests; 61
+commits, 16 September – 4 October 2026, 55 from one maintainer; 67
+pytest functions run in CI, not run here. Four marks:
+<code>tombstone</code> and <code>scope_enforced</code> on the opt-in
+gateway, <code>trust_state</code> on the facts ledger,
+<code>negative_eval</code>. The README's DeepEval table is a dictionary
+of constants.</li>
+<li>Study when: you want a short list of project constants that every
+coding agent reads at session start, served from one SQLite file, with a
+revocation that sticks.</li>
+<li>Do not copy when: memories must stay on your machine, the dependency
+graph is the reason you came, or more than one person shares the server
+under one key.</li>
 </ul>
         </article>
       </div>

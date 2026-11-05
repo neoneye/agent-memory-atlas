@@ -1039,6 +1039,8 @@ decision.
 
 **[Graphicle](../../systems/graphicle/) keeps two durable rejections, both keyed on a record.** A forgotten connector document leaves a hash of connector and document id in `am_forgotten_sources`, which every import consults, so a resent document is skipped and the later turns of a forgotten session are blocked before they exist (`crates/graphicle/src/deletion.rs:242-276`, `crates/graphicle/src/connectors.rs:440`). A rejected claim keeps its `am_claims` row, whose id is the sha256 of the scope and the whole claim object, so the identical proposal replays as rejected (`crates/graphicle-memory/src/semantic.rs:183`, `crates/graphicle/src/claims.rs:58-66`). The same text under a new document id, or the claim reworded or citing another quote, is a new source or draft. **Hashing the evidence into the key turns a rejection into a deduplication.**
 
+**[Friday](../../systems/friday/) gets its tombstone from a dedup lookup that ignores status, on one of its two gateways.** On the opt-in SQLite gateway a fact's id hashes kind, project and text, and a revoke keeps the row. `add` looks the text up across every row of that kind and project, so the same text re-added returns the revoked row as `duplicate` (`storage/local.py:136-155`, `:332-344`). The key is the exact string, the answer misnames a refusal, and no test pins it. On the Compose gateway the duplicate check skips superseded entries, so the same text appends an active copy under the same id (`gateway/main.py:395-401`). **One predicate on the dedup query decides whether a revocation is durable.**
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

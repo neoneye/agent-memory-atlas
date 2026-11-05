@@ -126,8 +126,8 @@ belief.</p>
 <blockquote>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
-recurs across the corpus. 71 systems of
-783 carry the mark, and <a
+recurs across the corpus. 72 systems of
+784 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -291,8 +291,8 @@ near-miss, and the argument that the expensive half of the pattern is
 not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
-<p><strong>71 systems of
-783 in the atlas carry the mark.</strong> The
+<p><strong>72 systems of
+784 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -1730,6 +1730,18 @@ rejected (<code>crates/graphicle-memory/src/semantic.rs:183</code>,
 a new document id, or the claim reworded or citing another quote, is a
 new source or draft. <strong>Hashing the evidence into the key turns a
 rejection into a deduplication.</strong></p>
+<p><strong><a href="../../systems/friday/">Friday</a> gets its tombstone
+from a dedup lookup that ignores status, on one of its two
+gateways.</strong> On the opt-in SQLite gateway a fact's id hashes kind,
+project and text, and a revoke keeps the row. <code>add</code> looks the
+text up across every row of that kind and project, so the same text
+re-added returns the revoked row as <code>duplicate</code>
+(<code>storage/local.py:136-155</code>, <code>:332-344</code>). The key
+is the exact string, the answer misnames a refusal, and no test pins it.
+On the Compose gateway the duplicate check skips superseded entries, so
+the same text appends an active copy under the same id
+(<code>gateway/main.py:395-401</code>). <strong>One predicate on the
+dedup query decides whether a revocation is durable.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

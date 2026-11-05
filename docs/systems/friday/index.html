@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A FastAPI and MCP memory server
+for coding agents: a JSON facts ledger, hosted Mem0 memories and a Neo4j
+graph, with an opt-in SQLite gateway.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Friday — Agent Memory Atlas">
+    <meta property="og:description" content="A FastAPI and MCP memory
+server for coding agents: a JSON facts ledger, hosted Mem0 memories and
+a Neo4j graph, with an opt-in SQLite gateway.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Friday — Agent Memory Atlas">
+    <meta name="twitter:description" content="A FastAPI and MCP memory
+server for coding agents: a JSON facts ledger, hosted Mem0 memories and
+a Neo4j graph, with an opt-in SQLite gateway.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Friday — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Friday",
+      "description": "A FastAPI and MCP memory server for coding agents: a JSON facts ledger, hosted Mem0 memories and a Neo4j graph, with an opt-in SQLite gateway.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Two gateways that disagree about what a
+revocation means</p>
+          <h1>Friday</h1>
+          <p class="document-deck">A FastAPI and MCP memory server for
+coding agents: a JSON facts ledger, hosted Mem0 memories and a Neo4j
+graph, with an opt-in SQLite gateway.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/friday-memory/friday">
+              <span>Source</span>
+              <strong>friday-memory/friday</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/friday-memory/friday/commit/fad2a61c38eb77058e4ecb71a558fd579e671dce" title="fad2a61c38eb77058e4ecb71a558fd579e671dce">
+              <span>Analyzed revision</span>
+              <code>fad2a61c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-05</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/friday-memory--friday" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>friday-memory--friday</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>5,612
+lines of Python outside tests: 1,226 in the two gateways, 466 in
+storage, 693 in decay, pipelines and orchestrator, 402 in the MCP
+bridge, 1,285 in the SDK and CLI, 1,365 in deploy and migration scripts,
+175 in the benchmark; a 3,171-line HTML Studio</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>61
+commits, 16 September – 4 October 2026: 55 from one maintainer under two
+author names, 3 from a second contributor, 3 from Dependabot; tag v1.5.2
+is the pin's parent</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>67
+pytest functions in 6 files, 1,753 lines, run in CI as the full suite
+and again as test_storage.py against SQLite and libSQL; none run for
+this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Friday is a FastAPI server and stdio MCP bridge that gives coding
+agents a project-scoped facts ledger, an episodic memory and an entity
+graph. The Compose deployment keeps facts in one JSON file, sends
+memories to the hosted Mem0 platform and extracts graph edges through
+DeepSeek; an opt-in gateway puts everything in one SQLite or libSQL
+table. The facts ledger is the real mechanism: key-based supersession, a
+revoked state every facts read filters, and on the opt-in gateway a
+dedup lookup that keeps a revoked text revoked. The default gateway
+re-admits that text as active, the blast-radius query cannot execute,
+and the published benchmark is a dictionary of constants.</p>
+<p>Several README layers have no code behind them at this commit.
+ChromaDB is never imported, recall potentiation has no caller, the
+Compose deployment schedules no nightly dream cycle, nothing commits to
+git, and the prompt-based mood detector is called only by a test. The
+opt-in gateway is the careful half of the repository: required project
+keys, <code>BEGIN IMMEDIATE</code> transactions, fail-closed
+authentication and a decay that does not compound on retries.</p>
+<p>Four marks are carried. Three rest on the opt-in gateway or on the
+facts ledger both gateways share, not on the default deployment as a
+whole, and the <code>tombstone</code> is an exact-string lookup that
+reports a rejection as a duplicate. Section 9 says what each mark covers
+and what it leaves out.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Friday holds three kinds of thing, and only one of them has a
+lifecycle.</p>
+<p>A <strong>fact</strong> is one string in a project, written by the
+agent through <code>add_fact</code> and treated as ground truth: the
+persona export lists active facts under <em>"Verified Architectural
+Facts"</em> (<code>gateway/main.py:886</code>), and the generated rule
+files tell the agent to record <em>"atomic, high-confidence
+constraints"</em> there (<code>friday/rules.py:137</code>). A fact
+enters <code>active</code> and leaves it four ways:</p>
+<ul>
+<li><strong>superseded</strong> — a new fact in the same project whose
+text before the first <code>:</code> or <code>=</code> matches,
+lower-cased and at least three characters, marks the older one
+<code>superseded</code> (<code>gateway/main.py:415-435</code>), or an
+explicit <code>supersedes</code> id does (<code>:405-413</code>);</li>
+<li><strong>revoked</strong> — <code>revoke_fact</code> or a soft delete
+sets <code>superseded: true</code> and <code>status: revoked</code> with
+a reason (<code>:503-506</code>, <code>:551-555</code>);</li>
+<li><strong>decayed</strong> — the decay pass halves energy every 14
+days from <code>last_recalled_at</code> and sets <code>decayed</code>
+below 0.25 (<code>layers/decay.py:147-163</code>);</li>
+<li><strong>deleted</strong> — a hard delete removes the entry
+(<code>gateway/main.py:541-543</code>).</li>
+</ul>
+<p>Every facts read drops all three withheld states
+(<code>gateway/main.py:469-474</code>, <code>:856-860</code>;
+<code>gateway/serverless.py:148-149</code>). No path the agent reaches
+moves a fact back to <code>active</code>:
+<code>record_memory_recall</code>, the reinforcer that would revive a
+decayed fact, has no caller.</p>
+<p>A <strong>memory</strong> is free text the agent sends to
+<code>add_memory</code>. On Compose it goes to Mem0's hosted platform,
+which owns whatever processing happens to it; Friday attaches a project
+label in metadata and keeps no copy. On the opt-in gateway it is a row
+that can be updated, superseded or deleted, with a
+<code>superseded</code> flag and no other state.</p>
+<p>A <strong>graph entity</strong> is a name a DeepSeek call extracted
+from a memory. Nodes merge on name alone across projects and are not
+withdrawn when the memory that produced them is deleted.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a fact is withheld while superseded, revoked or decayed; the two gateways disagree about whether its text can come back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a fact is withheld while superseded, revoked or decayed; the two gateways disagree about whether its text can come back
+flowchart TD
+  ADD[&quot;add_fact over MCP&lt;br/&gt;agent-written, active&quot;] --&gt; GW{&quot;which gateway&lt;br/&gt;takes the call?&quot;}
+  GW --&gt;|&quot;Compose default&quot;| LK[&quot;key before the colon&lt;br/&gt;supersedes older fact&quot;]
+  GW --&gt;|&quot;opt-in serverless&quot;| SK[&quot;row id hashes&lt;br/&gt;kind, project, text&quot;]
+  LK --&gt; LR[&quot;revoke_fact&lt;br/&gt;superseded and revoked&quot;]
+  SK --&gt; SR[&quot;revoke_fact&lt;br/&gt;row kept, revoked&quot;]
+  LR --&gt; LD[&quot;decay pass rewrites&lt;br/&gt;revoked to active&quot;]
+  SR --&gt; SD[&quot;decay skips&lt;br/&gt;superseded rows&quot;]
+  LD --&gt; LA[&quot;same text re-added&lt;br/&gt;new active copy, same id&quot;]
+  SD --&gt; SA[&quot;same text re-added&lt;br/&gt;duplicate, stays revoked&quot;]
+  LA --&gt; READ[&quot;facts read drops&lt;br/&gt;superseded, revoked&lt;br/&gt;and decayed&quot;]
+  SA --&gt; READ
+  READ ~~~ DREAM[&quot;Compose dream cycle&lt;br/&gt;reads status alone,&lt;br/&gt;so a revoked fact&lt;br/&gt;can feed an insight&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Two gateways implement one HTTP surface, and the MCP bridge talks to
+whichever one <code>FRIDAY_URL</code> names.</p>
+<p><strong>Compose gateway</strong> (<code>gateway/main.py</code>, the
+<code>Dockerfile</code> CMD). FastAPI with module-level handlers. Facts
+are a JSON document read and rewritten whole on every call
+(<code>_load_facts</code>, <code>_save_facts</code>,
+<code>:168-191</code>). Memories go through
+<code>mem0.MemoryClient</code> (<code>:100-107</code>), the mem0ai
+package's client for the hosted platform, and
+<code>.env.example:14-16</code> says to get a key at mem0.ai. Every
+memory is stored under <code>user_id="friday_user"</code>
+(<code>:291</code>). Neo4j 5.15 runs beside it in
+<code>docker-compose.yml</code>. Graph extraction is an
+OpenAI-compatible call to DeepSeek in a FastAPI background task
+(<code>:299-312</code>). Cognitive state is one JSON file
+(<code>orchestrator/cognitive_state.py:30-46</code>).</p>
+<p><strong>Opt-in serverless gateway</strong>
+(<code>gateway/serverless.py</code>,
+<code>Dockerfile.serverless</code>). A factory app over a
+<code>Storage</code> protocol with two implementations: SQLite with a
+connection per operation and <code>BEGIN IMMEDIATE</code> for writes
+(<code>storage/local.py:31-47</code>), and remote libSQL through the
+same SQL (<code>storage/turso.py</code>). One <code>records</code> table
+holds facts, memories, entities, edges, blueprints and state, keyed
+<code>(kind, project, id)</code>, with an FTS5 Porter index over
+memories kept by triggers (<code>migrations/0001_initial.sql</code>,
+<code>0002_fts.sql</code>). <code>docs/serverless-migration.md</code>
+describes Cloud Run with IAM and a Cloud Scheduler job, and states that
+graph extraction, graph rename and delete, and the Studio are not
+covered.</p>
+<p><strong>MCP bridge</strong> (<code>mcp/server.py</code>). A
+hand-rolled JSON-RPC loop over stdin that forwards seven tools to HTTP
+with the shared key in two headers.</p>
+<p><strong>Studio</strong> (<code>studio/index.html</code>). A Three.js
+page the Compose gateway serves at <code>/</code>. Its write calls send
+no key, except add-fact, which falls back to a hard-coded
+<code>friday_brain_secret_key_2026</code> (<code>:1464</code>). Its
+consolidation and reinforce buttons post to
+<code>/api/dream/trigger</code> and <code>/api/synapse/reinforce</code>
+(<code>:2240</code>, <code>:2565</code>), routes neither gateway
+defines.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Compose needs Docker, Neo4j, a Mem0 platform key for memories to
+persist, and a DeepSeek-compatible key for the graph. Without
+<code>MEM0_API_KEY</code>, <code>/add</code> stores nothing and answers
+<code>{"status": "added"}</code> all the same
+(<code>gateway/main.py:286-315</code>). Facts work offline.
+<code>install.sh</code> is a <code>curl | bash</code> that clones
+<code>main</code> unpinned and generates secrets. The opt-in gateway
+needs only a SQLite path, or a libSQL URL and token, and refuses to
+start on a missing or default key
+(<code>gateway/serverless.py:108-110</code>). The facts file and the
+SQLite table are both readable and repairable by hand.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>MCP tool to HTTP.</strong> <code>TOOL_HANDLERS</code>
+(<code>mcp/server.py:341-349</code>) maps <code>add_memory</code> to
+<code>POST /add</code>, <code>add_fact</code> to
+<code>POST /facts</code>, <code>memory_search</code> to
+<code>POST /search</code>, and <code>get_context</code> to
+<code>GET /context</code>, falling back to <code>GET /facts</code> on
+404 (<code>:293-305</code>); the other three map to blast radius, delete
+and revoke. A loop rewrites every tool's <code>project</code> schema to
+default <code>"default"</code> (<code>:226-233</code>), but
+<code>add_fact</code> and <code>revoke_fact</code> forward
+<code>project</code> only when the model passes one
+(<code>:254-255</code>, <code>:328-329</code>).</li>
+<li><strong>Fact write, Compose.</strong> <code>add_fact</code>
+(<code>gateway/main.py:386-457</code>): the id is the first 12 hex
+characters of the text's SHA-256 (<code>:390</code>); an exact active
+duplicate in the project returns <code>duplicate</code>
+(<code>:395-401</code>); explicit and key-based supersession follow
+(<code>:405-435</code>); then append and rewrite the file
+(<code>:437-452</code>). An omitted project lands in <code>global</code>
+(<code>:131-133</code>), which every project's facts read includes
+(<code>:477</code>).</li>
+<li><strong>Fact write, opt-in.</strong> <code>LocalStorage.add</code>
+(<code>storage/local.py:136-155</code>) selects any row of that kind,
+project and text, and returns <code>duplicate</code> if one exists;
+otherwise it inserts with id
+<code>sha256(canonical([kind, project, content]))</code>
+(<code>storage/models.py:19-21</code>). This gateway has no key-based or
+explicit supersession of facts, and its request model drops an MCP
+<code>supersedes</code> argument
+(<code>gateway/serverless.py:19-24</code>).</li>
+<li><strong>Memory write.</strong> Compose:
+<code>mem0.add(content, user_id="friday_user", metadata={source, project})</code>
+(<code>gateway/main.py:289-293</code>) and the background extraction
+(<code>pipelines/auto_graph.py:18-40</code>). Opt-in:
+<code>db.add("memories", ...)</code>
+(<code>gateway/serverless.py:169-172</code>).</li>
+<li><strong>Context.</strong> Compose defines no <code>/context</code>
+route, so <code>get_context</code> returns
+<code>GET /facts?project=</code> (<code>gateway/main.py:460-481</code>).
+The opt-in <code>/context</code> returns facts and the 50 newest
+unsuperseded memories (<code>gateway/serverless.py:248-253</code>).</li>
+<li><strong>Search.</strong> Compose: Mem0 search with a metadata filter
+and a post-filter (<code>gateway/main.py:566-590</code>). Opt-in: FTS5
+<code>MATCH</code> over the query's tokens joined by <code>OR</code>,
+with <code>project = ?</code> and <code>superseded = 0</code>
+(<code>storage/local.py:157-173</code>).</li>
+<li><strong>Correction.</strong> <code>revoke_fact_endpoint</code> and
+<code>delete_fact_endpoint</code>
+(<code>gateway/main.py:484-562</code>); <code>revoke_fact</code>,
+<code>delete_fact</code> and <code>mutate_memory</code>
+(<code>storage/local.py:281-358</code>). A Compose memory delete first
+checks the stored project label (<code>_verify_memory_project</code>,
+<code>gateway/main.py:238-275</code>).</li>
+<li><strong>Decay and dream.</strong> Compose:
+<code>apply_system_decay</code> (<code>layers/decay.py:98-177</code>)
+and <code>run_dream_cycle</code>
+(<code>pipelines/dream_cycle.py:79-161</code>), both behind
+authenticated POSTs. Opt-in: <code>LocalStorage.decay</code>
+(<code>storage/local.py:252-279</code>) and
+<code>scripts/deploy/consolidate.py:7-16</code>, scheduled at
+<code>0 3 * * *</code> UTC by
+<code>scripts/deploy/cloud-scheduler.sh:23</code>.</li>
+<li><strong>Graph read.</strong> <code>get_blast_radius</code>
+(<code>gateway/main.py:674-745</code>) and the Studio's
+<code>/api/graph-data</code> (<code>:629-671</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A Compose fact is a dict in <code>facts.json</code>: <code>id</code>,
+<code>content</code>, <code>project</code>, <code>created_at</code>,
+<code>superseded</code>, <code>superseded_by</code>,
+<code>superseded_at</code>, <code>energy_score</code>,
+<code>decay_immune</code>, <code>recall_count</code>,
+<code>last_recalled_at</code> and <code>status</code>
+(<code>gateway/main.py:437-450</code>), with <code>revoked_at</code>,
+<code>revoked_reason</code> and <code>decayed_at</code> added by later
+passes. The id hashes the text alone, so the same sentence in two
+projects shares an id, and a re-added revoked text appends a second
+entry with the same id. <code>recall_count</code> and
+<code>last_recalled_at</code> have one writer after creation,
+<code>record_memory_recall</code>, which nothing calls.</p>
+<p>The opt-in <code>records</code> table is
+<code>(rowid, kind, project, id, data, content, source, superseded)</code>
+with <code>UNIQUE(kind, project, id)</code>. <code>data</code> is the
+whole JSON payload and the other columns are projections for indexing
+(<code>migrations/0001_initial.sql</code>). Imported legacy rows without
+a project are enveloped under <code>__legacy_unscoped__</code>
+(<code>storage/models.py:9</code>).</p>
+<p>Temporal fields are <code>created_at</code>,
+<code>superseded_at</code>, <code>revoked_at</code>,
+<code>decayed_at</code> and <code>decay_applied_at</code>, all record
+time. There is no validity interval.</p>
+<p>Scope is a free-text <code>project</code> string the caller chooses.
+One API key covers every project, and
+<code>docs/serverless-migration.md</code> states that <em>"the shared
+API key is not a multi-tenant authorization boundary"</em>. A fact in
+<code>global</code> is read by every project.</p>
+<p>The cognitive state is a separate record: mode, urgency, stress,
+valence and a response calibration
+(<code>orchestrator/cognitive_state.py:14-27</code>). It is one file on
+Compose and one row per project on the opt-in gateway, and
+<code>POST /state/update</code> is its only writer.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Facts are listed, not searched.</strong>
+<code>get_context</code> returns every fact passing the status filter
+for the project plus <code>global</code>, sorted by energy, with no cap
+(<code>gateway/main.py:466-481</code>). On the opt-in gateway the 50
+newest memories come with them. Energy orders the list and could cut it
+through <code>min_energy</code>, which the MCP path never passes.</p>
+<p><strong>Memory search</strong> on Compose is Mem0's hosted search for
+user <code>friday_user</code> with
+<code>filters={"AND": [{"metadata": {"project": p}}]}</code>, then a
+post-filter that keeps rows whose project matches or is absent
+(<code>gateway/main.py:574-587</code>). A memory with no project label
+therefore reaches every project's results when the backend returns it.
+On the opt-in gateway each <code>\w+</code> token of the query is quoted
+and joined with <code>OR</code>, so a five-word question matches any
+memory holding any one of its words, ranked by FTS5 <code>rank</code>
+(<code>storage/local.py:159-172</code>). The FTS5 table indexes
+<code>source</code> and <code>project</code> beside
+<code>content</code>, and the <code>MATCH</code> names no column
+(<code>migrations/0002_fts.sql:1</code>). A query word equal to a source
+label such as <code>agent</code>, or to the project's own name, matches
+every memory that carries it.</p>
+<p><strong>The blast-radius query cannot execute.</strong> Its Cypher
+reads <code>WHERE toLower(start.name) = toLower()</code>, and the string
+never references the <code>entity</code> the call passes
+(<code>gateway/main.py:699</code>, <code>:707</code>). Neo4j rejects
+<code>toLower()</code> with no argument, and the <code>except</code>
+returns <code>status: "neo4j_unavailable"</code> with zero impacted
+nodes (<code>:733-743</code>). The tool the benchmark script credits
+with <em>"96% Blast-Radius Accuracy"</em>
+(<code>benchmarks/benchmark_deepeval.py:164</code>) returns that on
+every call. The string has had this form since <code>a0b7bd9</code>, the
+commit that added the endpoint. The <code>project</code> parameter is
+accepted and unused, and the test that covers the endpoint accepts
+<code>neo4j_unavailable</code> as a pass (section 10).</p>
+<p>No path fuses the layers. <code>orchestrator/router.py:13-32</code>
+defines a cross-layer merge with no caller.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls by the agent; there is no capture
+hook. The generated rule files tell it to write <em>"whenever you
+complete a task, resolve a bug, introduce a schema change"</em>, without
+being asked (<code>friday/rules.py:135</code>).</p>
+<p><strong>Fact conflict detection is a string prefix.</strong> Text
+before the first <code>:</code> or <code>=</code> is the key, so
+<code>Payment Gateway: Stripe</code> is superseded by
+<code>Payment Gateway: DodoPayments</code>, as the README shows. Two
+facts sharing a generic prefix such as <code>Note:</code> supersede each
+other. The README's own
+<code>Production database endpoint is db.internal.net:5432</code> keys
+on everything up to the port, so a changed host does not supersede the
+old one. The opt-in gateway detects no conflict between facts.</p>
+<p><strong>Re-assertion differs by gateway.</strong> Compose's duplicate
+check skips superseded entries (<code>gateway/main.py:399</code>), so a
+revoked text re-added appends a new <code>active</code> entry carrying
+the same id. A later <code>revoke_fact</code> on that id stops at the
+first match (<code>:493-498</code>), which is the revoked entry,
+re-marks it and reports <code>revoked</code>; the new copy stays active.
+On the opt-in gateway the dedup lookup has no status predicate
+(<code>storage/local.py:139-144</code>), so the same text returns
+<code>duplicate</code> with the revoked row's id, and the row stays
+revoked.</p>
+<p><strong>Graph extraction</strong> sends the first 3,000 characters of
+a memory to DeepSeek with a JSON-only prompt and upserts up to 10
+entities and 15 links (<code>pipelines/auto_graph.py:43-131</code>). A
+node merges on <code>name</code> alone and keeps the first writer's
+project (<code>:105-111</code>). The model's relationship label is
+upper-cased, its spaces replaced, and concatenated into the Cypher text
+(<code>:124-131</code>), so model output reaches query syntax.</p>
+<p><strong>The dream cycle writes templates.</strong>
+<code>synthesize_recent_insights</code> buckets active facts by keyword
+lists that include <code>razorpay</code>, <code>dodo</code>,
+<code>gstin</code>, <code>jhalka</code> and <code>ec2</code>. It emits
+fixed sentences such as <em>"Infrastructure Consolidation: Verified N
+active server directives with automated GitHub backup &amp; deploy key
+auth"</em> (<code>pipelines/dream_cycle.py:49-70</code>). When no bucket
+matches, it emits <code>Crystallized Learning:</code> plus the first 120
+characters of one fact (<code>:72-74</code>). On the opt-in gateway
+these become memories with <code>source="dream_cycle"</code>
+(<code>scripts/deploy/consolidate.py:13-15</code>), searchable and
+returned by <code>/context</code>.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A Compose <code>/add</code> blocks on one HTTPS call to Mem0;
+extraction runs after the response in the same process, one model call
+capped at 600 tokens. When a Mem0 memory becomes searchable depends on
+the platform and is not visible from this tree. A fact is readable as
+soon as the file is rewritten. An opt-in write is one SQLite transaction
+and is searchable on commit.</p>
+<p>The Compose decay pass rewrites the whole facts file on each request,
+and nothing schedules it. The opt-in scheduler visits every project
+nightly, reads and rewrites every fact row, and inserts up to two
+template memories per project. <code>get_context</code> injects every
+active fact with no budget, so its size grows with the ledger.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP bridge registers seven tools
+(<code>mcp/server.py:74-223</code>). The agent holds every verb,
+<code>revoke_fact</code> and <code>delete_memory</code> included, and
+names the project on every call. <code>friday rules generate</code>
+writes the same Two-Way Zero-Amnesia directives into
+<code>AGENTS.md</code>, <code>CLAUDE.md</code>,
+<code>.cursorrules</code>, <code>GEMINI.md</code>,
+<code>.github/copilot-instructions.md</code>,
+<code>.windsurfrules</code>, <code>.continue/rules.md</code> and
+<code>CONVENTIONS.md</code> (<code>friday/rules.py</code>), and the
+repository carries all eight. There is no hook, so reading memory at
+session start and writing it at the end depend on the model following
+those files.</p>
+<p>The SDK (<code>friday/client.py</code>) wraps the REST routes
+synchronously and asynchronously. Its <code>get_context</code> returns
+the Markdown persona export rather than the payload the MCP tool reads
+(<code>:238-248</code>). A LangChain retriever wraps <code>search</code>
+(<code>friday/integrations/langchain.py</code>), and
+<code>smithery.yaml</code> starts the bridge with
+<code>python -m mcp.server</code>. With <code>FRIDAY_GCP_IAM=true</code>
+the bridge shells out to <code>gcloud auth print-identity-token</code>
+on every request (<code>mcp/server.py:60-70</code>).</p>
+<p>The cognitive-state endpoints are on the HTTP surface and not on MCP.
+<code>detect_state_from_prompt</code>, the heuristic that would set mode
+and urgency from a prompt, is called only by
+<code>tests/test_sdk.py:447</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-revoked-state-does-not-survive-the-compose-decay-pass">The
+revoked state does not survive the Compose decay pass</h3>
+<p><code>apply_system_decay</code> skips facts whose status is
+<code>superseded</code> or <code>archived</code>
+(<code>layers/decay.py:144</code>). A revoked fact has status
+<code>revoked</code>, so it is decayed like an active one and its status
+rewritten to <code>active</code> or <code>decayed</code>
+(<code>:136-142</code>, <code>:158-167</code>). The
+<code>superseded: true</code> flag set at revocation keeps it out of
+every facts read. The dream cycle filters on
+<code>status == "active"</code> alone
+(<code>pipelines/dream_cycle.py:105</code>), so after one decay pass a
+revoked fact is an input to synthesis and can be copied into a
+<code>CrystallizedInsight</code> node. No writer produces
+<code>archived</code>. The opt-in decay skips any row carrying the
+<code>superseded</code> flag (<code>storage/local.py:262</code>).</p>
+<h3 id="compose-decay-compounds">Compose decay compounds</h3>
+<p>Each pass multiplies the stored <code>energy_score</code> by the
+decay factor for the full time since <code>last_recalled_at</code>, and
+that timestamp never moves after the write
+(<code>layers/decay.py:147-158</code>). Two passes on one day apply a
+fact's whole age twice. Every SDK or HTTP call to
+<code>/dream/run</code> or <code>/decay/apply</code> moves facts toward
+<code>decayed</code>, and no reachable path moves them back. The opt-in
+<code>decay</code> starts from <code>decay_applied_at</code>, and its
+docstring says retries must not compound
+(<code>storage/local.py:253</code>, <code>:269</code>).</p>
+<h3 id="a-derived-copy-escapes-revocation">A derived copy escapes
+revocation</h3>
+<p>On the opt-in gateway the scheduled consolidation can write
+<code>Crystallized Learning:</code> plus a fact's text as a memory.
+Revoking the fact later leaves that memory searchable, since nothing
+links the two. The dedup that keeps the fact revoked does not reach a
+copy with a prefix.</p>
+<h3 id="authentication-and-exposure-on-compose">Authentication and
+exposure on Compose</h3>
+<p>The facts list, graph dump, entity quick search and cognitive state
+are served without a key (<code>gateway/main.py:460-465</code>,
+<code>:629-630</code>, <code>:826-827</code>, <code>:910-913</code>),
+and <code>tests/test_health.py:47-53</code> pins <code>GET /facts</code>
+as public. With no <code>project</code>, the facts read returns every
+project's facts. CORS allows any origin with credentials
+(<code>:66-72</code>), and the key is accepted as <code>?key=</code>
+(<code>:82</code>).</p>
+<p><code>/ingest</code> writes
+<code>Path("/app/blueprints") / filename</code> with the caller's
+filename (<code>:606-608</code>), so an absolute or <code>../</code>
+name escapes that directory. Two graph routes concatenate a caller's
+relation label into Cypher (<code>:761-765</code>, <code>:808</code>,
+<code>:817</code>). The opt-in gateway closes each of these. Every route
+but <code>/health</code> needs the key in a header, compared with
+<code>hmac.compare_digest</code>, and blueprints are rows
+(<code>gateway/serverless.py:116-128</code>, <code>:192-195</code>).</p>
+<h3 id="cross-project-mutation-on-compose">Cross-project mutation on
+Compose</h3>
+<p>Memory delete and update compare the stored project label first, a
+fix dated 4 October 2026 (<code>gateway/main.py:238-275</code>). Facts
+have no equivalent. <code>supersedes</code> matches an id in any project
+(<code>:406-408</code>). A revoke or delete without <code>project</code>
+takes the first id match anywhere (<code>:493-498</code>,
+<code>:531-536</code>). With a project, a <code>global</code> fact can
+be revoked from any project, and an <code>add_fact</code> that omits
+<code>project</code> writes to <code>global</code>.</p>
+<h3 id="data-loss-on-compose">Data loss on Compose</h3>
+<p><code>_save_facts</code> writes in place with
+<code>write_text</code>, and <code>_load_facts</code> returns an empty
+ledger on any parse error (<code>gateway/main.py:174-191</code>). A
+truncated file reads as empty, and the next fact written replaces the
+whole ledger. A failed save is logged, and the endpoint reports
+<code>added</code> regardless.</p>
+<h3 id="where-the-memories-go">Where the memories go</h3>
+<p>On Compose every episodic memory is sent to the Mem0 platform under
+one user id, which contradicts <em>"100% Self-Hosted Docker
+Compose"</em> (<code>README.md:150</code>) for the layer that holds
+decisions and rationale. Graph extraction sends each memory's first
+3,000 characters to the configured DeepSeek-compatible endpoint.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code></strong> — awarded on the opt-in
+gateway. A revoked fact keeps its row and text, and <code>add</code>
+looks the text up across every row of that kind and project before
+inserting, so re-adding it returns <code>duplicate</code> and the row
+stays revoked (<code>storage/local.py:139-144</code>,
+<code>:332-344</code>). The key is the value and the add path consults
+it. It is the exact string, so a change of case or wording is a new
+fact. The answer says <code>duplicate</code>, so the agent is told the
+fact is stored. No committed case asserts it, and Compose does the
+opposite.</li>
+<li><strong><code>trust_state</code></strong> — awarded on the facts
+ledger. <code>status</code> is <code>active</code>,
+<code>superseded</code>, <code>revoked</code> or <code>decayed</code>,
+with a <code>superseded</code> flag beside it. Producers are on the
+agent's surface, and every facts read filters on both. It is not a
+review state: everything enters <code>active</code>, and Compose's decay
+overwrites <code>revoked</code>.</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on the opt-in
+gateway, where every route requires a non-empty <code>project</code> and
+every <code>SELECT</code> filters on it. Compose carries the same key
+with an optional, unauthenticated facts read, unlabelled memories shared
+across projects, and an unscoped graph.</li>
+<li><strong><code>bitemporal</code></strong> — withheld; every timestamp
+is record time.</li>
+<li><strong><code>audit_log</code></strong> — withheld; a mutation
+overwrites the fact or row, and a revocation's reason is a field on
+it.</li>
+<li><strong><code>human_review</code></strong> — withheld; nothing waits
+for a person, and the Studio's write calls are edits after the fact,
+most of them sent without the key.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 67 pytest functions. CI runs all of them against the
+Compose gateway and the SDK with Neo4j and Mem0 absent, then
+<code>test_storage.py</code> alone against SQLite and libSQL. I did not
+run them.</p>
+<p><strong>The exclusion cases that hold.</strong>
+<code>test_gateway_fact_auto_supersede</code> writes
+<code>Primary DB: MySQL 8.0</code> and
+<code>Primary DB: PostgreSQL 16</code> to project <code>alpha</code>,
+<code>Primary DB: SQLite</code> to <code>beta</code>, and one global
+fact. One list must then hold the current value and the global fact and
+must not hold the superseded value or <code>beta</code>'s
+(<code>tests/test_blast_and_conflict.py:171-178</code>), and the persona
+export repeats the project check (<code>:186-190</code>). The
+cross-project isolation case asserts <code>mem_oss</code> present and
+<code>mem_prod</code> absent in one search result
+(<code>tests/test_hygiene.py:222-232</code>), against a Mem0 mock that
+applies the filter itself.
+<code>test_records_dedup_isolation_and_reopen</code> writes two memories
+in two projects that both stem-match <code>deployments</code>, and
+asserts exactly one result for project <code>one</code>
+(<code>tests/test_storage.py:31-33</code>).</p>
+<p><strong>The cases that cannot fail as written.</strong> The
+blast-radius test accepts
+<code>status in ["neo4j_unavailable", "ok"]</code> with zero impacted
+nodes (<code>tests/test_blast_and_conflict.py:193-202</code>), so it
+passes against the broken Cypher, which raises into that branch every
+time. The unscoped search case asserts two ids absent from a result the
+mock guarantees is empty (<code>tests/test_hygiene.py:235-238</code>).
+Two opt-in checks assert empty lists for a project nothing was written
+to (<code>tests/test_storage.py:117</code>, <code>:134</code>).</p>
+<p><strong>Missing.</strong> No case re-adds a revoked text on either
+gateway, decays a revoked fact, runs decay twice on Compose, or calls
+blast radius against a populated graph.</p>
+<p><strong>The benchmark is a constant.</strong>
+<code>benchmarks/benchmark_deepeval.py</code> prints <em>"Evaluated
+✓"</em> for five scenario names after a <code>time.sleep(0.1)</code>
+each, then prints <code>BENCHMARK_RESULTS</code>, a dictionary literal
+holding every figure in the README's table (<code>:96-121</code>,
+<code>:134-136</code>). No system is called and no DeepEval metric is
+computed, and <code>deepeval</code> is in no dependency file. The
+README's 95% precision, 99% faithfulness and 280 tokens per turn
+reproduce exactly, as constants. No paper is associated with the
+project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the dedup lookup status-blind on purpose.</strong> If a
+fact's id hashes its scope and text and the insert first looks the text
+up across every state, a revoked value cannot be re-added by the same
+writer. Return <code>rejected</code> rather than <code>duplicate</code>,
+and test it.</li>
+<li><strong>Decay from the last application, not from creation.</strong>
+Store when decay was last applied and multiply only by the elapsed
+interval, so a retried or repeated pass is idempotent.</li>
+<li><strong>Require the scope key in the request model.</strong>
+<code>project: str = Field(min_length=1)</code> on every route makes an
+unscoped read a validation error rather than a full listing.</li>
+<li><strong>Fail closed on a default secret.</strong> Refusing to start
+when the key is unset or equals a known placeholder costs one line.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two implementations of one state machine.</strong> One decay
+skips rows by status and the other by flag, and that is how a revoked
+fact became active on one side. Share the transition function.</li>
+<li><strong>Accepting a failure value as a pass.</strong> A test whose
+allowed outcomes include the error branch cannot detect that the success
+branch never runs.</li>
+<li><strong>Conflict detection by string prefix.</strong> A key derived
+from punctuation in free text supersedes on coincidence and misses on
+rephrasing; ask the writer for the key.</li>
+<li><strong>A benchmark script that prints its results.</strong> Commit
+the per-case outputs a table is computed from, or label the table a
+target.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Friday suits one developer who wants a list of project constants that
+every agent reads at session start, and who will run the opt-in gateway
+against a local SQLite file. That path is small, transactional and
+tested for isolation. Walk away from the Compose deployment if memories
+must stay on your machine, if the graph's blast radius is the reason you
+came, or if a revoked fact must stay revoked. Do not serve more than one
+person from it, since one key reads and revokes every project.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What the Mem0 platform does to a memory between <code>add</code> and
+<code>search</code>, whether it stores the text or facts extracted from
+it, and whether <code>MemoryClient.search</code> in mem0ai 0.1.29
+honours the <code>filters</code> argument.</li>
+<li>Whether the maintainers treat the opt-in gateway as the successor;
+the migration guide says it does not replace the existing one.</li>
+<li>Whether DeepSeek ever returns a relationship label that changes the
+Cypher statement it is concatenated into.</li>
+<li>How large <code>get_context</code> grows on a ledger used for
+months, with no budget and an energy that only declines.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Compose gateway: <code>gateway/main.py</code></li>
+<li>Opt-in gateway and storage: <code>gateway/serverless.py</code>,
+<code>storage/local.py</code>, <code>storage/turso.py</code>,
+<code>storage/models.py</code>, <code>migrations/*.sql</code></li>
+<li>Decay and consolidation: <code>layers/decay.py</code>,
+<code>pipelines/dream_cycle.py</code>,
+<code>scripts/deploy/consolidate.py</code>,
+<code>scripts/deploy/cloud-scheduler.sh</code></li>
+<li>Graph extraction: <code>pipelines/auto_graph.py</code></li>
+<li>MCP, SDK and rule files: <code>mcp/server.py</code>,
+<code>friday/client.py</code>, <code>friday/rules.py</code>,
+<code>friday/integrations/langchain.py</code>,
+<code>smithery.yaml</code></li>
+<li>State and routing: <code>orchestrator/cognitive_state.py</code>,
+<code>orchestrator/router.py</code></li>
+<li>Studio: <code>studio/index.html</code></li>
+<li>Tests and benchmark: <code>tests/*.py</code>,
+<code>benchmarks/benchmark_deepeval.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>ChromaDB is never imported.</strong>
+<code>git grep -n -i -E 'import chromadb|from chromadb|chromadb\.' -- '*.py'</code>
+returns nothing; <code>git grep -n -i chroma -- '*.py'</code> matches
+the <code>/add</code> docstring and an SDK type field.</li>
+<li><strong>No embedding library is used.</strong>
+<code>git grep -n -E 'sentence_transformers|SentenceTransformer' -- '*.py'</code>
+returns nothing.</li>
+<li><strong>Mem0 is reached only through the hosted client.</strong>
+<code>git grep -n -E 'from mem0 import'</code> returns
+<code>gateway/main.py:102</code>, <code>MemoryClient</code>.</li>
+<li><strong>Unwired functions.</strong>
+<code>git grep -n record_memory_recall</code>,
+<code>git grep -n route_query</code> and
+<code>git grep -n detect_state_from_prompt</code> return each
+definition, plus <code>tests/test_sdk.py</code> for the last.</li>
+<li><strong>No <code>/context</code> route on Compose.</strong>
+<code>git grep -n -E '"/context"' -- gateway</code> returns
+<code>gateway/serverless.py:248</code> only.</li>
+<li><strong>The Studio's consolidation and reinforce routes do not
+exist.</strong>
+<code>git grep -n -E 'dream/trigger|synapse/reinforce' -- '*.py'</code>
+returns nothing; the same pattern over <code>studio/index.html</code>
+returns three calls.</li>
+<li><strong>Nothing commits to git.</strong>
+<code>git grep -n -E '"(commit|push)"|git (commit|push)' -- '*.py' '*.sh'</code>
+returns nothing; with <code>rev-parse</code> in place of
+<code>commit</code> it matches
+<code>scripts/deploy/gcp_candidate.py:150</code>.</li>
+<li><strong>Compose schedules nothing.</strong>
+<code>git grep -n -i -E 'schedule|cron|apscheduler' -- gateway docker-compose.yml Dockerfile</code>
+returns nothing; the same pattern matches
+<code>scripts/deploy/cloud-scheduler.sh</code>.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_(from|to|until)|validfrom|event_time|occurred_at|as_of' -- '*.py' '*.sql'</code>
+returns nothing; adding <code>created_at</code> matches
+<code>gateway/main.py:441</code>.</li>
+<li><strong>No mutation log.</strong>
+<code>git grep -n -i -E 'audit|event_log|journal' -- '*.py' '*.sql'</code>
+returns one tool description, <code>mcp/server.py:210</code>.</li>
+<li><strong>No review state.</strong>
+<code>git grep -n -i -E 'pending|approv|candidate' -- gateway storage mcp layers pipelines</code>
+returns the opt-in app's title only.</li>
+<li><strong>The MCP bridge never passes
+<code>min_energy</code>.</strong>
+<code>git grep -n min_energy -- mcp</code> returns nothing; the same
+search over <code>friday</code> matches the SDK's
+<code>get_facts</code>.</li>
+<li><strong>The blast-radius Cypher names neither the entity nor a
+project.</strong>
+<code>sed -n 698,706p gateway/main.py | grep -c -E 'entity|project'</code>
+prints 0; <code>grep -c start</code> over the same lines prints 4.</li>
+<li><strong><code>last_recalled_at</code> is written at creation and by
+the uncalled reinforcer.</strong>
+<code>git grep -n last_recalled_at -- '*.py' ':!tests'</code> returns
+<code>gateway/main.py:448</code> and <code>layers/decay.py:86</code> as
+writers; every other hit reads it.</li>
+<li><strong>No revoke case re-adds the revoked text.</strong>
+<code>git grep -n -E 'revoke' -- tests</code> returns
+<code>tests/test_hygiene.py</code> only, whose revoke cases at
+<code>:31-117</code> and <code>:298-330</code> add no fact with the
+revoked content afterwards.</li>
+<li><strong>No test decays twice on Compose.</strong>
+<code>git grep -n -E 'apply_system_decay|decay/apply|dream/run|run_dream_cycle|\.decay\(' -- tests</code>
+returns auth-only posts at <code>tests/test_health.py:150</code> and
+<code>:156</code>, mocked routes in <code>tests/test_sdk.py</code>, and
+the opt-in double decay at
+<code>tests/test_storage.py:82-84</code>.</li>
+<li><strong>Blast radius is tested against mocks and an absent Neo4j
+only.</strong> <code>git grep -n -E 'blast' -- tests</code> returns the
+two SDK mock cases, the MCP forwarding case and
+<code>test_gateway_blast_radius_offline_fallback</code>.</li>
+<li><strong>No capture hook.</strong>
+<code>git ls-files | grep -i -E 'hook'</code> and
+<code>git grep -n -i -E 'SessionStart|UserPromptSubmit|"hooks"'</code>
+return nothing; <code>git ls-files | grep -i -E 'hook|rules'</code>
+matches the rule files.</li>
+<li><strong>The opt-in store supersedes no fact.</strong>
+<code>git grep -n -E 'supersed' -- storage/local.py</code> returns the
+column projection, the search predicate, the decay skip,
+<code>mutate_memory</code> and <code>revoke_fact</code>, and nothing in
+<code>add</code>.</li>
+<li><strong>Decay and dream never name the revoked state.</strong>
+<code>git grep -n -E revoked -- layers pipelines</code> returns
+nothing.</li>
+<li><strong><code>archived</code> has no writer.</strong>
+<code>git grep -n -E archived -- '*.py'</code> returns the two skip
+lists, <code>layers/decay.py:144</code> and
+<code>storage/local.py:262</code>.</li>
+<li><strong>DeepEval is not a dependency.</strong>
+<code>git grep -n -i deepeval -- pyproject.toml 'requirements*.txt' uv.lock</code>
+returns nothing.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org'</code>
+returns nothing.</li>
+<li><strong>The blast-radius string has one origin.</strong>
+<code>git log -S'toLower() ' --oneline -- gateway/main.py</code> returns
+<code>a0b7bd9</code> alone.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-05</strong> — <a
+href="https://github.com/friday-memory/friday/commit/fad2a61c38eb77058e4ecb71a558fd579e671dce"><code class="commit-id" title="fad2a61c38eb77058e4ecb71a558fd579e671dce">fad2a61c…</code></a>.
+First reading, from a full clone at the head of <code>main</code>; the
+other branches are Dependabot's. Screened first: three auto-run surfaces
+(<code>.cursorrules</code>,
+<code>.github/copilot-instructions.md</code>, and
+<code>smithery.yaml</code> declaring a start command), two build-time
+execution points (<code>Makefile</code>,
+<code>tests/conftest.py</code>), nothing inside the seven-day cooldown.
+MIT, no rider. Nothing installed, built or run. Four marks:
+<code>tombstone</code> and <code>scope_enforced</code> on the opt-in
+serverless gateway, <code>trust_state</code> on the facts ledger,
+<code>negative_eval</code> on controlled exclusion cases (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

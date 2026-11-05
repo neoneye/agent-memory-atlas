@@ -401,6 +401,8 @@ permanent."*
 
 **[Immune](../../systems/immune/) pauses its clock with a global offset, and one reader ignores the pause.** A rule is hot while it is critical, seen three times or seen in the last 30 days, and heat adds a 90-day recency term (`immune-adapter.js:295-301`, `:490-502`). `freeze` and `unfreeze` add the frozen days to one total that `daysDiffAdjusted` subtracts from every item's age (`:137-150`), so a rule first seen after a 60-day freeze reads as zero days old for 60 days. The prompt hook decides hot from raw dates (`immune-inject.js:20-32`). Reinforcement is the scan model reporting a match. **Subtract a pause only from the intervals it covers, and give every reader the same clock.**
 
+**[Friday](../../systems/friday/) decays from creation on every pass, and one copy of the pass forgets what revoked means.** The Compose gateway multiplies a fact's stored energy by the factor for the whole time since `last_recalled_at` (`layers/decay.py:147-158`). The only later writer of that timestamp, `record_memory_recall`, has no caller, so two passes in one day apply the fact's age twice (`:62-95`). The pass skips `superseded` and `archived` by status, so a revoked fact is decayed and rewritten to `active` (`:136-167`). The opt-in copy starts from `decay_applied_at` and skips the superseded flag, and a test pins two passes to one result (`storage/local.py:252-279`, `tests/test_storage.py:82-86`). **Decay from the last application, and let the correction state decide what decay may touch.**
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.
