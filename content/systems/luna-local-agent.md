@@ -1,7 +1,7 @@
 ---
 title: "Luna"
-eyebrow: "A household companion whose forget stops at the fact"
-description: "A local voice companion whose model writes, corrects and forgets one-sentence facts, beside idle-time episode notes, lessons, subject pages and per-person fact files."
+eyebrow: "A tool-heavy local agent whose forget stops at the fact"
+description: "A persistent-state local agent with 52 registered tools whose model writes, corrects and forgets one-sentence facts beside episode notes, lessons and per-person fact files."
 root: ../..
 page_kind: system
 source_name: "fswolf/luna-local-agent"
@@ -28,7 +28,7 @@ matrix:
   write: "The model calls remember_fact, update_fact and forget_fact mid-turn; a background extractor answering NONE, NEW or REPLACE runs only when the model has no tool calling; idle passes write episode notes, lessons, pages and game feelings"
   update_delete: "update_fact rewrites in place with no history; REPLACE and the tidy pass retire a row with a timestamp; forget_fact deletes the row and nothing derived from the conversation; the memory page edits, retires, restores and deletes by id"
   scoping: "One file per enrolled person and per-session guest facts in memory, chosen by the turn's speaker; history, episodes, lessons, projects, recipes and knowledge passages reach every turn that is not stream chat, a stranger's included"
-  integration: "In-process: a terminal and voice companion on LM Studio or llama.cpp with memory tools, a localhost memory page, slash commands, relay stations and a Discord plugin"
+  integration: "In-process: a terminal and voice agent on LM Studio or llama.cpp with 52 registered tools (files, shell, mail, web, network, desktop, reminders, scheduled jobs, self-introspection) plus MCP servers, a localhost memory page, slash commands, relay stations and a Discord plugin"
   background: "An idle loop every two minutes writes episode notes after 30 quiet minutes; a dream pass every 20 hours writes lessons, tidies fact pairs and rewrites pages; a worker folds old turns into the running summary"
   trust: "No status on a fact; agent-noted lessons and recipes wait for an on-screen yes; dream-pass lessons, facts and episodes land unreviewed; the dream and episode prompts mark their inputs as records"
   strengths: "A split between correcting a fact and recording a change; offers with persisted per-item cooldowns and a mute that survives restarts; lesson and recipe writes behind an approval the agent cannot answer; an editor over the rows the model reads"
@@ -37,9 +37,16 @@ matrix:
 
 ## 1. Executive Summary
 
-Luna is a local voice companion built from several models on LM Studio or
-llama.cpp, with a persona, moods and a household of recognised speakers. Its
-memory is one-sentence facts the model writes, corrects and forgets through
+Luna is a persistent-state local agent built from several models on LM Studio
+or llama.cpp: a chat model that decides and talks, with smaller models beside it
+for speech in and out, sight, recall by meaning and relevance. Its main surface
+is tooling. The registry holds 52 model-callable tools across files, shell,
+mail, web research, the network, the desktop, reminders, scheduled jobs and its
+own introspection (`tools/__init__.py:32`), and MCP servers add more. A persona
+with moods and a portrait is a layer over the agent, and it knows a household
+of recognised speakers.
+
+Its memory is one-sentence facts the model writes, corrects and forgets through
 tools, plus notes an idle loop writes about conversations, its own mistakes and
 the subjects it knows most about. What is notable is the attention to repetition
 and drift: offers it raises unprompted remember being declined, and a lesson the
@@ -331,7 +338,7 @@ the current reply (`mind/reflect.py:938-971`).
 
 ### Forgetting reaches the fact and nothing built from it
 
-The companion failure that hurts is raising something the user asked to drop.
+For an agent that stays running in a house, the failure that hurts is raising something the user asked to drop.
 Luna answers it for offers and not for facts. `forget_fact` deletes the row
 (`mind/factstore.py:380-392`) or pops the list entry. It does not touch the
 episode note written from the conversation that produced the fact. That note
@@ -483,9 +490,9 @@ an introspection probe.
 
 ### Fit
 
-This suits one person building a companion on their own machine who wants to
-read and edit everything it keeps. The engineering is careful where a solo
-companion fails: atomic writes, bad-file quarantine, locked databases that do
+This suits one person running a tool-heavy assistant on their own machine who
+wants to read and edit everything it keeps. The engineering is careful where a
+long-running local agent fails: atomic writes, bad-file quarantine, locked databases that do
 not fail a turn, injection framing on every background prompt. Walk away if
 other people's privacy is the requirement. The household model scopes the fact
 store and leaves the notes, history and documents shared. Walk away too if
@@ -557,3 +564,5 @@ Run from the repository root at the pinned commit with `/usr/bin/git grep`.
 ## History
 
 **2026-11-05** — [`659ddcf2952f805a3d090eeabc8055644e2505af`](https://github.com/fswolf/luna-local-agent/commit/659ddcf2952f805a3d090eeabc8055644e2505af). First reading, from a depth-1 clone at the head of `main`, with history from the GitHub API. Screened first: no auto-run or build-time surface, two unpinned requirements files, and both flagged FRESH only because a shallow clone dates every file to the tip; their last changes were 17 October and 26 September 2026. MIT, no rider. Nothing installed, built or run. Two marks: `human_review` on agent-noted lessons and recipes, `negative_eval` on the per-person partition; tombstone withheld because a forget leaves no record and reaches no derived store ([section 9](#9-reliability-safety-and-trust)).
+
+**2026-11-05** — Framing: the summary, description and fit describe the persistent-state, tool-heavy agent the README at the pin states, with the persona as a layer over it, and give the tool registry's count. Marks and findings unchanged.

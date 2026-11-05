@@ -4,23 +4,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="A local voice companion whose
-model writes, corrects and forgets one-sentence facts, beside idle-time
-episode notes, lessons, subject pages and per-person fact files.">
+    <meta name="description" content="A persistent-state local agent
+with 52 registered tools whose model writes, corrects and forgets
+one-sentence facts beside episode notes, lessons and per-person fact
+files.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Luna — Agent Memory Atlas">
-    <meta property="og:description" content="A local voice companion
-whose model writes, corrects and forgets one-sentence facts, beside
-idle-time episode notes, lessons, subject pages and per-person fact
+    <meta property="og:description" content="A persistent-state local
+agent with 52 registered tools whose model writes, corrects and forgets
+one-sentence facts beside episode notes, lessons and per-person fact
 files.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Luna — Agent Memory Atlas">
-    <meta name="twitter:description" content="A local voice companion
-whose model writes, corrects and forgets one-sentence facts, beside
-idle-time episode notes, lessons, subject pages and per-person fact
+    <meta name="twitter:description" content="A persistent-state local
+agent with 52 registered tools whose model writes, corrects and forgets
+one-sentence facts beside episode notes, lessons and per-person fact
 files.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Luna — Agent Memory Atlas</title>
@@ -43,7 +44,7 @@ files.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Luna",
-      "description": "A local voice companion whose model writes, corrects and forgets one-sentence facts, beside idle-time episode notes, lessons, subject pages and per-person fact files.",
+      "description": "A persistent-state local agent with 52 registered tools whose model writes, corrects and forgets one-sentence facts beside episode notes, lessons and per-person fact files.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -98,12 +99,13 @@ files.">
     <main>
       <section class="document-hero">
         <div class="document-hero-inner">
-          <p class="eyebrow">A household companion whose forget stops at
-the fact</p>
+          <p class="eyebrow">A tool-heavy local agent whose forget stops
+at the fact</p>
           <h1>Luna</h1>
-          <p class="document-deck">A local voice companion whose model
-writes, corrects and forgets one-sentence facts, beside idle-time
-episode notes, lessons, subject pages and per-person fact files.</p>
+          <p class="document-deck">A persistent-state local agent with
+52 registered tools whose model writes, corrects and forgets
+one-sentence facts beside episode notes, lessons and per-person fact
+files.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/fswolf/luna-local-agent">
               <span>Source</span>
@@ -155,10 +157,17 @@ none run for this reading</strong></div>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>Luna is a local voice companion built from several models on LM
-Studio or llama.cpp, with a persona, moods and a household of recognised
-speakers. Its memory is one-sentence facts the model writes, corrects
-and forgets through tools, plus notes an idle loop writes about
+<p>Luna is a persistent-state local agent built from several models on
+LM Studio or llama.cpp: a chat model that decides and talks, with
+smaller models beside it for speech in and out, sight, recall by meaning
+and relevance. Its main surface is tooling. The registry holds 52
+model-callable tools across files, shell, mail, web research, the
+network, the desktop, reminders, scheduled jobs and its own
+introspection (<code>tools/__init__.py:32</code>), and MCP servers add
+more. A persona with moods and a portrait is a layer over the agent, and
+it knows a household of recognised speakers.</p>
+<p>Its memory is one-sentence facts the model writes, corrects and
+forgets through tools, plus notes an idle loop writes about
 conversations, its own mistakes and the subjects it knows most about.
 What is notable is the attention to repetition and drift: offers it
 raises unprompted remember being declined, and a lesson the agent
@@ -490,9 +499,9 @@ Trust</h2>
 <h3
 id="forgetting-reaches-the-fact-and-nothing-built-from-it">Forgetting
 reaches the fact and nothing built from it</h3>
-<p>The companion failure that hurts is raising something the user asked
-to drop. Luna answers it for offers and not for facts.
-<code>forget_fact</code> deletes the row
+<p>For an agent that stays running in a house, the failure that hurts is
+raising something the user asked to drop. Luna answers it for offers and
+not for facts. <code>forget_fact</code> deletes the row
 (<code>mind/factstore.py:380-392</code>) or pops the list entry. It does
 not touch the episode note written from the conversation that produced
 the fact. That note is the "last conversation" block until a later
@@ -664,15 +673,15 @@ adds and never deletes restores whatever was forgotten on the other
 side.</li>
 </ul>
 <h3 id="fit">Fit</h3>
-<p>This suits one person building a companion on their own machine who
-wants to read and edit everything it keeps. The engineering is careful
-where a solo companion fails: atomic writes, bad-file quarantine, locked
-databases that do not fail a turn, injection framing on every background
-prompt. Walk away if other people's privacy is the requirement. The
-household model scopes the fact store and leaves the notes, history and
-documents shared. Walk away too if "forget that" must hold. The design
-treats the fact as the memory, and it is one of five places the same
-sentence lives.</p>
+<p>This suits one person running a tool-heavy assistant on their own
+machine who wants to read and edit everything it keeps. The engineering
+is careful where a long-running local agent fails: atomic writes,
+bad-file quarantine, locked databases that do not fail a turn, injection
+framing on every background prompt. Walk away if other people's privacy
+is the requirement. The household model scopes the fact store and leaves
+the notes, history and documents shared. Walk away too if "forget that"
+must hold. The design treats the fact as the memory, and it is one of
+five places the same sentence lives.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
 <li>How often the model calls <code>update_fact</code> for a change in
@@ -773,6 +782,10 @@ agent-noted lessons and recipes, <code>negative_eval</code> on the
 per-person partition; tombstone withheld because a forget leaves no
 record and reaches no derived store (<a
 href="#9-reliability-safety-and-trust">section 9</a>).</p>
+<p><strong>2026-11-05</strong> — Framing: the summary, description and
+fit describe the persistent-state, tool-heavy agent the README at the
+pin states, with the persona as a layer over it, and give the tool
+registry's count. Marks and findings unchanged.</p>
         </article>
       </div>
     </main>
