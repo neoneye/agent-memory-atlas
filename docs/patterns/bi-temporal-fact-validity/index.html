@@ -496,6 +496,19 @@ and <code>observed_at</code>
 No read path filters, ranks or returns them; the Recall fact projection
 carries content, kind and <code>observedAt</code> only
 (<code>packages/runtime-host/src/server/execution-composition.ts:890-894</code>).</p>
+<p><a href="../../systems/mgi-mind/">MGI-Mind</a> has a world-time start
+and a record-time end. <code>valid_from</code> is written only when a
+caller passes it to <code>mind_fact add</code>, HTTP
+<code>/fact/add</code> or <code>mgimind fact add --valid-from</code>,
+and <code>query_fact_as_of</code> with <code>world_time</code> tests it
+in place of <code>created_at</code>, falling back per fact
+(<code>src/knowledge.rs:930-954</code>). <code>valid_until</code> is the
+clock at retirement on both axes, and the code comment beside the
+world-time test says a world-time end would need its own field. A
+successor dated into the past therefore overlaps its predecessor on the
+world axis until the moment it was recorded, and the one committed case
+queries an instant outside that overlap. <code>valid_from</code> is
+stored as given and compared as a string.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

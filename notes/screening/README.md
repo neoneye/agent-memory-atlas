@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 366 |
+| Repositories with an auto-run surface (`RUNS`) | 367 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 339 |
-| Repositories with build-time execution (`EXEC`) | 564 |
+| Repositories with build-time execution (`EXEC`) | 565 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
 
@@ -243,6 +243,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`mentedb`](../../content/systems/mentedb.md) | `.github/copilot-instructions.md` |
 | [`meridian`](../../content/systems/meridian.md) | `.claude/settings.json`, `.githooks/` |
 | [`mex`](../../content/systems/mex.md) | `.claude-plugin/` |
+| [`mgi-mind`](../../content/systems/mgi-mind.md) | `server.json` |
 | [`midas`](../../content/systems/midas.md) | `server.json` |
 | [`mind-mem`](../../content/systems/mind-mem.md) | `.cursorrules`, `.githooks/`, `.github/copilot-instructions.md`, `hooks/`, `hooks/hooks.json` |
 | [`mindreader`](../../content/systems/mindreader.md) | `mcp.json` |

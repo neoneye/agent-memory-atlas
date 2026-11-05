@@ -30050,41 +30050,44 @@ the key the scoped read filters on.</li>
 href="../systems/mgi-mind/"><code>mgi-mind</code></a></h3>
 <ul>
 <li>Best idea: <strong>derive the database filter from the visibility
-rule.</strong> <code>EntryStatus::hidden_wire_strings</code> builds the
-Qdrant <code>must_not</code> set from <code>is_default_visible</code>,
-so the fact query and the duel's rival set agree on what is current, and
-its comment records the two leaks (<code>stale</code>, then
-<code>quarantine_candidate</code>) that taught it. The fact duel runs
-under a per-axis mutex and a cross-process file lock.</li>
-<li>Biggest risk: <strong>the duel reduces to recency, and a value never
-stays rejected.</strong> A live write earns entrenchment only from age,
-so in the default mode any contradicted fact under about nine months old
-flips. Re-adding the loser's triple rebuilds its payload with
-<code>valid = "true"</code> and a fresh duel, so an invalidated or
-dampened value returns.</li>
-<li>Most reusable component: <code>src/knowledge.rs:87-207</code> — the
+rule, and make the value the key.</strong>
+<code>EntryStatus::hidden_wire_strings</code> builds the Qdrant
+<code>must_not</code> set from <code>is_default_visible</code>, so the
+fact query, the duel's rival set and the session briefing agree on what
+is current. A fact's id is a UUIDv5 of its triple, so
+<code>add_fact_core</code> reads one row to refuse an explicitly
+invalidated value on every write path until a <code>restore</code>.</li>
+<li>Biggest risk: <strong>the duel rewards recent repetition.</strong> A
+newcomer's weight and a rival's entrenchment grow on the live path only
+with age and confirmation count, so in the default mode a once-asserted
+fact under about four months old flips to any contradiction. Re-adding
+the loser starts a fresh duel that flips it back; only an explicit
+invalidate stays rejected.</li>
+<li>Most reusable component: <code>src/knowledge.rs:87-210</code> — the
 seven-state <code>EntryStatus</code>, <code>is_default_visible</code>,
 and the derived <code>must_not</code> builder, small enough to lift into
 any store that filters by status.</li>
-<li>Second risk: <strong>library scope is enforced on search and not on
-recall.</strong> A library-scoped HTTP token is refused
-<code>/fact/query</code> and <code>/procedure/recall</code> and served
-both through JSON <code>/memory/recall</code>. The session briefing
-hand-rolls its status check and admits
-<code>quarantine_candidate</code>, and <code>mind_history</code> lists
-quarantined memories.</li>
-<li>Maturity impression: Apache-2.0, 25,368 lines of Rust before the
-inline test modules, 297 commits from one contributor between 28 May and
-13 September 2026, 432 unit tests and 24 integration tests. Three marks:
-<code>trust_state</code>, <code>audit_log</code>, and
-<code>negative_eval</code> on two CI-run duel tests; the HTTP scope
-canary never runs in CI. Published LongMemEval-S recall recomputes
-exactly from the committed files.</li>
+<li>Second risk: <strong>world time has a start and no end of its
+own.</strong> <code>valid_from</code> is caller-supplied and read by the
+world-time as-of, but <code>valid_until</code> is the record time of
+retirement, so a successor dated into the past overlaps its predecessor
+on the world axis. On MCP the library is an optional caller filter; only
+library-scoped HTTP tokens are confined.</li>
+<li>Maturity impression: Apache-2.0, 27,581 lines of Rust before the
+inline test modules, 317 commits from one contributor between 28 May and
+21 October 2026, 465 unit tests and 44 integration tests. Five marks:
+<code>tombstone</code>, <code>trust_state</code>,
+<code>bitemporal</code>, <code>audit_log</code>, and
+<code>negative_eval</code> on CI-run duel, visibility and scope-canary
+tests. Published LongMemEval-S recall recomputes exactly from the
+committed files.</li>
 <li>Study when: you want a contradiction rule with its formulas, locks
-and filter derivation written out and tested, or a quarantine that keeps
-rejected candidates recoverable and counted.</li>
-<li>Do not copy when: a fact must survive a newer wrong assertion, or a
-token's library must bound everything it reads.</li>
+and filter derivation written out and tested, a value-keyed refusal that
+needs no separate table, or a quarantine that keeps rejected candidates
+recoverable and counted.</li>
+<li>Do not copy when: a fact must survive a newer wrong assertion, a
+backdated fact must close its predecessor's world interval, or an MCP
+client's library must bound everything it reads.</li>
 </ul>
 <h3 id="mnemo"><a href="../systems/mnemo/"><code>mnemo</code></a></h3>
 <ul>

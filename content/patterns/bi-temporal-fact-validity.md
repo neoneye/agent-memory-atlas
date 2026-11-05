@@ -246,6 +246,8 @@ gains a closed copy and an open copy that both claim validity from the start.
 
 [Apache Maka](../../systems/maka/) has the writer and not the reader. The extraction model supplies `eventStartedAt` and `eventEndedAt` with a temporal type, checked by a `CHECK` constraint and stored beside `created_at` and `observed_at` (`packages/storage/src/sqlite-long-term-memory-schema.ts:38-87`). No read path filters, ranks or returns them; the Recall fact projection carries content, kind and `observedAt` only (`packages/runtime-host/src/server/execution-composition.ts:890-894`).
 
+[MGI-Mind](../../systems/mgi-mind/) has a world-time start and a record-time end. `valid_from` is written only when a caller passes it to `mind_fact add`, HTTP `/fact/add` or `mgimind fact add --valid-from`, and `query_fact_as_of` with `world_time` tests it in place of `created_at`, falling back per fact (`src/knowledge.rs:930-954`). `valid_until` is the clock at retirement on both axes, and the code comment beside the world-time test says a world-time end would need its own field. A successor dated into the past therefore overlaps its predecessor on the world axis until the moment it was recorded, and the one committed case queries an instant outside that overlap. `valid_from` is stored as given and compared as a string.
+
 ## A third clock
 
 Two clocks answer *what was true* and *what did we believe*. The temporal
