@@ -17160,6 +17160,67 @@ the screen had nothing to parse. Searches:
 The record is for a reader who meets the survey's Table 6 and wants the
 implementations: the nine linked above are the place to start, and none
 of the post-training systems in its third block has a report here.</li>
+<li><strong>xmemory (<a
+href="https://arxiv.org/abs/2604.27906">arXiv:2604.27906</a>) was
+examined and has no report: the engine is a proprietary hosted service,
+and every public repository is a client, an integration or benchmark
+data.</strong> <em>From Unstructured Recall to Schema-Grounded Memory:
+Reliable AI Memory via Iterative, Schema-Aware Extraction</em> (Alex
+Petrov, Alexander Gusak, Denis Mukha and Dima Korolev, all of xmemory;
+v1 30 April 2026, v3 13 August 2026, cs.AI, 33 pages) describes memory
+as a system of record whose schema states <em>"which values must never
+be inferred"</em>. Writes are decomposed into object detection, field
+detection and field-value extraction, with validation gates, local
+retries and an LLM judge in the loop; a value that fails validation
+becomes a retry, a clarification or an explicit unknown rather than a
+commit. Three contexts split the work: a request context per write, a
+session context that assembles partial objects across turns, and a main
+context described as <em>"the durable, versioned store"</em> holding
+current values, their history and provenance links to the sessions they
+came from. Schema changes are versioned migrations that mark
+irrecoverable values as unknown. The end-to-end benchmark drives field
+updates, clears, relation deletion, an entity rename and a cascading
+entity delete, re-asking state questions after each; xmemory reports
+97.10 % F1 against 80.16–87.24 % for <a
+href="../systems/cognee/">Cognee</a>, <a
+href="../systems/mem0/">Mem0</a>, <a
+href="../systems/supermemory/">Supermemory</a> and <a
+href="../systems/zep/">Zep</a>, and 95.2 % on a generated
+expense-splitting task. Its own limitations section says the benchmarks
+are deliberately structured and that incorrect facts pass if they pass
+the validators. The atlas has not checked these numbers. The
+organisation <code>xmemory-ai</code> publishes twelve repositories, one
+of them a fork of <code>hermes-agent</code>.
+<code>xmemory_client_py</code> at <a
+href="https://github.com/xmemory-ai/xmemory_client_py/commit/2cead52f11a6682d7879f4cbfb10bc7a6c66605e"><code class="commit-id" title="2cead52f11a6682d7879f4cbfb10bc7a6c66605e">2cead52f…</code></a>
+is 9,365 lines whose <code>write</code>,
+<code>review_suggestions</code>, <code>decide_suggestions</code> and
+<code>apply_pending_decisions</code> are each one <code>POST</code> to
+<code>/instances/{id}/…</code> on <code>https://api.xmemory.ai</code>;
+its schema-evolution module says its models <em>"mirror the server-side
+wire formats"</em>. Its LICENSE grants MIT for the client only and
+states that the backend, <em>"its memory engine, schemas, extraction and
+reader models"</em> are proprietary. <code>claude-code-plugin</code> at
+<a
+href="https://github.com/xmemory-ai/claude-code-plugin/commit/5fa4330a058b6537e53ea6eef19f98a945f1562a"><code class="commit-id" title="5fa4330a058b6537e53ea6eef19f98a945f1562a">5fa4330a…</code></a>
+and <code>xmemory-skill</code> are all-rights-reserved and reach the
+service through the <code>xmemcli</code> command; the TypeScript client,
+the n8n node, two Temporal plugins, an example agent and an MCP
+catalogue listing are the same boundary in other runtimes.
+<code>datasets</code> at <a
+href="https://github.com/xmemory-ai/datasets/commit/372866e895e7d9a0ec94c48defbad8e90fdc35b0"><code class="commit-id" title="372866e895e7d9a0ec94c48defbad8e90fdc35b0">372866e8…</code></a>
+holds the three benchmarks' YAML and CSV data and six Python files, all
+of them the expense-task generator; the harness that ran the five
+baselines is not in it. Searches: <code>pdftotext</code> extracts 13,619
+words, in which <code>github</code> occurs eight times — four links into
+<code>datasets</code>, three in bibliography entries for Cognee and
+LoCoMo, and one in prose about LongMemEval — and <em>source code</em>
+never; the twelve trees were listed through the API and only the client
+was cloned. If the engine were published, the first thing to read would
+be what the main context does with a value it replaces: whether the
+earlier value stays queryable and marked replaced, and whether a
+cascading delete leaves anything that stops re-extraction from writing
+the deleted record back.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
