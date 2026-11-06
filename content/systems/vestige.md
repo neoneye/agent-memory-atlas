@@ -1,514 +1,460 @@
 ---
 title: "Vestige"
-eyebrow: "Backward reach and reversible merges"
-description: "Merge candidates classified by Fellegi-Sunter record linkage into match, possible and non-match, where the uncertain classes need an explicit confirmation and every applied operation carries its own undo payload."
+eyebrow: "Every write a gated frame on a signed log"
+description: "A local MCP memory for coding agents whose every write is proposed, gated and admitted as a frame on an append-only, hash-chained, signed log."
 root: ../..
 page_kind: system
 source_name: "samvallad33/vestige"
 source_url: https://github.com/samvallad33/vestige
 archive_name: "samvallad33--vestige"
-revision: 3c5b198712d97b1f5350a04a4f2df5ed6cb2245b
-revision_url: https://github.com/samvallad33/vestige/commit/3c5b198712d97b1f5350a04a4f2df5ed6cb2245b
-analyzed_at: 2026-09-18
-capabilities: "bitemporal, audit_log"
+revision: 26a54f15c4f154a765e9b931e7d7925e86233a85
+revision_url: https://github.com/samvallad33/vestige/commit/26a54f15c4f154a765e9b931e7d7925e86233a85
+analyzed_at: 2026-11-06
+licence: "AGPL-3.0; LICENSE is the standard 661-line text, read in full, no rider; contributions go through CLA.md and CLA-ENTITY.md, and the README sells a paid companion to the Operator gate, not to the memory"
+size: "187,921 lines of Rust in ten crates under crates/ (vestige-mcp 105,086, vestige-core 45,633, the six strata crates 32,254); 8,031 lines of JavaScript in the @vestige/init installer and its hooks; 47,383 lines of Python in the Operator gates, outside the memory path"
+activity: "1,377 commits on main, 25 January – 6 November 2026, almost all by one author under several spellings, with Cursor Agent and Claude as committing agents; 25 contributor entries in the GitHub API, anonymous included; the pin is 10 commits past the v6.2.0 tag"
+tests: "1,468 #[test] and #[tokio::test] functions in crates/, run by cargo test --workspace in ci.yml; 17 node:test files in packages/vestige-init, the hook edge cases gated on VESTIGE_TEST_MCP_BIN; none run for this reading"
+capabilities: "bitemporal, audit_log, negative_eval"
 capability_evidence:
-  bitemporal: "knowledge nodes | crates/vestige-core/src/storage | an optional validity interval beside the record timestamps, boosted on the read path | tests/phase_1"
-  audit_log: "merge and purge | crates/vestige-core/src/storage | the reversal payload stored with every applied operation, and a content-free tombstone row kept for sync and audit | tests"
-stack_storage: "sqlite"
-stack_retrieval: "lexical, vector, graph"
-stack_source: "seeded"
+  bitemporal: "node records | crates/strata-store/src/types.rs:122-126, crates/vestige-mcp/src/strata_memory.rs:1526-1538, crates/vestige-mcp/src/tools/smart_ingest.rs:81-87, crates/vestige-mcp/src/tools/memory_packet.rs:353-358 | valid_from_ms and valid_until_ms beside created_at_ms, which the MCP adapter stamps from the wall clock while validity comes from the caller's validFrom/validUntil, an inferred 'as of' date or the state TTL; the hook packet withholds a record outside its window | crates/vestige-core/src/memory/node.rs:497, crates/strata-store/src/ghostlink_tests.rs:233"
+  audit_log: "the Strata log | crates/strata-store/src/store.rs:1596-1668, crates/strata/src/format.rs:12-14, :43-44 | every StoreOp is admitted as a PROPOSE, a GATE verdict and an EFFECT before its one STORE_WRITE frame lands; frames are blake3-chained and sealed segments carry an Ed25519-signed Merkle root; a denied or held write leaves its propose and gate frames | crates/strata-store/src/tests.rs, crates/strata/src/tests.rs"
+  negative_eval: "every agent read tool on retired records | crates/vestige-mcp/src/strata_memory.rs:4735-5149, :4538, :5176 | one fixture retires a marker record and keeps a linked control; the test asserts the control is visible and the marker's content and id are absent from memory get, get_batch, state, recall by id and prefix and in every legacy mode, receipt and graph; companion cases cover suppress and undo. The hook packet is not covered | cargo test over a tempdir log, no service dependency"
+stack_storage: "files"
+stack_retrieval: "lexical, graph"
+stack_source: "reviewed"
 matrix:
-  memory_unit: "A knowledge node with FSRS-6 scheduling state, a dual-strength model, sentiment weighting and an optional validity interval"
-  storage: "One SQLite file behind a 25MB Rust binary, with embeddings in a blob table and fifteen-plus migrations"
-  retrieval: "Hybrid search with spreading activation, a validity boost, and backward causal reach from a recorded failure"
-  write: "Local capture with no cloud call; contradiction detection surfaces supersede candidates rather than applying them"
-  update_delete: "Merge and supersede go through a preview plan; purge keeps a content-free tombstone row for sync and audit"
-  scoping: "Tags and connector cursors; no tenant or namespace boundary on the read path"
-  integration: "An MCP server with thirteen tools, a dashboard, connectors and a single-binary install"
-  background: "A dream cycle, consolidation, a Rac1 suppression worker cascading decay to co-activated neighbours"
-  trust: "Retrieval availability states — active, dormant, silent, unavailable — logged with a nine-value reason vocabulary"
-  strengths: "Uncertain merges require confirm=true, and every applied operation stores the payload that reverses it"
-  risks: "The reader in the committed harness is a concatenator rather than an agent, so answer accuracy there is a retrieval proxy — which the harness says itself, at length"
+  memory_unit: "A node record on a signed log: content, tags, node type, scope, record time, a validity window, a supersession pointer and an FSRS card"
+  storage: "Strata: hash-chained frames in segment files, each sealed segment signed with Ed25519; state is re-derived by replay and no SQLite is linked"
+  retrieval: "Exact handle through recall (id, eight-character prefix, exact tag); exact-token BM25 only in the hook packet; walks over recorded edges; no embeddings"
+  write: "Every write is a PROPOSE, a GATE verdict and an EFFECT before its data frame lands; a prompt hook extracts facts from user prompts by pattern and saves them"
+  update_delete: "Edit admits a successor and retires the old record; suppress hides for good; undo appends a compensating record; purge and delete are withheld"
+  scoping: "A scope string on every record, filtered in the hook packet and in walks; recall by id, prefix or tag reads across every scope by design"
+  integration: "An MCP server with six advertised verbs and a hidden reflex tool for lifecycle hooks, an installer that wires hooks into several agent CLIs, a dashboard"
+  background: "Retroactive salience backfill on every save, raising older memories that share an exact entity tag, each change with a receipt and an exact undo"
+  trust: "No epistemic state; a record is live or retired, inside or outside its validity window, and endorsed by caller roles whose weights never change a truth claim"
+  strengths: "One gated append path for every mutation, verifiable offline, and committed tests asserting retired records stay out of every agent read tool"
+  risks: "The Memory PR review queue is forced to fast mode on the only backend, recall ignores scope, and a retired fact said again is admitted fresh"
 ---
 
 ## 1. Executive Summary
 
-Vestige is a local-first memory layer for MCP agents: one 25MB Rust binary, one
-SQLite file, AGPL-3.0, about 97,000 lines across two crates with 1,088 test
-functions. It models memory on cognitive science — FSRS-6 spaced repetition, the
-Bjork dual-strength model, ACT-R activation, top-down inhibitory suppression —
-and cites the papers in the code.
+Vestige is a local MCP memory for coding agents in which every mutation is
+proposed, judged by a deterministic gate, and admitted as a frame on Strata, an
+append-only log whose frames are hash-chained and whose sealed segments are
+signed. State is replayed from the log rather than stored beside it, which
+makes the audit trail structural rather than a table someone remembered to
+write. The weak side is review: the Memory PR queue that would hold a risky
+write for a person is forced to its pass-through mode on the only backend the
+binary ships.
 
-Three things earn the report.
+**Every write has one path.** `admit_write_with_params`
+(`crates/strata-store/src/store.rs:1596-1668`) appends a PROPOSE frame and a
+GATE frame, refuses on `Deny` or `Hold` with both frames left on the log, then
+appends an EFFECT citing the payload digest, and only then the single
+`STORE_WRITE` frame at `:1664`. Ingest, edit, retire, review, edges, anchors,
+intentions and salience changes are all `StoreOp` variants through that
+function. `receipt get` explains a write, `receipt replay` re-derives it and
+reports a mismatch, and `vestige strata-verify` checks the chain and the
+trailers offline.
 
-**Merge decisions use record-linkage theory instead of a similarity threshold.**
-`crates/vestige-core/src/advanced/merge_supersede.rs` applies Fellegi-Sunter
-with two thresholds, classifying every candidate pair as `match`, `possible` or
-`non_match`. The header says why: a single cosine threshold "over-merges and
-destroys the audit trail". The consequence reaches the tool surface — the
-`dedup` tool's `apply` action accepts a `match` plan directly, and
-`'possible'/'non_match' need confirm=true`. Uncertainty is routed back to the
-caller rather than resolved by rounding — and *the caller* is the precise word,
-which is why the human-review mark does not hold on a second reading.
-`confirm` is a field in the tool call:
-`crates/vestige-mcp/src/trace_recorder.rs:460-466` reads
-`args.get("confirm").and_then(|v| v.as_bool()).unwrap_or(false)`, and the tool
-description at `server.rs:472` documents it as part of the call shape —
-*"'purge' (for good; confirm=true)"*. A boolean the model sets in its own
-arguments guards against a slip, the way `--force` does; it does not put a
-person in the loop. The separation of `scan`, `plan_*` and `apply` is still the
-right shape, and it is what makes the plan inspectable by whoever is watching —
-but nothing requires that anyone is.
+**Erasure is refused and says why.** `purge`, `delete` and `delete_knowledge`
+return `unavailable_in_4_0` (`crates/vestige-mcp/src/server.rs:387-394`).
+`suppress` hides a record from every read and keeps its bytes, and its tool
+description says it *"cannot be undone … and is not erasure"*
+(`server.rs:594`). A committed test scans the raw segment files for the
+suppressed marker and fails if the bytes are gone, with the message *"suppress
+must not claim erasure"* (`strata_memory.rs:4583-4592`).
 
-**Every applied operation carries the payload that reverses it.**
-`merge_operations` is described in the migration as "the 'git reflog for your
-agent's memory'": one row per applied merge or supersede, with `undo_payload`
-holding "everything needed to reverse it", `signals` recording "why the memories
-combined", and an `undo` op type that points back at what it reverted. The tool
-description states the invariant plainly — "Old memories are invalidated, never
-deleted."
+**The project removed its own retrieval.** Version 4.0 (30 September 2026)
+dropped embeddings, keyword search and SQLite from the default build. The
+agent's `recall` resolves an exact id, a unique prefix of eight or more
+characters, or an exact tag, and a free-text query returns `handle_required`
+with candidates. The one ranked read is the lifecycle-hook packet, which runs
+exact-token BM25 over the scoped store (`tools/memory_packet.rs:380`). The
+Fellegi-Sunter merge and supersede planner is withheld on Strata
+(`server.rs:396-420`), and its scorer `score_pair` has no caller outside its
+own file.
 
-**And there is a `protect` action** that pins a memory against auto-merge,
-supersede and forget — an explicit opt-out from every automatic lifecycle
-mechanism, which is a thing this atlas asks for and rarely finds.
-
-**The benchmark story is the thing to read here, and it opens with a
-retraction.** `docs/BENCHMARKS.md` withdraws the project's own prior benchmark
-in its first paragraph:
-
-> "Vestige previously advertised a benchmark called **CauseBench**. It is
-> **formally withdrawn**. Its harness no longer exists, its repro command
-> 404'd, and its published numbers are retracted. **CauseBench must never be
-> cited**, in release notes, READMEs, issues, launch posts, or conversation —
-> not even as 'an earlier result'."
-
-A separate LongMemEval run is invalidated in the same notice. The page then says
-why it is written the way it is: *"After a retraction, a number that cannot be
-reproduced by a stranger is worse than no number at all."* Section 10 has what
-replaced it.
+**The benchmark page labels its own numbers as describing another engine.**
+`docs/BENCHMARKS.md` opens by saying *"There is no 4.x benchmark on this
+page."* Section 10 has the rest.
 
 ## 2. Mental Model
 
-A memory is a `knowledge_node` carrying an unusual amount of cognitive state:
-FSRS-6 stability, difficulty, reps and lapses; the Bjork dual-strength triple of
-storage, retrieval and retention strength; sentiment score and magnitude for
-emotional weighting; and an ACT-R activation value computed during
-consolidation.
+A memory is a `NodeRecord` (`crates/strata-store/src/types.rs:101-133`): id,
+scope, content, sorted tags, node type, `created_at_ms`, `valid_from_ms`,
+`valid_until_ms`, an optional `superseded_by`, and source provenance. Its FSRS
+card lives in the kernel state, folded from review events on the log.
+Retrievability is derived on read from the card and the clock, and
+`docs/STORAGE.md` states that it is not stored.
 
-Beside it, `memory_states` holds a four-value **availability** state — `active`,
-`dormant`, `silent`, `unavailable` — with `suppression_until` and a
-`suppressed_by` JSON array naming which other memories are inhibiting this one.
-That last field is the design's core idea: memories compete, and losing
-competition is a recorded event rather than a lower score.
+Nothing on the log is overwritten. An edit admits a successor and retires the
+predecessor. A suppression admits a one-character anchor node, retires the
+target in its favour, then retires the anchor
+(`crates/vestige-mcp/src/strata_memory.rs:854-895`). An undo appends a
+compensating record. A record is live while `superseded_by` is empty, and that
+is the only lifecycle test any read applies (`strata_memory.rs:1613`).
 
-The flagship retrieval primitive is `backfill`, and it inverts the usual
-direction. When a failure is recorded, it reaches **backward** in time to
-promote the earlier memory that caused it — selected by shared entity (the same
-file, environment variable or service) rather than by similarity, because, in
-the tool's own words, the root cause is one "a vector search structurally cannot
-surface because it isn't similar to the failure, only causally upstream". It is
-described as a faithful port of Cai 2024 and is backward-only by construction.
+A retirement is a `RETIRE` proposal, and the pinned policy decides it by name.
+`default_policy` (`store.rs:516-541`) allows four named rules — `edit` only when
+the successor was admitted in the same tool call, `suppress`, `intentions`, and
+`purge` only with `confirm` — holds every other `RETIRE`, and allows any other
+write under a blast-radius cap of 10,000. The rule name travels as a
+domain-separated hash in the proposal's `params_hash`, never as content.
 
 ```mermaid
-%% caption: suppression compounds per call and expires, merges keep an undo payload, and purge is the one irreversible transition — leaving a content-free tombstone row
-stateDiagram-v2
-    [*] --> Active: captured
-    Active --> Dormant: time_decay
-    Dormant --> Active: access or cue_reactivation
-    Active --> Silent: competition_loss
-    Silent --> Active: interference_resolved
-    Active --> Unavailable: user_suppression, compounds per call
-    Unavailable --> Active: suppression_expired or reverse within 24h
-    Active --> Active: manual_override
-    Dormant --> Active: backfill promotes it as an upstream cause
-    Active --> Merged: plan classified match, applied
-    Active --> Merged: plan classified possible, applied with confirm=true
-    Merged --> Active: undo, from the stored undo_payload
-    Active --> Purged: irreversible, content-free tombstone row remains
-    Purged --> [*]
+%% caption: every mutation is a propose, a gate verdict and an effect before its one data frame lands; reads replay the log, and only the hook packet filters by scope and validity
+flowchart TD
+    subgraph writers["Writers"]
+        direction TB
+        W1["remember: save, declared links,<br/>validFrom and validUntil"]
+        W2["prompt hook: pattern-extracted facts,<br/>queued, saved at turn end"]
+        W3["curate: edit, suppress,<br/>promote, demote"]
+        W4["dedup undo,<br/>confirm=true from the caller"]
+        W5["salience backfill<br/>on every save"]
+        W1 ~~~ W2
+        W2 ~~~ W3
+        W3 ~~~ W4
+        W4 ~~~ W5
+    end
+    writers --> P["PROPOSE frame"]
+    P --> G{"GATE: default_policy,<br/>first match wins"}
+    G -->|"Deny or Hold"| X["refused; propose and<br/>gate frames stay"]
+    G -->|"Allow"| E["EFFECT frame cites<br/>the payload digest"]
+    E --> D["STORE_WRITE frame:<br/>one StoreOp, blake3-chained"]
+    D --> SEAL["sealed segment: Merkle root,<br/>Ed25519 signature"]
+    D --> REG["registry re-derived<br/>by replay"]
+    REG --> H["hook packet: scope user,<br/>live, in window, BM25"]
+    REG --> RC["recall: exact id, prefix or tag,<br/>live, every scope"]
+    H ~~~ RC
+    REG --> CW["causal_walk and graph:<br/>recorded edges, live ends"]
+    RC ~~~ CW
 ```
-
-Every transition on that diagram writes a `state_transitions` row with a
-`reason_type` from a nine-value vocabulary — the labels on the arrows are the
-literal values in the schema.
 
 ## 3. Architecture
 
-Two crates: `vestige-core` (62,000 lines) holds storage, the neuroscience
-modules, search, merge/supersede and the dream cycle; `vestige-mcp` (35,000
-lines) is the tool surface. The result is a single binary with an `npx`
-installer, an offline embedding model downloaded once, no API key and no
-telemetry.
+Ten crates. `strata` is the log engine: segments, group commit, sealing and
+tail verification (`crates/strata/src/log.rs`). `strata-gate` is the policy VM
+and the record kinds PROPOSE, GATE, EFFECT, GAP, LESSON_ALARM, CANARY and ALERT
+(`crates/strata-gate/src/record.rs`). `strata-store` is the memory registry
+folded from the log, and `strata-kernel` the integer FSRS fold.
+`strata-migrate` and `vestige-upgrade` import a v3 `vestige.db` read-only into
+a new log under a signed migration receipt, and `strata-verify` checks a data
+directory offline. `vestige-core` keeps the cognitive modules; `vestige-mcp` is
+the server, the CLI, the dashboard and the hook surface.
 
-The schema is fifteen-plus numbered migrations with a `schema_version` table and
-assertions in the migration code itself — migration V13's test block checks that
-`deletion_tombstones` exists after it runs.
+The log format is in `crates/strata/src/format.rs:12-14` and `:43-44`. Each
+frame carries the blake3 of the previous frame, a segment header carries the
+previous segment's hash, and a sealed segment ends in a trailer holding the
+frame count, a Merkle root, and an Ed25519 signature over the segment id, the
+previous segment hash and that root. Persisted records carry integers and
+strings only, and the store reads no wall clock (`types.rs:1-7`), so replay is
+deterministic.
 
-One migration comment deserves quoting in full, because it is the correct
-handling of a defect this atlas keeps finding in other systems:
-
-> DEPRECATED (v2.0.5): `knowledge_edges` is unused. All graph edges use
-> `memory_connections` (migration V3). This table was designed for bi-temporal
-> edge support but was never wired. Retained for schema compatibility with
-> existing databases. Do NOT add queries against this table.
-
-An unwired table, labelled as unwired, with the reason, the replacement and an
-instruction. Four systems in this atlas ship the same situation without the
-comment; a reader auditing this schema cannot be misled.
+There is no SQLite backend to fall back to. `legacy-sqlite = []` is an empty
+feature in both `crates/vestige-core/Cargo.toml:17` and
+`crates/vestige-mcp/Cargo.toml:17`, and `crates/vestige-core/src/storage/`
+holds contracts and types with no SQL implementation.
 
 ## 4. Essential Implementation Paths
 
-**Capture** — the `memory` tool → `SqliteStorage` insert
-(`crates/vestige-core/src/storage/sqlite.rs:874-935`), which writes
-`valid_from`/`valid_until` from the caller when supplied.
+**Save** — `remember` (`tools/remember_unified.rs`) → `smart_ingest`, which
+parses `validFrom`/`validUntil`, infers one unambiguous `as of YYYY-MM-DD`
+phrase (`tools/smart_ingest.rs:388`), and checks the secret gate and canonical
+duplicates → `ingest_in_scope_with_receipt` (`store.rs:1721-1760`) → declared
+links through `check_links`, which refuses a target in another scope
+(`strata_memory.rs:1003-1035`) → salience backfill for the new id.
 
-**Recall** — hybrid search with a validity boost
-(`crates/vestige-core/src/search/temporal.rs:121`) and spreading activation via
-the `graph` tool's `associations` action.
+**Prompt hook** — `packages/vestige-init/hooks/memory.cjs` extracts facts from
+the user's prompt by pattern into a per-session queue file, saves up to 20 at
+turn end through `remember`, and on session, prompt and tool events calls
+`session` with `memory_hook`, which lands in `memory_packet::packet`
+(`tools/session_context.rs:127-133`).
 
-**Point in time** — `sqlite.rs:3686`: `SELECT * FROM knowledge_nodes WHERE
-(valid_from IS NULL OR valid_from <= ?1) AND (valid_until IS NULL OR valid_until
->= ?1)`, with `KnowledgeNode::is_valid_at` as the in-memory equivalent and unit
-tests for the future-dated and past-dated cases.
+**Recall** — `recall::handle_flow` (`tools/recall.rs:243-321`) →
+`resolve_handle` (`strata_memory.rs:1942-2018`): exact id, then a unique prefix
+of eight or more characters, then an exact case-sensitive tag, each over live
+records only.
 
-**Merge** — `dedup` `scan` (read-only, cosine clusters plus Fellegi-Sunter) →
-`plan_merge`/`plan_supersede` (a `merge_plans` row, status `pending`) → `apply`
-(guarded by `confirm=true` for `possible` and `non_match`) → `merge_operations`
-with the undo payload → `undo`.
+**Retire** — `curate` edit → `StrataStore::edit`; `curate` suppress →
+`suppress_memory` (`strata_memory.rs:3717-3746`), which also retires every live
+GhostLink composition naming the record.
 
-**Suppress** — the `suppress` tool applies top-down inhibition; a background
-Rac1 worker cascades decay to co-activated neighbours; reversible within 24
-hours.
-
-**Backfill** — from a recorded failure, reach backward by shared entity and
-promote the causal antecedent.
+**Undo** — `dedup` action `undo` with an `operation_id` and `confirm=true`
+appends a compensating record; `strata_memory.rs:5176-5215` is the test.
 
 ## 5. Memory Data Model
 
-Twenty-five-plus tables. The ones that carry the design:
-
-| Table | Role |
+| Frame payload (`StoreOp`, `crates/strata-store/src/op.rs`) | What it does |
 | --- | --- |
-| `knowledge_nodes` | Content plus FSRS-6, dual-strength, sentiment, activation, `valid_from`/`valid_until` |
-| `memory_states` | `active \| dormant \| silent \| unavailable`, with `suppression_until` and `suppressed_by` |
-| `state_transitions` | Append-only, `from_state`, `to_state`, a nine-value `reason_type`, `reason_data` |
-| `merge_plans` | `pending \| applied \| cancelled`, with the Fellegi-Sunter `confidence` and `classification` |
-| `merge_operations` | The reflog: `undo_payload`, `signals`, `reason`, `reverts_op_id` |
-| `deletion_tombstones` | Content-free: id, time, reason, node type, tags, and counts of what the purge touched |
-| `memory_access_log` | `search_hit \| promote \| demote`, timestamped |
-| `fsrs_cards`, `fsrs_config` | Scheduling state and per-user parameters |
-| `composition_events`, `composition_members`, `composition_outcomes` | Which memories were used together, and what happened next |
+| `UpsertNode` | Creates a node, or rewrites one on the `set_created_at` and undo paths |
+| `SupersedeNode` | Sets `superseded_by`; admitted only as a `RETIRE` under a named rule |
+| `ReviewNode` | Folds an FSRS rating with a signed `reviewed_at_ms` |
+| `SaveEdge`, `SaveEdges` | Typed edges from an eight-value vocabulary (`types.rs:16-25`) |
+| `UpsertIntentions` | Intention rows, one effect for the batch |
+| `RecordAnchors`, `ReplaceAnchors`, `RecordAnchorVerdict` | Code anchors and their cached verification verdict |
+| `AdjustSalience` | A bounded stability change with its entity evidence and `undo_of` |
 
-`deletion_tombstones` is worth reading carefully because of what it deliberately
-does not keep. The migration comment: purge "permanently removes memory content
-and embeddings, but keeps a content-free audit/sync record so users can verify
-that a memory was removed without Vestige retaining the text it was told to
-forget." The row keeps the counts of what the purge affected — edges pruned,
-insights rewritten, insights deleted, children orphaned — so the blast radius is
-auditable without the content being retained. That is a genuinely thoughtful
-resolution of the tension between an audit trail and a right to erasure.
+The variants are borsh-positional, and the file says to append only, *"or old
+logs stop replaying"* (`op.rs:66-67`).
 
-The composition tables are the other unusual idea: recording which memories were
-retrieved *together*, what produced the composition, and what happened
-afterwards, with the comment noting that `memory_id` values are "intentionally
-historical references instead of foreign keys" so the record survives the
-memories it describes.
+The edge vocabulary calls `supersedes` and `corrects` *"review-gated"* trails
+(`types.rs:36-38`). `corrects` has no writer outside the v3 importer.
+`supersedes` is a declared link the caller adds on save, and it records an edge
+without retiring the target (`strata_memory.rs:935-997`, `:1040-1083`).
 
 ## 6. Retrieval Mechanics
 
-Hybrid search over embeddings and FTS, with three things layered on top that are
-not common here.
+**Recall is lookup, not search.** `resolve_handle` filters with `retrievable`
+and nothing else. It reads no scope and no validity window, so a tag returns
+every live record carrying it from every scope, expired ones included. A
+Strata-side description string advertises *"exact-token BM25 over stored
+text"* for `recall` (`server.rs:600`); the recall code path runs no ranking,
+and `lexical::rank` has one caller, the hook packet.
 
-A **validity boost** (`search/temporal.rs`) modulates the score by whether the
-node's interval contains the query time, rather than filtering hard — so a
-memory that has stopped being valid ranks lower rather than vanishing, while the
-dedicated point-in-time query filters hard when a caller asks for an instant.
+**The hook packet is the ranked read.** `packet`
+(`tools/memory_packet.rs:344-530`) loads the scope's nodes, drops retired ones
+and those outside their validity window at the current time, and ranks the
+prompt by exact-token BM25 over content and tags (`tools/lexical.rs:88-140`).
+A prompt naming one recorded person does not pull in another person's records.
+Up to four two-hop bridges follow `person:`, `place:`, `food:`, `file:`,
+`service:` and `symbol:` tags, and whole records are packed into about 3,000
+tokens. An empty prompt injects nothing.
 
-**Spreading activation** through `memory_connections` gives the `graph` tool its
-`associations`, `chain` and `bridges` actions — a reasoning path from one memory
-to another rather than a ranked list.
+**Walks follow recorded edges only.** `causal_walk` and the `graph` subgraph
+skip superseded endpoints (`strata_memory.rs:2461-2480`), and GhostLink
+proposals stay inside one scope (`crates/strata-store/src/ghostlink_tests.rs:309`).
 
-**Backward reach.** `backfill` is the flagship and the honest description of its
-own necessity is the interesting part: the causal memory "ranks 7th of 8 under
-both dense cosine *and* BM25, while the decoy ranks 1st" on the verbatim queries
-agents typed. The mechanism exists because the ranking demonstrably fails, and
-the project measured its own ranking failing before building around it.
-
-There is no tenant or namespace scope. Tags are the only partition, and the
-error message at `sqlite.rs:8445` — "Filter by tags to reduce scope" — is about
-scan cost rather than isolation. `scope_enforced` is withheld: this is a
-single-user store by design.
+**Scope is a predicate on some reads and absent from the main one.** The hook
+packet filters on scope at `memory_packet.rs:350`, but the hook passes none, so
+`session_context.rs:128` defaults it to `user`. A record the agent saves under a
+project scope is never injected, and any tag recall returns it. The
+documentation states the cross-scope behaviour as intended: *"Exact-handle
+reads such as an id or a prefix work across scopes"* (`docs/STORAGE.md`).
 
 ## 7. Write Mechanics
 
-Writes are local and synchronous; there is no cloud call and no model call on
-the write path beyond embedding.
+The gate is deterministic: an ordered rule list, first match wins, default deny,
+no clocks, floats or environment (`crates/strata-gate/src/policy.rs:1-2`). A
+secret gate runs before it; `docs/STORAGE.md` lists the live-key families it
+refuses in every stored field.
 
-Correction is a three-step pipeline and the steps are separated on purpose.
-`scan` is read-only. `plan_merge` and `plan_supersede` produce a preview — a
-`merge_plans` row with the diff in `payload` and no mutation. `apply` executes
-one, and refuses without `confirm=true` when the classification is anything
-weaker than `match`.
+**Writes arrive from the user's prompts as well as from the agent.**
+`explicitFact` in `memory.cjs` matches possessions, people, places, dates,
+jobs, health and preferences, and tags them `person:`, `place:`,
+`preference:key=value` and similar. A queued fact is saved at the next turn
+event with an `intent_id` hashed from client, session and prompt, so a replay
+returns the first write instead of making a second one.
 
-**Purge is the one irreversible operation and it is gated behind the same
-caller-set `confirm=true`.** It removes content and embeddings, scrubs
-`insights.source_memories`, detaches temporal-summary children, prunes graph
-edges, and writes the content-free tombstone.
+**Every save triggers backfill.** `remember` runs the retroactive salience
+planner on each new id (`tools/remember_unified.rs:140-167`). It walks recorded
+edges backward and raises the stability of older memories sharing an exact
+entity. Each change is an `AdjustSalience` frame carrying the exact
+before-score, so `undo` restores it, and `dry_run` previews with nothing
+appended (`tools/backfill.rs:16-27`).
 
-What the tombstone does not do is prevent re-assertion. It is keyed on the
-memory id, and its consultation point is portable sync — "Hard purge tombstones
-win over newer local edits during portable sync" — so importing a database that
-still has the memory will not resurrect it. Writing the same content again
-through the normal capture path will.
+**A save tagged `pinned` rewrites the agent's instruction file.** After the
+ingest, `remember` calls `project` with `path: "CLAUDE.md"` and `confirm: true`
+supplied by the code itself (`tools/remember_unified.rs:188-205`). `project`
+replaces only the fenced region, inside the server's working directory, from
+the `user` scope's durable records.
+
+**Duplicates are exact.** The canonical index keys on `(scope,
+canonical_hash(content))`, and a duplicate becomes an echo node pointing at the
+original (`store.rs:1262-1290`).
 
 ## 8. Agent Integration
 
-Thirteen MCP tools, consolidated from a larger set with the folding documented in
-comments: `recall`, `memory`, `codebase`, `intention`, `smart_ingest`,
-`source_sync`, `memory_status`, `maintain`, `dedup`, `graph`, `session_start`,
-`suppress`, `backfill`. `session_start` combines search, intentions, status,
-predictions and codebase context into one token-budgeted call, "instead of 5
-separate calls".
+Six advertised MCP verbs — `session`, `remember`, `recall`, `causal_walk`,
+`curate`, `precedent` (`server.rs:28-35`, `:1231-1330`) — plus a `reflex` tool
+left out of `tools/list` for hooks to call. Older tool names dispatch too, and
+each such call appends an unsigned line to `legacy-tool-calls.jsonl`
+(`server.rs:37-68`).
 
-A dashboard, connectors with cursor checkpoints and upstream reconciliation, and
-a portable export/import that merges into a non-empty database while applying
-tombstones and keeping newer local rows on timestamp conflicts.
+`@vestige/init` installs the hooks. Besides the memory hook, Reflex keeps
+per-session context manifests and pushes each retirement of a held memory once
+to every other session holding it (`tools/reflex.rs:979-984`; test at
+`:4053`). At compaction it gives back the memories a summary dropped, under the
+test at `:4179`.
+
+The Operator gates in `operator/` and `operator-lite/` judge shell and tool
+calls before they run. They write receipts and permits, which the `precedent`
+verb reads and Reflex turns into stop memories. They are not on the memory
+write path.
 
 ## 9. Reliability, Safety, and Trust
 
-**Bitemporal — awarded.** `valid_from` and `valid_until` are separate columns
-from `created_at`/`updated_at`, written from caller-supplied values on insert,
-read by a dedicated point-in-time query, used as a ranking boost, and unit-tested
-with future-dated and past-dated cases.
+**Bitemporal — awarded.** `valid_from_ms` and `valid_until_ms` are separate
+fields from `created_at_ms` (`types.rs:122-126`). The MCP adapter stamps
+`created_at_ms` from the wall clock and takes validity from the caller
+(`strata_memory.rs:1534-1536`). The agent sets it through `remember`'s
+`validFrom`/`validUntil` (`smart_ingest.rs:81-87`), an inferred `as of` date,
+or the 30-day default on `state` records. The hook packet and the projection
+withhold a record outside its window. No Strata read asks for a past instant:
+recall's `validAt` belongs to the legacy `reason` mode, which returns
+`similarity_disabled`.
 
-**Audit log — awarded, and it is well-motivated.** `state_transitions` is
-append-only, indexed on memory and time, and every row names *why* the state
-moved from a fixed vocabulary — `access`, `time_decay`, `cue_reactivation`,
-`competition_loss`, `interference_resolved`, `user_suppression`,
-`suppression_expired`, `manual_override`, `system_init`. `merge_operations` is a
-second append-only record with the reversal payload, and `memory_access_log` a
-third for reads. A reader can reconstruct why a memory is where it is.
+**Audit log — awarded.** Every mutation is a frame behind a recorded gate
+verdict, and the log is the store. The intent index and maintenance stamps are
+side files, and neither changes what a read returns.
 
-**Human review — awarded.** The confirmation gate is real and it is graded by
-uncertainty rather than applied uniformly: a `match` applies, a `possible` or
-`non_match` requires an explicit `confirm=true` from the caller. `protect` lets a
-person exempt a memory from every automatic lifecycle mechanism, and `undo`
-reverses an applied operation from its stored payload.
+**Negative eval — awarded.** `retired_nodes_stay_out_of_every_read_tool`
+(`strata_memory.rs:4735-5149`) retires a marker record linked to a kept
+control, asserts the control is visible, then asserts the marker's content and
+id are absent from every agent read tool. That is the paired shape a filter
+excluding everything cannot pass. The hook packet has no such case.
 
-**Trust state — withheld, and the distinction is worth naming.**
-`memory_states` is a four-value field consulted on the read path, which is the
-shape of the mark. It fails the definition because the axis is *availability*,
-not credence: `silent` means another memory outcompeted this one, `unavailable`
-means someone suppressed it. Nothing says whether a memory is true. `merge_plans`
-has an epistemic-looking `classification` — `match | possible | non_match` — but
-that is a judgement about whether two memories are the same thing, not about
-whether either is correct.
+**Human review — withheld; a queue nothing fills.** `trace/review.rs` defines
+Memory PRs: `fast`, `risk_gated` and `paranoid` modes, a risk taxonomy, and
+dashboard routes to list and decide them (`dashboard/mod.rs:225-236`). The
+server calls the gate before a mutating tool runs and after a write lands
+(`server.rs:1571`, `:1734`).
+`read_review_mode` returns `Fast` whenever the backend is Strata
+(`trace_recorder.rs:118-137`), and Strata is the only backend. The gate VM's
+`require_human` modifier turns an allow into a permanent `Hold`
+(`policy.rs:35-38`, `:78-80`), and no shipped rule sets it. What remains are
+caller-set flags, `confirm=true` on undo and on project write; `suppress` needs
+none.
 
-**Tombstone — withheld.** `deletion_tombstones` is content-free by design and
-keyed on the memory id, and it is consulted during portable sync rather than on
-capture. It is a deletion receipt for replication, and it is a good one.
+**Trust state — withheld.** The axes are lifecycle (`superseded_by`), validity,
+scope, FSRS retrievability, a float trust on receipts, and actor endorsements
+whose weights, in `actor.rs:13-15`'s words, never establish that a claim is
+true. None is a credence state that withholds a record.
 
-**Negative eval — no.** 1,088 test functions, and none found asserting that
-particular material must not be retrieved. The Silent Rotation benchmark's
-"converged **wrong**" column is the nearest thing in spirit — it measures the
-fleet adopting a planted decoy — and it is not in this tree.
+**Tombstone — withheld.** A retired record gives up its place in the canonical
+index (`store.rs:1265-1277`), and `find_node_by_canonical_hash` returns live
+records only (`:1769-1779`). The same content saved again is a fresh live
+record, and the prompt hook saves it again whenever the user repeats it.
+
+**Scope enforced — withheld.** The scope key reaches the hook packet, the
+projection and GhostLink, but not `recall`, the agent's read verb. That is the
+line drawn for [Cortex](../cortex/): a predicate half the read paths cannot
+express does not hold the mark.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**No paper of its own**, and an unusually dense set of citations to other
-people's: DeepMind on the limits of single-vector retrieval
-([arXiv:2508.21038](https://arxiv.org/abs/2508.21038)), Cai 2024 for backward
-salience, Anderson et al. 2025 and Davis on Rac1 for suppression, Bjork & Bjork
-1992 for dual strength, FSRS-6 for scheduling, Fellegi-Sunter for record
-linkage. The mechanisms are named after the papers in the code, which makes them
-checkable in a way "cognitive-science-inspired" usually is not.
+**No paper of its own.** The code cites FSRS-6, Bjork & Bjork's dual strength,
+ACT-R and Cai 2024 for backfill. A `whitepaper-tr-2026-01` tag exists, and no
+paper file is in the tree at the pin.
 
-1,088 test functions across the two crates, plus `tests/e2e`, `tests/hooks` and
-`tests/phase_1`. **I did not run them.** The screen flagged `server.json` as an
-auto-run manifest and twelve dependency manifests inside the seven-day cooldown
-including `Cargo.lock` and `pnpm-lock.yaml`.
+1,468 Rust test functions across the crates, with `cargo test --workspace` and
+per-crate runs in `.github/workflows/ci.yml:113-124`. The strata crates test
+replay, damaged segments, receipts and imports, and `retire_policy_stdio`
+exercises the named rules over real stdio. **I did not run them.** The screen
+found two auto-run surfaces (`hooks/` with 18 entries, and `server.json`) and
+dependency manifests inside the seven-day cooldown, a count the shallow clone
+inflates.
 
-**The benchmarks are in the tree, and the methodology page is unusually rigorous.** `benchmarks/` holds five harnesses — `memconflict`,
-`agent-memory-eval`, `before-you-change-that`, `memoryarena` and `task-cost` —
-and `docs/BENCHMARKS.md` documents the one the project says it stands behind.
-Six things there are worth copying whole.
+**The benchmark page discloses that its numbers describe another engine.**
+`docs/BENCHMARKS.md:3` states that the MemConflict run used 2.4.1 and Silent
+Rotation v3.1, both with hybrid recall that a 4.x build lacks, so the harnesses
+*"record retrieval errors, not scores"* against it. The CauseBench retraction
+stands, as does the Answer Accuracy versus Conflict Recognition Score
+correction that puts the best CRS at 0.2501. The Silent Rotation table carries
+its own caveat: only the `rag`, `mem0` and `zep` baselines converged on the
+wrong key.
 
-**It retracts its own prior benchmark and forbids citing it.** CauseBench is
-"formally withdrawn", its numbers retracted, and the prohibition is explicit —
-*"not even as 'an earlier result'"*. So is a separate invalidated LongMemEval
-run. Almost nothing in this corpus retracts a number it published.
-
-**It corrects the field's reading of the paper it borrows.** MemConflict
-([arXiv:2605.20926](https://arxiv.org/abs/2605.20926)) is quoted from the PDF rather than a summary, and the page
-separates two columns the ecosystem conflates: the widely-repeated
-`0.5539 / 0.4871 / …` list is **Answer Accuracy**, not Conflict Recognition
-Score. *"Calling them CRS overstates the field by roughly a factor of two."* The
-best CRS any of the six systems reaches is **0.2501**, and the page quotes the
-paper saying so. Correcting a mistake that flatters everyone, including the
-systems you are measured against, is unusual.
-
-**Four arms run every time and none is optional.** `nomem` is the floor —
-*"anything scoring above ~0 here is measuring the judge, not memory"* — `random`
-is a blob-inflation control at a fixed seed, `bm25` is the earned-complexity
-bar, and `vestige` is the system under test. The justification cites MemDelta
-([arXiv:2606.29914](https://arxiv.org/abs/2606.29914)): agent memory routinely loses to controlled baselines, and
-changing the embedding model alone moved accuracy 6.2pp at p=0.004, enough to
-reverse rankings. The rule follows: *"A memory system that cannot beat naive
-BM25 on the same corpus, with the same reader and the same judge, has not earned
-its complexity. The harness prints that verdict explicitly."*
-
-**The structural metric cannot be gamed by wording.** `CRS-struct` scores
-whether `recall(mode="contradictions")` returned a contradiction pair, read from
-`contradictionsFound` — *"never by keyword-matching the response, so the metric
-cannot be satisfied by the server merely emitting the word 'contradiction'."*
-The lexical variant beside it uses upstream's exact keyword rule, applied
-identically to every arm.
-
-**The limits section is longer than the results section**, nine numbered items,
-and it disqualifies the project's own favourable readings: its numbers are not
-comparable to the paper's table because the judge and reader differ; only
-cross-arm differences within one run mean anything; the reader is a concatenator
-so AA is a retrieval proxy rather than task accuracy; and — the one most systems
-would leave out — *"CRS-struct is not a head-to-head win. BM25 and the
-random/no-memory controls have no contradiction channel at all, so they are
-structurally 0 by construction, not by measured deficit… and must never be
-presented as such."*
-
-**It refuses to estimate what the public data cannot support.** The paper's
-SEH@K and SRS need gold supporting-memory ids; the released questions do not
-carry them, so those metrics are not reported — *"We will not estimate them."*
-The page also records that the released 30 instances are an expansion of the
-paper's ~12, so its sample is not the paper's sample.
-
-The recorded-agent package is framed with the same discipline: *"Treat it as one
-inspectable observation, not a causal win or product ranking"*, and it discloses
-that the competing arm was cut off at a 900-second limit **even though its
-recorded final application also passes 21/21** — publishing the fact that the
-competitor would have passed.
+`benchmarks/real_engine/` is a LongMemEval-S campaign harness with a spending
+ledger; no result from it is committed. `benchmarks/agentdojo/` measures the
+Operator gate against prompt injection, not memory.
 
 ## 11. For Your Own Build
 
 ### Steal
 
-- **Use two thresholds, not one, and route the middle to a person.**
-  Fellegi-Sunter's `match | possible | non_match` with `confirm=true` on the
-  uncertain classes is the cheapest correct answer to "when is a merge safe" —
-  and the header's argument, that a single threshold "over-merges and destroys
-  the audit trail", generalises to every dedup gate in this atlas.
-- **Store the undo payload with the operation.** One JSON column turns every
-  merge into a reversible one and gives you a reflog for free.
-- **Record why memories combined, not just that they did.** `signals` alongside
-  `undo_payload` is what makes a later "why is this one memory now" answerable.
-- **Give the user a `protect` flag.** One boolean exempting a memory from
-  auto-merge, supersede and forgetting is the escape hatch every automatic
-  lifecycle needs and almost none has.
-- **Keep a content-free deletion receipt.** Id, time, reason, and the counts of
-  what the purge touched — enough to prove the deletion and audit its blast
-  radius, without retaining the text you were told to forget.
-- **Name the reason for every state transition from a fixed vocabulary.** Nine
-  values covering decay, competition, user action and system init means the log
-  answers "why" and not only "when".
-- **Label your unwired tables in the schema.** "Designed for bi-temporal edge
-  support but was never wired… Do NOT add queries against this table" is the
-  single most useful comment in this report, and four other systems in this atlas
-  would have avoided a finding by writing it.
-- **Measure your ranking failing before you build around it.** The backfill
-  feature exists because the causal memory measurably ranks 7th of 8 under both
-  dense and lexical retrieval.
+- **Make the log the store.** One function appends propose, verdict, effect and
+  data in that order, and state is a replay. Nothing can mutate memory without
+  leaving the frame that explains it.
+- **Name the retirement rule, and hold the unnamed.** Four named `RETIRE` rules
+  are allowed and every other retirement is held, so a new retirement path
+  fails closed until someone writes its rule.
+- **Withhold an action rather than fake it.** Erasure, merge planning and
+  `protect` are dropped from the advertised schema and refused with a reason,
+  and `scan` reports `mergeCandidates` as `unavailable` so it cannot be read as
+  "none found".
+- **Test the absence beside the presence.** The retired-read test keeps a linked
+  control and asserts both halves for every tool.
+- **Store the exact before-value with every score change.** `AdjustSalience`
+  carries the old stability and the latest card event, so an undo is exact.
+- **Tell other sessions when a belief they hold is retired.** The push reaches
+  every session holding the old id, once.
 
 ### Avoid
 
-- **Retract a number you cannot reproduce, and say it may never be cited.** The
-  CauseBench notice is four sentences and it is worth more to a reader than any
-  result on the page.
-- **Read the paper you are citing, not the summary of it.** The
-  Answer-Accuracy-versus-CRS correction here fixes a claim the whole field was
-  repeating, and it makes every competitor look *better* than the summary did.
-- **Run the floor and the cheap baseline every time, and print the verdict.** A
-  no-memory arm tells you whether you are measuring the judge; a BM25 arm tells
-  you whether the complexity was earned.
-- **Score a capability structurally, not lexically.** A metric satisfied by the
-  system emitting a word is a metric about the word.
-- **Write the limits section longer than the results section**, and put the item
-  that disqualifies your best number in it.
-- **Do not mistake availability states for trust states.** `silent` and
-  `unavailable` say a memory lost a competition or was suppressed; neither says
-  it is wrong, and a system with four states and no notion of correctness can
-  look more epistemically equipped than it is.
-- **Do not expect a deletion receipt to stop a re-write.** The tombstone here
-  wins during sync and is silent during capture.
-- **Do not ship this shape without a scope story if more than one person will
-  use it.** Tags are a convention; there is no boundary.
+- **A review mode that falls back silently.** A configured `paranoid` mode
+  becomes `fast` with one log warning, and the dashboard keeps serving the
+  queue's routes.
+- **A memory verb that writes the agent's instructions.** A `pinned` tag
+  rewrites `CLAUDE.md` with a confirmation the code supplies.
+- **A scope that only one read honours.** The hook partitions; recall does not.
+- **Suppression without a value key.** A hidden fact comes back the next time
+  the user says it.
+- **A tool description that outruns the code.** One `recall` description says
+  BM25, and the code resolves handles.
 
 ### Fit
 
-This is for one developer on one machine who wants their agent to stop
-re-learning the same lesson, and who is willing to run a 25MB binary and trust a
-lot of cognitive-science machinery they will not read. AGPL-3.0 matters for
-anyone considering embedding it in a service.
-
-The parts worth lifting even if you never run it are small and separable: the
-two-threshold merge classification, the undo payload, and the content-free
-deletion receipt. Each is a table and a policy.
+For one developer who wants an agent's memory, and its corrections, to be
+provable after the fact, and who will work by exact ids and tags rather than by
+search. Not for anyone who needs erasure: the log keeps every byte, and the
+documentation says to use full-disk encryption and points to planned
+crypto-erasure.
 
 ## 12. Open Questions
 
-- **Does any tool expose `valid_from`?** The storage layer writes it from the
-  caller and the query reads it; whether an agent can set a fact's validity
-  through MCP was not traced, and it decides whether the bi-temporal axis is used
-  or merely available.
-- **How often does `possible` actually occur?** The whole confirmation design
-  rests on the middle class being non-empty and rare; no distribution is
-  published.
-- **What clears `suppressed_by`?** Suppression compounds per call and reverses
-  within 24 hours; the longer-term behaviour of the array was not traced.
-- **What do the composition outcome tables drive?** They record which memories
-  were used together and what happened; whether anything reads them back into
-  ranking is unclear from the tool surface.
+- **Does any shipped path produce a held `RETIRE`?** Every unnamed retirement is
+  held and nothing releases it; no path past the four named rules was traced.
+- **Is the stale-belief list persisted across restarts?** The retirements live
+  in Reflex state, and whether that state survives a restart was not traced.
+- **Does any read consult the anchor verdicts?** `RecordAnchorVerdict` caches
+  `verified`, `moved`, `drifted`, `missing` or `unverifiable`, and the op
+  comment says readers re-verify against the live tree.
 
 ## Appendix: File Index
 
-**Merge and supersede** — `crates/vestige-core/src/advanced/merge_supersede.rs`
-(the Fellegi-Sunter rationale at `:19-41`, the three-way classification `:62`),
-`crates/vestige-mcp/src/tools/dedup.rs`,
-`crates/vestige-core/src/storage/migrations.rs:804-853` (`merge_plans`,
-`merge_operations`)
+**The log** — `crates/strata/src/log.rs`, `crates/strata/src/format.rs:12-14`,
+`:43-44` (chain and signed trailer)
 
-**Deletion** — `migrations.rs:750-770` (`deletion_tombstones` and its
-rationale), `sync_tombstones` `:735`
+**The gate** — `crates/strata-gate/src/policy.rs:35-38`, `:78-80`
+(`require_human`), `crates/strata-gate/src/record.rs`
 
-**States and transitions** — `migrations.rs:292-311` (`memory_states`),
-`:349-362` (`state_transitions` and the reason vocabulary), `:483-495`
-(`memory_access_log`)
+**The store** — `crates/strata-store/src/op.rs` (`StoreOp`),
+`crates/strata-store/src/types.rs:101-133` (`NodeRecord`),
+`crates/strata-store/src/store.rs:403-418` (`permissive_policy`), `:420-495`
+(named rules), `:516-541` (`default_policy`), `:1262-1290` (canonical index),
+`:1596-1668` (admission), `:1721-1760` (ingest), `:1769-1779` (duplicate
+lookup), `:2378-2443` (retire)
 
-**Bi-temporality** — `migrations.rs:211-215`,
-`crates/vestige-core/src/storage/sqlite.rs:3686` (the point-in-time query),
-`:874-935` (the insert), `crates/vestige-core/src/memory/node.rs:336`
-(`is_valid_at`) and `:494-506` (its tests),
-`crates/vestige-core/src/memory/temporal.rs`,
-`crates/vestige-core/src/search/temporal.rs`
+**The adapter** — `crates/vestige-mcp/src/strata_memory.rs:854-895`
+(`retire_live`), `:935-1083` (declared links), `:1526-1538`
+(`to_store_input`), `:1613` (`retrievable`), `:1942-2018` (`resolve_handle`),
+`:2242-2256` (scoped reads), `:3717-3746` (`suppress_memory`)
 
-**The labelled dead table** — `migrations.rs:377-400` (`knowledge_edges`)
+**Reads** — `crates/vestige-mcp/src/tools/recall.rs:243-321`,
+`tools/memory_packet.rs:344-530`, `tools/lexical.rs:88-140`,
+`tools/session_context.rs:127-133`
 
-**Neuroscience modules** — `crates/vestige-core/src/neuroscience/`
-(`hippocampal_index.rs`), the FSRS tables `migrations.rs:313`, `:507`, the dream
-cycle `:532`, `consolidation_history` `:332`
+**Writes** — `tools/remember_unified.rs:140-205`,
+`tools/smart_ingest.rs:81-87`, `:388`, `tools/backfill.rs:16-27`,
+`packages/vestige-init/hooks/memory.cjs`
 
-**Composition** — `migrations.rs:854-900`
-(`composition_events`, `composition_members`, `composition_outcomes`)
+**Review** — `crates/vestige-core/src/trace/review.rs`,
+`crates/vestige-mcp/src/trace_recorder.rs:118-137`,
+`crates/vestige-mcp/src/server.rs:1571`, `:1734`,
+`crates/vestige-mcp/src/dashboard/mod.rs:225-236`
 
-**Tool surface** — `crates/vestige-mcp/src/server.rs:247-420` (the thirteen
-tools, with the folding history in comments), `crates/vestige-mcp/src/tools/`
+**Withheld surface** — `crates/vestige-mcp/src/server.rs:387-436`, `:594-600`
 
-**Tests** — 1,088 test functions in `crates/`, plus `tests/e2e`, `tests/hooks`,
-`tests/phase_1`
+**Reflex** — `crates/vestige-mcp/src/tools/reflex.rs:979-984`, `:4053`, `:4179`
 
-**Benchmarks** — `docs/BENCHMARKS.md` (the CauseBench retraction `:7-19`, the
-Answer-Accuracy-versus-CRS correction `:58-98`, the four arms `:106-118`, the
-metric definitions `:127-134`, the nine-item limits section `:140-180`),
-`benchmarks/memconflict/` (`longmemeval.py`, `LONGMEMEVAL.lock.json`),
-`benchmarks/before-you-change-that/`, `benchmarks/agent-memory-eval/`,
-`benchmarks/memoryarena/`, `benchmarks/task-cost/`
+**Tests** — `crates/vestige-mcp/src/strata_memory.rs:4538`, `:4735-5149`,
+`:5176`; `crates/strata-store/src/ghostlink_tests.rs:233`, `:309`;
+`crates/vestige-core/src/memory/node.rs:497`;
+`packages/vestige-init/test/memory-edge.test.js:23`, `:68`
+
+**Benchmarks** — `docs/BENCHMARKS.md`, `benchmarks/memconflict/`,
+`benchmarks/before-you-change-that/`, `benchmarks/real_engine/`,
+`benchmarks/agentdojo/`
 
 ## Appendix: Recorded Searches
 
@@ -516,13 +462,27 @@ Run from the root of the checkout at the pinned commit.
 
 | Claim | Command | Result at this pin |
 | --- | --- | --- |
-| The benchmarks are in the tree | `ls benchmarks/` | Five harnesses: `agent-memory-eval`, `before-you-change-that`, `memconflict`, `memoryarena`, `task-cost` |
-| The prior benchmark is retracted | `sed -n '7,19p' docs/BENCHMARKS.md` | CauseBench formally withdrawn, its numbers retracted, citation forbidden |
-| The upstream revision is pinned | `grep -n "Pinned revision" docs/BENCHMARKS.md` | `ec51d5d36e87f7665d1337f3a88cbde95fc2a964` |
-| `domains` is indexed but not filtered | `grep -rn "domains" --include="*.rs" crates \| grep -iE "WHERE.*domains\|LIKE"` | One hit, a migration comment deferring the filter to a later phase; no read path uses it |
-| No scope key reaches a read | the `scoping` matrix row, re-checked | Tags and connector cursors only |
+| The prior benchmark is retracted | `grep -n "formally withdrawn" docs/BENCHMARKS.md` | One hit in the retraction notice |
+| No 4.x benchmark is published | `sed -n 3p docs/BENCHMARKS.md` | The notice ending *"There is no 4.x benchmark on this page."* |
+| No SQLite backend is compiled | `git grep -n -E '^legacy-sqlite' -- crates/vestige-core/Cargo.toml crates/vestige-mcp/Cargo.toml` | `legacy-sqlite = []` in both |
+| One data-frame writer | `git grep -n -E 'KIND_STORE_WRITE, ' -- crates/strata-store/src` | `store.rs:1664`; every other hit is a test fixture |
+| BM25 runs only in the hook packet | `git grep -n -E 'lexical::rank' -- crates` | One hit, `tools/memory_packet.rs:380` |
+| Recall's handle path reads no scope | `sed -n '1942,2018p' crates/vestige-mcp/src/strata_memory.rs \| grep -c scope` | `0` |
+| Recall's tool code has no scope predicate | `git grep -n -w scope -- crates/vestige-mcp/src/tools/recall.rs` | Two schema description strings, no code |
+| No shipped rule requires a human | `git grep -n -E 'require_human: *true' -- crates` | Nothing |
+| Review modes fall back on Strata | `sed -n '118,137p' crates/vestige-mcp/src/trace_recorder.rs` | Returns `ReviewMode::Fast` when the backend is Strata |
+| No `corrects` edge writer | `git grep -n -E 'EdgeKind::Corrects' -- crates` | Only `types.rs:55` and `:68`, the enum and its name |
+| The Fellegi-Sunter scorer has no caller | `git grep -n -E 'score_pair\(' -- crates` | Hits only inside `advanced/merge_supersede.rs` |
+| Duplicate lookup ignores retired records | `sed -n '1769,1779p' crates/strata-store/src/store.rs` | Filters on `NodeRecord::is_live` |
+| Recall's handle path reads no validity window | `sed -n '1942,2018p' crates/vestige-mcp/src/strata_memory.rs \| grep -c valid_` | `0` |
+| The hook passes no scope | `grep -n memory_hook packages/vestige-init/hooks/memory.cjs` | Two calls, `:590` and `:604`, neither with a `scope` field |
+| Nothing releases a held write | `git grep -n -E 'StoreError::Held' -- crates` | Construction at `store.rs:1644`, `:2758` and the error mapping; no reader of a held proposal |
+| No LongMemEval-S result is committed | `git ls-files benchmarks/real_engine` | Harness code, manifests, `reproduce.sh` and `published.json`, which holds other systems' published scores as context |
+| No paper in the tree | `git grep -l -i -E 'bibtex\|@misc\|@article\|CITATION.cff\|zenodo\|doi\.org' -- README.md docs` | Nothing |
 
 ## History
+
+**2026-11-06** — [`26a54f15c4f154a765e9b931e7d7925e86233a85`](https://github.com/samvallad33/vestige/commit/26a54f15c4f154a765e9b931e7d7925e86233a85) — 777 commits past the previous pin, through the 4.0 move to the Strata log and on to 6.2.0; the SQLite storage, embeddings and keyword search are deleted. **`negative_eval` awarded** on a paired retired-read test ([section 9](#9-reliability-safety-and-trust)). `bitemporal` and `audit_log` hold on the log. `human_review` stays withheld: the Memory PR queue is forced to fast mode on Strata, the only backend. Every section is rewritten. The body published at the previous pin overstated one mark: section 9 read *"Human review — awarded"* beside the History entry withdrawing it. Its 1,088-test figure does not reproduce at that pin, which carries 1,644, and its `sqlite.rs` anchors named a path that was a directory there. Re-screened; nothing built or run.
 
 **2026-09-18** — [`3c5b198712d97b1f5350a04a4f2df5ed6cb2245b`](https://github.com/samvallad33/vestige/commit/3c5b198712d97b1f5350a04a4f2df5ed6cb2245b) — re-pinned from `548ccae`; 37 files and +5,879 lines, re-screened at the new pin. **Human review withdrawn.** The record read *"a preview plan the caller inspects, with `confirm=true` required before an uncertain merge applies"*, and the word doing the work is *caller*: `confirm` is a field in the tool call, read at `crates/vestige-mcp/src/trace_recorder.rs:460-466` as `args.get("confirm").and_then(|v| v.as_bool()).unwrap_or(false)` and documented in the tool description itself as *"'purge' (for good; confirm=true)"*. The model sets it. That is a guard against a slip, like `--force`, not a person in the loop — the same ruling this atlas applied to a declared approve tool elsewhere. The `scan` / `plan` / `apply` separation remains the right shape and keeps the plan inspectable; nothing requires that anyone inspects it. `bitemporal` and `audit_log` hold, and the reversal payload stored with every applied operation is untouched by this.
 

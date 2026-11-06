@@ -1807,12 +1807,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`vestige`](../systems/vestige/)
 
-- Best idea: Fellegi-Sunter record linkage classifying every merge candidate as `match`, `possible` or `non_match`, with the two uncertain classes requiring an explicit `confirm=true` — the header's argument being that a single cosine threshold "over-merges and destroys the audit trail".
-- Biggest risk: none of the published numbers is a head-to-head win, and the project says so itself at greater length than it states the results. The harness reader is a concatenator, so answer accuracy is a retrieval proxy; the structural contradiction metric scores 0 for every control by construction rather than by measured deficit, and the page forbids presenting it as a win.
-- Most reusable component: `merge_operations`, described in its own migration as "the git reflog for your agent's memory", where `undo_payload` carries everything needed to reverse an applied merge and `signals` records why the memories combined.
-- Maturity impression: 97,000 lines of Rust in a 25MB single binary, AGPL-3.0, 1,088 test functions, twenty-five-plus tables — and a deprecated table labelled in the schema as "designed for bi-temporal edge support but was never wired … Do NOT add queries against this table", which is the correct handling of a defect four other systems here ship silently.
-- Study when: your automatic merge or supersede has one similarity threshold and you have never asked what it does at the boundary.
-- Do not copy when: more than one person will use the store; there is no scope beyond tags.
+- Best idea: one admission path for every mutation — a PROPOSE frame, a GATE verdict and an EFFECT citing the payload digest before the single `STORE_WRITE` frame lands on a blake3-chained log with Ed25519-signed segments, and every retirement without a named rule held rather than allowed.
+- Biggest risk: the review queue is code that does not run — the Memory PR `risk_gated` and `paranoid` modes fall back to `fast` whenever the backend is Strata, the only backend the binary ships — and the agent's `recall` reads ids, prefixes and tags across every scope.
+- Most reusable component: `retired_nodes_stay_out_of_every_read_tool` in `crates/vestige-mcp/src/strata_memory.rs`, which retires a marker record linked to a kept control and asserts the control visible and the marker's content and id absent from every agent read tool.
+- Maturity impression: 187,921 lines of Rust in ten crates, AGPL-3.0, 1,468 test functions run by `cargo test --workspace` in CI, 1,377 commits — and a benchmark page that opens by stating its numbers were measured on an engine the current build does not contain.
+- Study when: you want memory whose every change can be proven after the fact, offline, from the log alone.
+- Do not copy when: you need erasure, ranked search for the agent, or a scope boundary on the agent's read verb.
 
 ### [`shodh-memory`](../systems/shodh-memory/)
 
