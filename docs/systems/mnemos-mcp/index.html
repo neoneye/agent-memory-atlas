@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local MCP server keeping one
+agent's self-written memories in SQLite, with fading, questions the
+agent answers, and beliefs moved only by its verdicts.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mnemos
+(Riley-Coyote) — Agent Memory Atlas">
+    <meta property="og:description" content="A local MCP server keeping
+one agent's self-written memories in SQLite, with fading, questions the
+agent answers, and beliefs moved only by its verdicts.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mnemos
+(Riley-Coyote) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local MCP server keeping
+one agent's self-written memories in SQLite, with fading, questions the
+agent answers, and beliefs moved only by its verdicts.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mnemos (Riley-Coyote) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mnemos (Riley-Coyote)",
+      "description": "A local MCP server keeping one agent's self-written memories in SQLite, with fading, questions the agent answers, and beliefs moved only by its verdicts.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Memory the agent writes and answers for</p>
+          <h1>Mnemos (Riley-Coyote)</h1>
+          <p class="document-deck">A local MCP server keeping one
+agent's self-written memories in SQLite, with fading, questions the
+agent answers, and beliefs moved only by its verdicts.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Riley-Coyote/mnemos-mcp">
+              <span>Source</span>
+              <strong>Riley-Coyote/mnemos-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Riley-Coyote/mnemos-mcp/commit/3108e08a50ec605213d00e90505dd6a0163166ad" title="3108e08a50ec605213d00e90505dd6a0163166ad">
+              <span>Analyzed revision</span>
+              <code>3108e08a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-06</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Riley-Coyote--mnemos-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Riley-Coyote--mnemos-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0,
+with a NOTICE carrying the MIT notice for releases before
+0.5.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>49,321
+lines of Python in mnemos/ outside tests, 8,386 of them
+simple_runtime.py and 5,734 the SQLite store; 6,622 lines of JavaScript,
+HTML and CSS for the local page; 2,765 more in scripts/ and
+benchmarks/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>385
+commits, 2 April – 4 November 2026: 381 by Riley-Coyote, one by
+davidefitz and three by Dependabot; 326 carry a Claude co-author
+trailer</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>154
+pytest files with 1,754 test functions and 50,612 lines, run in CI on
+Python 3.10 to 3.13; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mnemos is a local MCP server that gives one agent a memory it writes
+itself: captures in its own words, signed with its model id, kept in one
+SQLite file and read back into every session before the first turn. No
+model writes the memory. Judgement work is queued as questions the agent
+answers with a typed verdict, and the verdict alone moves state while
+the words are kept as written. A correction or a forget closes the old
+memory for good, while decay only fades it. The weakness is the other
+side of that design: the agent holds every verb, nothing waits for the
+person, and forgotten words never leave disk.</p>
+<p>The default surface is twelve tools
+(<code>mnemos/simple_mcp.py:241-783</code>); an advanced mode adds
+twenty-three more on the same store. Upkeep runs on a schedule, every
+four hours and nightly, and decays memories on a clock of the days the
+agent lived. When <code>claude</code> is installed and setup's question
+is answered yes, its default, "quiet hours" run unattended Claude Code
+sessions as the agent. Retrieval is FTS5 fused with an exact scan over
+local MiniLM vectors, plus link spreading. The README compares recall
+against Claude Code's built-in memory; no result file behind those
+figures is committed.</p>
+<p>Three marks: <code>trust_state</code>, <code>scope_enforced</code>
+and <code>negative_eval</code>. This is a different project from <a
+href="../mnemos/">mnemos (arhuman)</a> and <a href="../ori-mnemos/">Ori
+Mnemos</a>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>capture pair</strong>: an engram and a
+continuity note written in one transaction, the note pointing at the
+engram, so either id reaches both (<code>save_capture_pair</code>,
+<code>mnemos/store/sqlite_store.py:4231-4272</code>). The engram holds
+the words, a frozen copy of the words at encoding, and an optional
+<code>impact</code>. That is what the memory changed in how the agent
+works, which only the agent may write
+(<code>mnemos/simple_mcp.py:507-513</code>). Every engram records
+<code>author_kind</code> (agent, tool, system, import, person) and the
+model that signed it.</p>
+<p>An engram is in one of three states, and its archive row says why it
+left:</p>
+<ul>
+<li><code>active</code> — recalled, linked and decayed.</li>
+<li><code>dormant</code> — accessibility under 0.05
+(<code>mnemos/consolidation/decay.py:184</code>); found only by a strong
+match, which wakes it.</li>
+<li><code>archived</code>, for one of two kinds of reason. Decay below
+0.01 writes <code>decay_below_threshold</code> (<code>:185</code>,
+<code>:261</code>). Those reasons, with one repair reason, form
+<code>RECALLABLE_ARCHIVE_REASONS</code>, and such a memory returns
+through <code>include_archived</code> or its id
+(<code>sqlite_store.py:210-215</code>).</li>
+<li>A correction, the agent's forget, the <code>no_longer_true</code>
+verdict and a person's forget archive with other reasons. Those are
+<em>closed</em>: no recall path reopens them (<code>_still_held</code>,
+<code>mnemos/simple_runtime.py:5852-5861</code>).</li>
+</ul>
+<p>Judgement is a <strong>question</strong>, never an inference.
+Maintenance enqueues one of five kinds into
+<code>reflection_queue</code>: what a capture changed, what a fading
+memory taught, whether an idea returning across three days is a belief,
+whether a held belief still holds, whether a fading fact is still true
+(<code>sqlite_store.py:417</code>, <code>:432-463</code>). The agent
+answers with <code>mnemos_reflect</code> and a verdict from a closed
+list per kind (<code>simple_runtime.py:932-936</code>). An answered
+lesson question becomes a <code>lesson</code> engram at strength and
+stability 0.8, which fades far more slowly
+(<code>mnemos/consolidation/softening.py:601-602</code>).</p>
+<p>A <strong>belief</strong> exists only after the agent says
+<code>hold</code>. Retiring it sets
+<code>superseded_by = 'retired'</code> and confidence 0, and every
+context read filters on it (<code>simple_runtime.py:3982-4022</code>).
+Handoffs, the journal and notes to the person are kept verbatim and are
+never memories: no pass decays, links or rewrites them.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a capture is in force at once; decay fades it into an archive that recall can reopen, while a correction, a forget or a no_longer_true verdict closes it; beliefs exist only once the agent says hold</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a capture is in force at once; decay fades it into an archive that recall can reopen, while a correction, a forget or a no_longer_true verdict closes it; beliefs exist only once the agent says hold
+flowchart TD
+  CAP[&quot;mnemos_capture&lt;br/&gt;agent&#39;s words, signed&quot;] --&gt; PAIR[&quot;engram + note&lt;br/&gt;one transaction&quot;]
+  PAIR --&gt; ACT[&quot;active&quot;]
+  ACT --&gt;|&quot;accessibility &lt; 0.05&quot;| DOR[&quot;dormant&quot;]
+  DOR --&gt;|&quot;strong match wakes it&quot;| ACT
+  DOR --&gt;|&quot;accessibility &lt; 0.01&quot;| FADE[&quot;archived: faded&lt;br/&gt;recallable reason&quot;]
+  FADE --&gt;|&quot;include_archived or id&quot;| ACT
+  ACT --&gt; CLOSE[&quot;archived: closed&lt;br/&gt;correction, forget,&lt;br/&gt;no_longer_true,&lt;br/&gt;person&#39;s forget&quot;]
+  CLOSE --&gt; GONE[&quot;no recall path&lt;br/&gt;reopens it;&lt;br/&gt;words stay on disk&quot;]
+  GONE ~~~ Q[&quot;maintenance asks:&lt;br/&gt;idea on 3 days a belief?&quot;]
+  Q --&gt;|&quot;verdict hold&quot;| BEL[&quot;belief, in the wake&quot;]
+  Q --&gt;|&quot;decline&quot;| NONE[&quot;nothing formed&quot;]
+  BEL --&gt;|&quot;verdict retire&quot;| RET[&quot;superseded_by retired&lt;br/&gt;filtered from context&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Python package with one console script, <code>mnemos</code>
+(<code>pyproject.toml</code>). <code>mnemos serve</code> starts the
+stdio MCP server in simple mode unless <code>--mode advanced</code>,
+<code>MNEMOS_MODE</code> or config says otherwise
+(<code>mnemos/cli.py:61-72</code>, <code>:2179-2201</code>). Advanced
+mode registers the simple tools and adds twenty-three
+(<code>mnemos/mcp_server.py:94</code>). Both delegate to
+<code>MnemosRuntime</code> in <code>mnemos/simple_runtime.py</code>,
+over <code>EngramStore</code> in
+<code>mnemos/store/sqlite_store.py</code>.</p>
+<p><strong>Store.</strong> One SQLite file per agent,
+<code>~/.mnemos/&lt;agent&gt;.db</code>, unless a path is configured
+(<code>mnemos/simple_scope.py:79-89</code>). It holds
+<code>engrams</code> with an FTS5 table, typed <code>connections</code>,
+<code>versions</code>, <code>archive</code>, <code>beliefs</code>,
+<code>hypomnema_entries</code> (the notes and handoffs),
+<code>reflection_queue</code>, <code>memory_trace</code>,
+<code>journal_entries</code>, <code>notes</code>,
+<code>lived_days</code> and <code>passage_vectors</code>
+(<code>sqlite_store.py:471-848</code>). Shared memories live in a second
+file, <code>~/.mnemos/shared-memory.db</code>, that every agent on the
+machine reads.</p>
+<p><strong>Embeddings.</strong> Optional. With the
+<code>embeddings</code> extra, <code>all-MiniLM-L6-v2</code> runs
+locally and passages of up to 160 words are embedded into
+<code>passage_vectors</code>
+(<code>mnemos/store/embedding_index.py:123</code>, <code>:359</code>).
+Gemini embeddings are a choice, never inferred from a key. Without
+either, recall matches words.</p>
+<p><strong>Scheduled work.</strong> <code>mnemos connect</code> and
+<code>setup</code> install launchd, systemd or cron jobs:
+<code>consolidate</code> every four hours and
+<code>consolidate --deep</code> at 03:00
+(<code>mnemos/setup/scheduler.py:82-95</code>). The quiet hours run the
+<code>claude</code> CLI as the agent at 08:00, 19:00 and 03:30,
+scheduled on a yes to setup's one question, which defaults to yes
+(<code>scheduler.py:97-126</code>, <code>mnemos/cli.py:1354</code>).</p>
+<p><strong>The page.</strong> <code>mnemos log</code>, or the
+<code>mnemos_page</code> tool, serves a local site on 127.0.0.1 behind a
+random path token, checking Host and Origin on every POST
+(<code>mnemos/companion/server.py:191-213</code>,
+<code>:477-490</code>). The person reads memory, replies to the agent's
+notes, corrects and lets go there.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run but the MCP server the client spawns.
+<code>pip install "mnemos-continuity[mcp,embeddings]"</code>,
+<code>mnemos embeddings download</code> (about 90 MB, with PyTorch in
+the extra) and <code>mnemos connect &lt;agent&gt; --write</code>. No API
+key is needed to store anything. Everything works offline. Windows gets
+the tools without the scheduled parts. The store is SQLite and readable
+by hand, but its invariants live in code: a capture is two rows, a
+correction four kinds of rows, and many repair commands exist for stores
+older code wrote. Uninstall removes hooks, server entries and jobs and
+leaves <code>~/.mnemos</code> in place.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>mnemos_capture</code>
+(<code>simple_mcp.py:487-530</code>) calls <code>capture</code>
+(<code>simple_runtime.py:5301-5495</code>). It classifies kind and
+domain by substring (<code>:745-770</code>), signs with
+<code>author_model(signed_as)</code>, and prepares the engram with links
+and surprise detection. It writes the pair in one transaction
+(<code>:5433</code>), embeds after commit, and calls
+<code>maintain(auto=True)</code> (<code>:5469</code>).</li>
+<li><strong>Recall.</strong> <code>mnemos_recall</code>
+(<code>simple_mcp.py:540-589</code>) to <code>_recall_own</code>
+(<code>simple_runtime.py:5513-5640</code>), then
+<code>ReactiveRetriever.retrieve</code>
+(<code>mnemos/retrieval/reactive.py:285</code>). An id as the query
+returns one item whole through <code>_recall_by_id</code>
+(<code>simple_runtime.py:4948</code>), which refuses a closed memory and
+names its successor. Returned memories are reinforced once per session
+(<code>_reinforce_returned</code>, <code>:7448</code>).</li>
+<li><strong>Wake.</strong> The SessionStart hook prints
+<code>build_context_packet</code>
+(<code>mnemos/interface/context_packet.py:198</code>): handoffs, replies
+from the person, standing rules, beliefs, at most one question and what
+upkeep changed, under 8,000 characters plus one whole handoff
+(<code>:100</code>). <code>mnemos_context</code> returns the same packet
+where no hook exists.</li>
+<li><strong>Cue.</strong> A prompt hook asks a warm answerer over a unix
+socket for up to three memories, one line of 200 characters each
+(<code>mnemos/cue.py:125-136</code>).</li>
+<li><strong>Correct and forget.</strong> <code>correct</code>
+(<code>simple_runtime.py:6418</code>) resolves the target pair by id or
+by a query that must hold half its meaningful words. A forget runs
+<code>_retire</code> (<code>:5863-5901</code>), which archives every
+live note and memory of the pair. A correction also writes a replacement
+pair, a <code>supersedes</code> link, lineage both ways and a signed
+version (<code>record_correction</code>,
+<code>sqlite_store.py:4395</code>).</li>
+<li><strong>Reflect.</strong> <code>reflect</code>
+(<code>simple_runtime.py:3590</code>) finds the pending question in
+scope, checks the verdict against the kind and applies it:
+<code>_apply_still_true</code> (<code>:3847-3888</code>) and the belief
+reaffirmation (<code>:3982-4022</code>).</li>
+<li><strong>Upkeep.</strong> <code>maintain</code> (<code>:6822</code>)
+spawns a detached child for automatic runs (<code>:6858-6859</code>,
+<code>_spawn_upkeep</code> at <code>:448</code>). The child runs
+<code>ConsolidationDaemon.run_cycle</code>
+(<code>mnemos/consolidation/daemon.py:84</code>): decay, identity,
+linking, softening and question passes.</li>
+<li><strong>Person.</strong> <code>mnemos remember</code>,
+<code>correct</code>, <code>forget</code>, <code>notes reply</code> and
+the page go through <code>mnemos/interface/person.py</code>; a forget
+archives as <code>forgotten_by_person</code>
+(<code>sqlite_store.py:222</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>engrams</code> carries <code>content</code>,
+<code>content_at_encoding</code>, <code>impact</code>,
+<code>impact_source</code>, <code>author_kind</code>,
+<code>author_model</code>, <code>author_session</code>,
+<code>kind</code>, <code>tags</code>, <code>strength</code>,
+<code>stability</code>, <code>accessibility</code>,
+<code>resolution</code>, <code>lineage</code>,
+<code>owner_agent_id</code>, <code>person_id</code>,
+<code>project_scope</code>, <code>visibility</code>, <code>state</code>,
+access counters, and a signed <code>standing</code> mark
+(<code>sqlite_store.py:471-509</code>). <code>versions</code> keeps the
+words before each change, signed by the corrector when a correction made
+it. <code>archive</code> holds one row per archived engram with its
+reason, written by <code>INSERT OR REPLACE</code>
+(<code>:2826-2855</code>).</p>
+<p><strong>Scope</strong> is the triple of agent, person and project, on
+engrams, notes, questions, journal entries, notes to the person and
+trace rows. It defaults to <code>mnemos-agent</code>, <code>user</code>
+and <code>global</code>. A comment states the rule: the project is never
+inferred from the working directory, because a client's launch location
+would partition one agent's memory (<code>simple_scope.py:22-29</code>).
+Beliefs carry <code>agent_id</code> alone
+(<code>sqlite_store.py:553-568</code>).</p>
+<p><strong>Time.</strong> <code>created_at</code>,
+<code>last_accessed</code> and <code>lived_days</code>. Decay reads
+hours of lived days, so a month without a session costs nothing
+(<code>mnemos/consolidation/lived.py:1-14</code>). There is no validity
+interval.</p>
+<p><strong>Provenance.</strong> Each write resolves a signer in a fixed
+order: <code>signed_as</code>, <code>MNEMOS_AGENT_MODEL</code>, this
+session's <code>mnemos_introduce</code>, the harness transcript, or
+unsigned (<code>mnemos/authorship.py:1-38</code>). The person's words
+are <code>author_kind = 'person'</code>, unsigned.</p>
+<p><strong>Trace.</strong> <code>memory_trace</code> records each tool
+call's tool, session, signer and the ids it read and wrote, ids only.
+Rows older than 90 days are deleted on every insert
+(<code>sqlite_store.py:119</code>, <code>:5510-5530</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>retrieve</code> builds three ranked seed lists and fuses them
+by reciprocal rank (k 60, words weighted 0.3, meaning 0.5;
+<code>reactive.py:104-106</code>):</p>
+<ul>
+<li><strong>Words.</strong> FTS5 bm25 over active then dormant engrams
+in scope (<code>:366-371</code>). Words that most live memories share
+are dropped, but only for candidates meaning can find whole. Lessons are
+ranked by their own words, and handoffs and journal entries by bm25 over
+the passed notes.</li>
+<li><strong>Meaning.</strong> The cue's vector against every passage
+vector of the live ids in scope, an exact scan with no ANN index
+(<code>:384-388</code>).</li>
+<li><strong>Shared.</strong> The shared store by every word, kept to
+rows marked <code>shared</code> or <code>public</code>.</li>
+</ul>
+<p>Then <strong>resonance</strong>: from each newly reached memory,
+activation spreads over its strongest links both ways, at most two hops,
+with a floor. Archived and out-of-scope memories neither receive nor
+relay; dormant ones receive and do not relay. A memory reached through
+links can tie the best seed and never outrank it. Results are filtered
+and then cut to <code>max_results</code>, so the list backfills rather
+than coming back short.</p>
+<p>Recall formats memories with their words whole up to 2,000
+characters, and other items at 300, each labelled with how it was found.
+When vectors exist but meaning search failed this session, the result
+says only words were searched (<code>_searched_by_words_only</code>,
+<code>simple_runtime.py:5642</code>). Recall reinforces what it
+returned, once per session per memory.</p>
+<p>The failure modes follow from the shape. Link spreading pulls in a
+memory the query never named. Reinforcement favours what is recalled,
+and the benchmark README measures that drift on a synthetic graph.
+Contradictory memories can all be live, and the tool description tells
+the agent the newer usually holds (<code>simple_mcp.py:562</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every content write is a tool call by the agent or a command by the
+person. The encoder links the new engram to related ones and weighs it
+against held beliefs for surprise, which raises its encoding strength.
+With a provider configured, a model may retype links in deep cycles, and
+a link goes only on an explicit <code>NONE</code> for its exact id.
+Since 0.4.0 no model rewrites a memory's words or writes a lesson
+(<code>mnemos/consolidation/softening.py:1-20</code>). The same release
+retired a transcript indexer whose model-harvested facts outnumbered the
+agent's own captures; a comment in the scheduler counts 7,058 against 13
+on one install (<code>mnemos/setup/scheduler.py:128-152</code>).</p>
+<p>There is no deduplication at capture: <code>save_capture_pair</code>
+inserts with no lookup of existing words, so saving the same sentence
+twice yields two pairs. A capture is never compared with a closed memory
+either; the agent can capture again exactly what it forgot.</p>
+<p>A correction archives the old pair and writes a replacement in one
+transaction. The replacement keeps the old impact unless the agent gives
+a new one, and keeps a standing mark. A correction naming nothing is
+captured as fresh continuity (<code>simple_mcp.py:612-613</code>).</p>
+<p><strong>Classification is substring matching.</strong>
+<code>_classify_domain</code> tests markers with <code>in</code> on the
+lowered text, so "research" matches <code>arc</code> and is
+<code>long-arc</code>, and "know" matches <code>now</code> and is
+<code>situational</code> (<code>simple_runtime.py:756-770</code>).
+Domain sets confidence and salience defaults (<code>:7589-7611</code>)
+and whether a note is <code>foundational</code>.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The capture call is synchronous and model-free: classification, link
+discovery, surprise against beliefs, one transaction, then the engram's
+vector. A capture is searchable by words when the call returns. Upkeep
+forks into a detached process instead of holding the call; its docstring
+records the cycle at 12 to 60 seconds on a real store
+(<code>simple_runtime.py:6827</code>). Scheduled upkeep reads every
+dormant memory in pages, and up to 10,000 active ones per pass. The wake
+costs up to 8,000 characters plus one handoff of up to 16,384. It is
+printed at SessionStart, ahead of the first user turn, and the cue adds
+up to three lines per prompt.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Simple mode's twelve tools are <code>mnemos_context</code>,
+<code>handoff</code>, <code>journal</code>, <code>note</code>,
+<code>page</code>, <code>capture</code>, <code>recall</code>,
+<code>correct</code>, <code>maintain</code>, <code>reflect</code>,
+<code>introduce</code> and <code>health</code>. The server instructions
+tell the model to call context before the first substantive answer,
+capture without being asked, correct rather than re-capture, and sign
+every write (<code>simple_mcp.py:62-78</code>). They are kept under
+2,048 characters because Claude Code shows a model no more.</p>
+<p><code>mnemos connect</code> writes the MCP entry and, where the
+harness has the events, a wake hook and a prompt hook.
+<code>mnemos/setup/harnesses.py</code> declares wake events for Claude
+Code, Codex, Gemini CLI and OpenClaw. Hermes gets a memory provider
+(<code>mnemos/integrations/hermes/</code>). Cursor, Claude Desktop and
+others get the server only. Codex skips hooks until the user approves
+them under <code>/hooks</code>.</p>
+<p>The agent's agency is total. It captures, recalls, corrects, forgets,
+marks a rule standing, answers every question with the verdict of its
+choice, runs maintenance and writes the handoff it wakes with. Advanced
+mode adds <code>mnemos_hypomnema_*</code>,
+<code>mnemos_review_queue</code>, <code>mnemos_inspect</code>,
+<code>mnemos_forget</code> and <code>mnemos_consolidate</code>, several
+taking <code>agent_id</code>, <code>person_id</code> and
+<code>project_scope</code> arguments.</p>
+<p>The quiet hours are a second integration. <code>life.py</code>
+launches <code>claude --model claude-opus-5-5 --restricted</code> with
+this store's MCP server and a SessionStart hook that wakes the agent
+(<code>mnemos/life.py:713-738</code>). "Mine" gets Read, Write, Edit,
+Glob, Grep, a sandboxed Bash, WebSearch and WebFetch, with pushes,
+<code>curl</code>, <code>ssh</code> and publishing denied
+(<code>:65-75</code>, <code>:106-110</code>). The other two kinds get
+the file tools or none.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-agent-answers-its-own-questions">The agent answers its own
+questions</h3>
+<p>The reflection queue is the design's centre and it has one
+respondent. Maintenance proposes, the agent decides, and the verdict is
+checked only against the question's list. A <code>signed_as</code> check
+stops one model retiring a belief another model wrote, but
+<code>signed_as</code> is a string the caller types
+(<code>simple_runtime.py:3655-3678</code>). Nothing in the queue waits
+for the person, and no surface lets the person answer a question. The
+README states this as the intent: the agent's beliefs change only by its
+own verdict.</p>
+<h3 id="forget-is-archival">Forget is archival</h3>
+<p>Every forget path ends in <code>archive_engram</code>, which marks
+the engram archived, copies its words into <code>archive</code>, drops
+its FTS row and deletes unanswered questions about it
+(<code>sqlite_store.py:2826-2855</code>). The words stay in
+<code>engrams.content</code>, <code>content_at_encoding</code>,
+<code>archive.content</code> and any version row.
+<code>delete_engram</code> exists and has no caller in
+<code>mnemos/</code>. The privacy doc says no command or tool
+hard-deletes a memory (<code>docs/privacy-security.md:229-232</code>).
+<code>tests/test_forget_is_complete.py</code> exists because a forgotten
+capture once reached the wake through two frozen copies; its header
+records both.</p>
+<h3 id="who-counts-as-the-person">Who counts as the person</h3>
+<p><code>run_by_agent</code> decides whether a CLI write is the person's
+by <code>--signed-as</code> and two environment variables,
+<code>CLAUDECODE</code> and <code>AI_AGENT</code>
+(<code>authorship.py:167-180</code>). A command in the agent's shell
+that unsets them is recorded as the person: an unsigned correction, or a
+forget archived as <code>forgotten_by_person</code>, which the next wake
+reports as the person letting a memory go.</p>
+<h3 id="scope-gaps">Scope gaps</h3>
+<p>Beliefs are keyed on the agent, so a belief formed from one person's
+memories appears in another person's wake in the same store
+(<code>context_packet.py:281</code>). Advanced
+<code>mnemos_inspect</code> and <code>mnemos_forget</code> load any
+engram in the store by id with no scope check, and the forget archives
+as <code>user_requested</code> (<code>mcp_server.py:1266</code>,
+<code>:1462-1466</code>). Its docstring says resharpen can restore it,
+but that reason is not in <code>RECALLABLE_ARCHIVE_REASONS</code>.</p>
+<h3 id="the-unattended-hour">The unattended hour</h3>
+<p>The "mine" hour is a Claude Code session nobody watches, with web
+fetch and the memory tools in one context. Text it reads on a page can
+become a capture signed as the agent, with
+<code>author_kind = 'agent'</code>, and reach every later wake. The deny
+lists cover exfiltration verbs and credential paths. They do not
+separate what the hour read from what it keeps.</p>
+<h3 id="limits-at-scale">Limits at scale</h3>
+<p>Decay reads at most 10,000 active memories a pass, most accessible
+first (<code>decay.py:51</code>, <code>:118-122</code>). Past that, the
+memories nearest to dormant are the ones never decayed. Meaning search
+scans every live passage vector per recall.</p>
+<h3 id="marks">Marks</h3>
+<p>Three are carried.</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — withheld. A closed memory
+is keyed on its id; a new capture of the same words is a new pair that
+nothing checks. Belief questions are suppressed by the member engram ids
+already asked about, not by the idea.</li>
+<li><strong><code>trust_state</code></strong> — earned on the archive
+reason. A faded memory and a closed one are both <code>archived</code>;
+the reason decides which recall may reopen, and the closed reasons come
+from the correction, forget and <code>no_longer_true</code> paths an
+agent reaches. Belief retirement is a second axis, filtered on every
+context read. No candidate state exists: a capture is in force at
+once.</li>
+<li><strong><code>bitemporal</code></strong> — withheld;
+<code>created_at</code> and lived days are the only times.</li>
+<li><strong><code>scope_enforced</code></strong> — earned on the
+three-key predicate, with the belief and advanced-mode gaps above.</li>
+<li><strong><code>audit_log</code></strong> — withheld.
+<code>versions</code> records word changes only and
+<code>mnemos repair-versions</code> deletes duplicate rows
+(<code>sqlite_store.py:2762-2771</code>). The trace sees every write but
+holds ids and is pruned at 90 days.</li>
+<li><strong><code>human_review</code></strong> — withheld. Nothing waits
+for a person; the person's correct and forget act after the write, and
+the agent answers every question.</li>
+<li><strong><code>negative_eval</code></strong> — earned on the cases in
+section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>release-hardening.yml</code> runs pytest on Python 3.10 to
+3.13, a coverage run, a job with the embeddings extra, ruff, and wheel
+smoke installs, one of them unlocked. I did not run any of it.
+<code>tests/conftest.py</code> points <code>HOME</code> at a temporary
+directory, strips the environment, fakes the OS schedulers and guards
+<code>subprocess.run</code>.</p>
+<p>The suite is named for behaviours and most files open with the defect
+they pin. <code>tests/test_scope_isolation_packet.py:70-114</code>
+stores APOLLO for alice and ZEPHYR for bob under one agent. It asserts
+each packet lacks the other's codename and, in a third case on the same
+fixture, contains its own.
+<code>tests/test_the_person_corrects_and_forgets.py:312-357</code> first
+asserts the cue returns a memory, then forgets it as the person. It
+checks that recall by words, meaning, archive search, id and note id,
+the cue, two maintenance cycles, the wake and the person's search all
+omit it.</p>
+<p>Weaker cases sit beside these.
+<code>tests/test_forget_is_complete.py:63-80</code> asserts
+<code>SECRET not in rt.recall("bank PIN")</code> on a store whose only
+memory was forgotten. <code>tests/test_agent_scoping.py</code> proves
+consolidation leaves another agent's rows unchanged, a write-path
+property.</p>
+<p><strong>Benchmarks.</strong>
+<code>benchmarks/retrieval_benchmark.py</code> seeds 224 synthetic
+engrams in three disjoint topics; its README tabulates a parameter grid
+and a 100-session drift run dated 10 June 2026. No raw output is
+committed, so I recomputed nothing. The README's comparison with Claude
+Code's own memory (35% against 65% on 30 tasks, and two tests over two
+years) has no committed questions, answers or judgements. Those figures
+stay claims. The project publishes no paper.</p>
+<p>Missing: a populated negative case for a correction, asserting the
+replaced words are absent where the replacement is returned.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A verdict vocabulary per question, and words never
+parsed.</strong> The answer text is kept; a closed list of verdicts
+decides. Its own tests record the failures keyword parsing
+produced.</li>
+<li><strong>Two kinds of archive.</strong> Recording why a memory left
+lets decay stay reversible while a correction stays final, in one
+column.</li>
+<li><strong>Decay on lived time.</strong> Counting only the days the
+agent ran keeps an absent user from costing the agent its memory.</li>
+<li><strong>Exempt what is obeyed from decay.</strong> A standing rule
+is not recalled because it is followed, so usage-based fading would
+remove it for working.</li>
+<li><strong>Test forget against every delivery path</strong>, frozen
+copies included.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A respondent who is also the proposer's
+beneficiary.</strong> If one agent writes, is asked and answers, the
+queue records decisions but reviews nothing.</li>
+<li><strong>An environment variable as the line between the agent and
+the person.</strong></li>
+<li><strong>Keying one kind of state on fewer scope keys than the
+rest.</strong></li>
+<li><strong>A capped sweep ordered by the wrong end.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Suits someone who wants one long-lived agent to keep its own notes
+about them and their work, read back without effort, and who accepts
+that the agent decides what it believes. The maintenance budget is
+mostly the agent's: it answers questions, writes handoffs and corrects
+itself, and the store wants the scheduled jobs running. Walk away if a
+person must approve what is kept, if a forget must remove the text, or
+if several people share one agent. Walk away also if an unattended
+session with web access writing into memory is unacceptable.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often agents answer the queue in practice, and whether
+<code>decline</code> and <code>not_now</code> dominate; the health card
+counts unanswered questions.</li>
+<li>Whether beliefs keyed on the agent alone are intended to follow it
+across people and projects.</li>
+<li>How the quiet hours' captures compare in provenance with session
+captures, since both are <code>author_kind = 'agent'</code>.</li>
+<li>What the README's three comparison runs used as questions and
+judges.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>mnemos/store/sqlite_store.py</code>,
+<code>mnemos/store/fts.py</code>,
+<code>mnemos/store/embedding_index.py</code>,
+<code>mnemos/store/archive.py</code></li>
+<li>Write path: <code>mnemos/simple_runtime.py</code>
+(<code>capture</code>, <code>correct</code>, <code>_retire</code>,
+<code>reflect</code>), <code>mnemos/encoding/encoder.py</code>,
+<code>mnemos/authorship.py</code></li>
+<li>Retrieval: <code>mnemos/retrieval/reactive.py</code>,
+<code>mnemos/retrieval/reconsolidation.py</code>,
+<code>mnemos/cue.py</code></li>
+<li>Context: <code>mnemos/interface/context_packet.py</code></li>
+<li>Background: <code>mnemos/consolidation/</code>
+(<code>daemon.py</code>, <code>decay.py</code>, <code>lived.py</code>,
+<code>softening.py</code>, <code>connection_discovery.py</code>),
+<code>mnemos/setup/scheduler.py</code>, <code>mnemos/life.py</code></li>
+<li>MCP, CLI, person: <code>mnemos/simple_mcp.py</code>,
+<code>mnemos/mcp_server.py</code>, <code>mnemos/cli.py</code>,
+<code>mnemos/simple_scope.py</code>,
+<code>mnemos/interface/person.py</code>,
+<code>mnemos/companion/server.py</code>,
+<code>mnemos/shared_memory.py</code></li>
+<li>Tests and evals: <code>tests/</code>, <code>benchmarks/</code>,
+<code>.github/workflows/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_(from|to|until|at)|valid_time|as_of|bitemporal' -- mnemos</code>
+returns nothing;
+<code>git grep -c -E 'created_at|last_accessed' -- mnemos/store/sqlite_store.py</code>
+returns 66.</li>
+<li><strong>No product caller hard-deletes an engram.</strong>
+<code>git grep -n -E 'delete_engram\(' -- mnemos</code> returns only the
+definition at <code>mnemos/store/sqlite_store.py:2378</code>.</li>
+<li><strong>No tombstone.</strong>
+<code>git grep -n -i -E 'tombstone' -- mnemos tests</code> returns
+nothing.</li>
+<li><strong>The encoder never consults the archive.</strong>
+<code>git grep -n -E 'archive_reason|RECALLABLE|archived' -- mnemos/encoding</code>
+returns nothing;
+<code>git grep -c -E 'state' -- mnemos/encoding/encoder.py</code>
+returns 11.</li>
+<li><strong>Version and trace rows are deleted in three places.</strong>
+<code>git grep -n -E 'DELETE FROM (versions|memory_trace)' -- mnemos</code>
+returns <code>sqlite_store.py:2387</code> (in the uncalled
+<code>delete_engram</code>), <code>:2767</code> and
+<code>:5528</code>.</li>
+<li><strong>Beliefs carry no person or project.</strong>
+<code>git grep -n -E 'person_id|project_scope' -- mnemos/core/belief.py</code>
+returns nothing;
+<code>git grep -c -E 'agent_id' -- mnemos/core/belief.py</code> returns
+3.</li>
+<li><strong>Advanced inspect and forget load by id alone.</strong>
+<code>git grep -n -E '_store\.get_engram\(' -- mnemos/mcp_server.py</code>
+returns <code>:1266</code> and <code>:1462</code>.</li>
+<li><strong>No approval state.</strong>
+<code>git grep -n -i -E 'pending_review|awaiting_(review|approval)|approv' -- mnemos</code>
+returns two harness setup strings in
+<code>mnemos/setup/harnesses.py</code>.</li>
+<li><strong>No committed benchmark results.</strong>
+<code>git ls-files | /usr/bin/grep -E '\.(json|jsonl|csv)$'</code>
+returns nothing.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- .</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-06</strong> — <a
+href="https://github.com/Riley-Coyote/mnemos-mcp/commit/3108e08a50ec605213d00e90505dd6a0163166ad"><code class="commit-id" title="3108e08a50ec605213d00e90505dd6a0163166ad">3108e08a…</code></a>.
+First reading, from a full clone at the head of <code>main</code>.
+Screened first: no auto-run surface, <code>pyproject.toml</code> and
+<code>uv.lock</code> changed inside the seven-day cooldown (both last on
+4 November 2026), <code>tests/conftest.py</code> executes on collection,
+and a <code>CLAUDE.md</code> read as data. Apache-2.0 with a NOTICE
+carrying the earlier MIT notice and no rider. Nothing installed, built
+or run. Three marks. <code>human_review</code> is withheld because the
+agent answers every question and nothing waits for the person;
+<code>audit_log</code> because versions cover word changes only and the
+trace is pruned (<a href="#marks">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

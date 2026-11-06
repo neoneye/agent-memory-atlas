@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 787 reports.**
+**This page covers all 788 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7212,3 +7212,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 19,084 lines of Python in the memory code and the turn runtime, 62,393 outside tests; 308 commits from two authors, 30 July – 5 November 2026; 800 unittest methods run offline in CI, not run here. Two marks: `human_review` on agent-noted lessons and recipes, `negative_eval` on the per-person partition.
 - Study when: you are building a long-running assistant that raises things unprompted and must not nag, and want offer hysteresis and an approval gate on self-written instructions in one readable codebase.
 - Do not copy when: "forget that" must hold across every store, several people share the device and must not see each other's notes, or you need the old value after a change the model recorded.
+
+### [`mnemos-mcp`](../systems/mnemos-mcp/)
+- Best idea: **a question with a closed list of verdicts, where the verdict decides and the agent's words are only kept.** Maintenance asks what a fading memory taught, whether an idea returning on three days is a belief, and whether a belief or a fading fact still holds; `mnemos_reflect` checks the verdict against the question's list and never reads the answer for a yes or a no.
+- Second idea: an archive reason that separates fading from closing. Decay's archive reopens through `include_archived` or the id, while a correction, a forget and `no_longer_true` close a memory no recall path reopens; decay runs on the days the agent lived and skips what it marked standing.
+- Biggest risk: **the agent answers every question it is asked.** It captures, corrects, forgets, retires beliefs and marks rules standing through its own tools; nothing waits for the person, and the CLI tells the person from the agent by two environment variables.
+- Second risk: forgotten words stay in the engram, archive and version rows; beliefs are keyed on the agent alone and reach every person's wake in the store; the quiet hour, on by default where `claude` exists, is an unattended Claude Code session with web access that writes memory as the agent.
+- Most reusable component: `RECALLABLE_ARCHIVE_REASONS` with `_still_held` and `_retire` in `mnemos/store/sqlite_store.py:210-222` and `mnemos/simple_runtime.py:5852-5901`, with the verdict table at `mnemos/simple_runtime.py:932-936`.
+- Maturity impression: Apache-2.0, MIT before 0.5.0; 49,321 lines of Python in mnemos/ outside tests; 385 commits, 2 April – 4 November 2026, 381 by one author and 326 with a Claude co-author trailer; 1,754 pytest functions in 154 files run in CI, not run here. Three marks: `trust_state`, `scope_enforced`, `negative_eval`. The README's recall comparison with Claude Code's own memory has no committed results.
+- Study when: you want agent-curated memory where judgement is a typed verdict rather than parsed text, and where correcting and fading are different exits.
+- Do not copy when: a person must approve what is kept, a forget must remove the text, or several people share one agent.

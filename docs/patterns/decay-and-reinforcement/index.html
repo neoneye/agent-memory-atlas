@@ -721,6 +721,22 @@ pins two passes to one result (<code>storage/local.py:252-279</code>,
 <code>tests/test_storage.py:82-86</code>). <strong>Decay from the last
 application, and let the correction state decide what decay may
 touch.</strong></p>
+<p><strong><a href="../../systems/mnemos-mcp/">Mnemos (Riley-Coyote)</a>
+decays on the days the agent lived and exempts what it was told to
+obey.</strong> Accessibility fades on a clock that counts only days with
+any activity, so a month without a session costs nothing
+(<code>mnemos/consolidation/lived.py:1-14</code>). Below 0.05 a memory
+goes dormant, and below 0.01 it is archived with a reason recall may
+reopen, unlike a correction's
+(<code>mnemos/consolidation/decay.py:184-185</code>,
+<code>mnemos/store/sqlite_store.py:210-215</code>). Recall reinforces a
+returned memory once per session, and the pass never reads a memory
+marked standing, because a rule that is followed is not recalled. The
+active sweep takes 10,000 rows, most accessible first, so past that the
+memories nearest dormancy are the ones skipped
+(<code>decay.py:51</code>, <code>:118-122</code>). <strong>Run decay on
+the agent's time, exempt the rules it obeys, and start a capped sweep
+from the end that should move.</strong></p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>
