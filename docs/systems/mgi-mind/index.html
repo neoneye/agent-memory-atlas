@@ -108,14 +108,14 @@ pass a relevance gate into quarantine.</p>
               <strong>madgodinc/mgi-mind</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/madgodinc/mgi-mind/commit/9fae7803ff7514d02504cd01a8f14f7e146fa8ba" title="9fae7803ff7514d02504cd01a8f14f7e146fa8ba">
+            <a class="meta-pill revision-pill" href="https://github.com/madgodinc/mgi-mind/commit/a8defc36f7d0bcd5108714763a12625a0eda0868" title="a8defc36f7d0bcd5108714763a12625a0eda0868">
               <span>Analyzed revision</span>
-              <code>9fae7803…</code>
+              <code>a8defc36…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-11-05</strong>
+              <strong>2026-11-06</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/madgodinc--mgi-mind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -125,14 +125,14 @@ pass a relevance gate into quarantine.</p>
                       </div>
                               <div class="document-meta document-facts">
             <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
-            <div class="meta-pill fact-pill"><span>Size</span><strong>27,581
-lines of Rust in src/ before the inline test modules, 35,657 with them;
+            <div class="meta-pill fact-pill"><span>Size</span><strong>27,841
+lines of Rust in src/ before the inline test modules, 35,980 with them;
 a 536-line Python client</strong></div>
-            <div class="meta-pill fact-pill"><span>Activity</span><strong>317
-commits on main by 1 contributor, 28 May 2026 – 21 October
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>319
+commits on main by 1 contributor, 28 May 2026 – 6 November
 2026</strong></div>
-            <div class="meta-pill fact-pill"><span>Tests</span><strong>465
-inline Rust unit tests, 44 integration tests in tests/, 8 Python client
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>468
+inline Rust unit tests, 47 integration tests in tests/, 8 Python client
 tests</strong></div>
           </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -163,16 +163,19 @@ them.</p>
 decides which statuses are hidden, and every fact reader's Qdrant filter
 is derived from it: the query, the duel's rival set and the session
 briefing. A fact's id is its value, and an explicit invalidate is final:
-every fact write path reads the invalidated row and refuses the triple
-until a restore. Facts take an optional world-time
-<code>valid_from</code> beside the record clock, and an as-of query
-reads either axis.</p>
-<p>What is weak is the duel and the end of the world-time interval. On
-the default path a fact asserted once flips to any contradiction while
-younger than about four months, and re-adding the loser flips it back.
-Retirement stamps record time, so a backdated successor overlaps its
-predecessor on the world axis. On MCP the library is a caller's option;
-only a library-scoped HTTP token is held to it.</p>
+every fact write path refuses the invalidated triple, and any triple
+equal to it up to case and whitespace, until a restore. Facts take an
+optional world-time <code>valid_from</code> beside the record clock, a
+dated successor writes the end of its predecessor's world interval, and
+an as-of query reads either axis.</p>
+<p>What is weak is the duel. On the default path a fact asserted once
+flips to any contradiction while younger than about four months. A loser
+re-asserted inside the default 24-hour window lands
+<code>contested</code>, which hides nothing: both values return,
+unlabelled. The duel's rival set includes the challenger's own row, so a
+re-assertion on a contested axis can retire itself and report
+<code>won</code>. On MCP the library is a caller's option; only a
+library-scoped HTTP token is held to it.</p>
 <p>Five marks: <code>tombstone</code>, <code>trust_state</code>,
 <code>bitemporal</code>, <code>audit_log</code> and
 <code>negative_eval</code>. Section 9 names the two withheld.</p>
@@ -191,21 +194,24 @@ promotes it, so repetition is the admission test. Nothing judges whether
 a memory is true.</p>
 <p><strong>A fact becomes current by winning a duel.</strong> A triple
 is keyed on its own value, a UUIDv5 of subject, predicate and object
-(<code>src/knowledge.rs:285-288</code>). For a predicate registered
+(<code>src/knowledge.rs:371-374</code>). For a predicate registered
 <code>Single</code> or <code>TemporalSingle</code>, a new object that
 differs from a visible valid one triggers
 <code>resolve_against_existing</code>. The duel compares the newcomer's
-weight with the entrenchment of the strongest rival and returns flip,
-contested or quarantine (<code>src/duel.rs:277-285</code>). A flip
-writes the newcomer <code>active</code> and retires the loser:
+weight with the entrenchment of the strongest visible row on the axis
+and returns flip, contested or quarantine
+(<code>src/duel.rs:277-285</code>, <code>:303-345</code>). A flip writes
+the newcomer <code>active</code> and retires the loser:
 <code>stale</code> for <code>Single</code>, <code>superseded</code> for
 <code>TemporalSingle</code>, each with <code>valid_until = now</code>
-(<code>src/duel.rs:397-450</code>).</p>
+(<code>src/duel.rs:397-450</code>). When the winner carries a
+<code>valid_from</code>, the loser also gets <code>world_until</code>
+set to it (<code>src/knowledge.rs:784-791</code>).</p>
 <p><strong>On the default path the duel leans on recency.</strong> A
 newcomer weighs <code>0.1 · log2(1 + c)</code> in the default
 <code>ChatOnly</code> mode, where <code>c</code> is its own confirmation
-count, 1 on a first write (<code>src/knowledge.rs:492</code>,
-<code>:537-543</code>; <code>src/duel.rs:210-231</code>;
+count, 1 on a first write (<code>src/knowledge.rs:613</code>,
+<code>:658-667</code>; <code>src/duel.rs:210-231</code>;
 <code>src/install_mode.rs:57-61</code>). Every write of a triple raises
 its <code>confirmations_count</code> by one, whoever sends it.
 Entrenchment sums log terms for dependants, confirmations and age and
@@ -223,18 +229,27 @@ newcomer's weight, which without dependants takes some forty assertions
 of a two-year-old rival. These thresholds were computed from the code,
 not run.</p>
 <p><strong>How a fact stops being one.</strong> A duel loser is hidden,
-not deleted. Re-adding it rewrites the payload with its original
-<code>created_at</code> and its own count plus one, and duels the
-current winner afresh (<code>src/knowledge.rs:481-500</code>); against a
-young winner the re-proposed value's higher weight flips it back. An
-invalidate is different. It sets <code>valid = false</code> and
-<code>valid_until</code> (<code>src/knowledge.rs:1122-1201</code>), and
-<code>add_fact_core</code> reads that field on the row the triple's id
-addresses before any duel, refusing with verdict
-<code>invalidated</code> and writing nothing but an audit row
-(<code>:455-478</code>). <code>restore</code> is the only way back
-(<code>:1212-1279</code>).</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a memory and a fact each become current in MGI-Mind, where an invalidated triple is refused, and the path that brings a duel loser back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a memory and a fact each become current in MGI-Mind, where an invalidated triple is refused, and the path that brings a duel loser back
+not deleted. Re-adding it rewrites the whole payload with its original
+<code>created_at</code> and its own count plus one, which drops its
+<code>valid_until</code> and <code>world_until</code>
+(<code>src/knowledge.rs:602-617</code>, <code>:714-756</code>). If it
+lost within <code>flip_back_window_hours</code> of the re-add, 24 by
+default and 0 to disable, a winning duel writes it
+<code>contested</code> and leaves the winner in place; after the window
+it flips the winner back (<code>src/knowledge.rs:302-326</code>,
+<code>:594-599</code>, <code>:683-689</code>;
+<code>src/config.rs:103-112</code>).</p>
+<p>An invalidate is different. It sets <code>valid = false</code> and
+<code>valid_until</code> (<code>src/knowledge.rs:1260-1338</code>).
+Before any duel, <code>add_fact_core</code> reads that field on the row
+the triple's id addresses, then scans every <code>valid = false</code>
+row for one equal under <code>tombstone_key</code>: whitespace runs
+collapsed, ends trimmed, lowercased. Either match refuses with verdict
+<code>invalidated</code> and the invalidated row's id, writing nothing
+but an audit row (<code>src/knowledge.rs:295-300</code>,
+<code>:328-369</code>, <code>:559-593</code>). <code>restore</code> is
+the only way back (<code>:1350-1417</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a memory and a fact each become current in MGI-Mind, where an invalidated triple or its variant is refused, and the two paths that bring a duel loser back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a memory and a fact each become current in MGI-Mind, where an invalidated triple or its variant is refused, and the two paths that bring a duel loser back
 flowchart TD
     I[&quot;mind_ingest candidate&quot;] --&gt; G{&quot;secret scan, relevance&lt;br/&gt;gate, novelty,&lt;br/&gt;near-duplicate&quot;}
     G -- &quot;passes&quot; --&gt; M[&quot;live memory, returned&lt;br/&gt;by search and history&quot;]
@@ -242,15 +257,17 @@ flowchart TD
     Q -- &quot;re-ingested&lt;br/&gt;or promoted&quot; --&gt; M
     A[&quot;mind_add,&lt;br/&gt;no gate&quot;] --&gt; M
     M ~~~ F
-    F[&quot;mind_fact add s,p,o&lt;br/&gt;from MCP, HTTP,&lt;br/&gt;CLI or ingest&quot;] --&gt; T{&quot;row at UUIDv5&lt;br/&gt;of s,p,o has&lt;br/&gt;valid = false?&quot;}
-    T -- &quot;yes&quot; --&gt; R[&quot;refused,&lt;br/&gt;nothing written&quot;]
+    F[&quot;mind_fact add s,p,o&lt;br/&gt;from MCP, HTTP,&lt;br/&gt;CLI or ingest&quot;] --&gt; T{&quot;own row has&lt;br/&gt;valid = false, or an&lt;br/&gt;invalidated row equal&lt;br/&gt;up to case and&lt;br/&gt;whitespace?&quot;}
+    T -- &quot;yes&quot; --&gt; R[&quot;refused with that&lt;br/&gt;row&#39;s id,&lt;br/&gt;nothing written&quot;]
     T -- &quot;no&quot; --&gt; C{&quot;single-valued&lt;br/&gt;predicate with a&lt;br/&gt;visible rival object?&quot;}
     C -- &quot;no&quot; --&gt; ACT[&quot;status active,&lt;br/&gt;confirmations + 1&quot;]
-    C -- &quot;yes&quot; --&gt; D{&quot;duel: own&lt;br/&gt;confirmations against&lt;br/&gt;rival entrenchment&quot;}
-    D -- &quot;young rival,&lt;br/&gt;asserted once&quot; --&gt; FLIP[&quot;newcomer active,&lt;br/&gt;rival stale or&lt;br/&gt;superseded,&lt;br/&gt;valid_until = now&quot;]
+    C -- &quot;yes&quot; --&gt; D{&quot;duel: own&lt;br/&gt;confirmations against&lt;br/&gt;the most entrenched&lt;br/&gt;visible row&quot;}
+    D -- &quot;young rival,&lt;br/&gt;asserted once&quot; --&gt; FLIP[&quot;newcomer active,&lt;br/&gt;rival stale or&lt;br/&gt;superseded,&lt;br/&gt;valid_until = now,&lt;br/&gt;world_until = winner&#39;s&lt;br/&gt;valid_from if dated&quot;]
     D -- &quot;older or&lt;br/&gt;re-confirmed&quot; --&gt; CON[&quot;newcomer&lt;br/&gt;contested,&lt;br/&gt;both visible&quot;]
     D -- &quot;about forty&lt;br/&gt;confirmations&lt;br/&gt;or dependants&quot; --&gt; QC[&quot;quarantine_&lt;br/&gt;candidate,&lt;br/&gt;hidden&quot;]
-    FLIP --&gt; RE[&quot;rival&#39;s value re-added:&lt;br/&gt;a fresh duel,&lt;br/&gt;created_at kept&quot;]
+    FLIP --&gt; RE{&quot;rival&#39;s value&lt;br/&gt;re-added: lost&lt;br/&gt;within 24 hours?&quot;}
+    RE -- &quot;yes, and it&lt;br/&gt;would win&quot; --&gt; CON
+    RE -- &quot;no&quot; --&gt; D
     RE ~~~ INV
     INV[&quot;mind_fact invalidate&quot;] --&gt; X[&quot;valid = false, hidden&quot;]
     X -- &quot;mind_fact restore&quot; --&gt; RS[&quot;valid = true,&lt;br/&gt;prior status back&quot;]</code></pre></details></figure>
@@ -262,7 +279,7 @@ is a loopback HTTP surface over the same dispatcher
 Embedding runs in process through ONNX Runtime:
 <code>multilingual-e5-base</code> by default, with a
 <code>bge-reranker-base</code> cross-encoder on by default
-(<code>src/config.rs:109-126</code>). The models stay warm for the life
+(<code>src/config.rs:118-135</code>). The models stay warm for the life
 of the MCP process.</p>
 <p>Qdrant holds four collections: <code>memories</code>, with named
 dense and sparse vectors and payload indexes on library, author, source,
@@ -271,8 +288,8 @@ type and <code>created_at</code>; <code>_kg_facts</code>, vectorless;
 <code>_mod_procstats</code>, derived procedure statistics
 (<code>src/storage.rs:26-35</code>). Procedures and skills live in
 <code>memories</code> as typed points in the <code>_procedures</code>
-and <code>_skills</code> libraries (<code>src/storage.rs:2612</code>,
-<code>:3435-3436</code>).</p>
+and <code>_skills</code> libraries (<code>src/storage.rs:2625</code>,
+<code>:3448-3449</code>).</p>
 <p>Files under <code>$MGIMIND_HOME</code> hold the rest:
 <code>audit.log</code>, per-agent session logs, pinned blocks rendered
 at the top of every briefing, the access journal used by decay, and the
@@ -301,7 +318,7 @@ NDJSON.</p>
 Paths</h2>
 <p><strong>Memory write.</strong> <code>mind_add</code> →
 <code>storage::add_memory_authored</code>
-(<code>src/storage.rs:1407-1523</code>): refuse an unregistered library,
+(<code>src/storage.rs:1420-1536</code>): refuse an unregistered library,
 refuse a secret, chunk at 500 characters with overlap, embed, keep the
 original <code>created_at</code> for an existing id, upsert, and append
 an <code>Add</code> audit row.</p>
@@ -320,31 +337,37 @@ stores, unless a library-scoped HTTP token set
 <code>_confine_extraction</code>.</p>
 <p><strong>Memory search.</strong> <code>mind_search</code> →
 <code>storage::search_filtered</code>
-(<code>src/storage.rs:2232-2364</code>): embed the query, record it in
+(<code>src/storage.rs:2245-2377</code>): embed the query, record it in
 the activity buffer for the doubt window, build the filter with
 <code>memory_query_filter_ex</code>, run dense and sparse prefetches
 fused by RRF, rerank, truncate to the tier, and record access counts in
 process.</p>
 <p><strong>Fact write.</strong> <code>mind_fact add</code> →
 <code>knowledge::add_fact_core</code>
-(<code>src/knowledge.rs:403-697</code>): take the per-axis mutex and a
+(<code>src/knowledge.rs:489-830</code>): take the per-axis mutex and a
 cross-process file lock, read this triple's own <code>created_at</code>,
-<code>valid</code>, <code>confirmations_count</code> and
-<code>valid_from</code>, refuse it if invalidated, look up the
-cardinality, fetch visible rivals, run the duel, upsert,
-<code>retire_loser</code>, and append a <code>FactAdd</code> row with
-the verdict and any retired loser. Both MCP and HTTP return the verdict
-(<code>recorded</code>, <code>won</code>, <code>contested</code>,
-<code>quarantined</code>, <code>invalidated</code>).</p>
+<code>valid</code>, <code>confirmations_count</code>,
+<code>valid_from</code>, <code>status</code> and
+<code>valid_until</code>, and refuse it if it or a case and whitespace
+variant is invalidated. Then look up the cardinality, fetch visible
+rivals, run the duel, upsert, <code>retire_loser</code>, set the loser's
+<code>world_until</code> when the winner is dated, and append a
+<code>FactAdd</code> row with the verdict and any retired loser. Both
+MCP and HTTP return the verdict (<code>recorded</code>,
+<code>won</code>, <code>contested</code>, <code>quarantined</code>,
+<code>invalidated</code>).</p>
 <p><strong>Fact read.</strong> <code>mind_fact query</code> →
 <code>query_facts</code>, <code>query_fact_history</code> or
-<code>query_fact_as_of</code> (<code>src/mcp.rs:1132-1149</code>).
+<code>query_fact_as_of</code> (<code>src/mcp.rs:1141-1158</code>).
 <code>query_facts</code> filters <code>valid = true</code>, excludes the
 hidden statuses, matches the term as full text on any of the three
 fields, and runs the doubt-window drift check
-(<code>src/knowledge.rs:739-803</code>). <code>query_fact_as_of</code>
-takes <code>world_time</code> to choose the start bound
-(<code>:1027-1109</code>).</p>
+(<code>src/knowledge.rs:872-924</code>). <code>query_fact_as_of</code>
+reads <code>active</code>, <code>superseded</code> and
+<code>stale</code> rows only, and <code>world_time</code> chooses both
+bounds (<code>:1164-1247</code>). All three render through
+<code>render_facts</code>, which prints the record-time interval and no
+status (<code>src/cli.rs:3460-3484</code>).</p>
 <p><strong>Unified recall.</strong> <code>mind_recall_all</code> fuses
 facts, a <code>search</code> with no library, and procedures
 (<code>src/mcp.rs:393-441</code>).</p>
@@ -355,7 +378,7 @@ the 20 newest visible facts, the library list and a quarantine
 digest.</p>
 <p><strong>Forget.</strong> <code>mind_delete</code> →
 <code>delete_memory</code>, with the content snapshotted into the audit
-row (<code>src/storage.rs:3366-3402</code>).
+row (<code>src/storage.rs:3379-3415</code>).
 <code>consolidate --apply</code> merges near-duplicates, then archives
 or prunes cold memories, logging a <code>Delete</code> row per removed
 memory and one <code>Consolidate</code> summary
@@ -386,9 +409,10 @@ memory and one <code>Consolidate</code> summary
 <td><code>valid</code> as a string, <code>status</code>,
 <code>created_at</code>, <code>updated_at</code>,
 <code>valid_from</code>, <code>valid_until</code>,
-<code>confirmations_count</code>, <code>author</code>,
-<code>origin_context_id</code>, later <code>dependants_count</code>,
-<code>confidence_score</code>, doubt count</td>
+<code>world_until</code>, <code>confirmations_count</code>,
+<code>author</code>, <code>origin_context_id</code>, later
+<code>dependants_count</code>, <code>confidence_score</code>, doubt
+count</td>
 </tr>
 <tr>
 <td>predicate</td>
@@ -408,20 +432,31 @@ memory and one <code>Consolidate</code> summary
 A memory carries <code>library</code>, and a query may filter on one or
 several. Facts, procedures, skills, sessions and pinned blocks are
 global (<code>src/http_api.rs:690-702</code>).</p>
-<p><strong>Time.</strong> A fact carries two start bounds and one end.
+<p><strong>Time.</strong> A fact carries two start bounds and two ends.
 <code>created_at</code> is the record time of its first write and
-survives re-adds (<code>src/knowledge.rs:481</code>).
+survives re-adds (<code>src/knowledge.rs:602</code>).
 <code>valid_from</code>, when a caller supplies one, is when it became
 true in the world, and a later re-add without one keeps it
-(<code>:493-496</code>, <code>:604-606</code>). <code>valid_until</code>
-is the system clock at retirement or invalidation. The record-time slice
-tests <code>[created_at, valid_until)</code>; the world-time slice tests
-<code>[valid_from or created_at, valid_until)</code>
-(<code>:930-954</code>). The code comment beside the second says a
-world-time end would need its own field, and none exists.</p>
+(<code>:614-617</code>, <code>:731-733</code>). <code>valid_until</code>
+is the system clock at retirement or invalidation.
+<code>world_until</code> is the winner's <code>valid_from</code>,
+written on the loser of a flip whose winner is dated
+(<code>:784-791</code>).</p>
+<p>The record-time slice tests <code>[created_at, valid_until)</code>;
+the world-time slice tests
+<code>[valid_from or created_at, world_until or valid_until)</code>
+(<code>:1064-1091</code>). Nothing else reads <code>world_until</code>:
+history and the current-value query read status, and
+<code>render_facts</code> prints <code>created_at .. valid_until</code>
+on either axis. An undated successor, and the operator's
+<code>migrate-v14 redo-duels --apply</code> retire pass, leave the
+loser's world end at record time (<code>src/cli.rs:2368-2379</code>).
+Dates are stored as given and compared as strings, and nothing checks
+that <code>world_until</code> falls after the loser's own
+<code>valid_from</code>.</p>
 <p><strong>Content addressing has consequences.</strong> Editing a
 memory writes a new point and deletes the old one
-(<code>src/storage.rs:1295-1319</code>). Re-adding identical text
+(<code>src/storage.rs:1308-1332</code>). Re-adding identical text
 upserts the same point and clears any <code>quarantined</code> or
 <code>archived</code> flag, because the payload is rebuilt. For a fact
 the same identity is what makes the invalidation durable.</p>
@@ -431,13 +466,13 @@ and a sparse arm over a hashed term-frequency vector, each limited to
 <code>rerank_top_k</code> (20) and fused with RRF inside one Qdrant
 Query API call. The cross-encoder then re-scores and sorts, and the
 score is mapped through a sigmoid
-(<code>src/storage.rs:2273-2340</code>). Tiers truncate the text to
+(<code>src/storage.rs:2286-2353</code>). Tiers truncate the text to
 about 100 or 500 characters, or return it whole.</p>
 <p><strong>One base filter excludes procedures, skills, quarantined
 points and archived points</strong>
 (<code>src/storage.rs:385-405</code>), and every memory listing builds
-on it: search, browse, history and by-author (<code>:2283</code>,
-<code>:4111</code>, <code>:4284</code>, <code>:4347</code>). Archived
+on it: search, browse, history and by-author (<code>:2296</code>,
+<code>:4124</code>, <code>:4297</code>, <code>:4360</code>). Archived
 points can be asked for explicitly through the filter's archived
 scope.</p>
 <p>Fact retrieval is a full-text payload match, not semantic. The doubt
@@ -466,12 +501,12 @@ relevance gate entirely, which is why HTTP adds a per-author write quota
 The relevance gate checks form, not truth. <code>mind_web</code> fetches
 a page and can save it to a library. The secret scanner refuses a
 key-like string and points at the vault, on every write path including
-quarantine (<code>src/storage.rs:1421-1432</code>,
-<code>:1547-1553</code>).</p>
+quarantine (<code>src/storage.rs:1434-1445</code>,
+<code>:1560-1566</code>).</p>
 <p><strong>A re-assertion is a confirmation, whoever makes it.</strong>
 <code>confirmations_count</code> rises by one on every write of the same
 triple, from any agent or the same one
-(<code>src/knowledge.rs:492</code>, <code>:597-600</code>). It feeds the
+(<code>src/knowledge.rs:613</code>, <code>:724-727</code>). It feeds the
 triple's own weight as a challenger and its entrenchment as a rival, so
 repeating a value is how it resists the next contradiction.</p>
 <p><strong>The inheritance discount is narrow.</strong>
@@ -479,12 +514,12 @@ repeating a value is how it resists the next contradiction.</p>
 process-local set (<code>src/cli.rs:3129-3139</code>;
 <code>src/doubt.rs:906-929</code>), and <code>add_fact_core</code>
 halves a challenger's weight when that challenger's own triple is in the
-set (<code>src/knowledge.rs:528-543</code>). A briefed fact was visible,
+set (<code>src/knowledge.rs:649-667</code>). A briefed fact was visible,
 so on a single-valued predicate the discount reaches one side of a
-contested pair, or a value that lost after the briefing. Re-asserting
-the briefed winner raises no duel. The set lives in one process, so
-<code>mgimind context</code> from a terminal marks nothing in the MCP
-server.</p>
+contested pair, or a value that lost after the briefing. Re-asserting a
+briefed winner that stands alone raises no duel. The set lives in one
+process, so <code>mgimind context</code> from a terminal marks nothing
+in the MCP server.</p>
 <h3 id="operational-cost">Operational cost</h3>
 <ul>
 <li>Write: synchronous embed and upsert; facts are vectorless and pay
@@ -502,8 +537,8 @@ Injection is whatever the agent asks for, at the tier it picks;
 <p>The README counts 29 live MCP tools plus 15 deprecated aliases.
 <code>tools/list</code> hides the aliases unless
 <code>MGIMIND_LIST_DEPRECATED=1</code>, and the dispatcher serves them
-(<code>src/mcp.rs:1278-1299</code>). Each listed tool carries read-only,
-destructive and idempotent hints (<code>:1914</code>). The model holds
+(<code>src/mcp.rs:1287-1308</code>). Each listed tool carries read-only,
+destructive and idempotent hints (<code>:1923</code>). The model holds
 every verb: add, ingest, search, fact add, invalidate and restore,
 predicate registration, quarantine list, promote and expire, restore,
 delete, export and import, sessions and pinned blocks. Vault tools
@@ -528,30 +563,65 @@ hidden set from <code>is_default_visible</code>, and
 <code>hidden_status_must_not</code> turns it into the Qdrant
 <code>must_not</code> used by <code>query_facts</code>, the duel's rival
 set, <code>list_all_facts</code> and the session briefing
-(<code>src/knowledge.rs:165-210</code>, <code>:758</code>,
-<code>:1650</code>; <code>src/cli.rs:3093-3105</code>). The comments
+(<code>src/knowledge.rs:165-210</code>, <code>:891</code>,
+<code>:1788</code>; <code>src/cli.rs:3093-3105</code>). The comments
 record the drift that leaked <code>stale</code> and then
 <code>quarantine_candidate</code> before the derivation existed, the
 second through the briefing.</p>
+<p><strong><code>contested</code> hides nothing.</strong> It is
+default-visible, so a damped flip-back puts the re-asserted loser back
+into the fact query and the briefing beside the winner
+(<code>src/knowledge.rs:165-170</code>). Neither surface labels a
+status: the briefing prints
+<code>subject -&gt; predicate -&gt; object</code>, and
+<code>render_facts</code> prints the triple and its record-time interval
+(<code>src/cli.rs:3130</code>, <code>:3460-3484</code>). The as-of
+slices whitelist <code>active</code>, <code>superseded</code> and
+<code>stale</code>, so while a value sits <code>contested</code> it
+drops out of both time axes
+(<code>src/knowledge.rs:1187-1192</code>).</p>
+<p><strong>The rival set includes the challenger.</strong>
+<code>find_facts_by_subject_predicate</code> returns every visible row
+on the axis, the challenger's own <code>contested</code> row among them,
+and <code>resolve_against_existing</code> names the most entrenched row
+as the loser (<code>src/knowledge.rs:632-642</code>;
+<code>src/duel.rs:322-341</code>). On an axis holding a
+<code>contested</code> value, re-asserting it can therefore retire the
+challenger's own row while the verdict reads <code>won</code>
+(<code>src/knowledge.rs:777-798</code>). In the sequence
+<code>flip_back_within_window_lands_contested</code> drives, A, B, A,
+the re-asserted A carries the higher count. A fourth write, A again
+inside the window, retires A itself, and a fifth lands
+<code>contested</code> again. This sequence was computed from the code,
+not run.</p>
 <p><strong>Locking around the duel is careful.</strong> A per-(subject,
 predicate) async mutex serialises agents in one process, and
 <code>lock_facts_cross_process</code> extends it to separate
 <code>mgimind</code> processes; invalidate and restore take the same
-file lock (<code>src/knowledge.rs:323-379</code>, <code>:1131</code>,
-<code>:1219</code>).</p>
-<p><strong>The invalidation is consulted, and it is exact.</strong> The
-refusal sits at the top of the one function every fact writer reaches:
-MCP <code>mind_fact</code> and its legacy alias, HTTP
-<code>/fact/add</code>, <code>mgimind fact add</code>,
-<code>mind_ingest</code> and the feature-gated extractor
-(<code>src/mcp.rs:753</code>, <code>:1116</code>;
-<code>src/http_api.rs:1044</code>; <code>src/cli.rs:3438</code>;
-<code>src/ingest.rs:487</code>). Nothing deletes a fact point; the one
-collection drop, a vectorless migration, re-inserts every payload
-(<code>src/storage.rs:906-934</code>). The key is the raw string, so
-<code>Berlin</code> and <code>berlin</code> are different triples.
+file lock (<code>src/knowledge.rs:409-463</code>, <code>:1269</code>,
+<code>:1357</code>).</p>
+<p><strong>The invalidation is consulted on every write path, and
+matched loosely.</strong> The refusal sits at the top of the one
+function every fact writer reaches: MCP <code>mind_fact</code> and its
+legacy alias, HTTP <code>/fact/add</code>,
+<code>mgimind fact add</code>, <code>mind_ingest</code> and the
+feature-gated extractor (<code>src/mcp.rs:762</code>,
+<code>:1125</code>; <code>src/http_api.rs:1044</code>;
+<code>src/cli.rs:3438</code>; <code>src/ingest.rs:487</code>). Nothing
+deletes a fact point; the one collection drop, a vectorless migration,
+re-inserts every payload (<code>src/storage.rs:919-947</code>).
 <code>mind_ingest</code> counts a refused fact in
 <code>stored_facts</code> (<code>src/ingest.rs:487-489</code>).</p>
+<p>The loose key is local to the refusal. The id, the duel's conflict
+test and the rival lookup compare exact strings, so <code>Berlin</code>
+and <code>berlin</code> on a <code>Single</code> predicate duel each
+other (<code>src/knowledge.rs:226-231</code>, <code>:1777-1782</code>).
+<code>tombstone_key</code> lowercases and collapses Unicode whitespace
+but applies no Unicode normalisation, so a precomposed and a decomposed
+<code>ü</code> differ. A variant row written before the invalidate stays
+visible, and re-asserting it is refused. The variant check scrolls every
+<code>valid = false</code> row on each fact write, under both locks
+(<code>src/knowledge.rs:328-369</code>).</p>
 <p><strong>Library scope holds for a scoped token and is optional
 elsewhere.</strong> The route gate admits a library-scoped HTTP token
 only to memory routes that apply its allowlist
@@ -565,34 +635,47 @@ tokens, the library is a caller's filter, and
 <p><strong>Audit coverage and its edges.</strong> Every declared
 <code>AuditOp</code> has a producer. Promote and expire record the
 calling agent, and <code>relevance-gate</code> remains only on the
-automatic ingest path (<code>src/storage.rs:1660-1680</code>;
-<code>src/ingest.rs:339</code>). Three writes leave no row:
-<code>mind_skill(action="remove")</code>, and pinned-block set and
-remove (<code>src/storage.rs:3685-3705</code>, <code>:651-677</code>).
-Nothing rotates or prunes <code>audit.log</code>.
-<code>mgimind restore</code> unpacks a backup's files under
-<code>$MGIMIND_HOME</code>, its <code>audit.log</code> included, over
-the live ones, and appends no event
-(<code>src/storage.rs:4971-5035</code>).</p>
+automatic ingest path (<code>src/storage.rs:1673-1693</code>;
+<code>src/ingest.rs:339</code>). <code>skill::remove</code> writes
+<code>skill_remove</code> with the removed text, and the pinned-block
+writers write <code>block_set</code> with the prior content and
+<code>block_remove</code> with the removed content, inside the functions
+every CLI, MCP and HTTP caller reaches
+(<code>src/skill.rs:188-213</code>;
+<code>src/storage.rs:649-690</code>). Nothing rotates or prunes
+<code>audit.log</code>, and <code>record</code> logs a warning when an
+append fails (<code>src/audit.rs:304-320</code>).</p>
+<p><strong>A restore keeps the log it replaces.</strong> Before a
+backup's <code>audit.log</code> is unpacked,
+<code>restore_archive_inner</code> copies the live log to
+<code>audit.log.pre-restore-&lt;UTC stamp&gt;</code>, and after a
+successful restore a <code>backup_restore</code> row naming the archive
+and that copy is chained onto the restored log
+(<code>src/storage.rs:4990-5014</code>, <code>:5052-5063</code>). Rows
+written after the backup survive only in the copy, which no
+<code>audit verify</code> reads. Snapshots upload to Qdrant after every
+file is unpacked, so a restore failing there leaves the replaced log and
+the copy with no <code>backup_restore</code> row
+(<code>:5071-5101</code>).</p>
 <p><strong>Privacy.</strong> Delete removes the point and keeps the
 truncated content in <code>audit.log</code>. Backups can be encrypted
 with a passphrase.</p>
 <p>Capability marks:</p>
 <ul>
 <li><code>tombstone</code> — awarded on the fact store. The rejected
-value is the key of its row, and the writer reads that row and refuses
-the value until a restore. A duel loser is not covered, and memories
-have no equivalent: a quarantined memory is promoted by re-assertion,
-the opposite of a tombstone.</li>
+value is the key of its row, and the writer reads that row, and every
+invalidated row equal to it up to case and whitespace, and refuses the
+value until a restore. A duel loser is not covered, and memories have no
+equivalent: a quarantined memory is promoted by re-assertion, the
+opposite of a tombstone.</li>
 <li><code>trust_state</code> — awarded. The fact <code>status</code>
 enum carries states that withhold a value, and every fact reader filters
-on them.</li>
+on them. <code>contested</code> is not one of them.</li>
 <li><code>bitemporal</code> — awarded on the fact store.
 <code>valid_from</code> is a world time a caller supplies, kept apart
-from <code>created_at</code>, and the world-time as-of reads it. Only
-the start is separate: the end is the record time of retirement, so a
-successor dated into the past overlaps its predecessor until the moment
-it was recorded.</li>
+from <code>created_at</code>, and a flip to a dated winner writes the
+loser's <code>world_until</code>. The world-time as-of reads both. An
+undated successor closes the world interval at record time.</li>
 <li><code>audit_log</code> — awarded; the edges are above.</li>
 <li><code>negative_eval</code> — awarded; section 10.</li>
 <li><code>scope_enforced</code> — withheld. The boundary is real for a
@@ -616,14 +699,14 @@ committed JSON.</p>
 <code>Single</code> predicate, adds <code>old_winner</code> and then
 <code>new_value_should_flip</code> over MCP, and asserts the query
 contains the new value and not the old
-(<code>tests/cli_integration.rs:895-960</code>).
+(<code>tests/cli_integration.rs:905-963</code>).
 <code>temporal_single_supersedes_prior_value</code> asserts
 <code>Munich</code> present and <code>Berlin</code> absent in the
 default query, and the reverse in the history query
-(<code>:962-1035</code>). Three visibility tests plant a hidden record
+(<code>:972-1044</code>). Three visibility tests plant a hidden record
 beside a live one and assert the stale fact absent from the briefing,
 and an archived memory and a skill absent from history and by-author
-(<code>:2695-2948</code>).</p>
+(<code>:2731-2971</code>).</p>
 <p><strong>The scope canary runs in CI.</strong>
 <code>http_v2_acl_flood_verdict_contract</code> plants a canary memory
 in a library a scoped token cannot see, and a fact and a procedure in
@@ -638,12 +721,27 @@ Qdrant, the models and ONNX Runtime configured, on Linux and Windows
 <p><strong>The fact rules have their own cases.</strong>
 <code>explicit_invalidate_is_final_until_restored</code> asserts the
 refused re-add, the absence after it and the return after
-<code>restore</code> (<code>:3396-3459</code>).
-<code>world_time_as_of_differs_from_record_time_as_of</code> asserts
+<code>restore</code> (<code>tests/cli_integration.rs:3447-3505</code>).
+<code>invalidated_triple_refuses_case_and_whitespace_variants</code>
+re-adds an upper-cased, padded subject with <code>berlin  </code> and
+asserts the refusal names the invalidated id. Its control,
+<code>Berlin-Mitte</code>, is accepted (<code>:3828-3878</code>).</p>
+<p><code>world_time_as_of_differs_from_record_time_as_of</code> asserts
 that at 2020-06-01 the record-time slice is empty and the world-time
-slice holds the 2020 value and not the 2023 one
-(<code>:3642-3708</code>). The audit tests read the log back after each
-write (<code>:2950-3303</code>).</p>
+slice holds the 2020 value and not the 2023 one. At 2024-06-01, between
+the successor's <code>valid_from</code> and its record time, it holds
+the 2023 value and not the 2020 one (<code>:3701-3770</code>).
+<code>flip_back_within_window_lands_contested</code> asserts a first
+contradiction <code>won</code>, the loser's re-add
+<code>contested</code>, and both values in the query
+(<code>:3777-3822</code>). Two older duel tests set the window to 0, and
+they assert the flip-back it would damp (<code>:3512-3612</code>,
+<code>:3626-3694</code>).</p>
+<p><strong>The audit tests read the log back after each write</strong>
+(<code>:2986-3344</code>, <code>:3883-3922</code>), each ending in a
+passing <code>audit verify</code>. The restore round trip asserts the
+last row is <code>backup_restore</code> naming the saved copy, and that
+the copy exists (<code>:2095-2209</code>).</p>
 <p><strong>Computed and frozen.</strong> <code>calibration.rs</code>
 runs a fixed corpus of conflict scenarios through the duel formulas with
 a match-rate floor and a frozen set of divergences. It exercises the
@@ -661,13 +759,13 @@ zero-config default, while <code>MindConfig::default</code> selects
 <code>multilingual-e5-base</code>. The committed e5 runs are FP16 on a
 GPU.</p>
 <p><strong>Not covered.</strong> No test plants a
-<code>quarantine_candidate</code> fact. No test queries the world axis
-at an instant between a backdated successor's <code>valid_from</code>
-and its record time, where both values return. No test removes a skill
-and reads the audit log. No paper belongs to the project; the arXiv
-identifiers in <code>docs/design/</code>,
-<code>src/bench_stale.rs</code> and <code>src/cli.rs</code> cite other
-work.</p>
+<code>quarantine_candidate</code> fact. The flip-back test re-adds the
+loser once, so the self-retiring second re-add inside the window is
+unasserted. The restore test writes nothing between backup and restore,
+so it cannot show that the saved copy holds rows the restored log lacks.
+No paper belongs to the project; the arXiv identifiers in
+<code>docs/design/</code>, <code>src/bench_stale.rs</code> and
+<code>src/cli.rs</code> cite other work.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -697,10 +795,14 @@ empty result fails.</li>
 producer.</strong> When entrenchment can earn only age and repetition,
 the duel rewards whoever repeated a value last, and the old value wins
 the rematch.</li>
-<li><strong>A world-time start with a record-time end.</strong> Closing
-the predecessor at the moment of recording, not at the successor's
-<code>valid_from</code>, makes the world-time slice return both values
-for exactly the facts the axis exists for.</li>
+<li><strong>A rival set that contains the challenger.</strong> Choosing
+the most entrenched visible row as the loser, without excluding the
+challenger's own row, lets a re-assertion on a contested axis retire
+itself and report a win.</li>
+<li><strong>A damping state that readers cannot tell from a live
+conflict.</strong> Parking a flip-back as <code>contested</code> keeps
+the winner in place, but both values reach the briefing unlabelled, and
+the parked value leaves the as-of timeline.</li>
 <li><strong>A route gate and a composite route decided
 separately.</strong> Refusing <code>/fact/query</code> to a scoped token
 means nothing if <code>/memory/recall</code> serves facts; the
@@ -720,10 +822,11 @@ holds only behind library-scoped HTTP tokens, not over MCP.</p>
 <li>Does any deployment run <code>migrate-v14 dependants --apply</code>
 routinely, and how does the duel behave once dependants counts
 exist?</li>
-<li>Will retirement of a <code>TemporalSingle</code> loser close its
-world-time interval at the successor's <code>valid_from</code>?</li>
-<li>Should <code>valid_from</code> be parsed and normalised before it is
-stored, given that the comparison is lexicographic?</li>
+<li>Should the duel exclude the challenger's own row from the rival set,
+and should a parked flip-back carry a status the briefing labels?</li>
+<li>Should <code>valid_from</code> and <code>world_until</code> be
+parsed and normalised before they are stored, given that the comparison
+is lexicographic?</li>
 <li>What does <code>enforce</code> mode do to fact ranking on a real
 store once <code>calibrate</code> proposes a threshold?</li>
 </ul>
@@ -740,7 +843,7 @@ and as-of), <code>src/config.rs</code>.</li>
 <code>src/provenance.rs</code>, <code>src/procedure.rs</code>,
 <code>src/skill.rs</code>.</li>
 <li><strong>Retrieval path:</strong>
-<code>src/storage.rs:2232-2364</code>, <code>src/reranker.rs</code>,
+<code>src/storage.rs:2245-2377</code>, <code>src/reranker.rs</code>,
 <code>src/embedder.rs</code>, <code>src/doubt.rs</code>,
 <code>src/activity.rs</code>.</li>
 <li><strong>Context assembly:</strong>
@@ -766,19 +869,23 @@ and as-of), <code>src/config.rs</code>.</li>
 producers for every declared op, including <code>FactAdd</code>
 (<code>knowledge.rs</code>), <code>ProcedureAdd</code> and
 <code>ProcedureOutcome</code> (<code>procedure.rs</code>,
-<code>skill.rs</code>) and <code>Consolidate</code>
-(<code>consolidate.rs</code>).</li>
-<li><code>awk 'NR&gt;=3685 &amp;&amp; NR&lt;=3705' src/storage.rs | grep -c 'audit::record'</code>
-and
-<code>awk 'NR&gt;=645 &amp;&amp; NR&lt;=677' src/storage.rs | grep -c 'audit::record'</code>
-— 0 and 0: <code>remove_skill</code> and the pinned-block writers append
-no audit row.</li>
+<code>skill.rs</code>), <code>Consolidate</code>
+(<code>consolidate.rs</code>), <code>SkillRemove</code>
+(<code>skill.rs</code>), and <code>BlockSet</code>,
+<code>BlockRemove</code> and <code>BackupRestore</code>
+(<code>storage.rs</code>); <code>Reanchor</code> is produced inside
+<code>audit.rs</code>.</li>
+<li><code>git grep -n -E 'remove_skill|set_block\(|remove_block\(|save_blocks\(' -- src</code>
+— <code>remove_skill</code> is called only by
+<code>skill::remove</code>, and <code>save_blocks</code> only by
+<code>set_block</code> and <code>remove_block</code>, whose callers are
+<code>cli.rs</code> and <code>mcp.rs</code>.</li>
 <li><code>grep -n -i -E 'rotate|retention|prune|truncate|remove_file' src/audit.rs</code>
 — doc comments and <code>truncate(false)</code> on the lock file only;
 the log file is opened with <code>append(true)</code> alone.</li>
-<li><code>grep -n 'unpack_in' src/storage.rs</code> —
-<code>restore_archive</code> extracts every non-snapshot entry under
-<code>mind_home</code>, which includes <code>audit.log</code>.</li>
+<li><code>grep -n 'unpack_in' src/storage.rs</code> — one call, in
+<code>restore_archive_inner</code> (<code>storage.rs:5065</code>), after
+the live-log copy at <code>:5052-5063</code>.</li>
 <li><code>grep -rn -E 'DeletePointsBuilder::new\(' src</code> — memories
 and procstats only; no point deletion targets
 <code>FACTS_COLLECTION</code>.</li>
@@ -788,14 +895,25 @@ and procstats only; no point deletion targets
 <code>extractor.rs</code>, all through <code>add_fact_core</code>.</li>
 <li><code>grep -rn '"valid"' src | grep false</code> —
 <code>"false"</code> is written only by
-<code>invalidate_fact_authored</code> (<code>knowledge.rs:1163</code>);
-the other hit is a test comment.</li>
+<code>invalidate_fact_authored</code> (<code>knowledge.rs:1301</code>);
+<code>knowledge.rs:342</code> is the variant scan's filter and the third
+hit a test comment.</li>
+<li><code>git grep -n -w tombstone_key -- src</code> —
+<code>knowledge.rs:295-358</code> and its unit test only; the id,
+<code>detect_conflict</code> and the rival lookup do not use it.</li>
+<li><code>git grep -n -i -E 'unicode_normalization|nfc|nfkc' -- src Cargo.toml</code>
+— no match; no Unicode normalisation runs on fact strings.</li>
 <li><code>git grep -n -E 'valid_from' -- src ':!src/knowledge.rs'</code>
 — hits only in <code>mcp.rs</code>, <code>http_api.rs</code> and
 <code>cli.rs</code> argument handling; none in <code>ingest.rs</code> or
 <code>extractor.rs</code>.</li>
-<li><code>grep -n -E 'parse|DateTime' src/knowledge.rs | grep -i valid_from</code>
-— no match; <code>valid_from</code> is stored as given.</li>
+<li><code>grep -n -E 'parse|DateTime' src/knowledge.rs | grep -i -E 'valid_from|world_until'</code>
+— no match; both are stored as given.</li>
+<li><code>git grep -n -w world_until -- src</code> — one writer,
+<code>knowledge.rs:790</code> in <code>add_fact_core</code>; read by
+<code>fact_from_point</code> (<code>:1049</code>) and used only by
+<code>fact_valid_at_world_time</code> (<code>:1088</code>) from
+<code>query_fact_as_of</code> (<code>:1223</code>).</li>
 <li><code>grep -rn -E 'mark_inherited|from_live_session: false' src tests</code>
 — one production caller, <code>cli.rs:3138</code>;
 <code>from_live_session: false</code> only in a <code>duel.rs</code>
@@ -803,7 +921,7 @@ test.</li>
 <li><code>grep -rn -E '"(confirmations_count|dependants_count)"' src | grep -v '^src/duel.rs'</code>
 — <code>dependants_count</code> is written only by
 <code>migrate_v14.rs:404</code>; <code>confirmations_count</code> by
-<code>add_fact_core</code> (<code>knowledge.rs:599</code>) and the
+<code>add_fact_core</code> (<code>knowledge.rs:726</code>) and the
 procedure migration.</li>
 <li><code>grep -n 'memory_query_filter' src/storage.rs</code> — applied
 by <code>search_filtered</code>, <code>top_k_neighbor_content</code>,
@@ -819,7 +937,12 @@ token.</li>
 <li><code>git grep -n -E 'quarantine_candidate|QuarantineCandidate' -- tests</code>
 — one comment; no case plants the state.</li>
 <li><code>git grep -n -E 'world_time' -- tests</code> — one case,
-querying 2020-06-01.</li>
+querying 2020-06-01 and 2024-06-01.</li>
+<li><code>sed -n 3777,3822p tests/cli_integration.rs | grep -c '"object":"value_A"'</code>
+— 2: the first write and one re-add.</li>
+<li><code>sed -n 2095,2209p tests/cli_integration.rs | grep -n -E 'run\(&amp;\['</code>
+— fact add, backup, restore, fact query and audit verify; no write
+between backup and restore.</li>
 <li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git</code>
 — design notes, <code>bench_stale.rs</code> and <code>cli.rs</code>
 citing other papers; no <code>CITATION.cff</code>.</li>
@@ -827,6 +950,21 @@ citing other papers; no <code>CITATION.cff</code>.</li>
 — no match; no host hook is installed.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-06</strong> — <a
+href="https://github.com/madgodinc/mgi-mind/commit/a8defc36f7d0bcd5108714763a12625a0eda0868"><code class="commit-id" title="a8defc36f7d0bcd5108714763a12625a0eda0868">a8defc36…</code></a>
+— v2.9.0, two commits past the previous pin; its changelog says it
+answers the limits this report named at v2.8.2. The invalidate refusal
+extends to case and whitespace variants, a dated winner writes the
+loser's <code>world_until</code>, and skill removal, pinned blocks and
+<code>mgimind restore</code> are audited, the last keeping the replaced
+log beside it. A loser re-added within 24 hours lands
+<code>contested</code>, which hides nothing. Marks unchanged. The duel's
+rival set includes the challenger's own row, at the previous pin too, so
+a re-assertion on a contested axis can retire itself and report
+<code>won</code>; parking flip-backs as <code>contested</code> makes
+that path routine (<a href="#9-reliability-safety-and-trust">section
+9</a>). Screened: three <code>FRESH</code> files, each a version bump.
+Nothing was run.</p>
 <p><strong>2026-11-05</strong> — <a
 href="https://github.com/madgodinc/mgi-mind/commit/9fae7803ff7514d02504cd01a8f14f7e146fa8ba"><code class="commit-id" title="9fae7803ff7514d02504cd01a8f14f7e146fa8ba">9fae7803…</code></a>
 — v2.8.2, 20 commits past the previous pin. <code>tombstone</code> and

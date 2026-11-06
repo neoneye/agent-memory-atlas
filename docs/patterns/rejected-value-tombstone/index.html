@@ -844,12 +844,14 @@ rejection table, because a fact's id is its value.</strong> The id is a
 UUIDv5 of subject, predicate and object, so a re-assertion lands on the
 row an invalidate marked <code>valid = false</code>, and
 <code>add_fact_core</code> reads that field under the duel's locks and
-returns verdict <code>invalidated</code> without writing. Every fact
-writer reaches that function — MCP, HTTP, CLI, ingest and the extractor
-— and only <code>restore</code> clears it, a verb the agent also holds.
-The match is the exact string, so a change of case walks past, and a
-value that merely lost a duel is not covered: re-adding it starts a
-fresh duel it can win.</p>
+returns verdict <code>invalidated</code> without writing. It then scans
+every <code>valid = false</code> row and refuses a triple equal to one
+after lowercasing and collapsing whitespace, returning that row's id.
+Every fact writer reaches that function — MCP, HTTP, CLI, ingest and the
+extractor — and only <code>restore</code> clears it, a verb the agent
+also holds. The loose key serves the refusal alone: the duel compares
+exact strings, no Unicode normalisation runs, and a value that merely
+lost a duel is not covered.</p>
 <p><a href="../../systems/kyb/">KYB</a> flags a revival and accepts it.
 Deleting a knowledge entry is an admin-only retraction that the snapshot
 search dates, and a later create of the same key, checked against every

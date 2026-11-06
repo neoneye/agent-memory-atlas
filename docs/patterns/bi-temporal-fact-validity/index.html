@@ -509,19 +509,20 @@ its own end, its successor's start and its retirement
 the diagnostic on the start and not on the end, since extraction drops a
 past <code>valid_until</code>, and the start is rewritten in place with
 no history.</p>
-<p><a href="../../systems/mgi-mind/">MGI-Mind</a> has a world-time start
-and a record-time end. <code>valid_from</code> is written only when a
-caller passes it to <code>mind_fact add</code>, HTTP
-<code>/fact/add</code> or <code>mgimind fact add --valid-from</code>,
-and <code>query_fact_as_of</code> with <code>world_time</code> tests it
-in place of <code>created_at</code>, falling back per fact
-(<code>src/knowledge.rs:930-954</code>). <code>valid_until</code> is the
-clock at retirement on both axes, and the code comment beside the
-world-time test says a world-time end would need its own field. A
-successor dated into the past therefore overlaps its predecessor on the
-world axis until the moment it was recorded, and the one committed case
-queries an instant outside that overlap. <code>valid_from</code> is
-stored as given and compared as a string.</p>
+<p><a href="../../systems/mgi-mind/">MGI-Mind</a> closes a world-time
+interval only when the successor is dated. <code>valid_from</code> is
+written only when a caller passes it to <code>mind_fact add</code>, HTTP
+<code>/fact/add</code> or <code>mgimind fact add --valid-from</code>. A
+flip to a dated winner writes the winner's <code>valid_from</code> into
+the loser's <code>world_until</code>, and <code>query_fact_as_of</code>
+with <code>world_time</code> tests
+<code>[valid_from or created_at, world_until or valid_until)</code>,
+falling back per fact (<code>src/knowledge.rs:784-791</code>,
+<code>:1064-1091</code>). The committed case asserts the 2020 value
+absent at 2024, inside the overlap a record-time end would leave. An
+undated successor and the <code>migrate-v14 redo-duels</code> retire
+pass close on record time, and both dates are stored as given and
+compared as strings.</p>
 <p><a href="../../systems/kyb/">KYB</a> has one clock and reads it
 correctly. <code>as_of</code> resolves each key's newest version
 committed at or before T, drops a key whose dated retraction marker is

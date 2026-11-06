@@ -30059,37 +30059,42 @@ rule, and make the value the key.</strong>
 fact query, the duel's rival set and the session briefing agree on what
 is current. A fact's id is a UUIDv5 of its triple, so
 <code>add_fact_core</code> reads one row to refuse an explicitly
-invalidated value on every write path until a <code>restore</code>.</li>
+invalidated value on every write path until a <code>restore</code>, and
+a scan of the invalidated rows refuses its case and whitespace variants
+too.</li>
 <li>Biggest risk: <strong>the duel rewards recent repetition.</strong> A
 newcomer's weight and a rival's entrenchment grow on the live path only
 with age and confirmation count, so in the default mode a once-asserted
-fact under about four months old flips to any contradiction. Re-adding
-the loser starts a fresh duel that flips it back; only an explicit
-invalidate stays rejected.</li>
+fact under about four months old flips to any contradiction. A loser
+re-added within 24 hours lands <code>contested</code>, which hides
+nothing, beside the winner; after that it duels afresh and can flip
+back. Only an explicit invalidate stays rejected.</li>
 <li>Most reusable component: <code>src/knowledge.rs:87-210</code> — the
 seven-state <code>EntryStatus</code>, <code>is_default_visible</code>,
 and the derived <code>must_not</code> builder, small enough to lift into
 any store that filters by status.</li>
-<li>Second risk: <strong>world time has a start and no end of its
-own.</strong> <code>valid_from</code> is caller-supplied and read by the
-world-time as-of, but <code>valid_until</code> is the record time of
-retirement, so a successor dated into the past overlaps its predecessor
-on the world axis. On MCP the library is an optional caller filter; only
-library-scoped HTTP tokens are confined.</li>
-<li>Maturity impression: Apache-2.0, 27,581 lines of Rust before the
-inline test modules, 317 commits from one contributor between 28 May and
-21 October 2026, 465 unit tests and 44 integration tests. Five marks:
+<li>Second risk: <strong>the duel's rival set includes the
+challenger.</strong> <code>resolve_against_existing</code> names the
+most entrenched visible row as the loser, the challenger's own
+<code>contested</code> row among them, so a re-assertion on a contested
+axis can retire itself while the verdict reads <code>won</code>. On MCP
+the library is an optional caller filter; only library-scoped HTTP
+tokens are confined.</li>
+<li>Maturity impression: Apache-2.0, 27,841 lines of Rust before the
+inline test modules, 319 commits from one contributor between 28 May and
+6 November 2026, 468 unit tests and 47 integration tests. Five marks:
 <code>tombstone</code>, <code>trust_state</code>,
 <code>bitemporal</code>, <code>audit_log</code>, and
-<code>negative_eval</code> on CI-run duel, visibility and scope-canary
-tests. Published LongMemEval-S recall recomputes exactly from the
-committed files.</li>
+<code>negative_eval</code> on CI-run duel, visibility, variant-refusal,
+world-time and scope-canary tests. Published LongMemEval-S recall
+recomputes exactly from the committed files.</li>
 <li>Study when: you want a contradiction rule with its formulas, locks
 and filter derivation written out and tested, a value-keyed refusal that
-needs no separate table, or a quarantine that keeps rejected candidates
+needs no separate table, a world-time interval closed at the successor's
+<code>valid_from</code>, or a quarantine that keeps rejected candidates
 recoverable and counted.</li>
 <li>Do not copy when: a fact must survive a newer wrong assertion, a
-backdated fact must close its predecessor's world interval, or an MCP
+re-asserted value must reach the briefing marked as disputed, or an MCP
 client's library must bound everything it reads.</li>
 </ul>
 <h3 id="mnemo"><a href="../systems/mnemo/"><code>mnemo</code></a></h3>
