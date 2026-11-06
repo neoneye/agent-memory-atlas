@@ -318,6 +318,16 @@ the same benchmark. Nothing in the harness's output records which haystack was
 read, so a result file can be complete in every other respect and still not say
 — **a LongMemEval number is comparable with another only if both name their data
 file, and the harness gives them no field in which to do it.**
+
+[deja-vu](../systems/deja-vu/) supplies the field outside the harness. Each run
+record it commits under `docs/benchmarks/` names the dataset file with its byte
+size and SHA-256 and the `skip_abs` flag, so its cleaned-set and all-500 figures
+say which haystack and which question set they were read from, and a Go test
+fails when a published figure differs from its record. Its
+`scripts/longmemeval -score` mode scores another system's ranked session ids into
+the same record shape. What the record does not carry is the commit that produced
+it.
+
 [LongMemEval-V2](https://github.com/xiaowu0162/LongMemEval-V2), announced May
 2026, is a separate repository and a separate benchmark.
 

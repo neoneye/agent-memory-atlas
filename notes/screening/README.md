@@ -18,7 +18,7 @@ Neither counts as screened.
 | Result | Count |
 | --- | ---: |
 | Repositories with an auto-run surface (`RUNS`) | 375 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 345 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 346 |
 | Repositories with build-time execution (`EXEC`) | 573 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
@@ -119,7 +119,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`daem0n-mcp`](../../content/systems/daem0n-mcp.md) | `.claude-plugin/`, `.opencode/`, `hooks/`, `opencode.json` |
 | [`daimon`](../../content/systems/daimon.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`deer-flow`](../../content/systems/deer-flow.md) | `.github/copilot-instructions.md` |
-| [`deja-vu`](../../content/systems/deja-vu.md) | `.claude-plugin/`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/hooks/`, `mcp.json`, `server.json` |
+| [`deja-vu`](../../content/systems/deja-vu.md) | `.claude-plugin/`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/hooks/`, `claude-plugin/hooks/hooks.json`, `mcp.json`, `server.json` |
 | [`demarkus`](../../content/systems/demarkus.md) | `.claude-plugin/`, `plugins/claude-code-knowledge/.claude-plugin/plugin.json`, `plugins/claude-code-knowledge/hooks/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/.mcp.json`, `plugins/claude-code/hooks/`, `plugins/cowork-memory/.claude-plugin/plugin.json`, `plugins/cowork-memory/.mcp.json` |
 | [`dense-mem`](../../content/systems/dense-mem.md) | `.githooks/` |
 | [`deus`](../../content/systems/deus.md) | `.claude/hooks/`, `.claude/settings.json` |

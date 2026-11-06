@@ -252,11 +252,12 @@ href="../../systems/memory-ts/">memory-ts</a></strong> keeps an
 <code>injected_memories</code> set per session and filters candidates
 against it; its test of that dedup asserts only that the third result is
 no larger than the second, so it passes when the dedup does nothing.
-<strong><a href="../../systems/deja-vu/">Deja-vu</a></strong> runs a
-novelty tracker that remembers which ids were already injected, so the
-same memory is not served twice into one session. All three are a
-cooldown lasting at least the rest of the session; Deja-vu keys its
-record on the project, and its report found nothing that expires it.</p>
+Both are a cooldown lasting at least the rest of the session. <strong><a
+href="../../systems/deja-vu/">Deja-vu</a></strong> counts its cooldown
+in injections instead: a served session sits out the next ten in the
+same agent session, and separately the next ten in the same project, so
+opening a new agent session does not reset it. It lapses on purpose,
+because <em>"a day that comes back to it should get it again."</em></p>
 <p><strong><a href="../../systems/neko/">Project N.E.K.O.</a></strong>
 arrives at suppression from the correction side rather than the
 authoring side: a ban-topic directive keyed on

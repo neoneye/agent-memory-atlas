@@ -139,12 +139,12 @@ client's `surfacedRelevantAutoMemoryPaths`), and a committed case asserts that
 such a memory is not selected again. **[memory-ts](../../systems/memory-ts/)**
 keeps an `injected_memories` set per session and filters candidates against it;
 its test of that dedup asserts only that the third result is no larger than the
-second, so it passes when the dedup does nothing.
-**[Deja-vu](../../systems/deja-vu/)** runs a novelty tracker that remembers which
-ids were already injected, so the same memory is not served twice into one
-session. All three are a cooldown lasting at least the rest of the session;
-Deja-vu keys its record on the project, and its report found nothing that
-expires it.
+second, so it passes when the dedup does nothing. Both are a cooldown lasting at
+least the rest of the session. **[Deja-vu](../../systems/deja-vu/)** counts its
+cooldown in injections instead: a served session sits out the next ten in the
+same agent session, and separately the next ten in the same project, so opening
+a new agent session does not reset it. It lapses on purpose, because *"a day
+that comes back to it should get it again."*
 
 **[Project N.E.K.O.](../../systems/neko/)** arrives at suppression from the
 correction side rather than the authoring side: a ban-topic directive keyed on

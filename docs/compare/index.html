@@ -7815,70 +7815,71 @@ transcript the agent had already written. The index adds derived fields
 the parsers never set: <code>GaveUp</code>, <code>Words</code>,
 <code>Touched</code>, <code>AgentTitle</code>, and for a synced session
 <code>OrigID</code>, <code>From</code>, <code>Lifecycle</code>,
-<code>LifecycleNote</code> and <code>LifecycleAt</code></td>
+<code>LifecycleNote</code> and <code>LifecycleAt</code>. Beside the
+sessions, <code>notes.jsonl</code> holds remembered facts and promoted
+notes</td>
 <td>Its own append-only index over the transcript files already on disk,
-under <code>internal/index</code>, with a digest, an embedded arm and
-per-source parsers for each supported harness. Nothing is copied into a
-database the user has to run; the corpus is the history, and the index
-is a derived artefact that can be rebuilt</td>
-<td>Lexical search over the index with CJK and NFC folding, a scoring
-pass with a freshness decay, and narrowing options for harness, project,
-session id and time. A session whose own text reports backing an
-approach out takes a ranking penalty rather than an exclusion. Notes
-promoted from a session are lifted above their source in the result
-order</td>
-<td>There is no write path in the ordinary sense — the agent's own
-transcript is the write, and <code>deja</code> indexes it. Secrets are
-stripped during indexing by <code>internal/redact</code> before anything
-is stored, so what a later recall hands the model has already been
-through the redactor. A person can promote a session to a note, which is
-the one authored artefact</td>
-<td>Re-indexing rebuilds from the transcripts, so the store is derived
-rather than authoritative. A promoted note carries a
+under <code>internal/index</code>, with a digest, an optional embedding
+rerank and per-source parsers for each supported harness. Nothing is
+copied into a database the user has to run; the corpus is the history,
+and the index is a derived artefact that can be rebuilt</td>
+<td>BM25 over the index with CJK and NFC folding, a freshness decay, and
+narrowing options for harness, project, session id and time. MCP recall
+ranks the working directory's project first and then the rest of the
+machine. A session whose own text reports backing an approach out takes
+a ranking penalty rather than an exclusion. Notes promoted from a
+session are lifted above their source in the result order</td>
+<td>No write path for sessions — the agent's own transcript is the
+write, and <code>deja</code> indexes it. Secrets are stripped during
+indexing by <code>internal/redact</code> before anything is stored. An
+agent or a person can store a fact with <code>remember</code>, and a
+person can promote a session to a note carrying a lifecycle state</td>
+<td>Re-indexing rebuilds from the transcripts. <code>deja forget</code>
+removes sessions and writes their <code>harness:id</code> keys to two
+tombstone files every rebuild filters against, and rewrites
+<code>notes.jsonl</code> to drop their promoted notes. A promoted note's
 <code>Lifecycle</code> — <code>accepted</code>, <code>rejected</code>,
-<code>superseded</code>, <code>stale</code> or <code>pending</code> —
-set by a person and synced between machines; it changes how a hit is
-ranked and how it is described to a reader, and it does not remove the
-session from results</td>
-<td>None enforced, and by design: the product's argument is that one
-memory should span every agent and project on the machine.
-<code>Project</code>, <code>Harness</code> and session id are stored and
-are applied as filters when a caller asks for them, with an unknown
-session id answering nothing rather than falling back to the whole
-store. With no flag, the search is the whole store</td>
+<code>superseded</code> or <code>stale</code> — is set by a person and
+synced between machines</td>
+<td>A default, not a boundary. The session-start and per-prompt hooks
+draw only from the working directory's project names, widened by
+<code>DEJA_RECALL=aggressive</code>. MCP recall ranks that project first
+and appends the rest of the machine; CLI search is the whole store
+unless <code>--project</code> is given. Project filters match by
+substring, an unknown session id answers nothing, and a trust policy can
+withhold imported memory per surface</td>
 <td>Hooks into each supported agent — recall arrives at session start,
-on every prompt, before a file is edited and after a command fails —
-plus an MCP server, a CLI, and a plugin manifest.
-<code>deja install --auto</code> wires the harnesses it finds</td>
+on every prompt, before a file is edited or a command runs, and after a
+command fails — plus one MCP tool with eight modes, a CLI, and a plugin
+manifest. <code>deja install --auto</code> wires the harnesses it
+finds</td>
 <td>Indexing and re-indexing; a digest cache per project for the
-session-start hook; a novelty tracker that records which ids were
-already served so the same memory is not injected twice; peer sync
-between machines</td>
-<td>Deliberately thin, and argued for. The index derives
-<code>GaveUp</code> from a session's own words and the search applies a
-score penalty and prints <em>"mentions backing an approach out — one
-path here was abandoned"</em>, with a comment explaining the restraint:
-<em>"Nobody sets the rejected state by hand… When the transcript itself
-says something was backed out, say so — as evidence from the session,
-not as a state someone recorded."</em> A promoted note's
-<code>Lifecycle</code> is the one recorded state, and it modifies rank
-and wording rather than admission</td>
+session-start hook; a novelty tracker that sits a served session out for
+the next ten injections in that agent session and in that project; peer
+sync between machines</td>
+<td>A promoted note's <code>Lifecycle</code> is a recorded state: a
+session marked <code>rejected</code>, <code>superseded</code> or
+<code>stale</code> is never offered as the decision before an edit or a
+command, while recall returns it labelled <em>"this was tried and
+rejected"</em> and demoted. <code>GaveUp</code> is derived from a
+session's own words; search applies a score penalty and prints a note,
+and the decision lines refuse it</td>
 <td>A corpus that starts full rather than empty, because the transcripts
 were already written; redaction on the indexing path so what reaches a
 model has been stripped before it is stored; a vacuity guard written as
-its own named test with the reasoning in a comment; a fail-closed
-narrowing where an unknown session id returns nothing rather than
-everything; code comments that cite the issue each decision came
+its own named test with the reasoning in a comment; a recorded state
+that keeps a reverted decision on record and out of the answer;
+benchmark runs committed as JSON with a test that fails when the prose
+drifts from them; code comments that cite the issue each decision came
 from</td>
-<td>No scope boundary at all — crossing projects is the point, so a
-session containing something private to one project can answer a
-question asked in another; the epistemic layer is deliberately minimal,
-so a wrong conclusion in an old transcript is retrievable forever with
-only a freshness decay and a give-up penalty against it; the index is
-derived from files the tool does not own, so a harness changing its
-transcript format is a parser problem rather than a migration; the
-benchmark numbers in the README have their harnesses committed and no
-result file</td>
+<td>No boundary on the pull path — MCP recall reaches every project on
+the machine, so a session private to one project can answer a question
+asked in another; a wrong conclusion nobody marked is retrievable
+forever with only a freshness decay and a give-up penalty against it;
+the index is derived from files the tool does not own, so a harness
+changing its transcript format is a parser problem rather than a
+migration; the committed benchmark runs record a date and no commit, so
+nothing ties a figure to the search code at the pin</td>
 </tr>
 <tr>
 <td><a href="../systems/demarkus/"><code>demarkus</code></a></td>
@@ -35364,7 +35365,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>200 of 787:</em> <a
+<p><em>201 of 787:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -35406,6 +35407,7 @@ href="../systems/cortex-hypermnesia/"><code>cortex-hypermnesia</code></a>,
 href="../systems/crystalline/"><code>crystalline</code></a>, <a
 href="../systems/cyrene-agent/"><code>cyrene-agent</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
+href="../systems/deja-vu/"><code>deja-vu</code></a>, <a
 href="../systems/demarkus/"><code>demarkus</code></a>, <a
 href="../systems/dense-mem/"><code>dense-mem</code></a>, <a
 href="../systems/deus/"><code>deus</code></a>, <a

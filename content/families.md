@@ -1912,35 +1912,40 @@ narrows it.
 **[brain-mcp](../systems/brain-mcp/) keeps the transcript bytes as the record and makes every recall a citation or an abstention.** An MIT Python recorder at version 2.1.1 copies Claude Code, Codex and Pi sessions byte-exact into append-only lake files before Claude Code's retention window deletes them. Stop and SessionEnd hooks and a 60-second poll-scan feed one ingest function under one file identity. A rewritten origin opens a new generation beside the old, capped at five a day, and a manifest logs every chunk's byte range and hash, which lets the receipt re-verify a session the agent deleted and `restore` put it back. Seven MCP tools search a DuckDB BM25 cache. Each hit carries a file, a line span and a sha256 recomputed from the floor, and an empty result names the lanes and dates searched. Text the harness injected under the user role is excluded by default, pinned by tests over a fixture that holds it. The destructive verb is where it breaks: `redact` rewrites the lake file and leaves the text in the index, so search keeps returning the secret. Two marks.
 
 **deja-vu inverts the family's starting condition: it does not record forward,
-it indexes backward.** MIT, 1,742 commits from thirty-one authors in the two
-months to September 2026, 273,068 lines of Go, 4,361 test functions. The
-observation is that every coding agent on a machine has been writing its
-sessions to disk for months and nobody was reading them, so the corpus already
-exists and what was missing is an index and a way to hand the right session back
-in whichever agent asks next. Recall arrives through hooks at session start, on
-each prompt, before an edit and after a failed command, with a novelty tracker
-suppressing an id already served into the same session.
+it indexes backward.** MIT, 2,673 commits from 97 author names between July and
+November 2026, 541,750 lines of Go, 7,646 test functions. The observation is that
+every coding agent on a machine has been writing its sessions to disk for months
+and nobody was reading them, so the corpus already exists and what was missing
+is an index and a way to hand the right session back in whichever agent asks
+next. Recall arrives through hooks at session start, on each prompt, before an
+edit or a command and after a failed command, with a novelty tracker sitting a
+served session out for the next ten injections.
 
 Two properties are worth taking. **Redaction happens on the indexing path**, so
 the derived store never holds a secret at all — a stronger guarantee than
 stripping at read time, where the index on disk still has it. And the test that
-earns this report's one mark is a model: a session-scoped search asserts one hit
-and the right one, and the *next test in the file* exists only to prove the
-fixture is not degenerate, under the comment *"Without the flag both sessions
-answer, so the test above is measuring the flag rather than a fixture that only
-had one match."* Most suites bury that control in an extra assertion where a
-refactor deletes it.
+earns its negative-evaluation mark is a model: a session-scoped search asserts
+one hit and the right one, and the *next test in the file* exists only to prove
+the fixture is not degenerate, under the comment *"Without the flag both
+sessions answer, so the test above is measuring the flag rather than a fixture
+that only had one match."* Most suites bury that control in an extra assertion
+where a refactor deletes it.
 
-What it deliberately does not build is the epistemic layer, and the refusal is
-argued rather than absent. The index derives `GaveUp` from a session's own
-words, the search applies a score penalty and prints *"mentions backing an
-approach out — one path here was abandoned"*, and the comment declines to go
-further: *"Nobody sets the rejected state by hand… When the transcript itself
-says something was backed out, say so — as evidence from the session, not as a
-state someone recorded."* Nothing withholds. Nor is there a scope boundary —
-crossing projects is the value proposition — so a session holding something
-specific to one project can answer a question asked from another, and the
-redactor's job is secrets rather than confidentiality between projects.
+The epistemic layer is split on purpose. The index derives `GaveUp` from a
+session's own words, the search applies a score penalty and prints *"mentions
+backing an approach out — one path here was abandoned"*, and the comment
+declines to go further: *"Nobody sets the rejected state by hand… When the
+transcript itself says something was backed out, say so — as evidence from the
+session, not as a state someone recorded."* The state a person does record
+withholds. A session whose promoted note says rejected, superseded or stale is
+never offered as the decision before an edit or a command, while recall returns
+it labelled, and that earns the second mark.
+
+Scope is a default on the hooks and a ranking on MCP recall, which appends the
+rest of the machine after the working directory's project. A session holding
+something specific to one project can answer a question an agent asks from
+another, and the redactor's job is secrets rather than confidentiality between
+projects.
 
 **Artesian separates the two clocks most of this family runs together.** An
 Apache-2.0 Rust workspace of fourteen crates and 67,852 lines, two authors, 213

@@ -1,58 +1,54 @@
 ---
 title: "deja-vu"
 eyebrow: "The memory was already on disk; nobody had indexed it"
-description: "A Go binary that treats the session transcripts Claude Code, Codex, Cursor and other agents already wrote to disk as the corpus rather than recording forward from empty — redacting secrets as it indexes, serving recall through hooks at session start and before an edit, and telling a reader in prose when a session's own text says an approach was backed out rather than promoting that to a recorded state."
+description: "A Go binary that indexes the session transcripts coding agents already wrote, redacting secrets as it builds and serving recall through hooks and MCP."
 root: ../..
 page_kind: system
 source_name: "vshulcz/deja-vu"
 source_url: https://github.com/vshulcz/deja-vu
 archive_name: "vshulcz--deja-vu"
-revision: 6a33ce289d0553b69ba9772da753cb447501f4d7
-revision_url: https://github.com/vshulcz/deja-vu/commit/6a33ce289d0553b69ba9772da753cb447501f4d7
-analyzed_at: 2026-09-20
-capabilities: "negative_eval"
+revision: 910d490f6b1909fa7a469c3adf95c0ec5d5187c5
+revision_url: https://github.com/vshulcz/deja-vu/commit/910d490f6b1909fa7a469c3adf95c0ec5d5187c5
+analyzed_at: 2026-11-06
+licence: "MIT"
+size: "541,750 lines of Go in 3,601 files, 318,201 of them in 2,904 test files; 26 internal packages"
+activity: "2,673 commits by 97 author names, 13 July – 5 November 2026, 2,410 of them under the maintainer's two spellings; release v0.24.0"
+tests: "7,646 Go test functions, run by CI on every push to main and every pull request; none run for this reading"
+capabilities: "trust_state, negative_eval"
 capability_evidence:
-  negative_eval: "a narrowing test whose vacuity guard is a separate named test with the reason written into its comment | internal/search/session_scope_test.go:20-70, internal/redact/env_key_test.go:13-40, internal/search/regex_empty_match_test.go:25 | `TestSearchWithinASession` asserts a scoped search returns exactly one hit and that it is the right session; the very next test, `TestSearchWithoutSessionSeesBoth`, runs the same fixture without the flag and asserts both sessions answer, under the comment *\"Without the flag both sessions answer, so the test above is measuring the flag rather than a fixture that only had one match.\"* `TestSearchWithAnUnknownSessionFindsNothing` pins the fail-closed direction — *\"An id that names nothing answers with nothing rather than falling back to the whole store.\"* The redaction suite is built the same way: `TestEnvVarKeyIsRedacted` beside `TestLowercaseKeyNamesAreLeftAlone`, and `TestKVGateNeverHidesAMatch` | the same files, inside 4,361 committed test functions"
+  trust_state: "promoted-note lifecycle on the decision lines before an edit and before a command | cmd/deja/hook_tool_file.go:651-669, :221-244, :504, cmd/deja/hook_tool.go:1038-1043, :1074, internal/sources/notes_promoted.go:20-26 | `decisionUsable` returns false for a session whose recorded state is `rejected`, `superseded` or `stale`, and both decision lines skip it; the standing-decision lookup keeps only `accepted` notes. Recall returns the same session labelled *\"[this was tried and rejected\"* and demoted, so the state withholds it from the answer and keeps it on record | cmd/deja/hook_tool_imported_decision_test.go:36-49, `TestASupersededImportedDecisionIsNotCarried`"
+  negative_eval: "a narrowing test whose vacuity guard is a separate named test with the reason written into its comment | internal/search/session_scope_test.go:29-71, internal/redact/env_key_test.go:13-40, internal/search/regex_empty_match_test.go:25 | `TestSearchNarrowsToOneSession` asserts a scoped search returns exactly one hit and that it is the right session; the very next test, `TestSearchWithoutSessionSeesBoth`, runs the same fixture without the flag and asserts both sessions answer, under the comment *\"Without the flag both sessions answer, so the test above is measuring the flag rather than a fixture that only had one match.\"* `TestSearchWithAnUnknownSessionFindsNothing` pins the fail-closed direction — *\"An id that names nothing answers with nothing rather than falling back to the whole store.\"* The redaction suite is built the same way: `TestEnvVarKeyIsRedacted` beside `TestLowercaseKeyNamesAreLeftAlone`, and `TestKVGateNeverHidesAMatch` | the same files, inside 7,646 committed test functions"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
 matrix:
-  memory_unit: "A `Session` — an id, the harness that wrote it, a project, a path, a title, start and update times, and its `Message` list of role, text and time — read from a transcript the agent had already written. The index adds derived fields the parsers never set: `GaveUp`, `Words`, `Touched`, `AgentTitle`, and for a synced session `OrigID`, `From`, `Lifecycle`, `LifecycleNote` and `LifecycleAt`"
-  storage: "Its own append-only index over the transcript files already on disk, under `internal/index`, with a digest, an embedded arm and per-source parsers for each supported harness. Nothing is copied into a database the user has to run; the corpus is the history, and the index is a derived artefact that can be rebuilt"
-  retrieval: "Lexical search over the index with CJK and NFC folding, a scoring pass with a freshness decay, and narrowing options for harness, project, session id and time. A session whose own text reports backing an approach out takes a ranking penalty rather than an exclusion. Notes promoted from a session are lifted above their source in the result order"
-  write: "There is no write path in the ordinary sense — the agent's own transcript is the write, and `deja` indexes it. Secrets are stripped during indexing by `internal/redact` before anything is stored, so what a later recall hands the model has already been through the redactor. A person can promote a session to a note, which is the one authored artefact"
-  update_delete: "Re-indexing rebuilds from the transcripts, so the store is derived rather than authoritative. A promoted note carries a `Lifecycle` — `accepted`, `rejected`, `superseded`, `stale` or `pending` — set by a person and synced between machines; it changes how a hit is ranked and how it is described to a reader, and it does not remove the session from results"
-  scoping: "None enforced, and by design: the product's argument is that one memory should span every agent and project on the machine. `Project`, `Harness` and session id are stored and are applied as filters when a caller asks for them, with an unknown session id answering nothing rather than falling back to the whole store. With no flag, the search is the whole store"
-  integration: "Hooks into each supported agent — recall arrives at session start, on every prompt, before a file is edited and after a command fails — plus an MCP server, a CLI, and a plugin manifest. `deja install --auto` wires the harnesses it finds"
-  background: "Indexing and re-indexing; a digest cache per project for the session-start hook; a novelty tracker that records which ids were already served so the same memory is not injected twice; peer sync between machines"
-  trust: "Deliberately thin, and argued for. The index derives `GaveUp` from a session's own words and the search applies a score penalty and prints *\"mentions backing an approach out — one path here was abandoned\"*, with a comment explaining the restraint: *\"Nobody sets the rejected state by hand… When the transcript itself says something was backed out, say so — as evidence from the session, not as a state someone recorded.\"* A promoted note's `Lifecycle` is the one recorded state, and it modifies rank and wording rather than admission"
-  strengths: "A corpus that starts full rather than empty, because the transcripts were already written; redaction on the indexing path so what reaches a model has been stripped before it is stored; a vacuity guard written as its own named test with the reasoning in a comment; a fail-closed narrowing where an unknown session id returns nothing rather than everything; code comments that cite the issue each decision came from"
-  risks: "No scope boundary at all — crossing projects is the point, so a session containing something private to one project can answer a question asked in another; the epistemic layer is deliberately minimal, so a wrong conclusion in an old transcript is retrievable forever with only a freshness decay and a give-up penalty against it; the index is derived from files the tool does not own, so a harness changing its transcript format is a parser problem rather than a migration; the benchmark numbers in the README have their harnesses committed and no result file"
+  memory_unit: "A `Session` — an id, the harness that wrote it, a project, a path, a title, start and update times, and its `Message` list of role, text and time — read from a transcript the agent had already written. The index adds derived fields the parsers never set: `GaveUp`, `Words`, `Touched`, `AgentTitle`, and for a synced session `OrigID`, `From`, `Lifecycle`, `LifecycleNote` and `LifecycleAt`. Beside the sessions, `notes.jsonl` holds remembered facts and promoted notes"
+  storage: "Its own append-only index over the transcript files already on disk, under `internal/index`, with a digest, an optional embedding rerank and per-source parsers for each supported harness. Nothing is copied into a database the user has to run; the corpus is the history, and the index is a derived artefact that can be rebuilt"
+  retrieval: "BM25 over the index with CJK and NFC folding, a freshness decay, and narrowing options for harness, project, session id and time. MCP recall ranks the working directory's project first and then the rest of the machine. A session whose own text reports backing an approach out takes a ranking penalty rather than an exclusion. Notes promoted from a session are lifted above their source in the result order"
+  write: "No write path for sessions — the agent's own transcript is the write, and `deja` indexes it. Secrets are stripped during indexing by `internal/redact` before anything is stored. An agent or a person can store a fact with `remember`, and a person can promote a session to a note carrying a lifecycle state"
+  update_delete: "Re-indexing rebuilds from the transcripts. `deja forget` removes sessions and writes their `harness:id` keys to two tombstone files every rebuild filters against, and rewrites `notes.jsonl` to drop their promoted notes. A promoted note's `Lifecycle` — `accepted`, `rejected`, `superseded` or `stale` — is set by a person and synced between machines"
+  scoping: "A default, not a boundary. The session-start and per-prompt hooks draw only from the working directory's project names, widened by `DEJA_RECALL=aggressive`. MCP recall ranks that project first and appends the rest of the machine; CLI search is the whole store unless `--project` is given. Project filters match by substring, an unknown session id answers nothing, and a trust policy can withhold imported memory per surface"
+  integration: "Hooks into each supported agent — recall arrives at session start, on every prompt, before a file is edited or a command runs, and after a command fails — plus one MCP tool with eight modes, a CLI, and a plugin manifest. `deja install --auto` wires the harnesses it finds"
+  background: "Indexing and re-indexing; a digest cache per project for the session-start hook; a novelty tracker that sits a served session out for the next ten injections in that agent session and in that project; peer sync between machines"
+  trust: "A promoted note's `Lifecycle` is a recorded state: a session marked `rejected`, `superseded` or `stale` is never offered as the decision before an edit or a command, while recall returns it labelled *\"this was tried and rejected\"* and demoted. `GaveUp` is derived from a session's own words; search applies a score penalty and prints a note, and the decision lines refuse it"
+  strengths: "A corpus that starts full rather than empty, because the transcripts were already written; redaction on the indexing path so what reaches a model has been stripped before it is stored; a vacuity guard written as its own named test with the reasoning in a comment; a recorded state that keeps a reverted decision on record and out of the answer; benchmark runs committed as JSON with a test that fails when the prose drifts from them; code comments that cite the issue each decision came from"
+  risks: "No boundary on the pull path — MCP recall reaches every project on the machine, so a session private to one project can answer a question asked in another; a wrong conclusion nobody marked is retrievable forever with only a freshness decay and a give-up penalty against it; the index is derived from files the tool does not own, so a harness changing its transcript format is a parser problem rather than a migration; the committed benchmark runs record a date and no commit, so nothing ties a figure to the search code at the pin"
 ---
 
 ## 1. Executive Summary
 
-Every memory system in this atlas starts empty and records forward. deja-vu
-starts full. Its observation is that the transcripts are already there — Claude
-Code, Codex, Cursor and the rest each write their sessions to disk — and that
-what has been missing is an index over them and a way to hand the right one back
-in whichever agent asks next. The README puts it in one line: *"Your agent is
-about to re-debug something you fixed in March — in a different agent."*
-
-MIT; 1,742 commits between 14 July 2026 and 10 September 2026 from thirty-one
-authors — two months of unusually dense work — 273,068 lines of Go, and 4,361
-committed test functions. The screen found five auto-run surfaces, among them hooks declared inline in `claude-plugin/.claude-plugin/plugin.json`, six
-manifests inside the seven-day cooldown, one build-time execution path, five
-unpinned dependency surfaces, and agent instruction files treated as data;
-nothing was installed or run.
+deja-vu does not record forward from empty. Claude Code, Codex, Cursor and the
+rest each write their sessions to disk, and deja indexes those transcripts and
+hands the right one back in whichever agent asks next. The README's lead line is
+*"Your coding agents stop re-debugging what you already fixed."*
 
 **The design's best property is that it does not need a write path.** The agent's
-own transcript is the write. `deja` parses it, redacts secrets during indexing
-so that what a later recall hands a model *"is safe to send"*, derives a few
-fields the parsers never set, and builds its own index beside the files. The
-store is a derived artefact: rebuild it and you get it back.
+own transcript is the write. `deja` parses it, strips credentials *"as the index
+is built"* (`README.md:151`), derives a few fields the parsers never set, and
+builds its own index beside the files. The store is a derived artefact: rebuild
+it and you get it back.
 
-**It carries one mark, and the test that earns it is a model for the corpus.**
+**It carries two marks.** The first is a test that is a model for the corpus.
 `internal/search/session_scope_test.go` asserts that a session-scoped search
 returns exactly one hit and that it is the right one. The *next* test in the
 file exists only to prove the fixture is not degenerate:
@@ -65,8 +61,16 @@ assertion. This one made the control its own named test and wrote the reasoning
 above it. A third case pins the fail-closed direction — an unknown session id
 *"answers with nothing rather than falling back to the whole store."*
 
-**The epistemic layer is thin on purpose, and the argument is written down.**
-The index derives `GaveUp` from a session's own words. The search applies a score
+**The second mark is on the state a person records.** Before an edit or a
+command, a hook offers the decision a past session reached about that file or
+command. `decisionUsable` refuses any session whose promoted note says
+`rejected`, `superseded` or `stale` (`cmd/deja/hook_tool_file.go:651-669`).
+Recall returns the same session, labelled *"this was tried and rejected"* and
+moved below the others. The state keeps a reverted decision on record and out of
+the role of the answer.
+
+**The inferred layer is thin on purpose, and the argument is written down.**
+The index derives `GaveUp` from a session's own words. Search applies a score
 penalty and prints a line beside the hit — *"mentions backing an approach out —
 one path here was abandoned"* — and the comment above it declines to go further:
 
@@ -75,16 +79,15 @@ one path here was abandoned"* — and the comment above it declines to go furthe
 > itself says something was backed out, say so — as evidence from the session,
 > not as a state someone recorded.
 
-That is a principled refusal to promote an inference to a state, and it is why
-`trust_state` is withheld rather than argued over. The one recorded state,
-`Lifecycle` on a promoted note, modifies rank and wording and never admission.
+Only the decision lines treat `GaveUp` as disqualifying; everywhere else an
+inference ranks and a recorded state is what withholds.
 
-**No scope, and that is the product.** `Project`, `Harness` and session id are
-stored and filterable, and with no flag the search is the whole machine. A
-system whose thesis is *the one memory your coding agents share* cannot also
-partition by project, and this report records the consequence rather than
-scoring it as a defect: a session holding something specific to one project can
-answer a question asked from another.
+**Scope is a default on the push paths and a ranking on the pull path.** The
+session-start and per-prompt hooks draw only from the working directory's
+project. MCP recall ranks that project first and then appends the rest of the
+machine, so a session from one project can answer a question an agent asks from
+another. A system whose thesis is *one memory across every agent* records that
+as a consequence, and `scope_enforced` is withheld on it.
 
 ## 2. Mental Model
 
@@ -94,67 +97,83 @@ for months, in a dozen different shapes. `internal/sources` holds a parser per
 harness; each turns a file into a `Session` of `Message`s.
 
 Indexing is where the tool's own judgement enters, and it is careful about
-saying so. Three fields are stamped by the index and never by a parser: `GaveUp`
-— whether the transcript says an approach was backed out; `Words` — how long the
-session is, because *"search sees only the messages that matched a query, so it
-had no way to tell a short session that is about the query from a marathon that
-mentions it once"*; and `Touched` — the files it worked on most, so a caller
-holding a hit can ask a cheap question without reading the session back. Each
-carries a comment saying it is false or zero for a store indexed before it
-existed.
+saying so. Three fields are stamped by the index and never by a parser.
+`GaveUp` records whether the transcript says an approach was backed out. `Words`
+is how long the session is, because *"search sees only the messages that matched
+a query, so it had no way to tell a short session that is about the query from a
+marathon that mentions it once."* `Touched` lists the files it worked on most. The first two
+carry a comment saying they are false or zero for a store indexed before they
+existed (`internal/model/model.go:233-253`).
 
 Redaction happens on this path, not on the read path. Secrets are stripped as
 the index is built, which means the derived artefact never holds them and every
-downstream surface inherits the property.
+downstream surface inherits the property. A session can also be forgotten:
+`deja forget` drops it and writes its key to a tombstone file that every rebuild
+filters against.
 
-Retrieval is lexical, scored, and freshness-decayed. Then hooks put it in front
-of the agent without anybody asking: at session start, on each prompt, before an
-edit, and after a failed command. A novelty tracker remembers which ids were
-already injected so the same memory is not served twice into one session.
+Retrieval is BM25, scored and freshness-decayed. Hooks put it in front of the
+agent without anybody asking: at session start, on each prompt, before an edit
+or a command, and after a failed command. A novelty tracker sits a served
+session out for the next ten injections, in that agent session and in that
+project.
 
-The one authored object is a note: a person promotes a session, and the note
-carries a lifecycle another machine can sync. Everything else is history.
+Two kinds of note are authored. An agent or a person stores a fact with
+`remember`. A person promotes a session with `deja promote`, and that note
+carries a lifecycle state another machine can sync. Everything else is history.
 
 ```mermaid
-%% caption: transcripts already written by many agents are parsed per harness, redacted as the index is built, and stamped with fields the parsers never set; retrieval is lexical and freshness-decayed, narrowed only when a caller asks; a session whose own text reports backing an approach out takes a score penalty and a printed note rather than being excluded; hooks inject recall without anyone asking, and a novelty tracker stops the same id arriving twice
-flowchart TB
-    T[("transcripts on disk<br/>Claude Code · Codex · Cursor · others<br/>already written, never by deja")]
+%% caption: transcripts already written by many agents are parsed per harness; a forgotten session's key drops it at every rebuild; the rest is redacted and indexed; the hooks read the working directory's project, MCP recall reads that project first and then the machine, and the decision line before an edit or a command refuses a session a person marked rejected, superseded or stale; a novelty tracker sits a served session out for ten injections
+flowchart TD
+    T[("transcripts on disk<br/>written by each agent, never by deja")]
     P["per-harness parsers<br/>internal/sources"]
+    TB{"session key in the<br/>forget tombstones?"}
+    DROP["dropped at every rebuild"]
     RD["redact: secrets stripped<br/>as the index is built"]
-    IDX[("index<br/>+ GaveUp, Words, Touched<br/>stamped by the index, not the parser")]
-    Q["lexical search<br/>CJK and NFC folding"]
-    NAR{"caller asked for a<br/>harness, project or session?"}
-    ALL["no flag: the whole store"]
-    ONE["narrowed; an unknown id<br/>answers nothing, not everything"]
-    SC["score: freshness decay,<br/>gave-up penalty if the transcript<br/>says an approach was backed out"]
-    NOTE["printed beside the hit:<br/>one path here was abandoned"]
-    HOOK["hooks: session start, each prompt,<br/>before an edit, after a failure"]
-    NOV["novelty tracker:<br/>ids already served are not re-injected"]
+    IDX[("index<br/>+ GaveUp, Words, Touched")]
+    NOTES[("notes.jsonl<br/>promoted notes with a lifecycle<br/>accepted · rejected · superseded · stale")]
+    SURF{"which surface reads?"}
+    PUSH["session-start and prompt hooks:<br/>the working directory's project only"]
+    PULL["MCP recall: that project first,<br/>then the rest of the machine"]
+    SC["BM25, freshness decay,<br/>gave-up penalty"]
+    LAB["rejected: labelled and moved down,<br/>still returned"]
+    DEC["decision line before<br/>an edit or a command"]
+    GATE{"rejected, superseded, stale,<br/>or the transcript gave up?"}
+    SKIP["not offered as the decision"]
+    NOV["novelty tracker:<br/>a served session sits out ten injections"]
     OUT["recall reaches the agent"]
 
     T --> P
-    P --> RD
+    P --> TB
+    TB -->|yes| DROP
+    TB -->|no| RD
     RD --> IDX
-    IDX --> Q
-    Q --> NAR
-    NAR -->|no| ALL
-    NAR -->|yes| ONE
-    ALL --> SC
-    ONE --> SC
-    SC --> NOTE
-    NOTE --> HOOK
-    HOOK --> NOV
+    IDX --> SURF
+    SURF --> PUSH
+    PUSH ~~~ PULL
+    SURF --> PULL
+    SURF --> DEC
+    PUSH --> SC
+    PULL --> SC
+    SC --> LAB
+    NOTES --> LAB
+    NOTES --> GATE
+    DEC --> GATE
+    GATE -->|yes| SKIP
+    GATE -->|no| NOV
+    LAB --> NOV
     NOV --> OUT
 ```
 
 ## 3. Architecture
 
-A single Go binary, `deja`, with twenty-one internal packages. The ones that
-carry the design: `sources` (a parser per harness), `index` (ingest, the derived
-fields, the digest), `search` (scoring, blame, context), `redact` (the secret
-stripper), `query` (the narrowing predicates), `peers` (machine-to-machine
-sync), `policy`, `mark`, `embed`, and two folding packages — `cjkfold` and
-`nfcfold` — that exist because the corpus is real user text in real languages.
+A single Go binary, `deja`, with twenty-six internal packages. The ones that
+carry the design are `sources` (a parser per harness), `index` (ingest, the
+derived fields, the digest, the forget tombstones), `search` (BM25 scoring,
+blame, context), `redact` (the secret stripper) and `query` (the narrowing
+predicates). Beside them sit `policy` (which origins may activate on which
+surface), `peers` (machine-to-machine sync), `embed` (an optional embedding
+rerank), and two folding packages, `cjkfold` and `nfcfold`, that exist because
+the corpus is real user text in real languages.
 
 There is no database to run and no service to deploy. `deja install --auto`
 finds the harnesses on the machine and wires their hook configuration; the
@@ -174,94 +193,125 @@ before everything that ever happened."*
 
 - **Parse.** `internal/sources` per harness → a `model.Session` with
   `model.Message`s.
-- **Index.** `internal/index/ingest.go` → `preRedactSessions` strips secrets →
-  `SessionMeta{...GaveUp: gaveUp(s.Messages), Words: sessionWords(s.Messages),
-  Touched: ..., Asked: askedHashes(...), Hit: frictionHashes(...)}`
-  (`ingest.go:1561`) → the index and its digest.
-- **Narrow.** `internal/search/search.go:195-210` → skip on a harness mismatch,
-  then `if !query.ProjectMatches(s.Project, s.From, o.Project) { continue }`,
-  then a session-id prefix match against both `ID` and `OrigID`.
-- **Score.** the ranking pass → `if doc.hit.Session.GaveUp && !decided &&
-  doc.hit.Session.Lifecycle != "accepted" { score *= gaveUpPenalty }` →
-  `score *= freshnessDecay(doc.hit.Session.Updated, now)` → sort →
+- **Index.** `internal/index/ingest.go:250` rebuilds through
+  `rebuildWithTombstones`, which drops every forgotten key (`:286`) →
+  `preRedactSessions` (`ingest_append.go:621`) runs `indexedText` over each
+  message → `SessionMeta{...GaveUp: gaveUp(s.Messages), Words:
+  sessionWords(s.Messages), Touched: ...}` (`ingest_derived.go:65`) → the index
+  and its digest.
+- **Narrow.** `internal/search/search.go:269-284` → skip on a harness mismatch,
+  then `if !query.ProjectAnyMatches(s.Project, s.From, o.ProjectWants()) {
+  continue }`, then a session-id prefix match against both `ID` and `OrigID`.
+- **Score.** `internal/search/bm25.go:78-101` → `if doc.hit.Session.GaveUp &&
+  !decided && doc.hit.Session.Lifecycle != "accepted" { score *= gaveUpPenalty
+  }` → `score *= freshnessDecay(doc.hit.Session.Updated, now)` → sort →
   `liftNotesAboveTheirSource(hits)`.
-- **Describe.** `lifecycleSummary` (`search.go:1001-1015`) words a recorded
-  state for a reader — *"tried and rejected"*, *"replaced by a later decision"*,
+- **Describe.** `lifecycleSummary` (`bm25.go:457-475`) words a recorded state
+  for a reader — *"tried and rejected"*, *"replaced by a later decision"*,
   *"marked stale — may no longer hold"* — under a comment saying
-  *"superseded is our vocabulary, not the reader's."*
-- **Inject.** `cmd/deja/hook_context.go` → a cached digest per project →
-  `rememberInjectedIDsFor` records what was served so the novelty tracker can
-  suppress a repeat.
+  *"superseded" is our vocabulary, not the reader's.*
+- **Inject.** `cmd/deja/digest_cache.go:408-567` → project names from the
+  working directory → `search.BuildAutoRecall` in safe mode
+  (`internal/search/recall.go:182-190`, `:257`) → `rememberInjectedIDsFor`
+  (`cmd/deja/hook_seen.go:320`) records what was served.
+- **Decide.** `cmd/deja/hook_tool_file.go:135` → `fileDecisionLineWithSymbols`
+  (`:221-270`) skips every session `decisionUsable` refuses (`:651-669`).
 
 ## 5. Memory Data Model
 
-A `Session` is what a transcript became, plus what the index derived from it.
+A `Session` is what a transcript became, plus what the index derived from it
+(`internal/model/model.go:223-312`).
 
 **From the transcript.** `ID`, `Harness`, `Project`, `Path`, `Title`, `Started`,
 `Updated`, and the `Message` list. A `Message` is a role, text and a time, with
-the time omitted from JSON when the transcript never stamped one.
+the time omitted from JSON when the transcript never stamped one (`:187-219`).
 
-**From the index.** `GaveUp`, `Words`, `Touched`, `AgentTitle` — each documented
-as *"Parsers do not set it; the index fills it from what it read"*, and each
-explicitly false or zero for a store indexed before the field existed. That
-backward-compatibility note appears on every derived field, which is the sort of
-discipline that keeps a derived index safe to rebuild incrementally.
+**From the index.** `GaveUp`, `Words`, `Touched`, `AgentTitle`. The first three
+are documented as filled by the index and never by a parser, and the first two
+as false or zero for a store indexed before the field existed. That note is the
+sort of discipline that keeps a derived index safe to rebuild incrementally.
 
 **From sync.** `OrigID` and `From` record where a session came from when it
-arrived from another machine, added because *"import renames sessions to
-`imported-<hash>`, so a promoted note stopped looking like one across a machine
-boundary and the rules written for notes stopped applying to it (#975)."*
-`Lifecycle`, `LifecycleNote` and `LifecycleAt` carry the state of a promoted
-note.
+arrived from another machine, added because import *"renames sessions to
+`imported-<hash>`, so a promoted note stopped looking like one"* across a machine
+boundary (`:263-280`). `Lifecycle`, `LifecycleNote` and `LifecycleAt` carry the
+state of a promoted note (`:281-286`), one of the four constants at `:42-45`.
+
+**Beside the sessions.** `notes.jsonl` holds remembered facts and promoted
+notes. A promotion is appended, and *"appending the same session again records a
+correction"* (`internal/sources/notes_promoted.go:28-29`). Forgetting a session
+rewrites the file without its notes (`rewriteNotes`, `:627-682`).
+
+**Deletion.** `deja forget` takes `--session`, `--project` or `--before` and
+writes each removed session's `harness:id` key (`model.go:86-87`) to two
+tombstone files, one under the config directory and a mirror beside the index,
+so that *"a wiped config directory"* does not let the next rebuild resurrect them
+(`internal/index/privacy.go:163-184`). `filterTombstonedSet` drops a key, a
+former key and a forgotten session's child runs (`:319-334`). `--unforget` is
+the only way back.
 
 **What is absent.** No confidence. No validity interval — a session has a start
-and an update time, both record time. No owner or tenant key; `Project` is the
-nearest thing and it is a label, not a boundary. No deletion marker, because
-deletion is not a concept here: the transcripts are the truth and the index is
-rebuilt from them.
+and an update time, and a promoted note the source transcript's update time,
+all of them record time. No owner or tenant key; `Project` is the nearest thing
+and it is a label matched by substring, not a boundary.
 
 ## 6. Retrieval Mechanics
 
-Lexical search over the index, with CJK and NFC folding so the corpus's real
-text behaves. Narrowing is opt-in: `--harness`, `--project`, `--session`, a time
-bound. `ProjectMatches` returns true when nothing was asked for, does a
-case-insensitive containment match otherwise, and has a guard worth quoting
-because it is exactly the sort of thing that goes wrong quietly — a bare want
-without a separator will not match the machine name, because *"`--project mini`
-would select every session from a machine called mini rather than a project of
-that name."*
+BM25 over the index, with CJK and NFC folding so the corpus's real text
+behaves. Narrowing on the CLI is opt-in: `--harness`, `--project`, `--session`, a
+time bound. `ProjectMatches` returns true when nothing was asked for and does a
+case-insensitive containment match otherwise (`internal/query/project.go:22-38`).
+It has a guard worth quoting, because it is the sort of thing that goes wrong
+quietly: a bare want without a separator will not match the machine name, since
+*"`--project mini` would select every session from a machine called mini rather
+than a project of that name."*
+
+The automatic surfaces use a stricter rule. `ProjectInScope` (`:79-110`) refuses
+a bare directory name against a local project, because *"working in /work/api,
+the candidate "api" matched a client's acme/api and the session-start hook
+injected it "from this project" (#2333)."*
+
+MCP recall scopes by ranking. With no `project` argument, `rankRecall` runs the
+search for the machine, runs it again for the working directory's project, and
+puts the project's hits first with the machine's from the same tier after them
+(`cmd/deja/mcp_recall.go:597-686`). `DEJA_RECALL_GLOBAL=1` turns the
+project-first pass off (`:606`).
 
 Scoring applies a freshness decay and the give-up penalty. The penalty's comment
-is precise about its own scope: a session that *"reverted one thing and settled
-another keeps the boost above"*, the penalty is skipped only when a person
-accepted the session afterwards — *"that is a fresher judgement that overrides
-the transcript"* — and rejected, stale and superseded do not rescue it because
-they *"agree it was a dead end"* or mean *"a better record exists."*
+is precise about its own scope. A session that *"reverted one thing and settled
+another keeps the boost above."* The penalty is skipped only when a person
+accepted the session afterwards, since *"that is a fresher judgement that
+overrides the transcript."* Rejected, stale and superseded do not rescue it,
+because they *"agree it was a dead end"* or mean *"a better record exists."*
 
-`liftNotesAboveTheirSource` puts a promoted note above the session it came from,
-and a sibling function re-stamps scores so a caller that re-sorts reads the same
-order back.
-
-Nothing is excluded on epistemic grounds. A session whose transcript says the
-approach failed is ranked down and annotated; a note marked rejected is
-described as *"tried and rejected"* and returned.
+`liftNotesAboveTheirSource` puts a promoted note above the session it came from.
+Before the page is cut, `demoteRejected` moves every hit a person marked
+rejected below the ones they did not (`cmd/deja/lifecycle.go:181`), so a limit of
+fifteen cannot fill with rejected attempts. Search excludes nothing on epistemic
+grounds; the decision lines in section 9 do.
 
 ## 7. Write Mechanics
 
-There is no write path for memory, which is the whole point. The agent writes
+There is no write path for sessions, which is the whole point. The agent writes
 its transcript because it always did; `deja` reads it.
 
 The one thing the indexing path does that a write path normally would is
-redaction. `internal/redact` strips secrets — environment-variable keys,
-high-entropy spans, key-value pairs — and it runs *"as the index is built"*, so
-the derived artefact never holds them. The suite around it is built the way this
-project builds suites: `TestEnvVarKeyIsRedacted` beside
+redaction. `indexedText` runs `redact.Text` over every message before the write
+loop (`internal/index/ingest_append.go:603-613`), so the derived artefact never
+holds a matched credential. The suite around it is built the way this project
+builds suites: `TestEnvVarKeyIsRedacted` beside
 `TestLowercaseKeyNamesAreLeftAlone`, and `TestKVGateNeverHidesAMatch` asserting
-the gate that decides whether to scan a line never suppresses a real hit.
+the gate that decides whether to scan a line never suppresses a real hit. The
+source transcripts keep their secrets; `deja secrets --scrub` rewrites the ones
+it can and keeps the original beside the file (`cmd/deja/secrets_scrub.go:75`).
 
-The one authored write is a note: a person promotes a session, and the note gets
-a lifecycle a peer can sync. That is the only place a human judgement enters the
-store, and it is opt-in.
+Two writes are authored. The MCP `remember` mode appends a fact to
+`notes.jsonl` under the working directory's project, refusing a duplicate
+(`cmd/deja/mcp.go:690-727`, `internal/sources/notes.go:334-366`); it carries no
+state and the hooks serve it at once. `deja promote <session> --state <state>`
+appends a promoted note and refuses any state outside the four
+(`cmd/deja/promote.go:76`, `:156`). Promotion is the only place a recorded
+judgement enters the store.
 
 Because the index is derived, correcting it is re-indexing. That is a genuine
 advantage — no migration, no drift between store and source — and a genuine
@@ -271,91 +321,105 @@ is no copy of the old shape to fall back on.
 ## 8. Agent Integration
 
 The integration is the product. `deja install --auto` finds the agents on the
-machine and wires their hooks, so recall arrives at four moments without anyone
-calling a tool: session start, each prompt, before a file is edited, and after a
-command fails. An MCP server and a CLI cover the cases where an agent or a
-person wants to ask directly, and a plugin manifest packages it for harnesses
-that take one.
+machine and wires their hooks, so recall arrives without anyone calling a tool:
+at session start, on each prompt, before a file is edited or a command runs, and
+after a command fails. The MCP server lists one tool, `deja`, whose `mode` is
+one of `recall`, `context`, `blame`, `fix`, `how`, `orient`, `remember` and
+`handoff` (`cmd/deja/mcp.go:394`); older tool names still dispatch to the same
+calls without being listed (`:420-438`).
 
-The novelty tracker is the piece that makes automatic injection tolerable:
-`rememberInjectedIDsFor` records which ids were served against a project key, so
-the same memory does not arrive twice in one session. Without it, injecting on
-every prompt would flood the window with the same three hits.
+The novelty tracker is the piece that makes automatic injection tolerable.
+`rememberInjectedIDsFor` appends each served id with the agent session and the
+project (`cmd/deja/hook_seen.go:320-345`). A session then sits out the next ten
+injections in that agent session and, separately, in that project, counted *"in
+injections rather than minutes because that is what the reader experiences"*
+(`:217-222`). The file rotates past 1 MB, keeping the current session's lines,
+and a compaction drops that session's entries so the truncated blocks can be
+sent again.
 
 `internal/peers` syncs between machines, which is where `OrigID`, `From` and the
 note lifecycle come from — a promoted note travels, and the id it had at home
-travels with it so a search by id still resolves.
+travels with it so a search by id still resolves. `internal/policy` decides per
+surface (`search`, `mcp`, `auto`) whether local, imported or one peer group's
+memory may activate, and defaults to allowing everything
+(`internal/policy/policy.go:1-6`).
 
 ## 9. Reliability, Safety, and Trust
 
 **Negative evaluation — awarded, on the strength of how the guard is written.**
-The narrowing test asserts one hit and the right one; the next test asserts both
-answer without the flag, and says in a comment that its purpose is to prove the
-first test measures the flag rather than a one-match fixture; a third asserts an
-unknown id returns nothing rather than the whole store. The redaction suite
-pairs a redacted case with a left-alone case and adds a test that the
-pre-filter never hides a match.
+`TestSearchNarrowsToOneSession` asserts one hit and the right one. The next test
+asserts both answer without the flag, and says in a comment that its purpose is
+to prove the first test measures the flag rather than a one-match fixture. A
+third asserts an unknown id returns nothing rather than the whole store
+(`internal/search/session_scope_test.go:29-71`). The redaction suite pairs a
+redacted case with a left-alone case and adds a test that the pre-filter never
+hides a match.
 
-**Trust state — withheld, and the refusal is the project's own.** `GaveUp` is
-derived, not recorded, and the code says why it should not be treated as a
-state. `Lifecycle` is recorded on a promoted note and is applied to rank and to
-wording, never to admission: a rejected note is returned, labelled *"tried and
-rejected."* The rubric asks for a state that withholds; nothing here withholds,
-and the project has argued that it should not.
+**Trust state — awarded, on the decision lines.** `Lifecycle` is a discrete
+field with four values. `deja promote` writes it to the user's notes file, or
+with `--repo` to `.deja/notes.jsonl` in the checkout (`cmd/deja/promote.go:34`,
+`:143-158`), and sync carries another machine's (`internal/index/sync.go:509-516`).
+Two read paths
+refuse a session whose state is `rejected`, `superseded` or `stale`: the
+decision line before an edit (`cmd/deja/hook_tool_file.go:221-244`) and the one
+before a command (`cmd/deja/hook_tool.go:1038-1043`, `:1074`), both through
+`decisionUsable` (`hook_tool_file.go:651-669`). The standing-decision lookup
+keeps only `accepted` notes (`:504`). `TestASupersededImportedDecisionIsNotCarried`
+asserts a superseded note is not served, under the comment *"rejected,
+superseded and stale all mean someone took it back"*
+(`cmd/deja/hook_tool_imported_decision_test.go:36-49`).
 
-**Human review — withheld, and it fails the *easier* half of the test.** This
-is worth stating in full, because the mechanism passes the part most systems
-fail.
+The same session is returned by recall, labelled and moved down. That is the
+rubric's distinction exactly: on record, and not acted on as true. The code
+draws it against itself. `lifecycle.go:107-115` records that `deja promote`
+once printed that a note *"now outranks the raw transcript in recall"* and that,
+measured, it did not: *"The state belongs to the session; ranking was never going
+to carry it."* `decisionUsable` is present at
+[`6a33ce289d0553b69ba9772da753cb447501f4d7`](https://github.com/vshulcz/deja-vu/commit/6a33ce289d0553b69ba9772da753cb447501f4d7)
+as well, at `cmd/deja/hook_tool.go:1063`.
 
-The rubric's one question is *can the agent that wrote the memory also clear its
-review?* Here it cannot. The MCP server exposes a **single tool**, `deja`, whose
-`mode` enum is exactly `recall`, `context`, `blame`, `fix`, `how` and `remember`
-(`cmd/deja/mcp.go:318`). `promote` is not on it, and there is no second tool.
-The adjudicating surface is a CLI verb — `deja promote <session> --state
-rejected --note "<correction>"` (`cmd/deja/promote.go`) over the four states in
-`internal/sources/notes.go:429`: `accepted`, `rejected`, `superseded`, `stale`.
-So the producer test is satisfied in its strong form, by absence rather than by
-a check.
+**Human review — withheld, and it fails the *easier* half of the test.** The
+rubric's question is *can the agent that wrote the memory also clear its
+review?* Here it cannot. None of the eight MCP modes promotes, and the aliases
+add no verb. The adjudicating surface is the CLI verb `deja promote`. The
+producer test passes in its strong form, by absence rather than by a check.
 
 What is missing is the other clause: *a memory waits in a state until* that
-actor resolves it. Nothing waits. A session is recallable the moment it exists,
-and `attachLifecycles` (`cmd/deja/lifecycle.go:72`) runs on the read path to
-**mark** a hit whose decision was later rejected — `lifecycleLine` renders it to
-the reader as *"tried and rejected"*. The hit is still returned. The rubric puts
-that case in its own exclusion list: *"A person who opens the stored document
-and rewrites it is authoring; the write has already landed. That is a real and
-useful affordance and it is the opposite of a gate."*
+actor resolves it. Nothing waits. A session is recallable the moment it is
+indexed, and a fact the agent stores with `remember` is served by the next hook.
+A promotion labels or withholds what had already been served, which is the
+rubric's own exclusion: *"the write has already landed."* No command lists
+sessions for adjudication.
 
-The code makes the same distinction against itself, which is why it is credible.
-`lifecycle.go:66-71` records that an earlier version printed that a promoted note
-*"now outranks the raw transcript in recall"* and that, measured, it did not —
-*"the correction only surfaced when its own wording matched the query, so asking
-about a reverted decision returned the transcript that made it, reading like
-current truth. The state belongs to the session; ranking was never going to
-carry it."* That is the same reasoning as the withheld `trust_state` above, and
-it is the project's, not this report's.
+**Scope — withheld, and it is the design.** The push paths carry the predicate.
+`BuildAutoRecall` treats every mode but `off` and `aggressive` as safe, and safe
+skips a session outside the working directory's project names
+(`internal/search/recall.go:182-190`, `:257`). The candidates are loaded by those
+names in the first place (`cmd/deja/digest_cache.go:408-451`), and the prompt
+hook ranks inside them (`cmd/deja/hook_prompt.go:290`, `:317`). From a directory
+in no project, the prompt hook searches the projects its terms name (`:832`).
 
-**Scope — withheld, and it is the design.** `Project`, `Harness` and session id
-are stored and are applied as filters when a caller asks. The default is the
-whole machine, because a memory that spans agents and projects is the value
-proposition. A reader should take the consequence seriously rather than as a
-score: nothing prevents a session containing something specific to one project
-from answering a question asked in another, and the redactor's job is secrets,
-not confidentiality between projects.
+The pull path does not carry it. MCP recall returns the machine after the
+project, `project` is an optional argument, and CLI search is the whole store
+by default. Only `how`, `orient` and `files` answer about the working
+directory's project unless told otherwise (`cmd/deja/how.go:500-523`). A session holding something specific to one project can answer a
+question an agent asks from another, and the redactor's job is secrets, not
+confidentiality between projects.
 
-**Tombstone — withheld.** Nothing records a rejected value; a note's lifecycle
-is keyed on the note, not on the claim, and does not stop anything returning.
+**Tombstone — withheld.** The forget tombstones are keyed on `harness:id`, a
+record key. They stop a rebuild resurrecting a forgotten session, and a new
+session carrying the same text is indexed like any other. Nothing records a
+rejected value.
 
-**Audit log — withheld.** The novelty tracker records which ids were injected —
-a delivery record, not a mutation record — and the index is derived, so there
-are no mutations to log.
+**Audit log — withheld.** Promotions append to `notes.jsonl`, but `rewriteNotes`
+edits and deletes its lines on a forget (`internal/sources/notes_promoted.go:627-682`).
+The novelty tracker and `deja log` record what was served, and `deja log` notes a
+`remember` call by its length (`cmd/deja/mcp.go:727`); neither records a
+promotion, a forget or the text that changed. The index is derived from
+transcripts.
 
-**Bitemporal — withheld.** Start and update times, both record time.
-
-**Human review — withheld, narrowly.** Promotion is a human act and the
-lifecycle states are human judgements, which is closer than most. What is
-missing is a queue: nothing presents a set of sessions for adjudication, and
-nothing is withheld pending one.
+**Bitemporal — withheld.** Start and update times, and a promoted note's source
+time, are all record time.
 
 **One property worth naming that the rubric has no mark for.** Redaction on the
 indexing path is a stronger guarantee than redaction on the read path, because
@@ -364,30 +428,60 @@ time has the secret on disk in its own index; this one does not.
 
 ## 10. Tests, Evals, and Benchmarks
 
-4,361 committed test functions across 273,068 lines of Go, and the suite's
+7,646 committed test functions across 541,750 lines of Go, and the suite's
 character is consistent: small named tests, each with a comment saying what it
-is for, several of which exist solely to keep another test honest.
+is for, several of which exist solely to keep another test honest. CI runs
+`go test` over `./...` on every push to `main` and every pull request, split
+across shards by test-name range (`.github/workflows/ci.yml:3-12`, `:237-247`).
 
-The benchmark claim is prominent and specific: **85.3% hit@1 on LongMemEval-S**
-and **69.6% on LoCoMo**, with *"millisecond lookups over 5 GB of history"*, under
-the line *"Both harnesses ship in this repo and run on the public datasets in
-minutes."* That claim about the harnesses is true: `scripts/locomo/main.go` and
-`scripts/longmemeval/main.go` are committed, and the LongMemEval harness has
-five test files of its own — `carry_test.go`, `gates_test.go`,
-`signals_test.go`, `spread_test.go`, `wherelost_test.go` — which is a harness
-somebody maintains rather than ran once.
+The README states **88.9% hit@1 on LongMemEval-S** (the 470-question cleaned
+set), **88.2%** on all 500 questions, and **71.9% hit@1 on LoCoMo** retrieval
+(`README.md:428-429`). Each figure has a committed run record in
+`docs/benchmarks/`: `longmemeval-s-cleaned.json`, `longmemeval-s-full.json` and
+`locomo.json`. A record names the harness, the run date, the dataset file with
+its byte size and SHA-256, the flags for the LongMemEval runs (`skip_abs` true
+for the cleaned set), wall time, median search latency, a row per question type,
+and evidence recall at 1, 5, 10 and 20.
 
-**No result file for either benchmark is committed.** The numbers in the README
-are the project's own reported figures, and what is in the tree is the apparatus
-to reproduce them plus a documentation page inviting the reader to. That is the
-right way round, and the claim this report makes is the scoped one: no result is
-committed to this repository, not that the evaluation was not performed.
+A record does not name the commit it ran at; the schema has no such field
+(`scripts/benchresult/result.go:45-58`). All three are dated 2026-10-28, and 19
+commits touched `internal/search` between the one that committed them and the
+pin. A figure is tied to a dataset, not to the code that produced it.
 
-`internal/bench` holds the retrieval-side benchmarking helpers — block, corpus,
-context and prompt — with their own tests.
+`cmd/deja/benchmark_artifacts_test.go` holds the prose to the records. It sits
+in `package main` with no build constraint, so `go test ./...` runs it. Both
+tests unmarshal the JSON and format each figure the way the page writes it.
+`TestBenchmarkPageMatchesTheCommittedRuns` (`:47-131`) requires sixteen strings
+in `docs/guide/benchmarks.html`. `TestQuotedHeadlineNumbersComeFromTheRuns`
+(`:139-242`) checks every `<n>% hit@1` quote in five files against the run its
+surrounding words name, and the landing page's animated R@5 counter against the
+full run.
 
-No paper. A search of the README and docs for `arxiv`, `bibtex`, `@article`,
-`@misc`, `Citation`, `CITATION.cff` and `doi` returns nothing.
+The checks are substring matches, and they cover what they list: the other ten
+translated READMEs, the per-type rows other than preference, and the LoCoMo rows
+are outside them. I did not run the Go test. I re-applied its string checks to
+the files at the pin with a Python transcription, and every one matched. The
+file's header says the published numbers were *"re-runnable and not checkable"*
+before it, and that *"the independent review at neoneye/agent-memory-atlas said
+exactly that"* (`:14-17`). The records and this test landed on 2026-09-15 in
+[`8ecfa775a81a432b59426e64bf546b83dd66d540`](https://github.com/vshulcz/deja-vu/commit/8ecfa775a81a432b59426e64bf546b83dd66d540),
+with figures of 85.3% and 69.7%.
+
+`scripts/longmemeval -score <file>` scores a ranking another system produced: a
+JSON map from question id to ranked session ids, read before any index is built
+(`scripts/longmemeval/main.go:76`, `:134-139`). It prints hit@1 to hit@20, MRR
+and evidence recall per question type with the dataset digest, counts an
+unanswered question as a miss rather than skipping it, and with `-out` writes
+the same record shape with the note *"deja did not run this retrieval"*
+(`scripts/longmemeval/submission.go:98-233`). No committed test calls it, and
+`-limit` is applied after the dispatch, so it does not narrow a scored file.
+
+The token-cost figure beside them — *"58% fewer tokens"* on a task already
+solved, eleven runs an arm — has its harness committed under `scripts/taskcost`
+and its runs only as tables in `docs/guide/day-zero.html`.
+
+No paper. `CITATION.cff` is software citation metadata for the repository, and
+the one arXiv link under `docs/` cites another project's paper.
 
 ## 11. For Your Own Build
 
@@ -407,19 +501,18 @@ No paper. A search of the README and docs for `arxiv`, `bibtex`, `@article`,
 - **Make narrowing fail closed.** An unknown session id returning nothing rather
   than the whole store is the safe direction, and it is a one-line decision that
   is easy to get backwards.
-- **Say what a state means in the reader's words.** *"tried and rejected"*,
-  *"replaced by a later decision"*, *"marked stale — may no longer hold"* —
-  under a comment noting that `superseded` is the system's vocabulary and not
-  the reader's.
-- **Refuse to promote an inference to a state.** Deriving `GaveUp` from a
-  transcript and then declining to record it as a rejection, because nobody
-  actually decided it, is a distinction most systems collapse.
+- **Let a state withhold where acting matters and label everywhere else.** A
+  rejected decision stays findable in search, marked, and is never offered as
+  the answer at the moment an edit is about to land.
+- **Commit the run beside the claim, and fail the build when the prose drifts.**
+  A JSON record per run and a test that formats its figures the way the page
+  does is cheap; add the commit to the record, which this one omits.
 
 ### Avoid
 
-- **Assuming the absence of scope is free.** Crossing the project boundary is
-  this design's value and also its exposure: the same index answers from every
-  project on the machine, and only secrets are stripped.
+- **Assuming a project-first ranking is a boundary.** The hooks stay inside the
+  project and the agent's own recall tool reaches the whole machine; the same
+  index answers from every project, and only secrets are stripped.
 - **Depending on file formats you do not own.** A parser per harness is the cost
   of starting full, and every harness that changes its transcript shape is a
   breakage with no stored copy of the old form to fall back on.
@@ -430,62 +523,69 @@ deja-vu suits one person on one machine running several coding agents, who has
 months of history already on disk and keeps rediscovering things they solved.
 The install is a binary and a hook wiring; there is nothing to operate; and the
 value arrives on the first index rather than after weeks of accumulation. It is
-not a team memory and not a multi-project memory — there is no boundary to
-enforce one — and it is not the choice where an old wrong conclusion must be
-suppressed rather than ranked down. A reader wanting the epistemic layer should
-note that the project has thought about it and declined it deliberately, which
-is a different thing from not having got to it.
+not a team memory, and its project scope is a default rather than a boundary. An
+old wrong conclusion is withheld only once a person marks it; until then it is
+ranked down at most.
 
 ## 12. Open Questions
 
-- Should a project boundary be available for people who want one? The key is
-  stored and the filter exists; only the default is unscoped.
-- Does `Lifecycle` ever need to withhold? A note marked `rejected` is returned
-  with a label; the same argument that keeps `GaveUp` out of admission may or
-  may not extend to a state a person set deliberately.
+- Should MCP recall default to the project the way the hooks do? The predicate
+  exists and the hooks apply it; only the pull path appends the machine.
+- Should `rejected` withhold from recall as well as from the decision lines? The
+  project's own argument for labelling rather than hiding is that a reverted
+  attempt is evidence; a person who marked it may want it gone from both.
 - What happens to the index when a harness changes its transcript format
   mid-history — is a partial parse recorded, or does the session drop out?
-- How is the novelty tracker bounded? It records served ids per project key, and
-  nothing in the reading showed what expires them.
 
 ## Appendix: File Index
 
 | Path | Lines | What it holds |
 | --- | --- | --- |
-| `internal/model/model.go` | — | `Message` with its zero-time marshalling (10-36), `Session` with the derived and synced fields (38-90) |
-| `internal/sources/` | — | A parser per supported harness |
-| `internal/index/` | — | `ingest.go` with `SessionMeta` assembly (1561) and the pre-redaction pass; `index.go` with the derived-field docs (344-348); `sync.go` with the lifecycle vocabulary (407) |
-| `internal/search/search.go` | — | The narrowing loop (195-210), the gave-up penalty and freshness decay (640-658), `lifecycleSummary` (1001-1015), the printed give-up note (1300-1313) |
-| `internal/query/project.go` | — | `ProjectMatches` (18-34) and `DisplayProject`, kept together *"so the filter and the screen cannot drift"* |
+| `internal/model/model.go` | — | Lifecycle constants (42-45), `SessionKey` (86-87), `Message` and its zero-time marshalling (187-219), `Session` with the derived and synced fields (223-312) |
+| `internal/sources/` | — | A parser per supported harness; `notes.go` with `AppendNoteTagged` (334-366); `notes_promoted.go` with `NoteStates` (20-26), the append-only promotion (28-31) and `rewriteNotes` (627-682) |
+| `internal/index/` | — | `ingest.go` rebuilding through the tombstones (250, 286); `ingest_append.go` with `indexedText` and `preRedactSessions` (603-621); `ingest_derived.go` with `SessionMeta` assembly (65); `privacy.go` with the tombstone files (163-184) and `filterTombstonedSet` (319-334); `sync.go` with the carried note state (509-516) |
+| `internal/search/` | — | `search.go` with the narrowing loop (269-284); `bm25.go` with the gave-up penalty and freshness decay (78-101), `lifecycleSummary` (457-475) and `gaveUpPenalty` (528-532); `search_render.go` with the printed give-up note (267-280); `recall.go` with `BuildAutoRecall` (182-190) and the safe-mode project filter (257) |
+| `internal/query/project.go` | — | `ProjectMatches` (22-38), `DisplayProject`, kept beside it *"so the filter and the screen cannot drift"* (60-73), `ProjectInScope` (79-110) |
 | `internal/redact/` | — | The secret stripper and its paired tests: `env_key_test.go`, `kvgate_test.go`, `entropy_scan_test.go` |
+| `internal/policy/policy.go` | — | Activation rules per surface and origin (1-52) |
 | `internal/peers/` | — | Machine-to-machine sync; the source of `OrigID`, `From` and note lifecycles |
 | `internal/cjkfold/`, `internal/nfcfold/` | — | Folding for real multilingual text |
-| `cmd/deja/hook_context.go`, `hook_prompt.go`, `hook_tool.go`, `mcp.go` | — | The four injection points, the digest cache and the novelty tracker |
-| `scripts/locomo/`, `scripts/longmemeval/` | — | The two benchmark harnesses; the LongMemEval one has five test files of its own |
-| `internal/search/session_scope_test.go` | — | The narrowing case, its named vacuity guard, and the fail-closed unknown-id case |
+| `cmd/deja/mcp.go`, `mcp_recall.go` | — | `tools/list` (213-214), the mode enum (394), aliases (420-438), `remember` (690-727); `rankRecall` with the project-first pass (566-687) |
+| `cmd/deja/digest_cache.go`, `hook_prompt.go`, `hook_seen.go` | — | Session-start candidates by project name (408-567); the prompt hook's project ranking (290-388, 832); the novelty tracker (217-222, 320-345) |
+| `cmd/deja/hook_tool_file.go`, `hook_tool.go`, `lifecycle.go` | — | The pre-edit decision line (135, 221-270), the accepted-only lookup (504), `decisionUsable` (651-669); the pre-command line (1038-1043, 1074); `attachLifecycles` (107-133) and `demoteRejected` (181) |
+| `cmd/deja/benchmark_artifacts_test.go`, `docs/benchmarks/` | — | The drift tests (47-131, 139-242) and the three committed run records |
+| `scripts/locomo/`, `scripts/longmemeval/`, `scripts/benchresult/` | — | The two benchmark harnesses, the `-score` mode (`submission.go` 98-233), and the record schema (`result.go` 45-58) |
+| `internal/search/session_scope_test.go`, `cmd/deja/hook_tool_imported_decision_test.go` | — | The narrowing case, its named vacuity guard and the fail-closed unknown-id case (29-71); the taken-back decision that is not carried (36-49) |
 
-Searches behind the absence claims above, run from the repository root:
+Searches behind the absence claims above, run from the repository root at the
+pin:
 
 ```sh
-rg -n 'Lifecycle' internal/search internal/query cmd/deja/mcp.go | rg -n 'continue|skip|exclude'  # none: lifecycle ranks and words, never withholds
-rg -n 'gaveUpPenalty' internal/search                                   # a score multiplier, not an exclusion
-rg -n 'valid_from|valid_to|as_of|ValidFrom|ValidTo' internal            # none: start and update times, both record time
-find . -name '*.json' -path '*bench*'                                   # none: both harnesses committed, no result file
-rg -n -i 'arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi' README.md docs  # none: no paper
+git grep -n -E 'LifecycleRejected, model.LifecycleSuperseded' -- cmd/deja                # one hit: decisionUsable, the only state-based exclusion
+git grep -n -E 'Lifecycle' -- internal/search internal/query cmd/deja/mcp.go cmd/deja/mcp_recall.go | grep -E 'continue|skip|exclude'  # none: search and recall label and reorder, never drop
+git grep -n -E 'case "(review|inbox|triage|pending|approve|queue)"' -- cmd/deja          # none: no command lists sessions for adjudication
+git grep -n -E 'valid_from|valid_to|as_of|ValidFrom|ValidTo' -- internal                 # none: start, update and source times, all record time
+git grep -n -E -i 'commit|revision|sha' -- scripts/benchresult/result.go                  # none: a run record names no commit
+gh api 'repos/vshulcz/deja-vu/commits?path=internal/search&sha=910d490f6b1909fa7a469c3adf95c0ec5d5187c5&since=2026-10-28T16:30:35Z&per_page=100' --jq length  # 19
+git grep -n -E 'scoreSubmission|readSubmission|rankIn|evidenceRecallIn' -- '*_test.go'   # none: the -score mode is untested
+git ls-files | grep -E '\.(json|jsonl|csv|tsv)$' | grep -i -E 'bench|result|run|cost|day0'  # three: the docs/benchmarks records, none for the token-cost stand
+git grep -i -E -o 'arxiv|bibtex|@article|@misc|citation|doi\.org|10\.[0-9]{4,}/' -- README.md docs CITATION.cff  # one arXiv link in docs/guide/compare.html, about another project
 ```
 
 ## Appendix: Recorded Searches
 
-Checked at the pinned revision, without a clone.
+Checked at the pinned revision from a shallow clone of the tag.
 
 | Claim | Check | Result at this pin |
 | --- | --- | --- |
-| The agent's tool surface has no adjudicating verb | `cmd/deja/mcp.go` fetched at this revision; `tools/list` returns `dejaTool()` alone, and its `mode` enum read at `:318` | One tool, six modes: `recall`, `context`, `blame`, `fix`, `how`, `remember`. No `promote`, `approve` or `resolve`. |
-| The adjudicating surface is a CLI verb over four states | `cmd/deja/promote.go` (471 lines) and `internal/sources/notes.go:429` | `NoteStates` is `accepted`, `rejected`, `superseded`, `stale`. |
-| A rejected session is still returned, labelled rather than withheld | `cmd/deja/lifecycle.go:60-90` read in full | `attachLifecycles` *marks* hits; nothing filters on the state, and the header comment says the state belongs to the session rather than to ranking. |
-
+| The agent's tool surface has no adjudicating verb | `cmd/deja/mcp.go`: `tools/list` returns `dejaTool()` alone (`:213-214`); its `mode` enum at `:394`; `dispatcherModes` at `:420-438` | One tool, eight modes: `recall`, `context`, `blame`, `fix`, `how`, `orient`, `remember`, `handoff`. The aliases resolve to the same calls. No `promote`, `approve` or `resolve`. |
+| The adjudicating surface is a CLI verb over four states | `cmd/deja/promote.go:76` and `internal/sources/notes_promoted.go:20-26` | `NoteStates` is `accepted`, `rejected`, `superseded`, `stale`. |
+| A rejected session is withheld from the decision lines and returned by recall | `cmd/deja/hook_tool_file.go:651-669` and its callers at `:237`, `:244`, `hook_tool.go:1042`, `:1074`; `cmd/deja/lifecycle.go:116-133`, `:181`; `cmd/deja/mcp_recall.go:528-530` | `decisionUsable` refuses the three taken-back states and `GaveUp`; recall attaches the state, demotes rejected hits and returns them. |
+| The benchmark prose is pinned to the run records | `cmd/deja/benchmark_artifacts_test.go` read in full; its string checks re-applied in Python to the files at the pin | Every page string and every `hit@1` quote in the five listed files matches the records. |
 
 ## History
+
+**2026-11-06** — [`910d490f6b1909fa7a469c3adf95c0ec5d5187c5`](https://github.com/vshulcz/deja-vu/commit/910d490f6b1909fa7a469c3adf95c0ec5d5187c5) — re-pinned at the v0.24.0 tag, 823 commits on. `trust_state` added: `decisionUsable` keeps a session a person marked rejected, superseded or stale off the decision lines, and it was at the previous pin too (`cmd/deja/hook_tool.go:1063`), so withholding the mark under-credited. Three absence claims were false at that pin: benchmark run records and a drift test had been committed on 2026-09-15 ([section 10](#10-tests-evals-and-benchmarks)); `deja forget` writes session-keyed tombstones ([section 5](#5-memory-data-model)); the novelty cooldown is ten injections, not unbounded. Session-start recall is scoped to the working directory's project by default, as at the previous pin ([section 9](#9-reliability-safety-and-trust)). The narrowing test is `TestSearchNarrowsToOneSession`. Nothing was installed, built or run.
 
 **2026-11-02** — [`6a33ce289d0553b69ba9772da753cb447501f4d7`](https://github.com/vshulcz/deja-vu/commit/6a33ce289d0553b69ba9772da753cb447501f4d7) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 2 auto-run surfaces, 5 in all: hooks declared inline in `claude-plugin/.claude-plugin/plugin.json` on SessionStart, UserPromptSubmit, PreToolUse, PostToolUse and PreCompact; an MCP server declared in `claude-plugin/.claude-plugin/plugin.json`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 
