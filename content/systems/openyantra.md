@@ -1,23 +1,23 @@
 ---
 title: "OpenYantra"
-eyebrow: "One gated writer, one workbook, every write applied twice"
+eyebrow: "One gated writer, one workbook, and a promotion that repeats"
 description: "A local personal-memory toolkit keeping a user model in a LibreOffice workbook behind one gated writer, beside a separate JSON store for MCP memory."
 root: ../..
 page_kind: system
 source_name: "revanthlevaka/OpenYantra"
 source_url: https://github.com/revanthlevaka/OpenYantra
 archive_name: "revanthlevaka--OpenYantra"
-revision: bf86ff26b72ee241d6c9915afc7d0604db9bbbdb
-revision_url: https://github.com/revanthlevaka/OpenYantra/commit/bf86ff26b72ee241d6c9915afc7d0604db9bbbdb
+revision: e6a19a119699f3a1c9e1c5891c494d5b27d2168e
+revision_url: https://github.com/revanthlevaka/OpenYantra/commit/e6a19a119699f3a1c9e1c5891c494d5b27d2168e
 analyzed_at: 2026-11-07
-licence: "LICENSE grants CC0 1.0 to the OpenYantra Protocol and MIT to three library files it names bare, openyantra.py, vidyakosha.py and yantra_ui.py, followed by the MIT text; openyantra.py was removed on 20 May 2026 and its code lives in openyantra/core.py, the other two sit under openyantra/, and no stated grant covers the rest of the tree; pyproject.toml declares MIT for the package and GitHub reports NOASSERTION"
-size: "10,855 lines of Python outside tests: 10,802 in openyantra/ (core.py 2,622, yantra_sqlite.py 1,003, yantra_ui.py 790) and 53 in examples/; 3,275 lines of HTML and JavaScript in UI/v4; 785 lines of installer shell and PowerShell"
-activity: "63 commits, 20 March – 7 November 2026: 46 by Revanth Levaka under three addresses, 13 authored as Claude, 4 by dependabot; 48 of them on 7 November; the repository was created on 15 March 2026 and its first commit is already v2.12"
-tests: "70 pytest functions in 15 files, 1,651 lines with conftest.py, run by ci.yml on Ubuntu with Python 3.9–3.12 and on macOS and Windows with 3.11; none run for this reading"
+licence: "LICENSE grants MIT to the software and dedicates the specification and protocol definitions, table schemas and sheet structures, to the public domain under CC0 1.0; pyproject.toml declares MIT and GitHub reports NOASSERTION"
+size: "10,894 lines of Python outside tests: 10,841 in openyantra/ (core.py 2,657, yantra_sqlite.py 1,003, yantra_ui.py 790) and 53 in examples/; 3,275 lines of HTML and JavaScript in UI/v4; 785 lines of installer shell and PowerShell"
+activity: "64 commits, 20 March – 7 November 2026: 47 by Revanth Levaka under three addresses, 13 authored as Claude, 4 by dependabot; 49 of them on 7 November; the repository was created on 15 March 2026 and its first commit is already v2.12"
+tests: "76 pytest functions in 16 files, 1,832 lines with conftest.py, run by ci.yml on Ubuntu with Python 3.9–3.12 and on macOS and Windows with 3.11; none run for this reading"
 capabilities: "audit_log, human_review"
 capability_evidence:
-  audit_log: "sheet engine — the Agrasandhanī ledger sheet | openyantra/core.py:270-305, :307-311, :419-440 | `LedgerAgent._process` appends one ledger row for every request that reaches it — `written`, `rejected` or `conflict` — with timestamp, request id, agent, sheet, operation, row identifier, confidence, source, importance and a truncated SHA-256 of the whole request; `_log_audit` is the sheet's only writer and appends, and `_validate` refuses any request addressed to the ledger itself | no test reads the ledger. Limits: an `add` entry names no row and no entry carries a value; the MCP memory_* tools, session-log archival, edge writes and direct LibreOffice edits leave no entry; the replay at the next start appends a second `written` row with the same request id; `yantra integrity` checks only that a signature starts with `sha256:`"
-  human_review: "sheet engine — the Raksha quarantine | openyantra/core.py:530-548, :1250-1292, openyantra/yantra_ui.py:238-241, UI/v4/dashboard.html:857-866, :946-949 | a sheet write whose text matches a confirmed injection, jailbreak, impersonation or encoding pattern is copied to the Quarantine sheet with status Quarantined and does not reach its target sheet, the search index or any context; it lands only when a person presses Release in the dashboard, which posts to a route on the local web server. None of the sixteen MCP tools, the three framework adapters, the Telegram bot or the CLI exposes a release verb, and `_validate` rejects any write addressed to the Quarantine sheet, so the producing agent cannot clear or rewrite its own hold | no test. Limits: the dashboard shows the matched pattern, not the held content; release never changes the row's status, so the item stays listed and can be released again; there is no reject verb; the released row is relabelled User-stated, High, added by User; the route is unauthenticated unless a passkey is enabled; MCP read_sheet returns the held text to the agent"
+  audit_log: "sheet engine — the Agrasandhanī ledger sheet | openyantra/core.py:282-317, :319-323, :431-452 | `LedgerAgent._process` appends one ledger row for every request that reaches it — `written`, `rejected` or `conflict` — with timestamp, request id, agent, sheet, operation, row identifier, confidence, source, importance and a truncated SHA-256 of the whole request; `_log_audit` is the sheet's only writer and appends, and `_validate` refuses any request addressed to the ledger itself | no test reads the ledger. Limits: an `add` entry names no row and no entry carries a value; the MCP memory_* tools, session-log archival, edge writes and direct LibreOffice edits leave no entry; a write interrupted between commit and acknowledgement is replayed at the next start and appends a second `written` row with the same request id; `yantra integrity` checks only that a signature starts with `sha256:`"
+  human_review: "sheet engine — the Raksha quarantine | openyantra/core.py:542-560, :1285-1327, openyantra/yantra_ui.py:238-241, UI/v4/dashboard.html:857-866, :946-949 | a sheet write whose text matches a confirmed injection, jailbreak, impersonation or encoding pattern is copied to the Quarantine sheet with status Quarantined and does not reach its target sheet, the search index or any context; it lands only when a person presses Release in the dashboard, which posts to a route on the local web server. None of the sixteen MCP tools, the three framework adapters, the Telegram bot or the CLI exposes a release verb, and `_validate` rejects any write addressed to the Quarantine sheet, so the producing agent cannot clear or rewrite its own hold | no test. Limits: the dashboard shows the matched pattern, not the held content; release never changes the row's status, so the item stays listed and can be released again; there is no reject verb; the released row is relabelled User-stated, High, added by User; the route is unauthenticated unless a passkey is enabled; MCP read_sheet returns the held text to the agent"
 stack_storage: "files, sqlite, faiss"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -29,10 +29,10 @@ matrix:
   update_delete: "Update matches the first column and appends a new row when nothing matches; resolve and complete set a status column; the delete operation has no branch and changes nothing; the JSON notes are overwritten by key or hard-deleted"
   scoping: "One workbook per person and no scope key; an Agent column selects which configured instructions each agent receives; the JSON notes carry an agent name no read filters on"
   integration: "A hand-rolled sixteen-tool stdio MCP server, a FastAPI dashboard and pywebview HUD on 127.0.0.1:7331, a CLI, LangChain, CrewAI and OpenClaw adapters, and a setup command writing Claude Desktop and Cursor configs"
-  background: "None scheduled; Nidra runs on demand, auto-resolves open loops whose topic words appear in recent session decisions, writes a summary, and computes preference promotions that the writer rejects"
+  background: "None scheduled; Nidra runs on demand, auto-resolves open loops whose topic words appear in recent session decisions, writes a summary, and adds regex-matched preference phrases to Beliefs at High confidence, again on every run"
   trust: "A regex scan can hold a write in quarantine for a person to release; Confidence and Source are caller-supplied labels, and the MCP add_task and add_project writes are stamped User-stated"
   strengths: "One choke point that scans, filters, validates and ledgers every sheet write; a quarantine the agent's tools cannot release; a store a person can open and read in LibreOffice"
-  risks: "The write queue is never acknowledged, so every write is applied again at the next start; the MCP memory tools bypass every gate; four of six MCP write tools fail; the SQLite engine, incremental index and promotion have no producer"
+  risks: "The MCP memory tools pass only secret redaction and the dashboard's JSON route not even that; Nidra adds every promoted preference again on each run, all under one topic; processes rewrite one file with no lock and replay each other's in-flight writes; the SQLite engine and incremental index have no producer"
 ---
 
 ## 1. Executive Summary
@@ -42,17 +42,16 @@ of one person as sheets in a LibreOffice workbook, written through one gated
 writer and served to Claude Desktop and Cursor over MCP. The gate is the
 notable part: an injection scan that can hold a write for a person to release,
 an admission filter, vocabulary checks, and a row on an append-only ledger
-sheet. The weakness is around the gate. Its crash-safety queue is never
-acknowledged, so the next process to open the workbook applies every write
-again. The MCP memory tools write a separate JSON store no gate reaches. The
-SQLite engine and the advertised preference promotion have no working producer.
+sheet. The weakness is around the gate. The MCP memory tools write a separate
+JSON store that only secret redaction reaches, and the dashboard writes the same
+store with none. Nidra's preference promotion adds every matched phrase to
+Beliefs at High confidence and adds it again on the next run, because its
+duplicate check compares a different string from the one it stores. Processes
+share the workbook and its write queue with no file lock. The SQLite engine has
+no producer.
 
-The licence grant is narrower than the tree. `LICENSE` puts the protocol under
-CC0 1.0 and names three library files for MIT, one of which, `openyantra.py`,
-was removed on 20 May 2026. No stated grant covers the CLI, the MCP server, the
-adapters or the rest of `openyantra/`, although `pyproject.toml` declares the
-package MIT. A reader who wants to reuse code should treat the MIT grant as
-covering `vidyakosha.py` and `yantra_ui.py` and ask about the rest.
+`LICENSE` grants MIT to the software and dedicates the protocol's table schemas
+and sheet structures to the public domain under CC0 1.0.
 
 The README describes a SQLite WAL store shared by the HUD, the CLI and the MCP
 server. At this commit the HUD and the MCP sheet tools share the workbook, the
@@ -69,8 +68,8 @@ Agent Config, the ledger (Agrasandhanī), Inbox and Corrections, plus Quarantine
 and Security Log created on first use. A row is identified by its first column
 — the attribute, task text or loop topic — and carries `Confidence` (High,
 Medium, Low, Inferred), `Source` (User-stated, Agent-observed, Agent-inferred,
-System), `Importance` 1 to 10 and `Last Updated` (`openyantra/core.py:68-96`,
-`:2526-2622`).
+System), `Importance` 1 to 10 and `Last Updated` (`openyantra/core.py:69-97`,
+`:2561-2657`).
 
 A row becomes a belief by passing four gates in order, and nothing marks it as
 less than true afterwards:
@@ -78,20 +77,20 @@ less than true afterwards:
 - **Raksha** redacts secrets, then scans the joined field text. A confirmed
   injection, jailbreak, impersonation or zero-width pattern sends the write to
   Quarantine; a suspicious one adds a `_security_flag` column and lets it
-  through (`core.py:530-548`, `openyantra/yantra_security.py:457-555`).
-- **Admission** drops a write whose text contains a noise phrase or whose
-  importance is below 2, with no ledger row (`core.py:109-145`).
+  through (`core.py:542-560`, `openyantra/yantra_security.py:457-555`).
+- **Admission** drops a write whose text contains a noise word or phrase, as
+  whole words, or whose importance is below 2, with no ledger row (`core.py:110-146`).
 - **Validation** rejects an unknown sheet or a value outside the controlled
-  vocabulary (`core.py:307-322`).
+  vocabulary (`core.py:319-334`).
 - **Conflict** refuses an update that would change a High-confidence field from
-  a request that is not High (`core.py:324-342`).
+  a request that is not High (`core.py:336-354`).
 
 A row stops counting through a lifecycle column read by the context builder: a
 loop resolved, a task Done, a project not Active, a goal not Active or In
-Progress (`core.py:954-968`). Identity, People, Preferences and Beliefs rows have
+Progress (`core.py:989-1003`). Identity, People, Preferences and Beliefs rows have
 no such column; they change only by overwrite. The `delete` operation is in the
 vocabulary and has no branch in the committer, so nothing is ever deleted
-(`core.py:77`, `:348-400`). A git revert adds a new Session Log row labelled
+(`core.py:78`, `:360-412`). A git revert adds a new Session Log row labelled
 *Reverted / Superseded Decision*; the reverted commit's own row is untouched
 (`openyantra/yantra_git.py:106-127`).
 
@@ -106,27 +105,29 @@ HUD, the dashboard, the CLI, Telegram, LibreOffice or Obsidian, and Nidra
 resolves loops when someone runs it.
 
 ```mermaid
-%% caption: a sheet row is believed once it clears four gates, and the queue meant to make it crash-safe applies it again at the next start; the MCP memory tools write a second store none of the gates reach
+%% caption: a sheet row is believed once it clears four gates, and the queue replays what a crash or another process left in it; Nidra adds its promotions again on every run; the MCP memory tools write a second store that only secret redaction reaches
 flowchart TD
   subgraph writers["Sheet writers"]
     direction TB
-    W1["MCP add_task,<br/>resolve_open_loop"]
+    W1["six MCP sheet tools,<br/>as Cognitive-MCP"]
     W2["HUD, dashboard, CLI,<br/>Telegram, mail, vault"]
-    W3["git post-commit hook,<br/>Nidra consolidation"]
+    W3["git post-commit hook"]
     W1 ~~~ W2 ~~~ W3
   end
   writers --> RK{"Raksha: a confirmed<br/>injection pattern?"}
   RK -->|"yes"| Q["Quarantine sheet<br/>waits for Release<br/>in the dashboard"]
-  RK -->|"no"| SQ["appended to<br/>sanchitta.json,<br/>kept after the write"]
+  RK -->|"no"| SQ["appended to<br/>sanchitta.json,<br/>removed once processed"]
   Q -->|"person releases"| SQ
-  SQ --> GATE{"noise substring,<br/>unknown sheet, bad<br/>vocabulary, conflict?"}
+  SQ --> GATE{"noise word,<br/>unknown sheet, bad<br/>vocabulary, conflict?"}
   GATE -->|"yes"| DROP["dropped; a rejected<br/>or conflict ledger row"]
   GATE -->|"no"| ROW["row in chitrapat.ods<br/>plus a written<br/>ledger row"]
   ROW --> CTX["session context:<br/>Active, unresolved,<br/>not Done"]
   ROW --> SRCH["semantic search:<br/>every row, no<br/>status filter"]
-  CTX ~~~ RP["next OpenYantra():<br/>queue replayed,<br/>each add lands twice"]
+  CTX ~~~ RP["next OpenYantra():<br/>replays whatever<br/>the queue holds"]
   RP --> ROW
-  SRCH ~~~ COG["memory_write / delete:<br/>cognitive_memories.json,<br/>overwrite by key or<br/>hard delete, no gates"]
+  SRCH ~~~ NID["Nidra: phrase in a<br/>session row becomes a<br/>High belief, every run"]
+  NID --> RK
+  NID ~~~ COG["memory_write / delete:<br/>cognitive_memories.json,<br/>secrets redacted, no<br/>scan, filter or ledger"]
 ```
 
 ## 3. Architecture
@@ -138,7 +139,7 @@ workbook.
 
 - **`core.py`** holds `OpenYantra`, the writer `LedgerAgent` and the queue
   `WriteQueue`. The constructor replays the queue, opens the search index, and
-  creates a SQLite `SyncEngine` beside the workbook (`core.py:462-500`).
+  creates a SQLite `SyncEngine` beside the workbook (`core.py:474-512`).
 - **`yantra_security.py`** is Raksha: regex lists, secret redaction and trust
   tiers keyed on the writer's agent name.
 - **`vidyakosha.py`** is the search sidecar: a FAISS flat inner-product index,
@@ -159,7 +160,7 @@ per-agent snapshots and yearly `chitrapat_sessions_<year>.ods` archives.
 
 A write is a whole-file rewrite. `_write_sheet` parses every sheet with pandas,
 then writes them all back through `pd.ExcelWriter` in place, with no temporary
-file and no file lock (`core.py:402-417`). The atomic temp-and-replace export
+file and no file lock (`core.py:414-429`). The atomic temp-and-replace export
 and the portalocker lock exist only in `SyncEngine.export_ods`, which no
 production path triggers (`yantra_sqlite.py:594-718`).
 
@@ -184,18 +185,19 @@ lists what each writes.
 
 ## 4. Essential Implementation Paths
 
-- **Sheet write.** `OpenYantra.request_write` (`core.py:524-576`) runs Raksha,
-  then `LedgerAgent.submit`, which appends the request to `sanchitta.json` and
-  calls `_process` (`:256-259`, `:270-305`). `_process` runs admission,
+- **Sheet write.** `OpenYantra.request_write` (`core.py:536-588`) runs Raksha,
+  then `LedgerAgent.submit`, which appends the request to `sanchitta.json`,
+  calls `_process`, and removes the entry by request id in a `finally` block
+  (`:265-271`, `:235-241`, `:282-317`). `_process` runs admission,
   `_validate`, `_check_conflict`, `_seal`, `_commit` and `_log_audit`. On
   `written`, `request_write` calls `VidyaKosha.sync` over the whole workbook,
-  because the `incremental_update` it checks for is not defined (`:559-563`).
+  because the `incremental_update` it checks for is not defined (`:571-575`).
   It then asks `SHEET_TABLE_MAP` for an edge table; that map is keyed `Tasks`,
   `OpenLoops`, while sheet names carry emoji, so the lookup is always `None`
-  (`:570`, `yantra_sqlite.py:61-77`).
+  (`:582`, `yantra_sqlite.py:61-77`).
 - **Replay.** `OpenYantra.__init__` calls `replay_queue`, which empties the queue
-  and runs `_process` on every request in it (`core.py:466-471`, `:261-264`).
-- **Capture.** MCP sheet tools (`cognitive_mcp.py:395-463`); the dashboard and
+  and runs `_process` on every request in it (`core.py:478-483`, `:273-276`).
+- **Capture.** MCP sheet tools (`cognitive_mcp.py:401-460`); the dashboard and
   HUD through `POST /api/inbox` (`yantra_ui.py:193-198`, `UI/v4/hud.html:408`);
   `yantra inbox` (`cli.py:274-277`); Telegram commands and plain messages
   (`telegram_bot.py:151-240`); the iOS Shortcut server (`ios_shortcut.py:55-93`);
@@ -204,27 +206,27 @@ lists what each writes.
   and the CrewAI, LangChain and OpenClaw adapters.
 - **Routing.** `route_inbox` sends each unrouted Inbox row to the sheet a
   keyword list picks, as a Low-confidence `Agent-inferred` row, then marks the
-  Inbox row by its first 50 characters (`core.py:604-640`, `:2215-2236`).
+  Inbox row by its full content (`core.py:621-657`, `:2250-2271`).
 - **Consolidation.** `NidraConsolidator.consolidate` clusters the last 25
-  sessions, resolves loops, computes promotions and logs a summary session
-  (`yantra_nidra.py:208-303`), from `yantra dream`, `POST /api/nidra/consolidate`
+  sessions, resolves loops, promotes preferences and logs a summary session
+  (`yantra_nidra.py:209-309`), from `yantra dream`, `POST /api/nidra/consolidate`
   or the HUD.
-- **Context.** `load_session_context` (`core.py:945-984`) feeds
-  `build_system_prompt_block` (`:986-1032`) and `build_context_markdown`
-  (`:1658-1817`), which MCP `get_system_context` returns; `SutraCompiler.compile`
+- **Context.** `load_session_context` (`core.py:980-1019`) feeds
+  `build_system_prompt_block` (`:1021-1067`) and `build_context_markdown`
+  (`:1693-1852`), which MCP `get_system_context` returns; `SutraCompiler.compile`
   packs a token budget (`yantra_sutra.py:71-365`).
-- **Search.** `OpenYantra.search` (`core.py:1041-1098`) over `VidyaKosha.query`
+- **Search.** `OpenYantra.search` (`core.py:1076-1133`) over `VidyaKosha.query`
   (`vidyakosha.py:355-439`), reached through the LangChain retriever and the
   CrewAI adapter; `CognitiveMemoryStore.search` (`cognitive_db.py:113-157`);
   `SyncEngine.traverse` (`yantra_sqlite.py:923-967`).
 - **Correction.** Update and resolve through `_commit`; the corrections queue
-  (`core.py:642-682`, `yantra_ui.py:205-221`); quarantine release
-  (`core.py:1250-1270`, `yantra_ui.py:238-241`); cognitive delete
-  (`cognitive_db.py:99-111`); session-log archival (`core.py:1117-1162`).
+  (`core.py:659-699`, `yantra_ui.py:205-221`); quarantine release
+  (`core.py:1285-1305`, `yantra_ui.py:238-241`); cognitive delete
+  (`cognitive_db.py:99-111`); session-log archival (`core.py:1152-1197`).
 
 ## 5. Memory Data Model
 
-The controlled vocabularies are sets in `core.py:68-77`: project, task and goal
+The controlled vocabularies are sets in `core.py:69-78`: project, task and goal
 statuses, four priorities, `Yes`/`No`, three preference strengths, four
 confidence values, four sentiments, four sources and six operations. Column
 names follow the template, and `_commit` adds any new field as a new column, so
@@ -232,28 +234,29 @@ a writer that names a field wrongly widens the sheet instead of failing.
 
 **Row identity is the first column's text.** `update`, `resolve` and `archive`
 build a mask on `df.iloc[:, 0] == row_identifier` and change every matching row
-(`core.py:365-397`). An update that matches nothing appends a new row with the
+(`core.py:377-409`). An update that matches nothing appends a new row with the
 requested fields, so a mistyped task name sent to the dashboard's complete
 route creates a row with status Done and no task text.
 
 **Provenance is caller-supplied.** `Source` and `Added By` come from the
 request. `add_task`, `add_project` and `update_identity` hardcode
 `source="User-stated"` and `confidence="High"`, so a task the agent creates
-through MCP is recorded as the person's statement (`core.py:820-860`).
+through MCP is recorded as the person's statement (`core.py:853-893`).
 
 **Scope.** One workbook per person. The one key is the Agent Config sheet's
 `Agent` column, which `load_session_context` uses to pick the instructions an
-agent receives, with `ALL` as the wildcard (`core.py:948-952`). The cognitive
+agent receives, with `ALL` as the wildcard (`core.py:983-987`). The cognitive
 notes carry an agent name that no read consults.
 
 **Time.** `Last Updated` in UTC seconds, `Opened` on loops, `Deadline` on tasks
 and goals, and the ledger's request timestamp. There is no validity time.
 `TTL_Days` on loops is read by `check_anishtha_ttl`, which reports expired loops
-and changes nothing (`core.py:716-745`).
+and changes nothing (`core.py:733-762`).
 
 **Unwired columns.** Beliefs carries `Contradiction_Flag`, created by the
-template and the migrator and written by nothing; `diff_beliefs` returns
-same-topic pairs to the CLI (`core.py:684-714`).
+template and the migrator and written only as `No` by Nidra's promotion;
+`diff_beliefs` returns same-topic groups to the CLI and the dashboard's
+insights (`core.py:701-731`, `:1948`, `:1996-2003`).
 
 **The SQLite schema** mirrors the sheets with lowercase columns and a `UNIQUE`
 request id on `ledger` for idempotent writes (`yantra_sqlite.py:128-381`).
@@ -263,8 +266,8 @@ request id on `ledger` for idempotent writes (`yantra_sqlite.py:128-381`).
 20 May 2026 at v2.12, holding a first name, a city and an occupation in
 Identity. Its Session Log has the bootstrap row twice, 15 seconds apart. Its
 ledger has the same four writes twice, under the same request ids and
-timestamps, which is the replay in section 9 recorded in the project's own
-file. `cognitive_memories.json` is an empty list, and `settings.json` holds the
+timestamps: the queue replay as it ran before `e6a19a1`, when nothing removed
+a processed entry, recorded in the project's own file. `cognitive_memories.json` is an empty list, and `settings.json` holds the
 defaults with empty key fields. `.gitignore` lists all three as user data.
 `openyantra/chitrapat_template.ods` is the blank template.
 
@@ -274,10 +277,10 @@ defaults with empty key fields. `.gitignore` lists all three as user data.
 `load_session_context` returns the identity map, the agent's instructions,
 Active projects, unresolved loops sorted by importance and capped at 15, Active
 or In Progress goals, tasks whose status is not Done, pending corrections and
-the unrouted Inbox count (`core.py:945-984`). Archived and Blocked tasks pass
+the unrouted Inbox count (`core.py:980-1019`). Archived and Blocked tasks pass
 that filter. `build_context_markdown` caps each section at four to eight items
 and adds Values and Constraints beliefs at High confidence, the first five
-People rows and Strong preferences (`core.py:1658-1817`). It is the only reader
+People rows and Strong preferences (`core.py:1693-1852`). It is the only reader
 that uses `Confidence` to exclude a row.
 
 **Semantic search** indexes eight sheets: Identity, Goals, Projects, People,
@@ -287,7 +290,7 @@ columns. The vector arm is FAISS `IndexFlatIP` over TF-IDF with truncated SVD,
 or MiniLM when installed; BM25 runs at k1 1.5 and b 0.75. Each arm is
 normalised by its maximum and fused at 0.7 vector to 0.3 BM25, and
 `OpenYantra.search` then multiplies by importance and a one-year recency ramp
-(`vidyakosha.py:355-439`, `core.py:1041-1098`). **No status filter applies**,
+(`vidyakosha.py:355-439`, `core.py:1076-1133`). **No status filter applies**,
 so a resolved loop, a Done task and a Cancelled project rank like live ones.
 
 A per-agent snapshot freezes the registry at session start and keeps querying
@@ -308,44 +311,66 @@ The MCP server injects nothing on its own; the model has to call
 Every write is an explicit call. No model extracts or rewrites memory; Nidra's
 Ollama call produces only the summary sentence it logs as a session.
 
-**Admission is a substring match.** `NOISE_PATTERNS` includes `sure`, `noted`,
-`great` and `understood`, and `_is_worth_remembering` tests each with `in`
-against the lower-cased field text (`core.py:109-145`). "Ensure the backup
-runs" contains `sure`, so that task is dropped with status `filtered` and no
-ledger row. Session Log, Inbox and Corrections writes skip the filter.
+**Admission is a whole-word match.** `NOISE_PATTERNS` includes `sure`, `noted`,
+`great` and `understood`, and `_is_worth_remembering` searches for each between
+word boundaries in the lower-cased field text (`core.py:110-146`). "Ensure the
+backup runs" is admitted; "Make sure the backup runs" and "Great Barrier Reef
+trip" are dropped with status `filtered` and no ledger row. Session Log, Inbox
+and Corrections writes skip the filter.
 
 **Conflict detection is a refusal with nowhere to go.** A conflicting update
 returns `resolution: pending_user`; the requested value is kept only as text in
-the ledger row's reason (`core.py:283-293`). Most MCP and adapter writes are
+the ledger row's reason (`core.py:295-305`). Most MCP and adapter writes are
 High confidence, so the guard rarely fires.
 
 **Duplicates are made, not removed.**
 
-- The queue replay applies every `add` a second time (section 9).
-- `route_inbox` marks an Inbox row by its first 50 characters; a longer row
-  matches nothing, the update appends a junk row, and the next route sends the
-  original again (`core.py:631-638`).
+- A request left in the queue at the next start is applied again; an `add`
+  lands a second row (section 9).
+- Nidra adds every promoted preference again on each run (below).
 - Obsidian import reads every line of `Inbox.md` again on each sync and never
   clears the file (`yantra_vault.py:232-245`).
 
 **Nidra.** `prune_and_resolve_loops` resolves an open loop when its topic, or
 its first three words of four or more letters, appears in the decisions and topics
-of the last 30 sessions (`yantra_nidra.py:154-206`). Revert rows are part of
+of the last 30 sessions (`yantra_nidra.py:155-207`). Revert rows are part of
 that corpus. `detect_promotable_preferences` scans for phrases such as *user
 prefers* and *always use*, skipping any session whose decision text contains
-*reverted* or *superseded* (`:104-152`). Its candidates go to a sheet named
-`Beliefs & Principles`, which is not a sheet, so `_validate` rejects every one
-(`:224-242`, `core.py:308-309`). The CLI reports zero promoted.
+*reverted* or *superseded* (`:104-153`). Each match longer than eight
+characters becomes a Beliefs row with Topic `Operational`, Position `User
+Preference: <phrase>`, Confidence High, Source `Agent-inferred` and Importance 8,
+written through `request_write` as `NidraConsolidator` (`:221-248`). Three
+consequences follow from the code:
 
-**Four of six MCP write tools fail.** `add_inbox_item` and `complete_task` build
-a `WriteRequest` with `source="MCP tool call"`, which the constructor's
-`assert source in SOURCE` refuses (`cognitive_mcp.py:400-407`, `:443-451`,
-`core.py:158-161`). `add_open_loop` calls `oy.add_open_loop`, which does not
-exist (`cognitive_mcp.py:418`). `add_project` passes `next_step` into the
-`priority` position, so an empty step is an invalid priority and the write is
-rejected (`:462`, `core.py:820`). The iOS Shortcut server fails the same
-assertion unless the request body names a valid source (`ios_shortcut.py:66`,
-`:75`).
+- **Every run promotes the same phrases again.** The duplicate check builds its
+  known set from stored Positions, which carry the *User Preference:* prefix,
+  and tests the bare phrase against it (`:111-114`, `:142-145`). The two never
+  match, so each `yantra dream` adds one more copy of every preference found in
+  the last 30 sessions.
+- **Every promotion shares one row identity.** The first column is the topic,
+  so all promoted rows are `Operational`. `diff_beliefs` groups them as one topic
+  with many positions, which the dashboard's insights report as a belief
+  contradiction, and an update addressed to `Operational` changes every one
+  (`core.py:701-731`, `:377-409`).
+- **The Inbox half of the scan reads nothing.** It takes `Item` or `Raw Input`
+  from each Inbox row (`:135`), and the Inbox sheet's columns are `Content`,
+  `Captured` and the rest (`core.py:2641-2643`), so only session text is
+  scanned.
+
+Promoted rows are not in the session context's principles section, which admits
+the Values and Constraints domains only (`core.py:1787-1795`); they reach
+semantic search, `read_sheet` and the HUD's recall.
+
+**The MCP sheet writes.** `add_inbox_item` calls `inbox` with source
+`Agent-observed`; `add_open_loop` calls an alias of `flush_open_loop`;
+`complete_task` sets Status Done with source `Agent-observed`; and
+`add_project` passes its arguments by name (`cognitive_mcp.py:401-460`,
+`core.py:592-614`, `:805-831`). All six write as `Cognitive-MCP`, the agent name
+the server constructs `OpenYantra` with, and no tool argument names the
+requesting agent (`cognitive_mcp.py:63`). The iOS Shortcut server passes its
+default source, `iOS Shortcut`, to `inbox`, so the constructor's
+`assert source in SOURCE` refuses the write unless the request body names a
+valid source (`ios_shortcut.py:66`, `:75`, `core.py:159-162`).
 
 ### Operational cost
 
@@ -368,8 +393,7 @@ The MCP server registers sixteen tools (`cognitive_mcp.py:121-319`). Five work
 on the JSON store: `memory_write`, `memory_read`, `memory_search`,
 `memory_delete` and `memory_stats`. Eleven work on the workbook:
 `get_system_context`, `health_check`, `morning_brief`, `read_sheet`,
-`graph_traverse` and six writes, of which `add_task` and `resolve_open_loop`
-succeed. The model names the agent on every `memory_write`, can delete any key
+`graph_traverse` and six writes. The model names the agent on every `memory_write`, can delete any key
 including the `agent-hierarchy-connections` record behind the dashboard's agent
 hierarchy, and can read any sheet, the ledger and Quarantine included.
 
@@ -413,31 +437,41 @@ commands above.
 
 ## 9. Reliability, Safety, and Trust
 
-### Every write is applied twice
+### Replay is at least once, across processes
 
-`LedgerAgent.submit` appends each request to `sanchitta.json` before processing
-it and never removes it afterwards (`core.py:256-259`). The next `OpenYantra`
-constructor in any process empties the file and runs `_process` on every
-request in it (`:466-471`, `:261-264`). Every `add` therefore lands a second
-row, every replayed write appends a second ledger row with the same request
-id, and an update is applied again over whatever happened in between.
-The Telegram bot builds a new instance per message and the CLI one per command,
-so the second application follows at the next message or command. The committed
-workbook records it (section 5). Replay also skips Raksha, though a quarantined
-request never enters the queue.
+`LedgerAgent.submit` appends each request to `sanchitta.json`, runs `_process`,
+and removes the entry by request id in a `finally` block, whether the write
+committed, was refused or raised (`core.py:265-271`, `:235-241`). The next
+`OpenYantra` constructor in any process empties the file and runs `_process` on
+whatever is in it (`:478-483`, `:273-276`). Replay carries no idempotency check,
+and two cases reach it:
+
+- **A crash between commit and acknowledgement.** `_commit` and `_log_audit`
+  have run, the entry is still in the file, and the next start applies the
+  request again: an `add` lands a second row and a second `written` ledger row
+  under the same request id.
+- **Another process starting mid-write.** The queue's lock is a
+  `threading.Lock` and the file has no file lock. A process that constructs
+  `OpenYantra` while another is inside `_process` replays the in-flight request
+  with its own `LedgerAgent`, and both apply it. The Telegram bot builds an
+  instance per message and the CLI one per command, and the window is one
+  `_process` call, two whole-workbook rewrites.
+
+The same lack of a file lock lets two processes enqueueing together each save a
+list without the other's entry; that write runs without crash recovery.
+Replay skips Raksha, and a quarantined request never enters the queue.
 
 ### The gate covers one store of two
 
 The single-writer design is real for the workbook and absent for the JSON
-store. `memory_write` goes straight to `CognitiveMemoryStore.write`, with no
-Raksha scan, no secret redaction, no admission filter and no ledger row, and
-`memory_delete` removes the note with no trace (`cognitive_mcp.py:330-360`).
-The README's claim that secrets are redacted *before saving* holds for sheet
-writes only. The MCP `add_inbox_item` tool passes the model's `source` argument
-as the requesting agent; Raksha skips scanning entirely for the agent name
-`User` (`yantra_security.py:475-483`). That tool fails on the source assertion
-before reaching the scan, which is the only thing keeping a model from choosing
-the unscanned tier.
+store. `memory_write` runs `Raksha.redact_secrets` over the key and the content
+and then calls `CognitiveMemoryStore.write`, with no injection scan, no
+admission filter and no ledger row; `memory_delete` removes the note with no
+trace (`cognitive_mcp.py:330-366`). The redaction sits in the MCP handler, not
+in the store, so the dashboard's `POST /api/cognitive/write` writes the same
+file unredacted (`yantra_ui.py:255-269`). Raksha skips scanning entirely for the
+agent name `User` (`yantra_security.py:475-483`); the MCP sheet tools write as
+`Cognitive-MCP`, which has no registered tier and is scanned.
 
 ### Concurrency and data loss
 
@@ -446,8 +480,8 @@ process. The MCP server, the dashboard, the bot, the hook and the CLI are
 separate processes doing read-modify-write on one file with no file lock, so
 two concurrent writes lose one. `_write_sheet` rewrites the file in place; a
 crash mid-write can leave a truncated workbook, and a sheet that fails to parse
-is written back empty (`core.py:402-417`). `archive_session_log` rewrites the
-Session Log directly, outside the ledger (`core.py:1117-1162`).
+is written back empty (`core.py:414-429`). `archive_session_log` rewrites the
+Session Log directly, outside the ledger (`core.py:1152-1197`).
 
 ### Declared and unwired
 
@@ -461,8 +495,8 @@ Session Log directly, outside the ledger (`core.py:1117-1162`).
   reached from `request_write` (section 4).
 - **Ledger verification.** `Raksha.verify_mudra` has no caller and hashes four
   keys where `_seal` hashes eleven, so it could not match a stored seal
-  (`yantra_security.py:345-360`, `core.py:344-346`). `yantra integrity` checks
-  only the `sha256:` prefix (`core.py:1164-1213`).
+  (`yantra_security.py:345-360`, `core.py:356-358`). `yantra integrity` checks
+  only the `sha256:` prefix (`core.py:1199-1248`).
 - **Corrections.** `propose_correction` has no caller in the product, so the
   queue fills only from library code. The dashboard's review updates the
   Corrections row keyed on its target sheet, which marks every correction for
@@ -479,16 +513,19 @@ The mail daemon accepts any SMTP client on `127.0.0.1:2525`. The dashboard has
 no authentication unless passkeys are enabled, and then only cookies from
 that process's memory count (`yantra_ui.py:113-127`).
 
-### Revert tracking at the pin
+### Revert tracking
 
-The pin's commit detects a revert by a subject starting with *revert* or a body
+The git hook detects a revert by a subject starting with *revert* or a body
 containing *reverts commit*, and writes the Session Log row with a
 *Reverted / Superseded Decision* prefix and `Status: REVERTED` in the notes
-(`yantra_git.py:106-117`). Nidra's promotion scan skips that row. Three limits
-follow from the code. The reverted commit's own row is unchanged, so its text
-remains a promotion source. Loop resolution reads revert rows, so a revert whose
-subject repeats an open loop's topic resolves that loop. And promotion is
-rejected at the writer, so the skip guards a write that cannot land.
+(`yantra_git.py:106-117`). Nidra's promotion scan skips that row. Two limits
+follow from the code. The reverted commit's own row is unchanged and stays a
+promotion source: a commit subject *Always use tabs for indentation* is logged
+as the decision `Commit [<hash>]: Always use tabs for indentation`, which Nidra
+promotes as *User Preference: tabs for indentation* at High confidence, and its
+revert does not stop the next run promoting it again. Loop resolution reads
+revert rows, so a revert whose subject repeats an open loop's topic resolves
+that loop.
 
 ### Marks
 
@@ -499,14 +536,14 @@ store.
   every request `_process` handles and written by nothing else. Each row records
   who wrote to which sheet, when, with which operation, row identifier,
   confidence and source, and a hash of the request. The limits are real: an
-  add names no row, no row carries the value, and the replay duplicates
-  entries.
+  add names no row, no row carries the value, and a replayed write duplicates
+  its entry.
 - **`human_review` — earned.** A write matching a confirmed pattern waits in
   Quarantine, out of every sheet, the index and the context, until a person
   presses Release. No agent-facing surface carries a release verb, and the
   agent cannot write the Quarantine sheet. The dashboard does not show the held
   content, release does not close the item, and a released row is relabelled as
-  the user's own statement at High confidence (`core.py:1258-1262`). The
+  the user's own statement at High confidence (`core.py:1293-1297`). The
   release route is a POST on `127.0.0.1` that needs no credential while
   passkeys are off, their default (`yantra_ui.py:238-241`, `:777`), so an
   agent with a general shell or HTTP tool can reach it; the mark rests on the
@@ -531,10 +568,10 @@ store.
 
 ## 10. Tests, Evals, and Benchmarks
 
-The suite is 70 pytest functions in 15 files. CI installs `.[full,dev]` and runs
+The suite is 76 pytest functions in 16 files. CI installs `.[full,dev]` and runs
 `pytest -v` on Ubuntu with Python 3.9 to 3.12 and on macOS and Windows with
 3.11 (`.github/workflows/ci.yml:38-80`). I did not run it. The README badge
-reports 69 passing.
+reports 75 passing.
 
 What is covered:
 
@@ -544,18 +581,26 @@ What is covered:
   (`tests/test_sutradhar.py`);
 - secret redaction for five key formats (`tests/test_security_sanitizer.py`);
 - git-hook install, ingest and revert labelling (`tests/test_git_hook.py`);
-- Nidra clustering, loop resolution and candidate detection
-  (`tests/test_nidra.py`);
+- Nidra clustering, loop resolution, candidate detection, and one
+  consolidation run whose promoted belief must land in Beliefs
+  (`tests/test_nidra.py:84-101`);
+- all six MCP sheet write tools against a real workbook, read back from the
+  sheets, and `memory_write` redacting an Anthropic-format key
+  (`tests/test_cognitive.py:205-298`);
+- whole-word admission, an empty queue after a write and no duplicate after a
+  second constructor, and an Inbox row over 50 characters routed without an
+  extra row (`tests/test_atlas_audit_fixes.py`);
 - vault export and import, the passkey flow, the token-budget packer, MCP
   config writing and dashboard routes.
 
 What is not: no test exercises Raksha's blocking, the quarantine or its release,
-the ledger, the admission filter, the queue replay or any MCP sheet tool. The
-four failing MCP write tools follow from that gap. Nidra's tests assert
-candidates and never that a belief lands, which is how promotion shipped
-rejected. The MCP test's `"error" not in resp` checks cannot fail, because tool
+the ledger, or the replay of a request left in the queue. The queue test
+constructs the second instance after the first has acknowledged, so the queue
+it replays is empty. No test runs consolidation twice, which is where the
+re-promotion shows. The `"error" not in resp` checks cannot fail, because tool
 errors return inside `result` with `isError` (`tests/test_cognitive.py:121`,
-`cognitive_mcp.py:94-102`). Importing `cognitive_mcp` at collection creates
+`cognitive_mcp.py:94-102`); the sheet-tool test also reads each sheet back, and
+that can. Importing `cognitive_mcp` at collection creates
 `~/openyantra/cognitive_memories.json` in the real home directory and, if
 `~/openyantra/chitrapat.ods` exists, opens it and replays its queue.
 
@@ -585,14 +630,18 @@ tree.
 
 ### Avoid
 
-- **A write-ahead queue with no acknowledgement.** Remove the entry when the
-  write commits, or replay is a second write. Key replay on a request id the
-  target row records.
+- **A write-ahead queue replayed without an idempotency key.** Acknowledging on
+  completion stops the routine second write; a crash before the acknowledgement,
+  or a second process starting mid-write, applies the request again. Key replay
+  on a request id the target row records, and lock the queue file.
 - **Two stores behind one name.** If the agent's memory tools and the person's
   workbook are both "memory", put both behind the gate, or the model will use
   the ungated one.
-- **Substring admission rules.** A noise list matched with `in` drops any text
-  that contains *sure* or *great*; match whole messages or drop the filter.
+- **Word-list admission rules.** A noise list matched on whole words
+  drops *Make sure the backup runs*; match whole messages or drop the filter.
+- **A duplicate check on a different string from the one stored.** Nidra stores
+  `User Preference: <phrase>` and checks the bare phrase, so the check never
+  fires. Compare the normalised form the writer stores.
 - **Provenance set by the helper rather than the caller.** A helper that stamps
   `User-stated` on every task turns the agent's writes into the person's
   statements.
@@ -601,24 +650,25 @@ tree.
 
 This suits one person who wants to keep a hand-readable record of their own
 projects, people and open threads, edit it in LibreOffice, and hand a summary
-of it to a chat assistant. It is not ready as an agent's working memory. Writes
-double, concurrent writers lose data, four of the six MCP write tools fail, and
-what the agent stores through MCP never reaches its own context. The
+of it to a chat assistant. It is not ready as an agent's working memory.
+Concurrent writers lose data and replay each other's writes, Nidra adds a copy
+of every promoted preference on each run, and what the agent stores through the
+MCP memory tools never reaches its own context. The
 maintenance budget is a single author's, and the installer runs whatever
 `main` holds. Walk away if more than one process writes, if anyone else can
 reach the Telegram bot, or if you need to delete anything.
 
 ## 12. Open Questions
 
-- Whether the doubled rows in the committed workbook were noticed, and whether
-  the queue was meant to be cleared by `SyncEngine.write`'s request-id check.
 - Which store the author intends to be authoritative: the whitepaper's v3.0
   plan makes the workbook the contract and SQLite the engine, and the code at
   the pin wires neither direction.
 - How often the Raksha patterns hold legitimate text in practice, and whether
   anyone uses the Release button.
-- Whether `Beliefs & Principles` and its `Belief / Principle` column are a
-  planned sheet or a leftover name.
+- Whether promoted preferences are meant to share the topic `Operational`,
+  which makes every one of them a single row identity.
+- Whether the secret redaction is meant to cover the dashboard's cognitive
+  write route as well as the MCP tool.
 
 ## Appendix: File Index
 
@@ -650,12 +700,14 @@ Run from the repository root at the pinned commit with `/usr/bin/git grep`.
 - **No incremental index update.**
   `git grep -n -E 'def incremental_update' -- .` returns nothing; the same
   command with `def sync\(` matches `vidyakosha.py:290`.
-- **The queue is emptied only by replay.**
-  `git grep -n -E 'dequeue_all|replay_queue' -- 'openyantra/*.py'` returns the
-  two definitions and the constructor's call at `core.py:469`.
+- **The queue is shortened only by replay and acknowledgement.**
+  `git grep -n -E 'dequeue_all|replay_queue|acknowledge' -- 'openyantra/*.py'`
+  returns the noise word `acknowledged` at `core.py:112`, the three definitions,
+  the `submit` docstring, the `finally` call at `core.py:271` and the
+  constructor's call at `core.py:481`.
 - **No delete branch.**
   `git grep -n -E 'operation == "delete"|"delete" and' -- 'openyantra/*.py'`
-  returns nothing; `operation == "archive"` matches `core.py:390` and
+  returns nothing; `operation == "archive"` matches `core.py:402` and
   `yantra_sqlite.py:518`.
 - **No file lock or atomic replace on the write path.**
   `git grep -n -E 'portalocker|fcntl|flock|os\.replace' -- openyantra/core.py`
@@ -668,14 +720,16 @@ Run from the repository root at the pinned commit with `/usr/bin/git grep`.
   returns one comment about HTTP logging in `ios_shortcut.py:53`.
 - **No writer for Contradiction_Flag.**
   `git grep -n -E 'Contradiction_Flag|contradiction_flag' -- 'openyantra/*.py'`
-  returns the template header, the migrator, the header validator and the
-  SQLite column default.
+  returns the template header, the migrator, the header validator, the SQLite
+  column default and Nidra's promotion writing `No` (`yantra_nidra.py:240`).
 - **No caller for the correction and verification helpers.**
   `git grep -n -w -E 'propose_correction|apply_corrections|verify_mudra' -- .`
   returns their definitions, the class docstring and two lines of
   `PROTOCOL.md`.
-- **No add_open_loop method.**
-  `git grep -n -E 'def add_open_loop' -- .` returns nothing.
+- **Secret redaction runs only in the MCP handler.**
+  `git grep -n -w redact_secrets -- 'openyantra/*.py'` returns the two calls in
+  `cognitive_mcp.py:340-341`, the definition and the recursive call inside
+  `yantra_security.py`.
 - **No release or approve verb on the MCP server.**
   `git grep -n -i -E 'release|approve' -- openyantra/cognitive_mcp.py` returns
   nothing; `quarantine` matches the sheet map and the `read_sheet` enum.
@@ -688,10 +742,18 @@ Run from the repository root at the pinned commit with `/usr/bin/git grep`.
 - **Inbox.md is read and never written.**
   `git grep -n 'Inbox.md' -- openyantra/yantra_vault.py` returns the comment and
   the path at `:232` and `:234`.
+- **One consolidation run in the suite, and no quarantine or replay test.**
+  `git grep -n -i consolidate -- tests/` returns the single `consolidate` call at
+  `tests/test_nidra.py:91` and the dashboard test at `tests/test_ui_api.py:51-54`,
+  which posts once with `dry_run` true.
+  `git grep -n -i -E 'quarantin|release_|replay_queue|enqueue' -- tests/` returns
+  nothing.
 - **No paper reference.**
   `git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- .`
   returns nothing.
 
 ## History
+
+**2026-11-07** — [`e6a19a119699f3a1c9e1c5891c494d5b27d2168e`](https://github.com/revanthlevaka/OpenYantra/commit/e6a19a119699f3a1c9e1c5891c494d5b27d2168e). One commit past `bf86ff2`; its subject cites this atlas. Each queue entry is acknowledged after `_process`, which ends the routine second application; a request a crash or a second process leaves in the queue is still applied again ([section 9](#9-reliability-safety-and-trust)). The four MCP sheet tools that failed write, `route_inbox` marks rows by full content, admission matches whole words, and `memory_write` redacts secrets. Preference promotion lands, and its duplicate check never matches, so every run adds each phrase again ([section 7](#7-write-mechanics)). `LICENSE` grants MIT to the whole software. The first reading counted 70 test functions where there were 71. Both marks hold. Screened again with the same findings; nothing was installed or run.
 
 **2026-11-07** — [`bf86ff26b72ee241d6c9915afc7d0604db9bbbdb`](https://github.com/revanthlevaka/OpenYantra/commit/bf86ff26b72ee241d6c9915afc7d0604db9bbbdb). First reading, from a full clone at the head of `main`, the commit adding revert detection. Screened first: no auto-run surface, `pyproject.toml` inside the seven-day cooldown and with no lockfile, and `tests/conftest.py` executing on collection; the MCP setup, hook installer and installers were read for what they write. `SKILL.md`, `PROTOCOL.md` and `WHITEPAPER.md` were read as data. Nothing was installed, built or run. The licence names three files for MIT, one absent. Two marks, `audit_log` and `human_review`, both on the sheet engine; `negative_eval` is withheld because its one populated read-path case pins a traversal depth ([section 9](#9-reliability-safety-and-trust)).
