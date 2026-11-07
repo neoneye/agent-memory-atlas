@@ -1,334 +1,372 @@
 ---
 title: "CogniCore"
-eyebrow: "Candidate-to-verified memory with a utility ledger"
-description: "A memory entry that carries a discrete state, a scope pair, provenance columns and eight outcome counters, behind swappable SQLite, Chroma, graph and hybrid backends."
+eyebrow: "Session handoffs over a candidate-state store"
+description: "Memory that moves between coding agents: hooks turn each Claude Code or Codex transcript into a handoff, over SQLite rows carrying a lifecycle state."
 root: ../..
 page_kind: system
 source_name: "cognicore-dev/cognicore-env"
 source_url: https://github.com/cognicore-dev/cognicore-env
 archive_name: "cognicore-dev--cognicore-env"
-revision: 08d91395a5d4c6e714a141b2f42d91deb4030c88
-revision_url: https://github.com/cognicore-dev/cognicore-env/commit/08d91395a5d4c6e714a141b2f42d91deb4030c88
-analyzed_at: 2026-09-19
-capabilities: "trust_state, scope_enforced"
+revision: 6fc657d0f9554235993f55d5f2e9136d82a12fd2
+revision_url: https://github.com/cognicore-dev/cognicore-env/commit/6fc657d0f9554235993f55d5f2e9136d82a12fd2
+analyzed_at: 2026-11-07
+licence: "Apache-2.0; LICENSE is the standard 201-line Apache 2.0 text with its appendix template unfilled, read at the pin, no rider; it was added on 5 November 2026, and the tree carried an MIT LICENSE before that"
+size: "111,292 lines in tracked .py files: 63,608 in the cognicore package (9,315 of them in cognicore/memory), 17,193 in tests/, the rest in benchmarks/, examples/, scripts/, content_studio/ and plugins/"
+activity: "409 commits reachable from the pin, 5 April – 7 November 2026, the pin being the merge of the 0.12.0 release; 12 contributor entries in the GitHub API, two of them bots, anonymous included, most commits from two authors"
+tests: "1,189 pytest functions in 96 test_*.py files under tests/, run by ci.yml on Python 3.10–3.12 with pytest-xdist; none run for this reading"
+capabilities: "trust_state, scope_enforced, negative_eval"
 capability_evidence:
-  trust_state: "the memory entry, defaulted at the schema rather than assigned by a writer | cognicore/memory/base.py:145, cognicore/memory/sqlite_backend.py:48 | `state TEXT DEFAULT 'candidate'` in the DDL and `state: str = \"candidate\"` on the dataclass, moving through `verified`, `active` and `archived`. It is consulted rather than displayed: `sqlite_backend.py:588` counts only entries `WHERE state NOT IN ('archived', 'deleted')` and `:643` applies the same predicate to the category read before its `LIMIT`, so an archived entry is withheld from those reads rather than merely marked. The predicate is not uniform, which the 2026-09-19 re-read establishes and the mark survives: `get_all` at `:648-655` filters only `deleted`, so it returns archived entries under a docstring that calls them *\"all active entries\"*. A separate `correct` flag and eight outcome counters sit on a different axis | tests/test_memory.py, tests/test_advanced_memory.py"
-  scope_enforced: "the read path, pushed into the backend on search and filtered in Python on the category read | cognicore/memory/scoped.py:25-39 | `ScopedMemory.search` discards any scope the caller passes and forwards the wrapper's own — `self.backend.search(query, top_k, category, self.scope, self.scope_id)` — so the primary read carries the key as a backend predicate. `get_by_category` is the weaker half and says so in its comment: the backends do not accept a scope there, so it over-fetches `top_k * 5`, filters `e.scope == self.scope and e.scope_id == self.scope_id` in Python, and slices to `top_k` | tests/test_hybrid_backend.py"
+  trust_state: "two read paths that act on the state column: every SQLite search arm, and structured-experience retrieval | cognicore/memory/sqlite_backend.py:48, :332, :424, :455, :608, :625, cognicore/experience/retrieval.py:91, :123, cognicore/memory/context_preservation.py:765-769 | `state TEXT DEFAULT 'candidate'` in the DDL. Every arm of `SQLiteMemoryBackend.search` (embedding, FTS5, empty query, BM25 fallback, LIKE) excludes `archived` and `deleted`. `ExperienceRetriever.retrieve` drops archived and invalidated experiences and, with `require_verified`, any experience not `verified`, `promoted` or `transferable`; the session-start brief passes `require_verified=True`. The writer of `verified` is `VerificationGate.promote` (`cognicore/experience/verification.py:78-106`), fed by agent-supplied evidence whose `exit_code` defaults to 0 (`cognicore/connectors/remote.py:1149`). `get_by_category` carries no archived predicate, and the local MCP server's category recall reads it | tests/test_sqlite_state_filtering.py"
+  scope_enforced: "the read path of the cognicore-extension MCP server, and the hook-driven session-start brief | cognicore/extension/server.py:52-65, :151-169, :199-217, cognicore/memory/sqlite_backend.py:338-343, :431-436, :462-467, :546-549, :631-636, cognicore/hooks.py:59-65, cognicore/memory/context_preservation.py:850-852 | The extension server hashes the git root of the working directory into a project id and passes `scope` and `scope_id` into `SQLiteMemoryBackend.search`, which applies both as predicates on every arm, so a project row is reachable only with that project's id; the model picks the scope value, not the id. The SessionStart hook selects `WHERE project = ?` with a key normalised from the event's `cwd`. `ScopedMemoryBackend` has no product caller. The local `cognicore-mcp` recall and the hosted server's default recall apply no scope key; the hosted boundary is a per-account SQLite file, which is not this mark | tests/test_hooks.py"
+  negative_eval: "the session-start brief, on a secret and on a project boundary | tests/test_hooks.py:61-79 | One store, one test: after a save, the project's brief must contain seven named values and must not contain the fake key `sk-test-FAKE`, and a second project's SessionStart against the same store must inject nothing. The state-filtering file does not carry the mark on its own: each exclusion case seeds a database holding only the archived row and asserts `[]`, with the active control in a separate test and database (tests/test_sqlite_state_filtering.py:40-73) | tests/test_hooks.py"
 stack_storage: "sqlite, chroma"
 stack_retrieval: ""
 stack_source: "reviewed"
 matrix:
-  memory_unit: "A `memory_entry` with a state, a category, a scope pair, provenance columns and eight outcome counters"
-  storage: "Swappable backends behind one contract — SQLite, Chroma, TF-IDF, graph, multihop and hybrid; a separate research store for episodes, strategies and reflections"
-  retrieval: "Backend-specific search with a scoped wrapper filtering on the read path, plus multihop and reranking paths"
-  write: "Extraction and categorisation into a `candidate` state; `supersedes` set when a newer entry replaces an older one"
-  update_delete: "`supersedes` points at the entry being replaced and is queryable metadata in the Chroma backend; state moves to `archived`; no rejected-value record"
-  scoping: "`scope` and `scope_id` on every entry, applied by `ScopedMemory` on the read path as a Python filter when the backend cannot express it"
-  integration: "MCP launch path, a Claude Code plugin directory, an HTTP and UI server, and an OpenEnv manifest"
-  background: "A `sleep` module, lifecycle and decay passes, a utility scorer and a task queue table"
-  trust: "`state` defaults to `candidate` and moves through `verified`, `active` and `archived`; a separate `correct` flag and positive/negative outcome counters"
-  strengths: "A state that begins at `candidate` rather than at true, and a utility ledger that distinguishes a retrieved memory from a used one and from an ignored one"
-  risks: "The category read over-fetches five times the limit and scopes in Python, so a caller whose scope is sparse in a category under-returns silently; supersession is record-keyed with no rejected-value record; the committed benchmark's headline gain comes from one of six environments"
+  memory_unit: "A `memory_entry` with a state, a category, a scope pair, provenance columns and eight outcome counters; a session row holding a versioned handoff JSON and a project key"
+  storage: "SQLite per surface: one local file for the hooks and local MCP server, one for the extension server, one per account on the hosted server plus a shared marketplace database; Chroma, TF-IDF, graph, multihop and hybrid backends behind the same contract"
+  retrieval: "SQLite FTS5 with BM25 and LIKE fallbacks, optional embeddings; a token-budgeted session-start brief selected by project; experience retrieval filtered by verification status and environment compatibility"
+  write: "Rule-based handoff extraction from Claude Code and Codex transcripts with secret redaction and exact-text dedupe; optional Claude API compression; agent tools for notes, sessions and structured experiences"
+  update_delete: "Forget tools hard-delete by id; a CLI sleep pass archives contradictions and merges duplicates; `supersedes` and `invalidated_by` are record-keyed; no rejected-value record"
+  scoping: "Project id from the git root on the extension server and a project key on session start, both SQL predicates; per-account files on the hosted server; no scope on the local MCP recall"
+  integration: "Three Claude Code plugins, Codex hooks, a local stdio MCP server, a hosted Streamable HTTP MCP server with GitHub and Google sign-in, a ChatGPT connector, and sync between local and hosted"
+  background: "No scheduler; hooks save on Stop, PreCompact and SessionEnd, and `cognicore sleep` runs consolidation on demand"
+  trust: "`state` defaults to `candidate`; search withholds `archived` and `deleted`; experiences need `verified` for the session-start brief, written by a self-attested evidence gate"
+  strengths: "A session handoff with goal, state, decisions, open tasks and exact values, captured from the transcript with no model call and resumed under a token budget; a state predicate pinned by negative tests on every search arm"
+  risks: "The used and ignored counters and the utility promotion pass have no caller; the verify gate accepts any non-empty command; listing for sale exposes the whole store to purchase, whatever the listing filtered; the local MCP recall spans projects"
 ---
 
 ## 1. Executive Summary
 
-CogniCore is an **agent memory service with swappable backends**, MIT, 79,439
-lines of Python. It ships an OpenEnv manifest, a Claude Code plugin directory, an
-MCP launch path, a UI server, a benchmark harness and a paper directory — the
-repository is a research programme with a memory library at the centre of it.
+CogniCore is **memory that moves between coding agents**. Claude Code and Codex
+hooks turn each session's transcript into a rule-based handoff — goal, current
+state, decisions with reasons, open tasks, facts, exact values — stored beside a
+SQLite `memory_entries` table whose rows carry a lifecycle `state`, a scope pair,
+provenance columns and outcome counters. The package also ships a local MCP
+server, a hosted multi-tenant MCP server with a memory marketplace, a ChatGPT
+connector, and a research programme of benchmarks and RL environments.
 
-**Two things earn marks and both are unusual enough to name.**
+**A row arrives as `candidate`, and two read paths act on its state.** Every arm
+of `SQLiteMemoryBackend.search` excludes `archived` and `deleted`, and
+structured-experience retrieval withholds any experience not `verified`,
+`promoted` or `transferable` when `require_verified` is set, which the
+session-start brief sets. The gate that writes `verified` is self-attested:
+evidence is a list the agent supplies, `exit_code` defaults to 0 and the
+timestamp to now, so `[{"command": "x"}]` promotes.
 
-The `memory_entries` schema declares `state TEXT DEFAULT 'candidate'`. A memory
-does not arrive believed; it arrives as a candidate and has to become something
-else, with `verified`, `active` and `archived` the other values in use. Most
-systems in this corpus store a confidence float and call that trust — a float
-cannot express *rejected* and cannot express *not yet assessed*. A default of
-`candidate` is a stronger statement than any number, and it is one line of DDL.
+**The scope predicate is real on two read paths, and the wrapper that looks like
+the boundary has no caller.** `cognicore-extension` hashes the git root into a
+project id and passes it to SQLite search, which applies `scope = ? AND
+scope_id = ?` on every arm; the session-start hook selects `WHERE project = ?`.
+`ScopedMemoryBackend`, the class that forces a scope onto any backend, is
+constructed by one test and by no product path.
 
-The same row carries a **utility ledger**: `retrieval_count`, `used_count`,
-`ignored_count`, `positive_outcomes`, `negative_outcomes`, `utility_score`. The
-distinction between *retrieved*, *used* and *ignored* is the interesting one —
-it records that a memory surfaced and the agent declined it, which is the signal
-almost every retrieval-scoring design in this atlas lacks.
-
-**The scope mark is earned, and the two read paths do not carry it equally.**
-`ScopedMemory.search` discards whatever scope a caller passes and forwards the
-wrapper's own into the backend — `self.backend.search(query, top_k, category,
-self.scope, self.scope_id)` — so the primary read applies the key as a backend
-predicate, and a caller cannot widen it by passing a different argument.
-
-`get_by_category` is the weaker half, and the code says why: the backends do not
-accept a scope there, so it over-fetches `top_k * 5`, filters
-`e.scope == self.scope and e.scope_id == self.scope_id` in Python, and slices to
-`top_k`. The boundary holds — nothing out of scope is returned — and the cost is
-silent under-return: a caller whose scope holds fewer than `top_k` of the
-category's top `top_k * 5` gets a short list with no error. The 5× margin is a
-deliberate bound on that, and it is a guess rather than a measurement. `count()`
-is the same shape without the bound, fetching `top_k=999999` and filtering, under
-a comment calling itself a heuristic.
-
-**Correction is record-keyed.** `supersedes` holds the id of the entry being
-replaced, and the Chroma backend can query `where={"supersedes": entry_id}` to
-find what replaced what — better than most, because the supersession is
-*searchable* rather than merely recorded. It is still keyed on the record, so
-nothing stops a later extraction re-writing a value that was already replaced.
+**The utility ledger is schema and scorer, with retrieval counting as its only
+live input.** `used_count`, `ignored_count` and the outcome counters are written
+only by `MemoryLifecycleManager.record_outcome`, and the only writer that moves a
+row from `candidate` to `active` or `verified` by utility is `run_lifecycle_pass`.
+Neither has a caller anywhere in the tree, tests included.
 
 ## 2. Mental Model
 
-A memory is a **row that starts as a candidate and accumulates evidence about
-its own usefulness**.
-
-The schema carries four groups of columns, and reading them in order is the
-design:
+A memory is **a row that starts as a candidate**, and a session is **a handoff
+document keyed to a project**. The two are written together: a save stores the
+handoff on the `sessions` row and each of its statements as a `memory_entries`
+row, so the brief reads the first and recall searches the second.
 
 | Group | Columns |
 | --- | --- |
 | Content | `text`, `category`, `memory_type`, `embedding_json` |
-| Epistemic | `state`, `correct`, `importance`, `relevance` |
+| Epistemic | `state`, `correct`, `confidence`, `importance`, `relevance` |
 | Scope | `scope`, `scope_id`, `session_id` |
-| Provenance and utility | `creation_reason`, `source_component`, `source_agent`, `retrieval_count`, `used_count`, `ignored_count`, `positive_outcomes`, `negative_outcomes`, `utility_score`, `last_accessed` |
+| Lineage | `supersedes`, `invalidated_by`, `invalidated_reason` |
+| Provenance and utility | `creation_reason`, `source_component`, `source_agent`, `source_task`, `retrieval_count`, `used_count`, `ignored_count`, `positive_outcomes`, `negative_outcomes`, `utility_score`, `last_accessed` |
+| Session row | `handoff_json`, `conversation_hash`, `agent`, `client`, `external_id`, `project` |
 
-Three of those four groups are things most systems in this corpus do not store at
-all. `creation_reason` and `source_component` say *why* and *from where*, which
-is provenance as a first-class column rather than a metadata blob.
+`creation_reason` is set on every handoff row (`session_state`, `session_detail`,
+`session_summary`), and `source_agent` to the saving agent, so a fact can be
+traced to the session that produced it.
 
 ### How a thing becomes a belief, and how it stops being one
 
 ```mermaid
-%% caption: the lifecycle from candidate to archived, driven by a utility score computed from whether a retrieved entry was used or ignored — with supersession keyed on the record, so the value can return
+%% caption: the state writers that have callers and the reads that consult them — a self-attested verify gate, an archive the search arms withhold and the category read returns, and a session-start brief keyed on project
 flowchart TD
-    E["extraction and categorisation"] --> C["state: candidate"]
-    C -->|"evidence"| V["state: verified"]
-    V --> A["state: active"]
-    A -->|"retrieved"| U{"used or ignored?"}
-    U -->|"used"| P["used_count,<br/>positive_outcomes"]
-    U -->|"ignored"| I["ignored_count"]
-    P --> UT["utility_score"]
-    I --> UT
-    UT -->|"decay and lifecycle passes"| AR["state: archived"]
-    A -->|"a newer entry replaces it"| S["supersedes = old entry_id,<br/>queryable in the Chroma backend"]
-    S -.->|"keyed on the record,<br/>so the value can return"| E
+    subgraph IN["writers"]
+        direction TB
+        HK["Stop, PreCompact, SessionEnd hooks:<br/>transcript to rule-based handoff"]
+        TL["MCP tools: remember,<br/>save_session, record_experience"]
+    end
+    HK --> SS["sessions row:<br/>project key, handoff_json"]
+    HK --> ME["memory_entries rows:<br/>scope global, state candidate,<br/>exact-text dedupe links existing rows"]
+    TL --> ME
+    ME --> GATE{"verify_experience:<br/>evidence non-empty, command set,<br/>exit_code 0, which is the default"}
+    GATE -->|"passes"| VER["state verified"]
+    ME -->|"cognicore sleep CLI:<br/>contradiction or duplicate"| ARC["state archived"]
+    SS --> BRIEF["SessionStart brief:<br/>WHERE project = ?"]
+    VER -->|"require_verified"| BRIEF
+    ME --> SRCH["SQLite search, every arm:<br/>state NOT IN archived, deleted"]
+    ARC -.->|"withheld"| SRCH
+    ME --> CAT["get_by_category:<br/>no archived predicate"]
+    ARC -.->|"returned"| CAT
+    VER ~~~ ARC
+    BRIEF ~~~ SRCH
+    SRCH ~~~ CAT
 
-    style AR fill:#f4e2bd,stroke:#b8860b
+    style ARC fill:#f4e2bd,stroke:#b8860b
+    style CAT fill:#f4e2bd,stroke:#b8860b
 ```
 
-The left column is the part worth copying: a memory earns its way from candidate
-to active, and its usefulness is measured rather than assumed. The dashed edge is
-the familiar gap.
+The utility ladder — `candidate` to `active` on a first retrieval, `active` to
+`verified` above a promotion threshold, `archived` on decay or negative transfer
+(`cognicore/memory/utility.py:224-275`) — is absent from the diagram because
+nothing calls it.
 
 ## 3. Architecture
 
 One memory contract (`cognicore/memory/base.py`) with six backends behind it —
 `sqlite_backend`, `chroma_backend`, `tfidf_backend`, `graph_backend`,
-`multihop_backend` and `hybrid_backend` — plus an async wrapper and a scoped
-wrapper that compose over any of them.
+`multihop_backend` and `hybrid_backend` — and every shipped surface opens SQLite:
 
-Two SQLite databases are committed to the repository at this commit
-(`cognicore_memory.db`, `cognicore_trajectories.db`), alongside a benchmark
-suite, an experiments directory and a paper directory. A separate
-`research/persistent_store.py` keeps `episodes`, `strategies` and `reflections`,
-which is the research programme's own store rather than the agent memory.
+| Surface | Store |
+| --- | --- |
+| `cognicore` plugin hooks and `cognicore-mcp` | `~/.cognicore/mcp/mcp_memories.db` |
+| `cognicore-extension` | `~/.cognicore/extension/memory.db` |
+| Hosted server, `cognicore/connectors/remote.py` | `memory_<sha256 of account id>.db` per account, plus one shared `commerce.db` |
+| `cognicore-experience` plugin | `~/.cognicore/experience_memory.db` |
+
+`cognicore/sync.py` pushes each saved handoff to the hosted account and pulls
+other apps' sessions back, so a session saved in Claude Code can be resumed from
+claude.ai. `cognicore/research/persistent_store.py` keeps `episodes`,
+`strategies` and `reflections` for the research programme, apart from the agent
+memory.
 
 ### Deployment and ergonomics
 
-A Dockerfile, a Procfile and an `openenv.yaml` are all present, so the intended
-deployment is a service. The cost to an operator is choosing among six backends
-with different capabilities — the Chroma backend can query supersession by
-metadata, the scoped wrapper falls back to Python filtering when a backend cannot
-express scope, and nothing in the contract makes those differences visible to a
-caller.
+The Dockerfile and `deploy/docker-compose.yml` start `cognicore.connectors.remote`
+behind Caddy, the hosted endpoint every plugin and editor config names; the
+Procfile, `fly.toml` and `render.yaml` start the ChatGPT connector instead. Local
+installation is `cognicore install`, which writes the Claude Code plugin and the
+Codex hooks. An operator choosing the hosted server gets isolation by file rather
+than by predicate, and no account-wide erasure tool, which only the ChatGPT
+connector carries.
 
 ## 4. Essential Implementation Paths
 
-- **Schema:** `cognicore/memory/sqlite_backend.py:36` — `memory_entries`, with
-  `sessions` and `session_memories` below it.
-- **Contract and backends:** `cognicore/memory/base.py`, `chroma_backend.py`,
-  `graph_backend.py`, `hybrid_backend.py`, `multihop_backend.py`,
-  `tfidf_backend.py`.
-- **Scope:** `cognicore/memory/scoped.py:34-46` — the read-path filter and the
-  comment explaining when it is used.
-- **Supersession:** `cognicore/memory/chroma_backend.py:48`, `:147` — set on
-  write, queried by `where={"supersedes": entry_id}`.
-- **Lifecycle:** `lifecycle.py`, `sleep.py`, `temporal.py`, `utility.py`,
-  `evaluator.py`.
-- **Write path:** `extractor.py`, `categorize.py`, `decompose.py`, `planner.py`.
+- **Schema:** `cognicore/memory/sqlite_backend.py:36-68` — `memory_entries`;
+  `:131-146` `sessions` and `session_memories`, with the handoff columns migrated
+  in at `:150-169`.
+- **State predicate:** `sqlite_backend.py:332`, `:424`, `:455`, `:608`, `:625`
+  on search; `:674` on count, `:729` on the type read; none on
+  `get_by_category` (`:656-670`); `get_all` (`:734-741`) excludes `deleted` only.
+- **Experience ladder:** `cognicore/experience/manager.py:91-120` (record as
+  `candidate`), `verification.py:32-106` (gate and promote), `retrieval.py:54-140`.
+- **Scope:** `cognicore/extension/server.py:52-65`, `:151-217`; the hook's
+  project read at `cognicore/hooks.py:59-65` and
+  `cognicore/memory/context_preservation.py:850-852`.
+- **Handoff:** `cognicore/memory/handoff.py`, `transcript.py`, `redact.py`,
+  `context_preservation.py:455-652` (save), `:819-931` (resume).
+- **Hosted:** `cognicore/connectors/remote.py:199-243` (per-account file),
+  `:612-681` (marketplace), `:1134-1160` (verify).
 
 ## 5. Memory Data Model
 
-The `state` column is the atlas-relevant one and its default is the finding:
-`'candidate'`. The values observed in the memory package are `candidate`,
-`verified`, `active` and `archived`.
+`MemoryState` (`cognicore/memory/base.py:64-80`) declares nine values in two
+families: `unverified`, `observed`, `verified`, `promoted` and `transferable` for
+experiences, and `candidate`, `active`, `archived` and `deleted` for the utility
+lifecycle. The writers with callers are `ExperienceManager.record` (`candidate`,
+with failed attempts as `observed`), `VerificationGate.promote` (`verified`),
+revalidation through the hosted `cognicore_check_experience` (`verified` or
+`archived`), and the sleep pass (`archived`). `promote_to_transferable` and
+`TranscriptExtractor`, which writes `active`, are exported with no product
+caller. No writer sets `promoted` or `deleted`; the mem0 importer passes an
+imported record's state through.
 
-`correct` is a separate integer flag from `state`, which is worth noting because
-the two can disagree — a memory can be `verified` as a state and carry a
-`correct` value recording an outcome, and nothing in the schema constrains their
-relationship. Whether that is a deliberate separation of *assessed* from *right*
-was not established.
+`correct` is a separate integer flag recording an outcome, and the DDL carries no
+`CHECK` relating it to `state`. `memory_type` defaults to `semantic` and is orthogonal to
+`state`; `experience` and `failure` are the types the experience retriever reads.
 
-`memory_type` defaults to `semantic` and is orthogonal to `state`: type says what
-kind of memory, state says how far it has been assessed. Keeping those apart is
-correct, and several larger systems in this corpus conflate them.
+A handoff (`docs/handoff-schema.json`, `cognicore.handoff/v1`) carries goal,
+current state, decisions with a `made` or `rejected` status, open tasks, key
+facts, exact values, files, code, environment and provenance.
 
 ## 6. Retrieval Mechanics
 
-Backend-specific: TF-IDF, embedding similarity, graph traversal, multihop, and a
-hybrid combining them, with a reranking benchmark committed at the repository
-root.
+**Lifecycle state is a predicate on search and not on the category read.** The
+five search arms exclude `archived` and `deleted`, added in `11e46955` on
+1 November 2026 under a commit message stating that archived text could resurface
+through search and the empty-query listing. `get_by_category` takes no state
+argument. The local MCP server's `cognicore_recall` falls back to it when search
+returns nothing (`cognicore/mcp/server.py:373`), and `cognicore_recall_failures`
+and `cognicore_recall_successes` read it directly (`:433`, `:478`), so an archived
+row reaches the agent through those three.
 
-**Scope is applied above the backend, not inside it.** `ScopedMemory` retrieves
-and then filters `e.scope == self.scope and e.scope_id == self.scope_id` in
-Python. The comment is candid — it exists for backends that cannot filter on
-scope themselves — and the consequence is the one the rubric warns about for
-post-filtered scope: any `k` or `limit` the backend applied was applied to the
-unscoped set, so a scoped caller can silently receive fewer results than asked
-for, and the shortfall looks like an empty store rather than a late filter.
+**Scope is a predicate where it is passed.** The extension server passes it on
+recall and list, the hook passes a project key to the session read, and SQLite
+applies both in SQL. The BM25 fallback loads every live row and computes IDF over
+the whole table before dropping out-of-scope rows (`sqlite_backend.py:606-615`,
+`:546-549`), so another project's text shapes the ranking and never the result
+set. The local `cognicore_recall` (`mcp/server.py:364`) passes no scope, and
+handoff rows are stored as `scope=global` with no project, so recall in one
+project returns facts saved in another.
+
+**The session-start brief reads the handoff, not the rows.** `resume_session`
+selects session rows, loads `handoff_json`, and fills goal, state, open tasks,
+decisions, facts and verified experiences in priority order until
+`COGNICORE_RESUME_TOKENS` (default 1,000) is spent; omitted sections are named so
+the agent can fetch them by `session_id` and `section`. Two parts of it cross the
+project key by construction. The experiences section searches the whole store,
+matching on environment and not on repository (`context_preservation.py:757-780`),
+and with sync on, `pointer_text` lists up to three sessions from other apps whose
+project is not this one (`cognicore/sync.py:383-397`).
 
 ## 7. Write Mechanics
 
-Extraction and categorisation produce entries in the `candidate` state.
-`supersedes` is set when a new entry replaces an existing one, and in the Chroma
-backend it is stored as searchable metadata rather than an opaque field.
+The Stop, PreCompact and SessionEnd hooks read the transcript
+(`cognicore/memory/transcript.py`), dropping injected context, hook output and
+CogniCore's own brief, and `handoff.py` classifies sentences into goal, state,
+tasks, decisions and facts with regular expressions and no model call.
+`redact.py` replaces credential-shaped strings before anything is stored.
+`COGNICORE_AI_COMPRESS` optionally sends a long session to the Claude API for a
+summary, at most once per `COGNICORE_AI_MIN_TOKENS` of new conversation.
 
-Background work exists and is substantial: a `sleep` module, `lifecycle.py`,
-decay (177 occurrences of the vocabulary across the package), `utility.py`
-maintaining the outcome counters, and a `tasks` table in
-`integrations/task_queue.py`. A memory's `state` and `utility_score` therefore
-change without a caller doing anything, which is the intended design and means
-the store is not stable between reads.
+Each statement is stored once: `_existing_ids_by_text`
+(`context_preservation.py:438-447`) links a statement already in
+`memory_entries` instead of copying it, and it matches by exact text with no state
+predicate. A re-saved statement whose row was archived stays linked to the
+archived row and out of search; one whose row was deleted is stored again.
+
+`cognicore sleep` (`cognicore/cli.py:328`) runs `SleepProcessor`, which merges
+near-duplicates and archives the lower-utility member of a contradictory pair;
+with utility scores at their default, list order decides, newest first. Its one
+caller is the `cognicore sleep` command.
 
 ### Memories cross agents, and half the trust surface crosses with them
 
-`cognicore/commerce/transfer.py` copies memories between two backends, either
-directly (`share`, `clone`) or through a marketplace with pricing and reputation
-in `marketplace.py`. What travels is worth reading field by field, because the
-split is not the obvious one.
+`cognicore/commerce/transfer.py` copies memories between two backends, directly
+(`share`, `clone`) or through a marketplace in `marketplace.py`. The read is
+`search(query='', top_k=…, scope=None)`, so it draws from every scope in the
+source store, and each entry is rebuilt in the target with the **sender's**
+`scope` and `scope_id`, `source_agent`, `creation_reason="shared"`, and
+`confidence` copied verbatim.
 
-The read is unscoped by construction:
-`source_backend.search(query='', top_k=top_k, scope=None)` goes to the raw
-backend rather than through `ScopedMemory`, so a transfer draws from every scope
-in the source store at once. Each entry is then rebuilt in the target with `text`,
-`category`, `memory_type`, `confidence`, `action`, a copied `metadata` dict —
-and `scope=entry.scope, scope_id=entry.scope_id`, the **sender's** keys, written
-into the receiver's store where they name a project the receiver does not have.
+**`state` does not travel**, so an imported memory lands as `candidate`, which is
+the shape [Portable Handoff](../portable-handoff/) argues for. **`confidence`
+does**, so a memory the sender scored 0.95 arrives unverified carrying 0.95,
+without the evidence behind the score.
 
-**`state` is the field that does not travel, and that is the right call.** The
-new `MemoryEntry` omits it, so the dataclass default applies and an imported
-memory lands as `candidate` rather than inheriting whatever the sender had
-verified. Provenance is stamped alongside — `source_agent` and
-`creation_reason="shared"` — so an imported claim is identifiable as imported and
-arrives unverified. That is the shape [Portable Handoff](../portable-handoff/)
-argues for, implemented in two lines.
+**A listing covers the whole store.** `cognicore_list_for_sale` takes a category,
+memory type and confidence floor, but persists only a per-account `for_sale`
+flag (`marketplace.py:105-108`); the `memory_prices` table a listing would need
+is declared and never written. `MemoryTransfer.purchase` then reads the seller's
+entire store and keeps every entry at confidence 0.7 or above, filtered only by
+the **buyer's** arguments (`transfer.py:211-223`). `confidence` defaults to 1.0,
+so a seller who listed one category has listed everything. `PRIVACY.md` describes
+the copied set as *"memories you list"*.
 
-**`confidence` does travel, verbatim.** So the epistemic state resets and the
-number attached to it does not: a memory the sender scored 0.95 arrives as a
-`candidate` carrying 0.95, and the utility counters that would have justified the
-score stay behind. Whichever ranker reads confidence sees the sender's judgement
-with none of the sender's evidence, and `source_agent` is a caller-supplied
-string defaulting to `"source"`. The half of the trust surface that resets is the
-half with a defined vocabulary; the half that carries over is the float.
+Until `d33dda44` on 19 October 2026, the hosted purchase checked only that the
+seller was registered, and read-only tools registered every caller, so any
+account's memories could be copied; `cognicore_share_experience` could also write
+into another account. Both refuse at this pin, under
+`tests/test_remote_tenant_isolation.py`.
 
 ## 8. Agent Integration
 
-An MCP launch path (`mcp_launch_demo.py`), a `claude-plugin/` directory, an HTTP
-and UI server (`cognicore/ui/server.py`, `dashboard.html`), and an `openenv.yaml`
-manifest. The breadth is unusual for a memory library and reflects that this is
-packaged as an environment rather than as a dependency.
+Three plugins under `plugins/`, read as data:
 
-`cognicore/integrations/chatgpt.py` adds a hosted surface with Supabase-backed
-auth beside it, and one of its tools is worth reading for how it states its own
-limits. `cognicore_delete_all_data` is a right-to-erasure path: it authenticates
-*"exclusively through the validated Context/sub claim"*, deletes the user's
-logical records from an isolated per-tenant SQLite database, runs `VACUUM`, and
-attempts physical removal of the database, WAL and SHM files. Two of its six
-documented behaviours are refusals to overclaim — it *"does not silently claim
-physical deletion succeeded if the OS prevents it"*, and its closing note says
-`VACUUM` *"does not guarantee cryptographic erasure of physical disk sectors"*
-and that standard file deletion leaves filesystem snapshots, backups and
-storage-level copies untouched. That is a deletion feature describing the space
-between what it does and what a reader might assume it does, which is rarer than
-the feature.
+| Plugin | MCP | Hooks |
+| --- | --- | --- |
+| `cognicore` | stdio `cognicore-mcp`, `COGNICORE_TOOLSETS=search` | SessionStart on startup, clear or compact runs `cognicore-hooks session-start`; Stop, PreCompact and SessionEnd run `cognicore-hooks save`; each falls back to `python -m cognicore.hooks` |
+| `cognicore-memory` | HTTP, `https://mcp.cognicoree.tech/mcp/stream` | none |
+| `cognicore-experience` | `python ${CLAUDE_PLUGIN_ROOT}/scripts/server.py` | SessionStart runs `hooks/session_start_hook.py`; PostToolUse on `Bash` runs `hooks/evidence_collector.py` |
 
-It is not a tombstone, and the distinction is the usual one: it erases a user's
-records wholesale rather than recording that a particular value was rejected, so
-nothing stops the same content being written again.
+`.claude-plugin/marketplace.json` lists the first two. `.cursor/mcp.json`,
+`.vscode/mcp.json` and `server.json` name the same hosted endpoint, and
+`cognicore setup codex` writes the equivalent Codex hooks. The experience
+plugin's PostToolUse hook appends each Bash command, an output hash, the exit
+code and the git commit to `.cognicore/session_evidence.json` in the working
+directory, keeping the last 50.
+
+The hosted server checks a bearer JWT in ASGI middleware on every `/mcp`, `/sse`,
+`/messages` and `/sync` path, issued by its own OAuth layer over GitHub or Google
+sign-in, and resolves the account's file from the `sub` claim. Its recall
+defaults to `scope="all"`, which passes no scope predicate within that file
+(`remote.py:447-465`).
+
+`cognicore/connectors/chatgpt.py:332` carries `cognicore_delete_all_data`, which
+authenticates *"exclusively through the validated Context/sub claim"*, deletes
+the user's records, runs `VACUUM`, attempts to remove the database, WAL and SHM
+files, and states that this *"does not guarantee cryptographic erasure"*. It
+erases a user wholesale and records nothing about what was rejected, so it is
+not a tombstone. The hosted Claude server has per-id `cognicore_forget` and no
+account-wide equivalent.
 
 ## 9. Reliability, Safety, and Trust
 
-**`trust_state` — earned.** A discrete `state` column defaulting to `candidate`,
-with `verified` and `archived` in use.
+**`trust_state` — earned.** A discrete `state` defaulting to `candidate`, with
+`archived` and `deleted` withheld from every search arm and unverified
+experiences withheld from the session-start brief. Two qualifications travel with
+it: the verify gate accepts any non-empty command with a zero exit code, which is
+the default, and the category read returns archived rows.
 
-**`scope_enforced` — earned**, with the post-filter caveat stated in the matrix
-rather than buried here.
+**`scope_enforced` — earned**, on the extension server's project id and the
+session-start project key, both SQL predicates on a runtime-derived key. The
+brief's experiences section and sync pointer cross that key, the local MCP recall
+and the hosted recall apply none, and the hosted per-account file is a physical
+partition: a real boundary, and not the one this mark measures.
 
-**`tombstone` — not found.** The vocabulary does not appear in the package;
-`supersedes` is record-keyed. The near-miss is real and worth naming: because the
-Chroma backend indexes `supersedes` as queryable metadata, the system can already
-answer "what replaced this entry", which is the lookup a tombstone needs. What is
-missing is keying it on the normalised *value*, so a re-extraction of the same
-claim is not recognised as the thing already replaced.
+**`negative_eval` — earned, on the hook test.** `tests/test_hooks.py:61-79`
+saves a session, requires seven named values in that project's brief and the
+fake key `sk-test-FAKE` absent from the same brief, then asserts a second
+project's session start against the same store injects nothing. The
+state-filtering tests are weaker than they look: each exclusion case's database
+holds only the archived or deleted row, so `== []` would also pass against a
+search returning nothing, and the active-entry control runs in a separate test
+on a separate database (`tests/test_sqlite_state_filtering.py:40-73`).
 
-**`audit_log` — not found.** `events.py` is a publish/subscribe observer bus with
-`subscribe` and `publish` over in-process callbacks, not a persisted mutation
-record. Searched the package for an append-only event table or a log writer and
-found none.
+**`tombstone` — not found.** `supersedes` and `invalidated_by` are record-keyed,
+forget hard-deletes, and a `rejected` decision in a handoff is displayed as
+*"Rejected: …"* in the brief without gating any write. The exact-text dedupe
+above is the near-miss: it keeps an archived statement archived on re-save, and
+forgets a deleted one.
 
-**`bitemporal` — not found.** `temporal.py` exists and carries no `valid_from`,
-`valid_to`, `valid_at` or `effective` field; the schema has `timestamp` and
-`last_accessed`, both record time.
+**`audit_log` — not found.** `events.py` is an in-process publish/subscribe
+bus, `replay/store.py` records agent trajectory events, and the safety layer's
+audit is an in-memory list of action decisions; none records a memory mutation.
 
-**`human_review` and `negative_eval` — not assessed.** A benchmark harness,
-`analyze_verdicts.py` and `run_production_audit.py` are present and were not
-traced; neither mark is claimed in either direction.
+**`bitemporal` — not found.** `temporal.py` carries no valid-time field, and the
+schema's `timestamp` and `last_accessed` are record time.
+
+**`human_review` — not found.** `cognicore_verify_experience` is a tool on the
+agent's own surface (`remote.py:1134`, `chatgpt.py:274`), and its evidence is
+the agent's own JSON, so the producer clears its own candidate state. The viewer
+(`cognicore/memory/viewer.py`) is read-only.
 
 ## 10. Tests, Evals, and Benchmarks
 
-The repository is unusually eval-heavy: `benchmark.py`, `cognicore_bench/`,
-`cognicore_benchmarks/`, `run_reranking_benchmark.py`, `analyze_failures.py`,
-`analyze_verdicts.py`, `analyze_verdicts_multihop.py`, a `results/` directory and
-`trajectories_export.jsonl`.
+`tests/` holds 1,189 test functions, run in CI on three Python versions, plus a
+fault-injection harness: `tests/test_mem0_bridge.py::TestVerifierDefeatVector`
+re-runs the import reachability test under a patched recall seam and asserts it
+goes red. I ran nothing from the repository for this reading.
 
-It is also loose at the root: fourteen `test_*.py` files sit beside `tests/`,
-several of them provider smoke tests (`test_groq.py`, `test_gemini_sdk.py`,
-`test_quota_15.py`), which is scratch work committed rather than a suite. Two
-`.db` files and a `validation.log` are committed alongside them. I ran nothing;
-every figure below is read from a committed run.
+**The 0.9.3 memory ablation is not in the tree at this pin.**
+`benchmark_output/benchmark_report.md` and its CSV were untracked as generated
+data in `de8183da` on 16 October 2026. At
+[`08d91395a5d4c6e714a141b2f42d91deb4030c88`](https://github.com/cognicore-dev/cognicore-env/commit/08d91395a5d4c6e714a141b2f42d91deb4030c88)
+the report's figures recompute exactly from `benchmark_results.csv`, which I
+aggregated with a short script of my own: 90 runs per arm, solve rate 1.1% →
+12.2%, accuracy 12.6% → 19.9%, repeated failures 76 → 91.
 
-**A committed ablation, and it is designed better than most in this atlas.**
-`benchmark_output/benchmark_report.md` records a run at version 0.9.3 with seed
-42: six environments, three difficulties, five episodes per configuration, 90
-task runs per condition. The conditions differ in exactly one thing, stated in
-the file — *"the **only** variable is whether execution history persists between
-episodes"* — with the same agent architecture, the same tasks and the same seed
-on both arms. Single-variable ablations of memory against no-memory are what this
-atlas asks for and almost never finds.
+The breakdown is the finding. `SafetyClassification` moves 7% → 73% solve,
+`RealWorldSafety` moves accuracy 33% → 37%, and four of six environments are 0%
+on both arms. The headline gain is one environment, and repeated failures — the
+metric the stated hypothesis names — rose under memory.
 
-**Its own table then undercuts its headline, in two places.** The aggregate reads
-solve rate 1.1% → 12.2% and accuracy 12.6% → 19.9%. The per-environment
-breakdown shows where all of it came from: `SafetyClassification` moves 7% → 73%
-solve and 42% → 82% accuracy, `RealWorldSafety` moves accuracy 33% → 37%, and
-the remaining four environments — CodeDebugging, RealWorldCodeBugs, Planning,
-WorkflowAgent — are 0% on both arms, before and after. So the headline is one
-environment of six, and a reader who stops at the aggregate learns the opposite
-of what the breakdown says.
-
-The second is sharper because it is the metric the hypothesis names. The stated
-hypothesis is that *"AI agents perform better when they can access relevant
-execution history from previous failures"*, and the report defines a repeated
-failure as reusing a strategy that already failed on the same root cause. Memory
-made that **worse**: 76 repeated failures on the baseline against 91 with memory,
-0.84 against 1.01 per task. The file offers an explanation — memory-enabled
-agents *"explore more strategy combinations across episodes"* — and no evidence
-for it, then redirects: *"The key metric is accuracy, which improved
-significantly."* Choosing the metric that moved after seeing which moved is the
-thing an ablation exists to prevent, and this one is honest enough to print the
-number that disagrees with it, which is more than most.
-
-The learning curves are the part to keep. In the one environment that moved,
-`SafetyClassification` goes 40% → 90% → 100% → 100% → 100% across five episodes,
-which is a real accumulation curve; `RealWorldSafety` goes 40% → 60% → 50% →
-60% → 40%, which is noise. Both are printed.
+The artifacts committed at this pin report without raw outputs: the LongMemEval
+recall table in `docs/benchmarks.md` has no per-question results beside it, and
+`docs/transfer-audit.md` reports fact-recovery and token figures from
+`scripts/bench_transfer.py`, which CI runs without committing its output. No
+figure from either is repeated here.
 
 ## 11. For Your Own Build
 
@@ -336,73 +374,139 @@ which is a real accumulation curve; `RealWorldSafety` goes 40% → 60% → 50% �
 
 - **`state DEFAULT 'candidate'`.** One line of DDL that makes "not yet assessed"
   representable, which a confidence float cannot do.
-- **Separating `used_count` from `ignored_count`.** Recording that a memory
-  surfaced and was *declined* is the feedback signal most retrieval scoring in
-  this atlas lacks — it distinguishes a bad memory from an unretrieved one.
-- **`creation_reason` and `source_component` as columns.** Provenance in the
-  schema rather than in a metadata blob means it survives a backend swap.
-- **Making supersession queryable.** Storing `supersedes` as searchable metadata
-  rather than an opaque column turns a link into a lookup.
+- **A handoff with a priority order and a budget.** Goal, state, open tasks,
+  decisions, facts, filled until the budget is spent, with the omitted sections
+  named so the agent can fetch them — a brief whose size the caller controls.
+- **Negative tests on every search arm.** One fixture, one state change, one
+  `== []` per arm, and an active entry as the control.
+- **Reading the transcript in the hook.** Capture does not depend on the agent
+  remembering to save.
 
 ### Avoid
 
-- **Scope as a post-filter.** If the backend applied a limit, it applied it to
-  the unscoped set. Push the predicate down, or do not apply a limit above it.
-- **Six backends behind one contract with different capabilities.** A caller
-  cannot tell whether their backend filters scope natively or in Python, and the
-  difference changes what a limited query returns.
+- **A counter with no writer.** `used_count` and `ignored_count` are the
+  interesting signal, and nothing in the shipped paths increments them.
+- **A predicate on some reads.** Search withholds archived rows; the category
+  read beside it does not, and an agent tool reads the category.
+- **A sale flag in place of a listing.** Persist what was listed, or the listing
+  arguments are a preview.
 
 ### Fit
 
-This suits a team that wants **a memory service with an epistemic model already
-in the schema** and is prepared to choose a backend deliberately. The candidate
-state and the utility ledger are the reasons to read it, and both are portable as
-ideas even if nothing else is adopted.
-
-Poor fit if the scope boundary has to be strict — the post-filter is a real
-limitation under a limit — or if you want a small dependency: this ships as an
-environment with a benchmark programme and a paper directory attached.
+This suits a developer who wants **Claude Code and Codex sessions to resume each
+other** with no model call at save time, locally or through a hosted account.
+Poor fit if the project boundary has to hold on recall, if verification must mean
+something an agent cannot type, or if you want the memory library without the
+research programme around it.
 
 ## 12. Open Questions
 
-- **What moves an entry from `candidate` to `verified`?** The states exist in the
-  schema and the transition was not traced to a gate.
-- **How do `state` and `correct` relate?** Two epistemic fields with no
-  constraint between them, and no reconciling code was found.
-- **Which backends filter scope natively?** The scoped wrapper exists because
-  some cannot; which is which determines whether a limited scoped query is safe.
-- **What do the committed `.db` files hold?** Two databases are in the tree at
-  this commit, and whether they are fixtures or captured runs was not
-  established.
+- **Is the utility ladder meant to run?** `run_lifecycle_pass` and
+  `record_outcome` are complete and called by nothing, tests included.
+- **Should the hosted recall default to a scope?** The comment beside
+  `scope="all"` says it exists so remembered notes and session facts are both
+  found; within one account file that is a design choice rather than a leak.
+- **Which backends filter scope natively?** SQLite does on every search arm and
+  Chroma takes `scope` as metadata; the TF-IDF, graph and multihop backends were
+  not traced.
 
 ## Appendix: File Index
 
 **Storage and schema**
 - `cognicore/memory/sqlite_backend.py` — `memory_entries`, `sessions`,
   `session_memories`
-- `cognicore/memory/base.py` — the backend contract
+- `cognicore/memory/base.py` — the backend contract, `MemoryState`, `MemoryScope`
 - `cognicore/research/persistent_store.py` — episodes, strategies, reflections
 
 **Backends**
 - `chroma_backend.py`, `graph_backend.py`, `hybrid_backend.py`,
-  `multihop_backend.py`, `tfidf_backend.py`, `vector_memory.py`
+  `multihop_backend.py`, `tfidf_backend.py`, `vector_memory.py`, `scoped.py`
 
-**Scope, lifecycle and utility**
-- `scoped.py` — the read-path filter
-- `lifecycle.py`, `sleep.py`, `temporal.py`, `utility.py`, `evaluator.py`
+**Sessions and handoff**
+- `cognicore/hooks.py`, `cognicore/sync.py`
+- `cognicore/memory/context_preservation.py`, `handoff.py`, `transcript.py`,
+  `redact.py`, `ai_compress.py`, `viewer.py`
 
-**Write path**
-- `extractor.py`, `categorize.py`, `decompose.py`, `planner.py`
+**Lifecycle, experience and utility**
+- `cognicore/memory/lifecycle.py`, `sleep.py`, `utility.py`, `temporal.py`
+- `cognicore/experience/manager.py`, `verification.py`, `retrieval.py`,
+  `revalidation.py`, `schema.py`
 
 **Integration**
-- `mcp_launch_demo.py`, `claude-plugin/`, `cognicore/ui/server.py`,
-  `openenv.yaml`, `Dockerfile`
+- `cognicore/mcp/server.py`, `cognicore/extension/server.py`,
+  `cognicore/connectors/remote.py`, `cognicore/connectors/chatgpt.py`
+- `cognicore/commerce/transfer.py`, `marketplace.py`
+- `plugins/cognicore/`, `plugins/cognicore-memory/`,
+  `plugins/cognicore-experience/`, `.claude-plugin/marketplace.json`, `server.json`
 
 **Evals**
-- `benchmark.py`, `cognicore_bench/`, `cognicore_benchmarks/`,
-  `run_reranking_benchmark.py`, `analyze_verdicts.py`, `results/`
+- `tests/test_sqlite_state_filtering.py`, `tests/test_hooks.py`,
+  `tests/test_remote_tenant_isolation.py`, `tests/test_mem0_bridge.py`
+- `benchmarks/`, `docs/benchmarks.md`, `docs/transfer-audit.md`,
+  `scripts/bench_transfer.py`
+
+### Recorded searches
+
+Run from the repository root at the pinned commit with `/usr/bin/git grep`.
+
+- **`ScopedMemoryBackend` has no product caller.**
+  `git grep -n -w ScopedMemoryBackend -- .` returns the class at
+  `cognicore/memory/scoped.py:8` and two lines of `tests/test_persistence_fixes.py`.
+- **The utility pass and outcome recorder have no caller.**
+  `git grep -n -E '\.(run_lifecycle_pass|batch_score)\(|memory\.record_outcome\(|lifecycle\.record_outcome\(' -- .`
+  returns nothing; `git grep -n -w -E 'run_lifecycle_pass|batch_score' -- .`
+  returns only the two definitions, and `git grep -n -w record_outcome -- cognicore`
+  the definition at `cognicore/memory/lifecycle.py:99` and the unrelated
+  `cognicore/decision/` controller.
+- **No archived predicate on the category read.**
+  `git grep -n -E 'state NOT IN' -- cognicore/memory/sqlite_backend.py` returns
+  lines 332, 424, 455, 608, 625, 674, 729 and 738, none inside
+  `get_by_category` (656-670).
+- **No tombstone vocabulary.**
+  `git grep -n -i -E 'tombstone|suppress' -- 'cognicore/memory/*.py' 'cognicore/experience/*.py' 'cognicore/connectors/*.py' 'cognicore/mcp/*.py'`
+  returns nothing.
+- **No valid-time field.**
+  `git grep -n -i -E '(^|[^[:alnum:]_])(valid_(from|to|at|until)|effective_(from|at|date))' -- '*.py'`
+  returns nothing.
+- **No persisted listing.** `git grep -n -w memory_prices -- .` returns only the
+  `CREATE TABLE` at `cognicore/commerce/marketplace.py:62`.
+- **One account-wide erasure tool.**
+  `git grep -n -E 'def cognicore_delete_all_data' -- .` returns
+  `cognicore/connectors/chatgpt.py:332` alone.
+- **No test of the extension server's project scope.**
+  `git grep -n -E 'MemoryScope\.PROJECT|scope="project"' -- tests` returns nothing.
+- **The verify verb is on the agent surface.**
+  `git grep -n -E 'def cognicore_(verify|promote|approve|review)' -- 'cognicore/*.py'`
+  returns `cognicore/connectors/chatgpt.py:274` and
+  `cognicore/connectors/remote.py:1134`.
+- **The used and ignored counters have one writer.**
+  `git grep -n -E 'on_used\(|on_ignored\(' -- cognicore` returns the calls inside
+  `record_outcome` at `cognicore/memory/lifecycle.py:111-115`, the definitions,
+  and a docstring.
+- **No writer of `promoted` or `deleted`.**
+  `git grep -n -E "verification_status[[:space:]]*=[^=]" -- 'cognicore/*.py'`
+  returns `CANDIDATE`, `VERIFIED`, `INVALID` and `TRANSFERABLE` assignments only;
+  `git grep -n -E 'DELETED\.value' -- 'cognicore/*.py'` returns only
+  `is_searchable` at `cognicore/memory/base.py:260`.
+- **No state constraint in the DDL.**
+  `git grep -n -E 'CHECK[[:space:]]*\(' -- cognicore/memory/sqlite_backend.py`
+  returns nothing.
+- **The sleep pass has one caller.**
+  `git grep -n -E 'SleepProcessor\(|trigger_sleep\(' -- cognicore` returns
+  `cognicore/cli.py:349` and `trigger_sleep` itself, which
+  `git grep -n -w trigger_sleep -- .` shows has no caller.
+- **No raw outputs beside the new benchmark tables.**
+  `git ls-files 'benchmarks/longmemeval/*.json' 'benchmarks/longmemeval/*.jsonl' 'benchmarks/longmemeval/*.csv'`
+  returns nothing, and `git ls-files '*bench_transfer*'` returns only
+  `scripts/bench_transfer.py`.
+- **No product caller of the two uncalled state writers.**
+  `git grep -n -w -E 'TranscriptExtractor|promote_to_transferable' -- . ':!cognicore/memory/extractor.py' ':!cognicore/experience/verification.py'`
+  returns the package export in `cognicore/memory/__init__.py` and
+  `tests/test_memory_extractor.py`.
 
 ## History
+
+**2026-11-07** — [`6fc657d0f9554235993f55d5f2e9136d82a12fd2`](https://github.com/cognicore-dev/cognicore-env/commit/6fc657d0f9554235993f55d5f2e9136d82a12fd2) — 174 commits on, release 0.12.0: session handoffs captured by Claude Code and Codex hooks, a hosted multi-tenant server, and Apache-2.0 in place of MIT. `negative_eval` added on the hook test's populated brief, not on the single-row state-filtering cases; the other two marks hold on corrected bases, [section 9](#9-reliability-safety-and-trust). Wrong at the previous pin, in the overstating direction: the scope record rested on `ScopedMemoryBackend`, which nothing called; the trust record's `:643` was the type read, while search filtered no state until `11e46955`; and the used/ignored ledger had no writer. The 0.9.3 ablation left the tree and recomputes from its old CSV, [section 10](#10-tests-evals-and-benchmarks). Screen: 15 auto-run surfaces against 8, hooks named in [section 8](#8-agent-integration); 5 FRESH, 2 genuine. Nothing installed or run.
 
 **2026-11-02** — [`08d91395a5d4c6e714a141b2f42d91deb4030c88`](https://github.com/cognicore-dev/cognicore-env/commit/08d91395a5d4c6e714a141b2f42d91deb4030c88) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 6 auto-run surfaces, 8 in all: hooks registered in `cognicore-experience/hooks/hooks.json` on SessionStart and PostToolUse; MCP servers declared in `claude-plugin/.mcp.json` and `cognicore-experience/.mcp.json`. The hook and MCP files were read at the pin as data; nothing was installed or run, and no mark changes.
 

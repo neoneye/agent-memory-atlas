@@ -18,7 +18,7 @@ Neither counts as screened.
 | Result | Count |
 | --- | ---: |
 | Repositories with an auto-run surface (`RUNS`) | 376 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 350 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 351 |
 | Repositories with build-time execution (`EXEC`) | 575 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
 | Repositories that could not be screened | 0 |
@@ -92,7 +92,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`claudinio-brain`](../../content/systems/claudinio-brain.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`codemem`](../../content/systems/codemem.md) | `.claude-plugin/`, `.opencode/`, `opencode.jsonc`, `plugins/claude/.claude-plugin/plugin.json`, `plugins/claude/hooks/`, `plugins/claude/hooks/hooks.json` |
 | [`cognee`](../../content/systems/cognee.md) | `.devcontainer/devcontainer.json` |
-| [`cognicore`](../../content/systems/cognicore.md) | `.claude-plugin/`, `.cursorrules`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/.mcp.json`, `cognicore-experience/.claude-plugin/plugin.json`, `cognicore-experience/.mcp.json`, `cognicore-experience/hooks/`, `cognicore-experience/hooks/hooks.json` |
+| [`cognicore`](../../content/systems/cognicore.md) | `.claude-plugin/`, `.cursor/mcp.json`, `.cursorrules`, `.vscode/mcp.json`, `plugins/cognicore-experience/.claude-plugin/plugin.json`, `plugins/cognicore-experience/.mcp.json`, `plugins/cognicore-experience/hooks/`, `plugins/cognicore-experience/hooks/hooks.json` |
 | [`cogz`](../../content/systems/cogz.md) | `server.json` |
 | [`commonground`](../../content/systems/commonground.md) | `.gitmodules` |
 | [`compartment`](../../content/systems/compartment.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `mcp.json`, `server.json` |

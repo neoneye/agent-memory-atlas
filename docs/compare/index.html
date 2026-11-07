@@ -5815,37 +5815,44 @@ graph can harden errors</td>
 <tr>
 <td><a href="../systems/cognicore/"><code>cognicore</code></a></td>
 <td>A <code>memory_entry</code> with a state, a category, a scope pair,
-provenance columns and eight outcome counters</td>
-<td>Swappable backends behind one contract — SQLite, Chroma, TF-IDF,
-graph, multihop and hybrid; a separate research store for episodes,
-strategies and reflections</td>
-<td>Backend-specific search with a scoped wrapper filtering on the read
-path, plus multihop and reranking paths</td>
-<td>Extraction and categorisation into a <code>candidate</code> state;
-<code>supersedes</code> set when a newer entry replaces an older
-one</td>
-<td><code>supersedes</code> points at the entry being replaced and is
-queryable metadata in the Chroma backend; state moves to
-<code>archived</code>; no rejected-value record</td>
-<td><code>scope</code> and <code>scope_id</code> on every entry, applied
-by <code>ScopedMemory</code> on the read path as a Python filter when
-the backend cannot express it</td>
-<td>MCP launch path, a Claude Code plugin directory, an HTTP and UI
-server, and an OpenEnv manifest</td>
-<td>A <code>sleep</code> module, lifecycle and decay passes, a utility
-scorer and a task queue table</td>
-<td><code>state</code> defaults to <code>candidate</code> and moves
-through <code>verified</code>, <code>active</code> and
-<code>archived</code>; a separate <code>correct</code> flag and
-positive/negative outcome counters</td>
-<td>A state that begins at <code>candidate</code> rather than at true,
-and a utility ledger that distinguishes a retrieved memory from a used
-one and from an ignored one</td>
-<td>The category read over-fetches five times the limit and scopes in
-Python, so a caller whose scope is sparse in a category under-returns
-silently; supersession is record-keyed with no rejected-value record;
-the committed benchmark's headline gain comes from one of six
-environments</td>
+provenance columns and eight outcome counters; a session row holding a
+versioned handoff JSON and a project key</td>
+<td>SQLite per surface: one local file for the hooks and local MCP
+server, one for the extension server, one per account on the hosted
+server plus a shared marketplace database; Chroma, TF-IDF, graph,
+multihop and hybrid backends behind the same contract</td>
+<td>SQLite FTS5 with BM25 and LIKE fallbacks, optional embeddings; a
+token-budgeted session-start brief selected by project; experience
+retrieval filtered by verification status and environment
+compatibility</td>
+<td>Rule-based handoff extraction from Claude Code and Codex transcripts
+with secret redaction and exact-text dedupe; optional Claude API
+compression; agent tools for notes, sessions and structured
+experiences</td>
+<td>Forget tools hard-delete by id; a CLI sleep pass archives
+contradictions and merges duplicates; <code>supersedes</code> and
+<code>invalidated_by</code> are record-keyed; no rejected-value
+record</td>
+<td>Project id from the git root on the extension server and a project
+key on session start, both SQL predicates; per-account files on the
+hosted server; no scope on the local MCP recall</td>
+<td>Three Claude Code plugins, Codex hooks, a local stdio MCP server, a
+hosted Streamable HTTP MCP server with GitHub and Google sign-in, a
+ChatGPT connector, and sync between local and hosted</td>
+<td>No scheduler; hooks save on Stop, PreCompact and SessionEnd, and
+<code>cognicore sleep</code> runs consolidation on demand</td>
+<td><code>state</code> defaults to <code>candidate</code>; search
+withholds <code>archived</code> and <code>deleted</code>; experiences
+need <code>verified</code> for the session-start brief, written by a
+self-attested evidence gate</td>
+<td>A session handoff with goal, state, decisions, open tasks and exact
+values, captured from the transcript with no model call and resumed
+under a token budget; a state predicate pinned by negative tests on
+every search arm</td>
+<td>The used and ignored counters and the utility promotion pass have no
+caller; the verify gate accepts any non-empty command; listing for sale
+exposes the whole store to purchase, whatever the listing filtered; the
+local MCP recall spans projects</td>
 </tr>
 <tr>
 <td><a href="../systems/cognis/"><code>cognis</code></a></td>
@@ -36593,7 +36600,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>503 of 790:</em> <a
+<p><em>504 of 790:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -36681,6 +36688,7 @@ href="../systems/codewiki-plus/"><code>codewiki-plus</code></a>, <a
 href="../systems/codex-dev-mcp-suite/"><code>codex-dev-mcp-suite</code></a>,
 <a href="../systems/cognee/"><code>cognee</code></a>, <a
 href="../systems/cognee-rs/"><code>cognee-rs</code></a>, <a
+href="../systems/cognicore/"><code>cognicore</code></a>, <a
 href="../systems/cognis/"><code>cognis</code></a>, <a
 href="../systems/cogz/"><code>cogz</code></a>, <a
 href="../systems/compartment/"><code>compartment</code></a>, <a
@@ -37133,7 +37141,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-503 repositories of
+504 repositories of
 790 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together

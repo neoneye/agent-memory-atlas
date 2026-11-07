@@ -2377,10 +2377,13 @@ one conversation thread, or a licence.</li>
 <h3 id="cognicore"><a
 href="../systems/cognicore/"><code>cognicore</code></a></h3>
 <ul>
-<li>Best idea: <code>state TEXT DEFAULT 'candidate'</code> — a memory
-arrives unassessed rather than believed, which a confidence float cannot
-express, plus a utility ledger separating retrieved from used from
-<em>ignored</em>.</li>
+<li>Best idea: <strong>a session handoff captured from the transcript
+with no model call.</strong> Claude Code and Codex hooks classify the
+conversation into goal, current state, decisions with reasons, open
+tasks, facts and exact values, and the next session start injects it
+under a token budget, selected by project — over rows declared
+<code>state TEXT DEFAULT 'candidate'</code>, so a memory arrives
+unassessed rather than believed.</li>
 <li>Second idea: <strong>an imported memory resets to
 <code>candidate</code> and keeps <code>source_agent</code> and
 <code>creation_reason="shared"</code>.</strong>
@@ -2390,38 +2393,31 @@ another agent had verified arrives unverified and identifiable as
 imported. That is the shape <a
 href="../systems/portable-handoff/">Portable Handoff</a> argues for, in
 two lines.</li>
-<li>Biggest risk: <strong>the committed ablation's headline is one
-environment of six, and the metric its hypothesis names moved the wrong
-way.</strong> <code>benchmark_output/benchmark_report.md</code> is a
-genuine single-variable run — same agent, same tasks, same seed, memory
-the only difference — reporting solve rate 1.1% → 12.2%. The breakdown
-shows <code>SafetyClassification</code> at 7% → 73% and four of six
-environments at 0% on both arms. And repeated failures, which the report
-defines as reusing a strategy that already failed on the same root
-cause, rose from 76 to 91 under memory; the file explains that as
-broader exploration, offers no evidence, and redirects to accuracy.
-Beside that, <code>MemoryTransfer.share</code> reads with
-<code>scope=None</code>, copies the sender's <code>scope</code> and
-<code>scope_id</code> into the receiver's store, and carries
-<code>confidence</code> across verbatim while the state resets — so the
-half of the trust surface that survives the trip is the float.</li>
-<li>Most reusable component: the four column groups on
-<code>memory_entries</code> — content, epistemic, scope, and
-provenance-plus-utility — which put <code>creation_reason</code> and
-<code>source_component</code> in the schema rather than in a metadata
-blob.</li>
-<li>Maturity impression: MIT, 79,439 lines, six backends behind one
-contract, a benchmark programme and a paper directory — beside fourteen
-loose <code>test_*.py</code> provider smoke files and two committed
-<code>.db</code> files at the repository root.</li>
-<li>Study when: you want an epistemic state in the schema rather than in
-a prompt, or a retrieval feedback signal that records what the agent
-declined.</li>
-<li>Do not copy when: you want a dependency rather than an environment,
-or you need <code>get_by_category</code> to be exhaustive — it
-over-fetches five times the limit and scopes in Python, so a caller
-sparse in a category under-returns with no error. <code>search</code>
-does push the predicate into the backend.</li>
+<li>Biggest risk: <strong>the trust and utility surfaces are wider in
+the schema than in the code that writes them.</strong>
+<code>used_count</code>, <code>ignored_count</code> and the utility
+promotion pass have no caller; the gate that writes
+<code>verified</code> accepts any non-empty command, because
+<code>exit_code</code> defaults to 0; and the hosted
+<code>cognicore_list_for_sale</code> persists only a flag, so a purchase
+copies every seller entry at confidence 0.7 or above whatever the
+listing filtered. The local MCP recall searches every project's session
+facts.</li>
+<li>Most reusable component: the token-budgeted resume — goal, state,
+open tasks, decisions and facts in priority order, with the omitted
+sections named so the agent can fetch them by <code>session_id</code>
+and <code>section</code>.</li>
+<li>Maturity impression: Apache-2.0 (MIT until 5 November 2026), a
+0.12.0 release, 1,189 test functions in CI, including a session-start
+test that keeps a fake key and a second project out of a populated brief
+— beside RL environments, a benchmark programme and a NEXUS paper in the
+same package, and a 0.9.3 ablation untracked as generated data.</li>
+<li>Study when: you want sessions to carry between coding agents without
+an extraction model, or an epistemic state in the schema rather than in
+a prompt.</li>
+<li>Do not copy when: you need the project boundary to hold on recall,
+verification an agent cannot satisfy by typing, or a dependency rather
+than an environment.</li>
 </ul>
 <h3 id="alma-memory"><a
 href="../systems/alma-memory/"><code>alma-memory</code></a></h3>
