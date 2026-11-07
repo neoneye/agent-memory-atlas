@@ -108,14 +108,14 @@ linter freezes, and authority decides whether a violation blocks.</p>
               <strong>krakozavr/MemContinuum</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/krakozavr/MemContinuum/commit/16293db855d5bf6922360571acb027850e4bca50" title="16293db855d5bf6922360571acb027850e4bca50">
+            <a class="meta-pill revision-pill" href="https://github.com/krakozavr/MemContinuum/commit/d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8" title="d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8">
               <span>Analyzed revision</span>
-              <code>16293db8…</code>
+              <code>d5d29fbc…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-10-15</strong>
+              <strong>2026-11-07</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/krakozavr--MemContinuum" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -125,15 +125,16 @@ linter freezes, and authority decides whether a violation blocks.</p>
                       </div>
                               <div class="document-meta document-facts">
             <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
-            <div class="meta-pill fact-pill"><span>Size</span><strong>15,519
+            <div class="meta-pill fact-pill"><span>Size</span><strong>19,916
 lines of Python outside tests, fixtures and the benchmark (memidx.py
-9,602, memlint.py 3,007), 3,249 more under bench/, and 14,340 lines of
+13,414, memlint.py 3,541), 3,249 more under bench/, and 16,166 lines of
 shell under hooks/ and scripts/</strong></div>
-            <div class="meta-pill fact-pill"><span>Activity</span><strong>409
-commits on main, 30 August – 13 October 2026, under two author names the
-licence gives as one person; version 0.2.0</strong></div>
-            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,059
-test functions in 19 modules, 47,161 lines; none run for this
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>621
+commits on main, 30 August – 6 November 2026, under two author names the
+licence gives as one person; version 0.5.0, tagged at 3aaa7ef, with 15
+later commits on the shell-edit ledger</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,704
+test functions in 23 modules, 57,754 lines; none run for this
 reading</strong></div>
           </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -173,46 +174,57 @@ new link carrying <code>reverses</code> and a
 <code>reason_for_change</code>, and the link it reverses keeps its
 text.</p>
 <p><code>memlint.py --against-ref REF</code> enforces that
-(<code>memlint.py:2077-2155</code>, <code>:2404-2680</code>). It
+(<code>memlint.py:2269-2347</code>, <code>:2877-3197</code>). It
 compares every link against the same link at a git ref and reports any
 changed field outside
 <code>{link, status, superseded_by, promoted_by}</code>. That is a set
 difference, so a field added to the schema later is frozen without
 anyone listing it. A link whose parsed fields survive but whose raw
 bytes changed is refused as a reformat. So is a removed link, a deleted
-record file, and a new link inserted below a recorded one. Three
-lifecycle fields may each move forward once, only into a terminal state,
-and only as the sole change on that link.</p>
+record file, a new link inserted below a recorded one, and recorded
+links reordered. Three lifecycle fields may each move forward once, only
+into a terminal state, and only as the sole change on that link.</p>
+<p>The same check covers the topic's <code>standing:</code> list, which
+decides what every session opens with (<code>:2743-2874</code>). A
+commit that adds or removes a standing link must add exactly one
+<code>standing_marks:</code> row for that change, carrying who recorded
+it, when, on whose authority, from what source and why. Recorded rows
+are frozen by fields and bytes like links, a row matching no change is
+refused, and the row's authority must be owner-level.</p>
 <p>The store's <code>pre-commit</code> hook runs the schema lint and
 then that check, and exits 1 on either
-(<code>hooks/pre-commit-append-only.sh:161-169</code>,
-<code>:183</code>, <code>:228-231</code>, wired by
-<code>scripts/repo-init.sh:1615</code>).
-<code>git commit --no-verify</code> skips it, and the installer's
-documentation says the real guarantee for a shared store is the same
-check in CI behind a protected branch
-(<code>hooks/install-hooks.md:224-227</code>); no workflow, template or
-script in the tree provides that job. Each link carries
-<code>recorded_by</code> and <code>recorded_at</code>, so the chain is
-the store and the record of every ruling made in it, which earns
-<code>audit_log</code>.</p>
+(<code>hooks/pre-commit-append-only.sh:173-179</code>,
+<code>:192</code>, <code>:201</code>, wired by
+<code>scripts/repo-init.sh:1717</code>).
+<code>git commit --no-verify</code> skips it. The post-commit hook then
+re-runs both checks against the parent commit and leaves a marker the
+next session start reports
+(<code>hooks/post-commit-reindex.sh:258-374</code>). The marker is
+removed by the next clean commit, which compares only against its own
+parent. The installer's documentation says the real guarantee for a
+shared store is the same check in CI behind a protected branch
+(<code>hooks/install-hooks.md:321-324</code>); no workflow, template or
+script in the tree provides that job. Each link and each standing mark
+carries <code>recorded_by</code> and <code>recorded_at</code>, so the
+chain is the store and the record of every ruling made in it, which
+earns <code>audit_log</code>.</p>
 <p><strong>Authority decides what a record may do.</strong> Five values
 are allowed on a ruling, and they collapse into three citation tiers:
 <code>owner-verbatim</code> and <code>owner-ratified</code> are
 CONSTRAINT; the other three are HOLD when they carry evidence and
 CONTEXT when they do not; anything not <code>active</code> is CONTEXT
-whatever its authority (<code>memidx.py:4692-4711</code>). Search
+whatever its authority (<code>memidx.py:5831-5850</code>). Search
 defaults to <code>active</code>, so a superseded, declined or
 provisional link row is not returned unless asked for
-(<code>:3122-3149</code>, <code>:3243-3247</code>). The session-start
+(<code>:3613-3640</code>, <code>:3689-3693</code>). The session-start
 digest carries a standing link only when it is active and owner-level
-(<code>:5536-5539</code>). A discrete status that withholds a memory,
+(<code>:6669-6672</code>). A discrete status that withholds a memory,
 applied as a filter, is what <code>trust_state</code> asks for.</p>
 <p>One more mark. <strong><code>negative_eval</code></strong>: one
 search over three records planted with the same term returns the real
 topic and asserts both inbox drops are absent, then flips a single flag
 and asserts both are present
-(<code>tests/test_memidx.py:3295-3359</code>).</p>
+(<code>tests/test_memidx.py:3418-3482</code>).</p>
 <p><strong><code>human_review</code> is withheld.</strong> Anything
 under <code>inbox/</code> indexes as <code>type: inbox</code> whatever
 its frontmatter claims and stays out of search; a
@@ -222,12 +234,17 @@ is absent is an actor the producing agent cannot be. The route out of
 staging is appending a link whose authority is
 <code>owner-verbatim</code> or <code>owner-ratified</code>, and the
 linter describes the second as <em>"the orchestrator's own
-paraphrase"</em> (<code>memlint.py:126</code>). The agent writes the
+paraphrase"</em> (<code>memlint.py:141</code>). The agent writes the
 link with its own Edit and Write tools; the linter checks the shape and
-never that an owner affirmed it.</p>
+never that an owner affirmed it. A standing mark's owner-level authority
+is the same kind of field: the caller passes it to
+<code>mark-standing --authority</code>, and <code>recorded_by</code>
+falls back from <code>--recorded-by</code> to
+<code>MEMCONTINUUM_RECORDED_BY</code> to <code>memidx</code>
+(<code>memidx.py:12562-12571</code>).</p>
 <p>Three findings sit against the design. <strong>The scope key can
 never exclude anything:</strong> one database holds one project, refused
-outright for a second (<code>memidx.py:1046-1051</code>), so the
+outright for a second (<code>memidx.py:1075-1080</code>), so the
 <code>project</code> predicate guards a stamping accident rather than
 partitioning anything. <strong>A declined ruling is delivered, not
 enforced:</strong> the pre-edit chain hands every link to the model
@@ -249,75 +266,91 @@ There is no <code>paraphrase</code> value, and
 <code>owner-ratified</code> exists so an inference can be promoted
 without being confused with the owner's own words.</p>
 <p>A memory is <strong>used at the moment of an edit</strong>, not when
-someone remembers to ask. Before the Edit or Write tool touches a file,
-a hook resolves that path to the topics whose <code>code_refs</code>
-cover it and injects their chains. When nothing binds the file, it
-searches on the path's words and labels the result <em>"No recorded
-decision binds this file. Nearest by search -- may be unrelated"</em>
-(<code>hooks/mc-fallback-lib.sh:28</code>). The lookup is bounded at two
-seconds, and a timeout says the absence of a matching decision was not
-established.</p>
+someone remembers to ask. When the model issues an Edit or Write, a
+<code>PreToolUse</code> hook resolves the path to the topics whose
+<code>code_refs</code> cover it and returns their chains as additional
+context. The hook runs before the edit reaches disk, and its context
+reaches the model with that edit's result: it governs the next move, not
+the edit that triggered it (<code>hooks/pre-edit-chain.sh:6-14</code>).
+When nothing binds the file, it searches on the path's words and labels
+the result <em>"No recorded decision binds this file. Nearest by search
+-- may be unrelated"</em> (<code>hooks/mc-fallback-lib.sh:28</code>).
+The lookup is bounded at two seconds, and a timeout says the absence of
+a matching decision was not established. A bound file or symbol whose
+bytes differ from the hash captured at binding is named beside the chain
+as changed since capture.</p>
 <p>A few rulings apply everywhere. A topic may list some of its own
 links as <code>standing</code>, and every session opens with a capped
 digest of those that are active and owner-level, at most 24 links and
-4,800 bytes (<code>memidx.py:4605-4606</code>).</p>
+4,800 bytes (<code>memidx.py:5744-5745</code>). Which links are standing
+is itself audited: every change to the list leaves a frozen, attributed
+row.</p>
 <p>Nothing forgets. There is no decay, no consolidation and no
 summariser; a ruling stops applying by being superseded, declined or
 marked historical, and its text stays where it was written.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — a ruling is appended as a link and the store's pre-commit hook refuses any edit, removal, reorder or reformat of a recorded link; a post-commit reindex projects the chain into SQLite, the session opens with the active owner-level standing links, and before an Edit or Write a hook injects the governing chain, or a labelled nearest-by-search guess on a miss, under a two-second watchdog whose timeout says so</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a ruling is appended as a link and the store&#39;s pre-commit hook refuses any edit, removal, reorder or reformat of a recorded link; a post-commit reindex projects the chain into SQLite, the session opens with the active owner-level standing links, and before an Edit or Write a hook injects the governing chain, or a labelled nearest-by-search guess on a miss, under a two-second watchdog whose timeout says so
-flowchart TB
-    AUTH[&quot;an owner, an agent&lt;br/&gt;or a reviewer writes&lt;br/&gt;one ruling&quot;]
-    INBOX[(&quot;inbox/ — a proposal,&lt;br/&gt;typed inbox whatever&lt;br/&gt;it claims, kept out&lt;br/&gt;of search&quot;)]
-    LINK[&quot;appended as a new link:&lt;br/&gt;date, status, kind,&lt;br/&gt;authority, evidence,&lt;br/&gt;rationale, alternatives&quot;]
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a ruling is appended as a link, and a change to the standing list must carry its own audit row; the store's pre-commit hook refuses any edit, removal, reorder or reformat of a recorded link or row, and the post-commit hook re-runs the same checks for a commit that skipped it. The reindexed chain reaches the model twice: as the standing digest at session start, and as the governing chain, or a labelled guess, returned with the result of an Edit or Write, which has already been applied</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a ruling is appended as a link, and a change to the standing list must carry its own audit row; the store&#39;s pre-commit hook refuses any edit, removal, reorder or reformat of a recorded link or row, and the post-commit hook re-runs the same checks for a commit that skipped it. The reindexed chain reaches the model twice: as the standing digest at session start, and as the governing chain, or a labelled guess, returned with the result of an Edit or Write, which has already been applied
+flowchart TD
+    AUTH[&quot;an owner, an agent&lt;br/&gt;or a reviewer&lt;br/&gt;writes one ruling&quot;]
+    INBOX[(&quot;inbox/: a proposal,&lt;br/&gt;kept out of search&quot;)]
+    LINK[&quot;appended as a new link:&lt;br/&gt;date, status, kind,&lt;br/&gt;authority, evidence,&lt;br/&gt;rationale, alternatives;&lt;br/&gt;a standing change adds&lt;br/&gt;one standing_marks row&quot;]
     HOOK{&quot;store pre-commit:&lt;br/&gt;schema lint, then&lt;br/&gt;memlint --against-ref&quot;}
-    REFUSE[&quot;refused: a recorded&lt;br/&gt;link&#39;s fields and bytes&lt;br/&gt;are frozen&quot;]
+    REFUSE[&quot;refused: recorded&lt;br/&gt;links, marks and&lt;br/&gt;anchors are frozen;&lt;br/&gt;a standing change&lt;br/&gt;needs its row&quot;]
     STORE[(&quot;the store is a git repo&lt;br/&gt;of markdown topics&quot;)]
-    IDX[(&quot;post-commit reindex:&lt;br/&gt;SQLite, FTS5, embeddings&quot;)]
+    POST[&quot;post-commit: reindex,&lt;br/&gt;re-run both checks,&lt;br/&gt;mark a bypass&quot;]
+    IDX[(&quot;SQLite index:&lt;br/&gt;FTS5, embeddings&quot;)]
     START[&quot;session start:&lt;br/&gt;standing digest of active&lt;br/&gt;owner-level links&quot;]
-    EDIT[&quot;the model runs&lt;br/&gt;Edit or Write&quot;]
-    LOOK{&quot;pre-edit hook:&lt;br/&gt;does any topic&#39;s&lt;br/&gt;code_refs cover&lt;br/&gt;the path?&quot;}
-    CHAIN[&quot;inject every link&lt;br/&gt;of each topic,&lt;br/&gt;declined ones included&quot;]
-    GUESS[&quot;search the path&#39;s words,&lt;br/&gt;active decisions only,&lt;br/&gt;labelled may be unrelated&quot;]
+    EDIT[&quot;the model issues&lt;br/&gt;Edit or Write&quot;]
+    LOOK{&quot;PreToolUse hook&lt;br/&gt;reads the index:&lt;br/&gt;does any topic&#39;s&lt;br/&gt;code_refs cover&lt;br/&gt;the path?&quot;}
+    CHAIN[&quot;every link of&lt;br/&gt;each topic, declined&lt;br/&gt;ones included, with&lt;br/&gt;changed-since-capture&lt;br/&gt;notes&quot;]
+    GUESS[&quot;search the path&#39;s&lt;br/&gt;words, active only,&lt;br/&gt;labelled may be&lt;br/&gt;unrelated&quot;]
     WD{&quot;answered within&lt;br/&gt;two seconds?&quot;}
-    SILENT[&quot;says retrieval timed out:&lt;br/&gt;absence of a decision&lt;br/&gt;was not established&quot;]
+    SILENT[&quot;timed out: absence&lt;br/&gt;of a decision was&lt;br/&gt;not established&quot;]
+    APPLY[&quot;the edit is applied&lt;br/&gt;either way; the context&lt;br/&gt;arrives with its result&lt;br/&gt;and shapes the next move&quot;]
 
     AUTH -.-&gt; INBOX
     AUTH --&gt; LINK
     LINK --&gt; HOOK
-    HOOK -- &quot;recorded link changed&quot; --&gt; REFUSE
-    HOOK -- &quot;append only&quot; --&gt; STORE
-    STORE --&gt; IDX
+    HOOK -- &quot;row changed&quot; --&gt; REFUSE
+    HOOK -- &quot;appended&quot; --&gt; STORE
+    STORE --&gt; POST
+    POST --&gt; IDX
     IDX --&gt; START
+    START -- &quot;later in the session&quot; --&gt; EDIT
     EDIT --&gt; LOOK
-    IDX --&gt; LOOK
     LOOK -- yes --&gt; CHAIN
     LOOK -- no --&gt; GUESS
     CHAIN --&gt; WD
     GUESS --&gt; WD
     WD -- no --&gt; SILENT
-    WD -- yes --&gt; EDIT</code></pre></details></figure>
+    WD -- yes --&gt; APPLY
+    SILENT --&gt; APPLY</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Two Python programs and a shell layer around Claude Code.</p>
 <ul>
-<li><code>memidx.py</code> (9,602 lines) — the indexer and every read
+<li><code>memidx.py</code> (13,414 lines) — the indexer and every read
 command: <code>reindex</code>, <code>search</code>, <code>chain</code>,
 <code>for-path</code>, <code>why</code>, <code>drift</code>,
-<code>standing</code>, <code>unmapped</code>, <code>check</code>,
-<code>code-search</code>, <code>code-census</code>, <code>stats</code>.
-It owns the SQLite schema for both databases, the FTS5 tables, the
-embedding pipeline and its staleness fingerprint, and the three
-enforcement classes.</li>
-<li><code>memlint.py</code> (3,007 lines) — validation in three parts: a
+<code>standing</code>, <code>context-pack</code>, <code>unmapped</code>,
+<code>check</code>, <code>code-search</code>, <code>code-census</code>,
+<code>stats</code>. Four commands edit topic frontmatter or the inbox
+and commit nothing: <code>bind</code>, <code>mark-standing</code>,
+<code>anchor-backfill</code> and
+<code>propose-bindings --write-inbox</code>. It owns the SQLite schema
+for both databases, the FTS5 tables, the embedding pipeline and its
+background worker, the anchor hashing, and the three enforcement
+classes.</li>
+<li><code>memlint.py</code> (3,541 lines) — validation in three parts: a
 schema and consistency pass over the tree, a citation check of cited
 commits and <code>file:line</code> references against
 <code>--code-root</code>, and <code>--against-ref</code>, the
-append-only check that compares links against a git ref.</li>
+append-only check that compares links, anchor rows, standing marks, link
+order and <code>current</code> against a git ref.</li>
 <li><code>mc_text.py</code> (124 lines) — the content-term vocabulary
 shared by the indexer and the prompt-query channel.</li>
-<li><code>chunkers/</code> (2,515 lines) — a Python AST chunker, a Swift
+<li><code>chunkers/</code> (2,566 lines) — a Python AST chunker, a Swift
 chunker and a tree-sitter backend with pinned grammars for JavaScript,
 TypeScript, Java, PHP, Rust and Lua.</li>
-<li><code>hooks/</code> (7,890 lines of shell) —
+<li><code>hooks/</code> (9,056 lines of shell) —
 <code>pre-edit-chain.sh</code> is the retrieval hook,
 <code>mc-fallback-lib.sh</code> and <code>mc-query-lib.sh</code> its
 search fallback, <code>ledger-post-edit.sh</code> the edit ledger,
@@ -326,8 +359,11 @@ search fallback, <code>ledger-post-edit.sh</code> the edit ledger,
 <code>sessionstart-remind.sh</code> the standing digest and session
 nudge, <code>userprompt-remind.sh</code> and
 <code>newfile-nudge.sh</code> the write-side nudges and the prompt
-search, <code>mc-watchdog.sh</code> the deadline wrapper.</li>
-<li><code>scripts/</code> (6,450 lines of shell) —
+search, <code>code-refresh.sh</code> the code-index refresh,
+<code>mc-store-lint.sh</code> the two commit checks shared by the
+pre-commit and post-commit hooks, <code>mc-watchdog.sh</code> the
+deadline wrapper.</li>
+<li><code>scripts/</code> (7,110 lines of shell) —
 <code>repo-init.sh</code> installs and wires everything;
 <code>memcontinuum-update.sh</code> re-renders drifted installs; the
 <code>-decide</code>, <code>-state</code> and registry scripts manage a
@@ -362,7 +398,7 @@ two store-side git hooks and a registry row.</li>
 Paths</h2>
 <ul>
 <li><strong>Freeze a recorded link.</strong>
-<code>_link_diff_errors</code> (<code>memlint.py:2082-2155</code>) takes
+<code>_link_diff_errors</code> (<code>memlint.py:2274-2347</code>) takes
 one link as it was at a ref and as it is now, subtracts
 <code>{link, status, superseded_by, promoted_by}</code> from the union
 of both field sets, and reports every remaining field whose value moved.
@@ -373,16 +409,38 @@ of both field sets, and reports every remaining field whose value moved.
 <code>promoted_by</code> may be added once. A lifecycle move bundled
 with any body edit produces an error for each.</li>
 <li><strong>Freeze its bytes and its place.</strong>
-<code>_link_raw_spans</code> (<code>:2224</code>) locates each link's
+<code>_link_raw_spans</code> (<code>:2416</code>) locates each link's
 exact text span by indentation, and <code>check_append_only</code>
 refuses a link whose parsed fields are identical and whose bytes are
 not, treating a span it cannot extract as changed
-(<code>:2649-2680</code>). A new id following a recorded one is refused
-as out of order (<code>:2621-2636</code>); a removed link
-(<code>:2643-2648</code>) and a deleted or renamed record
-(<code>:2490-2509</code>) are errors.</li>
+(<code>:3166-3197</code>). A new id following a recorded one is refused
+as out of order (<code>:3138-3153</code>), and recorded ids must keep
+their relative order (<code>_link_order_errors</code>,
+<code>:2814</code>), because the chain head is the first active link in
+file order. A removed link (<code>:3160-3165</code>) and a deleted or
+renamed record (<code>:2973-2989</code>) are errors.</li>
+<li><strong>Pair a standing change with its row.</strong>
+<code>_standing_pairing_errors</code> (<code>:2794-2811</code>) requires
+one new <code>standing_marks:</code> row per id added to or removed from
+<code>standing:</code> and refuses a row that matches no change.
+<code>_standing_marks_freeze_errors</code> (<code>:2743-2791</code>)
+freezes recorded rows by fields and bytes and requires new rows above
+old ones. <code>_standing_marks_errors</code> (<code>:242-283</code>)
+refuses a row whose <code>authority</code> is not owner-level.
+<code>_current_discipline_errors</code> (<code>:2848-2862</code>)
+refuses a <code>current:</code> that moves while the newest active link
+has not.</li>
+<li><strong>Freeze a code baseline.</strong> An <code>anchors:</code>
+row records the SHA-256 of the file or the one chunk a
+<code>code_refs</code> entry named when it was bound, with the capture
+kind, date, code commit and worktree state.
+<code>_anchor_freeze_errors</code> (<code>:2681-2714</code>) freezes
+recorded rows; <code>_anchor_errors</code> (<code>:172-220</code>)
+requires each row's <code>ref</code> to be present in
+<code>code_refs</code> and its <code>link</code> in
+<code>links</code>.</li>
 <li><strong>Judge new links more strictly than old ones.</strong>
-<code>_new_link_errors</code> (<code>:115-140</code>) refuses an unknown
+<code>_new_link_errors</code> (<code>:130-155</code>) refuses an unknown
 <code>kind</code> and an <code>owner-verbatim</code> ruling phrased as a
 question. Under <code>--against-ref</code> these are errors only for
 links absent at the ref; a plain lint reports them on recorded links as
@@ -390,22 +448,29 @@ warnings, since frozen history cannot be repaired in place.</li>
 <li><strong>Gate the commit.</strong>
 <code>hooks/pre-commit-append-only.sh</code> runs the schema lint, then
 <code>memlint.py --against-ref HEAD --staged ROOT</code>, and exits 1 on
-an error from either (<code>:161-169</code>, <code>:183</code>,
-<code>:228-231</code>). An unset root, a different repository, an unborn
+an error from either (<code>:173-179</code>, <code>:192</code>,
+<code>:201</code>). An unset root, a different repository, an unborn
 <code>HEAD</code>, a missing interpreter or an unrecognised linter
-result each exit 0 with a logged reason.</li>
+result each exit 0 with a logged reason.
+<code>hooks/post-commit-reindex.sh</code> re-runs both checks with
+<code>HEAD~1</code> as the ref and writes a
+<code>&lt;project&gt;.relint-failed</code> marker under
+<code>MEMCONTINUUM_HOME</code> on a finding (<code>:258-374</code>);
+<code>sessionstart-remind.sh</code> prints one line while it exists
+(<code>:448</code>), and the next clean post-commit run removes it
+(<code>:320</code>).</li>
 <li><strong>Classify a ruling.</strong>
 <code>invariant_enforcement_class</code>
-(<code>memidx.py:4692-4711</code>) returns <code>context</code> for any
+(<code>memidx.py:5831-5850</code>) returns <code>context</code> for any
 non-<code>active</code> status, then <code>constraint</code>,
 <code>hold</code> or <code>context</code> by authority and evidence.
 "Evidence" here means a list holding at least one non-blank string
-(<code>:4666-4678</code>); the citation check is a separate lint pass
-and does not feed the class. <code>memlint.py:1338-1364</code> computes
+(<code>:5805-5817</code>); the citation check is a separate lint pass
+and does not feed the class. <code>memlint.py:1471-1497</code> computes
 the same tiers from raw YAML and imports memidx's two authority
 sets.</li>
 <li><strong>Run the drift gate.</strong> <code>cmd_drift</code>
-(<code>memidx.py:4821-4901</code>) checks each link's
+(<code>memidx.py:5960-6040</code>) checks each link's
 <code>invariant</code> against current source, sends a
 <code>provisional</code> link to <code>revalidate</code> unchecked,
 names skipped ones, and returns 1 on a constraint violation or, under
@@ -413,31 +478,42 @@ names skipped ones, and returns 1 on a constraint violation or, under
 store README template lists the command
 (<code>templates/store-README.md.tmpl:45</code>).</li>
 <li><strong>Resolve a path to decisions.</strong>
-<code>topic_matches_for_path</code> (<code>:3716</code>) keeps the
-project's topics with a <code>code_refs</code> entry matching the file
-by prefix, glob or <code>path#symbol</code>;
-<code>topic_chain_lines</code> (<code>:3981-3994</code>) then selects
-every link for that topic by <code>topic_path</code>, ordered by
-sequence, with no status filter.</li>
+<code>cmd_for_path</code> (<code>:5214</code>) opens the index read-only
+and exits 5 on an index that needs migrating, which the hook logs as
+<code>index-needs-migration</code>. <code>topic_matches_for_path</code>
+(<code>:4217</code>) keeps the project's topics with a
+<code>code_refs</code> entry matching the file by prefix, glob or
+<code>path#symbol</code>; <code>topic_chain_lines</code>
+(<code>:4974-4992</code>) then selects every link for that topic by
+<code>topic_path</code>, ordered by sequence, with no status filter, and
+places any anchor note after the header.</li>
 <li><strong>Fall back on a miss.</strong>
-<code>pre-edit-chain.sh:684</code> and <code>newfile-nudge.sh:741</code>
+<code>pre-edit-chain.sh:816</code> and <code>newfile-nudge.sh:741</code>
 run <code>search --decisions-only --read-only --hydrate</code> on the
 path's words. <code>--decisions-only</code> restricts hits to topics,
-links, incidents and investigations (<code>memidx.py:3230-3241</code>);
+links, incidents and investigations (<code>memidx.py:3676-3687</code>);
 <code>--hydrate</code> renders each hit's chain under a byte cap that
-keeps the current link first (<code>:3378-3403</code>,
-<code>:4006</code>).</li>
+keeps the current link first (<code>:3879-3904</code>,
+<code>:5004</code>).</li>
 <li><strong>Deliver the standing digest.</strong>
-<code>cmd_standing</code> (<code>:5432</code>) reads each topic's
-<code>standing</code> list, keeps a link only when it is
-<code>active</code> and owner-level, and refuses rather than truncates
-over the cap; <code>sessionstart-remind.sh</code> delivers it.</li>
+<code>standing_entries</code> (<code>:6639</code>) reads each topic's
+<code>standing</code> list and keeps a link only when it is
+<code>active</code> and owner-level; <code>cmd_standing</code>
+(<code>:6679</code>) refuses rather than truncates over the cap, and
+<code>sessionstart-remind.sh</code> delivers it.</li>
+<li><strong>Pack decisions for a brief.</strong>
+<code>cmd_context_pack</code> (<code>:7110</code>) prints the standing
+digest, the chains bound to the named files, any <code>--topic</code>
+chains and a labelled FTS guess for <code>--query</code>, under a hard
+byte cap that drops whole topics and names them, ending in a SHA-256 of
+exactly the bytes printed. It opens the index read-only. The hash is
+printed, not stored.</li>
 <li><strong>Stage a proposal.</strong> <code>infer_type</code>
-(<code>:705-716</code>) returns <code>inbox</code> for anything whose
+(<code>:734-745</code>) returns <code>inbox</code> for anything whose
 first path segment is <code>inbox</code>, overriding the file's own
 <code>type:</code>; <code>cmd_search</code> excludes those records and
 their link rows unless <code>include_inbox</code> is set
-(<code>:3288-3296</code>).</li>
+(<code>:3734-3742</code>).</li>
 <li><strong>Notice a shell edit.</strong>
 <code>hooks/ledger-post-edit.sh</code> diffs the tree with
 <code>git status</code> after a Bash or unrecognised tool call and
@@ -448,10 +524,24 @@ rows to the session's ledger, which is what the nudges read.</li>
 <p>A <strong>topic</strong> is a file with frontmatter —
 <code>type</code>, <code>id</code>, <code>title</code>,
 <code>area</code>, <code>project</code>, <code>current</code>,
-<code>code_refs</code>, <code>standing</code>, <code>tags</code> — and a
-body of links. <code>current</code> is hand-set to the newest active
-link and the linter errors, naming the correct value, when it
+<code>code_refs</code>, <code>standing</code>,
+<code>standing_marks</code>, <code>anchors</code>, <code>tags</code> —
+and a body of links. <code>current</code> is hand-set to the newest
+active link and the linter errors, naming the correct value, when it
 disagrees.</p>
+<p>A <strong>standing mark</strong> is one row per change to
+<code>standing:</code> — <code>link</code>, <code>action</code>
+(<code>add</code> or <code>remove</code>), <code>date</code>,
+<code>recorded_at</code>, <code>recorded_by</code>,
+<code>authority</code>, <code>source</code>, <code>why</code>. The rows
+are never indexed or delivered; they exist to be audited.</p>
+<p>An <strong>anchor</strong> is one row per bound
+<code>code_refs</code> entry and link — the entry, the link, a SHA-256
+of the file or of one chunk, the capture kind (<code>ruling</code>,
+<code>bind</code> or <code>backfill</code>), the capture date, the code
+commit and the worktree state. A prefix or glob reference never carries
+one. One baseline exists per entry and link; a new baseline needs a new
+link.</p>
 <p>A <strong>link</strong> carries <code>link</code>, <code>date</code>,
 <code>status</code>, <code>kind</code>, an optional
 <code>reverses</code> with a <code>reason_for_change</code> drawn from
@@ -475,11 +565,19 @@ withheld.</p>
 <p><strong>Trust:</strong> five authorities and five statuses, read on
 the search default, the standing digest and the drift gate.
 <code>trust_state</code> earned.</p>
-<p><strong>Audit:</strong> the link chain, frozen against the last
-commit. Topic frontmatter is outside the guard: <code>code_refs</code>,
-which decides which files a ruling governs, and <code>standing</code>,
-which decides what every session opens with, change with no event beyond
-git history.</p>
+<p><strong>Audit:</strong> the link chain and the standing marks, frozen
+against the last commit, with <code>standing</code>,
+<code>current</code> and link order judged against them. The rest of the
+frontmatter is outside the guard. <code>code_refs</code>, which decides
+which files a ruling governs, changes with no event beyond git history.
+Adding one through <code>bind</code> leaves an anchor row; adding one by
+hand, or as a prefix or glob, leaves nothing. <code>type</code> is
+unguarded too, and a change of type takes a topic out of the standing
+digest (<code>docs/SCHEMA.md:386-388</code>). Nothing in the tree
+removes a binding. The plain lint requires an anchor row's
+<code>ref</code> to be in <code>code_refs</code>, and the guard freezes
+the row, so an anchored reference cannot be removed by a commit that
+runs the hook.</p>
 <p><strong>Scoping:</strong> a <code>project</code> column that one
 database can only ever hold one value of. Withheld — see <a
 href="#9-reliability-safety-and-trust">section 9</a>.</p>
@@ -494,7 +592,12 @@ topic whose <code>code_refs</code> cover it out, each with its whole
 chain. Matching is by path prefix, fnmatch glob or
 <code>path#symbol</code>, and only the last takes part in marker
 verification. Concepts matching the path come too, and each brings the
-topics that govern it.</p>
+topics that govern it. A bound file or symbol is hashed against its
+anchor row, and the chain carries one of a fixed set of labels — changed
+since capture, never captured, missing, not checked — that never alter
+the link's status or authority. The lookup also runs for a worktree
+checked out beside the repository, and declines without a search an edit
+under the parent folder that belongs to no wired project.</p>
 <p>The <strong>search fallback</strong> runs when <code>for-path</code>
 finds nothing for the file being edited or created. It searches on the
 path's words with the default status filter, restricted to decision
@@ -502,7 +605,18 @@ records, takes at most two hits and labels them as a guess. Each hit
 carries its chain, capped at 2,000 bytes by default.</p>
 <p>The <strong>standing digest</strong> opens every session and every
 compaction with the standing links of all topics — citation lines only,
-ordered and capped, and refused rather than truncated over the cap.</p>
+ordered and capped, and refused rather than truncated over the cap. With
+a code root configured, one line after it names standing links whose
+bound code changed since capture; that line is the first thing dropped
+when the cap bites.</p>
+<p>The <strong>context pack</strong> is the same material handed to
+someone outside the session. <code>context-pack FILE...</code> prints
+the standing digest and the chains bound to the files a reviewer or a
+dispatched agent will touch, each link with its authority and store
+path, ending in a SHA-256 of the exact bytes. The rendered rules file
+tells briefs to open with it
+(<code>templates/memcontinuum-rules.md:27</code>); nothing runs it
+automatically.</p>
 <p><code>search</code> is FTS5 by default, with vector and hybrid modes
 behind a lazily imported <code>fastembed</code>. Its defaults lean the
 same way as the mark: <code>status</code> defaults to active, and inbox
@@ -522,18 +636,29 @@ links on purpose, because the question it answers is why the code is
 strange.</p>
 <p><strong>Failure modes.</strong> Every path but the commit gate fails
 open. A missing or uninitialised index returns a named reply and no
-decision; a stale index answers from what it has. The two-second timeout
-and the labelled fallback are the two places where the model is told
-what was not established. A file edited through Bash gets no lookup; the
-ledger records it afterwards from <code>git status</code>, which does
-not show a file committed in the same call or one under an ignored
-path.</p>
+decision; an index that needs a schema migration gets a one-line refusal
+from the pre-edit lookup, which never writes it; a stale index answers
+from what it has. The two-second timeout and the labelled fallback are
+the two places where the model is told what was not established. A file
+edited through Bash gets no lookup; the ledger records it afterwards
+from <code>git status</code> over each code root and its linked
+worktrees, which does not show a file committed in the same call or one
+under an ignored path.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p><strong>Nothing extracts.</strong> There is no summariser, no
 consolidation pass and no background writer; a memory exists because a
 person or an agent wrote a link and committed it. No production code
-writes a topic file. The nudges are the only push: one fires when files
-have been edited under no decision topic, the other when the
+writes a link. Three commands write topic frontmatter, each by line
+insertion that must round-trip through the parser, printing the diff and
+committing nothing (<code>memidx.py:12219-12229</code>):
+<code>bind</code> adds a <code>code_refs</code> entry and its anchor
+row, <code>mark-standing</code> changes <code>standing:</code> and
+prepends its row, and <code>anchor-backfill</code> gives an older
+reference a baseline labelled <code>backfill</code>.
+<code>propose-bindings</code> reads a session's edit ledger and fallback
+searches and prints suggested bindings, optionally to
+<code>inbox/proposals/</code>. The nudges are the only push: one fires
+when files have been edited under no decision topic, the other when the
 conversation has moved on shortly after real edits.</p>
 <p><strong>Correction is an append.</strong> The predecessor keeps its
 text and gains a terminal status; the successor names it in
@@ -556,17 +681,22 @@ mode. Both sit under the two-second watchdog.</li>
 <li>A commit pays the schema lint and the <code>--against-ref</code>
 pass over the staged records.</li>
 <li>A reindex is proportional to the store; embeddings are optional and
-lazy.</li>
+filled by a background worker, with a first model download of about 133
+MB.</li>
+<li>An anchor check hashes each bound file or chunk under the hook's
+budget, and a check the budget cut short is labelled unchecked rather
+than reported.</li>
 <li>No model call anywhere in the memory path.</li>
 </ul>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>The model never calls a recall tool. The hooks put the standing
 digest in front of it at session start, the governing chain or a
-labelled guess before an Edit or a Write, and nudges when edits have
-accumulated under no topic. Two skills — <code>memcontinuum</code> and
-<code>memory-search</code> — give it the deliberate surfaces. The
-person's surfaces are the CLI, the markdown store itself, and
-<code>inbox/</code>.</p>
+labelled guess with the result of an Edit or a Write, and nudges when
+edits have accumulated under no topic. The hook sees the edit's final
+content and only adds context; nothing in the tree denies an edit. Two
+skills — <code>memcontinuum</code> and <code>memory-search</code> — give
+it the deliberate surfaces. The person's surfaces are the CLI, the
+markdown store itself, and <code>inbox/</code>.</p>
 <p>The install decision is itself recorded per repository in a registry
 keyed by the <code>origin</code> remote when there is one and the
 working tree path otherwise, so a repository that declined is never
@@ -603,19 +733,32 @@ reads: the search default, which the hook fallbacks and the
 gate, where <code>provisional</code> withholds a link from enforcement
 entirely. The classification exists twice, over YAML and over SQLite
 rows, with the authority sets shared so the two cannot diverge. The
-limit is the producer: authority and status are fields in a file the
-writing agent edits, and nothing verifies that an
+anchor labels sit beside the status and do not join it: a ruling whose
+bound code changed since capture is still <code>active</code> and still
+a constraint. The limit is the producer: authority and status are fields
+in a file the writing agent edits, and nothing verifies that an
 <code>owner-verbatim</code> ruling came from the owner.</p>
 <p><strong>Audit log — awarded.</strong> The chain is the record of the
 rulings made in it: each link names when it was ruled, who recorded it,
-when, what it reverses and on what grounds. The append-only property is
-enforced by a linter whose frozen set is a subtraction rather than a
-list, by a byte comparison that catches a regenerated file, and by the
-store's own <code>pre-commit</code> hook. Two limits. The hook is a
-local git hook that <code>--no-verify</code> skips, and the CI re-run
-the documentation recommends is not shipped. And topic-level frontmatter
-— <code>code_refs</code>, <code>standing</code>, <code>current</code> —
-changes with no event in the chain.</p>
+when, what it reverses and on what grounds. The standing marks extend it
+to the one frontmatter field that puts a ruling in every session: each
+addition to or removal from <code>standing:</code> is a dated,
+attributed row with a source and a reason, and the guard refuses the
+change without its row. The append-only property is enforced by a linter
+whose frozen set is a subtraction rather than a list, by a byte
+comparison that catches a regenerated file, by an order check on links
+and rows, and by the store's own <code>pre-commit</code> hook.</p>
+<p>Four limits. The hook is a local git hook that
+<code>--no-verify</code> skips; the post-commit re-run names such a
+commit at the next session start, on that machine, until the next clean
+commit removes the marker, and the CI re-run the documentation
+recommends is not shipped. A commit whose previous version of a record
+could not be parsed is treated as a repair, and the documentation states
+that a removed link, anchor block or marks block passes it with a note
+(<code>docs/SCHEMA.md:389-396</code>). <code>code_refs</code> and
+<code>type</code> change with no row. And a mark's
+<code>authority</code> and <code>recorded_by</code> are what the caller
+passed, the same limit <code>trust_state</code> carries.</p>
 <p><strong>Human review — withheld.</strong> Inbox records are typed as
 such regardless of what they claim and excluded from search; provisional
 links are never enforced; no edit can move a status toward
@@ -628,7 +771,9 @@ checks an actor; the recorded search for <code>isatty</code> and
 is asserted against a populated result set with the flag as the only
 variable, and re-asserted in the other direction. The FTS mode it uses
 needs no embedding model, so the positive control runs with PyYAML
-alone.</p>
+alone. The standing-marks, binding and context-pack suites assert
+refusals and cap behaviour, not what a read must withhold, so the mark
+rests on the inbox cases alone.</p>
 <p><strong>Scope — withheld, and the withholding is not a finding about
 isolation.</strong> Project isolation is enforced by construction: one
 decision database belongs to one project, <code>records</code> is keyed
@@ -669,19 +814,30 @@ positional in the chain.</p>
 <p><strong>What the fail-open discipline costs.</strong> Every hook
 except the commit gate is written never to block an edit, which is a
 defensible choice for a tool that sits in front of someone else's work.
-The guarantee is about the <em>store</em> — a recorded link cannot be
-rewritten through a commit that runs the hook — and not about the
-<em>work</em>: nothing ensures a decision was consulted, only that it
-was offered when the index was present and the path went through a tool
-the hooks see.</p>
+The pre-edit hook could refuse: it runs on <code>PreToolUse</code> with
+the edit's final content in hand. The repository ships a probe that
+drives a real session against a denying stand-in hook, and its docstring
+describes denial as established, with no result file committed
+(<code>bench/pretooluse_rewrite_deny_probe.py:10-13</code>,
+<code>:52-54</code>). The real hook returns context only. The guarantee
+is about the <em>store</em> — a recorded link cannot be rewritten
+through a commit that runs the hook — and not about the <em>work</em>:
+nothing ensures a decision was consulted, only that it was offered when
+the index was present and the path went through a tool the hooks
+see.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>2,059 test functions in 19 modules and 47,161 lines.
+<p>2,704 test functions in 23 modules and 57,754 lines.
 <code>test_memidx.py</code> and <code>test_memlint.py</code> carry the
 schema, the enforcement classes, the append-only diff and the inbox
-exclusion; <code>test_memlint_citations.py</code> the citation check;
-<code>test_hooks.py</code> and <code>test_write_hooks.py</code> the
-shell layer, including the search fallback and the standing digest;
+exclusion; <code>test_standing_marks.py</code> (109 functions) the
+pairing, freeze, order and <code>current</code> rules, including a
+refused agent-authority row; <code>test_binding.py</code> (132) the
+anchor rows, their capture, their labels and their cap order;
+<code>test_context_pack.py</code> (30) the pack's cap, omissions, hash
+and blind mode; <code>test_memlint_citations.py</code> the citation
+check; <code>test_hooks.py</code> and <code>test_write_hooks.py</code>
+the shell layer, including the search fallback and the standing digest;
 <code>test_repo_init.py</code> and <code>test_update.py</code> the
 installer and updater; <code>test_stats.py</code> the log parser. There
 are golden files, a macOS smoke test and a bash-3.2 runner. CI runs the
@@ -720,6 +876,14 @@ rewrites every record while changing no value.</li>
 <li><strong>Make a lifecycle move the only change on a record.</strong>
 A status flip bundled with a text edit is how an append-only store
 quietly stops being one.</li>
+<li><strong>Pair a membership change with a frozen row.</strong>
+Requiring exactly one attributed row per id added to or removed from a
+list, and refusing rows that match no change, audits a mutable pointer
+without making the pointer itself append-only.</li>
+<li><strong>Hash what a decision was bound to.</strong> A baseline
+captured at binding lets a later delivery say the code moved since,
+labelled by how the baseline was captured, without pretending the ruling
+is now wrong.</li>
 <li><strong>Tighten rules for new records only.</strong> A stricter
 check that errors on new links and warns on frozen ones lets a schema
 improve without demanding edits the append-only rule forbids.</li>
@@ -752,7 +916,11 @@ decides what blocks work is only as strong as whoever can type
 <code>owner-verbatim</code>.</li>
 <li><strong>A guarantee that lives in a local hook.</strong> A check
 <code>--no-verify</code> skips needs a server-side twin, and the twin
-has to ship, not be recommended.</li>
+has to ship, not be recommended. A post-commit re-check that clears at
+the next clean commit makes a bypass visible once, on one machine.</li>
+<li><strong>A context hook that could refuse and only informs.</strong>
+The edit's content is in the hook's hands before it is applied; the
+declined values are in the index.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>Right for a small team or a solo developer running agent-driven work
@@ -765,16 +933,20 @@ guarantee that a decision was actually read.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
 <li>Will a declined ruling ever be checked rather than shown? The
-reasons are recorded and immutable; what is missing is a lookup on the
-way in.</li>
+reasons are recorded and immutable, and the Edit and Write hook already
+holds the edit's content before it is applied. An edit made through the
+shell gets no lookup at all, so a check there needs a different entry
+point.</li>
 <li>Can one store serve several projects? The refusal is honest about
 why it cannot — <code>records</code> keyed by <code>path</code> alone —
 and the code index shows the shape that would fix it.</li>
 <li>What do the benchmark numbers look like on real decisions? The
 private gate exists for that and its fixtures are unpublished.</li>
-<li>Should topic frontmatter be frozen too? <code>standing</code> puts a
-ruling in every session, and an edit to it leaves no event in the
-chain.</li>
+<li>Should <code>code_refs</code> get the standing list's treatment? It
+decides which files a ruling governs, a hand-added or glob reference
+leaves no row, and an anchored one cannot be removed at all.</li>
+<li>Should a change of <code>type</code> be guarded? It is the remaining
+way to take a topic out of the standing digest without a row.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <div class="table-wrap"><table>
@@ -788,22 +960,31 @@ chain.</li>
 <tbody>
 <tr>
 <td><code>memidx.py</code></td>
-<td>9,602</td>
+<td>13,414</td>
 <td>Both SQLite schemas, <code>reindex</code>, <code>search</code>
-(3155), <code>chain</code>, <code>for-path</code> (4196),
-<code>why</code> (4513), <code>drift</code> (4821),
-<code>standing</code> (5432); <code>invariant_enforcement_class</code>
-(4692), <code>topic_matches_for_path</code> (3716),
-<code>topic_chain_lines</code> (3981), <code>infer_type</code>
-(705)</td>
+(3746), <code>chain</code>, <code>for-path</code> (5214),
+<code>why</code> (5652), <code>drift</code> (5960),
+<code>standing</code> (6679), <code>context-pack</code> (7110),
+<code>bind</code> (12262), <code>mark-standing</code> (12510),
+<code>propose-bindings</code> (12733), <code>anchor-backfill</code>
+(12819); <code>invariant_enforcement_class</code> (5831),
+<code>topic_matches_for_path</code> (4217),
+<code>topic_chain_lines</code> (4974), <code>standing_entries</code>
+(6639), <code>apply_topic_edit</code> (12219), <code>infer_type</code>
+(734)</td>
 </tr>
 <tr>
 <td><code>memlint.py</code></td>
-<td>3,007</td>
-<td>The schema pass, <code>_new_link_errors</code> (115), the citation
-check, <code>_link_tier</code> (1338), and <code>--against-ref</code>:
-<code>_link_diff_errors</code> (2082), <code>_link_raw_spans</code>
-(2224), <code>check_append_only</code> (2404)</td>
+<td>3,541</td>
+<td>The schema pass, <code>_new_link_errors</code> (130),
+<code>_anchor_errors</code> (172), <code>_standing_marks_errors</code>
+(242), the citation check, <code>_link_tier</code> (1471), and
+<code>--against-ref</code>: <code>_link_diff_errors</code> (2274),
+<code>_link_raw_spans</code> (2416), <code>_anchor_freeze_errors</code>
+(2681), <code>_standing_marks_freeze_errors</code> (2743),
+<code>_link_order_errors</code> (2814),
+<code>_standing_guard_errors</code> (2865),
+<code>check_append_only</code> (2877)</td>
 </tr>
 <tr>
 <td><code>mc_text.py</code></td>
@@ -812,52 +993,73 @@ check, <code>_link_tier</code> (1338), and <code>--against-ref</code>:
 </tr>
 <tr>
 <td><code>chunkers/</code></td>
-<td>2,515</td>
+<td>2,566</td>
 <td>Python AST, Swift and tree-sitter backends with pinned grammars</td>
 </tr>
 <tr>
 <td><code>hooks/pre-edit-chain.sh</code></td>
-<td>916</td>
-<td>The retrieval hook, its search fallback and its timeout message</td>
+<td>1,042</td>
+<td>The retrieval hook, its search fallback, its worktree outcomes and
+its timeout message</td>
 </tr>
 <tr>
 <td><code>hooks/mc-fallback-lib.sh</code>,
 <code>mc-query-lib.sh</code></td>
-<td>270, 188</td>
+<td>334, 191</td>
 <td>The fallback labels, filtering and query building</td>
 </tr>
 <tr>
 <td><code>hooks/sessionstart-remind.sh</code></td>
-<td>870</td>
-<td>The standing digest and the session nudge</td>
+<td>1,004</td>
+<td>The standing digest, its anchor line, the bypassed-commit note and
+the session nudge</td>
 </tr>
 <tr>
 <td><code>hooks/userprompt-remind.sh</code>,
 <code>newfile-nudge.sh</code></td>
-<td>1,424, 862</td>
+<td>1,422, 867</td>
 <td>The write-side nudges, the opt-in prompt search and the new-file
 fallback</td>
 </tr>
 <tr>
 <td><code>hooks/ledger-post-edit.sh</code></td>
-<td>802</td>
-<td>The session edit ledger, including the shell-diff path</td>
+<td>969</td>
+<td>The session edit ledger, including the shell-diff path over linked
+worktrees</td>
 </tr>
 <tr>
-<td><code>hooks/pre-commit-append-only.sh</code></td>
-<td>237</td>
-<td>The store's git gate</td>
+<td><code>hooks/pre-commit-append-only.sh</code>,
+<code>mc-store-lint.sh</code></td>
+<td>208, 96</td>
+<td>The store's git gate and the two checks it shares with the
+post-commit hook</td>
+</tr>
+<tr>
+<td><code>hooks/post-commit-reindex.sh</code></td>
+<td>532</td>
+<td>The reindex, the post-commit re-run of both checks and the bundle
+backup</td>
+</tr>
+<tr>
+<td><code>hooks/code-refresh.sh</code></td>
+<td>177</td>
+<td>The code-index refresh at session start and turn end</td>
 </tr>
 <tr>
 <td><code>hooks/mc-watchdog.sh</code>, <code>memlib.sh</code></td>
-<td>297, 815</td>
+<td>300, 840</td>
 <td>The deadline wrapper and the shared shell library</td>
 </tr>
 <tr>
 <td><code>scripts/repo-init.sh</code>,
 <code>memcontinuum-update.sh</code></td>
-<td>1,859, 2,293</td>
+<td>1,982, 2,681</td>
 <td>The installer, the hook wiring and the updater</td>
+</tr>
+<tr>
+<td><code>templates/memcontinuum-rules.md</code></td>
+<td>36</td>
+<td>The rendered rules file, including the context-pack instruction</td>
 </tr>
 <tr>
 <td><code>bench/README.md</code>, <code>score.py</code>,
@@ -866,15 +1068,21 @@ fallback</td>
 <td>The benchmark's method, scorer and query set</td>
 </tr>
 <tr>
+<td><code>bench/pretooluse_rewrite_deny_probe.py</code></td>
+<td>599</td>
+<td>A harness measuring Claude Code's <code>PreToolUse</code> rewrite
+and deny contract against a stand-in hook</td>
+</tr>
+<tr>
 <td><code>docs/SCHEMA.md</code>, <code>INTERNALS.md</code>,
 <code>DESIGN.md</code></td>
-<td>505, 3,380, 82</td>
+<td>640, 4,172, 82</td>
 <td>The record schema, the internals, the design note</td>
 </tr>
 <tr>
 <td><code>tests/</code></td>
-<td>47,161 in 19 modules</td>
-<td>2,059 test functions, goldens, a macOS smoke test, a bash-3.2
+<td>57,754 in 23 modules</td>
+<td>2,704 test functions, goldens, a macOS smoke test, a bash-3.2
 runner</td>
 </tr>
 </tbody>
@@ -888,14 +1096,14 @@ runner</td>
 <li><code>git grep -n -E '"declined"|status[^a-z]+declined' -- hooks</code>
 — no match: no hook reads a declined status.</li>
 <li><code>git grep -n -E 'alternatives|rejected_because' -- memidx.py memlint.py</code>
-— <code>memidx.py:339</code> and <code>:502</code> index the text,
-<code>memlint.py:213-222</code> validates each alternative's authority;
+— <code>memidx.py:362</code> and <code>:531</code> index the text,
+<code>memlint.py:384-393</code> validates each alternative's authority;
 nothing reads them as a precondition.</li>
 <li><code>git grep -n 'path TEXT PRIMARY KEY' -- memidx.py</code> —
-<code>:849</code>, the <code>records</code> table, keyed by path alone;
+<code>:878</code>, the <code>records</code> table, keyed by path alone;
 the other three hits are other tables.</li>
 <li><code>git grep -n 'this db keys rows by path alone' -- memidx.py</code>
-— <code>:1049</code>, the refusal.</li>
+— <code>:1078</code>, the refusal.</li>
 <li><code>git grep -n -E 'against-ref' -- .github templates scripts</code>
 — no match: no shipped workflow, template or script runs the append-only
 check.</li>
@@ -903,15 +1111,44 @@ check.</li>
 — comments, and <code>templates/store-README.md.tmpl:45</code>, the
 manual command; no hook, skill or workflow runs it.</li>
 <li><code>git grep -n -i -E 'isatty|approve' -- memidx.py memlint.py hooks scripts skills</code>
-— three comments; no actor check.</li>
-<li><code>git grep -n -E 'write_text|open\([^)]*"(w|a)"' -- memidx.py memlint.py mc_text.py</code>
-— three log appends; no production write to a topic file.</li>
+— three comments and the <code>--authority</code> help text of
+<code>mark-standing</code> (<code>memidx.py:13119</code>); no actor
+check.</li>
+<li><code>git grep -n -E 'write_text|write_bytes|open\([^)]*"(w|a)"' -- memidx.py memlint.py mc_text.py</code>
+— two log appends, the code-index staleness marker, the
+<code>propose-bindings</code> inbox file (<code>memidx.py:12789</code>),
+and <code>apply_topic_edit</code> (<code>:12229</code>), whose three
+callers are <code>bind</code>, <code>mark-standing</code> and
+<code>anchor-backfill</code>; no production code writes a link.</li>
+<li><code>git grep -n -i -E 'unbind|remov(e|ing|ed) (a |the )?(code_ref|binding|reference)' -- memidx.py memlint.py docs</code>
+— no match: nothing removes a binding.</li>
+<li><code>git grep -n -E 'permissionDecision|"deny"' -- hooks</code> —
+no match: no shipped hook denies an edit.</li>
+<li><code>git grep -n -F 'Edit|Write' -- templates hooks</code> —
+<code>templates/pre-edit-hook.json.tmpl:5</code>, its documentation and
+the ledger's tool switch; the pre-edit hook matches no shell tool.</li>
 <li><code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- README.md docs</code>
 — no match; no paper.</li>
 <li><code>git grep -n -i -E 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE</code>
 — no match; the MIT text carries no rider.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-07</strong> — <a
+href="https://github.com/krakozavr/MemContinuum/commit/d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8"><code class="commit-id" title="d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8">d5d29fbc…</code></a>
+— version 0.5.0 and 15 commits on the shell-edit ledger. All three marks
+re-verified; the inbox tests are byte-identical. Added upstream:
+standing marks, link order and <code>current</code> under the guard,
+with anchor baselines frozen (<a
+href="#4-essential-implementation-paths">section 4</a>); a post-commit
+re-run of both checks; a read-only pre-edit lookup; anchor labels and
+the context pack (<a href="#6-retrieval-mechanics">section 6</a>); three
+commands that write frontmatter (<a href="#7-write-mechanics">section
+7</a>). Wrong at the previous pin: that the pre-edit chain reaches the
+model before the edit. The hook's own header said, at both pins, that it
+arrives with the edit's result. Section 2 and its diagram are corrected.
+Screened from a full clone: eighteen hook scripts as the one auto-run
+surface, <code>pyproject.toml</code> inside the cooldown, two unpinned
+surfaces, MIT with no rider. Nothing was installed or run.</p>
 <p><strong>2026-10-15</strong> — <a
 href="https://github.com/krakozavr/MemContinuum/commit/16293db855d5bf6922360571acb027850e4bca50"><code class="commit-id" title="16293db855d5bf6922360571acb027850e4bca50">16293db8…</code></a>
 — 62 commits on, at version 0.2.0. All three marks re-verified at both

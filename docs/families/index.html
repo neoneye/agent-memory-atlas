@@ -6696,10 +6696,10 @@ keyed on what was proposed. And the archive refs that protect an
 episode's commits are off unless the run asks for them.</p>
 <p><strong><a href="../systems/memcontinuum/">MemContinuum</a> is the
 family's append-only decision chain, and it is the one here that
-enforces the property rather than asserting it.</strong> MIT, 409
-commits between 30 August and 13 October 2026 under two author names the
-licence gives as one person, 15,519 lines of Python beside 2,059 test
-functions and 14,340 lines of shell. One markdown file per question; its
+enforces the property rather than asserting it.</strong> MIT, 621
+commits between 30 August and 6 November 2026 under two author names the
+licence gives as one person, 19,916 lines of Python beside 2,704 test
+functions and 16,166 lines of shell. One markdown file per question; its
 body is an ordered list of rulings, newest first, each with its own
 date, status, kind and authority; a change of mind is a new ruling that
 names what it reverses and on which of three grounds. What separates it
@@ -6708,24 +6708,28 @@ from every other store here that says the same thing is
 against itself at a git ref and errors on any changed field outside a
 set of four. That is a subtraction, so a field added tomorrow is frozen
 without anyone listing it, and a ruling whose raw bytes changed while
-its values did not is refused as well. The store's own
+its values did not is refused as well. The same check covers the list of
+rulings every session opens with: adding or removing one requires a
+frozen row saying who, when, on whose authority and why. The store's own
 <code>pre-commit</code> hook runs that check and exits 1;
-<code>--no-verify</code> skips it, and the CI re-run the documentation
-recommends is not shipped. Authority decides what a record may do: only
-the owner's own or ratified words can fail a drift check or ride in the
-digest every session opens with, an evidence-backed finding is reported
-unless <code>--strict-holds</code> is passed, and a provisional ruling
-is never checked at all. Three marks. Project isolation is enforced by
-construction rather than by a filter: one database holds one project,
-and a second <code>--project</code> on the same file is refused outright
-with the reason in the error, which is why <code>scope_enforced</code>
-is withheld — a single-scope store cannot demonstrate partitioning — and
-not because anything leaks between projects. What does sit against it is
-that a declined ruling — with the option, the reason it was rejected and
-its own authority, frozen once written — is handed to the model before
-it edits the governed file and consulted by nothing, which is one lookup
-short of a rejected-value tombstone; and that the authority on a ruling
-is whatever its writer typed.</p>
+<code>--no-verify</code> skips it, the post-commit hook re-runs it and
+flags the bypass until the next clean commit, and the CI re-run the
+documentation recommends is not shipped. Authority decides what a record
+may do: only the owner's own or ratified words can fail a drift check or
+ride in the digest every session opens with, an evidence-backed finding
+is reported unless <code>--strict-holds</code> is passed, and a
+provisional ruling is never checked at all. Three marks. Project
+isolation is enforced by construction rather than by a filter: one
+database holds one project, and a second <code>--project</code> on the
+same file is refused outright with the reason in the error, which is why
+<code>scope_enforced</code> is withheld — a single-scope store cannot
+demonstrate partitioning — and not because anything leaks between
+projects. What does sit against it is that a declined ruling — with the
+option, the reason it was rejected and its own authority, frozen once
+written — is returned to the model with the result of an edit to the
+governed file and consulted by nothing, which is one lookup short of a
+rejected-value tombstone; and that the authority on a ruling is whatever
+its writer typed.</p>
 <p><strong><a href="../systems/sage-memory/">SAGE</a> is the family's
 admission-by-vote store, and its status field withholds a memory rather
 than ranking it down.</strong> Apache-2.0, 1,614 commits since 2 March

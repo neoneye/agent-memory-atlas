@@ -14655,8 +14655,10 @@ changed field outside
 <code>{link, status, superseded_by, promoted_by}</code> — a subtraction,
 so a field added later is frozen by default — a byte comparison refuses
 a regenerated record whose values did not change, and the store's own
-<code>pre-commit</code> hook exits 1 on failure.
-<code>--no-verify</code> skips the hook, and the CI re-run the
+<code>pre-commit</code> hook exits 1 on failure. A change to the
+standing list must carry a frozen, attributed row.
+<code>--no-verify</code> skips the hook, the post-commit re-run flags
+the bypass only until the next clean commit, and the CI re-run the
 documentation recommends is not shipped.</li>
 <li>Second idea: <strong>a retrieval timeout that says so.</strong> When
 the two-second lookup misses its deadline the hook tells the model the
@@ -14668,11 +14670,11 @@ unrelated.</li>
 <li>Biggest risk: <strong>the declined ruling is delivered and never
 consulted.</strong> A <code>declined</code> ruling carries the option,
 the reason it was rejected and its own authority, frozen once written,
-and the pre-edit hook hands it to the model — but nothing checks a
-proposal against it, so re-adopting what was refused meets no
-resistance. (Project isolation is not a weakness here: one database
-holds one project, <code>records</code> is keyed by path alone, and a
-second <code>--project</code> is refused outright;
+and the pre-edit hook returns it to the model with the result of the
+edit — but nothing checks a proposal against it, so re-adopting what was
+refused meets no resistance. (Project isolation is not a weakness here:
+one database holds one project, <code>records</code> is keyed by path
+alone, and a second <code>--project</code> is refused outright;
 <code>scope_enforced</code> is withheld because a single-scope store
 cannot demonstrate partitioning, not because anything leaks.)</li>
 <li>Most reusable component: the authority-to-tier mapping — five values
@@ -14680,10 +14682,10 @@ on a ruling, of which only the owner's own or ratified words can fail a
 run, evidence-backed findings are reported unless
 <code>--strict-holds</code> is passed, and a provisional ruling is
 routed to revalidation and never checked.</li>
-<li>Maturity impression: MIT, 409 commits from 30 August to 13 October
-2026 under two author names the licence gives as one person, 15,519
-lines of Python beside 47,161 lines of tests holding 2,059 test
-functions, 14,340 lines of shell, three design documents and pinned
+<li>Maturity impression: MIT, 621 commits from 30 August to 6 November
+2026 under two author names the licence gives as one person, version
+0.5.0, 19,916 lines of Python beside 57,754 lines of tests holding 2,704
+test functions, 16,166 lines of shell, three design documents and pinned
 tree-sitter grammars with a stated reason; three capability marks, and a
 public retrieval benchmark with a negative control and no committed
 score.</li>

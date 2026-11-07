@@ -17874,23 +17874,31 @@ index with FTS5 and whole-record embeddings; a separate SQLite code
 index of chunked source; a per-session JSON edit ledger and a hook log
 rotated across a bounded number of files under MEMCONTINUUM_HOME</td>
 <td>for-path maps a file being edited to every topic whose code_refs
-cover it and returns the whole chain, every link regardless of status;
-on a miss the hook runs a labelled search on the path's words. A
-session-start digest delivers active owner-level links that topics name
-as standing. search is FTS5, vector or hybrid with a default status of
-active and inbox records excluded; an opt-in channel searches on the
-user's prompt; why walks path to concept to governing topics</td>
+cover it and returns the whole chain, every link regardless of status,
+with a note when a bound file or symbol differs from its captured
+baseline; it opens the index read-only and refuses one that needs
+migrating; on a miss the hook runs a labelled search on the path's
+words. A session-start digest delivers active owner-level links that
+topics name as standing. search is FTS5, vector or hybrid with a default
+status of active and inbox records excluded; an opt-in channel searches
+on the user's prompt; why walks path to concept to governing topics;
+context-pack prints the standing digest and the bound chains as one
+capped, fingerprinted block for a reviewer's brief</td>
 <td>A person or an agent appends a link to a topic file and commits.
 Nothing extracts: there is no summariser and no consolidation pass.
-current is hand-set to the newest active link and the linter errors when
-it disagrees</td>
+Three commands edit topic frontmatter by line insertion, print the diff
+and commit nothing: bind adds a code_ref with a hashed baseline,
+mark-standing changes standing with its audit row, anchor-backfill adds
+baselines to older refs. current is hand-set to the newest active link
+and the guard refuses it moving while the newest active link has
+not</td>
 <td>There is no update. A change of mind is a new link with reverses and
 a reason_for_change; the predecessor keeps its text and gains status
 superseded with superseded_by. Three lifecycle fields may each move
 forward once and only alone; every other field and the link's raw bytes
 are frozen against the last commit, and a removed link or a deleted
-record file is an error. Topic-level frontmatter is outside the
-guard</td>
+record file is an error. standing, current, link order and anchor
+baselines are guarded; code_refs, title, tags and type are not</td>
 <td>One decision database per project, enforced rather than assumed:
 records is keyed by path alone, so opening the same file under a second
 project is refused with the reason in the error. A project column sits
@@ -17900,32 +17908,40 @@ project and code root</td>
 <td>Claude Code hooks — a pre-edit lookup on Edit and Write with a
 search fallback, a post-edit ledger, session-start and user-prompt
 nudges with the standing digest and an opt-in prompt search, a
-precompact persist, a session-end stamp — plus two skills, a store-side
-git pre-commit and post-commit, an installer, an updater, and a
-per-machine registry of which repositories have a store</td>
-<td>None on the memory. A post-commit hook reindexes, a watchdog bounds
-each hook at two seconds, and the nudges are triggered by the edit
-ledger rather than by a timer</td>
+code-index refresh at session start and turn end, a precompact persist,
+a session-end stamp — plus two skills, a rendered rules file that tells
+briefs to open with a context pack, a store-side git pre-commit and
+post-commit, an installer, an updater, and a per-machine registry of
+which repositories have a store</td>
+<td>None on the decisions. A post-commit hook reindexes, re-runs the
+commit checks and can write a verified git bundle backup; a background
+worker fills missing embeddings; a watchdog bounds each hook at two
+seconds, and the nudges are triggered by the edit ledger rather than by
+a timer</td>
 <td>Five authorities — owner-verbatim, owner-ratified, reviewer-finding,
 code-derived, agent-inference — carried per field, and five statuses.
 Together they select one of three citation tiers; the tier decides
 whether a violated invariant fails a manually run drift check, is
 reported, or is skipped, and only active owner-level links reach the
 standing digest. Cited commits and file:line references are checked
-against the code root at lint time</td>
+against the code root at lint time. A changed-since-capture note on a
+bound reference is shown beside the chain and never changes a status or
+an authority</td>
 <td>An append-only guarantee enforced by a linter and a git hook rather
 than asserted, freezing new fields by default and raw bytes as well as
-parsed values; an authority vocabulary where only the owner's own or
-ratified words may block work or ride in every session; a retrieval
-timeout and a search miss that each say what was not established; a
-public retrieval benchmark with a negative control</td>
+parsed values, and extended to the standing list by pairing every change
+with a frozen audit row; an authority vocabulary where only the owner's
+own or ratified words may block work or ride in every session; a
+retrieval timeout and a search miss that each say what was not
+established; a public retrieval benchmark with a negative control</td>
 <td>A declined ruling is handed to the model and nothing prevents its
-re-adoption; the authority and status on a link are whatever its writer
-typed, so an agent can write owner-verbatim; every hook except the
-commit gate fails open, and a shell edit gets no lookup; the drift gate
-runs only when a person invokes it; CI re-running the append-only check
-is documented and not shipped; topic frontmatter, including code_refs
-and standing, changes without a recorded event</td>
+re-adoption; the authority and status on a link, and on a standing mark,
+are whatever its writer typed, so an agent can write owner-verbatim;
+every hook except the commit gate fails open, and a shell edit gets no
+lookup; the drift gate runs only when a person invokes it; CI re-running
+the append-only check is documented and not shipped, and the post-commit
+warning for a bypassed commit clears at the next clean commit; code_refs
+and type change without a recorded event</td>
 </tr>
 <tr>
 <td><a href="../systems/memcp/"><code>memcp</code></a></td>
