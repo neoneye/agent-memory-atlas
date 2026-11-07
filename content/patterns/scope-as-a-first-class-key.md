@@ -952,6 +952,8 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 **[Memgraph Context Graph](../../systems/memgraph-ai-toolkit/) decides ownership at the source turn, because the content is shared.** Chunks are content-addressed, so two users' identical text lands in one chunk; recall counts an entity as the user's only when a `MENTIONED_IN` edge lists one of the user's turns in `sources`, and a fact only when its `source_id` is one (`context-graph/sessions-graph/src/sessions_graph/recall.py:271-307`). A committed case gives two users facts on one shared Paris entity and asserts each sees their own companion and not the other's (`context-graph/sessions-graph/tests/test_e2e_recall.py:109-121`). In Community the user is a config-file string over an unauthenticated loopback Memgraph; the Enterprise edition replaces the key with a database per member under Memgraph's grants.
 
+**[billion-context](../../systems/billion-context/) removed the cross-session parameter from the schema and left it in the handler.** Each session's compression state is its own partition, and `search_context` reads another session's summaries whenever `args.conversation_id` names it, checking only that the id exists (`src/decompress-shared.ts:950-995`). The plugin endpoint deletes the key before execution (`src/plugin.ts:2262-2267`); the wire lane parses the model's arguments and passes every key through (`src/loop/core.ts:1281`). On a `--host 0.0.0.0` proxy every remote client shares one store with no authentication. Fork adoption beside it copies a parent's block only when the request holds every message the block covers. **Strip a retired parameter at the dispatcher every lane shares, not in one lane's handler.**
+
 
 ## Tests to require
 

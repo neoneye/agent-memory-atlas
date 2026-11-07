@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 788 reports.</strong></p>
+<p><strong>This page covers all 789 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32801,6 +32801,47 @@ verdict rather than parsed text, and where correcting and fading are
 different exits.</li>
 <li>Do not copy when: a person must approve what is kept, a forget must
 remove the text, or several people share one agent.</li>
+</ul>
+<h3 id="billion-context"><a
+href="../systems/billion-context/"><code>billion-context</code></a></h3>
+<ul>
+<li>Best idea: <strong>a fold the model can undo.</strong> Every
+compression block keeps the verbatim originals of the range it
+summarises, <code>decompress</code> returns them inline or to a file,
+and search covers the folded text as well as the summaries, so a summary
+that turns out wrong can be checked against what it replaced.</li>
+<li>Second idea: session identity the requester has to hold. An
+anonymous request attaches to a stored session only on a byte-exact
+prefix from position 0, and a fork adopts a parent block only when every
+message the block covers is present in the incoming request.</li>
+<li>Biggest risk: <strong>the cross-session search trusts the
+call.</strong> On the wire lane the proxy passes the model's tool
+arguments through, and <code>search_context</code> reads any session
+whose <code>conversation_id</code> they name, resident originals
+included. The plugin endpoint strips the key and the wire paths do not,
+and a <code>--host 0.0.0.0</code> or container deployment shares one
+store with no authentication.</li>
+<li>Second risk: <code>bili sessions rm</code> stops at the session's
+own rows, leaving archive-log lines, pinned checkpoints and fork copies;
+the <code>blocks</code> table its schema calls append-only is upserted
+and pruned on every save; <code>decompress</code> writes to any path the
+model names; auto-update is on by default outside containers.</li>
+<li>Most reusable component: <code>planForkAdoption</code> and
+<code>maybeAdoptForkBlocks</code> in
+<code>src/fork-adoption.ts:160</code>, <code>:347-376</code>, with the
+design record in <code>SESSION-IDENTITY.md</code>.</li>
+<li>Maturity impression: MIT with an attribution term for user-facing
+products; 158,347 lines of TypeScript in src/ and 25,546 in the kernel
+outside tests; 8,016 commits, 6 August – 7 November 2026, 3,677 of them
+by one author; 1,299 node:test files run in CI, not run here. No marks.
+The paper's production figures and the third-party benchmark tables have
+no committed raw data to recompute from.</li>
+<li>Study when: you are building reversible in-session compression and
+want originals, stable ref numbering and prefix-cache discipline worked
+out in production code.</li>
+<li>Do not copy when: the proxy serves more than one person, a summary
+must be correctable or erasable everywhere, or memory must carry across
+sessions by design rather than by id.</li>
 </ul>
         </article>
       </div>

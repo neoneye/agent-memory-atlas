@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 788 reports.**
+**This page covers all 789 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7222,3 +7222,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, MIT before 0.5.0; 49,321 lines of Python in mnemos/ outside tests; 385 commits, 2 April – 4 November 2026, 381 by one author and 326 with a Claude co-author trailer; 1,754 pytest functions in 154 files run in CI, not run here. Three marks: `trust_state`, `scope_enforced`, `negative_eval`. The README's recall comparison with Claude Code's own memory has no committed results.
 - Study when: you want agent-curated memory where judgement is a typed verdict rather than parsed text, and where correcting and fading are different exits.
 - Do not copy when: a person must approve what is kept, a forget must remove the text, or several people share one agent.
+
+### [`billion-context`](../systems/billion-context/)
+- Best idea: **a fold the model can undo.** Every compression block keeps the verbatim originals of the range it summarises, `decompress` returns them inline or to a file, and search covers the folded text as well as the summaries, so a summary that turns out wrong can be checked against what it replaced.
+- Second idea: session identity the requester has to hold. An anonymous request attaches to a stored session only on a byte-exact prefix from position 0, and a fork adopts a parent block only when every message the block covers is present in the incoming request.
+- Biggest risk: **the cross-session search trusts the call.** On the wire lane the proxy passes the model's tool arguments through, and `search_context` reads any session whose `conversation_id` they name, resident originals included. The plugin endpoint strips the key and the wire paths do not, and a `--host 0.0.0.0` or container deployment shares one store with no authentication.
+- Second risk: `bili sessions rm` stops at the session's own rows, leaving archive-log lines, pinned checkpoints and fork copies; the `blocks` table its schema calls append-only is upserted and pruned on every save; `decompress` writes to any path the model names; auto-update is on by default outside containers.
+- Most reusable component: `planForkAdoption` and `maybeAdoptForkBlocks` in `src/fork-adoption.ts:160`, `:347-376`, with the design record in `SESSION-IDENTITY.md`.
+- Maturity impression: MIT with an attribution term for user-facing products; 158,347 lines of TypeScript in src/ and 25,546 in the kernel outside tests; 8,016 commits, 6 August – 7 November 2026, 3,677 of them by one author; 1,299 node:test files run in CI, not run here. No marks. The paper's production figures and the third-party benchmark tables have no committed raw data to recompute from.
+- Study when: you are building reversible in-session compression and want originals, stable ref numbering and prefix-cache discipline worked out in production code.
+- Do not copy when: the proxy serves more than one person, a summary must be correctable or erasable everywhere, or memory must carry across sessions by design rather than by id.

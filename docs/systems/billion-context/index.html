@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A context-compression proxy and
+plugin whose model-written fold summaries persist per session,
+restorable to their originals and searchable from another session by
+id.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="billion-context — Agent Memory Atlas">
+    <meta property="og:description" content="A context-compression proxy
+and plugin whose model-written fold summaries persist per session,
+restorable to their originals and searchable from another session by
+id.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="billion-context — Agent Memory Atlas">
+    <meta name="twitter:description" content="A context-compression
+proxy and plugin whose model-written fold summaries persist per session,
+restorable to their originals and searchable from another session by
+id.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>billion-context — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "billion-context",
+      "description": "A context-compression proxy and plugin whose model-written fold summaries persist per session, restorable to their originals and searchable from another session by id.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Fold summaries that outlive the session</p>
+          <h1>billion-context</h1>
+          <p class="document-deck">A context-compression proxy and
+plugin whose model-written fold summaries persist per session,
+restorable to their originals and searchable from another session by
+id.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ranxianglei/billion-context">
+              <span>Source</span>
+              <strong>ranxianglei/billion-context</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ranxianglei/billion-context/commit/83bddaa0670baf36facc25688b29355f5c59fa91" title="83bddaa0670baf36facc25688b29355f5c59fa91">
+              <span>Analyzed revision</span>
+              <code>83bddaa0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-07</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ranxianglei--billion-context" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ranxianglei--billion-context</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+with an added attribution term: a product end users can see must name
+billion-context and acp-kernel, with links, on its home page,
+documentation or credits page</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>158,347
+lines of TypeScript in src/ and 25,546 in the acp-kernel package outside
+tests, plus 4,672 in pi-subagents/ and a 1,897-line Python Hermes
+plugin</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>8,016
+commits on master, 6 August – 7 November 2026; 87 contributors listed by
+the API, 3,677 commits by ranxianglei</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,299
+node:test files, 370,338 lines: 1,139 in tests/, 144 in kernel/, 16 in
+pi-subagents/; run by CI workflows, none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>billion-context is a context-compression proxy and host plugin that
+sits between a coding agent and its model API. It injects four tools so
+the model folds consumed message ranges into summaries it writes itself,
+and restores them on demand. It enters this atlas because those
+summaries outlive the session: each is a persisted claim about what
+happened, keyed to the messages it covers. Its strength is
+reversibility, since every fold keeps its originals and session identity
+refuses to attach without the history. Its weakness is a cross-session
+search that takes a session id from the model's tool arguments on the
+wire lane and checks nothing else.</p>
+<p>The code's centre of mass is the proxy, not the memory. Most of
+<code>src/</code> is wire translation, launch lanes for about two dozen
+agents, prefix-cache bookkeeping and storage migration. The
+memory-relevant core is the acp-kernel <code>CompressionState</code> and
+the per-session store under it. The kernel holds the blocks, the ref
+ledger and an opt-in rule list. The store adds a SQLite index of
+messages, blocks and content-addressed bodies, plus archive logs.</p>
+<p>No capability mark is earned. The cross-session read is the deciding
+finding for <code>scope_enforced</code>. Block lifecycle flags are not
+epistemic states, and search ignores them. The SQLite
+<code>blocks</code> table is upserted and pruned on every save, so it is
+a mirror of state rather than a log. No committed test asserts that
+particular material stays out of a populated search result.</p>
+<p>The licence is MIT with an added term: a product end users can see
+that incorporates the software must name billion-context and acp-kernel,
+with links, on its home page, its documentation or a credits page; a
+server-side use satisfies it in shipped documentation
+(<code>LICENSE</code>, mirrored in <code>kernel/LICENSE</code>). The
+term does not restrict reading or analysis. GitHub reports the licence
+as <code>NOASSERTION</code> because of it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a <strong>compression block</strong>:
+<code>blockId</code>, <code>runId</code>, <code>tier</code> (1 to 3), an
+optional <code>topic</code>, a <code>summary</code>, the raw message ids
+it directly and effectively covers, the block ids it consumed,
+<code>createdAt</code>, a survival counter, a
+<code>young</code>/<code>old</code> generation and <code>active</code>
+(<code>kernel/src/types.ts:68-112</code>). The summary is written by a
+model: the agent's own model through the <code>compress</code> tool, the
+upstream model in a proxy-run preflight fold, or a configured external
+summarizer. Nothing compares it with the range it replaced.</p>
+<p>A block is born active and renders in place of its range. It leaves
+the active set three ways:</p>
+<ul>
+<li>a tier-2 or tier-3 block consumes it, and it stays as inactive
+lineage;</li>
+<li>block sync finds its messages gone from the inbound view and
+deactivates it, unless a host marked it <code>expanded</code> because
+the user decompressed it;</li>
+<li><code>bili sessions foreign-blocks --apply</code> archives it to
+<code>block-archive.jsonl</code> when its messages never belonged to the
+session.</li>
+</ul>
+<p><code>decompress</code> does not change state. Its comment calls it
+<em>"copy-paste — the block stays active"</em>
+(<code>src/decompress-shared.ts:150</code>), and
+<code>deactivateBlock</code> in <code>kernel/src/decompress.ts:62</code>
+is reached only from the orphan reaper, which passes it by value to
+<code>reapOrphanBlocks</code> (<code>src/server.ts:4597</code>). The one
+correction path is model-driven: an inline decompress marks the block
+<code>restoredInline</code>, and a later <code>compress</code> over its
+whole span replaces the summary under the same id
+(<code>kernel/src/types.ts:93-99</code>).</p>
+<p>The originals are the ground truth, and they are kept. Each block's
+covered messages are cached in <code>blockContents</code>. Oversized
+tool results sit in a per-session content store keyed by
+<code>mNNNNN</code> ref, append-only and first write wins
+(<code>kernel/src/content-store.ts:3-27</code>). Refs are never
+re-issued.</p>
+<p>A second, smaller memory is opt-in. With <code>rules.enabled</code>,
+an <code>acp_rule</code> tool records up to 50 reminders of 300
+characters, re-injected into the system prompt every turn
+(<code>kernel/src/rules.ts:17-35</code>). Rules live in the session's
+state and fork adoption does not copy them.</p>
+<p>Nothing is treated as verified, and nothing is withheld for being
+doubtful. Search returns active and inactive blocks alike.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a block is a model-written summary over a folded range, kept per session beside its originals; search reads every block of the session it is pointed at, and on the wire lane the model can point it at another session by id</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a block is a model-written summary over a folded range, kept per session beside its originals; search reads every block of the session it is pointed at, and on the wire lane the model can point it at another session by id
+flowchart TD
+  subgraph writers[&quot;Who writes a summary&quot;]
+    direction TB
+    MODEL[&quot;model calls compress&lt;br/&gt;range, topic, summary&quot;]
+    PRE[&quot;preflight fold&lt;br/&gt;request over the window&quot;]
+    EXT[&quot;external summarizer&lt;br/&gt;when configured&quot;]
+    MODEL ~~~ PRE ~~~ EXT
+  end
+  writers --&gt; BLOCK[&quot;block bN, tier 1&lt;br/&gt;covered message ids&lt;br/&gt;originals kept&quot;]
+  BLOCK --&gt; DIST{&quot;tier-1 mass&lt;br/&gt;past threshold?&quot;}
+  DIST --&gt;|&quot;yes&quot;| T2[&quot;tier-2 block folds it&lt;br/&gt;child kept inactive&quot;]
+  DIST --&gt;|&quot;no&quot;| LIVE[&quot;active: rendered&lt;br/&gt;in place of the range&quot;]
+  T2 ~~~ LIVE
+  LIVE --&gt; SAVE[&quot;per-session state&lt;br/&gt;JSON envelope&lt;br/&gt;and index.db&quot;]
+  SAVE --&gt; SEARCH{&quot;search_context&lt;br/&gt;conversation_id set?&quot;}
+  SEARCH --&gt;|&quot;no&quot;| OWN[&quot;own session&#39;s blocks&lt;br/&gt;active and inactive&quot;]
+  SEARCH --&gt;|&quot;yes, wire lane&quot;| FOREIGN[&quot;named session&#39;s blocks&lt;br/&gt;no ownership check&quot;]
+  OWN ~~~ FOREIGN
+  OWN --&gt; DEC[&quot;decompress bN&lt;br/&gt;originals returned&lt;br/&gt;block unchanged&quot;]
+  DEC ~~~ RM[&quot;bili sessions rm&lt;br/&gt;archive lines, pinned&lt;br/&gt;checkpoints survive&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>Proxy.</strong> An HTTP server that parses Anthropic, OpenAI
+chat, OpenAI Responses and Google requests, runs the kernel's
+<code>processTurn</code> pipeline on the history, injects the tools and
+the compression doctrine, forwards the request, and rewrites the
+response. When the model calls one of its tools, the proxy executes it
+and re-requests, up to <code>MAX_LOOP_ROUNDS = 10</code>
+(<code>src/loop/core.ts:52</code>). Clients reach it through a
+<code>/bili/&lt;upstream&gt;</code> URL prefix, a TLS-intercepting
+<code>CONNECT</code> lane for whitelisted model hosts, or a launcher
+that sets either up.</p>
+<p><strong>Plugin lane.</strong> Native plugins and the MCP shell call
+<code>POST /__bili/plugin/tool</code> with a conversation id and the
+tool arguments (<code>src/server/admin.ts:797-801</code>,
+<code>src/plugin.ts:2044</code>). Management paths under
+<code>/__bili/</code> answer loopback only
+(<code>src/server/admin.ts:148-149</code>).</p>
+<p><strong>Kernel.</strong> <code>acp-kernel</code> (in
+<code>kernel/</code>, consumed as a <code>file:</code> dependency) is a
+pure library: state types, the per-turn pipeline, compression, search
+and the content store, with no I/O.</p>
+<p><strong>Store.</strong> <code>sessionsDir()</code> resolves to
+<code>$XDG_DATA_HOME/billion-context/sessions</code> or
+<code>BILI_SESSIONS_DIR</code> (<code>src/paths.ts:44-47</code>). Each
+session is a JSON envelope written atomically after a 500 ms debounce,
+with no fsync and no cross-process lock
+(<code>src/persist.ts:51-108</code>, <code>src/knobs.ts:377-380</code>).
+Beside it, <code>index.db</code> holds the unified schema
+(<code>src/storage/schema.ts:123-287</code>):</p>
+<ul>
+<li><code>sessions</code>, <code>messages</code>, <code>blocks</code>,
+<code>refs</code>, <code>dead_refs</code>;</li>
+<li><code>content</code>, a refcounted CAS of bodies;</li>
+<li><code>checkpoints</code>, frozen session records, with
+<code>pinned</code>;</li>
+<li><code>conversations</code>, <code>session_ext</code>,
+<code>kv_store</code>.</li>
+</ul>
+<p>The default mode is <code>full</code>: reads come from the index and
+envelopes are written too (<code>src/knobs.ts:873-885</code>).
+<code>storage.backend: "mysql"</code> moves the same tables to MySQL
+(<code>src/storage/mysql.ts</code>). Files are plaintext by default.
+<code>BILI_PERSIST_ZSTD=1</code> and <code>BILI_ENCRYPTION_KEY</code>
+add compression and AES-256-GCM.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>npm install -g billion-context</code> gives the
+<code>bili</code> command; the README asks for Node 22 or later for the
+SQLite engine. Nothing else has to run, and no API key is needed beyond
+the one the agent sends upstream. The proxy binds <code>127.0.0.1</code>
+by default. <code>--host 0.0.0.0</code> and the shipped
+<code>Dockerfile</code> serve other machines with <em>"no
+authentication"</em> (<code>README.md:486</code>, <code>:508-512</code>;
+<code>Dockerfile:33</code>).</p>
+<p>Installing into a host writes that host's configuration.
+<code>bili plugin install claude</code> pins
+<code>ANTHROPIC_BASE_URL</code>, sets
+<code>DISABLE_AUTO_COMPACT=1</code>, and adds a
+<code>SessionStart</code> hook and a <code>SubagentStart</code> hook to
+<code>~/.claude/settings.json</code>
+(<code>src/plugin-install.ts:677-724</code>). The repository's own
+<code>.claude-plugin/</code> manifests declare no hooks or MCP servers.
+Their <code>/billion-context:bili-setup</code> command runs the
+installer (<code>commands/bili-setup.md</code>).</p>
+<p>Self-update is on by default outside the container image, with a
+staggered rollout and a remote hold file. An advisory channel can
+force-install a named version even with auto-update off
+(<code>README.md:530</code>, <code>:550</code>).</p>
+<p>The store is human-readable JSON, but the <code>full</code> mode
+loads from <code>index.db</code>, so hand edits to an envelope do not
+reach a running proxy without the index.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Turn intake.</strong> The proxy request handler in
+<code>src/server/handle.ts</code> resolves the session, then calls the
+kernel <code>processTurn</code>
+(<code>kernel/src/compress.ts:947</code>), which assigns refs, syncs
+blocks, prunes covered messages, filters, injects the nudge and renders
+<code>&lt;acp&gt;</code> ref tags.</li>
+<li><strong>Compress.</strong> On the wire lane, the model's
+<code>tool_use</code> arguments are parsed with <code>JSON.parse</code>
+and dispatched (<code>src/loop/core.ts:1276-1289</code>,
+<code>src/stream.ts:50-66</code>,
+<code>src/compress-loop-responses.ts:108-122</code>).
+<code>applyConfiguredCompression</code>
+(<code>src/external-summary-compress.ts:37</code>) either applies the
+model's summary or replaces it with an external summarizer's, and
+<code>applyCompression</code> (<code>kernel/src/compress.ts:343</code>)
+creates the block.</li>
+<li><strong>Preflight.</strong> <code>src/preflight.ts</code> folds
+before forwarding when the request would overflow the window, calling
+the upstream with the compress prompt.</li>
+<li><strong>Search.</strong> <code>executeSearchContextTarget</code>
+(<code>src/decompress-shared.ts:950-995</code>) picks the target state,
+and <code>executeSearchContext</code> (<code>:821-937</code>)
+ranks.</li>
+<li><strong>Decompress.</strong> <code>resolveDecompress</code>
+(<code>src/decompress-shared.ts:171</code>), with the
+<code>toFile</code> writer at <code>:122-147</code>.</li>
+<li><strong>Fork and resume.</strong> <code>maybeAdoptForkBlocks</code>
+(<code>src/fork-adoption.ts:347-376</code>), and the resume inheritance
+path in <code>src/server/handle.ts:1862-1907</code>.</li>
+<li><strong>Persist.</strong> <code>SessionStore</code> in
+<code>src/persist.ts</code>; unified ingest in
+<code>ingestSession</code> (<code>src/storage/store.ts:861</code>).</li>
+<li><strong>Delete.</strong> <code>removeSession</code>
+(<code>src/persist.ts:1489-1507</code>) and <code>deleteSession</code>
+(<code>src/storage/store.ts:1810-1850</code>); archive and restore at
+<code>:1989-2170</code>; GC in <code>src/session-gc.ts</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The block (section 2) is serialized verbatim into
+<code>blocks.payload_json</code>, with projections into
+<code>tier</code>, <code>start_seq</code>, <code>end_seq</code>,
+<code>summary_hash</code>, <code>one_hash</code>,
+<code>supersedes_block_id</code>, <code>active</code> and
+<code>created_at</code> (<code>src/storage/schema.ts:172-189</code>).
+The schema header calls messages, content and blocks <em>"append-only
+facts (UPDATE is a bug)"</em> (<code>:3-6</code>). The block ingest does
+not keep that promise. A stored block absent from the saved state is
+deleted and its bodies released
+(<code>src/storage/store.ts:1134-1139</code>). Every other block is
+upserted, overwriting <code>summary_hash</code>, <code>active</code> and
+<code>payload_json</code> (<code>:1198-1209</code>). So the table is the
+current block set, and a refold leaves no trace of the summary it
+replaced.</p>
+<p><strong>Scope</strong> is the session. A session's id is the client's
+own conversation id where one is sent, used verbatim (an
+<code>x-claude-code-session-id</code> header, a Codex
+<code>session_id</code>, an OpenCode session header). With none, prefix
+affinity hashes the replayed history progressively from position 0 and
+attaches only on a byte-exact match with a stored chain's head, minting
+a fresh <code>pfa-</code> id otherwise
+(<code>SESSION-IDENTITY.md</code>, <code>src/prefix-affinity.ts</code>).
+There is no user, project or tenant key. <code>sessions.namespace</code>
+defaults to <code>'proxy'</code>, and the foreign read does not consult
+it (<code>src/persist.ts:2023-2032</code>).</p>
+<p><strong>Temporal fields</strong> are the block's
+<code>createdAt</code> and each message's first-sight <code>ts</code>.
+Neither is a validity time.</p>
+<p><strong>Lineage.</strong> <code>metadata.derivedFromSessionId</code>
+links a fork, a resumed session or a ZCode memory sub-session to its
+parent (<code>src/fork-adoption.ts:371-375</code>,
+<code>src/server/handle.ts:1830-1832</code>,
+<code>:1906-1907</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There are two retrievals, and neither is automatic in the memory
+sense.</p>
+<p><strong>The fold itself.</strong> Every request re-renders the
+history with active block summaries in place of their ranges. That is
+context assembly, bounded by the window and, per the paper's section
+3.3, by protected zones: the recent tail, the first and last user
+messages and the compression calls themselves.</p>
+<p><strong><code>search_context</code></strong> is the model's lookup.
+Its schema takes <code>query</code> and <code>limit</code>
+(<code>kernel/src/compress-tools.ts:393-408</code>). It runs the
+kernel's <code>substring</code> algorithm with a near-zero floor over
+<code>blockDocs</code>, which builds one document per block from topic
+and summary, <strong>active and inactive alike</strong>
+(<code>kernel/src/search/index.ts:22-33</code>,
+<code>src/decompress-shared.ts:845-849</code>). A second pass searches
+the verbatim originals of blocks no summary matched, capped at
+<code>limit</code> (<code>:868-894</code>). The default limit is 5, and
+a truncation note reports how many candidates were cut. An opt-in
+plan-aware re-rank reorders hits by the session's latest todo state, and
+only for its own session.</p>
+<p>An empty result is worded as scoped: <em>"Scope = compressed
+topics/summaries (active + folded-away) … NOT visible messages or other
+sessions; absence here ≠ never-discussed"</em>
+(<code>src/decompress-shared.ts:901</code>).</p>
+<p><strong><code>decompress</code></strong> returns a block's cached
+originals, or its full transitive originals with <code>full</code>, or a
+ref range with <code>startId</code>/<code>endId</code>. It returns the
+summary when no originals survive. With <code>toFile</code>, it writes
+the body to any path the model names, creating directories as needed
+(<code>:122-147</code>).</p>
+<p>The kernel ships an embedding algorithm as a reference and registers
+none (<code>kernel/src/search/algorithms/semantic.ts:1-8</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A block is created when the model calls <code>compress</code> with
+one or more ranges, each a start ref, an end ref, a topic and a summary.
+The proxy validates the range against the kernel's boundaries and
+protected zones, applies a summary length window of 50 to 20,000
+characters by default (<code>CONFIGURATION.md:287-288</code>), and
+records the block. A preflight fold does the same with a summary the
+proxy requested. When tier-1 mass passes its threshold, the nudge offers
+block ranges, and a tier-2 block consumes the tier-1 blocks it
+covers.</p>
+<p>Nothing deduplicates or reconciles summaries. Two blocks describing
+the same decision differently are both kept and both searchable.
+Agent-written content is the norm here: the model decides what to fold,
+and its summary is what later turns see.</p>
+<p><strong>Fork adoption</strong> is the one cross-session write, and it
+is guarded by holding. When an anonymous history diverges, or a client
+resumes under a new id, the child copies only parent blocks whose every
+effective message id appears in the incoming request
+(<code>src/fork-adoption.ts:13-60</code>). Rules, nudge state and stats
+are not inherited. The copy is deep, so the branches never mutate each
+other.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A model-initiated compress is synchronous inside the model round
+trip. The proxy executes it and re-requests before the client sees a
+response, so the fold costs one extra upstream call. A preflight fold
+blocks the forwarded request until the summarizer answers. A new block
+is searchable immediately in memory and on disk within the 500 ms
+debounce. No background pass rereads or rewrites the store. Injection
+per turn is the whole rendered view, which is the product: the doctrine
+text, the tool schemas, every active summary and the raw tail. The
+design keeps the prefix byte-stable between folds, through latches on
+transformed bytes and ref numbering fixed at first sight
+(<code>kernel/src/types.ts:287-424</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model holds four verbs on every lane: <code>compress</code>,
+<code>decompress</code>, <code>search_context</code>,
+<code>acp_status</code>. <code>acp_cache</code> and
+<code>acp_retrieve</code> are added where enabled, and
+<code>acp_rule</code> and <code>absorb</code> when configured. The model
+chooses what to fold and when, prompted by a nudge carrying recommended
+ranges with sizes. The paper says the nudge is removed once the fold
+lands, so it leaves nothing in the cached prefix.</p>
+<p>There is no session-start recall. A resumed session sees its own
+folded view because the history it replays matches. A new session sees
+nothing of an older one unless a fork or resume link adopts blocks, or a
+search names the older id.</p>
+<p>Adapting it to another agent needs only a configurable base URL. The
+launcher lanes for agents without one use TLS interception with a local
+CA, scoped to whitelisted model hosts
+(<code>README.md:508-512</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-cross-session-read-takes-its-target-from-the-call">The
+cross-session read takes its target from the call</h3>
+<p><code>executeSearchContextTarget</code> reads
+<code>args.conversation_id</code>. When it names another session, the
+function loads that session's state, resident or from the store, and
+returns its matching summaries under <em>"Read-only search of historical
+session …"</em> (<code>src/decompress-shared.ts:944-948</code>,
+<code>:957</code>, <code>:986-995</code>). For a resident session the
+verbatim folded originals are searched too. The only check is that the
+id exists.</p>
+<p>Which callers can supply the id at this pin:</p>
+<ul>
+<li><strong>The model, on the wire lane.</strong> The proxy parses the
+model's tool arguments and passes every key through
+(<code>src/loop/core.ts:1281</code>, <code>src/stream.ts:65</code>,
+<code>src/compress-loop-responses.ts:112</code>). No wire path strips
+<code>conversation_id</code>. The schema the model sees omits the
+parameter (<code>src/compress-tool.ts:148-153</code>), so a model sends
+it only if trained on the old schema or told to by text in its
+context.</li>
+<li><strong>Not through the plugin endpoint.</strong>
+<code>handlePluginTool</code> deletes <code>args.conversation_id</code>
+before executing (<code>src/plugin.ts:2262-2267</code>). The MCP shell's
+deliberate keep for <code>search_context</code>
+(<code>src/mcp.ts:364-405</code>), and the shim test asserting it
+(<code>tests/mcp-native-thread.test.ts:346</code>, <code>:363</code>),
+therefore end at that delete.</li>
+<li><strong>The derived-ancestor fallback.</strong> A search with no
+target that finds nothing walks <code>derivedFromSessionId</code> up to
+eight parents and answers from the first that matches
+(<code>src/decompress-shared.ts:496-511</code>, <code>:971-983</code>).
+Fork links are written even when no block was adoptable, and the code
+says so: <em>"a mis-guessed parent can at most be searched
+read-only"</em> (<code>src/fork-adoption.ts:335-344</code>).</li>
+<li><strong><code>bili export &lt;id&gt;</code></strong>, the operator's
+CLI, which the result note points to.</li>
+</ul>
+<p>On a single-user loopback proxy this reaches nothing the user's own
+shell could not read from <code>sessionsDir()</code>. On
+<code>--host 0.0.0.0</code> or the container image, every remote
+client's model shares one store, and an id is the only credential.
+Client ids are conversation UUIDs, so the exposure is to an id leaked
+into a context, not to a guessed one.</p>
+<p>The identity design states the opposite principle for adoption:
+<em>"matching requires holding a byte-identical head, so folded state
+reveals nothing the requester does not already hold"</em>
+(<code>SESSION-IDENTITY.md</code>). Fork adoption keeps that principle,
+and the foreign search does not.</p>
+<h3 id="deletion-stops-at-the-sessions-own-rows">Deletion stops at the
+session's own rows</h3>
+<p><code>bili sessions rm</code> removes the envelopes, the
+content-store sidecar and every index row, and releases the bodies
+(<code>src/persist.ts:1489-1507</code>,
+<code>src/storage/store.ts:1810-1850</code>). Four things survive
+it:</p>
+<ul>
+<li><strong>Pinned checkpoints</strong> keep their rows and a CAS
+reference to a full frozen session record, by design
+(<code>src/storage/store.ts:1829-1836</code>).</li>
+<li><strong>An archived session's line</strong> in
+<code>archive/archive.jsonl</code> holds its messages, blocks and
+bodies. Restore rewrites the log without that line (<code>:2170</code>),
+but <code>rm</code> on an archived session does not touch it.</li>
+<li><strong>Fork and resume children</strong> hold deep copies of
+adopted blocks and originals.</li>
+<li><strong>Exports and body dumps</strong> the user wrote, and the
+rotating log.</li>
+</ul>
+<p>The opt-in GC (<code>BILI_SESSION_GC=1</code>) deletes only session
+files older than seven days that were never compressed and stayed under
+one million tokens (<code>src/session-gc.ts:14-40</code>). The README
+calls every deletion audit-logged. That means one <code>info</code> line
+per file in <code>bili.log</code>, which rotates at 10 MB
+(<code>src/session-gc.ts:272-274</code>). The sweep names no index call,
+so whether a removed file's <code>index.db</code> rows survive in
+<code>full</code> mode is an open question.</p>
+<h3 id="what-the-model-can-write-outside-the-store">What the model can
+write outside the store</h3>
+<p><code>decompress</code> with <code>toFile</code> writes to any path
+the model supplies, with <code>mkdir -p</code>, as the proxy's user
+(<code>src/decompress-shared.ts:122-147</code>). An agent harness that
+sandboxes the model's own file tools does not sandbox this one.</p>
+<h3 id="trust-in-the-summaries">Trust in the summaries</h3>
+<p>A summary is the model's account of a range, and nothing checks it
+against the originals. The originals stay recoverable, which is the
+defence: a doubted summary can be checked by <code>decompress</code>. A
+summary steered by injected text in a tool result is stored and rendered
+at the head of every later turn until refolded.</p>
+<h3 id="concurrency">Concurrency</h3>
+<p>There is no per-session request lock on the wire path, and the
+persist header says two concurrent requests for one session <em>"can
+interleave processTurn and corrupt in-memory state"</em>
+(<code>src/persist.ts:111-114</code>). Two proxies sharing a sessions
+dir race on every write, behind a monotonic-counter guard.</p>
+<h3 id="marks">Marks</h3>
+<p>None is carried.</p>
+<ul>
+<li><strong><code>scope_enforced</code></strong> — the session is the
+partition, and the foreign path filters on whatever session id the
+caller passes. On the wire lane that is the model, with no ownership
+check. There is no user, project or tenant key.</li>
+<li><strong><code>audit_log</code></strong> — the <code>blocks</code>
+table is upserted and pruned on save, and the GC's audit line is a
+rotating log entry. Nothing records a compress, refold or deletion as an
+event.</li>
+<li><strong><code>trust_state</code></strong> — <code>active</code>,
+<code>expanded</code>, <code>restoredInline</code> and
+<code>generation</code> are lifecycle flags. Search reads active and
+inactive blocks alike, so none even filters.</li>
+<li><strong><code>tombstone</code></strong> — <code>deadRefs</code>
+records refs whose messages vanished and lifts when they reappear; an
+archived session row is called a tombstone and is keyed on the session.
+Neither names a rejected value.</li>
+<li><strong><code>bitemporal</code></strong> — <code>createdAt</code>
+and <code>ts</code> are record times.</li>
+<li><strong><code>human_review</code></strong> — the web panel lists
+sessions and stats, and the model writes, refolds and folds away
+summaries with no queue.</li>
+<li><strong><code>negative_eval</code></strong> — see section 10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is large: 1,299 <code>*.test.ts</code> files run by
+<code>node:test</code>, and the repository carries 29 GitHub workflows,
+including end-to-end lanes per host. I did not run them.</p>
+<p>Memory-relevant coverage:</p>
+<ul>
+<li><code>tests/search-context-cross-session.test.ts</code> pins the
+foreign read as a feature. It asserts the schema omits
+<code>conversation_id</code> (<code>:64-117</code>). It asserts a
+resident or cold-loaded foreign session is searched and its file left
+byte-identical (<code>:176-224</code>). No case refuses a foreign
+id.</li>
+<li><code>tests/search-context.test.ts:105-112</code> asserts an
+inactive block is searchable and marked inactive.</li>
+<li><code>tests/prefix-affinity.test.ts</code> and
+<code>tests/truncation-fork.test.ts</code> cover identity, including
+that an exact self-replay does not inherit from itself
+(<code>tests/prefix-affinity.test.ts:231</code>).</li>
+<li><code>tests/foreign-block-sweep.test.ts:82-115</code> archives a
+foreign block and asserts it is gone from the store's live set while a
+healthy sibling stays.</li>
+<li><code>tests/session-gc.test.ts</code> covers the GC conditions.</li>
+</ul>
+<p><code>negative_eval</code> is withheld. The foreign-block case
+asserts a store listing, not a search result.
+<code>tests/zcode-memory-isolation.test.ts:167</code> asserts folded
+originals stay out of the forwarded wire body, which is the assembled
+window. <code>tests/search-context-2751.test.ts:60</code> asserts a
+low-ranked block is cut by the limit, which is truncation. No committed
+case shows a search returning hits while a named block or another
+session's block is absent.</p>
+<p><strong>Paper.</strong> <code>paper/</code> holds <em>Model-Driven
+Incremental Hierarchical Compression</em>, preprint v0.2 dated 7
+September 2026, in-repo under MIT and described as a living document
+anyone may edit. I found no arXiv id for it. Its claims rest on
+production logs and a pilot, and its artifact map says the data and the
+experiment harness are <em>"not yet public"</em>. Only
+<code>paper/figures/make-figures.py</code> is committed, so no figure
+can be recomputed here. The pilot does carry an ablation of sorts. A
+quiescent control that never compressed reproduced almost all the
+re-fetch reduction from the doctrine text and tags alone, and a
+fixed-cadence arm beat the default on one workload.</p>
+<p>Two of the paper's mechanism statements disagree with the code at
+this pin. Its section 3.2 says <code>decompress</code> <em>"re-activates
+a block's sources and deactivates the block"</em>; the code leaves the
+block active. It says <code>search_context</code> covers block summaries
+<em>"plus recent messages"</em>. The code searches summaries and folded
+originals, and its own empty-result text says <em>"NOT visible
+messages"</em>.</p>
+<p><strong>Third-party benchmark.</strong>
+<code>benchmarks/third-party-1500/</code> holds two READMEs and seven
+PNG charts, added in commit <a
+href="https://github.com/ranxianglei/billion-context/commit/81c5466a7fb0de9d9bac52be1064e82355bb3ee8"><code class="commit-id" title="81c5466a7fb0de9d9bac52be1064e82355bb3ee8">81c5466a…</code></a>
+by Wang Tian Yi on 31 October 2026. It reports LongMemEval-S,
+ContextBench and MemoryAgentBench at 500 items each for
+<code>v0.1.202</code> against a full-context arm and three RAG arms. No
+per-item result, prompt or harness is committed, so none of its figures
+can be recomputed from this tree. <code>kernel/bench/search/</code> is a
+search-quality benchmark over a committed 289-line corpus that reports
+MRR and recall per algorithm, with no committed output.</p>
+<p>Missing before trusting it as memory: a case where a foreign or named
+block is absent from a populated search, a wire-lane case refusing a
+<code>conversation_id</code>, and a deletion case covering archive lines
+and forks.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep the original beside every summary, and give the model
+the way back.</strong> A fold the model can undo is cheaper to get
+wrong, and <code>decompress</code> with a file target keeps the restore
+out of the context window.</li>
+<li><strong>Make identity something the requester has to hold.</strong>
+Attaching an anonymous request only on a byte-exact prefix from position
+0 means state cannot leak to a request that does not contain it.</li>
+<li><strong>Adopt a derived record only when every source it covers is
+present.</strong> Set membership on content-hash ids is position-free
+and rejects a block straddling the fork.</li>
+<li><strong>Word an empty search result as scoped.</strong> Naming what
+was searched, and that absence is not proof, stops a model from reading
+a miss as a fact.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A parameter removed from the schema but not from the
+handler.</strong> Stripping it on one lane and honouring it on another
+leaves the read open wherever the arguments arrive raw. Strip it at the
+dispatcher every lane shares.</li>
+<li><strong>A table documented as append-only and written by
+upsert.</strong> A reader trusting the comment expects history the rows
+do not keep.</li>
+<li><strong>Calling a rotating log line an audit trail.</strong></li>
+<li><strong>A model-chosen output path written by a process outside the
+agent's sandbox.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who runs long coding sessions on one machine
+and wants them to stop dying at the window, with every fold reversible.
+As memory it is thin by design: per-session summaries with no
+cross-session recall a person can steer, no correction verb and no
+notion of a summary being wrong. Do not run it as a shared service,
+because the store has no owner key and the cross-session read trusts the
+call. The maintenance surface is large: a self-updating proxy across
+about two dozen agents and four wire protocols, changing many times a
+day.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether any shipped model emits <code>conversation_id</code> on
+<code>search_context</code> in practice, and whether a prompt-injected
+id has been observed in the wild.</li>
+<li>Whether the GC's file deletion leaves the session's
+<code>index.db</code> rows in <code>full</code> mode, where reads prefer
+the index.</li>
+<li>Whether a request carrying another conversation's client id, without
+its history, is ever rendered that conversation's active summaries.</li>
+<li>How the README's "audit-logged" GC claim is meant to survive the 10
+MB log rotation.</li>
+<li>Whether the paper's production corpus will be published, which the
+artifact map says is planned.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>State and kernel: <code>kernel/src/types.ts</code>,
+<code>kernel/src/state.ts</code>, <code>kernel/src/compress.ts</code>,
+<code>kernel/src/decompress.ts</code>,
+<code>kernel/src/content-store.ts</code>,
+<code>kernel/src/rules.ts</code>,
+<code>kernel/src/search/index.ts</code>,
+<code>kernel/src/compress-tools.ts</code></li>
+<li>Tool execution: <code>src/decompress-shared.ts</code>,
+<code>src/stream.ts</code>, <code>src/loop/core.ts</code>,
+<code>src/compress-loop-responses.ts</code>,
+<code>src/external-summary-compress.ts</code>,
+<code>src/preflight.ts</code>, <code>src/compress-tool.ts</code></li>
+<li>Plugin and MCP lanes: <code>src/plugin.ts</code>,
+<code>src/mcp.ts</code>, <code>src/server/admin.ts</code>,
+<code>src/plugin-install.ts</code>,
+<code>hermes-plugin/__init__.py</code>, <code>plugins/codex/</code></li>
+<li>Identity: <code>SESSION-IDENTITY.md</code>,
+<code>src/prefix-affinity.ts</code>, <code>src/fork-adoption.ts</code>,
+<code>src/server/handle.ts</code></li>
+<li>Storage: <code>src/paths.ts</code>, <code>src/persist.ts</code>,
+<code>src/storage/schema.ts</code>, <code>src/storage/store.ts</code>,
+<code>src/storage/mysql.ts</code>, <code>src/session-gc.ts</code>,
+<code>src/storage-maintenance.ts</code></li>
+<li>Tests: <code>tests/search-context-cross-session.test.ts</code>,
+<code>tests/search-context.test.ts</code>,
+<code>tests/mcp-native-thread.test.ts</code>,
+<code>tests/foreign-block-sweep.test.ts</code>,
+<code>tests/session-gc.test.ts</code>,
+<code>tests/prefix-affinity.test.ts</code></li>
+<li>Paper and benchmarks: <code>paper/</code>,
+<code>benchmarks/third-party-1500/</code>,
+<code>kernel/bench/search/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No wire path strips <code>conversation_id</code>.</strong>
+<code>git grep -n -E 'conversation_id' -- src/stream.ts src/loop/ src/compress-loop-responses.ts src/stream-google.ts src/server/handle.ts</code>
+returns nothing; the same pattern over <code>src/plugin.ts</code>
+matches the delete at <code>:2267</code> and two comments.</li>
+<li><strong><code>deactivateBlock</code> runs only from the orphan
+reaper.</strong>
+<code>git grep -n -w deactivateBlock -- 'src/*.ts' 'kernel/src/*.ts' ':!*.test.ts'</code>
+matches its definition, the kernel export, the import in
+<code>src/server.ts</code>, two comments and the by-value call at
+<code>src/server.ts:4597</code>.</li>
+<li><strong>No event or audit table.</strong>
+<code>git grep -n -i -E 'CREATE TABLE IF NOT EXISTS [a-z_]*(event|audit|journal|history|log)' -- 'src/*.ts' 'kernel/src/*.ts'</code>
+returns nothing;
+<code>git grep -n -E 'CREATE TABLE IF NOT EXISTS' -- src/storage/schema.ts</code>
+matches seventeen lines: the twelve DDL tables, four migration
+statements and one comment.</li>
+<li><strong>The GC names no index call.</strong>
+<code>/usr/bin/grep -n -E 'shadow|unified|removeSession|deleteSession|index\.db' src/session-gc.ts</code>
+returns nothing.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|validfrom|validTo|valid_at' -- 'src/*.ts' 'kernel/src/*.ts' ':!*.test.ts'</code>
+returns nothing.</li>
+<li><strong>No embedding retrieval registered.</strong>
+<code>git grep -n -i -E 'embedding|cosine' -- 'src/*.ts' 'kernel/src/*.ts' ':!*.test.ts'</code>
+returns the unregistered reference algorithm, two search-module comments
+naming it, and uses of the word for embedding hosts and embedded text in
+<code>ccr.ts</code>, <code>config.ts</code>, <code>launcher.ts</code>,
+<code>server/admin.ts</code> and <code>web/</code>.</li>
+<li><strong>No committed benchmark results.</strong>
+<code>git ls-files | /usr/bin/grep -i -E 'bench|eval|longmem|locomo'</code>
+returns the nine files under <code>benchmarks/third-party-1500/</code>
+and the two under <code>kernel/bench/search/</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-07</strong> — <a
+href="https://github.com/ranxianglei/billion-context/commit/83bddaa0670baf36facc25688b29355f5c59fa91"><code class="commit-id" title="83bddaa0670baf36facc25688b29355f5c59fa91">83bddaa0…</code></a>.
+First reading, from a depth-1 clone. Screened first: one auto-run
+surface, the <code>.claude-plugin/</code> marketplace and plugin
+manifests, which declare no hooks or MCP servers; the
+<code>SessionStart</code> and <code>SubagentStart</code> hooks are
+written into <code>~/.claude/settings.json</code> by
+<code>bili plugin install claude</code>. A Codex plugin under
+<code>plugins/codex/</code> starts an MCP server and the screen does not
+parse it. Eight dependency files inside the cooldown, all dated to the
+tip by the shallow clone; one <code>prepare</code> script; four unpinned
+surfaces, two of them <code>file:</code> packages in the tree. MIT with
+an attribution rider that does not restrict analysis. Nothing installed,
+built or run. No marks: the cross-session search takes its target from
+the model on the wire lane (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

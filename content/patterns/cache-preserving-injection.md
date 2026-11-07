@@ -247,6 +247,15 @@ on how to write one.
   bytes until the next trim. Stripping signed reasoning from each former
   latest message as newer ones arrived rewrote the trimmed history to the
   cache on every turn that thought, so the strip point moves only at a trim.
+- **[billion-context](../../systems/billion-context/)** — the constraint as the
+  whole product. A proxy that folds history into model-written summaries
+  rewrites the middle of the prompt by design, so it confines every rewrite to
+  a fold: transformed bytes, emergency clips and deferred ref tags are latched
+  at first application, replayed verbatim on quiet turns and released together
+  at the next successful fold (`kernel/src/types.ts:287-424`). Token counts,
+  ref numbers and first-sight timestamps are stored once, so a restart
+  re-renders the same bytes. The README treats a sustained cache-hit rate
+  below 95% as a fault to diagnose.
 
 Note that [MemOS](../../systems/memos/)'s "activation memory: KV/prefix cache" is
 a *different* mechanism — reusing model state rather than positioning text — and
