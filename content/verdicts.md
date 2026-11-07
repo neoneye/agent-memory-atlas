@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 789 reports.**
+**This page covers all 790 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7232,3 +7232,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT with an attribution term for user-facing products; 158,347 lines of TypeScript in src/ and 25,546 in the kernel outside tests; 8,016 commits, 6 August – 7 November 2026, 3,677 of them by one author; 1,299 node:test files run in CI, not run here. No marks. The paper's production figures and the third-party benchmark tables have no committed raw data to recompute from.
 - Study when: you are building reversible in-session compression and want originals, stable ref numbering and prefix-cache discipline worked out in production code.
 - Do not copy when: the proxy serves more than one person, a summary must be correctable or erasable everywhere, or memory must carry across sessions by design rather than by id.
+
+### [`openyantra`](../systems/openyantra/)
+- Best idea: **a quarantine the agent cannot drain.** A sheet write matching a confirmed injection, jailbreak, impersonation or zero-width pattern is held in its own sheet, out of every other sheet, the search index and the context, until a person presses Release in the dashboard. No MCP tool, adapter, bot command or CLI verb releases it, and the writer refuses writes addressed to the Quarantine sheet.
+- Second idea: one writer for the workbook that records every outcome. `LedgerAgent._process` appends a ledger row for `written`, `rejected` and `conflict` alike, so a refused write leaves a trace beside the accepted ones.
+- Biggest risk: **every write is applied twice.** The crash-safety queue in `sanchitta.json` is appended before each write and never acknowledged, and the next `OpenYantra()` in any process replays all of it, so every add lands a second row. The project's committed workbook carries the duplicates.
+- Second risk: the MCP `memory_*` tools write a separate JSON store with no scan, redaction, filter or ledger, and no context reads it. Four of the six MCP sheet-write tools fail on an assertion, a missing method or a shifted argument. Several processes rewrite the whole workbook with no file lock, and the SQLite engine, the incremental index and preference promotion have no producer.
+- Most reusable component: the quarantine path, `_quarantine` and `release_quarantine` in `openyantra/core.py:1250-1292`, with the release route at `openyantra/yantra_ui.py:238-241`.
+- Maturity impression: CC0 1.0 for the protocol and MIT for three named library files, one absent at the pin, with no stated grant for the rest; 10,855 lines of Python outside tests; 63 commits, 20 March – 7 November 2026, 48 of them on 7 November; 70 pytest functions run in CI, not run here. Two marks: `audit_log`, `human_review`. The whitepaper's validation is review by language models, and no benchmark is committed.
+- Study when: you want a write gate whose security hold only a person can clear, or a memory a person reads and edits in a spreadsheet application.
+- Do not copy when: more than one process writes, a write must land exactly once, or the agent's own memory tools must pass the same gate as everything else.

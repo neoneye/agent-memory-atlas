@@ -465,6 +465,19 @@ seconds (<code>:1480-1514</code>). The module docstring defers a
 ledger-aware <code>flush()</code> to later releases
 (<code>enrichment_ledger.py:1-7</code>). The durable half of the pattern
 is built; the worker that reads it back is the missing half.</p>
+<p><strong><a href="../../systems/openyantra/">OpenYantra</a> persists
+every write before applying it and never acknowledges one.</strong>
+<code>LedgerAgent.submit</code> appends the request to
+<code>sanchitta.json</code> and processes it, and nothing removes the
+entry on success; the next process to construct <code>OpenYantra</code>
+empties the file and runs every request again
+(<code>openyantra/core.py:256-264</code>, <code>:466-471</code>). The
+crash-safety queue is therefore a second write: each <code>add</code>
+lands two rows and the ledger records both under one request id, which
+the project's own committed workbook shows. The request-id check that
+would make replay idempotent exists in a SQLite writer that nothing
+outside tests calls
+(<code>openyantra/yantra_sqlite.py:461-486</code>).</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>

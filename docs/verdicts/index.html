@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 789 reports.</strong></p>
+<p><strong>This page covers all 790 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32842,6 +32842,49 @@ out in production code.</li>
 <li>Do not copy when: the proxy serves more than one person, a summary
 must be correctable or erasable everywhere, or memory must carry across
 sessions by design rather than by id.</li>
+</ul>
+<h3 id="openyantra"><a
+href="../systems/openyantra/"><code>openyantra</code></a></h3>
+<ul>
+<li>Best idea: <strong>a quarantine the agent cannot drain.</strong> A
+sheet write matching a confirmed injection, jailbreak, impersonation or
+zero-width pattern is held in its own sheet, out of every other sheet,
+the search index and the context, until a person presses Release in the
+dashboard. No MCP tool, adapter, bot command or CLI verb releases it,
+and the writer refuses writes addressed to the Quarantine sheet.</li>
+<li>Second idea: one writer for the workbook that records every outcome.
+<code>LedgerAgent._process</code> appends a ledger row for
+<code>written</code>, <code>rejected</code> and <code>conflict</code>
+alike, so a refused write leaves a trace beside the accepted ones.</li>
+<li>Biggest risk: <strong>every write is applied twice.</strong> The
+crash-safety queue in <code>sanchitta.json</code> is appended before
+each write and never acknowledged, and the next
+<code>OpenYantra()</code> in any process replays all of it, so every add
+lands a second row. The project's committed workbook carries the
+duplicates.</li>
+<li>Second risk: the MCP <code>memory_*</code> tools write a separate
+JSON store with no scan, redaction, filter or ledger, and no context
+reads it. Four of the six MCP sheet-write tools fail on an assertion, a
+missing method or a shifted argument. Several processes rewrite the
+whole workbook with no file lock, and the SQLite engine, the incremental
+index and preference promotion have no producer.</li>
+<li>Most reusable component: the quarantine path,
+<code>_quarantine</code> and <code>release_quarantine</code> in
+<code>openyantra/core.py:1250-1292</code>, with the release route at
+<code>openyantra/yantra_ui.py:238-241</code>.</li>
+<li>Maturity impression: CC0 1.0 for the protocol and MIT for three
+named library files, one absent at the pin, with no stated grant for the
+rest; 10,855 lines of Python outside tests; 63 commits, 20 March – 7
+November 2026, 48 of them on 7 November; 70 pytest functions run in CI,
+not run here. Two marks: <code>audit_log</code>,
+<code>human_review</code>. The whitepaper's validation is review by
+language models, and no benchmark is committed.</li>
+<li>Study when: you want a write gate whose security hold only a person
+can clear, or a memory a person reads and edits in a spreadsheet
+application.</li>
+<li>Do not copy when: more than one process writes, a write must land
+exactly once, or the agent's own memory tools must pass the same gate as
+everything else.</li>
 </ul>
         </article>
       </div>

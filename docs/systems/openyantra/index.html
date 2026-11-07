@@ -1,0 +1,1032 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local personal-memory toolkit
+keeping a user model in a LibreOffice workbook behind one gated writer,
+beside a separate JSON store for MCP memory.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenYantra — Agent Memory Atlas">
+    <meta property="og:description" content="A local personal-memory
+toolkit keeping a user model in a LibreOffice workbook behind one gated
+writer, beside a separate JSON store for MCP memory.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenYantra — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local personal-memory
+toolkit keeping a user model in a LibreOffice workbook behind one gated
+writer, beside a separate JSON store for MCP memory.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenYantra — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenYantra",
+      "description": "A local personal-memory toolkit keeping a user model in a LibreOffice workbook behind one gated writer, beside a separate JSON store for MCP memory.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One gated writer, one workbook, every write
+applied twice</p>
+          <h1>OpenYantra</h1>
+          <p class="document-deck">A local personal-memory toolkit
+keeping a user model in a LibreOffice workbook behind one gated writer,
+beside a separate JSON store for MCP memory.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/revanthlevaka/OpenYantra">
+              <span>Source</span>
+              <strong>revanthlevaka/OpenYantra</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/revanthlevaka/OpenYantra/commit/bf86ff26b72ee241d6c9915afc7d0604db9bbbdb" title="bf86ff26b72ee241d6c9915afc7d0604db9bbbdb">
+              <span>Analyzed revision</span>
+              <code>bf86ff26…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-07</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/revanthlevaka--OpenYantra" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>revanthlevaka--OpenYantra</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>LICENSE
+grants CC0 1.0 to the OpenYantra Protocol and MIT to three library files
+it names bare, openyantra.py, vidyakosha.py and yantra_ui.py, followed
+by the MIT text; openyantra.py was removed on 20 May 2026 and its code
+lives in openyantra/core.py, the other two sit under openyantra/, and no
+stated grant covers the rest of the tree; pyproject.toml declares MIT
+for the package and GitHub reports NOASSERTION</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>10,855
+lines of Python outside tests: 10,802 in openyantra/ (core.py 2,622,
+yantra_sqlite.py 1,003, yantra_ui.py 790) and 53 in examples/; 3,275
+lines of HTML and JavaScript in UI/v4; 785 lines of installer shell and
+PowerShell</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>63
+commits, 20 March – 7 November 2026: 46 by Revanth Levaka under three
+addresses, 13 authored as Claude, 4 by dependabot; 48 of them on 7
+November; the repository was created on 15 March 2026 and its first
+commit is already v2.12</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>70
+pytest functions in 15 files, 1,651 lines with conftest.py, run by
+ci.yml on Ubuntu with Python 3.9–3.12 and on macOS and Windows with
+3.11; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenYantra is a local, single-user memory toolkit that keeps a
+structured model of one person as sheets in a LibreOffice workbook,
+written through one gated writer and served to Claude Desktop and Cursor
+over MCP. The gate is the notable part: an injection scan that can hold
+a write for a person to release, an admission filter, vocabulary checks,
+and a row on an append-only ledger sheet. The weakness is around the
+gate. Its crash-safety queue is never acknowledged, so the next process
+to open the workbook applies every write again. The MCP memory tools
+write a separate JSON store no gate reaches. The SQLite engine and the
+advertised preference promotion have no working producer.</p>
+<p>The licence grant is narrower than the tree. <code>LICENSE</code>
+puts the protocol under CC0 1.0 and names three library files for MIT,
+one of which, <code>openyantra.py</code>, was removed on 20 May 2026. No
+stated grant covers the CLI, the MCP server, the adapters or the rest of
+<code>openyantra/</code>, although <code>pyproject.toml</code> declares
+the package MIT. A reader who wants to reuse code should treat the MIT
+grant as covering <code>vidyakosha.py</code> and
+<code>yantra_ui.py</code> and ask about the rest.</p>
+<p>The README describes a SQLite WAL store shared by the HUD, the CLI
+and the MCP server. At this commit the HUD and the MCP sheet tools share
+the workbook, the MCP memory tools use a JSON file, and SQLite holds
+only hand-drawn graph edges. Two marks are earned, both on the sheet
+engine: <code>audit_log</code> on the ledger sheet and
+<code>human_review</code> on the quarantine. Section 9 gives the reason
+for each of the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>row in a sheet</strong> of
+<code>chitrapat.ods</code>. The sheets are Identity, Goals, Projects,
+People, Preferences, Beliefs, Tasks, Open Loops, Session Log, Agent
+Config, the ledger (Agrasandhanī), Inbox and Corrections, plus
+Quarantine and Security Log created on first use. A row is identified by
+its first column — the attribute, task text or loop topic — and carries
+<code>Confidence</code> (High, Medium, Low, Inferred),
+<code>Source</code> (User-stated, Agent-observed, Agent-inferred,
+System), <code>Importance</code> 1 to 10 and <code>Last Updated</code>
+(<code>openyantra/core.py:68-96</code>, <code>:2526-2622</code>).</p>
+<p>A row becomes a belief by passing four gates in order, and nothing
+marks it as less than true afterwards:</p>
+<ul>
+<li><strong>Raksha</strong> redacts secrets, then scans the joined field
+text. A confirmed injection, jailbreak, impersonation or zero-width
+pattern sends the write to Quarantine; a suspicious one adds a
+<code>_security_flag</code> column and lets it through
+(<code>core.py:530-548</code>,
+<code>openyantra/yantra_security.py:457-555</code>).</li>
+<li><strong>Admission</strong> drops a write whose text contains a noise
+phrase or whose importance is below 2, with no ledger row
+(<code>core.py:109-145</code>).</li>
+<li><strong>Validation</strong> rejects an unknown sheet or a value
+outside the controlled vocabulary (<code>core.py:307-322</code>).</li>
+<li><strong>Conflict</strong> refuses an update that would change a
+High-confidence field from a request that is not High
+(<code>core.py:324-342</code>).</li>
+</ul>
+<p>A row stops counting through a lifecycle column read by the context
+builder: a loop resolved, a task Done, a project not Active, a goal not
+Active or In Progress (<code>core.py:954-968</code>). Identity, People,
+Preferences and Beliefs rows have no such column; they change only by
+overwrite. The <code>delete</code> operation is in the vocabulary and
+has no branch in the committer, so nothing is ever deleted
+(<code>core.py:77</code>, <code>:348-400</code>). A git revert adds a
+new Session Log row labelled <em>Reverted / Superseded Decision</em>;
+the reverted commit's own row is untouched
+(<code>openyantra/yantra_git.py:106-127</code>).</p>
+<p>The <strong>cognitive store</strong> is a second memory with no
+relation to the first: a JSON list of notes with a key, a type, an agent
+name, content, tags and a timestamp. A write replaces the note with the
+same key case-insensitively, and a delete removes it
+(<code>openyantra/cognitive_db.py:40-111</code>). Only the MCP
+<code>memory_*</code> tools and the dashboard's cognitive routes reach
+it, and no context builder reads it.</p>
+<p>Control is hybrid. The agent writes through MCP, a person writes
+through the HUD, the dashboard, the CLI, Telegram, LibreOffice or
+Obsidian, and Nidra resolves loops when someone runs it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a sheet row is believed once it clears four gates, and the queue meant to make it crash-safe applies it again at the next start; the MCP memory tools write a second store none of the gates reach</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a sheet row is believed once it clears four gates, and the queue meant to make it crash-safe applies it again at the next start; the MCP memory tools write a second store none of the gates reach
+flowchart TD
+  subgraph writers[&quot;Sheet writers&quot;]
+    direction TB
+    W1[&quot;MCP add_task,&lt;br/&gt;resolve_open_loop&quot;]
+    W2[&quot;HUD, dashboard, CLI,&lt;br/&gt;Telegram, mail, vault&quot;]
+    W3[&quot;git post-commit hook,&lt;br/&gt;Nidra consolidation&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  writers --&gt; RK{&quot;Raksha: a confirmed&lt;br/&gt;injection pattern?&quot;}
+  RK --&gt;|&quot;yes&quot;| Q[&quot;Quarantine sheet&lt;br/&gt;waits for Release&lt;br/&gt;in the dashboard&quot;]
+  RK --&gt;|&quot;no&quot;| SQ[&quot;appended to&lt;br/&gt;sanchitta.json,&lt;br/&gt;kept after the write&quot;]
+  Q --&gt;|&quot;person releases&quot;| SQ
+  SQ --&gt; GATE{&quot;noise substring,&lt;br/&gt;unknown sheet, bad&lt;br/&gt;vocabulary, conflict?&quot;}
+  GATE --&gt;|&quot;yes&quot;| DROP[&quot;dropped; a rejected&lt;br/&gt;or conflict ledger row&quot;]
+  GATE --&gt;|&quot;no&quot;| ROW[&quot;row in chitrapat.ods&lt;br/&gt;plus a written&lt;br/&gt;ledger row&quot;]
+  ROW --&gt; CTX[&quot;session context:&lt;br/&gt;Active, unresolved,&lt;br/&gt;not Done&quot;]
+  ROW --&gt; SRCH[&quot;semantic search:&lt;br/&gt;every row, no&lt;br/&gt;status filter&quot;]
+  CTX ~~~ RP[&quot;next OpenYantra():&lt;br/&gt;queue replayed,&lt;br/&gt;each add lands twice&quot;]
+  RP --&gt; ROW
+  SRCH ~~~ COG[&quot;memory_write / delete:&lt;br/&gt;cognitive_memories.json,&lt;br/&gt;overwrite by key or&lt;br/&gt;hard delete, no gates&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything is one Python package, <code>openyantra/</code>,
+constructed per process. Each of the MCP server, the dashboard, the
+Telegram bot, the iOS Shortcut server, the mail daemon, the CLI and the
+git hook opens its own <code>OpenYantra</code> on the same workbook.</p>
+<ul>
+<li><strong><code>core.py</code></strong> holds <code>OpenYantra</code>,
+the writer <code>LedgerAgent</code> and the queue
+<code>WriteQueue</code>. The constructor replays the queue, opens the
+search index, and creates a SQLite <code>SyncEngine</code> beside the
+workbook (<code>core.py:462-500</code>).</li>
+<li><strong><code>yantra_security.py</code></strong> is Raksha: regex
+lists, secret redaction and trust tiers keyed on the writer's agent
+name.</li>
+<li><strong><code>vidyakosha.py</code></strong> is the search sidecar: a
+FAISS flat inner-product index, a pickled BM25 index and a JSON registry
+of indexed rows.</li>
+<li><strong><code>yantra_sqlite.py</code></strong> creates fifteen
+tables mirroring the sheets, plus <code>_meta</code>,
+<code>_sync_state</code> and <code>edges</code>, at every start
+(<code>yantra_sqlite.py:128-381</code>). Only <code>edges</code> is
+written in product code, by the dashboard.</li>
+<li><strong><code>cognitive_db.py</code></strong> and
+<strong><code>cognitive_mcp.py</code></strong> are the JSON store and a
+hand-written line-delimited JSON-RPC server announcing protocol
+<code>2024-11-05</code>.</li>
+<li><strong><code>yantra_ui.py</code></strong> is a FastAPI app on
+<code>127.0.0.1:7331</code> serving <code>UI/v4/dashboard.html</code>
+and <code>UI/v4/hud.html</code>; <code>desktop.py</code> opens either in
+pywebview or a browser.</li>
+</ul>
+<p>Beside the workbook the package keeps <code>sanchitta.json</code>,
+<code>chitrapat.db</code>, <code>cognitive_memories.json</code>,
+<code>settings.json</code>, <code>vidyakosha.faiss</code>,
+<code>vidyakosha_bm25.pkl</code>, <code>vidyakosha_registry.json</code>,
+a <code>pratibimba/</code> folder of per-agent snapshots and yearly
+<code>chitrapat_sessions_&lt;year&gt;.ods</code> archives.</p>
+<p>A write is a whole-file rewrite. <code>_write_sheet</code> parses
+every sheet with pandas, then writes them all back through
+<code>pd.ExcelWriter</code> in place, with no temporary file and no file
+lock (<code>core.py:402-417</code>). The atomic temp-and-replace export
+and the portalocker lock exist only in
+<code>SyncEngine.export_ods</code>, which no production path triggers
+(<code>yantra_sqlite.py:594-718</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The core needs Python 3.9 or later with <code>odfpy</code> and
+<code>pandas</code>. Search adds <code>scikit-learn</code> and
+<code>faiss-cpu</code>, MiniLM is optional, and the dashboard adds
+FastAPI, uvicorn and <code>webauthn</code>. No API key is needed to
+store anything. Nidra calls a local Ollama on
+<code>localhost:11434</code> when one answers and falls back to a
+template sentence. Everything runs offline.</p>
+<p>The store is the point of the design. A person can open
+<code>chitrapat.ods</code> in LibreOffice, read every sheet and fix a
+row by hand. Such an edit bypasses Raksha and the ledger. The
+<code>yantra sync</code> command that the skill file describes as
+importing such edits calls <code>SyncEngine.import_ods</code>, whose
+body opens the file and returns a note: <em>"stub returns OK for
+now"</em> (<code>yantra_sqlite.py:762</code>). A hand edit takes effect
+because the workbook is the store; the search index sees it at the next
+write.</p>
+<p>The first-run path is <code>curl … install.sh | bash</code> or
+<code>install.ps1</code>; section 8 lists what each writes.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Sheet write.</strong> <code>OpenYantra.request_write</code>
+(<code>core.py:524-576</code>) runs Raksha, then
+<code>LedgerAgent.submit</code>, which appends the request to
+<code>sanchitta.json</code> and calls <code>_process</code>
+(<code>:256-259</code>, <code>:270-305</code>). <code>_process</code>
+runs admission, <code>_validate</code>, <code>_check_conflict</code>,
+<code>_seal</code>, <code>_commit</code> and <code>_log_audit</code>. On
+<code>written</code>, <code>request_write</code> calls
+<code>VidyaKosha.sync</code> over the whole workbook, because the
+<code>incremental_update</code> it checks for is not defined
+(<code>:559-563</code>). It then asks <code>SHEET_TABLE_MAP</code> for
+an edge table; that map is keyed <code>Tasks</code>,
+<code>OpenLoops</code>, while sheet names carry emoji, so the lookup is
+always <code>None</code> (<code>:570</code>,
+<code>yantra_sqlite.py:61-77</code>).</li>
+<li><strong>Replay.</strong> <code>OpenYantra.__init__</code> calls
+<code>replay_queue</code>, which empties the queue and runs
+<code>_process</code> on every request in it
+(<code>core.py:466-471</code>, <code>:261-264</code>).</li>
+<li><strong>Capture.</strong> MCP sheet tools
+(<code>cognitive_mcp.py:395-463</code>); the dashboard and HUD through
+<code>POST /api/inbox</code> (<code>yantra_ui.py:193-198</code>,
+<code>UI/v4/hud.html:408</code>); <code>yantra inbox</code>
+(<code>cli.py:274-277</code>); Telegram commands and plain messages
+(<code>telegram_bot.py:151-240</code>); the iOS Shortcut server
+(<code>ios_shortcut.py:55-93</code>); the SMTP daemon
+(<code>yantra_mail.py:20-49</code>); Obsidian import
+(<code>yantra_vault.py:181-245</code>); the post-commit hook
+(<code>yantra_git.py:63-127</code>); and the CrewAI, LangChain and
+OpenClaw adapters.</li>
+<li><strong>Routing.</strong> <code>route_inbox</code> sends each
+unrouted Inbox row to the sheet a keyword list picks, as a
+Low-confidence <code>Agent-inferred</code> row, then marks the Inbox row
+by its first 50 characters (<code>core.py:604-640</code>,
+<code>:2215-2236</code>).</li>
+<li><strong>Consolidation.</strong>
+<code>NidraConsolidator.consolidate</code> clusters the last 25
+sessions, resolves loops, computes promotions and logs a summary session
+(<code>yantra_nidra.py:208-303</code>), from <code>yantra dream</code>,
+<code>POST /api/nidra/consolidate</code> or the HUD.</li>
+<li><strong>Context.</strong> <code>load_session_context</code>
+(<code>core.py:945-984</code>) feeds
+<code>build_system_prompt_block</code> (<code>:986-1032</code>) and
+<code>build_context_markdown</code> (<code>:1658-1817</code>), which MCP
+<code>get_system_context</code> returns;
+<code>SutraCompiler.compile</code> packs a token budget
+(<code>yantra_sutra.py:71-365</code>).</li>
+<li><strong>Search.</strong> <code>OpenYantra.search</code>
+(<code>core.py:1041-1098</code>) over <code>VidyaKosha.query</code>
+(<code>vidyakosha.py:355-439</code>), reached through the LangChain
+retriever and the CrewAI adapter;
+<code>CognitiveMemoryStore.search</code>
+(<code>cognitive_db.py:113-157</code>); <code>SyncEngine.traverse</code>
+(<code>yantra_sqlite.py:923-967</code>).</li>
+<li><strong>Correction.</strong> Update and resolve through
+<code>_commit</code>; the corrections queue
+(<code>core.py:642-682</code>, <code>yantra_ui.py:205-221</code>);
+quarantine release (<code>core.py:1250-1270</code>,
+<code>yantra_ui.py:238-241</code>); cognitive delete
+(<code>cognitive_db.py:99-111</code>); session-log archival
+(<code>core.py:1117-1162</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The controlled vocabularies are sets in <code>core.py:68-77</code>:
+project, task and goal statuses, four priorities,
+<code>Yes</code>/<code>No</code>, three preference strengths, four
+confidence values, four sentiments, four sources and six operations.
+Column names follow the template, and <code>_commit</code> adds any new
+field as a new column, so a writer that names a field wrongly widens the
+sheet instead of failing.</p>
+<p><strong>Row identity is the first column's text.</strong>
+<code>update</code>, <code>resolve</code> and <code>archive</code> build
+a mask on <code>df.iloc[:, 0] == row_identifier</code> and change every
+matching row (<code>core.py:365-397</code>). An update that matches
+nothing appends a new row with the requested fields, so a mistyped task
+name sent to the dashboard's complete route creates a row with status
+Done and no task text.</p>
+<p><strong>Provenance is caller-supplied.</strong> <code>Source</code>
+and <code>Added By</code> come from the request. <code>add_task</code>,
+<code>add_project</code> and <code>update_identity</code> hardcode
+<code>source="User-stated"</code> and <code>confidence="High"</code>, so
+a task the agent creates through MCP is recorded as the person's
+statement (<code>core.py:820-860</code>).</p>
+<p><strong>Scope.</strong> One workbook per person. The one key is the
+Agent Config sheet's <code>Agent</code> column, which
+<code>load_session_context</code> uses to pick the instructions an agent
+receives, with <code>ALL</code> as the wildcard
+(<code>core.py:948-952</code>). The cognitive notes carry an agent name
+that no read consults.</p>
+<p><strong>Time.</strong> <code>Last Updated</code> in UTC seconds,
+<code>Opened</code> on loops, <code>Deadline</code> on tasks and goals,
+and the ledger's request timestamp. There is no validity time.
+<code>TTL_Days</code> on loops is read by
+<code>check_anishtha_ttl</code>, which reports expired loops and changes
+nothing (<code>core.py:716-745</code>).</p>
+<p><strong>Unwired columns.</strong> Beliefs carries
+<code>Contradiction_Flag</code>, created by the template and the
+migrator and written by nothing; <code>diff_beliefs</code> returns
+same-topic pairs to the CLI (<code>core.py:684-714</code>).</p>
+<p><strong>The SQLite schema</strong> mirrors the sheets with lowercase
+columns and a <code>UNIQUE</code> request id on <code>ledger</code> for
+idempotent writes (<code>yantra_sqlite.py:128-381</code>).
+<code>SyncEngine.write</code> has callers only in
+<code>tests/test_setu.py</code>.</p>
+<p><strong>Committed data files.</strong> The root
+<code>chitrapat.ods</code> is a workbook bootstrapped on 20 May 2026 at
+v2.12, holding a first name, a city and an occupation in Identity. Its
+Session Log has the bootstrap row twice, 15 seconds apart. Its ledger
+has the same four writes twice, under the same request ids and
+timestamps, which is the replay in section 9 recorded in the project's
+own file. <code>cognitive_memories.json</code> is an empty list, and
+<code>settings.json</code> holds the defaults with empty key fields.
+<code>.gitignore</code> lists all three as user data.
+<code>openyantra/chitrapat_template.ods</code> is the blank
+template.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Context injection</strong> is assembled from sheets, not
+search. <code>load_session_context</code> returns the identity map, the
+agent's instructions, Active projects, unresolved loops sorted by
+importance and capped at 15, Active or In Progress goals, tasks whose
+status is not Done, pending corrections and the unrouted Inbox count
+(<code>core.py:945-984</code>). Archived and Blocked tasks pass that
+filter. <code>build_context_markdown</code> caps each section at four to
+eight items and adds Values and Constraints beliefs at High confidence,
+the first five People rows and Strong preferences
+(<code>core.py:1658-1817</code>). It is the only reader that uses
+<code>Confidence</code> to exclude a row.</p>
+<p><strong>Semantic search</strong> indexes eight sheets: Identity,
+Goals, Projects, People, Preferences, Beliefs, Tasks and Open Loops
+(<code>vidyakosha.py:237-240</code>). Each row becomes
+<code>[sheet] column: value …</code> without the confidence, source and
+date columns. The vector arm is FAISS <code>IndexFlatIP</code> over
+TF-IDF with truncated SVD, or MiniLM when installed; BM25 runs at k1 1.5
+and b 0.75. Each arm is normalised by its maximum and fused at 0.7
+vector to 0.3 BM25, and <code>OpenYantra.search</code> then multiplies
+by importance and a one-year recency ramp
+(<code>vidyakosha.py:355-439</code>, <code>core.py:1041-1098</code>).
+<strong>No status filter applies</strong>, so a resolved loop, a Done
+task and a Cancelled project rank like live ones.</p>
+<p>A per-agent snapshot freezes the registry at session start and keeps
+querying the live FAISS and BM25 indexes, so positions in a rebuilt
+index can address a different row of the frozen registry
+(<code>vidyakosha.py:441-455</code>, <code>:492-502</code>).</p>
+<p><strong>The HUD's recall</strong> fetches the Beliefs sheet and
+filters it by substring in the browser
+(<code>UI/v4/hud.html:433-445</code>). <strong>MCP
+<code>memory_search</code></strong> is a substring match over key and
+content with type, all-tags and date-prefix filters, and returns every
+match. <strong><code>graph_traverse</code></strong> is a recursive CTE
+walking edges both ways for up to six hops, with a path-substring cycle
+guard.</p>
+<p>The MCP server injects nothing on its own; the model has to call
+<code>get_system_context</code>. Cognitive notes are never part of any
+context.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is an explicit call. No model extracts or rewrites
+memory; Nidra's Ollama call produces only the summary sentence it logs
+as a session.</p>
+<p><strong>Admission is a substring match.</strong>
+<code>NOISE_PATTERNS</code> includes <code>sure</code>,
+<code>noted</code>, <code>great</code> and <code>understood</code>, and
+<code>_is_worth_remembering</code> tests each with <code>in</code>
+against the lower-cased field text (<code>core.py:109-145</code>).
+"Ensure the backup runs" contains <code>sure</code>, so that task is
+dropped with status <code>filtered</code> and no ledger row. Session
+Log, Inbox and Corrections writes skip the filter.</p>
+<p><strong>Conflict detection is a refusal with nowhere to go.</strong>
+A conflicting update returns <code>resolution: pending_user</code>; the
+requested value is kept only as text in the ledger row's reason
+(<code>core.py:283-293</code>). Most MCP and adapter writes are High
+confidence, so the guard rarely fires.</p>
+<p><strong>Duplicates are made, not removed.</strong></p>
+<ul>
+<li>The queue replay applies every <code>add</code> a second time
+(section 9).</li>
+<li><code>route_inbox</code> marks an Inbox row by its first 50
+characters; a longer row matches nothing, the update appends a junk row,
+and the next route sends the original again
+(<code>core.py:631-638</code>).</li>
+<li>Obsidian import reads every line of <code>Inbox.md</code> again on
+each sync and never clears the file
+(<code>yantra_vault.py:232-245</code>).</li>
+</ul>
+<p><strong>Nidra.</strong> <code>prune_and_resolve_loops</code> resolves
+an open loop when its topic, or its first three words of four or more
+letters, appears in the decisions and topics of the last 30 sessions
+(<code>yantra_nidra.py:154-206</code>). Revert rows are part of that
+corpus. <code>detect_promotable_preferences</code> scans for phrases
+such as <em>user prefers</em> and <em>always use</em>, skipping any
+session whose decision text contains <em>reverted</em> or
+<em>superseded</em> (<code>:104-152</code>). Its candidates go to a
+sheet named <code>Beliefs &amp; Principles</code>, which is not a sheet,
+so <code>_validate</code> rejects every one (<code>:224-242</code>,
+<code>core.py:308-309</code>). The CLI reports zero promoted.</p>
+<p><strong>Four of six MCP write tools fail.</strong>
+<code>add_inbox_item</code> and <code>complete_task</code> build a
+<code>WriteRequest</code> with <code>source="MCP tool call"</code>,
+which the constructor's <code>assert source in SOURCE</code> refuses
+(<code>cognitive_mcp.py:400-407</code>, <code>:443-451</code>,
+<code>core.py:158-161</code>). <code>add_open_loop</code> calls
+<code>oy.add_open_loop</code>, which does not exist
+(<code>cognitive_mcp.py:418</code>). <code>add_project</code> passes
+<code>next_step</code> into the <code>priority</code> position, so an
+empty step is an invalid priority and the write is rejected
+(<code>:462</code>, <code>core.py:820</code>). The iOS Shortcut server
+fails the same assertion unless the request body names a valid source
+(<code>ios_shortcut.py:66</code>, <code>:75</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Writes block the caller and are retrievable when the call returns.
+One sheet write reads the target sheet, reads and rewrites every sheet,
+does the same again for the ledger row, then rebuilds the search index:
+it reads eight sheets again, refits TF-IDF, re-encodes every row and
+rewrites the FAISS, BM25 and registry files. Each write's cost therefore
+grows with the whole workbook, and with MiniLM installed every write
+re-embeds the store. The <code>yantra_sqlite.py</code> docstring's 2 ms
+writes describe the unwired SQLite path.</p>
+<p>Nidra reads the last 25 to 30 sessions per run with a ten-second
+Ollama timeout and runs only when asked. The OpenClaw adapter prepends
+the context block to the system prompt at session start, so any write
+since the last session changes the prompt prefix.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers sixteen tools
+(<code>cognitive_mcp.py:121-319</code>). Five work on the JSON store:
+<code>memory_write</code>, <code>memory_read</code>,
+<code>memory_search</code>, <code>memory_delete</code> and
+<code>memory_stats</code>. Eleven work on the workbook:
+<code>get_system_context</code>, <code>health_check</code>,
+<code>morning_brief</code>, <code>read_sheet</code>,
+<code>graph_traverse</code> and six writes, of which
+<code>add_task</code> and <code>resolve_open_loop</code> succeed. The
+model names the agent on every <code>memory_write</code>, can delete any
+key including the <code>agent-hierarchy-connections</code> record behind
+the dashboard's agent hierarchy, and can read any sheet, the ledger and
+Quarantine included.</p>
+<p>The adapters are thin. The LangChain chat history writes a session
+row on flush, and its retriever wraps <code>search</code>. The CrewAI
+memory routes <code>save</code> by kind and wraps <code>search</code>.
+The OpenClaw hooks inject the prompt block at session start, re-inject
+open loops after compaction and log a session at the end. The
+<code>pre_compact_hook</code> that its comment says preserves open loops
+returns the payload unchanged (<code>adapters/openclaw.py:37-40</code>).
+<code>SKILL.md</code> describes the library API for an agent and was
+read as data.</p>
+<h3 id="what-the-setup-commands-and-installers-write">What the setup
+commands and installers write</h3>
+<ul>
+<li><strong><code>yantra mcp setup</code></strong> writes
+<code>mcpServers.openyantra</code> into Claude Desktop's
+<code>claude_desktop_config.json</code> and
+<code>~/.cursor/mcp.json</code> at their per-OS paths, pointing at the
+interpreter, the absolute path of <code>cognitive_mcp.py</code> and the
+workbook. It copies an existing file to <code>.json.bak</code>, replaces
+a file it cannot parse with a fresh one holding only its own entry, and
+creates both files whether or not the client is installed
+(<code>mcp_setup.py:18-122</code>).</li>
+<li><strong><code>yantra hook install</code></strong> writes
+<code>.git/hooks/post-commit</code> in the target repository, replacing
+any existing hook without a check. The hook runs
+<code>python -m openyantra.cli hook run</code> in the background with
+output discarded, against <code>OPENYANTRA_FILE</code> or a
+<code>chitrapat.ods</code> in the repository root
+(<code>yantra_git.py:28-60</code>, <code>cli.py:23-24</code>).</li>
+<li><strong><code>install.sh</code></strong> fetches forty files one at
+a time from <code>raw…/main</code>, continuing past any that fail. It
+installs Homebrew through its own <code>curl | bash</code> when Python
+is missing, runs <code>sudo</code> package installs on Linux, and
+pip-installs eleven unpinned packages into
+<code>~/openyantra/.venv</code>. It writes the <code>yantra</code>
+launcher, a desktop shortcut whose quarantine attribute it strips, and
+PATH and <code>OPENYANTRA_FILE</code> lines appended to
+<code>~/.zshrc</code>, <code>~/.bashrc</code> or
+<code>~/.bash_profile</code> (<code>install.sh:21</code>,
+<code>:186-375</code>).</li>
+<li><strong><code>install.ps1</code></strong> does the same on Windows.
+It writes <code>yantra.ps1</code>, a <code>yantra.bat</code> that runs
+it with <code>-ExecutionPolicy Bypass</code>, a desktop shortcut, and
+the user-level <code>PATH</code> and <code>OPENYANTRA_FILE</code>
+variables.</li>
+<li><strong>The <code>Dockerfile</code></strong> installs the core
+dependencies only and starts <code>cognitive_mcp</code>. Without
+<code>faiss</code> or a workbook inside the container, only the JSON
+memory tools work.</li>
+</ul>
+<p>No installer registers a hook or an MCP config on its own; both need
+the commands above.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="every-write-is-applied-twice">Every write is applied twice</h3>
+<p><code>LedgerAgent.submit</code> appends each request to
+<code>sanchitta.json</code> before processing it and never removes it
+afterwards (<code>core.py:256-259</code>). The next
+<code>OpenYantra</code> constructor in any process empties the file and
+runs <code>_process</code> on every request in it
+(<code>:466-471</code>, <code>:261-264</code>). Every <code>add</code>
+therefore lands a second row, every replayed write appends a second
+ledger row with the same request id, and an update is applied again over
+whatever happened in between. The Telegram bot builds a new instance per
+message and the CLI one per command, so the second application follows
+at the next message or command. The committed workbook records it
+(section 5). Replay also skips Raksha, though a quarantined request
+never enters the queue.</p>
+<h3 id="the-gate-covers-one-store-of-two">The gate covers one store of
+two</h3>
+<p>The single-writer design is real for the workbook and absent for the
+JSON store. <code>memory_write</code> goes straight to
+<code>CognitiveMemoryStore.write</code>, with no Raksha scan, no secret
+redaction, no admission filter and no ledger row, and
+<code>memory_delete</code> removes the note with no trace
+(<code>cognitive_mcp.py:330-360</code>). The README's claim that secrets
+are redacted <em>before saving</em> holds for sheet writes only. The MCP
+<code>add_inbox_item</code> tool passes the model's <code>source</code>
+argument as the requesting agent; Raksha skips scanning entirely for the
+agent name <code>User</code> (<code>yantra_security.py:475-483</code>).
+That tool fails on the source assertion before reaching the scan, which
+is the only thing keeping a model from choosing the unscanned tier.</p>
+<h3 id="concurrency-and-data-loss">Concurrency and data loss</h3>
+<p><code>LedgerAgent</code> holds a <code>threading.Lock</code>, which
+serialises writes inside one process. The MCP server, the dashboard, the
+bot, the hook and the CLI are separate processes doing read-modify-write
+on one file with no file lock, so two concurrent writes lose one.
+<code>_write_sheet</code> rewrites the file in place; a crash mid-write
+can leave a truncated workbook, and a sheet that fails to parse is
+written back empty (<code>core.py:402-417</code>).
+<code>archive_session_log</code> rewrites the Session Log directly,
+outside the ledger (<code>core.py:1117-1162</code>).</p>
+<h3 id="declared-and-unwired">Declared and unwired</h3>
+<ul>
+<li><strong>The SQLite engine.</strong> The README calls it the shared
+store; nothing outside tests calls <code>SyncEngine.write</code>,
+<code>import_ods</code> is a stub, and the dashboard's preference for
+SQLite reads is gated on the same mismatched map, so it reads the
+workbook (<code>yantra_ui.py:166-187</code>). <code>export_ods</code>
+would replace the workbook with the SQLite tables, which
+<code>test_sync_wal_reconciliation</code> shows; it fires only when
+SQLite's ledger has rows, and nothing writes them.</li>
+<li><strong>Edge inference.</strong> <code>infer_edges</code> is tested
+with lowercase keys and is never reached from <code>request_write</code>
+(section 4).</li>
+<li><strong>Ledger verification.</strong>
+<code>Raksha.verify_mudra</code> has no caller and hashes four keys
+where <code>_seal</code> hashes eleven, so it could not match a stored
+seal (<code>yantra_security.py:345-360</code>,
+<code>core.py:344-346</code>). <code>yantra integrity</code> checks only
+the <code>sha256:</code> prefix (<code>core.py:1164-1213</code>).</li>
+<li><strong>Corrections.</strong> <code>propose_correction</code> has no
+caller in the product, so the queue fills only from library code. The
+dashboard's review updates the Corrections row keyed on its target
+sheet, which marks every correction for that sheet with the same
+decision (<code>yantra_ui.py:212-216</code>).
+<code>apply_corrections</code> has no caller.</li>
+</ul>
+<h3 id="capture-channels-open-to-others">Capture channels open to
+others</h3>
+<p>The Telegram bot checks no sender. Anyone who messages it can add
+Inbox items, tasks, goals and loops and read open-loop topics and health
+counts (<code>telegram_bot.py:97-240</code>). The iOS Shortcut server
+binds <code>0.0.0.0:7332</code> with
+<code>Access-Control-Allow-Origin: *</code> and no token
+(<code>ios_shortcut.py:81-83</code>, <code>:171</code>). The mail daemon
+accepts any SMTP client on <code>127.0.0.1:2525</code>. The dashboard
+has no authentication unless passkeys are enabled, and then only cookies
+from that process's memory count
+(<code>yantra_ui.py:113-127</code>).</p>
+<h3 id="revert-tracking-at-the-pin">Revert tracking at the pin</h3>
+<p>The pin's commit detects a revert by a subject starting with
+<em>revert</em> or a body containing <em>reverts commit</em>, and writes
+the Session Log row with a <em>Reverted / Superseded Decision</em>
+prefix and <code>Status: REVERTED</code> in the notes
+(<code>yantra_git.py:106-117</code>). Nidra's promotion scan skips that
+row. Three limits follow from the code. The reverted commit's own row is
+unchanged, so its text remains a promotion source. Loop resolution reads
+revert rows, so a revert whose subject repeats an open loop's topic
+resolves that loop. And promotion is rejected at the writer, so the skip
+guards a write that cannot land.</p>
+<h3 id="marks">Marks</h3>
+<p>Two are earned; both apply to the sheet engine and neither covers the
+JSON store.</p>
+<ul>
+<li><strong><code>audit_log</code> — earned.</strong> The ledger sheet
+is appended by <code>_log_audit</code> for every request
+<code>_process</code> handles and written by nothing else. Each row
+records who wrote to which sheet, when, with which operation, row
+identifier, confidence and source, and a hash of the request. The limits
+are real: an add names no row, no row carries the value, and the replay
+duplicates entries.</li>
+<li><strong><code>human_review</code> — earned.</strong> A write
+matching a confirmed pattern waits in Quarantine, out of every sheet,
+the index and the context, until a person presses Release. No
+agent-facing surface carries a release verb, and the agent cannot write
+the Quarantine sheet. The dashboard does not show the held content,
+release does not close the item, and a released row is relabelled as the
+user's own statement at High confidence
+(<code>core.py:1258-1262</code>). The release route is a POST on
+<code>127.0.0.1</code> that needs no credential while passkeys are off,
+their default (<code>yantra_ui.py:238-241</code>, <code>:777</code>), so
+an agent with a general shell or HTTP tool can reach it; the mark rests
+on the declared tool surface carrying no release verb.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> No record keyed
+on a value refuses a later write. A revert writes a new labelled row and
+blocks nothing; a cognitive delete removes the note.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>Confidence</code> is a four-value label. One context section
+admits only High beliefs, and the conflict guard protects High fields,
+but search, <code>load_session_context</code>, <code>read_sheet</code>
+and the prompt block return every level, and no value means <em>recorded
+but not believed</em>.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> No validity
+time exists beside <code>Last Updated</code>.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> The Agent
+column selects configured instructions, not memories. Every memory
+sheet, the index and the JSON store are shared by every agent.</li>
+<li><strong><code>negative_eval</code> — withheld.</strong> The suite's
+populated negative on a read path asserts a traversal depth: at one hop,
+a node two hops away is absent while the one-hop node is present
+(<code>tests/test_sutradhar.py:70-78</code>). That pins a parameter, not
+the exclusion of material the system should withhold. The
+reverted-decision case keeps text out of a promotion candidate list, a
+write decision rather than a retrieval
+(<code>tests/test_nidra.py:37-54</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is 70 pytest functions in 15 files. CI installs
+<code>.[full,dev]</code> and runs <code>pytest -v</code> on Ubuntu with
+Python 3.9 to 3.12 and on macOS and Windows with 3.11
+(<code>.github/workflows/ci.yml:38-80</code>). I did not run it. The
+README badge reports 69 passing.</p>
+<p>What is covered:</p>
+<ul>
+<li>the JSON store's write, read, delete, search and date filters
+(<code>tests/test_cognitive.py</code>);</li>
+<li>edge add, delete and traversal, and <code>infer_edges</code> called
+directly (<code>tests/test_sutradhar.py</code>);</li>
+<li>secret redaction for five key formats
+(<code>tests/test_security_sanitizer.py</code>);</li>
+<li>git-hook install, ingest and revert labelling
+(<code>tests/test_git_hook.py</code>);</li>
+<li>Nidra clustering, loop resolution and candidate detection
+(<code>tests/test_nidra.py</code>);</li>
+<li>vault export and import, the passkey flow, the token-budget packer,
+MCP config writing and dashboard routes.</li>
+</ul>
+<p>What is not: no test exercises Raksha's blocking, the quarantine or
+its release, the ledger, the admission filter, the queue replay or any
+MCP sheet tool. The four failing MCP write tools follow from that gap.
+Nidra's tests assert candidates and never that a belief lands, which is
+how promotion shipped rejected. The MCP test's
+<code>"error" not in resp</code> checks cannot fail, because tool errors
+return inside <code>result</code> with <code>isError</code>
+(<code>tests/test_cognitive.py:121</code>,
+<code>cognitive_mcp.py:94-102</code>). Importing
+<code>cognitive_mcp</code> at collection creates
+<code>~/openyantra/cognitive_memories.json</code> in the real home
+directory and, if <code>~/openyantra/chitrapat.ods</code> exists, opens
+it and replays its queue.</p>
+<p>There is no retrieval-quality evaluation and no benchmark.
+<code>WHITEPAPER.md</code> is the project's paper, written at v2.10. Its
+validation section reports four rounds of review by eight language
+models with quoted verdicts, which is opinion rather than measurement,
+and it lists LOCOMO and DMR evaluation as not done. Its description of
+the write gates and trust tiers matches the code. It claims Mudra
+verification on read, which has no caller, and an incremental index
+sync, which is a full rebuild. No arXiv or DOI reference exists in the
+tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One choke point for every write, with a ledger row per
+outcome.</strong> Recording <code>rejected</code> and
+<code>conflict</code> beside <code>written</code> makes a refused write
+visible instead of silent. Give the ledger the row id and the value,
+which this one lacks.</li>
+<li><strong>A security hold the agent cannot drain.</strong> Put the
+release verb on a surface the agent has no tool for, keep the held write
+out of every sheet and index, and show the person what is held, not only
+why.</li>
+<li><strong>A store a person can open with a desktop
+application.</strong> A workbook with one sheet per kind of memory is
+legible without the product, which no database file is.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A write-ahead queue with no acknowledgement.</strong> Remove
+the entry when the write commits, or replay is a second write. Key
+replay on a request id the target row records.</li>
+<li><strong>Two stores behind one name.</strong> If the agent's memory
+tools and the person's workbook are both "memory", put both behind the
+gate, or the model will use the ungated one.</li>
+<li><strong>Substring admission rules.</strong> A noise list matched
+with <code>in</code> drops any text that contains <em>sure</em> or
+<em>great</em>; match whole messages or drop the filter.</li>
+<li><strong>Provenance set by the helper rather than the
+caller.</strong> A helper that stamps <code>User-stated</code> on every
+task turns the agent's writes into the person's statements.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who wants to keep a hand-readable record of
+their own projects, people and open threads, edit it in LibreOffice, and
+hand a summary of it to a chat assistant. It is not ready as an agent's
+working memory. Writes double, concurrent writers lose data, four of the
+six MCP write tools fail, and what the agent stores through MCP never
+reaches its own context. The maintenance budget is a single author's,
+and the installer runs whatever <code>main</code> holds. Walk away if
+more than one process writes, if anyone else can reach the Telegram bot,
+or if you need to delete anything.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the doubled rows in the committed workbook were noticed, and
+whether the queue was meant to be cleared by
+<code>SyncEngine.write</code>'s request-id check.</li>
+<li>Which store the author intends to be authoritative: the whitepaper's
+v3.0 plan makes the workbook the contract and SQLite the engine, and the
+code at the pin wires neither direction.</li>
+<li>How often the Raksha patterns hold legitimate text in practice, and
+whether anyone uses the Release button.</li>
+<li>Whether <code>Beliefs &amp; Principles</code> and its
+<code>Belief / Principle</code> column are a planned sheet or a leftover
+name.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Writer, queue, context, search wrapper:
+<code>openyantra/core.py</code></li>
+<li>Security, trust tiers, quarantine scan:
+<code>openyantra/yantra_security.py</code></li>
+<li>Search sidecar: <code>openyantra/vidyakosha.py</code>,
+<code>openyantra/yantra_sutra.py</code></li>
+<li>SQLite schema, edges, unwired sync:
+<code>openyantra/yantra_sqlite.py</code></li>
+<li>JSON store and MCP server: <code>openyantra/cognitive_db.py</code>,
+<code>openyantra/cognitive_mcp.py</code>,
+<code>openyantra/mcp_setup.py</code></li>
+<li>Dashboard, HUD, desktop: <code>openyantra/yantra_ui.py</code>,
+<code>UI/v4/dashboard.html</code>, <code>UI/v4/hud.html</code>,
+<code>openyantra/desktop.py</code></li>
+<li>Capture channels: <code>openyantra/telegram_bot.py</code>,
+<code>openyantra/ios_shortcut.py</code>,
+<code>openyantra/yantra_mail.py</code>,
+<code>openyantra/yantra_vault.py</code>,
+<code>openyantra/yantra_git.py</code>,
+<code>openyantra/cli.py</code></li>
+<li>Consolidation: <code>openyantra/yantra_nidra.py</code></li>
+<li>Adapters: <code>openyantra/adapters/langchain.py</code>,
+<code>crewai.py</code>, <code>openclaw.py</code></li>
+<li>Install and container: <code>install.sh</code>,
+<code>install.ps1</code>, <code>yantra</code>,
+<code>Dockerfile</code></li>
+<li>Paper and specs: <code>WHITEPAPER.md</code>,
+<code>PROTOCOL.md</code>, <code>SKILL.md</code></li>
+<li>Tests: <code>tests/test_*.py</code>,
+<code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>SQLite writes have test callers only.</strong>
+<code>git grep -n -E '\.write\(table=|engine\.write\(|db_engine\.write\(' -- .</code>
+returns the usage docstring at
+<code>openyantra/yantra_sqlite.py:27</code> and four calls in
+<code>tests/test_setu.py</code>.</li>
+<li><strong>No incremental index update.</strong>
+<code>git grep -n -E 'def incremental_update' -- .</code> returns
+nothing; the same command with <code>def sync\(</code> matches
+<code>vidyakosha.py:290</code>.</li>
+<li><strong>The queue is emptied only by replay.</strong>
+<code>git grep -n -E 'dequeue_all|replay_queue' -- 'openyantra/*.py'</code>
+returns the two definitions and the constructor's call at
+<code>core.py:469</code>.</li>
+<li><strong>No delete branch.</strong>
+<code>git grep -n -E 'operation == "delete"|"delete" and' -- 'openyantra/*.py'</code>
+returns nothing; <code>operation == "archive"</code> matches
+<code>core.py:390</code> and <code>yantra_sqlite.py:518</code>.</li>
+<li><strong>No file lock or atomic replace on the write path.</strong>
+<code>git grep -n -E 'portalocker|fcntl|flock|os\.replace' -- openyantra/core.py</code>
+returns nothing; across <code>openyantra/</code> it matches only
+<code>yantra_sqlite.py</code>.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|valid_at|event_time|occurred_at' -- 'openyantra/*.py'</code>
+returns nothing.</li>
+<li><strong>No value-keyed refusal.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|rejected_values|do_not_relearn|suppress' -- 'openyantra/*.py'</code>
+returns one comment about HTTP logging in
+<code>ios_shortcut.py:53</code>.</li>
+<li><strong>No writer for Contradiction_Flag.</strong>
+<code>git grep -n -E 'Contradiction_Flag|contradiction_flag' -- 'openyantra/*.py'</code>
+returns the template header, the migrator, the header validator and the
+SQLite column default.</li>
+<li><strong>No caller for the correction and verification
+helpers.</strong>
+<code>git grep -n -w -E 'propose_correction|apply_corrections|verify_mudra' -- .</code>
+returns their definitions, the class docstring and two lines of
+<code>PROTOCOL.md</code>.</li>
+<li><strong>No add_open_loop method.</strong>
+<code>git grep -n -E 'def add_open_loop' -- .</code> returns
+nothing.</li>
+<li><strong>No release or approve verb on the MCP server.</strong>
+<code>git grep -n -i -E 'release|approve' -- openyantra/cognitive_mcp.py</code>
+returns nothing; <code>quarantine</code> matches the sheet map and the
+<code>read_sheet</code> enum.</li>
+<li><strong>No agent filter on the JSON store's reads.</strong>
+<code>git grep -n -E 'm.get\("agent"' -- openyantra/cognitive_db.py</code>
+returns <code>stats</code> and <code>get_hierarchy</code> only.</li>
+<li><strong>No Telegram sender check.</strong>
+<code>git grep -n -E 'effective_user|effective_chat|chat_id|ALLOWED' -- openyantra/telegram_bot.py</code>
+returns nothing.</li>
+<li><strong>Inbox.md is read and never written.</strong>
+<code>git grep -n 'Inbox.md' -- openyantra/yantra_vault.py</code>
+returns the comment and the path at <code>:232</code> and
+<code>:234</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- .</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-07</strong> — <a
+href="https://github.com/revanthlevaka/OpenYantra/commit/bf86ff26b72ee241d6c9915afc7d0604db9bbbdb"><code class="commit-id" title="bf86ff26b72ee241d6c9915afc7d0604db9bbbdb">bf86ff26…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, the
+commit adding revert detection. Screened first: no auto-run surface,
+<code>pyproject.toml</code> inside the seven-day cooldown and with no
+lockfile, and <code>tests/conftest.py</code> executing on collection;
+the MCP setup, hook installer and installers were read for what they
+write. <code>SKILL.md</code>, <code>PROTOCOL.md</code> and
+<code>WHITEPAPER.md</code> were read as data. Nothing was installed,
+built or run. The licence names three files for MIT, one absent. Two
+marks, <code>audit_log</code> and <code>human_review</code>, both on the
+sheet engine; <code>negative_eval</code> is withheld because its one
+populated read-path case pins a traversal depth (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

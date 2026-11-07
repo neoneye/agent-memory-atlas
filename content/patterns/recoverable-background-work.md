@@ -213,6 +213,8 @@ columns does this pass have no input for, and what happens to them.
 
 [ZettelForge](../../systems/zettelforge/) writes the outbox and never reads it. Each causal-extraction, NER and neighbour-evolution job gets a row in an SQLite `enrichment_jobs` ledger, with a state, an attempt count and an error code, and is then put on an in-process queue of 500 (`src/zettelforge/memory_manager.py:1261-1288`). A full queue marks the row failed; a crash leaves rows `queued` or `running`. The ledger's two readers are called only from tests, so no path replays a row, and the atexit drain gives the queue 10 seconds (`:1480-1514`). The module docstring defers a ledger-aware `flush()` to later releases (`enrichment_ledger.py:1-7`). The durable half of the pattern is built; the worker that reads it back is the missing half.
 
+**[OpenYantra](../../systems/openyantra/) persists every write before applying it and never acknowledges one.** `LedgerAgent.submit` appends the request to `sanchitta.json` and processes it, and nothing removes the entry on success; the next process to construct `OpenYantra` empties the file and runs every request again (`openyantra/core.py:256-264`, `:466-471`). The crash-safety queue is therefore a second write: each `add` lands two rows and the ledger records both under one request id, which the project's own committed workbook shows. The request-id check that would make replay idempotent exists in a SQLite writer that nothing outside tests calls (`openyantra/yantra_sqlite.py:461-486`).
+
 ## Tests to require
 
 - Crash before, during, and after each state mutation.
