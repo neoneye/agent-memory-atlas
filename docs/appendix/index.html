@@ -17544,6 +17544,86 @@ returns nothing, and the same pattern matches
 <code>memtable.rs</code> alone. A layer that put lifecycle, provenance
 or a correction path on these nodes would be the report, with this
 engine in its <code>storage</code> row.</li>
+<li><strong>Memorilla (<a
+href="https://arxiv.org/abs/2610.21375">arXiv:2610.21375</a>) was
+examined and has no report: it is a learned reader for a document
+collection, and the collection belongs to the caller.</strong>
+<em>Memorilla: Latent Semantic Memory for LLMs</em> (Adibvafa
+Fallahpour, Parsa Idehpour, Vignesh Kothapalli, Nikita Mounier, Shirley
+Wu, Shayan Pardis and Jure Leskovec; Stanford, Toronto, Pennsylvania,
+MIT and the Vector Institute; v1 15 October 2026, v3 3 November 2026,
+cs.LG and cs.AI, no venue named) embeds each document once with a frozen
+Qwen3-Embedding-4B into what §2.1 calls <em>"the query-independent
+document store"</em>. For each query, 16 learned slots are conditioned
+on the question embedding, cross-attend over every document embedding,
+and are projected into a frozen Qwen3-8B's input space as soft tokens.
+The paper reports the best average across eight personalization,
+long-document and knowledge-intensive benchmarks against baselines that
+include <a href="../systems/mem0/">Mem0</a> and MemoRAG. On FactKG it
+scores 84.33% against 80.43% for full context, with 108× fewer document
+tokens. On TextWorld, success rises from 18.6% for full-history
+in-context learning to 24.2%. Table 13 shows where the gain comes from.
+Query-independent pooling at matched parameters reaches 31.10 on PMv2
+short answer against Memorilla's 44.04, and a Q-Former that also sees
+the question reaches 43.34. Replacing every document embedding with
+Gaussian noise moves the documents-only variant by +0.04 and Memorilla
+by −5.93. The code is <a
+href="https://github.com/snap-stanford/memorilla"><code>snap-stanford/memorilla</code></a>,
+Apache-2.0, at <a
+href="https://github.com/snap-stanford/memorilla/commit/d8f18891a50bf33c18f04fe5167c22f51e58c9cd"><code class="commit-id" title="d8f18891a50bf33c18f04fe5167c22f51e58c9cd">d8f18891…</code></a>
+(6 November 2026): 21 commits by three contributors and 7,354 lines of
+Python. <strong>Inference keeps nothing.</strong>
+<code>MemoryVLLM.answer(question, documents)</code> embeds
+<code>[*documents, question]</code> on every call and returns a string
+(<code>memorilla/vllm.py:182-220</code>, <code>:208</code>). No function
+adds, changes or removes a document in a store. <strong>The persistent
+store the paper describes is, in this tree, a benchmark cache.</strong>
+It is <code>EmbeddingStore</code>
+(<code>memorilla/embeddings.py:72</code>), whose docstring reads
+<em>"Read-only, memory-mapped access to one split's document and
+question embeddings"</em>. <code>build_embeddings</code> writes a whole
+split from its parquet files (<code>:387-431</code>), and the only
+invalidation is an error message telling you to remove the directory and
+recompute (<code>:561</code>). §2.1's <em>"only added or changed
+documents must be re-encoded"</em> has no code path. Neither does §7's
+claim that each user's store <em>"can be kept on device or deleted on
+request"</em>. It is a privacy claim with nothing behind it in the
+release except deleting a split directory. <strong>The agent's document
+store lives for one game.</strong> It is <code>TrajectoryMemory</code>
+in the authors' <a
+href="https://github.com/Adibvafa/SkyRL-Memorilla">SkyRL fork</a> at <a
+href="https://github.com/Adibvafa/SkyRL-Memorilla/commit/0ce9767c76efd9ac3907065bbbd674411311a666"><code class="commit-id" title="0ce9767c76efd9ac3907065bbbd674411311a666">0ce9767c…</code></a>:
+a Python list capped at <code>max_documents</code>
+(<code>skyrl-gym/skyrl_gym/envs/textworld/memory.py:62-96</code>) and
+recreated at every episode reset (<code>base.py:111</code>). What
+carries from one game to the next is the memory module's GRPO-trained
+weights, a policy learned over many games rather than anything one game
+revealed. <strong>No memory token has an identity.</strong> Each is
+recomputed per query, so no key, claim or value could be corrected. This
+is the boundary <a href="../systems/aimee/">aimee</a>'s prepared
+attention state sits on, one level further: aimee's tensors derive from
+a governed store in its own tree, and Memorilla has no store. The screen
+found no auto-run surface. It flagged one build-time execution point
+(<code>tests/conftest.py</code>), one dependency surface inside the
+cooldown (<code>pyproject.toml</code>, changed a day before the pin) and
+no lockfile. Nothing was installed or run. Searches:
+<code>pdftotext</code> extracts 15,032 words from v3, in which
+<code>github</code> occurs zero times, since the repository is linked
+from the project site rather than the paper;
+<code>git grep -n -E 'def (add|append|delete|remove|update|upsert|forget)' -- '*.py'</code>
+matches only <code>EmbeddingWriter.add</code>
+(<code>memorilla/embeddings.py:259</code>), whose callers are
+<code>build_embeddings</code> and the tests;
+<code>git grep -n -i -w -E 'sqlite3?|faiss|chromadb|qdrant|lancedb|pgvector'</code>
+matches <code>.gitignore</code> alone. A release that kept a per-user
+store would be the report. The first things to read in it are whether
+removing a document leaves anything that still answers from it, since
+the soft tokens are rebuilt per query and only the store could keep a
+deleted document, and whether the personalization checkpoints were
+trained on the users they serve. <code>pv4</code> and <code>pmv2</code>
+are trained on synthetic users here; a deployment fine-tuned on real
+conversations moves deletion into the weights, which is the case that
+brings <a href="../systems/second-me/">Second Me</a> into scope.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
