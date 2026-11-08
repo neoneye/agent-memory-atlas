@@ -465,20 +465,21 @@ seconds (<code>:1480-1514</code>). The module docstring defers a
 ledger-aware <code>flush()</code> to later releases
 (<code>enrichment_ledger.py:1-7</code>). The durable half of the pattern
 is built; the worker that reads it back is the missing half.</p>
-<p><strong><a href="../../systems/openyantra/">OpenYantra</a>
-acknowledges each write and replays without an idempotency
-check.</strong> <code>LedgerAgent.submit</code> appends the request to
+<p><strong><a href="../../systems/openyantra/">OpenYantra</a> keys
+replay on a request id written in a second file write.</strong>
+<code>LedgerAgent.submit</code> appends the request to
 <code>sanchitta.json</code>, processes it, and removes the entry by
 request id in a <code>finally</code> block; the next process to
 construct <code>OpenYantra</code> empties the file and runs whatever is
-in it (<code>openyantra/core.py:235-241</code>, <code>:265-276</code>,
-<code>:478-483</code>). A crash after the commit and before the
-acknowledgement applies the request again, and so does a second process
-constructing <code>OpenYantra</code> while the first is mid-write,
-because the queue's lock is per process and the file has none. The
-request-id check that would make replay idempotent exists in a SQLite
-writer that nothing outside tests calls
-(<code>openyantra/yantra_sqlite.py:461-486</code>).</p>
+in it (<code>openyantra/core.py:280-286</code>, <code>:315-326</code>,
+<code>:554-559</code>). <code>_process</code> skips a request whose id
+the ledger sheet holds (<code>:332-351</code>), but the row and the
+ledger entry are two whole-workbook rewrites. A crash between them
+applies the request again, and so does a second process replaying while
+the first is inside <code>_process</code>, because that check runs under
+a per-process lock and the queue's file lock is skipped unless
+<code>portalocker</code> is installed. The idempotency key belongs in
+the same write as the row.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>

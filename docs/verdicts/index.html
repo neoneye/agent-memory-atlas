@@ -32855,29 +32855,28 @@ and the writer refuses writes addressed to the Quarantine sheet.</li>
 <code>LedgerAgent._process</code> appends a ledger row for
 <code>written</code>, <code>rejected</code> and <code>conflict</code>
 alike, so a refused write leaves a trace beside the accepted ones.</li>
-<li>Biggest risk: <strong>promotion repeats itself.</strong> Nidra turns
-any <em>user prefers</em> or <em>always use</em> phrase in the last 30
-sessions into a Beliefs row at High confidence, and its duplicate check
-tests the bare phrase against stored positions that carry a <em>User
-Preference:</em> prefix, so every run adds every phrase again, all under
-the one topic <code>Operational</code>. A reverted commit's own subject
-stays a source.</li>
-<li>Second risk: the MCP <code>memory_*</code> tools write a separate
-JSON store with secret redaction and no scan, filter or ledger, the
-dashboard writes the same store with no redaction, and no context reads
-it. Several processes rewrite the whole workbook and share the write
-queue with no file lock, so a process starting mid-write replays the
-in-flight request. The SQLite engine and the incremental index have no
-producer.</li>
+<li>Biggest risk: <strong>several processes rewrite one workbook with no
+file lock.</strong> The MCP server, the dashboard, the bot, the git hook
+and the CLI each read and rewrite the whole file, so concurrent writes
+lose one. Replay skips a request the ledger holds, which leaves two ways
+to apply a request twice: a crash between the sheet write and the ledger
+write, and a second process replaying before the ledger row lands. The
+queue's lock is skipped unless <code>portalocker</code> imports, and no
+manifest installs it.</li>
+<li>Second risk: the MCP <code>memory_*</code> tools and the dashboard
+write a separate JSON store with secret redaction and no scan, filter or
+ledger, and no context reads it. The SQLite engine and the incremental
+index have no producer.</li>
 <li>Most reusable component: the quarantine path,
 <code>_quarantine</code> and <code>release_quarantine</code> in
-<code>openyantra/core.py:1285-1327</code>, with the release route at
+<code>openyantra/core.py:1361-1403</code>, with the release route at
 <code>openyantra/yantra_ui.py:238-241</code>.</li>
 <li>Maturity impression: MIT for the software, with the protocol's
-schemas under CC0 1.0; 10,894 lines of Python outside tests; 64 commits,
-20 March – 7 November 2026, 49 of them on 7 November; 76 pytest
-functions run in CI, not run here. Two marks: <code>audit_log</code>,
-<code>human_review</code>. The whitepaper's validation is review by
+schemas under CC0 1.0 in a separate file; 11,019 lines of Python outside
+tests; 65 commits, 20 March – 8 November 2026, 49 of them on 7 November;
+81 pytest functions run in CI, not run here. Three marks:
+<code>audit_log</code>, <code>human_review</code>,
+<code>negative_eval</code>. The whitepaper's validation is review by
 language models, and no benchmark is committed.</li>
 <li>Study when: you want a write gate whose security hold only a person
 can clear, or a memory a person reads and edits in a spreadsheet
