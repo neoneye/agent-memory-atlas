@@ -2618,28 +2618,29 @@ DELETE, so the invariant is enforced by RLS rather than by everyone
 remembering not to write the statement.</li>
 <li>Biggest risk: that log records <code>{scope, key}</code> over an
 in-place upsert, so it proves a memory changed and cannot show what it
-replaced — and archiving frees the address, which is the inverse of a
-tombstone on the operation a user reaches for when a lesson is
-wrong.</li>
-<li>Most reusable component: <code>packages/mcp-core/src/scope.ts</code>
-plus the <code>org_scope_bindings</code> routing — a validated
-four-level scope key, an authenticated tenancy boundary, and a table
-that makes "this repo's lessons belong to the team" a row instead of a
-convention.</li>
-<li>Maturity impression: Migrations written like design documents with
-numbered decisions, 298 test files, RLS on every table, hashed and
-scoped tokens, HMAC-verified webhook ingest with an explicit
-no-timing-oracle note, and a spec that parses the newest action-CHECK
-migration and fails when it disagrees with the TypeScript audit
-vocabulary — beside five entrenchment guards of which one is enforced by
-code.</li>
+replaced. Archiving frees the address, so a removed lesson can return as
+a new record at <code>seen_count</code> 1, and the
+<code>supersedes</code> link that would connect them filters no
+read.</li>
+<li>Most reusable component: <code>applyTenantScope</code> — the one
+predicate every service-role read funnels through, ANDing ownership, org
+membership, the API key's scope allowlist and its tenancy — with the
+validated four-level scope key and <code>org_scope_bindings</code>
+routing above it.</li>
+<li>Maturity impression: Migrations written like design documents, 353
+test files plus a SQL migration suite that proves the RPC actor guard, a
+session-start read that ranks, caps, diversifies and reports what its
+budget dropped, and a spec that fails when the audit vocabulary and the
+action CHECK disagree. Three capability marks:
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>, the last on a local-store case keeping an
+archived lesson out of a populated list and read.</li>
 <li>Study when: you need shared agent memory for more than one person
-and have to answer who changed what, or you want the cleanest separation
-of a scope key from a tenancy boundary in this atlas.</li>
-<li>Do not copy when: you are one developer (the parts worth paying for
-are the multi-user parts), or your problem is deciding which lesson to
-trust — LoreKit is an excellent filing cabinet with an excellent lock
-and no opinion about the contents.</li>
+and have to answer who changed what, or you want a scope key kept apart
+from a tenancy boundary.</li>
+<li>Do not copy when: your problem is deciding which lesson to trust.
+LoreKit ranks on recurrence, reads and citations, and nothing it stores
+keeps a contradicted, superseded or rejected lesson out of a read.</li>
 </ul>
 <h3 id="clio"><a href="../systems/clio/"><code>clio</code></a></h3>
 <ul>
@@ -4199,8 +4200,9 @@ has a low score.</li>
 <li>Most reusable component: <code>prune_agent_memory_items</code> — a
 <code>SECURITY DEFINER</code> function that compares its caller-supplied
 user id against <code>auth.uid()</code> before deleting anything, then
-has execute revoked from every client role. It is the same construct
-LoreKit leaves unchecked.</li>
+has execute revoked from every client role. <a
+href="../systems/lorekit/">LoreKit</a>'s migration <code>00046</code>
+applies the same guard to its archive and purge RPCs.</li>
 <li>Maturity impression: RLS on all three tables, a retention pass that
 deletes generated documents before the rows referencing them, and
 <strong>no tests anywhere in the repository</strong> — for a subsystem

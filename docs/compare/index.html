@@ -16463,34 +16463,46 @@ Apache-2.0 later, not open source at this pin</td>
 </tr>
 <tr>
 <td><a href="../systems/lorekit/"><code>lorekit</code></a></td>
-<td>A lesson addressed by <code>(scope, key)</code> — a text value up to
-64 KB with tags, <code>source_agent</code> and <code>trigger</code></td>
-<td>Supabase Postgres with row-level security and a generated FTS
-column; or a local two-tier Markdown store in the CLI</td>
-<td>Exact <code>scope</code> equality plus
-<code>websearch_to_tsquery</code> full-text; the narrow-to-broad ladder
-is three separate calls the agent is told to make</td>
-<td><code>memory.write</code> upserts in place on the unique key; no LLM
-anywhere; a GitHub webhook writes PR review comments through a
-deterministic signal filter</td>
-<td>Upsert overwrites the value with no version kept; soft archive,
-restore, TTL expiry, and two hard-delete purge RPCs</td>
+<td>A record addressed by <code>(scope, key)</code> with a stable id — a
+Markdown or JSON value up to 64 KB, tags, kind, host, origin repo,
+branch, commit and PR, an open attributes map and an optional supersedes
+link</td>
+<td>Supabase Postgres with row-level security, a generated FTS column
+and a dormant pgvector column; or a local two-tier Markdown store in the
+CLI whose frontmatter keeps fields it does not know</td>
+<td>Scope equality plus <code>websearch_to_tsquery</code>; an unscoped
+read returns one winner by scope type; a ranked route scores recency,
+recurrence, <code>ts_rank_cd</code> relevance and outcome tags with MMR
+diversity; the SessionStart hook merges the scope ladder under a
+3,000-character budget</td>
+<td><code>memory.write</code> upserts in place on the live key and
+increments <code>seen_count</code>; no model on any path; embedding on
+REST create is opt-in and nothing reads the vector; a GitHub webhook
+writes PR review comments as candidates with a graded TTL</td>
+<td>Upsert overwrites the value with no version kept;
+<code>supersedes</code> links a record to the one it replaces and
+filters nothing; soft archive, restore, TTL expiry, saved auto-archive
+policies, and two hard-delete purges</td>
 <td><code>global</code>, <code>project::</code>, <code>repo::</code>,
-<code>branch::</code> — validated, applied as a read-path filter, and
-backed by Postgres RLS and org roles</td>
-<td>MCP over a Supabase edge function, a CLI, and marketplace plugins
-for Claude Code, Cursor and Codex</td>
-<td>None scheduled in-repo; purge is an RPC called by the dashboard, an
-MCP tool, or a pg_cron job the operator sets up</td>
-<td>No status on a memory. Provenance is <code>source_agent</code> and
-<code>trigger</code>; the recurrence and entrenchment guards are prose
-in a skill file</td>
-<td>An authenticated tenancy boundary in the database rather than a
-scope tag, and an audit log made append-only by having no update or
-delete policy</td>
+<code>branch::</code> — validated and applied as a read filter inside
+one tenant predicate that ANDs an API key's scope allowlist and tenancy;
+RLS on the dashboard's JWT path</td>
+<td>MCP over a Supabase edge function, a REST API, a CLI with lifecycle
+hooks, and marketplace plugins for Claude Code, Cursor and Codex</td>
+<td>A nightly groom sweep and a rate-limit reaper behind a pg_cron
+guard; retention policies only archive; hard purge is a confirmed manual
+act</td>
+<td>No status on a record. Provenance is source_agent, trigger, kind,
+host and origin; recurrence, read, open and citation counters rank; a
+<code>status::</code> tag is read only by the duplicate-cluster
+tooling</td>
+<td>A tenant predicate applied in the one function every read funnels
+through, an audit log with no update or delete policy, and a
+session-start read that ranks, de-duplicates and reports what its budget
+left out</td>
 <td>The audit log records that a value changed and never what it was;
-archive deliberately frees the key so the same lesson can be
-re-asserted</td>
+archiving frees the key, so a revived lesson is a new record at
+seen_count 1; supersedes is a link no read path consults</td>
 </tr>
 <tr>
 <td><a href="../systems/loreweave/"><code>loreweave</code></a></td>
@@ -36675,7 +36687,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>506 of 791:</em> <a
+<p><em>507 of 791:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -36913,6 +36925,7 @@ href="../systems/local-memory-mcp/"><code>local-memory-mcp</code></a>,
 <a
 href="../systems/longterm-memory-mcp/"><code>longterm-memory-mcp</code></a>,
 <a href="../systems/loreai/"><code>loreai</code></a>, <a
+href="../systems/lorekit/"><code>lorekit</code></a>, <a
 href="../systems/loreweave/"><code>loreweave</code></a>, <a
 href="../systems/lossless-context-mcp/"><code>lossless-context-mcp</code></a>,
 <a
@@ -37218,7 +37231,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-506 repositories of
+507 repositories of
 791 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together

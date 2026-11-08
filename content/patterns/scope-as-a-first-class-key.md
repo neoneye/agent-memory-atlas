@@ -388,10 +388,13 @@ forms — `global`, `project::{name}`, `repo::{owner}/{repo}`,
 `branch::{owner}/{repo}::{branch}` — normalised to lowercase, rejecting the
 single-colon mistake with an error that prints the corrected form, and applied
 as an equality filter on every read that names one. The **tenancy boundary** is something else
-entirely: row-level security policies gating each read on `auth.uid()` or a
-matching `org_id` JWT claim. One says *which* memories are relevant; the other
-says *whose* they are, and it holds even against a caller that constructs its own
-query.
+entirely. API-key calls run on a service-role client that bypasses RLS, so the
+boundary there is `applyTenantScope`, one predicate every read calls, ANDing
+ownership, org membership, the key's scope allowlist and its tenancy; the
+dashboard's JWT path adds row-level security on `auth.uid()` and org
+membership. One says *which* memories are relevant; the other says *whose* they
+are, and because it lives in one function, no call site can answer that
+differently.
 
 Then a third layer joins them, which is the part worth stealing.
 `org_scope_bindings` maps a scope string to an organisation, and the write RPC
@@ -424,15 +427,15 @@ per-user while Telegram is still host-global. Disabling the feature where the ke
 does not yet reach is a third option beside enforcing and leaking, and it is
 rarely taken.
 
-The counterweight, and the reason LoreKit is not simply the best entry here: the
-scope *hierarchy* is not enforced as a merge. LoreKit's own README describes agents
-reading branch, then repo, then global and merging; an unscoped `memory.read`
-picks one winner by scope type, and `memory.list` returns one exact scope or
-every visible one, unmerged. The ladder is three separate calls a skill file
-instructs the agent to make. A validated, RLS-backed, org-routed key whose hierarchy exists
-only in prose is a good reminder that a scope *format* and a scope *resolution
-order* are different pieces of work, and the second one is easy to assume you
-have done.
+The counterweight is where the scope *hierarchy* is resolved. An unscoped
+`memory.read` picks one winner by scope type, and `memory.list` returns one exact
+scope or every visible one, unmerged. The merge across branch, repo, project and
+global happens in the client: the CLI's SessionStart hook lists each scope in
+the working directory's read order, resolves one winner per key by precedence,
+and ranks the winners together. An agent calling the MCP server without the
+hook gets the ladder only if it makes the calls itself. A scope *format* and a
+scope *resolution order* are different pieces of work, and they can live on
+different sides of the wire.
 
 **[gh-aw](../../systems/gh-aw/) orders its partitions, and an ordered
 partition is still not the key.** Its cache-memory store is a git repository

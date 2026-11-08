@@ -157,7 +157,7 @@ shallowest.</strong> 332 of
 It is also the mark most often satisfied by a single predicate that a
 background job then ignores.</li>
 <li><strong>Negative evidence is almost never tested.</strong>
-506 of 791
+507 of 791
 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. The mark spans two strengths and does not
@@ -336,7 +336,7 @@ the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
 73 tombstones,
-506 negative-eval suites — are
+507 negative-eval suites — are
 counts <em>over inspectable code</em>, and a closed system could hold
 any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -2261,8 +2261,12 @@ frontmatter written by <code>save_query_result</code> in
 <li><a href="../systems/lorekit/"><code>lorekit</code></a>:
 <code>supabase/migrations/00001_memories.sql</code> (table, RLS,
 generated FTS), <code>00003_archive.sql</code>,
-<code>00010_audit_log.sql</code>,
-<code>00030_memory_ttl.sql</code>.</li>
+<code>00010_audit_log.sql</code>, <code>00048_memory_origin.sql</code>,
+<code>00059_memory_seen_count.sql</code>,
+<code>00084_memory_read_counters.sql</code>,
+<code>00107_memory_citations.sql</code>,
+<code>00119_memory_record_extensions.sql</code> (attributes,
+content_type, supersedes, the current <code>memory_write</code>).</li>
 <li><a href="../systems/clio/"><code>clio</code></a>:
 <code>ltm.json</code> in <code>~/.clio/projects/&lt;uuid&gt;/</code>,
 written by <code>lib/CLIO/Memory/LongTerm.pm</code> — five typed arrays
@@ -2442,9 +2446,10 @@ embedding, insert, chunk dual-write; deterministic extraction in
 — one append-only Markdown file per answered question, outcome written
 to both frontmatter and body.</li>
 <li><a href="../systems/lorekit/"><code>lorekit</code></a>:
-<code>packages/mcp-core/src/tools/write.ts</code> into the
-<code>memory_write</code> RPC — an upsert on the partial unique index,
-with <code>xmax</code> deciding create versus update.</li>
+<code>toolWrite</code> in <code>supabase/functions/mcp/tools.ts</code>
+into the <code>memory_write</code> RPC — an upsert on a partial unique
+index that increments <code>seen_count</code>, with <code>xmax</code>
+deciding create versus update.</li>
 <li><a href="../systems/clio/"><code>clio</code></a>:
 <code>lib/CLIO/Tools/MemoryOperations.pm</code> dispatching into
 <code>LongTerm.pm:146</code>–<code>:441</code>; corroboration and tier
@@ -2608,10 +2613,13 @@ branch in <code>src/hybrid-search-sources.ts:52-55</code>.</li>
 preferred-first reordering in <code>graphify/serve.py:927</code> and
 <code>:1128</code>.</li>
 <li><a href="../systems/lorekit/"><code>lorekit</code></a>:
-<code>packages/mcp-core/src/tools/read.ts</code>, <code>list.ts</code>
-and <code>search.ts</code> — exact scope equality plus
-<code>websearch_to_tsquery</code>, each applying the archive and expiry
-filters.</li>
+<code>toolRead</code>, <code>toolList</code> and <code>toolSearch</code>
+in <code>supabase/functions/mcp/tools.ts</code> — scope equality plus
+<code>websearch_to_tsquery</code> inside <code>applyTenantScope</code>,
+each applying the archive and expiry filters;
+<code>supabase/functions/memories/handlers/relevant.ts</code> ranks by
+recency, <code>seen_count</code>, <code>ts_rank_cd</code> and outcome
+with MMR.</li>
 <li><a href="../systems/clio/"><code>clio</code></a>: per-request
 keyword overlap in <code>ContextBuilder::score_ltm</code>
 (<code>ContextBuilder.pm:326</code>), threshold 5 and at most five
@@ -2756,10 +2764,11 @@ provenance in <code>src/context-injection-logger.ts</code>.</li>
 into <code>reflections/LESSONS.md</code>, read whole at session start
 per the skill in
 <code>graphify/skills/*/references/query.md</code>.</li>
-<li><a href="../systems/lorekit/"><code>lorekit</code></a>: none
-server-side — the plugins' lifecycle hooks call
-<code>memory.list</code>, and the narrow-to-broad ladder lives in
-<code>packages/cli/skill/lorekit-memory/references/scope-resolution.md</code>.</li>
+<li><a href="../systems/lorekit/"><code>lorekit</code></a>: client-side
+— <code>fetchLessons</code> and <code>formatLessons</code> in
+<code>packages/cli/src/core/lessons.mjs</code> merge the scope ladder,
+rank, cap each loop bucket, diversify, and render under a
+3,000-character budget with a count of what was left out.</li>
 <li><a href="../systems/clio/"><code>clio</code></a>:
 <code>MessageHistory::messages_to_prose_dynamic</code>
 (<code>MessageHistory.pm:192</code>–<code>:250</code>) renders up to
@@ -2892,10 +2901,11 @@ consolidation, and self-model replay in
 — git post-commit and post-checkout hooks
 (<code>graphify/hooks.py:142</code>, <code>:191</code>) refresh the
 lessons doc best-effort, gated by <code>lessons_fresh()</code>.</li>
-<li><a href="../systems/lorekit/"><code>lorekit</code></a>: none
-committed — <code>purge_archived_memories</code> and
-<code>purge_expired_memories</code> are RPCs the migration suggests
-running under pg_cron.</li>
+<li><a href="../systems/lorekit/"><code>lorekit</code></a>: a nightly
+<code>lorekit-groom-sweep</code> and a rate-limit reaper registered
+behind a <code>pg_cron</code> guard; retention policies only archive,
+and <code>purge_archived_memories</code> and
+<code>purge_expired_memories</code> stay manual.</li>
 <li><a href="../systems/clio/"><code>clio</code></a>: no worker —
 <code>maybe_consolidate</code> (<code>LongTerm.pm:1217</code>) runs
 in-process at session start and session load behind a 24-hour and
@@ -3022,7 +3032,8 @@ SDK — a CLI plus the same skill compiled into fourteen harness formats
 under <code>graphify/skills/</code>.</li>
 <li><a href="../systems/lorekit/"><code>lorekit</code></a>: MCP over a
 Supabase edge function (<code>supabase/functions/mcp/</code>) with logic
-shared from <code>packages/mcp-core</code>, plus a CLI and
+shared from <code>packages/mcp-core</code>, a REST API under
+<code>supabase/functions/memories/</code>, plus a CLI and
 Claude/Cursor/Codex plugins.</li>
 <li><a href="../systems/clio/"><code>clio</code></a>: the agent is the
 host — one <code>memory_operations</code> tool with thirteen operations,
@@ -3256,10 +3267,13 @@ labelled queries, hybrid against vector-only.</li>
 functions across 177 files and 59,500 lines against 15,959 of source;
 <code>tests/test_reflect.py</code> carries 58 of them for the ~900-line
 memory layer, including the self-ingestion regression guard.</li>
-<li><a href="../systems/lorekit/"><code>lorekit</code></a>: 1,184 cases
-across 90 files, concentrated on scope, TTL, tokens, org permissions and
-the archive lifecycle; <code>edge-parity.spec.ts</code> guards the two
-MCP implementations against drift.</li>
+<li><a href="../systems/lorekit/"><code>lorekit</code></a>: 353 test
+files plus <code>supabase/tests/migrations.test.sql</code>, concentrated
+on scope, tenant predicates, tokens, org permissions, TTL and the
+archive lifecycle; <code>edge-parity.spec.ts</code> guards the two MCP
+implementations against drift, and
+<code>packages/cli/test/store.test.mjs</code> asserts an archived lesson
+is absent from a populated list.</li>
 <li><a href="../systems/clio/"><code>clio</code></a>: 353 test scripts,
 including <code>test_ltm_corroboration.pl</code> on the tier and three
 relevance tests asserting that an unrelated memory is not selected
@@ -4320,13 +4334,15 @@ shows the limit of operational supersession without epistemic state: it
 can archive a selected predecessor, but cannot prevent the rejected
 value from being distilled again. <a
 href="../systems/lorekit/">LoreKit</a> shows the same limit with the
-mechanism made explicit in a migration comment: archiving a lesson drops
-the unique constraint and recreates it as a partial index
-<code>where archived_at is null</code>, <em>"so the same (user_id,
-scope, key) can be re-created after an archive."</em> Freeing the
-address is a defensible ergonomic choice, and it is the exact inverse of
-a tombstone — the one operation a user reaches for when a lesson is
-<em>wrong</em> is the one that makes re-asserting it easiest.</p>
+mechanism made explicit in a migration comment: migration
+<code>00003</code> drops the unique constraint and recreates it as a
+partial index <code>where archived_at is null</code>, which <em>"allows
+the same (user_id, scope, key) to be re-created after an archive."</em>
+Freeing the address is a defensible ergonomic choice, and it is the
+exact inverse of a tombstone — the one operation a user reaches for when
+a lesson is <em>wrong</em> is the one that makes re-asserting it
+easiest. A <code>supersedes</code> link can name the archived record
+from its replacement, and no read path consults it.</p>
 <h3 id="semantic-deletion">Semantic deletion</h3>
 <p>Deleting by "similar memory" is dangerous. It is useful as a
 discovery aid, but the actual forget operation should target exact IDs

@@ -1199,7 +1199,7 @@ the same shape, and nothing in this corpus has one.
 - [`helm`](../systems/helm/): `facts`, `episodes` and an unused `links` table in `workspace/memory/memory.mjs:13-64`, where five later columns arrive as guarded `ALTER`s re-run on every process start and the active-row invariant is a partial unique index over `(kind, key) WHERE expired_at IS NULL`; vector side tables created lazily in `workspace/memory/embed.mjs`.
 - [`csm`](../systems/csm/): `memories` in `src/schema/memory-table-schema.ts`; the other forty-five tables across `src/schema/` plus `belief-knowledge-schema.ts`, `candidate-schema.ts`, `experience-packet-schema.ts`, `self-model-schema.ts` and `work-ledger-schema.ts`.
 - [`graphify`](../systems/graphify/): Markdown frontmatter written by `save_query_result` in `graphify/ingest.py`; the derived sidecar shape in `build_learning_overlay` (`graphify/reflect.py:758`).
-- [`lorekit`](../systems/lorekit/): `supabase/migrations/00001_memories.sql` (table, RLS, generated FTS), `00003_archive.sql`, `00010_audit_log.sql`, `00030_memory_ttl.sql`.
+- [`lorekit`](../systems/lorekit/): `supabase/migrations/00001_memories.sql` (table, RLS, generated FTS), `00003_archive.sql`, `00010_audit_log.sql`, `00048_memory_origin.sql`, `00059_memory_seen_count.sql`, `00084_memory_read_counters.sql`, `00107_memory_citations.sql`, `00119_memory_record_extensions.sql` (attributes, content_type, supersedes, the current `memory_write`).
 - [`clio`](../systems/clio/): `ltm.json` in `~/.clio/projects/<uuid>/`, written by `lib/CLIO/Memory/LongTerm.pm` — five typed arrays with `confidence`, `tier` and `corroboration_sources` per entry; no schema, no database.
 
 ### Add/Write Path
@@ -1244,7 +1244,7 @@ the same shape, and nothing in this corpus has one.
 - [`helm`](../systems/helm/): the `remember` verb in `workspace/memory/memory.mjs:87-162` — provisional cap, evidence ratchet, supersession, gated supersede episode; hot-path capture in `index.js:572-583`; the tool wrapper `workspace/tools/impl/memory.remember.mjs`, which omits `--source` and so never trips the cap.
 - [`csm`](../systems/csm/): `MemoryManager.saveMemory()` in `src/memory-manager-base.ts:185` — provenance defaults, project-ownership check, transcript dedup, redaction, type quota, embedding, insert, chunk dual-write; deterministic extraction in `src/memory-extractor.ts`.
 - [`graphify`](../systems/graphify/): `save_query_result()` in `graphify/ingest.py:274` — one append-only Markdown file per answered question, outcome written to both frontmatter and body.
-- [`lorekit`](../systems/lorekit/): `packages/mcp-core/src/tools/write.ts` into the `memory_write` RPC — an upsert on the partial unique index, with `xmax` deciding create versus update.
+- [`lorekit`](../systems/lorekit/): `toolWrite` in `supabase/functions/mcp/tools.ts` into the `memory_write` RPC — an upsert on a partial unique index that increments `seen_count`, with `xmax` deciding create versus update.
 - [`clio`](../systems/clio/): `lib/CLIO/Tools/MemoryOperations.pm` dispatching into `LongTerm.pm:146`–`:441`; corroboration and tier promotion at `:511`, manual promotion at `:612`, and a text rewrite that keeps the tier in `update_entry` at `:307`.
 
 ### Search/Retrieve Path
@@ -1289,7 +1289,7 @@ the same shape, and nothing in this corpus has one.
 - [`helm`](../systems/helm/): one function, `workspace/memory/memory.mjs:164-326` — a 500-row recency-ordered candidate window, hand-written BM25, a semantic arm that is MiniLM if cached and TF-IDF cosine otherwise, RRF at k=60, a confidence weight and a key-match boost, and a separate episode scorer with a 30-day recency term.
 - [`csm`](../systems/csm/): `hybridSearch()` in `src/hybrid-search.ts:26` over `src/hybrid-search-sources.ts` and `src/hybrid-search-ranking.ts`; the three fallback tiers in `searchMemories` at `src/memory-manager-base.ts:510`, and the fail-closed scope branch in `src/hybrid-search-sources.ts:52-55`.
 - [`graphify`](../systems/graphify/): `aggregate_lessons()` and `_finalize_sources()` in `graphify/reflect.py`; the read-side annotation and preferred-first reordering in `graphify/serve.py:927` and `:1128`.
-- [`lorekit`](../systems/lorekit/): `packages/mcp-core/src/tools/read.ts`, `list.ts` and `search.ts` — exact scope equality plus `websearch_to_tsquery`, each applying the archive and expiry filters.
+- [`lorekit`](../systems/lorekit/): `toolRead`, `toolList` and `toolSearch` in `supabase/functions/mcp/tools.ts` — scope equality plus `websearch_to_tsquery` inside `applyTenantScope`, each applying the archive and expiry filters; `supabase/functions/memories/handlers/relevant.ts` ranks by recency, `seen_count`, `ts_rank_cd` and outcome with MMR.
 - [`clio`](../systems/clio/): per-request keyword overlap in `ContextBuilder::score_ltm` (`ContextBuilder.pm:326`), threshold 5 and at most five entries, with no tier term; substring matching in `search_entries` (`LongTerm.pm:810`) behind the tool's `search`.
 
 ### Context Assembly
@@ -1334,7 +1334,7 @@ the same shape, and nothing in this corpus has one.
 - [`helm`](../systems/helm/): `recallMemories()` in `index.js:490-510` for the per-turn block, prompt assembly at `index.js:595-607`, and the static channel — `workspace/memory/refresh-index.mjs` writing `INDEX.md`, imported by the `@memory/INDEX.md` line at `workspace/CLAUDE.md:15`.
 - [`csm`](../systems/csm/): `runSystemTransform()` in `src/hooks/system-transform.ts:32` — twelve stages per request; layer construction in `src/reentry-layer-builder.ts` under the budgets in `src/reentry-contract.ts`; per-item provenance in `src/context-injection-logger.ts`.
 - [`graphify`](../systems/graphify/): `render_lessons_md()` (`graphify/reflect.py:489`) into `reflections/LESSONS.md`, read whole at session start per the skill in `graphify/skills/*/references/query.md`.
-- [`lorekit`](../systems/lorekit/): none server-side — the plugins' lifecycle hooks call `memory.list`, and the narrow-to-broad ladder lives in `packages/cli/skill/lorekit-memory/references/scope-resolution.md`.
+- [`lorekit`](../systems/lorekit/): client-side — `fetchLessons` and `formatLessons` in `packages/cli/src/core/lessons.mjs` merge the scope ladder, rank, cap each loop bucket, diversify, and render under a 3,000-character budget with a count of what was left out.
 - [`clio`](../systems/clio/): `MessageHistory::messages_to_prose_dynamic` (`MessageHistory.pm:192`–`:250`) renders up to five badged entries of 500 characters into a block prepended to the user message, skipped under `--no-ltm` and `--incognito` (`WorkflowOrchestrator.pm:1209`).
 
 ### Background Workers
@@ -1379,7 +1379,7 @@ the same shape, and nothing in this corpus has one.
 - [`helm`](../systems/helm/): `workspace/think/think.mjs` under launchd/systemd — a ~15-minute reflection tick with a stale-PID lock, a quiet window, a tick and wall-clock guard that exits for the service manager to restart, and a weekly deep review whose completion mark is stamped only on a clean exit; then `workspace/memory/consolidate.mjs` (distil, decay, prune, dedupe) and an index rewrite after every tick.
 - [`csm`](../systems/csm/): no worker — in-process timers only: a 2-second debounced doc flush in `src/hooks/tool-execute-memory.ts`, a 120-second belief consolidation, and self-model replay in `src/self-model-updater.ts`.
 - [`graphify`](../systems/graphify/): no worker — git post-commit and post-checkout hooks (`graphify/hooks.py:142`, `:191`) refresh the lessons doc best-effort, gated by `lessons_fresh()`.
-- [`lorekit`](../systems/lorekit/): none committed — `purge_archived_memories` and `purge_expired_memories` are RPCs the migration suggests running under pg_cron.
+- [`lorekit`](../systems/lorekit/): a nightly `lorekit-groom-sweep` and a rate-limit reaper registered behind a `pg_cron` guard; retention policies only archive, and `purge_archived_memories` and `purge_expired_memories` stay manual.
 - [`clio`](../systems/clio/): no worker — `maybe_consolidate` (`LongTerm.pm:1217`) runs in-process at session start and session load behind a 24-hour and 20-entry gate.
 
 ### MCP/API/SDK Surfaces
@@ -1424,7 +1424,7 @@ the same shape, and nothing in this corpus has one.
 - [`helm`](../systems/helm/): no MCP or SDK for memory — a JSON-on-stdout CLI (`memory.mjs`), two shell-out entries in `workspace/tools/registry.json`, and Discord, iMessage and terminal front doors converging on one Claude Code session keyed `'owner'` in `workspace/sessions.mjs`.
 - [`csm`](../systems/csm/): OpenCode hooks in `src/hooks-registration.ts:35` and about fifty tools in `src/hooks/tool-registry.ts`; a stdio Codex MCP server in `src/codex-mcp-server.ts` with `src/codex-bridge-extra-ops.ts`.
 - [`graphify`](../systems/graphify/): no MCP or SDK — a CLI plus the same skill compiled into fourteen harness formats under `graphify/skills/`.
-- [`lorekit`](../systems/lorekit/): MCP over a Supabase edge function (`supabase/functions/mcp/`) with logic shared from `packages/mcp-core`, plus a CLI and Claude/Cursor/Codex plugins.
+- [`lorekit`](../systems/lorekit/): MCP over a Supabase edge function (`supabase/functions/mcp/`) with logic shared from `packages/mcp-core`, a REST API under `supabase/functions/memories/`, plus a CLI and Claude/Cursor/Codex plugins.
 - [`clio`](../systems/clio/): the agent is the host — one `memory_operations` tool with thirteen operations, plus a `/memory` slash command carrying the human-only `promote`.
 
 ### Evals/Tests
@@ -1479,7 +1479,7 @@ often weak evidence — is covered separately in
 - [`helm`](../systems/helm/): `workspace/tests/smoke.mjs`, 88 labelled cases against the live SQLite file, of which about nineteen touch memory. Two assert *ranking* rather than round-trips — confidence weighting placing a high-confidence fact above a low-confidence lexical match, and BM25 term-frequency ordering — which is rare at this scale. Others cover the provisional cap and its evidence ratchet, supersession end to end, the unique index rejecting a raw duplicate `INSERT`, the `access_count` bump on read, and two gates on the system's own episode noise. There is no eval harness, no retrieval benchmark, and no committed benchmark artefact; nothing tests the 500-row recall boundary that caps the whole design, and the second brain is covered by a case that explicitly asserts "no Claude run". Separately, `workspace/repo-scan-report.md` is a committed 25-issue self-audit — severity, `file:line`, "reproduced empirically", and a fix pointing at a correct pattern already in the repo — and every issue I checked is closed at the pinned commit, including the shared engine-resolution module the report itself recommended.
 - [`csm`](../systems/csm/): 1,782 `test(`/`it(` call sites across 212 files; the committed `full-test-output.txt` records 808 passing across 172 suites. Retrieval ground truth is `test/benchmark-hybrid.ts` — eight seeded memories, five labelled queries, hybrid against vector-only.
 - [`graphify`](../systems/graphify/): 3,308 test functions across 177 files and 59,500 lines against 15,959 of source; `tests/test_reflect.py` carries 58 of them for the ~900-line memory layer, including the self-ingestion regression guard.
-- [`lorekit`](../systems/lorekit/): 1,184 cases across 90 files, concentrated on scope, TTL, tokens, org permissions and the archive lifecycle; `edge-parity.spec.ts` guards the two MCP implementations against drift.
+- [`lorekit`](../systems/lorekit/): 353 test files plus `supabase/tests/migrations.test.sql`, concentrated on scope, tenant predicates, tokens, org permissions, TTL and the archive lifecycle; `edge-parity.spec.ts` guards the two MCP implementations against drift, and `packages/cli/test/store.test.mjs` asserts an archived lesson is absent from a populated list.
 - [`clio`](../systems/clio/): 353 test scripts, including `test_ltm_corroboration.pl` on the tier and three relevance tests asserting that an unrelated memory is not selected beside a control that is; nothing asserts that a trusted entry outranks an unverified one at injection.
 
 ## 5. Design Patterns That Recur
@@ -2243,12 +2243,13 @@ A retrieval benchmark is invalid at a stated cutoff if the system scores more th
 Pattern guide: [Rejected-value tombstone](../patterns/rejected-value-tombstone/).
 
 Update/delete APIs are not enough. A system needs to model contradiction, supersession, source, timestamp, and rejected values. Otherwise a wrong fact can be reintroduced by later extraction. [Verel](../systems/verel/)'s rejected tombstones are the clearest research-grade countermeasure; [RainBox](../systems/rainbox/) has adopted equivalent machinery in a product context: `MemoryRejectedValue` tombstones block future model re-assertion of rejected or superseded values, `correct_belief` is an atomic governed correction path, and write-time conflict detection is lattice-aware across the scope hierarchy. [llm-wiki-memory](../systems/llm-wiki-memory/) shows the limit of operational supersession without epistemic state: it can archive a selected predecessor, but cannot prevent the rejected value from being distilled again. [LoreKit](../systems/lorekit/) shows the same limit with the mechanism made
-explicit in a migration comment: archiving a lesson drops the unique constraint
-and recreates it as a partial index `where archived_at is null`, *"so the same
-(user_id, scope, key) can be re-created after an archive."* Freeing the address
-is a defensible ergonomic choice, and it is the exact inverse of a tombstone —
-the one operation a user reaches for when a lesson is *wrong* is the one that
-makes re-asserting it easiest.
+explicit in a migration comment: migration `00003` drops the unique constraint
+and recreates it as a partial index `where archived_at is null`, which *"allows
+the same (user_id, scope, key) to be re-created after an archive."* Freeing the
+address is a defensible ergonomic choice, and it is the exact inverse of a
+tombstone — the one operation a user reaches for when a lesson is *wrong* is the
+one that makes re-asserting it easiest. A `supersedes` link can name the
+archived record from its replacement, and no read path consults it.
 
 ### Semantic deletion
 

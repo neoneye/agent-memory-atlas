@@ -457,16 +457,19 @@ the tokenizer drops every token under four characters, so a memory about SQL, Go
 npm or an API cannot be retrieved by that word in a developer-facing product.
 
 **LoreKit**
-takes the third position on that axis and the one most projects can actually
-reach: the boundary is neither a filter nor a composite key but Postgres
-row-level security, so every read is gated on `auth.uid()` or a matching
-`org_id` JWT claim by the database rather than by the query. Its
+takes a third position on that axis, and the one most projects can actually
+reach: the boundary is a filter, but it exists in one function.
+`applyTenantScope` is the predicate every read on the service-role path calls,
+and it ANDs ownership, org membership, the API key's scope allowlist and its
+tenancy, so no call site can scope a read differently; the dashboard's JWT path
+adds row-level security. Its
 `org_scope_bindings` table then routes a write on a bound scope to the
 organisation instead of the writer, checked through `lorekit_org_can` — which
-means a team's shared scope is not a naming convention. It is also the atlas's
-clearest case of infrastructure outrunning epistemics: RLS, org roles, invites,
-token scopes, per-user caps, an append-only audit log — over a store whose memory
-model is a keyed slot with no status, no confidence and no history.
+means a team's shared scope is not a naming convention. It is also a clear case
+of infrastructure outrunning epistemics: org roles, token restrictions, per-user
+caps, an append-only audit log, and recurrence, read and citation counters that
+rank — over a store whose memory model is a keyed slot with no status, no
+confidence, a `supersedes` link no read consults, and no history.
 
 Three members mark the family's boundaries on the same axis: what happens to the
 evidence. Memobase caps a user profile at five sentences per subtopic and fifteen

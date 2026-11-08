@@ -1,504 +1,559 @@
 ---
 title: "LoreKit"
 eyebrow: "Multi-tenant lesson store"
-description: "Key-addressed lessons for coding agents in Postgres behind row-level security; its append-only audit log keeps no overwritten value, and its entrenchment doctrine is skill-file prose."
+description: "Key-addressed lessons for coding agents in Postgres or local Markdown, behind one tenant predicate; its append-only audit log keeps no overwritten value."
 root: ../..
 page_kind: system
 source_name: "mthines/lorekit"
 source_url: https://github.com/mthines/lorekit
 archive_name: "mthines--lorekit"
-revision: 07d2ce84baf6b6ba01b1424cc1253a4de4ee144d
-revision_url: https://github.com/mthines/lorekit/commit/07d2ce84baf6b6ba01b1424cc1253a4de4ee144d
-analyzed_at: 2026-10-01
+revision: 4a4641ff7b77da6fff82b853c98f1941aa637adf
+revision_url: https://github.com/mthines/lorekit/commit/4a4641ff7b77da6fff82b853c98f1941aa637adf
+analyzed_at: 2026-11-09
 licence: "MIT"
-size: "142,450 lines of TypeScript in 860 files, 64,550 of JavaScript in 216 and 31,968 of SQL in 110; the MCP core in packages/mcp-core is 23,415 lines of TypeScript in 131 files"
-activity: "2,050 commits on main, 23 July – 18 September 2026; one human author under four identities, plus Agent0, Claude and four bot accounts"
-capabilities: "scope_enforced, audit_log"
+size: "164,650 lines of TypeScript in 988 files, 70,960 of JavaScript in 238 and 62,876 of SQL in 119; the MCP core in packages/mcp-core is 26,490 lines of TypeScript in 149 files"
+activity: "2,123 commits on main, 23 July – 8 November 2026; one human author under four identities, plus Agent0, Claude and four bot accounts"
+tests: "353 *.spec.* or *.test.* files in TypeScript and JavaScript, a SQL migration suite in supabase/tests/migrations.test.sql, and live-endpoint smoke suites; ci.yml runs them on pull requests; none run for this reading"
+capabilities: "scope_enforced, audit_log, negative_eval"
 capability_evidence:
-  scope_enforced: "a supplied scope is an SQL predicate on every agent-reachable read of the hosted store, and a scoped API key's allowlist is applied inside the one tenant filter every read funnels through | packages/mcp-core/src/tools/read.ts:8-16, :67, packages/mcp-core/src/tools/list.ts:16, :106, supabase/functions/mcp/tools.ts:347, :570, :648, :791-813, :924, supabase/functions/_shared/auth/tenant-scope.ts:150-198, packages/mcp-core/src/scope/scope-precedence.ts | `memory.read`, `memory.list` and `memory.list_archived` validate a supplied scope and apply `.eq('scope', …)`; `memory.search` applies `scope.in`/`scope.like` over its `scopes`; the batch `refs` read groups by scope and applies `.eq('scope', s)` per group. The scope argument is optional, and an omitted one is the stated limit: `memory.read` resolves the key across every scope the caller can see and returns one winner by scope type — project, branch, repo, global — then most-recently-updated, then scope ascending, naming the scope that answered, while `memory.list` returns every visible scope unmerged. That widening sits inside the tenant predicate, not around it. `applyTenantScope` also ANDs the calling key's scope allowlist (migration 00068) onto every read, so *a scoped key must not see an out-of-allowlist row even on a read that names no scope at all*; `GET /memories/:id`, the one read with no scope argument, carries it too. Two limits: the edge `memory.search` skips an invalid exact scope instead of rejecting it (`tools.ts:807`), so a call whose every scope is malformed searches all visible scopes; and the CLI's local store is a directory per scope with no predicate, a separate store the mark does not rest on. The tenant predicate is a filter-shaper that *never re-derives membership itself*, mirroring `lorekit_member_org_ids()`, with the Deno copy guarded by a parity spec | packages/mcp-core/src/auth/tenant-scope.spec.ts, tenant-scope-usage.spec.ts, packages/mcp-core/src/edge/edge-parity.spec.ts"
-  audit_log: "an append-only table with no update or delete policy, a closed action vocabulary, and a committed test that fails when the vocabulary and the schema disagree | supabase/migrations/00010_audit_log.sql:30-75, 00089_audit_log_groom_actions.sql, packages/mcp-core/src/audit/audit-vocabulary.spec.ts | `audit_log` records a user, an action from a `CHECK`-constrained list, a resource type and id, a target and a metadata blob, with RLS granting select only on one's own rows and *deliberately NO update or delete policy — the log is append-only / immutable via the API surface*. Widening the vocabulary is forward-only, a drop and re-add of the CHECK, and the reason is stated: `recordAudit` never throws on a rejected action, so a call whose action the CHECK refuses *is swallowed and logged to the server console only, leaving a silent, permanent hole* — which is why `audit-vocabulary.spec.ts` parses the newest action-CHECK migration and fails when it differs from the TypeScript `AUDIT_ACTIONS` set. The limit belongs with the mark: an update's row carries `metadata: { scope, key }` and not the value that changed | packages/mcp-core/src/audit/audit.spec.ts, packages/mcp-core/src/tools/write.spec.ts:169"
+  scope_enforced: "a supplied scope is an SQL predicate on every agent-reachable read of the hosted store, inside one tenant predicate that also ANDs a scoped API key's allowlist | supabase/functions/mcp/tools.ts:344, :367-368, :469-472, :525, :590-591, :668-669, :809-832, :924, :950-951, supabase/functions/_shared/auth/tenant-scope.ts:149-230, packages/mcp-core/src/tools/read.ts:67, packages/mcp-core/src/tools/list.ts:106 | `memory.read`, `memory.list` and `memory.list_archived` validate a supplied scope and apply `.eq('scope', …)`; `memory.search` applies `scope.in`/`scope.like` over its `scopes`; the batch `refs` read groups by scope and applies `.eq('scope', s)` per group. The scope argument is optional, and an omitted one is the stated limit: `memory.read` resolves the key across every scope the caller can see and returns one winner by scope type — project, branch, repo, global — then most-recently-updated, then scope ascending, naming the scope that answered. That widening sits inside the tenant predicate. API-key calls run on a service-role client that bypasses RLS, so the tenant boundary on that path is `applyTenantScope`: the caller's own rows or a member org's, ANDed with the key's scope allowlist (migration 00068) and its tenancy restriction (`orgs_only`, 00116), so *a scoped key must not see an out-of-allowlist row even on a read that names no scope at all*. Two limits: the edge `memory.search` skips an invalid exact scope instead of rejecting it (`tools.ts:827`), so a call whose every scope is malformed searches all visible scopes; and the CLI's local store is a directory per scope with no predicate, a separate store the mark does not rest on | packages/mcp-core/src/auth/tenant-scope.spec.ts, tenant-scope-usage.spec.ts, packages/mcp-core/src/edge/edge-parity.spec.ts"
+  audit_log: "an append-only table with no update or delete policy, a closed action vocabulary, and a committed test that fails when the vocabulary and the schema disagree | supabase/migrations/00010_audit_log.sql:30-75, 00089_audit_log_groom_actions.sql, supabase/functions/mcp/tools.ts:265-276, packages/mcp-core/src/audit/audit-vocabulary.spec.ts | `audit_log` records a user, an action from a `CHECK`-constrained list of 29, a resource type and id, a target and a metadata blob, with RLS granting select only on one's own rows and *deliberately NO update or delete policy — the log is append-only / immutable via the API surface*. Widening the vocabulary is forward-only, a drop and re-add of the CHECK, and the reason is stated: `recordAudit` never throws on a rejected action, so a call whose action the CHECK refuses *is swallowed and logged to the server console only, leaving a silent, permanent hole* — which is why `audit-vocabulary.spec.ts` parses the newest action-CHECK migration and fails when it differs from the TypeScript `AUDIT_ACTIONS` set. Two limits belong with the mark: an update's row carries `metadata: { scope, key }` and not the value that changed, and `user_id` references `auth.users on delete cascade`, so deleting an account deletes its audit rows | packages/mcp-core/src/audit/audit.spec.ts, packages/mcp-core/src/tools/write.spec.ts:169"
+  negative_eval: "the CLI's local store, with the hosted predicate asserted in SQL | packages/cli/test/store.test.mjs:115-132, supabase/tests/migrations.test.sql:2867-2928 | `list is newest-first and filters by tag; archived is hidden` writes two lessons to one scope, archives one, and asserts that `list` returns exactly the other and that `read` of the archived key returns null — a populated read with the archived entry absent and the live one present. The hosted read tools are covered one level down: §60c of the migration suite seeds an active, an archived and an expired row under one owner, asserts that the read tools' predicate returns the active row and neither of the others, and asserts that raw RLS returns both hidden rows, so the query-layer filter is shown to be the load-bearing one. The edge tools themselves are asserted only to apply the predicate (`list.spec.ts:163-172`, `read.spec.ts:141-150`, `search.spec.ts:164-167`), which is a test of the mechanism rather than of the result | packages/smoke-tests/src/byod-smoke.integration.spec.ts:396-407"
 stack_storage: "postgres, files"
 stack_retrieval: "lexical"
 stack_source: "seeded"
 matrix:
-  memory_unit: "A lesson addressed by `(scope, key)` — a text value up to 64 KB with tags, `source_agent` and `trigger`"
-  storage: "Supabase Postgres with row-level security and a generated FTS column; or a local two-tier Markdown store in the CLI"
-  retrieval: "Exact `scope` equality plus `websearch_to_tsquery` full-text; the narrow-to-broad ladder is three separate calls the agent is told to make"
-  write: "`memory.write` upserts in place on the unique key; no LLM anywhere; a GitHub webhook writes PR review comments through a deterministic signal filter"
-  update_delete: "Upsert overwrites the value with no version kept; soft archive, restore, TTL expiry, and two hard-delete purge RPCs"
-  scoping: "`global`, `project::`, `repo::`, `branch::` — validated, applied as a read-path filter, and backed by Postgres RLS and org roles"
-  integration: "MCP over a Supabase edge function, a CLI, and marketplace plugins for Claude Code, Cursor and Codex"
-  background: "None scheduled in-repo; purge is an RPC called by the dashboard, an MCP tool, or a pg_cron job the operator sets up"
-  trust: "No status on a memory. Provenance is `source_agent` and `trigger`; the recurrence and entrenchment guards are prose in a skill file"
-  strengths: "An authenticated tenancy boundary in the database rather than a scope tag, and an audit log made append-only by having no update or delete policy"
-  risks: "The audit log records that a value changed and never what it was; archive deliberately frees the key so the same lesson can be re-asserted"
+  memory_unit: "A record addressed by `(scope, key)` with a stable id — a Markdown or JSON value up to 64 KB, tags, kind, host, origin repo, branch, commit and PR, an open attributes map and an optional supersedes link"
+  storage: "Supabase Postgres with row-level security, a generated FTS column and a dormant pgvector column; or a local two-tier Markdown store in the CLI whose frontmatter keeps fields it does not know"
+  retrieval: "Scope equality plus `websearch_to_tsquery`; an unscoped read returns one winner by scope type; a ranked route scores recency, recurrence, `ts_rank_cd` relevance and outcome tags with MMR diversity; the SessionStart hook merges the scope ladder under a 3,000-character budget"
+  write: "`memory.write` upserts in place on the live key and increments `seen_count`; no model on any path; embedding on REST create is opt-in and nothing reads the vector; a GitHub webhook writes PR review comments as candidates with a graded TTL"
+  update_delete: "Upsert overwrites the value with no version kept; `supersedes` links a record to the one it replaces and filters nothing; soft archive, restore, TTL expiry, saved auto-archive policies, and two hard-delete purges"
+  scoping: "`global`, `project::`, `repo::`, `branch::` — validated and applied as a read filter inside one tenant predicate that ANDs an API key's scope allowlist and tenancy; RLS on the dashboard's JWT path"
+  integration: "MCP over a Supabase edge function, a REST API, a CLI with lifecycle hooks, and marketplace plugins for Claude Code, Cursor and Codex"
+  background: "A nightly groom sweep and a rate-limit reaper behind a pg_cron guard; retention policies only archive; hard purge is a confirmed manual act"
+  trust: "No status on a record. Provenance is source_agent, trigger, kind, host and origin; recurrence, read, open and citation counters rank; a `status::` tag is read only by the duplicate-cluster tooling"
+  strengths: "A tenant predicate applied in the one function every read funnels through, an audit log with no update or delete policy, and a session-start read that ranks, de-duplicates and reports what its budget left out"
+  risks: "The audit log records that a value changed and never what it was; archiving frees the key, so a revived lesson is a new record at seen_count 1; supersedes is a link no read path consults"
 ---
 
 ## 1. Executive Summary
 
-LoreKit is **a shared lesson store for coding agents**, built as a hosted
-product with the whole stack in the repository: a Supabase Postgres schema in 106
-migrations, an MCP server as an edge function, a Next.js dashboard, a CLI, and
-marketplace plugins for Claude Code, Cursor and Codex. MIT licensed and
-self-hostable. The pitch is cross-machine, cross-tool continuity — one agent
-learns something, every other agent on any machine reads it.
+LoreKit is **a shared lesson store for coding agents**. It is built as a hosted
+product with the whole stack in the repository: a Supabase Postgres schema in 119
+migrations, an MCP server as an edge function, a REST API, a Next.js dashboard, a
+CLI with lifecycle hooks, and marketplace plugins for Claude Code, Cursor and
+Codex. It is MIT licensed and self-hostable, and the CLI carries a second,
+offline store of Markdown files.
 
-The unit is deliberately small: a lesson addressed by `(scope, key)`, with a
-text value, tags, a `source_agent` and a `trigger`. There is no embedding, no
-similarity, no extraction and no model anywhere in the write path. Retrieval is
-exact-scope equality plus Postgres full-text search. That austerity is the
-design, not an omission.
+The unit is a record addressed by `(scope, key)`. It carries a stable id, a
+Markdown or JSON value, tags, a `kind` and `host`, the repository, branch,
+commit and pull request it was recorded from, an open `attributes` map, and an
+optional `supersedes` link to the record it replaces. No model sits on any write
+path. A `pgvector` column exists and an opt-in pipeline fills it on REST create,
+but no read path queries it, and the project's own `docs/embeddings.md` lists
+semantic search as *"Not built"*. Retrieval is scope equality and Postgres
+full-text search, ranked on the session-start path by recency, recurrence,
+lexical relevance and outcome signals.
 
-What is genuinely strong here is the **infrastructure around the memory**, and
-it is stronger than most systems in this atlas manage:
+What is strong is the infrastructure around the memory:
 
-- **The tenancy boundary is authenticated, not tagged.** Row-level security
-  policies on `memories` gate every read on `user_id = auth.uid()` or a matching
-  `org_id` JWT claim. This atlas's `scope_enforced` mark only certifies that a
-  scope key reaches the query; LoreKit has the stronger thing the rubric says is
-  rarer than the count suggests.
+- **The tenancy boundary is one function.** Agent calls authenticate with an API
+  key and run on a service-role client that bypasses RLS. Every read on that path
+  passes through `applyTenantScope`, which ANDs the caller's own and member-org
+  rows with the key's scope allowlist and tenancy restriction
+  (`supabase/functions/_shared/auth/tenant-scope.ts:206-230`). The dashboard's
+  JWT path gets RLS as well.
 - **The audit log is append-only by construction.** `audit_log` has a SELECT
-  policy and an INSERT policy and **deliberately no UPDATE or DELETE policy** —
-  the migration says so, numbered as Decision D5. A CHECK constraint
-  enumerates 29 actions (`00089_audit_log_groom_actions.sql`, the newest of the
-  migrations that redefine it), including `memory.create`, `memory.update`,
-  `memory.archive`, `memory.restore`, `memory.delete` and `memory.protect`.
-- **The migrations are written like design documents.** The audit-log migration
-  spends 25 comment lines explaining why capture is app-layer rather than a
-  trigger, names the single deliberate exception, and tells a future maintainer
-  what to do if an admin path is ever added. That is unusual and it made this
-  report faster to write.
+  policy and an INSERT policy and deliberately no UPDATE or DELETE policy, with a
+  CHECK constraint over 29 actions and a spec that fails when that list and the
+  TypeScript vocabulary disagree.
+- **The session-start read is budgeted and honest about it.** The hook merges the
+  scope ladder, ranks across it, caps each loop bucket, diversifies the result,
+  renders under a 3,000-character budget, and ends a truncated block with a count
+  of what it left out (`packages/cli/src/core/lessons.mjs:214-410`).
+- **The migrations are written like design documents.** Each one states the
+  problem, the alternatives it rejected and the residue it leaves.
 
-Two things undercut it, and they are the interesting part.
+Two things undercut it.
 
 **The audit log records that a value changed and never what it was.** The write
-path is an in-place upsert on the unique key; the audit metadata is
-`{ scope, key }` (`packages/mcp-core/src/tools/write.ts:118`). So LoreKit can
-prove a memory was updated, by whom and when, and cannot show what it replaced.
-An append-only mutation log over a store with no version history answers the
-security question and not the memory one.
+path is an in-place upsert on the live key, and the audit metadata is
+`{ scope, key }` (`supabase/functions/mcp/tools.ts:265-276`). LoreKit can prove
+a memory was updated, by whom and when, and cannot show what it replaced.
 
-**The epistemics are prose.** The `lorekit-setup` skill ships a genuinely
-excellent 257-line document on self-improvement loops, including five
-"entrenchment guards" against a loop reinforcing its own mistakes — the clearest
-statement of that problem in this corpus. Of the five, exactly one (expiry) is
-enforced by code. `seen_count >= 3`, the recurrence gate that governs promotion,
-appears in four Markdown files and **in no schema and no TypeScript**. There is
-no column to count recurrences in.
+**Correction is a link, not a state.** Archiving frees the address: the unique
+index is partial on `archived_at is null`, so the next write to that key inserts
+a new record with a new id and `seen_count` 1. That record may name its archived
+predecessor in `supersedes`, and no read path consults the link. A lesson a user
+removed can be re-learned without any record of the removal reaching a reader.
+
+LoreKit's author published an essay on 7 November 2026, [*Agent memory needs
+its OpenTelemetry moment*](https://www.lorekit.io/blog/open-agent-memory-format),
+proposing a shared record format for agent memory. The commit that landed the
+next morning (`c2676c2`) adds three of the post's fields to LoreKit's own record
+(§5). The post's own conformance test, that fields a tool does not know survive a
+rewrite, holds on the local store and is committed. It does not hold across
+LoreKit's own migration to the hosted store.
 
 ## 2. Mental Model
 
-A memory is **a keyed slot**. `(scope, key)` is an address; the value is
-whatever was last written there. This is the simplest model in this atlas after
-a plain file, and everything downstream follows from it.
+A memory is **a keyed slot with counters**. `(scope, key)` is an address; the
+value is whatever was last written there; `seen_count`, `read_count`,
+`opened_count` and `cited_count` say how often it was written, surfaced, deliberately
+fetched and credited. The id is stable while the slot is live and is replaced
+when the slot is vacated and refilled.
 
-The consequence worth internalising: LoreKit has no notion of a memory being
-*true*, *candidate*, *verified* or *rejected*. It has a notion of a memory
-*existing at an address*, being *visible*, or being *gone*. Belief is not
-modelled; occupancy is.
+The consequence: LoreKit has no notion of a memory being *true*, *candidate*,
+*verified* or *rejected*. It has a notion of a memory *existing at an address*,
+being *visible*, being *frequent*, or being *gone*. Belief is not modelled;
+occupancy and use are.
 
 ### How a thing becomes a belief
 
-Two capture paths, neither of which involves a model.
+Three capture paths, none of which involves a model.
 
 **The agent writes it.** `memory.write` calls the `memory_write` RPC, which
-upserts with `on conflict (user_id, scope, key) ... do update set value = ...`.
-Whether the row was created or updated is recovered from `xmax::text = '0'`,
-which is how the tool knows to log `memory.create` versus `memory.update`. When
-to write at all is decided by the `lorekit-memory` skill's `retrospective` rule
-— prose telling the agent to record a lesson after a stuck loop, a repeated
-failure, or a costly wrong assumption.
+upserts on one of three partial unique indexes — org-owned, personal, or
+service — each predicated on `archived_at is null`. A conflict is the
+second sighting of the lesson, and the RPC answers it with
+`seen_count = memories.seen_count + 1` rather than trusting a caller-supplied
+count (`supabase/migrations/00119_memory_record_extensions.sql:398-415`;
+reasoning in `00059_memory_seen_count.sql`). The RPC is `SECURITY DEFINER` and
+sets the actor from `auth.uid()` on any non-service connection
+(`00119_memory_record_extensions.sql:268-280`).
 
-**A GitHub webhook writes it.** PR review comments become lessons, and the gate
-is deterministic (`packages/mcp-server/src/webhooks/signal-filter.ts`):
-`classifyWebhookAction` admits only four event/action pairs, and `isSignalWorthy`
-rejects bodies under 20 characters, bot-noise patterns (CI status lines,
-Dependabot headers), and bodies that are entirely a fenced code block. One of
-the four admitted actions is `pull_request_review_thread resolved`, on the
-reasoning that the author acknowledged the finding — outcome-grounding by event
-type, and a good instinct.
+**The CLI hooks prompt for it.** The plugins register SessionStart,
+UserPromptSubmit, PostToolUseFailure and Stop hooks. The failure hook surfaces
+lessons relevant to the error alongside a nudge to write one; the Stop hook runs
+the retrospective rule (`packages/cli/src/commands/hook.mjs:291-362`). When to
+write is the agent's decision.
 
-The webhook body is HMAC-SHA256 verified with an explicit note that the
-signature-absent case returns before any crypto runs, *"no timing oracle on
-crypto"*. The ingest boundary is the most carefully built thing in the
-repository.
+**A GitHub webhook writes it.** PR review comments become candidate lessons. The
+gate is deterministic: four admitted event/action pairs, then a body filter
+rejecting short bodies, bot noise and code-only blocks
+(`supabase/functions/mcp/webhook.ts:747-789`). Candidates are keyed by GitHub's
+comment id, so a redelivery bumps `seen_count` instead of duplicating, and they
+expire on a TTL graded by signal tier: 90 days for a resolved thread, 30 for a
+submitted review, 14 for a fresh comment
+(`packages/mcp-core/src/limits/ttl-defaults.ts:41-45`). The body is
+HMAC-SHA256 verified, and the signature-absent case returns before any crypto
+runs.
 
 ### How a belief stops being one
 
-Four exits, and the interesting property is what the first one deliberately
-allows.
+*Overwrite.* A second write to the same live address replaces the value in
+place. Origin fields and attributes merge, keeping the last known value. No
+prior value is retained anywhere, including in the audit log.
 
-*Overwrite.* A second `memory.write` to the same address replaces the value in
-place. No version, no supersession pointer, no prior value retained anywhere —
-including in the audit log.
+*Archive.* `memory.archive`, the dashboard, or a retention policy sets
+`archived_at`. The read tools' predicate hides the row; `restore` clears it.
 
-*Archive.* `archive_memory` sets `archived_at`. RLS then hides the row from
-normal reads via a policy predicate, and a second policy exposes it to the
-dashboard's Archive tab. `restore_memory` clears the timestamp.
+*Expire.* `expires_at`, set from a TTL on the write, is filtered by the same
+predicate — `.or('expires_at.is.null,expires_at.gt.now()')` — on every read
+tool. A value-only update keeps an existing TTL; a write that re-supplies one
+extends it. Defaults differ by surface. The webhook always supplies a TTL. The
+CLI's `lorekit write` applies a TTL configured per scope prefix. An MCP
+`memory.write` without `ttl_days` is permanent, and the hook's write nudge only
+suggests the configured value — *"nothing enforces it"*
+(`packages/cli/src/core/lessons.mjs:816-830`).
 
-*Expire.* `expires_at`, set by `p_ttl_days` between 1 and 365, is filtered at
-the query layer — `.or('expires_at.is.null,expires_at.gt.now()')` — and the
-migration explains why it is not in the policy: RLS *"cannot call now() cheaply
-in a policy"*. All three read tools apply it, which I checked because the
-comment names three tools and it would have been easy for one to drift.
-
-*Purge.* Two separate hard-delete RPCs, `purge_archived_memories` (retention
-window, default 30 days) and `purge_expired_memories`, kept separate *"so each
-sweep is independently callable and narrowly indexed."*
-
-The archive step contains a decision that reads as a tombstone and is its exact
-opposite. Migration `00003` drops the original unique constraint and recreates
-it as a **partial** index `where archived_at is null`, with the comment: *"This
-allows the same (user_id, scope, key) to be re-created after an archive."*
-Archiving a lesson frees its address. An agent that archives "never use the
-bulk-insert path here" and then re-derives it tomorrow writes it back into the
-same slot, and nothing in the system records that a human once removed it.
+*Purge.* Two hard-delete RPCs, `purge_archived_memories` (after a retention
+window) and `purge_expired_memories`. A purge clears every `supersedes` link
+that pointed at the deleted row, by `on delete set null`.
 
 ```mermaid
-%% caption: every transition is logged and none of them preserves the value that was there, and because the unique index is partial a purge frees the key for the same claim to return
-stateDiagram-v2
-    [*] --> Active: memory.write upserts on scope plus key
-    [*] --> Active: a PR comment passes the deterministic signal filter
-    Active --> Active: a later write overwrites the value, no version kept
-    Active --> Expired: expires_at passes and the read paths filter it out
-    Active --> Archived: memory.archive, or the dashboard Archive tab
-    Archived --> Active: memory.restore clears the timestamp
-    Archived --> Gone: purge_archived_memories after the retention window
-    Expired --> Gone: purge_expired_memories
-    Gone --> Active: the unique index is partial, so the key is free again
-    note right of Gone
-        Every transition is logged. None of them
-        preserves the value that was there.
-    end note
+%% caption: a write to a live key overwrites it and counts a recurrence; archiving frees the key, so the next write is a new record that may point back with supersedes, a link no read consults
+flowchart TD
+    W["memory.write, REST POST, CLI write,<br/>or a PR comment past the signal filter"]
+    U{"a live row holds<br/>this owner, scope and key?"}
+    UP["upsert in place<br/>value replaced, seen_count + 1,<br/>origin and attributes merged"]
+    INS["insert a new record<br/>new id, seen_count 1,<br/>optional supersedes link"]
+    AUD["audit_log row<br/>memory.create or memory.update,<br/>metadata scope and key, no value"]
+    LIVE["live record<br/>read, list, search, ranked route,<br/>SessionStart injection"]
+    ARC["archived<br/>hidden by the read tools' predicate"]
+    EXP["expired<br/>hidden by the same predicate"]
+    GONE["hard-deleted by a purge RPC<br/>links to it set to null"]
+    W --> U
+    U -- yes --> UP
+    U -- no --> INS
+    UP --> AUD
+    INS --> AUD
+    AUD --> LIVE
+    LIVE -- "archive, or a retention policy" --> ARC
+    LIVE -- "TTL runs out" --> EXP
+    ARC -- "restore" --> LIVE
+    ARC -- "purge after the window" --> GONE
+    EXP -- "purge_expired" --> GONE
 ```
+
+The diagram leaves out one edge because it would cross the chart: from
+*archived* back to *insert a new record*. The partial unique index frees the key
+on archive, so the next write to it takes the insert branch
+(`supabase/migrations/00003_archive.sql:21`, and the `on conflict … where
+archived_at is null` arbiters in `00119_memory_record_extensions.sql:398`,
+`:446`, `:493`).
 
 ## 3. Architecture
 
-An NX monorepo shipping five packages and three plugins.
-
-**Storage** is Supabase Postgres: a `memories` table with a generated
-`tsvector` column and a GIN index, plus `orgs`, `org_scope_bindings`,
-`api_tokens`, `webhook_secrets`, `audit_log`, `user_limits`, `plans` and
-`usage_events` across 106 migrations. There is no vector extension and no
-embedding column — full-text search is the only content-based retrieval.
+An NX monorepo. **Storage** is Supabase Postgres: a `memories` table with a
+generated `tsvector` column and a GIN index, a dormant `vector(1536)` column with
+a partial HNSW index, per-memory read counters and a `memory_read_daily` rollup,
+a citations table, plus orgs, scope bindings, API tokens, webhook secrets,
+retention policies, `audit_log`, limits and `usage_events`.
 
 **The MCP surface** is a Supabase edge function (`supabase/functions/mcp/`)
-with the tool logic factored into `packages/mcp-core` so it can be shared with a
-Node MCP server (`packages/mcp-server`). An `edge-parity.spec.ts` exists to keep
-the two in step, and the webhook signal filter carries a comment demanding the
-Deno mirror be updated *"in the same commit"* — duplication managed by
-convention rather than by build, which is a standing hazard the code at least
-names.
+exposing 23 tools. The tool logic is factored into `packages/mcp-core` for a Node
+MCP server, and the Deno copy is a mirror kept in step by
+`edge-parity.spec.ts`. **A REST API** under `supabase/functions/memories/` serves
+the dashboard and the CLI's remote store, including routes the MCP surface does
+not have: `GET /memories/relevant`, duplicate clusters, facets and usage.
 
-**The local mode is a second implementation, not a fallback.** The CLI
-(40,594 lines of dependency-free `.mjs`) carries its own two-tier Markdown store:
-a per-user tier at `~/.lorekit/` and an opt-in per-repo tier at `<repo>/.lorekit/`,
-one file per `scope+key` under a directory derived from the scope. So the
-project maintains two storage engines with different substrates behind one
-command surface, and `migrate` moves between them.
+**The local mode is a second implementation, not a fallback.** The CLI is
+dependency-free `.mjs` carrying its own two-tier Markdown store: a per-user tier
+at `~/.lorekit/` and an opt-in per-repo tier at `<repo>/.lorekit/`, one file per
+`scope+key` under a directory derived from the scope. `migrate` moves entries
+between the stores, with the losses in §5.
 
-**Background work is scheduled where the extension exists, and never destroys.**
-Several migrations register `pg_cron` jobs behind the same guard — a rate-limit
-reaper every fifteen minutes, and a nightly `lorekit-groom-sweep` at 03:17 UTC,
-each wrapped in `if exists (select 1 from pg_extension where extname =
-'pg_cron')` so the migration still applies on an instance without it, where the
-functions can be driven by an external scheduler or the dashboard instead.
+**Background work is scheduled where the extension exists, and never
+destroys.** Migrations register `pg_cron` jobs behind an
+`if exists (… extname = 'pg_cron')` guard: a rate-limit reaper every fifteen
+minutes and a nightly `lorekit-groom-sweep`. Retention policies are *"scoped,
+saved rules that AUTO-ARCHIVE (never hard-delete) matching lessons"*, and one
+function, `lorekit_groom_candidates`, answers *what matches* for preview, run-now
+and the sweep, so a previewed count equals what a run archives. A `protected`
+flag exempts a lesson from every policy.
 
-What the sweep does is bounded by design. Retention policies are *"scoped, saved
-rules that AUTO-ARCHIVE (never hard-delete) matching lessons"*, reusing the
-existing soft-archive; the migration states that *"a policy NEVER hard-deletes;
-hard purge stays exactly where it is… manual, confirm-or---yes"*. So the
-automated half can only move a lesson out of retrieval, and the half that
-destroys stays a deliberate act.
-
-That gate is well reasoned and is not `human_review`, which is why this report
-does not carry the mark. It guards *destruction*, not admission — nothing waits
-in a state before it can be believed — and its non-interactive form is a flag
-the caller passes: `purge.mjs:18-19` requires `--yes` "when there is nobody to
-ask (a pipe, CI, or `--json`)". A confirmation prompt with a flag that satisfies
-it is a guard against a slip rather than against a decision. The reasoning
-behind it is still worth copying, and the comment gives it plainly: no dry run
-is possible because the RPCs return their count only after deleting, so *"the
-gate is therefore a confirmation, not a preview"*, and *"an agent loop must not
-be able to trigger one by omission."*
-
-The preview property is the part to copy. One function,
-`lorekit_groom_candidates`, is *"the single source of truth for 'what matches' —
-preview, run-now, and the nightly sweep all resolve the SAME candidates, so a
-previewed count always equals what a run archives."* A preview computed by a
-different query from the apply is a preview that can lie, and this is the shape
-that forecloses it.
-
-Hard purge is still an RPC an operator or the dashboard calls, so an unattended
-instance accumulates archived and expired rows — which the TTL migration
-presents as a virtue, since the sweep stays an index scan and *"no data is
-silently lost"*.
-
-The migration is also candid about what it approximates. `unseen_days` is a
-policy dimension, and LoreKit *"does not yet track per-memory READ activity
-(usage_events records reads in aggregate, not per row)"*, so rather than wiring
-read-tracking through every read handler the field stands on a proxy — the
-limitation named in the migration that depends on it rather than discovered by
-whoever trusts it.
+Hard purge is a deliberate act. `purge.mjs` requires `--yes` where there is
+nobody to ask, and the reason is stated: the RPCs return their count only after
+deleting, so *"the gate is therefore a confirmation, not a preview"*. That gate
+is not `human_review`: it guards destruction rather than admission, and its
+non-interactive form is a flag the caller supplies.
 
 ### Deployment and ergonomics
 
-The hosted path is three steps and genuinely does not require running anything:
-generate a token at lorekit.io, `npx @lorekit/cli install`, done. The local path
-requires nothing at all — no account, no network, Markdown files on disk.
-
-Self-hosting is the middle case and is documented as a five-minute Supabase +
-Vercel deploy. That is credible for the schema; it is less credible for the
-scheduling, since the purge jobs are left to the operator, and for the two
-mirrored implementations, which a self-hoster inherits.
-
-The store is human-readable in local mode and SQL-only in hosted mode, with the
-dashboard as the repair surface.
+The hosted path is a token from lorekit.io and `npx @lorekit/cli install`. The
+local path needs no account and no network. Self-hosting is a Supabase plus
+Vercel deploy, with a generated `supabase/byod/bootstrap.sql` for an existing
+project and a `/lorekit-self-host` skill. A self-hoster inherits the two mirrored
+server implementations and must enable `pg_cron` for the sweeps to run.
 
 ## 4. Essential Implementation Paths
 
 **Schema** — `supabase/migrations/00001_memories.sql` (table, RLS, FTS),
-`00003_archive.sql` (soft delete, restore, purge), `00010_audit_log.sql`,
-`00030_memory_ttl.sql` (expiry plus the current `memory_write`), `00014_orgs.sql`
-through `00028` (orgs, roles, invites, scope bindings).
+`00003_archive.sql`, `00010_audit_log.sql`, `00030_memory_ttl.sql`,
+`00046_memory_rpc_actor_guard.sql`, `00048_memory_origin.sql`,
+`00056_memory_kind_host.sql`, `00059_memory_seen_count.sql`,
+`00060_memory_embeddings.sql`, `00084_memory_read_counters.sql`,
+`00088_retention_policies.sql`, `00107_memory_citations.sql`,
+`00112_relevant_ranking.sql`, `00119_memory_record_extensions.sql` (the current
+`memory_write`).
 
-**Write** — `packages/mcp-core/src/tools/write.ts` → the `memory_write` RPC.
-Scope validated by `packages/mcp-core/src/scope.ts`, TTL by `ttl.ts`, limits by
-`limits.ts`, then `recordAudit` in `audit.ts`.
+**Write** — `supabase/functions/mcp/tools.ts` `toolWrite` (`:154-302`) → the
+`memory_write` RPC; record extensions parsed by
+`supabase/functions/_shared/provenance/record-extensions.ts`; then
+`recordAuditDeferred` and `recordCitations`.
 
-**Read** — `tools/read.ts` (scope + key equality), `tools/list.ts` (scope
-equality), `tools/search.ts` (`textSearch` on the generated `fts` column with
-`websearch` parsing). All three apply `.is('archived_at', null)` and the expiry
-`.or(...)`.
+**Read** — `toolRead` (`:304-415`), `toolReadRefs` (`:440-503`), `toolList`
+(`:505-695`), `toolSearch` (`:775-848`), each applying the archive and expiry
+predicate and `applyTenantScope`. The ranked route is
+`supabase/functions/memories/handlers/relevant.ts` over
+`_shared/ranking/lesson-rank.ts`.
 
-**Correction** — `tools/archive.ts`, `tools/delete.ts`, `tools/purge.ts`,
-`tools/purge-expired.ts`; the dashboard equivalents in
-`packages/web/src/lib/lore.ts` (`archiveLesson`, `restoreLesson`,
-`purgeArchivedLessons`), each resolving `user.id` from the session.
+**Session start** — `packages/cli/src/commands/hook.mjs:171-213` →
+`fetchLessons` and `formatLessons` in `packages/cli/src/core/lessons.mjs`.
 
-**Webhook capture** — `supabase/functions/mcp/webhook.ts` (HMAC verification,
-secret selection by `repository.full_name`), gated by
-`packages/mcp-server/src/webhooks/signal-filter.ts`.
+**Correction** — `toolArchive`, `toolRestore`, `toolPurge`, `toolPurgeExpired`,
+the policy and groom tools in `tools.ts`; `packages/cli/src/commands/purge.mjs`.
 
-**Scope resolution** — `packages/mcp-core/src/scope.ts` validates and normalises;
-the narrow-to-broad ladder lives in
-`packages/cli/skill/lorekit-memory/references/scope-resolution.md` as instructions.
+**Webhook** — `supabase/functions/mcp/webhook.ts`, with comment-relevance
+classification in `packages/mcp-core/src/webhook/comment-relevance.ts`.
 
-**Local store** — `packages/cli/src/store/local.mjs` and `format.mjs`,
-composed into a two-tier store by `control.mjs` and `stores.mjs`.
+**Local store** — `packages/cli/src/store/format.mjs`, `local.mjs`,
+`remote.mjs`, composed by `packages/cli/src/shared/stores.mjs`.
 
 ## 5. Memory Data Model
 
 `memories` carries `id`, `user_id`, `org_id`, `scope`, `key`, `value` (CHECK
-`length <= 65536`), `tags`, `source_agent`, `trigger`, the generated `fts`
-column, `created_at`, `updated_at`, `created_by`, `updated_by`, `archived_at`
-and `expires_at`.
+`length <= 65536`), `tags`, `source_agent`, `trigger`, `kind`, `host`, the four
+`origin_*` columns, `seen_count`, `read_count`, `last_read_at`, `opened_count`,
+`last_opened_at`, `cited_count`, `last_cited_at`, `protected`, `last_seen_at`,
+`embedding` and `embedding_model`, `attributes`, `content_type`, `supersedes`,
+the generated `fts`, `created_at`, `updated_at`, `created_by`, `updated_by`,
+`archived_at` and `expires_at`.
 
 **Scoping is the best-developed part of the model.** Four canonical forms —
 `global`, `project::{name}`, `repo::{owner}/{repo}`,
 `branch::{owner}/{repo}::{branch}` — validated by `validateScope`, which
-normalises to lowercase and rejects the single-colon mistake with an error
-message that shows the corrected string. Above that sit orgs with roles, invites,
-and `org_scope_bindings` that route a write on a bound scope to the org rather
-than the user, gated by `lorekit_org_can(...)`. This is the richest scope model
-in the atlas outside the graph systems, and it is enforced in three places: the
-validator, the read-path filter, and RLS.
+normalises to lowercase and rejects the single-colon mistake with an error that
+prints the corrected string. Above that sit orgs with roles and invites, and
+`org_scope_bindings`, which route a write on a bound scope to the org rather than
+the writer, gated by `lorekit_org_can(...)`. API tokens can be restricted to a
+scope allowlist and to a tenancy: all, selected orgs, personal only, or
+`orgs_only`, which excludes the owner's personal memories.
 
-**Provenance is two nullable text columns.** `source_agent` and `trigger` record
-which agent wrote a lesson and what prompted it. There is no evidence pointer, no
-confidence, no status and no link to the session or the PR comment a lesson came
-from — the webhook path knows the comment URL and does not store it as a
-retrievable field.
+**Provenance is typed and last-known.** `source_agent` and `trigger` say which
+agent wrote a lesson and what prompted it; `kind` (`lesson`, `bus` or `signal`)
+and `host` name its family and owning loop; `origin_repo`, `origin_branch`,
+`origin_commit` and `origin_pr` say where it was recorded from. Each origin field
+merges as *"the newest write wins when it knows the value, and a write that does
+NOT know it … never erases what a previous write did know"*
+(`00048_memory_origin.sql`). There is no confidence and no status column.
 
-**Temporal modelling is record-time only.** `created_at`, `updated_at`,
-`archived_at` and `expires_at` all describe LoreKit's own bookkeeping. Nothing
-records when a lesson was true, and because the upsert overwrites in place, a
-lesson that changed has no history at all — only a `memory.update` audit row
-saying that it did.
+**Use is measured, and the measurements are derived columns.** `read_count`
+splits into targeted and bulk reads in a daily rollup; `opened_count` counts
+deliberate fetches of a lesson that was surfaced; `cited_count` counts lessons an
+agent names in a later write's `cited` field, the one signal that says a lesson
+*worked* rather than that it was looked up (`00107_memory_citations.sql`). A
+trigger keeps all of them, and the embedding pair, from restamping `updated_at`,
+because recency ranking and age-based retention read that column.
+
+**Temporal modelling is record-time only.** Every timestamp describes LoreKit's
+own bookkeeping, and the upsert overwrites in place, so a lesson that changed has
+no history beyond a `memory.update` audit row saying that it did.
+
+### The record against the proposed open format
+
+The 7 November post sketches a record envelope and says *"the field names aren't
+a proposal."* Read against it, LoreKit's record at this pin covers most of the
+envelope:
+
+| Proposed field | LoreKit hosted | LoreKit local file |
+| --- | --- | --- |
+| `spec` | no format version on the record | no format version in the frontmatter |
+| `id` | `uuid`, stable across updates, replaced when an archived key is rewritten | minted on first write and kept on rewrite and archive |
+| `address` `{level, value}` | the `scope` string; the level is its prefix, and a repo value is `owner/name` with no host | the scope, plus a directory derived from it |
+| `key` | `key` | `key` |
+| `kind` | `kind`: `lesson`, `bus` or `signal`, closed by the Zod schema | `kind` |
+| `written_by` `{type, name}` | `source_agent` and `host` as free text; no field says person, agent or service | the same |
+| `content_type` | `text/markdown` or `application/json`, which must parse | the same |
+| `lifecycle` `{expires_at, extended_by}` | `expires_at`; a write that re-supplies a TTL extends it, a read never does | `expires_at` |
+| `attributes` | `jsonb` of namespaced scalars, merged on update, 32 keys at most | the same, validated alike |
+
+`supersedes`, `seen_count`, the read counters and `origin_*` have no slot in
+the sketch.
+
+The post names three conformance tests. **Unknown fields survive a rewrite** on
+the local store: `extraFields` carries every frontmatter key outside `FIELDS`
+through write, archive and `putEntry`, and
+`record-extensions.test.mjs:57` asserts it. The hosted store has fixed columns,
+so the property there is that attribute keys a write does not name survive the
+merge. **A round trip loses nothing** holds within each store and fails
+across them: `RemoteStore.putEntry`, which `migrate` uses, sends value, tags,
+`source_agent`, `trigger`, `created_at`, TTL, origin, attributes and
+`content_type`, and drops `id`, `supersedes`, `seen_count`, `kind`, `host` and
+every unknown frontmatter field (`packages/cli/src/store/remote.mjs:584-603`).
+Two of the drops are stated in the code: `supersedes` names a local id the
+hosted store cannot resolve, and archived entries are refused outright. **Expiry
+behaves as stated** is covered by the TTL suites on both stores.
 
 ## 6. Retrieval Mechanics
 
-**An omitted scope now widens instead of failing, and the answer says which
-scope answered.** `memory.read { key }` — the shape an agent reaches for after a
-session-start injection hands it a `scope::key` reference it only half-remembers
-— used to fail with *"scope and key are required"*, as did `memory.list`,
-`memory.list_archived` and `lorekit show`. The source records the patch it
-declined: defaulting the missing scope to `global` *"is worse than the error —
-it turns a loud, recoverable failure into a silent `null` for every repo-scoped
-lesson, indistinguishable from a genuine miss"*, on a store where repo-scoped
-rows outnumber global ones about two to one. So an omitted scope resolves the key
-across every scope the caller can already see and returns one winner.
+Five read surfaces, and they differ in what they rank.
 
-Three details make the widening safe to copy. Precedence runs over scope *types*
-— project, branch, repo, global, the hook engine's own `readOrder` — rather than
-over the caller's own scopes, because an MCP call has no working directory and
-type specificity is the one ordering every runtime can compute. Ties break by
-`updated_at` descending then scope ascending, and the reason is stated: without a
-total order the winner is whatever order Postgres happened to return, so the same
-call answers differently on consecutive runs. And the result always names the
-scope that answered, with `other_scopes` present only when the key was genuinely
-ambiguous — on an unscoped read the caller has no other way to tell a `global`
-hit from a `repo::…` one. A widening that does not say how wide it went is the
-same defect as a filter that does not say it filtered.
+**`memory.read`** fetches one address. **An omitted scope widens instead of
+failing, and the answer says which scope answered.** The source records the
+patch it declined: defaulting a missing scope to `global` *"is worse than the
+error — it turns a loud, recoverable failure into a silent `null` for every
+repo-scoped lesson"*. Precedence runs over scope *types* — project, branch,
+repo, global — then `updated_at` descending, then scope ascending, so the same
+call answers the same way twice. The result names the scope that answered and
+lists `other_scopes` when the key was ambiguous.
 
-The widening is over the scope-type dimension inside the tenant predicate, not
-around it; the visibility filter is unchanged.
+**`memory.list`** returns one exact scope, or every visible scope unmerged, newest
+first. **`memory.search`** runs `websearch_to_tsquery` over the generated column
+across a list of exact or prefix scopes. Neither ranks by anything but recency
+and FTS position.
 
-Three tools. `memory.read` fetches one address. `memory.list` returns everything
-at one exact scope, or across visible scopes when none is named. `memory.search` runs `websearch_to_tsquery` against the
-generated column, with tag filters composed as an `.or()` string and a
-position-based rank assigned because *"Supabase textSearch doesn't return a rank
-score directly"*.
+**`GET /memories/relevant`** is where ranking lives. A candidate RPC returns up
+to 200 rows ordered by `ts_rank_cd` when there is a query and by `updated_at`
+otherwise. The handler scores each on four factors with equal default weight:
 
-**The narrow-to-broad ladder is not implemented.** The README describes an agent
-reading branch, then repo, then global and merging; `list.ts` does
-`.eq('scope', input.scope)` on one exact value. The ladder is three separate
-calls the agent is told to make in `scope-resolution.md`. That is a defensible
-division — it keeps the server stateless and lets the agent decide the merge —
-but it means the headline organising idea is enforced by instructions, and an
-agent that skips a rung silently gets less context with no error.
+- recency, with a 14-day half-life;
+- salience, `seen_count` normalised against the most-recurring candidate;
+- lexical relevance, `ts_rank_cd` mapped into [0,1];
+- outcome, from the review-outcome bus tags or an origin PR.
 
-There is no token budget, no ranking across scopes, no recency weighting and no
-deduplication between what the three calls return. Merging is the agent's
-problem.
+It then selects with MMR at λ 0.7 over lexical Jaccard
+(`supabase/functions/_shared/ranking/lesson-rank.ts:61-64`, `:288`, `:363`,
+`:415`). The handler states its residue. Without a query, the 200-row window is
+the newest rows, so on a large store an old lesson with a high `seen_count` can
+miss the candidate set. That is the SessionStart question
+(`supabase/functions/memories/handlers/relevant.ts:49-73`).
+
+**The SessionStart hook** is what most sessions read. `fetchLessons` lists every
+scope in the working directory's read order, resolves one winner per key by
+precedence, ranks the winners in one cross-scope order with scope order as the
+tiebreak, caps each loop bucket at one lesson by default, and diversifies with
+the same MMR. `formatLessons` renders under a 3,000-character budget with a
+100-line ceiling and ends a truncated block with the per-scope count of what was
+left out and the verbs to fetch it (`packages/cli/src/core/lessons.mjs:214-410`,
+`packages/cli/src/shared/control.mjs:134`, `:189`, `:235`). Only general lessons
+are injected — `kind` null or `lesson` — so bus and signal records stay out of
+the digest. The per-prompt hook then injects only lessons not already shown in
+the session.
+
+The scope ladder is therefore implemented on the client: the CLI hook merges
+it, and the MCP server leaves the merge to whoever calls `memory.list` per scope.
 
 Failure modes:
 
-- **A stale lesson wins by being at the address.** With no confidence, no decay
-  and no verification, the only thing that removes a wrong lesson is somebody
-  archiving it.
-- **Search is lexical only.** A lesson phrased differently from the query is not
-  found, which the key-addressed model partly compensates for and partly
-  depends on: the agent has to guess the key convention.
-- **Rank is positional.** Search results are ordered by whatever Postgres
-  returned, with a rank assigned afterwards from the index position.
+- **A superseded lesson keeps competing.** No read path filters on
+  `supersedes`, so an old record and the record that replaced it are both live
+  until someone archives the old one.
+- **Search is lexical only.** A lesson phrased differently from the query is
+  found only through its key or shared words.
+- **Recurrence resets on revival.** A lesson archived and re-learned starts at
+  `seen_count` 1, so the salience it earned stays with the archived row.
 
 ## 7. Write Mechanics
 
-Writes are **synchronous, agent-triggered, and free of any model**. One RPC
-round trip; the lesson is visible to the next read immediately.
+Writes are **synchronous, agent-triggered and free of any model**. One RPC round
+trip; the lesson is visible to the next read.
 
-`memory_write` is one function handling three routing cases — org-routed (via an
-explicit `p_org_slug` or a scope binding the user can write to), service-role
-(`user_id is null`, for CI), and personal — each with its own partial unique
-index for the `on conflict` arbiter. It validates the TTL range in SQL and
-raises a typed error code, and it deliberately leaves an existing `expires_at`
-untouched when a value-only update omits the TTL, *"so a value-only update never
-accidentally clears an existing TTL."*
+`memory_write` handles three routing cases — org-routed (an explicit org or a
+scope binding the user can write to), service (`user_id is null`, for CI and the
+webhook), and personal — each with its own partial unique index for the
+`on conflict` arbiter. It validates the TTL in SQL, checks the key's scope
+allowlist, and on update keeps an existing `expires_at` when the TTL is omitted.
 
-Deduplication is the primary key: writing the same address twice is an update,
-by construction. There is no content-similarity dedup, so two lessons saying the
-same thing under different keys both persist. The skill instructs the agent to
-`memory.search` before writing, which is dedup-by-prose again.
+**`supersedes` is checked and stored, and nothing more.** The id must name a
+record with the same owner — personal to personal, or the same org — and the RPC
+answers an invisible target and a missing one with the same error, so the field
+cannot probe for other tenants' ids. A `SECURITY INVOKER` trigger applies the
+same rule to a direct PostgREST write, because a foreign-key check ignores RLS
+and would otherwise act as an existence oracle
+(`00119_memory_record_extensions.sql:96-136`, `:355-380`). The care is in the
+check; the link has no reader.
 
-Conflict handling does not exist at the data layer. The `lorekit-setup` skill's
-guard 4 says *"Contradiction is surfaced, not silently overwritten — the dedup
-search finds the prior lesson; a genuine reversal is a reviewed decision."* The
-mechanism that would surface it is the agent running a search first.
+Deduplication is the primary key: writing the same live address twice is an
+update and a recurrence. Two lessons saying the same thing under different keys
+both persist. The duplicate-cluster route groups near-duplicates by token
+Jaccard for the dashboard and for `lorekit invariants candidates`, which nominates
+a cluster for promotion when its summed `seen_count` reaches 3 or a member
+carries a non-`active` `status::` tag
+(`packages/cli/src/shared/candidates-pure.mjs:139-152`). Merging is a person's
+decision.
+
+Embedding is the one asynchronous write. `embedOnWrite` runs after a REST
+`POST /memories` only when `LOREKIT_EMBEDDING_ENABLED` and a key are both set,
+through `lorekit_memory_set_embedding`, the one authorised writer of the column.
+The MCP `memory.write` does not call it.
 
 ### Operational cost
 
-Cheap and bounded. No embedding call, no extraction, no background pass over the
-corpus; a write is one Postgres round trip and a read is an indexed query. Per-user
-memory caps and rate limits are enforced by DB trigger (`enforce_memory_cap()`)
-rather than by application code, which is the right place for them.
-
-On the read side, nothing is injected automatically by the server — the plugins'
-lifecycle hooks decide when to call `memory.list`, and the amount injected is
-whatever the scope holds, unbounded and untrimmed. A widely-used `global` scope
-grows without a ceiling and there is no budget anywhere in the read path.
+Cheap and bounded. A write is one Postgres round trip plus a deferred audit
+insert and a citations RPC; a read is an indexed query. Per-user memory caps are
+a DB trigger. The session-start read issues one list per scope in the read order,
+each bounded by the line ceiling, and spends at most the configured character
+budget of the agent's context.
 
 ## 8. Agent Integration
 
-MCP over HTTP with a Bearer token, plus a CLI that scaffolds two skills and
-wires the host. Claude Code gets a marketplace plugin with lifecycle hooks;
-Cursor gets a rule plus a `stop` hook; Codex is behind a feature flag with an
-`AGENTS.md` fallback described as experimental.
+MCP over HTTP with a Bearer token, REST for the CLI's remote store, and a CLI
+that scaffolds skills and wires the host. Claude Code gets a marketplace plugin
+whose hooks fetch `@lorekit/cli` through `npx` at run time; Cursor gets a rule
+plus a `stop` hook; Codex has an `AGENTS.md` fallback. Tokens are read, write or
+read-write, so a CI job can inject context without being able to learn.
 
-Token permissions are read-only or read-write, which is a real affordance: a CI
-job can be given a token that can inject context and cannot learn.
+**The agent decides what is worth remembering, and the server decides what the
+agent sees first.** Which lesson to write, which scope and key to use, and
+whether to search first are delegated to the skill files. The ranking, the
+budget, the bucket cap and the delta between hooks are code.
 
-**The agent has complete discretion and no obligation.** Every decision that
-matters — when a lesson is worth writing, which scope it belongs to, which key to
-use, whether to search first, which rungs of the ladder to read — is delegated to
-the two skill files. The server validates the scope string and enforces the
-tenancy boundary; it has no opinion about anything else.
+The `lorekit-setup` skill's self-improvement guidance names self-reinforcing
+error as the dominant risk and lists five entrenchment guards. Their mechanisms
+at this pin:
 
-That division is coherent, and it is worth being precise about what it costs.
-The `lorekit-setup` skill is the best writing in the repository: it says when
-*not* to add a learning loop (one-shot utilities, adversarial or audit steps that
-"must not be biased by prior runs", anything handling secrets), it names
-self-reinforcing error as the dominant risk, and it lists five guards against it.
-Every one of those is a behavioural expectation. A second agent, a different
-host, or a user who edits the skill gets none of them, and the store cannot tell
-the difference.
+1. *Lessons are advisory, never auto-applied.* A behavioural rule for the host.
+2. *Recurrence gates promotion* (`seen_count >= 3`). `seen_count` is a column the
+   RPC increments, and the candidate ranker applies the threshold to a cluster's
+   sum.
+3. *Every lesson expires.* The store enforces a TTL a write supplies. The
+   webhook and the CLI's configured scope defaults supply one; an MCP write
+   without `ttl_days` never expires.
+4. *Contradiction is surfaced, not silently overwritten.* The mechanism is the
+   agent's own search before writing; the upsert overwrites.
+5. *The privacy pre-flight is never bypassed.* A rule for the host's write step.
 
 ## 9. Reliability, Safety, and Trust
 
-**The tenancy boundary is the strongest in this atlas's local-first corpus**,
-because it is not local-first: RLS policies on `memories`, `audit_log` and the
-org tables gate reads on `auth.uid()` and JWT claims, org capabilities are
-checked by `lorekit_org_can` inside SECURITY DEFINER RPCs, and `org_scope_bindings`
-route writes by scope. Tokens are hashed, scoped and revocable.
+### Tenancy
 
-**One class of RPC does not check the caller.** `archive_memory`,
-`restore_memory` and `purge_archived_memories` (`00003`) and
-`purge_expired_memories` (`00030`) are `SECURITY DEFINER` and act on a
-caller-supplied `p_user_id` with no comparison against `auth.uid()` in the
-function body. The application layer is careful everywhere — the dashboard
-resolves `user.id` from the session, and the MCP purge tool refuses outright
-without a resolved user id — so the product path is sound. The gap is at the
-grant boundary, where Supabase exposes RPCs over PostgREST, and
-`purge_expired_memories` is explicitly granted to `authenticated`.
+The boundary on the agent path is application code applied in one place. API-key
+calls use a service-role client, and `applyTenantScope` is the single predicate
+every read funnels through: `user_id.eq.<id>` or `org_id.in.(<member orgs>)`,
+ANDed with the key's scope allowlist and tenancy
+(`supabase/functions/_shared/auth/tenant-scope.ts:206-230`). The project's
+architecture document states the invariant in those terms. On the JWT path,
+RLS policies gate reads on `auth.uid()` and org membership as well.
 
-Two details make this worth naming rather than passing over. The org RPCs in the
-same codebase **do** check, calling `lorekit_org_can(auth.uid(), ...)` — so the
-correct pattern is present and simply not applied here. And the comment in
-`00003` gets the mechanism backwards: *"Uses SECURITY DEFINER so the RLS update
-policy (user_id = auth.uid()) still applies."* `SECURITY DEFINER` runs the
-function as the table owner, and no migration sets `FORCE ROW LEVEL SECURITY`,
-so the owner bypasses that policy. The protection the comment names is the one
-the construct removes; what actually scopes the update is the caller-supplied
-parameter.
+The `SECURITY DEFINER` RPCs that act on a user — archive, restore, both purges and
+`memory_write` — set the actor from `auth.uid()` unless the connection is the
+service role, and execute is revoked from `PUBLIC`. That guard is migration
+`00046`, committed on 1 August 2026 in `725f5f3`, whose message says the gap was
+*"surfaced by the agent-memory-atlas analysis of LoreKit and an ensuing
+per-project security review."* §60 of the migration suite proves
+impersonation-denied, self-service, service-role and org branches, and the grant
+guard.
 
-**Third-party text becomes durable memory by design.** The webhook turns PR
-review comments into lessons, filtered for length and bot noise but **not for
-author**. A comment from an outside contributor on a public repository is
-signal-worthy if it is over 20 characters and not a CI status line, and it
-becomes a lesson that later sessions read. The atlas has systems that fence
-recalled memory as untrusted data; LoreKit's read path returns lesson text
-plainly, and the one capture path that ingests text the user did not write is
-the one with no provenance field pointing back at its author.
+### Third-party text
 
-**Deletion is real when it happens.** Purge is a hard `DELETE`. Because the
-audit log stores only `{ scope, key }`, purging a memory removes the content
-everywhere — which is the right privacy answer and the reason the log cannot
-answer content questions.
+The webhook turns PR review comments into candidates filtered for length and bot
+noise, not for author. The record carries the PR, branch and commit as origin
+and the comment URL as a `url::` tag, and no field names who wrote the comment.
+The comment-relevance classifier is stricter on the same question: only the PR
+author's own 👎 counts as a decline, *"otherwise anyone with a GitHub account
+could suppress a finding class"* (`supabase/functions/mcp/webhook.ts:459-463`).
+Candidates are written null-owned through the service path, and the project's
+`docs/decisions.md` records that rows written that way are ones *"no user token
+can ever read back"*, which limits who reads them to service-role callers.
+
+### Correction
+
+Overwrite keeps no prior value, archive frees the key, and `supersedes` is a link
+nothing filters on. The store can say that a record replaced another; it cannot
+keep the replaced one out of a read, and it cannot remember that a value was
+rejected. Purge is a hard `DELETE`, and because the audit row holds only
+`{ scope, key }`, a purged value is gone everywhere.
+
+### Marks
+
+`scope_enforced`, `audit_log` and `negative_eval` are earned (frontmatter
+records). `tombstone` is withheld because archiving vacates the address and a
+revived key is a new record. `trust_state` is withheld because no field on a
+record decides whether a read returns it: `kind` selects the digest's family,
+`protected` exempts from retention, and a `status::` tag is read only by the
+cluster tooling. `bitemporal` is withheld because every timestamp is record
+time. `human_review` is withheld because nothing waits in a state before it can
+be read.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**298 test files** across the monorepo, concentrated where the risk
-is: scope validation, TTL parsing and bounds, token auth, org permissions,
-limits, audit shape, archive lifecycle, and an `edge-parity.spec.ts` that exists
-to catch drift between the two MCP implementations.
+**353 test files** across the monorepo, plus a SQL migration suite and
+live-endpoint smoke suites, run by `ci.yml` on pull requests. They concentrate
+where the risk is: scope validation, tenant predicates, token restrictions, org
+permissions, TTL, limits, audit vocabulary, the archive lifecycle, edge/Node
+parity, and record extensions.
 
-The archive lifecycle suite is the best of it, driving a small in-memory row
-store through archive → restore → purge and asserting the negative cases:
-*"purge does not remove rows archived within the retention window"* and
-*"purge does not remove active (non-archived) rows"*.
+The negative read-path cases are the reason for `negative_eval`. The local
+store's `list is newest-first and filters by tag; archived is hidden` asserts on
+a populated read that an archived lesson is absent and a live one present
+(`packages/cli/test/store.test.mjs:115-132`). For the hosted tools, §60c of the
+migration suite seeds active, archived and expired rows under one owner and
+asserts that the tools' predicate keeps only the active one while raw RLS
+returns all three (`supabase/tests/migrations.test.sql:2867-2928`); the edge
+tool specs assert that the predicate is applied.
 
-Those are the near-miss for `negative_eval`, and they miss in an instructive
-direction. They assert that particular material must not be **deleted**. The
-atlas's mark is for material that must not be **retrieved** — and no committed
-case asserts that an archived or expired row is absent from `memory.list`,
-`memory.read` or `memory.search`. The filters are there in all three tools; the
-assertion that they work is not. Given that hiding archived rows is the entire
-point of the soft delete, that is the test I would want most.
+`record-extensions.test.mjs` covers the format work: ids kept across rewrite and
+archive, unknown fields surviving, attribute merging, JSON content validation,
+parity with the hosted validator, and a revived key becoming a new record that
+may supersede its archived predecessor.
 
-Nothing evaluates retrieval quality, and nothing could easily: with exact-key
-addressing and lexical search there is no ranking to score. There is no
-benchmark and the repository claims none. I inspected these tests; I did not run
-the suite.
+What is not tested is what the code does not do: no case asserts that a
+superseded record is kept out of a read, because no read path excludes one.
+Retrieval quality has no evaluation in the committed suites; `packages/evals`
+holds live agent-run harnesses that `docs/embeddings.md` says run manually and on
+demand. I read these tests; I did not run the suite.
 
 ## 11. For Your Own Build
 
@@ -506,131 +561,148 @@ the suite.
 
 **Make the audit log append-only by having no UPDATE or DELETE policy.** RLS
 with a SELECT and an INSERT policy and nothing else is immutability enforced by
-the database rather than by convention, and it is three lines. LoreKit's
-migration numbers the decision and explains it, which is the other half of the
-technique.
+the database, and a spec that parses the newest CHECK migration keeps the action
+vocabulary from drifting into silent holes.
 
-**Choose app-layer audit capture deliberately, and write down why.** The
-migration's argument is that application code can see the resolved actor and
-shape a human-readable target, which a trigger on the data table cannot — then
-names the one table where no call site exists and a trigger is therefore correct.
-Most systems pick one and never justify it; the justification is what tells the
-next maintainer where to add the next call.
+**Put the tenant boundary in one function every read calls.** When a
+service-role client bypasses RLS, a single predicate that ANDs ownership, org
+membership, the key's scope allowlist and its tenancy is what keeps a scoped key
+from seeing rows on a read that names no scope.
 
-**Validate a scope string and return the corrected form in the error.**
-`validateScope` catches `repo:owner/name` and answers with
-`Invalid scope "repo:owner/name": use "::" as the separator, not ":". Example:
-"repo::owner/name"`. An agent recovers from that on the next call.
+**Count recurrence where it happens.** Incrementing `seen_count` in the upsert,
+rather than accepting a count from the caller, makes the signal the promotion
+rule depends on something nobody can fake by passing a number.
 
-**Gate an external capture path on event type before content.** The webhook
-admits four event/action pairs and treats `pull_request_review_thread resolved`
-as high signal because the author acknowledged the finding. Deciding what to
-remember from the *shape* of an event is cheaper and more reliable than deciding
-it from the text.
+**Budget the injection and say what it dropped.** A character budget with a line
+ceiling, a per-bucket cap, MMR diversity, and a closing count of what was left
+out per scope is a session-start read that scales with the store and tells the
+reader it is partial.
 
-**Keep the two purge sweeps separate.** Archived-and-past-retention and
-expired-and-active are different predicates over different partial indexes;
-merging them into one job makes both slower and the failure modes shared.
+**Answer an invisible id and a missing id with the same error.** The
+`supersedes` trigger exists because a foreign-key check ignores RLS. Any field
+that names another row by id is a probe unless it is checked as the caller.
+
+**Keep unknown fields on rewrite.** `extraFields` makes the file format lossless
+for every tool sharing the directory, and it costs one spread.
 
 ### Avoid
 
 **Don't let an append-only audit log stand in for memory history.** A log that
 records `memory.update` with `{scope, key}` proves a change happened and cannot
-show what changed. If the value matters — and in a memory system it is the only
-thing that matters — put the old value in the log or keep a version chain. The
-security property and the memory property are different properties.
+show what changed. Put the old value in the log or keep a version chain.
+
+**Don't add a supersession link without a reader.** A `supersedes` pointer that
+no read consults records history for the dashboard and changes nothing an agent
+sees; the replaced lesson keeps competing in every ranking.
 
 **Don't free the address when you archive.** Relaxing the unique index so an
-archived key can be re-created is a reasonable ergonomic choice and it means an
-archived lesson can be silently re-asserted by the same agent that produced it.
-If archiving is ever used as "this was wrong", the store needs to remember the
-rejection, not just vacate the slot.
+archived key can be re-created means a removed lesson can be silently re-learned
+by the loop that produced it, starting from a fresh recurrence count.
 
-**Don't put the safety argument in the skill file.** Five entrenchment guards
-against self-reinforcing error, one of them enforced. A recurrence threshold with
-no column to count in is a threshold in name. Either give the guard a mechanism
-or describe it as advice — the danger of well-written doctrine is that it reads
-like a feature.
-
-**Don't ingest third-party text without recording who wrote it.** If review
-comments become memory, the author is the single most useful provenance field and
-the cheapest to store.
-
-**Don't write `SECURITY DEFINER` functions that trust a caller-supplied user
-id.** Compare it to `auth.uid()` inside the body, or accept no id at all and
-derive it. A comment asserting that RLS still applies is not a check, and
-`SECURITY DEFINER` is precisely the construct that stops it applying.
+**Don't let migration between your own stores be lossier than your format.** A
+local format that preserves unknown fields and a migration that drops `id`,
+`kind`, `host` and `seen_count` give a user two different answers to whether the
+format round-trips.
 
 ### Fit
 
-This suits **a small team that wants one shared, governed lesson store and is
-happy for the intelligence to live in prompts**. The tenancy model, roles,
-invites, token scopes, audit trail and caps are what you would build if the
-requirement were "several people and their CI share this and I need to answer who
-changed what" — and almost nothing else in this atlas has them. If that is the
-requirement, LoreKit is further along than anything comparable here.
+This suits **a team that wants one shared, governed lesson store** whose
+operators need to answer who changed what. The tenancy model, roles, token
+restrictions, audit trail, caps, ranked and budgeted injection, and use counters
+are what that requirement needs, and LoreKit has them.
 
-It suits a solo developer less well than its local mode suggests, because the
-local mode is a second implementation of a simpler idea, and the parts worth
-paying for — orgs, RLS, audit — are exactly the parts a solo user does not need.
-A single developer wanting keyed lessons on disk has a shorter path.
+It suits a solo developer through its local mode, which is a complete offline
+store with the same hooks and ranking. The parts with the most engineering in
+them — orgs, the tenant predicate, audit — are the multi-user parts.
 
-And anyone whose problem is *which* lesson to trust should look elsewhere.
-LoreKit is an excellent filing cabinet with an excellent lock and no opinion
-about the contents of the folders. Contradiction, staleness, corroboration and
-promotion are all real problems the project has thought about carefully — in a
-document. Pair it with a mechanism, or accept that the model is the only thing
-adjudicating.
+Anyone whose problem is *which* lesson to trust should pair it with a mechanism.
+LoreKit measures how often a lesson recurs, is read and is credited, and ranks
+on those; it does not hold a lesson out of a read because it was contradicted,
+superseded or rejected.
 
 ## 12. Open Questions
 
-- **Is `pg_cron` configured on the hosted instance?** The migrations mention it
-  and commit no schedule. Whether expired rows are ever actually purged in
-  production is not answerable from the repository, and it determines whether TTL
-  is a lifecycle or an annotation.
-- **Are the archive and purge RPCs reachable over PostgREST as deployed?** The
-  grants in the repository say `authenticated` for one of them; whether the
-  hosted project revokes the defaults is deployment state.
-- **How often does an agent actually run the three-call scope ladder?** The
-  design's central organising idea is delegated to a skill file, and nothing
-  measures compliance.
+- **Is `pg_cron` enabled on the hosted instance?** The sweeps are registered
+  behind a guard, and whether the nightly groom runs in production is deployment
+  state.
+- **Will `supersedes` get a reader?** The link is checked with care and consulted
+  by nothing; whether it is meant to filter, to demote, or only to annotate is
+  not stated in the code or the docs.
+- **Will the hosted migration carry the record extensions?** `putEntry` drops
+  `id`, `kind`, `host`, `seen_count` and unknown fields, which matters for the
+  round-trip property the open-format post proposes.
 - **Has the two-implementation split cost anything yet?** `edge-parity.spec.ts`
-  and a "keep in sync in the same commit" comment are the whole defence; the
-  issue history would show whether they have caught a drift or missed one.
+  and same-commit mirroring rules are the defence; the issue history would show
+  whether they have caught a drift or missed one.
 
 ## Appendix: File Index
 
 **Schema** — `supabase/migrations/00001_memories.sql`, `00003_archive.sql`,
-`00004_limits.sql`, `00010_audit_log.sql`, `00014_orgs.sql`,
-`00026_scope_org_bindings.sql`, `00030_memory_ttl.sql`, `00038_memory_ttl_seconds.sql`.
+`00010_audit_log.sql`, `00030_memory_ttl.sql`, `00046_memory_rpc_actor_guard.sql`,
+`00048_memory_origin.sql`, `00056_memory_kind_host.sql`,
+`00059_memory_seen_count.sql`, `00060_memory_embeddings.sql`,
+`00062_memory_embedding_write.sql`, `00084_memory_read_counters.sql`,
+`00088_retention_policies.sql`, `00089_audit_log_groom_actions.sql`,
+`00107_memory_citations.sql`, `00112_relevant_ranking.sql`,
+`00116_api_token_orgs_only_tenancy.sql`, `00119_memory_record_extensions.sql`.
 
-**Write path** — `packages/mcp-core/src/tools/write.ts`,
-`packages/mcp-core/src/ttl.ts`, `limits.ts`, `audit.ts`.
+**Hosted tools** — `supabase/functions/mcp/tools.ts`, `mcp-handler.ts`,
+`webhook.ts`, `ttl-defaults.ts`; `supabase/functions/_shared/auth/tenant-scope.ts`,
+`_shared/provenance/record-extensions.ts`, `_shared/ranking/lesson-rank.ts`,
+`_shared/ranking/outcome-signal.ts`, `_shared/embedding/embed-on-write.ts`;
+`supabase/functions/memories/handlers/relevant.ts`, `clusters.ts`, `create.ts`.
 
-**Read path** — `packages/mcp-core/src/tools/read.ts`, `list.ts`, `search.ts`.
+**Node core** — `packages/mcp-core/src/tools/`, `src/audit/audit.ts`,
+`src/limits/ttl-defaults.ts`, `src/webhook/comment-relevance.ts`.
 
-**Correction** — `packages/mcp-core/src/tools/archive.ts`, `delete.ts`,
-`purge.ts`, `purge-expired.ts`; `packages/web/src/lib/lore.ts`.
+**CLI** — `packages/cli/src/commands/hook.mjs`, `purge.mjs`, `write.mjs`,
+`migrate.mjs`; `packages/cli/src/core/lessons.mjs`;
+`packages/cli/src/shared/control.mjs`, `candidates-pure.mjs`;
+`packages/cli/src/store/format.mjs`, `local.mjs`, `remote.mjs`.
 
-**Scope** — `packages/mcp-core/src/scope.ts`,
-`packages/mcp-core/src/tenant-scope.ts`,
-`packages/cli/skill/lorekit-memory/references/scope-resolution.md`.
-
-**Webhook** — `supabase/functions/mcp/webhook.ts`,
-`packages/mcp-server/src/webhooks/signal-filter.ts`.
-
-**Local store** — `packages/cli/src/store/local.mjs`, `format.mjs`,
-`packages/cli/src/control.mjs`, `stores.mjs`.
-
-**Agent-facing doctrine** — `packages/cli/skill/lorekit-memory/rules/intake.md`
-and `retrospective.md`;
+**Agent-facing doctrine** —
 `packages/cli/skill/lorekit-setup/rules/self-improvement-loops.md`.
 
-**Tests** — `packages/mcp-core/src/tools/archive-lifecycle.spec.ts`,
-`packages/mcp-core/src/edge-parity.spec.ts`, `scope.spec.ts`, `ttl.spec.ts`,
-`org-permissions.spec.ts`.
+**Tests** — `packages/cli/test/store.test.mjs`, `record-extensions.test.mjs`;
+`supabase/tests/migrations.test.sql`;
+`packages/mcp-core/src/tools/*.spec.ts`, `src/audit/audit-vocabulary.spec.ts`,
+`src/auth/tenant-scope.spec.ts`, `src/edge/edge-parity.spec.ts`.
+
+### Recorded searches
+
+Run from the repository root at the pinned commit with `/usr/bin/git grep`.
+
+- **No read path consults `supersedes`.**
+  `git grep -n -w supersedes -- supabase/functions/mcp/tools.ts supabase/functions/memories/handlers/list.ts supabase/functions/memories/handlers/search.ts supabase/functions/memories/handlers/relevant.ts packages/cli/src/core/lessons.mjs`
+  returns the write's destructuring and RPC argument (`tools.ts:169`, `:183`,
+  `:237`), a span attribute (`:208`), a comment (`:359`) and two row types
+  (`:388`, `:475`), and no predicate.
+- **Nothing reads the embedding.** `git grep -n -F '<=>' -- supabase packages`
+  returns nothing, and `git grep -n -w embedding` over the search, relevant and
+  MCP tool handlers returns only a comment in `00112_relevant_ranking.sql:197`
+  calling the ranking *"embedding-free"*.
+- **No comment author on a webhook record.**
+  `git grep -n -E "(comment|review)'\]\?\.user" -- supabase/functions/mcp/webhook.ts`
+  returns nothing; the one author read is the PR author at `webhook.ts:463`.
+- **The server's default TTLs cover the webhook only.**
+  `git grep -n -l WEBHOOK_TTL_DAYS_BY_TIER` returns `ttl-defaults.ts` in both
+  runtimes, its spec, the core index and `docs/key-files.md`; the CLI's
+  per-scope default is `resolveDefaultTtlDays` in `packages/cli/src/store/ttl.mjs:89`,
+  called by `write.mjs:218` and by the hint at `lessons.mjs:826`.
+- **`status::` is read by the cluster and candidate tooling.**
+  `git grep -l -F 'status::' -- packages/cli/src supabase/functions packages/mcp-core/src`
+  outside tests returns `invariants.mjs`, `candidates-pure.mjs`,
+  `lessons-view.mjs`, both `duplicate-clusters.ts` copies, `clusters.ts` and the
+  REST schema, and no read handler.
 
 ## History
+
+**2026-11-09** — re-pinned to [`4a4641ff7b77da6fff82b853c98f1941aa637adf`](https://github.com/mthines/lorekit/commit/4a4641ff7b77da6fff82b853c98f1941aa637adf), 73 commits past `07d2ce8`, with LoreKit's 2026-11-07 open-format post read beside `c2676c2`, which adds `attributes`, `content_type`, `supersedes` and stable ids (§5). `negative_eval` is **added**: the local-store archive test dates from 2026-07-24. Claims already false at `07d2ce8` are corrected:
+- `seen_count` (00059), typed origin (00048), read and citation counters, ranking and the session-start budget all existed;
+- the `SECURITY DEFINER` actor gap was closed by `725f5f3` on 2026-08-01;
+- agent API keys bypass RLS and rely on `applyTenantScope`.
+
+Screened first; nothing was installed or run.
 
 **2026-11-02** — [`07d2ce84baf6b6ba01b1424cc1253a4de4ee144d`](https://github.com/mthines/lorekit/commit/07d2ce84baf6b6ba01b1424cc1253a4de4ee144d) — re-screened at the same pin with plugins below the checkout root followed. The screen had not counted 3 auto-run surfaces, 4 in all: hooks registered in `plugins/lorekit-claude/hooks/hooks.json` on SessionStart, UserPromptSubmit, PostToolUseFailure and Stop, each run through `npx`, which fetches the package at run time. The hook files were read at the pin as data; nothing was installed or run, and no mark changes.
 
