@@ -25526,10 +25526,11 @@ config, ledger, inbox, corrections, quarantine) with Confidence, Source,
 Importance and Last Updated; separately a keyed JSON note for the MCP
 memory tools</td>
 <td>chitrapat.ods, rewritten whole by pandas and odfpy through a
-temporary file and an atomic replace on every write; a sanchitta.json
-write queue; FAISS, BM25 and registry files beside it;
-cognitive_memories.json; a chitrapat.db SQLite file whose only written
-table is a graph of edges</td>
+temporary file and an atomic replace on every write, under an exclusive
+portalocker lock on a sibling lock file; a sanchitta.json write queue;
+FAISS, BM25 and registry files beside it; cognitive_memories.json; a
+chitrapat.db SQLite file whose only written table is a graph of
+edges</td>
 <td>A session-context builder filtering projects, loops, goals and tasks
 by status; FAISS over TF-IDF with SVD or MiniLM fused with BM25, then
 importance and recency, with no status filter; substring search on the
@@ -25539,9 +25540,9 @@ Telegram, mail, an iOS Shortcut endpoint, an Obsidian import, a git
 post-commit hook and three framework adapters; no model on the write
 path</td>
 <td>Update matches the first column and appends a new row when nothing
-matches; resolve and complete set a status column; the delete operation
-has no branch and changes nothing; the JSON notes are overwritten by key
-or hard-deleted</td>
+matches; resolve and complete set a status column; supersede fills a
+Superseded_By column; the delete operation has no branch and changes
+nothing; the JSON notes are overwritten by key or hard-deleted</td>
 <td>One workbook per person and no scope key; an Agent column selects
 which configured instructions each agent receives; the JSON notes carry
 an agent name no read filters on</td>
@@ -25553,6 +25554,7 @@ configs</td>
 topic words appear in recent session decisions, writes a summary, and
 adds regex-matched preference phrases to Beliefs at High confidence, one
 topic per phrase, skipping phrases already stored or found in a reverted
+decision, then marks superseded any belief whose text matches a reverted
 decision</td>
 <td>A regex scan can hold a write in quarantine for a person to release;
 Confidence and Source are caller-supplied labels, and the MCP add_task
@@ -25560,11 +25562,13 @@ and add_project writes are stamped User-stated</td>
 <td>One choke point that scans, filters, validates and ledgers every
 sheet write; a quarantine the agent's tools cannot release; a store a
 person can open and read in LibreOffice</td>
-<td>The MCP memory tools and the dashboard's JSON route pass only secret
-redaction; processes rewrite one workbook with no file lock, and the
-queue's lock needs a package no manifest installs, so concurrent writers
-lose updates and a replay overlapping another process's write applies it
-twice; the SQLite engine and incremental index have no producer</td>
+<td>On Linux and macOS a write that validation rejects or the conflict
+guard refuses waits forever on the workbook lock its own call holds, and
+blocks every later write in that process; the JSON store behind the MCP
+memory tools has a secret filter and an injection block but no admission
+filter or ledger; a superseded belief leaves only the session-context
+list and reaches search and both context compilers; the SQLite engine
+and incremental index have no producer</td>
 </tr>
 <tr>
 <td><a

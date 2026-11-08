@@ -466,20 +466,24 @@ ledger-aware <code>flush()</code> to later releases
 (<code>enrichment_ledger.py:1-7</code>). The durable half of the pattern
 is built; the worker that reads it back is the missing half.</p>
 <p><strong><a href="../../systems/openyantra/">OpenYantra</a> keys
-replay on a request id written in a second file write.</strong>
-<code>LedgerAgent.submit</code> appends the request to
-<code>sanchitta.json</code>, processes it, and removes the entry by
-request id in a <code>finally</code> block; the next process to
+replay on a request id saved with the row, under a lock its refusal path
+takes twice.</strong> <code>LedgerAgent.submit</code> appends the
+request to <code>sanchitta.json</code>, processes it, and removes the
+entry by request id in a <code>finally</code> block; the next process to
 construct <code>OpenYantra</code> empties the file and runs whatever is
 in it (<code>openyantra/core.py:280-286</code>, <code>:315-326</code>,
-<code>:554-559</code>). <code>_process</code> skips a request whose id
-the ledger sheet holds (<code>:332-351</code>), but the row and the
-ledger entry are two whole-workbook rewrites. A crash between them
-applies the request again, and so does a second process replaying while
-the first is inside <code>_process</code>, because that check runs under
-a per-process lock and the queue's file lock is skipped unless
-<code>portalocker</code> is installed. The idempotency key belongs in
-the same write as the row.</p>
+<code>:645-647</code>). <code>_process</code> skips a request whose id
+the ledger sheet holds, and <code>_commit_and_audit</code> writes the
+row and its ledger entry in one atomic replace, all under an exclusive
+file lock (<code>:332-373</code>, <code>:453-569</code>), so neither a
+crash nor a second process can apply a request twice while the lock is
+taken. The lock is not reentrant: a rejected or conflicting request logs
+through <code>_write_sheet</code>, which locks the same file on a second
+handle, and on Linux and macOS <code>flock</code> blocks it forever
+(<code>:383-391</code>, <code>:571-572</code>). The entry is then never
+acknowledged, so the next start's replay blocks on it too. A replay
+guard is only as sound as the lock around it, and the lock needs a test
+that sends a refusal through it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>

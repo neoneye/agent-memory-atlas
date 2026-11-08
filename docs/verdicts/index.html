@@ -32852,38 +32852,44 @@ the search index and the context, until a person presses Release in the
 dashboard. No MCP tool, adapter, bot command or CLI verb releases it,
 and the writer refuses writes addressed to the Quarantine sheet.</li>
 <li>Second idea: one writer for the workbook that records every outcome.
-<code>LedgerAgent._process</code> appends a ledger row for
-<code>written</code>, <code>rejected</code> and <code>conflict</code>
-alike, so a refused write leaves a trace beside the accepted ones.</li>
-<li>Biggest risk: <strong>several processes rewrite one workbook with no
-file lock.</strong> The MCP server, the dashboard, the bot, the git hook
-and the CLI each read and rewrite the whole file, so concurrent writes
-lose one. Replay skips a request the ledger holds, which leaves two ways
-to apply a request twice: a crash between the sheet write and the ledger
-write, and a second process replaying before the ledger row lands. The
-queue's lock is skipped unless <code>portalocker</code> imports, and no
-manifest installs it.</li>
-<li>Second risk: the MCP <code>memory_*</code> tools and the dashboard
-write a separate JSON store with secret redaction and no scan, filter or
-ledger, and no context reads it. The SQLite engine and the incremental
-index have no producer.</li>
+<code>LedgerAgent._process</code> saves a <code>written</code> ledger
+row in the same atomic write as the change, and appends
+<code>rejected</code> and <code>conflict</code> rows beside it, so the
+replay check reads a ledger that cannot lag the sheet.</li>
+<li>Biggest risk: <strong>a refused write waits forever on its own
+lock.</strong> <code>_process</code> holds an exclusive
+<code>portalocker</code> lock on the workbook, and a request that
+validation rejects or the conflict guard refuses logs through
+<code>_write_sheet</code>, which locks the same file again on a new
+handle. On Linux and macOS <code>flock</code> refuses the second handle
+and the call blocks, holding the process's write lock, and the
+unacknowledged entry blocks the next start's replay the same way. No
+test sends a refused write. Both locks run unlocked, silently, when
+locking raises.</li>
+<li>Second risk: a belief Nidra marks superseded after a revert leaves
+only the session context's <code>beliefs</code> list, which nothing
+reads; search, <code>yantra context</code> and the Sutra compiler return
+it at High confidence. The MCP <code>memory_*</code> tools and the
+dashboard write a separate JSON store with a secret filter and an
+injection block and no ledger, and no context reads it. The SQLite
+engine and the incremental index have no producer.</li>
 <li>Most reusable component: the quarantine path,
 <code>_quarantine</code> and <code>release_quarantine</code> in
-<code>openyantra/core.py:1361-1403</code>, with the release route at
+<code>openyantra/core.py:1458-1500</code>, with the release route at
 <code>openyantra/yantra_ui.py:238-241</code>.</li>
 <li>Maturity impression: MIT for the software, with the protocol's
-schemas under CC0 1.0 in a separate file; 11,019 lines of Python outside
-tests; 65 commits, 20 March – 8 November 2026, 49 of them on 7 November;
-81 pytest functions run in CI, not run here. Three marks:
+schemas under CC0 1.0 in a separate file; 11,449 lines of Python outside
+tests; 77 commits, 20 March – 8 November 2026, 62 of them on 7 and 8
+November; 91 pytest functions run in CI, not run here. Three marks:
 <code>audit_log</code>, <code>human_review</code>,
 <code>negative_eval</code>. The whitepaper's validation is review by
 language models, and no benchmark is committed.</li>
 <li>Study when: you want a write gate whose security hold only a person
 can clear, or a memory a person reads and edits in a spreadsheet
 application.</li>
-<li>Do not copy when: more than one process writes, a write must land
-exactly once, or the agent's own memory tools must pass the same gate as
-everything else.</li>
+<li>Do not copy when: a writer can send a value outside the vocabulary,
+a retraction must reach every read path, or the agent's own memory tools
+must pass the same gate as everything else.</li>
 </ul>
         </article>
       </div>
