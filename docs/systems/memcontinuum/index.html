@@ -242,16 +242,18 @@ is the same kind of field: the caller passes it to
 falls back from <code>--recorded-by</code> to
 <code>MEMCONTINUUM_RECORDED_BY</code> to <code>memidx</code>
 (<code>memidx.py:12562-12571</code>).</p>
-<p>Three findings sit against the design. <strong>The scope key can
-never exclude anything:</strong> one database holds one project, refused
-outright for a second (<code>memidx.py:1075-1080</code>), so the
-<code>project</code> predicate guards a stamping accident rather than
-partitioning anything. <strong>A declined ruling is delivered, not
-enforced:</strong> the pre-edit chain hands every link to the model
-regardless of status, and nothing keys on the rejected value.
-<strong>Every hook but the commit gate fails open:</strong> a missing
-index, a missing interpreter or a slow lookup means the edit proceeds,
-and a file changed from the shell gets no lookup at all.</p>
+<p><strong>Projects are separated by storage, not by a filter.</strong>
+Each repository is wired on its own, with its own store, hooks and
+project name, and one database is refused outright for a second project
+(<code>memidx.py:1075-1080</code>). Several repositories run side by
+side and none reads another's rulings; the cost is that no two projects
+can share memory. Two findings sit against the design. <strong>A
+declined ruling is delivered, not enforced:</strong> the pre-edit chain
+hands every link to the model regardless of status, and nothing keys on
+the rejected value. <strong>Every hook but the commit gate fails
+open:</strong> a missing index, a missing interpreter or a slow lookup
+means the edit proceeds, and a file changed from the shell gets no
+lookup at all.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is <strong>a question with a history of answers</strong>,
 and the history is the point. Asking "what do we do about hidden files
@@ -579,7 +581,8 @@ removes a binding. The plain lint requires an anchor row's
 the row, so an anchored reference cannot be removed by a commit that
 runs the hook.</p>
 <p><strong>Scoping:</strong> a <code>project</code> column that one
-database can only ever hold one value of. Withheld — see <a
+database can only ever hold one value of, because each repository has a
+store of its own. Withheld — see <a
 href="#9-reliability-safety-and-trust">section 9</a>.</p>
 <p><strong>Tombstone:</strong> a <code>declined</code> status and
 per-link rejected alternatives, frozen once written and delivered on the
@@ -783,8 +786,18 @@ mix — <em>"opening the SAME physical file for a different
 <code>--project</code> would silently evict/overwrite that project's
 rows"</em> (<code>memidx.py:1046-1051</code>). <code>project=?</code>
 appears 67 times in <code>memidx.py</code>, 11 of them in updates and
-deletes; the chain read keys on the topic path alone. Nothing here leaks
-between projects.</p>
+deletes; the chain read keys on the topic path alone. The separation
+starts above the database: <code>repo-init.sh</code> is a per-repository
+initializer (<code>scripts/repo-init.sh:2-7</code>) that wires the hooks
+into that repository's own <code>settings.local.json</code>
+(<code>:1204-1206</code>) and renders store-side wrappers exporting its
+store root and project name (<code>:389-390</code>). The default store
+sits beside the checkout and is named for it
+(<code>scripts/mc-registry-lib.sh:773</code>); where it is placed under
+<code>$HOME</code> instead, on a Windows-mounted checkout, a name
+already belonging to a different checkout or project is disambiguated or
+refused (<code>:756-764</code>). Nothing here leaks between projects,
+and the same construction means no two projects can share a store.</p>
 <p>What the mark asks for is narrower than isolation: a stored scope key
 that partitions co-resident memory on the read path. A store that holds
 exactly one scope cannot demonstrate that, because the predicate has
@@ -923,13 +936,16 @@ The edit's content is in the hook's hands before it is applied; the
 declined values are in the index.</li>
 </ul>
 <h3 id="fit">Fit</h3>
-<p>Right for a small team or a solo developer running agent-driven work
-on one repository who wants the reasons to survive the session and the
-reasoning to be citable afterwards. The append-only discipline is the
-strongest part and the part that costs least to adopt. Wrong if you need
-one store across several projects, memory about people rather than about
-code, a check that a proposal contradicts a declined ruling, or any
-guarantee that a decision was actually read.</p>
+<p>Right for a small team or a solo developer running agent-driven work,
+in one repository or several, who wants the reasons to survive the
+session and the reasoning to be citable afterwards. Each repository is
+wired and stored on its own, so several run side by side without leaking
+into each other. The append-only discipline is the strongest part and
+the part that costs least to adopt. Wrong if you need memory shared
+across projects, which that separation rules out by construction, memory
+about people rather than about code, a check that a proposal contradicts
+a declined ruling, or any guarantee that a decision was actually
+read.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
 <li>Will a declined ruling ever be checked rather than shown? The
@@ -1133,6 +1149,16 @@ the ledger's tool switch; the pre-edit hook matches no shell tool.</li>
 — no match; the MIT text carries no rider.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-08</strong> — <a
+href="https://github.com/krakozavr/MemContinuum/commit/d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8"><code class="commit-id" title="d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8">d5d29fbc…</code></a>
+— correction at the same pin. The fit statement limited the system to a
+single checkout, and section 1 listed project separation as a finding
+against the design; both read the withheld <code>scope_enforced</code>
+as a limit on deployment. Each repository is wired and stored on its
+own, so several run side by side without sharing rows, and the one cost
+is that no two can share memory. Sections 1, 5, 9 and 11, the scoping
+field and the verdict now say so, citing the per-repository initializer
+and the default store path.</p>
 <p><strong>2026-11-07</strong> — <a
 href="https://github.com/krakozavr/MemContinuum/commit/d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8"><code class="commit-id" title="d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8">d5d29fbc…</code></a>
 — version 0.5.0 and 15 commits on the shell-edit ledger. All three marks

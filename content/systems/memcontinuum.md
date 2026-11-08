@@ -28,7 +28,7 @@ matrix:
   retrieval: "for-path maps a file being edited to every topic whose code_refs cover it and returns the whole chain, every link regardless of status, with a note when a bound file or symbol differs from its captured baseline; it opens the index read-only and refuses one that needs migrating; on a miss the hook runs a labelled search on the path's words. A session-start digest delivers active owner-level links that topics name as standing. search is FTS5, vector or hybrid with a default status of active and inbox records excluded; an opt-in channel searches on the user's prompt; why walks path to concept to governing topics; context-pack prints the standing digest and the bound chains as one capped, fingerprinted block for a reviewer's brief"
   write: "A person or an agent appends a link to a topic file and commits. Nothing extracts: there is no summariser and no consolidation pass. Three commands edit topic frontmatter by line insertion, print the diff and commit nothing: bind adds a code_ref with a hashed baseline, mark-standing changes standing with its audit row, anchor-backfill adds baselines to older refs. current is hand-set to the newest active link and the guard refuses it moving while the newest active link has not"
   update_delete: "There is no update. A change of mind is a new link with reverses and a reason_for_change; the predecessor keeps its text and gains status superseded with superseded_by. Three lifecycle fields may each move forward once and only alone; every other field and the link's raw bytes are frozen against the last commit, and a removed link or a deleted record file is an error. standing, current, link order and anchor baselines are guarded; code_refs, title, tags and type are not"
-  scoping: "One decision database per project, enforced rather than assumed: records is keyed by path alone, so opening the same file under a second project is refused with the reason in the error. A project column sits on every record and most queries carry it; the chain read keys on the topic path. The code index is the multi-project store, keyed by path, project and code root"
+  scoping: "One store per repository: each is wired on its own with its own store root and project name, so several repositories run side by side and none reads another's rulings, and no two can share one. One decision database per project, enforced rather than assumed: records is keyed by path alone, so opening the same file under a second project is refused with the reason in the error. A project column sits on every record and most queries carry it; the chain read keys on the topic path. The code index is the multi-project store, keyed by path, project and code root"
   integration: "Claude Code hooks — a pre-edit lookup on Edit and Write with a search fallback, a post-edit ledger, session-start and user-prompt nudges with the standing digest and an opt-in prompt search, a code-index refresh at session start and turn end, a precompact persist, a session-end stamp — plus two skills, a rendered rules file that tells briefs to open with a context pack, a store-side git pre-commit and post-commit, an installer, an updater, and a per-machine registry of which repositories have a store"
   background: "None on the decisions. A post-commit hook reindexes, re-runs the commit checks and can write a verified git bundle backup; a background worker fills missing embeddings; a watchdog bounds each hook at two seconds, and the nudges are triggered by the edit ledger rather than by a timer"
   trust: "Five authorities — owner-verbatim, owner-ratified, reviewer-finding, code-derived, agent-inference — carried per field, and five statuses. Together they select one of three citation tiers; the tier decides whether a violated invariant fails a manually run drift check, is reported, or is skipped, and only active owner-level links reach the standing digest. Cited commits and file:line references are checked against the code root at lint time. A changed-since-capture note on a bound reference is shown beside the chain and never changes a status or an authority"
@@ -116,10 +116,12 @@ caller passes it to `mark-standing --authority`, and `recorded_by` falls back
 from `--recorded-by` to `MEMCONTINUUM_RECORDED_BY` to `memidx`
 (`memidx.py:12562-12571`).
 
-Three findings sit against the design. **The scope key can never exclude
-anything:** one database holds one project, refused outright for a second
-(`memidx.py:1075-1080`), so the `project` predicate guards a stamping accident
-rather than partitioning anything. **A declined ruling is delivered, not
+**Projects are separated by storage, not by a filter.** Each repository is
+wired on its own, with its own store, hooks and project name, and one database
+is refused outright for a second project (`memidx.py:1075-1080`). Several
+repositories run side by side and none reads another's rulings; the cost is
+that no two projects can share memory. Two findings sit against the design.
+**A declined ruling is delivered, not
 enforced:** the pre-edit chain hands every link to the model regardless of
 status, and nothing keys on the rejected value. **Every hook but the commit gate
 fails open:** a missing index, a missing interpreter or a slow lookup means the
@@ -390,7 +392,7 @@ and the guard freezes the row, so an anchored reference cannot be removed by a
 commit that runs the hook.
 
 **Scoping:** a `project` column that one database can only ever hold one value
-of. Withheld — see [section 9](#9-reliability-safety-and-trust).
+of, because each repository has a store of its own. Withheld — see [section 9](#9-reliability-safety-and-trust).
 
 **Tombstone:** a `declined` status and per-link rejected alternatives, frozen
 once written and delivered on the write path, keyed on the topic rather than on
@@ -590,7 +592,15 @@ store under a second `--project` rather than letting the two mix — *"opening
 the SAME physical file for a different `--project` would silently
 evict/overwrite that project's rows"* (`memidx.py:1046-1051`). `project=?`
 appears 67 times in `memidx.py`, 11 of them in updates and deletes; the chain
-read keys on the topic path alone. Nothing here leaks between projects.
+read keys on the topic path alone. The separation starts above the database:
+`repo-init.sh` is a per-repository initializer (`scripts/repo-init.sh:2-7`) that
+wires the hooks into that repository's own `settings.local.json`
+(`:1204-1206`) and renders store-side wrappers exporting its store root and
+project name (`:389-390`). The default store sits beside the checkout and is
+named for it (`scripts/mc-registry-lib.sh:773`); where it is placed under
+`$HOME` instead, on a Windows-mounted checkout, a name already belonging to a
+different checkout or project is disambiguated or refused (`:756-764`). Nothing here leaks between
+projects, and the same construction means no two projects can share a store.
 
 What the mark asks for is narrower than isolation: a stored scope key that
 partitions co-resident memory on the read path. A store that holds exactly one
@@ -717,11 +727,13 @@ gradeable sample, and `stats` reports `pre_edit_topics_named`,
 
 ### Fit
 
-Right for a small team or a solo developer running agent-driven work on one
-repository who wants the reasons to survive the session and the reasoning to be
-citable afterwards. The append-only discipline is the strongest part and the
-part that costs least to adopt. Wrong if you need one store across several
-projects, memory about people rather than about code, a check that a proposal
+Right for a small team or a solo developer running agent-driven work, in one
+repository or several, who wants the reasons to survive the session and the
+reasoning to be citable afterwards. Each repository is wired and stored on its
+own, so several run side by side without leaking into each other. The
+append-only discipline is the strongest part and the part that costs least to
+adopt. Wrong if you need memory shared across projects, which that separation
+rules out by construction, memory about people rather than about code, a check that a proposal
 contradicts a declined ruling, or any guarantee that a decision was actually
 read.
 
@@ -786,6 +798,8 @@ Run at the tree root of the pinned checkout with `git grep`.
 - `git grep -n -i -E 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE` — no match; the MIT text carries no rider.
 
 ## History
+
+**2026-11-08** — [`d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8`](https://github.com/krakozavr/MemContinuum/commit/d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8) — correction at the same pin. The fit statement limited the system to a single checkout, and section 1 listed project separation as a finding against the design; both read the withheld `scope_enforced` as a limit on deployment. Each repository is wired and stored on its own, so several run side by side without sharing rows, and the one cost is that no two can share memory. Sections 1, 5, 9 and 11, the scoping field and the verdict now say so, citing the per-repository initializer and the default store path.
 
 **2026-11-07** — [`d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8`](https://github.com/krakozavr/MemContinuum/commit/d5d29fbc9a9eed3b0b223e2c5d77059e2612b1e8) — version 0.5.0 and 15 commits on the shell-edit ledger. All three marks re-verified; the inbox tests are byte-identical. Added upstream: standing marks, link order and `current` under the guard, with anchor baselines frozen ([section 4](#4-essential-implementation-paths)); a post-commit re-run of both checks; a read-only pre-edit lookup; anchor labels and the context pack ([section 6](#6-retrieval-mechanics)); three commands that write frontmatter ([section 7](#7-write-mechanics)). Wrong at the previous pin: that the pre-edit chain reaches the model before the edit. The hook's own header said, at both pins, that it arrives with the edit's result. Section 2 and its diagram are corrected. Screened from a full clone: eighteen hook scripts as the one auto-run surface, `pyproject.toml` inside the cooldown, two unpinned surfaces, MIT with no rider. Nothing was installed or run.
 
