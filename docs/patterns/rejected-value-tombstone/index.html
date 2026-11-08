@@ -126,8 +126,8 @@ belief.</p>
 <blockquote>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
-recurs across the corpus. 72 systems of
-790 carry the mark, and <a
+recurs across the corpus. 73 systems of
+791 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -291,8 +291,8 @@ near-miss, and the argument that the expensive half of the pattern is
 not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
-<p><strong>72 systems of
-790 in the atlas carry the mark.</strong> The
+<p><strong>73 systems of
+791 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -860,6 +860,23 @@ read the history first (<code>src/main.rs:488-536</code>). The marker is
 keyed on the entry's key, so the revived write lands, and the same
 statement under another key is a new entry with nothing to compare it
 against.</p>
+<p><strong><a href="../../systems/noosphere-lite-mcp/">Noosphere Lite
+MCP</a> checks its tombstone on both paths, and its general write tool
+can forge one.</strong> <code>memory_evidence_reject</code> writes a
+node holding the scope, the fact key and the SHA-256 of the claim's
+canonical JSON value before it invalidates the claim, so an interrupted
+rejection still excludes the value. <code>propose</code> refuses a
+matching claim and the evidence query drops one at read
+(<code>noosphere_lite/evidence.py:96-105</code>, <code>:118-138</code>,
+<code>:201-203</code>). Revise and archive refuse the node and neither
+check reads its status, so nothing lifts it. Two edges are open. The
+general <code>memory_add</code> accepts
+<code>kind="evidence_tombstone"</code>, so a hand-written body
+suppresses a value no claim proposed, for good. The read-side check has
+no test, because every committed rejection also stales the claim, which
+the gate drops first. It is a separate project from <a
+href="../../systems/noosphere/">Noosphere</a>, by another author and in
+another language.</p>
 <h3 id="sorted-by-what-actually-stops-the-value">Sorted by what actually
 stops the value</h3>
 <p>The mark covers four different mechanisms. The table sorts the
@@ -886,6 +903,7 @@ href="../../systems/universal-memory-engine/">Universal Memory
 Engine</a>, <a href="../../systems/rainbox/">RainBox</a>, <a
 href="../../systems/verel/">Verel</a>, <a
 href="../../systems/noosphere/">Noosphere</a>, <a
+href="../../systems/noosphere-lite-mcp/">Noosphere Lite MCP</a>, <a
 href="../../systems/breadcrumbs/">breadcrumbs</a>, <a
 href="../../systems/memory-compiler/">Memory Compiler</a>, <a
 href="../../systems/agent-memory-doctrine/">Agent Memory Doctrine</a>,

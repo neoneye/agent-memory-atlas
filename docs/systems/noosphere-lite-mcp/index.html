@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local MCP memory server
+replaying an encrypted, hash-chained event journal mirrored to two
+filesystems, with a source-matched claim lane behind a value-keyed
+rejection tombstone.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Noosphere Lite
+MCP — Agent Memory Atlas">
+    <meta property="og:description" content="A local MCP memory server
+replaying an encrypted, hash-chained event journal mirrored to two
+filesystems, with a source-matched claim lane behind a value-keyed
+rejection tombstone.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Noosphere Lite
+MCP — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local MCP memory server
+replaying an encrypted, hash-chained event journal mirrored to two
+filesystems, with a source-matched claim lane behind a value-keyed
+rejection tombstone.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Noosphere Lite MCP — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Noosphere Lite MCP",
+      "description": "A local MCP memory server replaying an encrypted, hash-chained event journal mirrored to two filesystems, with a source-matched claim lane behind a value-keyed rejection tombstone.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An encrypted journal with a tombstone on
+the evidence lane</p>
+          <h1>Noosphere Lite MCP</h1>
+          <p class="document-deck">A local MCP memory server replaying
+an encrypted, hash-chained event journal mirrored to two filesystems,
+with a source-matched claim lane behind a value-keyed rejection
+tombstone.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Garyu-tt/noosphere-lite-mcp">
+              <span>Source</span>
+              <strong>Garyu-tt/noosphere-lite-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Garyu-tt/noosphere-lite-mcp/commit/b7f8c27c3505d9a3e99753f8b8d275c8274f4262" title="b7f8c27c3505d9a3e99753f8b8d275c8274f4262">
+              <span>Analyzed revision</span>
+              <code>b7f8c27c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-08</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Garyu-tt--noosphere-lite-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Garyu-tt--noosphere-lite-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>GPL-3.0-or-later
+in LICENSE (the GPLv3 text with no added terms), pyproject.toml and
+AUTHORS.md, which says earlier releases published under MIT keep that
+grant</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>1,681
+lines of Python in noosphere_lite/ (vault.py 530, evidence.py 256,
+briefing.py 244, git_drift_r03.py 183, mcp_server.py 177); 719 lines in
+two examples/ references the package does not import; a
+research/connectomics-r01 tree unrelated to memory</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>58
+commits, all by Garyu-tt between 02:04 and 16:27 UTC on 8 November 2026,
+four of them merges of the repository's eight pull requests; the
+repository was created the same day</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>71
+unittest functions in 8 files for the package, 17 more in tests/ for the
+reviewed-plasticity example and 14 in examples/memory_synthesis; no CI
+workflow; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Noosphere Lite MCP is a local, single-user memory server for MCP
+agents. It stores notes and typed links in an encrypted event journal
+that it replays in full on every call. The notable part is how much it
+refuses: diverged mirrors, a rejected value proposed again, a claim
+whose source bytes moved, a fact two sources disagree on. Its weakness
+is that every boundary it draws holds on one lane only. The unscoped
+note tools read across projects. Any tool caller can write a node of any
+kind, a tombstone included. A search costs up to 51 full
+decrypt-and-replay passes under an exclusive lock.</p>
+<p>The store is an append-only NLV1 journal of AES-256-GCM frames. Each
+frame's associated data carries its sequence number and a SHA-256 chain
+over every earlier frame. Two copies sit on different filesystems,
+enforced by <code>st_dev</code>, and a read that finds them diverged
+refuses to choose. Notes carry a <code>current</code> or
+<code>stale</code> status that cascades along <code>derived_from</code>
+links. Validity time is kept apart from record time, and a record with
+no validity is withheld from any historical query.</p>
+<p>The second lane is the evidence gate. A claim is a value at a JSON
+pointer into a stored source, labelled
+<code>source_matched_unreviewed</code>. It is re-derived from the source
+on every read, and rejecting it writes a tombstone keyed on scope, fact
+key and value digest that no tool can lift. The code labels its own
+limits throughout, with <code>truth_guaranteed: False</code> on every
+result and docstrings calling scope a filter rather than an access
+control.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>node</strong>: title, body, tags, a free
+<code>kind</code>, a source label, a random id,
+<code>recorded_at</code>, optional <code>observed_at</code>,
+<code>valid_from</code> and <code>valid_to</code>, <code>archived</code>
+and <code>status</code> (<code>noosphere_lite/vault.py:322-340</code>).
+Nodes are joined by directed links keyed on
+<code>(from, to, relation)</code> with a relation name matching
+<code>[A-Za-z][A-Za-z0-9_-]{0,63}</code>
+(<code>vault.py:398-408</code>). Only <code>derived_from</code> has
+semantics: it is the dependency edge staleness travels along.</p>
+<p>A note is believed as <code>current</code> the moment it is written,
+and the README says plainly what that means: <em>"Current means 'not
+flagged stale', not 'fact checked'."</em> It stops being believed in
+four ways:</p>
+<ul>
+<li><strong>Invalidation.</strong> <code>memory_invalidate</code> marks
+the node and every transitive <code>derived_from</code> descendant
+<code>stale</code>, with the reason and time
+(<code>vault.py:454-483</code>).</li>
+<li><strong>Upstream revision.</strong> <code>memory_revise</code>
+replaces a node's body, keeps it <code>current</code>, and marks its
+descendants stale (<code>vault.py:485-515</code>).</li>
+<li><strong>Git drift.</strong> <code>memory_git_scan</code> with
+<code>invalidate_stale</code> invalidates a note whose anchored file
+changed (<code>noosphere_lite/git_drift_r03.py:162-183</code>).</li>
+<li><strong>Archive.</strong> <code>memory_archive</code> hides the node
+from every read except the journal (<code>vault.py:517-522</code>).</li>
+</ul>
+<p>Revising a stale node is the only way back to <code>current</code>,
+and it clears that node alone (<code>vault.py:500-507</code>).</p>
+<p><strong>Evidence</strong> is a second kind of belief with its own
+gate (<code>noosphere_lite/evidence.py</code>). A source is a JSON
+document stored as canonical JSON. A claim names a fact key, a scope and
+a JSON pointer into one source. The value is read from the source, never
+supplied by the caller, and the claim is linked
+<code>derived_from</code> that source (<code>evidence.py:79-116</code>).
+Every claim is <code>source_matched_unreviewed</code>. No path writes
+another review state or sets <code>publication_approved</code> to true,
+and the docstring says no approval endpoint is provided
+(<code>evidence.py:53-58</code>).</p>
+<p>A claim reaches a reader only if, at that read, it is current, no
+tombstone matches it, every ancestor is current, it is valid at the
+instant asked, it has not expired, its source is current with unchanged
+bytes, and the pointer still yields the same value
+(<code>evidence.py:189-235</code>). If two surviving claims give one key
+different values, both are withheld and the status is
+<code>conflict</code> (<code>evidence.py:245-251</code>). Rejection is
+final: the tombstone cannot be revised, archived or lifted, and
+invalidating it changes nothing, because both readers collect tombstones
+without looking at their status (<code>evidence.py:96-105</code>,
+<code>:152-159</code>, <code>vault.py:498-499</code>,
+<code>:519-520</code>).</p>
+<p>Control is the agent's. Every verb is an MCP tool, no model runs
+inside the server, and no background process changes state.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a note is current until a cascade, a scan or the caller marks it stale, and only revising it makes it current again; a claim is a value read from a stored source and reaches a reader only by passing every check of the gate again on each read; rejecting one writes a value-keyed tombstone that refuses the same value on the write path and the read path for good</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a note is current until a cascade, a scan or the caller marks it stale, and only revising it makes it current again; a claim is a value read from a stored source and reaches a reader only by passing every check of the gate again on each read; rejecting one writes a value-keyed tombstone that refuses the same value on the write path and the read path for good
+flowchart TD
+  subgraph WR[&quot;Writes: MCP tools only&quot;]
+    direction TB
+    ADD[&quot;memory_add&lt;br/&gt;note, status current&quot;]
+    SRC[&quot;memory_evidence_source_add&lt;br/&gt;canonical JSON source&quot;]
+    ADD ~~~ SRC
+  end
+  WR --&gt; PROP{&quot;memory_evidence_propose&lt;br/&gt;value read at a&lt;br/&gt;JSON pointer&quot;}
+  PROP --&gt;|&quot;a tombstone matches,&lt;br/&gt;read on write and read&quot;| REF[&quot;refused: previously&lt;br/&gt;rejected value&quot;]
+  PROP --&gt; CLAIM[&quot;claim&lt;br/&gt;source_matched_unreviewed&lt;br/&gt;derived_from the source&quot;]
+  CLAIM --&gt; GATE{&quot;evidence read:&lt;br/&gt;current, no tombstone,&lt;br/&gt;ancestors current,&lt;br/&gt;valid and unexpired,&lt;br/&gt;source bytes and&lt;br/&gt;pointer value unchanged&quot;}
+  GATE --&gt;|&quot;two values&lt;br/&gt;for one key&quot;| CONF[&quot;both withheld:&lt;br/&gt;status conflict&quot;]
+  GATE --&gt; FACT[&quot;fact returned with&lt;br/&gt;truth_guaranteed false&quot;]
+  FACT ~~~ REJ
+  CLAIM --&gt; REJ[&quot;memory_evidence_reject&quot;]
+  REJ --&gt; TOMB[&quot;tombstone written first:&lt;br/&gt;scope, fact key,&lt;br/&gt;value digest&lt;br/&gt;no revise, no archive&quot;]
+  TOMB ~~~ CAUSE[&quot;memory_invalidate&lt;br/&gt;revise of an ancestor&lt;br/&gt;memory_git_scan&quot;]
+  CAUSE --&gt; STALE[&quot;stale, with reason,&lt;br/&gt;on the node and every&lt;br/&gt;derived_from descendant&quot;]
+  REJ --&gt; STALE
+  STALE --&gt; RD[&quot;search, by_source and&lt;br/&gt;neighborhood: labelled&lt;br/&gt;context: withheld&lt;br/&gt;briefing: review list&quot;]
+  RD ~~~ CUR
+  STALE --&gt;|&quot;memory_revise&lt;br/&gt;of that node&quot;| CUR[&quot;current again:&lt;br/&gt;not flagged,&lt;br/&gt;not checked&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The package is a Python 3.11 library behind a stdio MCP server, with
+no daemon, network listener or model
+(<code>noosphere_lite/mcp_server.py:8-176</code>). Its dependencies are
+<code>cryptography</code> and the MCP SDK, both bounded in
+<code>pyproject.toml</code>, with no lockfile. The vault imports
+<code>fcntl</code>, so it runs on Linux and macOS and not on Windows
+(<code>vault.py:7</code>).</p>
+<p><strong>Persistence</strong> is two files, <code>journal.nlv</code>,
+one in the primary directory and one in the mirror. Each starts with the
+magic bytes <code>NLV1\n</code> and continues with length-prefixed
+frames: a 12-byte random nonce, then the AES-GCM ciphertext of one JSON
+event (<code>vault.py:24-28</code>, <code>:285-316</code>). The
+associated data is <code>Noosphere-Lite-MCP/v1:</code>, the 8-byte
+sequence number and the running digest, where each digest is SHA-256
+over the previous digest and the whole frame
+(<code>vault.py:248-258</code>). A frame edited, swapped or removed from
+the middle fails decryption at that sequence number. The 32-byte key is
+a separate file outside both data directories
+(<code>vault.py:135-139</code>).</p>
+<p><strong>Every read rebuilds the store.</strong>
+<code>_snapshot</code> takes the exclusive lock, reads both copies,
+decrypts and replays every frame of each into dictionaries of nodes and
+links, and reconciles them (<code>vault.py:263-283</code>,
+<code>:318-320</code>). The longer valid copy wins, provided every other
+valid copy is its prefix; a copy that fails to read or decrypt is
+rewritten from the winner by an atomic replace; two valid copies that
+disagree on a common prefix raise
+<code>"mirrors diverged; refusing automatic data loss"</code>. No index,
+cache or plaintext copy persists.</p>
+<p><strong>The guards are on the filesystem.</strong> Both directories
+must exist, be real directories rather than symlinks, and carry no group
+or other permission bits. The key and journals are opened with
+<code>O_NOFOLLOW</code> and refused if group- or world-accessible. The
+two directories must have different <code>st_dev</code>, unless
+<code>NSL_DEVELOPMENT_SAME_DEVICE=1</code> or
+<code>--development-same-device</code> is set
+(<code>vault.py:74-100</code>, <code>:141-148</code>,
+<code>noosphere_lite/__main__.py:21-29</code>). The journal is capped at
+150,000 events, a frame at 1 MiB and an event at 64 KiB
+(<code>vault.py:26-28</code>).</p>
+<p><strong>Git provenance</strong> is optional.
+<code>NSL_GIT_ROOTS_JSON</code> maps up to 20 aliases to absolute
+worktree roots. Anchoring and status checks run
+<code>git rev-parse</code> and <code>git hash-object --no-filters</code>
+with a five-second timeout, <code>GIT_OPTIONAL_LOCKS=0</code> and no
+shell (<code>git_drift_r03.py:34-69</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Running it needs nothing beyond Python and the two dependencies: no
+service, no API key and no GPU.
+<code>python -m noosphere_lite init</code> creates both journals and a
+fresh key and refuses to overwrite an existing vault.
+<code>status</code> and <code>mcp</code> follow
+(<code>__main__.py:15-43</code>). The default layout puts both copies
+under <code>~/.local/share</code>, which is one filesystem on most
+machines. A first run without <code>NSL_PRIMARY</code> and
+<code>NSL_MIRROR</code> on separate mounts therefore fails with
+<code>"mirrors must be on different filesystems"</code>, and the README
+tells the operator to prepare two mounts first. The store is unreadable
+without the key, which is the design: there is no plaintext file to
+repair by hand, and losing every copy of the key loses the memory. Two
+plaintext exporters exist as functions, an OKF Markdown tree and
+LadybugDB staging CSVs, and nothing in the MCP server or the CLI calls
+them (<code>noosphere_lite/interop.py:25-76</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> Every mutation goes through
+<code>MemoryVault._append</code> (<code>vault.py:285-316</code>). It
+takes the lock, reconciles, checks the event count, calls the event
+builder against the reconciled state when it is a function, serialises
+and size-checks the event, checks that both link endpoints exist, seals
+the frame, and appends and fsyncs it to the primary and then the mirror.
+<code>add</code>, <code>link</code>, <code>unlink</code> and
+<code>archive</code> pass a dictionary. <code>invalidate</code> and
+<code>revise</code> pass a builder, so the descendants they stale are
+computed under the same lock as the append
+(<code>vault.py:476-482</code>, <code>:494-514</code>).</p>
+<p><strong>Read.</strong> <code>search</code> scores every non-archived
+node that is not an evidence kind or a Git anchor
+(<code>vault.py:349-387</code>). <code>context</code> packs search hits
+into a character budget (<code>vault.py:436-452</code>).
+<code>neighbors</code> walks links in both directions to depth three
+(<code>vault.py:410-434</code>). The MCP layer wraps the last two:
+<code>memory_search</code> adds a Git provenance label to each hit, and
+<code>memory_context</code> withholds any hit whose Git status is
+<code>stale_needs_review</code> (<code>mcp_server.py:31-75</code>,
+<code>noosphere_lite/context_r02.py:51-72</code>).</p>
+<p><strong>Evidence.</strong> <code>add_source</code> canonicalises JSON
+and stores it as an <code>evidence_source</code> node
+(<code>evidence.py:64-77</code>). <code>propose</code> reads the
+pointer, scans for a matching tombstone, writes the claim and links it
+to the source (<code>evidence.py:79-116</code>). <code>reject</code>
+writes the tombstone and then invalidates the claim, in that order on
+purpose: <em>"If invalidation fails, reads still exclude the rejected
+value"</em> (<code>evidence.py:118-138</code>). <code>query</code> is
+the gate, with ten discard reasons, and the conflict filter
+(<code>evidence.py:140-256</code>).</p>
+<p><strong>Briefing.</strong> <code>briefing</code> selects non-archived
+nodes of five kinds tagged <code>project:&lt;name&gt;</code>, sends
+stale or undated-under-<code>at</code> ones to
+<code>review_required</code>, orders the rest negative, invariant, open
+loop, decision, fact, then newest, and appends the evidence query for
+the same scope (<code>noosphere_lite/briefing.py:111-203</code>).
+<code>by_source</code> matches the stored source label exactly and opens
+no file (<code>briefing.py:205-244</code>).</p>
+<p><strong>Git drift.</strong> <code>anchor</code> refuses a dirty or
+stale target, records the committed blob id and the commit as a
+<code>git_anchor</code> node, and links the memory
+<code>derived_from</code> the anchor
+(<code>git_drift_r03.py:99-118</code>). <code>inspect_anchor</code>
+compares the live committed and worktree blobs with the recorded one.
+<code>status</code> aggregates every anchor on a memory, and reports
+<code>stale_needs_review</code> for any memory that is itself stale or
+archived, anchored or not (<code>git_drift_r03.py:120-160</code>).</p>
+<p><strong>Link suggestions.</strong> <code>suggest_links</code>
+proposes up to 30 unlinked nodes sharing at least two rare terms, one of
+them in a title or tag, and halves the score of a stale node. It writes
+nothing (<code>noosphere_lite/discovery.py:43-96</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The replayed state is two dictionaries: nodes by id, and links by
+<code>(from, to, relation)</code> with the link time as value
+(<code>vault.py:35-41</code>, <code>:194-229</code>). Six event types
+exist, and an unknown one fails the replay. <code>put</code> inserts a
+whole node and <code>revise</code> replaces it. <code>link</code> and
+<code>unlink</code> set and remove a link. <code>archive</code> and
+<code>mark_stale</code> set flags on existing nodes.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Written by</th>
+<th>Read by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kind</code></td>
+<td>the caller of <code>memory_add</code>, truncated to 32 characters;
+the evidence and Git code for its own kinds</td>
+<td>search's exclusion, briefing's selection, the evidence gate,
+<code>revise</code> and <code>archive</code> refusals</td>
+</tr>
+<tr>
+<td><code>status</code>, <code>stale_reason</code>,
+<code>stale_at</code></td>
+<td><code>mark_stale</code> and the <code>revise</code> cascade;
+<code>revise</code> resets the node itself</td>
+<td>every read path (section 6)</td>
+</tr>
+<tr>
+<td><code>recorded_at</code>, <code>created</code>,
+<code>updated</code></td>
+<td><code>add</code> stamps all three; <code>revise</code> updates
+<code>updated</code> only</td>
+<td>briefing's ordering, result payloads</td>
+</tr>
+<tr>
+<td><code>valid_from</code>, <code>valid_to</code></td>
+<td>the caller of <code>memory_add</code>, <code>memory_revise</code>
+and <code>memory_evidence_propose</code></td>
+<td><code>as_of</code> in search, the evidence gate and the
+briefing</td>
+</tr>
+<tr>
+<td><code>observed_at</code></td>
+<td>the caller of <code>memory_add</code> and
+<code>memory_evidence_source_add</code></td>
+<td>result payloads and exports only</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td>the caller of <code>memory_add</code>, up to 500 characters</td>
+<td><code>memory_by_source</code> exact match</td>
+</tr>
+<tr>
+<td><code>archived</code>, <code>archived_at</code></td>
+<td><code>archive</code></td>
+<td>every read path, which skips it</td>
+</tr>
+</tbody>
+</table></div>
+<p>Evidence nodes keep their structure in the body as canonical JSON. A
+claim holds <code>fact_key</code>, <code>scope</code>,
+<code>value</code>, <code>value_digest</code>, <code>pointer</code>,
+<code>source_id</code>, <code>source_sha256</code>, <code>author</code>
+(always <code>"unreviewed"</code>, since no MCP tool passes it),
+<code>review_state</code>, <code>stale_after</code> and
+<code>publication_approved</code> (<code>evidence.py:106-110</code>,
+<code>mcp_server.py:131-140</code>). A tombstone holds
+<code>scope</code>, <code>fact_key</code>, <code>value_digest</code>,
+<code>reason</code> and <code>rejected_claim_id</code>
+(<code>evidence.py:130-132</code>). A Git anchor holds
+<code>repo_alias</code>, <code>relative_path</code>,
+<code>expected_blob</code>, <code>observed_commit</code> and
+<code>memory_id</code> (<code>git_drift_r03.py:108-110</code>).</p>
+<p><strong>Scope</strong> is a string on claims and a
+<code>project:&lt;name&gt;</code> tag on notes, each matched exactly by
+the lane that reads it and by no other (section 9). There is no user,
+agent or tenant key, and no per-agent permission, which the README lists
+as roadmap.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Search is lexical and exhaustive.</strong> For each eligible
+node, <code>search</code> adds 10, 5 and 3 when the whole query is a
+substring of the title, the tags or the body, then 5, 3 and 1 per query
+word of two or more characters found in each. It sorts by score and id
+and returns at most 50 hits with a 220-character snippet
+(<code>vault.py:349-387</code>). No vector, no stemming, no recency
+weight. Status does not affect the score; a stale hit is returned with
+<code>status: "stale"</code>.</p>
+<p><strong><code>as_of</code> is a validity filter.</strong> A node is
+kept only when the instant falls in <code>[valid_from, valid_to)</code>,
+and a node with neither bound is dropped rather than assumed valid
+(<code>vault.py:364-372</code>). The evidence gate and the briefing
+apply the same rule (<code>evidence.py:210-218</code>,
+<code>briefing.py:48-60</code>). Legacy <code>memory_context</code>
+refuses <code>as_of</code> and points the caller at the strict mode
+(<code>context_r02.py:51-52</code>).</p>
+<p><strong>Context assembly has two modes.</strong> The legacy mode
+takes up to 16 search hits, reads each in full, and adds them while the
+title, body and 200 characters fit the budget of 500 to 40,000
+characters. It then drops every hit whose Git status is
+<code>stale_needs_review</code>, which includes every stale note, and
+labels the rest <code>unreviewed_legacy_memory</code>
+(<code>vault.py:436-452</code>, <code>context_r02.py:53-72</code>). The
+strict mode returns evidence facts only, skipping a whole fact rather
+than truncating one that does not fit
+(<code>context_r02.py:22-50</code>).</p>
+<p>The order of those two steps has two consequences. A stale note uses
+budget before it is dropped, so the call can return fewer current notes
+than the budget had room for, flagged as <code>truncated</code>. A stale
+note is also counted twice in <code>needs_review</code>, once by
+<code>vault.context</code> and again as Git-withheld
+(<code>vault.py:451</code>, <code>context_r02.py:62-67</code>).</p>
+<p><strong>The evidence query</strong> returns at most 50 facts sorted
+by key and claim id, with a count of discarded claims per reason:
+<code>not_current</code>, <code>rejected_value</code>,
+<code>unsafe_review_state</code>, <code>stale_dependency</code>,
+<code>unknown_historical_validity</code>, <code>expired</code>,
+<code>missing_or_stale_source</code>, <code>source_changed</code>,
+<code>value_disagrees_with_source</code> and
+<code>malformed_or_unverifiable</code>
+(<code>evidence.py:160-256</code>). The text filter is a substring of
+the fact key or of the value's canonical JSON. The dependency check
+walks every ancestor and runs the Git inspection live for each anchor it
+meets (<code>evidence.py:169-187</code>).</p>
+<p><strong>Graph reads</strong> return neighbours of every kind,
+evidence nodes included, and <code>memory_read</code> returns any
+non-archived node by id (<code>vault.py:342-347</code>,
+<code>:410-434</code>). A claim's value is therefore reachable from its
+source's neighbourhood without the gate, outside any scope, and labelled
+only by its <code>kind</code> and <code>status</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is an explicit MCP call. Nothing is extracted, summarised
+or deduplicated: two <code>memory_add</code> calls with the same title
+and body make two nodes. <code>add</code> validates sizes (title 1 to
+256 characters, body up to 48,000, up to 32 tags of up to 64), parses
+the three timestamps strictly, and refuses an instant without an offset
+(<code>vault.py:322-340</code>, <code>:48-67</code>).</p>
+<p><code>revise</code> refuses <code>evidence_claim</code> and
+<code>evidence_tombstone</code>, and accepts every other kind, a source
+and a Git anchor included (<code>vault.py:498-499</code>). Revising a
+source is fail-closed: its claims go stale through the cascade and fail
+the source hash at read. Revising an anchor can rewrite its expected
+blob, and the cascade then stales the anchored memory, which a second
+revise makes current.</p>
+<p>Deletion does not exist. <code>archive</code> appends an event that
+hides the node from reads, and the tool's own warning says the encrypted
+history keeps it (<code>vault.py:517-522</code>). A node removed from
+every view still sits, decryptable, in both journals for as long as the
+key exists.</p>
+<p><code>memory_add</code> passes the caller's <code>kind</code> through
+(<code>mcp_server.py:21-29</code>). A note written with
+<code>kind="evidence_claim"</code> is ignored by the evidence gate
+unless it is also linked <code>derived_from</code> a current source
+whose pointer yields its value, which makes it equivalent to a proposed
+claim except that it skipped the write check
+(<code>evidence.py:223-235</code>,
+<code>tests/test_evidence.py:116-124</code>). A note written with
+<code>kind="evidence_tombstone"</code> and a well-formed body is read as
+a tombstone by both checks, and is as permanent as a real one.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write blocks for one lock, one full decrypt and replay of both
+copies, and two appends with fsync. It is readable by the next call with
+no lag.</p>
+<p>Reads cost the same replay, repeated. <code>memory_search</code>
+takes one snapshot for the search and one more per hit for the Git
+label, so a 50-hit search replays the journal 51 times
+(<code>mcp_server.py:35-39</code>,
+<code>git_drift_r03.py:144-145</code>). Legacy
+<code>memory_context</code> takes up to 33: one search, 16 reads and 16
+Git statuses. Each replay decrypts every frame of both copies under the
+exclusive lock, so concurrent clients serialise. The README's own limit
+is the 150,000 event cap and <em>"large deployments require further
+performance work"</em>.</p>
+<p>Injection is bounded by the caller's <code>max_chars</code>, 40,000
+at most for context and 24,000 for a briefing. Nothing injects
+automatically, so the prompt prefix is the host's to manage.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers 22 tools with FastMCP on SDK 1.x or
+<code>MCPServer</code> on 2.x (<code>mcp_server.py:9-174</code>). The
+README's table, headed <em>"Eighteen MCP tools"</em>, lists eighteen,
+and its later R02 and R03 sections add
+<code>memory_source_grounded_context</code> and the three Git tools. The
+groups are notes (add, read, search, context, revise, invalidate,
+archive, status), graph (link, unlink, neighborhood, suggest links),
+evidence (source add, propose, reject, evidence context, source-grounded
+context), briefing (briefing, by source) and Git (anchor, status,
+scan).</p>
+<p>The agent holds every verb, including
+<code>memory_evidence_reject</code> and <code>memory_git_scan</code>
+with <code>invalidate_stale</code>. Tool results carry the trust labels
+in-band: <code>evidence_status: "unreviewed_legacy_memory"</code>,
+<code>truth_guaranteed: False</code> and a <code>warning</code> string,
+for a host or a model to read. There is no session hook, no automatic
+save and no automatic injection.</p>
+<p>Adapting it to another agent means speaking stdio MCP. The vault, the
+evidence gate and the briefing are plain classes, so embedding them
+without MCP is a dozen lines.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-journal">The journal</h3>
+<p>Authenticated sequencing defeats most tampering with one copy, and
+reconciliation repairs it from the other
+(<code>tests/test_vault.py:34-48</code>). Three cases fall outside.</p>
+<ul>
+<li><strong>A copy that fails is replaced without a trace.</strong>
+<code>_reconcile</code> treats an <code>OSError</code> and an
+authentication failure alike, rewrites the copy and logs nothing.
+<code>memory_status</code> then returns
+<code>"mirrors_valid": True</code> as a literal
+(<code>vault.py:270-283</code>, <code>:524-529</code>). An operator
+cannot tell a repaired tamper from a healthy vault.</li>
+<li><strong>A tail cut from both copies is a valid shorter
+journal.</strong> No head sequence or final digest is stored outside the
+journals, so removing the last frames of both is a rollback the replay
+accepts. An attacker needs write access to both mounts, not the
+key.</li>
+<li><strong>An append can report failure after it landed.</strong> The
+frame is written to the primary and then the mirror, and an exception on
+the mirror reaches the caller after the primary holds it
+(<code>vault.py:303-316</code>). The next read copies it to the mirror.
+A caller who retries an <code>add</code> gets two nodes.</li>
+</ul>
+<h3 id="scope-and-the-unscoped-tools">Scope and the unscoped tools</h3>
+<p>The evidence query filters on the claim's stored scope exactly, and
+the briefing on an exact <code>project:&lt;name&gt;</code> tag
+(<code>evidence.py:194-195</code>, <code>briefing.py:127-128</code>).
+Tests assert both boundaries. The code calls both an organisational
+filter, <em>"NOT an ACL"</em>, and the note tools bear that out:
+<code>memory_search</code>, <code>memory_context</code>,
+<code>memory_neighborhood</code>, <code>memory_read</code> and
+<code>memory_suggest_links</code> take no scope and return every
+project's notes. A claim from any scope is reachable through its
+source's neighbourhood and <code>memory_read</code>. This is the shape
+for which <code>scope_enforced</code> is withheld: the predicate is real
+on two lanes, and a sibling tool on the same surface reads past it.</p>
+<h3 id="the-tombstones-reach">The tombstone's reach</h3>
+<p>The tombstone is keyed on the value, checked on write and on read,
+and immutable, and it covers one lane. Three things sit outside it:</p>
+<ul>
+<li>The same value written as a note through <code>memory_add</code> is
+searchable and enters legacy context, labelled unreviewed.</li>
+<li><code>memory_add(kind="evidence_tombstone")</code> writes a
+tombstone no rejection produced. A hand-written body can suppress a
+value no claim ever proposed, and no verb removes it.</li>
+<li>A rejection made in error is final for that scope and key. The only
+route back is a new fact key.</li>
+</ul>
+<h3 id="trust-labels">Trust labels</h3>
+<p>The system cannot be talked into calling something true, because
+nothing in it says anything is: <code>truth_guaranteed</code> is a
+constant <code>False</code>, <code>review_state</code> has one value,
+and <code>publication_approved</code> has no writer of true. The
+<code>stale</code> state does real work. It is withheld by legacy
+context, moved to review by the briefing, and fatal to a claim and to
+every claim derived from it. Its weakness is that the producing agent
+clears it: revising the stale note restores <code>current</code>, with
+no check that the cause was addressed
+(<code>tests/test_vault.py:85-94</code>).</p>
+<p>A note anchored to a Git file is withheld from context as soon as the
+file drifts, while its descendants stay current until
+<code>memory_git_scan</code> runs with <code>invalidate_stale</code>
+(<code>git_drift_r03.py:144-183</code>). The evidence gate does better
+and checks the anchors of every ancestor live
+(<code>evidence.py:180-185</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code> — earned on the evidence
+lane.</strong> A durable record keyed on
+<code>(scope, fact_key, value_digest)</code>, refused on
+<code>propose</code> and filtered on <code>query</code>, that neither
+revise, archive nor invalidate can lift.</li>
+<li><strong><code>trust_state</code> — earned.</strong>
+<code>current</code> and <code>stale</code> are a stored field with four
+writers, a reset only by revision, and three read paths that withhold
+the stale value. It is a thin ladder, and the README says
+<code>current</code> is not a check.</li>
+<li><strong><code>bitemporal</code> — earned.</strong> Caller-supplied
+validity is kept beside an automatic <code>recorded_at</code>, filtered
+by <code>as_of</code>, and never defaulted to the write time. There is
+no record-time query.</li>
+<li><strong><code>audit_log</code> — earned.</strong> The journal is the
+store, every mutation is an authenticated chained frame, and nothing
+rewrites one. Events carry no actor and nothing reads the history.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Exact-list
+<code>as_of</code> search results with the excluded notes present, a
+rejected value absent beside a new one, and a scope pair with both
+arms.</li>
+<li><strong><code>scope_enforced</code> — withheld</strong>, for the
+unscoped note tools above.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No state
+waits for anyone. Every claim stays unreviewed, rejection is an agent
+tool, and the reviewer workflow in
+<code>examples/reviewed_plasticity</code> is a separate SQLite example
+the package does not import.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The package suite is 71 <code>unittest</code> functions in eight
+files under <code>tests/</code>, run with
+<code>python -m unittest discover -s tests</code>. No CI workflow is
+committed. I did not run the suite: <code>pyproject.toml</code> changed
+on 8 November 2026, inside the atlas's seven-day dependency
+cooldown.</p>
+<p>What it covers, by reading:</p>
+<ul>
+<li><strong>Journal integrity.</strong> No plaintext on disk, identical
+copies, recovery from one corrupt copy, refusal when both are tampered
+or the key is wrong, refusal on one filesystem without the override
+(<code>tests/test_vault.py:19-67</code>).</li>
+<li><strong>Cascades.</strong> Two-level staleness from a revision,
+invalidation and re-revision, and a dependency cycle
+(<code>test_vault.py:69-101</code>).</li>
+<li><strong>The evidence gate.</strong> Pointer resolution, the rejected
+value, conflicts, a revised source, scope, validity windows, expiry,
+Unicode pointers, malformed pointers, the exclusion from search,
+immutability, an unlinked forged claim, and an unlinked stale source
+(<code>tests/test_evidence.py</code>).</li>
+<li><strong>Context, briefing, Git drift and suggestions.</strong> The
+two context modes and their budgets, briefing order, exact project and
+source matches, stale notes sent to review, a changed file withholding
+its note, a reverted file not revalidating it, symlink and path
+refusals, and suggestion thresholds
+(<code>tests/test_context_r02.py</code>,
+<code>tests/test_briefing.py</code>,
+<code>tests/test_git_drift_r03.py</code>,
+<code>tests/test_discovery*.py</code>).</li>
+</ul>
+<p>Gaps, each confirmed by a recorded search:</p>
+<ul>
+<li><strong>The read-side tombstone filter has no case.</strong> Every
+rejection test rejects through <code>reject</code>, which stales the
+claim, and the gate drops it as <code>not_current</code> before the
+tombstone check (<code>evidence.py:198-203</code>). A second claim with
+the same value, or a claim written through <code>memory_add</code>,
+would reach it. No test asserts a <code>rejected_value</code>
+count.</li>
+<li><strong>No case exercises the MCP layer</strong>, where the Git
+label, the stale withholding in legacy context and the double
+<code>needs_review</code> count live.</li>
+<li><strong>No case covers the failure modes</strong> of a failed mirror
+append, both tails truncated, or a forged tombstone.</li>
+</ul>
+<p>The 17 functions in <code>tests/test_reviewed_plasticity.py</code>
+and the 14 in <code>examples/memory_synthesis/</code> test example code
+the package does not import.</p>
+<p><code>benchmarks/discovery-pilot-2026-11-08/</code> is an exploratory
+audit of link suggestions on the author's private graph. One AI reviewer
+labelled 24 sampled links, finding 3 useful, 6 plausible and 15 noise.
+Its README says the result is not a figure for this package and makes no
+precision or recall claim; <code>evaluate.py</code> re-aggregates the
+frozen labels. No paper is cited in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Chain the sequence number and a running digest into each
+frame's associated data.</strong> It turns an AEAD log into a
+tamper-evident one at the cost of 40 bytes of AAD and no extra
+storage.</li>
+<li><strong>Refuse to reconcile mirrors that disagree on a common
+prefix.</strong> Take the longer copy only when the shorter is its
+prefix, and raise otherwise; it is the one rule that keeps a replica
+from overwriting the good copy with the bad.</li>
+<li><strong>Re-derive a claim from its source on every read.</strong>
+Storing the pointer and the source digest beside the value makes "the
+source changed" a read-time refusal rather than a background job.</li>
+<li><strong>Key the rejection on scope, key and canonical value digest,
+write it before the invalidation, and check it on both paths.</strong>
+The ordering means an interrupted rejection still excludes the
+value.</li>
+<li><strong>Withhold historical answers with unknown validity.</strong>
+Dropping a record with no bounds from an <code>as_of</code> query,
+instead of assuming it always held, is one line and removes a whole
+class of confident wrong answers.</li>
+<li><strong>Withhold both values of a conflict.</strong> Returning
+neither, with a status that says why, is cheaper than any resolution
+policy and never wrong.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A free <code>kind</code> on the general write tool.</strong>
+Any lane keyed on a node kind inherits every write that can name that
+kind; restrict privileged kinds to the code that owns them.</li>
+<li><strong>A status field computed as a constant.</strong>
+<code>mirrors_valid: True</code> will be read as a check by every
+operator who sees it.</li>
+<li><strong>Replaying the whole store per helper call.</strong> Fetching
+a snapshot once per request and passing it down would cut the 51 replays
+of a search to one.</li>
+<li><strong>Filtering after budgeting.</strong> Drop what will be
+withheld before packing the context budget, or the budget is spent on
+material nobody receives.</li>
+<li><strong>A boundary on some read tools and not on others.</strong> If
+scope is only a filter, say so, as this code does, and do not let a test
+of the scoped lane stand in for the unscoped ones.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person on one Linux machine who wants agent memory
+that is encrypted at rest, survives a disk, and is explicit about how
+little it vouches for. It asks for two mounts and a key backup, and
+gives a store no one can read or repair without that key. It does not
+suit anything shared: the scope is a filter, the agent holds every verb,
+and every boundary holds on one lane while a sibling tool reads around
+it. Expect the whole-journal replay to set the size limit long before
+the 150,000-event cap. Reaching that limit means a snapshot cache or an
+index, and the design deliberately has neither.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What replay latency a journal of 10,000 or 100,000 events gives, and
+whether 51 replays per search is noticeable at that size.</li>
+<li>Whether the MIT releases the AUTHORS file mentions are an earlier
+repository, and whether they share the journal format.</li>
+<li>Whether the reviewed-plasticity example's independent-reviewer rule
+is meant to become the approval path that
+<code>publication_approved</code> anticipates.</li>
+<li>How a host is expected to respond to <code>mirrors diverged</code>,
+since the code offers no tool to choose a copy.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Journal, replay, reconciliation, notes and links:
+<code>noosphere_lite/vault.py</code></li>
+<li>Evidence gate, tombstone and conflicts:
+<code>noosphere_lite/evidence.py</code></li>
+<li>Context modes: <code>noosphere_lite/context_r02.py</code></li>
+<li>Briefings and source cards:
+<code>noosphere_lite/briefing.py</code></li>
+<li>Git anchors and drift:
+<code>noosphere_lite/git_drift_r03.py</code></li>
+<li>Link suggestions: <code>noosphere_lite/discovery.py</code></li>
+<li>MCP server and CLI: <code>noosphere_lite/mcp_server.py</code>,
+<code>noosphere_lite/__main__.py</code></li>
+<li>Plaintext exporters: <code>noosphere_lite/interop.py</code></li>
+<li>Tests: <code>tests/test_*.py</code></li>
+<li>Examples outside the package:
+<code>examples/reviewed_plasticity/</code>,
+<code>examples/memory_synthesis/</code></li>
+<li>Link-suggestion pilot:
+<code>benchmarks/discovery-pilot-2026-11-08/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No scope on the note tools.</strong>
+<code>git grep -n -w scope -- noosphere_lite/vault.py noosphere_lite/discovery.py noosphere_lite/mcp_server.py</code>
+returns only <code>mcp_server.py</code> lines 70-151, the evidence tools
+and the context tool's pass-through.</li>
+<li><strong>Suggestions do not filter on kind.</strong>
+<code>git grep -n -w kind -- noosphere_lite/discovery.py</code> returns
+one line, the output field at <code>discovery.py:87</code>.</li>
+<li><strong>No writer of an approved or reviewed state.</strong>
+<code>git grep -n -E 'publication_approved|review_state' -- noosphere_lite</code>
+returns the claim constructor at <code>evidence.py:109-110</code>, the
+gate's check at <code>:204-205</code> and the result label at
+<code>:241</code>.</li>
+<li><strong>No approve verb.</strong>
+<code>git grep -n -i -E 'approv|promot' -- noosphere_lite</code> returns
+four docstrings and the two <code>publication_approved</code> lines
+above.</li>
+<li><strong>No test reaches the read-side tombstone filter.</strong>
+<code>git grep -n rejected_value</code> returns
+<code>evidence.py:202</code> only.</li>
+<li><strong>No record-time query.</strong>
+<code>git grep -n recorded_at -- noosphere_lite</code> returns stamps,
+payloads, the briefing's sort key and the exporters, and no comparison
+against a query instant.</li>
+<li><strong>No history reader.</strong>
+<code>git grep -n -i -E 'history|journal_events|def events' -- 'noosphere_lite/*.py'</code>
+returns three docstrings and one warning string.</li>
+<li><strong>The examples are not imported or packaged.</strong>
+<code>git grep -n -E 'examples|reviewed_plasticity|memory_synthesis' -- noosphere_lite pyproject.toml</code>
+returns nothing; the same pattern over <code>README_EN.md</code>
+matches.</li>
+<li><strong>The exporters have test callers only.</strong>
+<code>git grep -n -E 'export_okf|export_ladybug_csv|networkx_report|interop'</code>
+returns their definitions, three lines of
+<code>docs/TEMPORAL_AND_INTEROP.md</code> and
+<code>tests/test_temporal.py:6</code>, <code>:48</code> and
+<code>:52</code>.</li>
+<li><strong>No CI and no paper.</strong> <code>ls .github</code> fails;
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation|doi\.org'</code>
+matches only <code>research/connectomics-r01/</code>, a connectome
+dataset study.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-08</strong> — <a
+href="https://github.com/Garyu-tt/noosphere-lite-mcp/commit/b7f8c27c3505d9a3e99753f8b8d275c8274f4262"><code class="commit-id" title="b7f8c27c3505d9a3e99753f8b8d275c8274f4262">b7f8c27c…</code></a>.
+First reading, from a shallow clone of <code>main</code> at the merge of
+the repository's sixth pull request. Screened first: no auto-run or
+build-time execution, and <code>pyproject.toml</code> inside the
+seven-day cooldown with no lockfile. I installed and ran nothing; the
+suite was read, not run. The README and <code>docs/</code> were read as
+data. Five marks: <code>tombstone</code>, <code>trust_state</code>,
+<code>bitemporal</code>, <code>audit_log</code> and
+<code>negative_eval</code>; <code>scope_enforced</code> is withheld
+because the note tools take no scope, and <code>human_review</code>
+because nothing approves a claim.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

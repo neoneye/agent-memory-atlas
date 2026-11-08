@@ -267,6 +267,8 @@ new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
 
 [Mnemosyne (28naem-del)](../../systems/mnemosyne-28naem-del/) makes the evidence graph the eligibility rule. A record declares its dependencies, `correct()` marks every record reachable over them `invalidated` in the same transaction, and the context compiler walks each candidate's provenance before top-k, withholding it when any ancestor is untrusted, inactive, has a failed outcome or holds a disagreeing fact key (`src/local/index.ts:2797-2834`, `:1151-1190`, `:3144-3165`). The limit is the edge nobody declared. Co-use inference proposes it and writes nothing until `mnemosy dependencies --review` accepts it under a typed reviewer name, and the premise guard that would hold a procedure in between is called only by the evaluation runner.
 
+[Noosphere Lite MCP](../../systems/noosphere-lite-mcp/) re-derives the evidence at every read instead of trusting the stored copy. A claim keeps a JSON pointer, the value it found and the source's SHA-256, and the evidence query re-hashes the source, re-reads the pointer, checks every `derived_from` ancestor's status and runs a live Git check on each anchor before returning it, with a discard count per reason (`noosphere_lite/evidence.py:140-256`). Two values for one key are both withheld. The limit is that the claim lane is opt-in: ordinary notes reach search and context labelled unreviewed, and the same value written as a note passes no gate.
+
 ### Related: admission gates rather than evidence
 
 These decide what may become a belief — a shared derivation, a confirmation turn,

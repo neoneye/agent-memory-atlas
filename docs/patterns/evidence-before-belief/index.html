@@ -464,6 +464,16 @@ inference proposes it and writes nothing until
 <code>mnemosy dependencies --review</code> accepts it under a typed
 reviewer name, and the premise guard that would hold a procedure in
 between is called only by the evaluation runner.</p>
+<p><a href="../../systems/noosphere-lite-mcp/">Noosphere Lite MCP</a>
+re-derives the evidence at every read instead of trusting the stored
+copy. A claim keeps a JSON pointer, the value it found and the source's
+SHA-256, and the evidence query re-hashes the source, re-reads the
+pointer, checks every <code>derived_from</code> ancestor's status and
+runs a live Git check on each anchor before returning it, with a discard
+count per reason (<code>noosphere_lite/evidence.py:140-256</code>). Two
+values for one key are both withheld. The limit is that the claim lane
+is opt-in: ordinary notes reach search and context labelled unreviewed,
+and the same value written as a note passes no gate.</p>
 <h3 id="related-admission-gates-rather-than-evidence">Related: admission
 gates rather than evidence</h3>
 <p>These decide what may become a belief — a shared derivation, a

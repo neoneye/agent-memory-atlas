@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 790 reports.**
+**This page covers all 791 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7242,3 +7242,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT for the software, with the protocol's schemas under CC0 1.0 in a separate file; 11,449 lines of Python outside tests; 77 commits, 20 March – 8 November 2026, 62 of them on 7 and 8 November; 91 pytest functions run in CI, not run here. Three marks: `audit_log`, `human_review`, `negative_eval`. The whitepaper's validation is review by language models, and no benchmark is committed.
 - Study when: you want a write gate whose security hold only a person can clear, or a memory a person reads and edits in a spreadsheet application.
 - Do not copy when: a writer can send a value outside the vocabulary, a retraction must reach every read path, or the agent's own memory tools must pass the same gate as everything else.
+
+### [`noosphere-lite-mcp`](../systems/noosphere-lite-mcp/)
+- Best idea: **a claim re-derived from its source on every read.** A claim stores a JSON pointer, the value it found there and the source's SHA-256, and the evidence query re-reads the pointer, re-hashes the source and walks every ancestor's status and Git anchor before it returns anything. A changed source, a stale ancestor or a drifted file is a read-time refusal, with a count per reason, and two values for one key are both withheld.
+- Second idea: a journal that refuses to guess. Each AES-256-GCM frame carries its sequence number and a SHA-256 chain over every earlier frame as associated data, the two copies must sit on different filesystems, and a read that finds them disagreeing on a common prefix raises instead of choosing.
+- Biggest risk: **every boundary holds on one lane.** Scope is enforced by the evidence query and the project tag by the briefing, while `memory_search`, `memory_context`, `memory_neighborhood` and `memory_read` take no scope and reach every project and every claim. `memory_add` accepts any `kind`, so a hand-written `evidence_tombstone` suppresses a value permanently, and nothing lifts a tombstone.
+- Second risk: each tool call decrypts and replays the whole journal under an exclusive lock, up to 51 times for one search; a copy that fails to decode is overwritten without a record while `memory_status` reports `mirrors_valid: true` as a constant; a tail cut from both copies replays as a valid shorter journal.
+- Most reusable component: `EvidenceGate.query` in `noosphere_lite/evidence.py:140-256`, with the rejection ordering in `reject` at `:118-138`.
+- Maturity impression: GPL-3.0-or-later; 1,681 lines of Python in the package; 58 commits by one author, all on 8 November 2026, the day the repository was created; 71 unittest functions for the package with no CI, not run here. Five marks: `tombstone`, `trust_state`, `bitemporal`, `audit_log`, `negative_eval`. The link-suggestion pilot is one AI reviewer's labels on a private graph and says so.
+- Study when: you want claims that stay bound to the bytes they came from, a rejection keyed on the value, or an encrypted log that detects reordering without a separate index.
+- Do not copy when: more than one person or project shares the store, the journal will grow past a few thousand events, or rejected values must be correctable.

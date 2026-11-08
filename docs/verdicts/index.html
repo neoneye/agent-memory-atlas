@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 790 reports.</strong></p>
+<p><strong>This page covers all 791 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32890,6 +32890,52 @@ application.</li>
 <li>Do not copy when: a writer can send a value outside the vocabulary,
 a retraction must reach every read path, or the agent's own memory tools
 must pass the same gate as everything else.</li>
+</ul>
+<h3 id="noosphere-lite-mcp"><a
+href="../systems/noosphere-lite-mcp/"><code>noosphere-lite-mcp</code></a></h3>
+<ul>
+<li>Best idea: <strong>a claim re-derived from its source on every
+read.</strong> A claim stores a JSON pointer, the value it found there
+and the source's SHA-256, and the evidence query re-reads the pointer,
+re-hashes the source and walks every ancestor's status and Git anchor
+before it returns anything. A changed source, a stale ancestor or a
+drifted file is a read-time refusal, with a count per reason, and two
+values for one key are both withheld.</li>
+<li>Second idea: a journal that refuses to guess. Each AES-256-GCM frame
+carries its sequence number and a SHA-256 chain over every earlier frame
+as associated data, the two copies must sit on different filesystems,
+and a read that finds them disagreeing on a common prefix raises instead
+of choosing.</li>
+<li>Biggest risk: <strong>every boundary holds on one lane.</strong>
+Scope is enforced by the evidence query and the project tag by the
+briefing, while <code>memory_search</code>, <code>memory_context</code>,
+<code>memory_neighborhood</code> and <code>memory_read</code> take no
+scope and reach every project and every claim. <code>memory_add</code>
+accepts any <code>kind</code>, so a hand-written
+<code>evidence_tombstone</code> suppresses a value permanently, and
+nothing lifts a tombstone.</li>
+<li>Second risk: each tool call decrypts and replays the whole journal
+under an exclusive lock, up to 51 times for one search; a copy that
+fails to decode is overwritten without a record while
+<code>memory_status</code> reports <code>mirrors_valid: true</code> as a
+constant; a tail cut from both copies replays as a valid shorter
+journal.</li>
+<li>Most reusable component: <code>EvidenceGate.query</code> in
+<code>noosphere_lite/evidence.py:140-256</code>, with the rejection
+ordering in <code>reject</code> at <code>:118-138</code>.</li>
+<li>Maturity impression: GPL-3.0-or-later; 1,681 lines of Python in the
+package; 58 commits by one author, all on 8 November 2026, the day the
+repository was created; 71 unittest functions for the package with no
+CI, not run here. Five marks: <code>tombstone</code>,
+<code>trust_state</code>, <code>bitemporal</code>,
+<code>audit_log</code>, <code>negative_eval</code>. The link-suggestion
+pilot is one AI reviewer's labels on a private graph and says so.</li>
+<li>Study when: you want claims that stay bound to the bytes they came
+from, a rejection keyed on the value, or an encrypted log that detects
+reordering without a separate index.</li>
+<li>Do not copy when: more than one person or project shares the store,
+the journal will grow past a few thousand events, or rejected values
+must be correctable.</li>
 </ul>
         </article>
       </div>
