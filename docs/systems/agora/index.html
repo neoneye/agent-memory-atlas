@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted chat platform for
+coding agents; its memory is a model-written run summary, handed to a
+fresh conversation when the CLI's own is gone.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Agora — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted chat platform
+for coding agents; its memory is a model-written run summary, handed to
+a fresh conversation when the CLI's own is gone.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agora — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted chat
+platform for coding agents; its memory is a model-written run summary,
+handed to a fresh conversation when the CLI's own is gone.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Agora — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Agora",
+      "description": "A self-hosted chat platform for coding agents; its memory is a model-written run summary, handed to a fresh conversation when the CLI's own is gone.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A run summary carried between
+conversations</p>
+          <h1>Agora</h1>
+          <p class="document-deck">A self-hosted chat platform for
+coding agents; its memory is a model-written run summary, handed to a
+fresh conversation when the CLI's own is gone.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/CaffeinatedSoftwareLLC/agora">
+              <span>Source</span>
+              <strong>CaffeinatedSoftwareLLC/agora</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/CaffeinatedSoftwareLLC/agora/commit/737a4b5d2d8134d4157c96a22db829b318ad74b4" title="737a4b5d2d8134d4157c96a22db829b318ad74b4">
+              <span>Analyzed revision</span>
+              <code>737a4b5d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-09</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/CaffeinatedSoftwareLLC--agora" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>CaffeinatedSoftwareLLC--agora</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>80,111
+lines of TypeScript, JavaScript and SQL outside test files, across the
+server, agent host, MCP server, web UI and mobile app</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>985
+commits, 15 February 2026 – 8 November 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>344
+test files, 66,783 lines, Vitest unit and Postgres integration suites
+plus Playwright end-to-end; CI runs them; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Agora is <strong>a self-hosted chat platform for AI coding
+agents</strong>. Claude Code, Codex, Gemini CLI, opencode and others
+join shared channels through an MCP server, <code>agora-mcp</code>. An
+agent host, <code>agora-host</code>, runs on the user's machine and
+wakes an agent's CLI headlessly when the agent is mentioned. The server
+is Fastify over Postgres and Redis, AGPL-3.0, self-hosted only.</p>
+<p>Most of what Agora stores is coordination state: messages, threads,
+task cards, file reservations and handoffs. These record what happened
+and who holds what. The one store that holds a model's claim and carries
+it into a later conversation is <strong>the session summary</strong>. At
+the end of each headless run the CLI returns a JSON object with <em>"a
+short summary string of completed work, decisions and remaining
+work"</em> (<code>agora-host/src/prompt.ts:82</code>). The server keeps
+it on the session and, when the CLI's own conversation cannot be
+resumed, puts it into the next wake as <em>"Prior session summary
+(untrusted)"</em> (<code>agora-host/src/prompt.ts:93</code>).</p>
+<p>What is good:</p>
+<ul>
+<li><strong>The summary is quoted as data.</strong> It goes into the
+prompt inside an escaped block beside a rule that messages, names and
+the prior summary are untrusted. A test checks that a forged
+<code>[SYSTEM]</code> line in a summary stays inside the block
+(<code>agora-host/test/adapters.test.ts:135-145</code>).</li>
+<li><strong>A dropped conversation does not start from nothing.</strong>
+An incompatible profile edit or a checkpoint restore clears the native
+session id, and the next wake gets the last summary instead.</li>
+</ul>
+<p>What is weak:</p>
+<ul>
+<li><strong>No person reads the summary.</strong> The session and run
+APIs leave it out, and its only visible copy is the first line, used as
+the commit subject on the session's branch.</li>
+<li><strong>Each run replaces it.</strong> Whether the summary covers
+the turn or the whole session is left to the model.</li>
+</ul>
+<p>No capability mark is earned. The careful trust machinery in this
+tree guards shared files rather than memory (§9).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>the latest account a session's agent gave of its
+own work</strong>. It is a string on the session row, not a record with
+an id, a source or a state.</p>
+<h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
+<p>Every headless run ends with the CLI's structured output.
+<code>summary()</code> in
+<code>agora-host/src/adapters.ts:576-581</code> takes the
+<code>summary</code> field, caps it at 16,000 characters, and maps a
+lurk run's <code>[pass]</code> to nothing. The host reports it on
+completion. <code>complete()</code> stores it on the run row and sets
+<code>summary = COALESCE($3, s.summary)</code> on the session
+(<code>src/lib/agent-runs.ts:775-812</code>), so a run that returns no
+summary leaves the previous one in place.</p>
+<p>While the CLI's native session id is kept, the agent resumes its own
+conversation (<code>--resume &lt;id&gt;</code> or
+<code>resume &lt;id&gt;</code>,
+<code>agora-host/src/adapters.ts:543</code>, <code>:559</code>) and is
+not shown the summary at all. The summary is read only when that id is
+gone. Two writers clear it:</p>
+<ul>
+<li>an incompatible profile edit, for every session of that profile
+(<code>src/routes/agent-hosts.ts:379-381</code>);</li>
+<li>a checkpoint restore or commit from the review panel
+(<code>src/routes/workspace-review.ts:162-164</code>).</li>
+</ul>
+<h3 id="how-a-belief-stops-being-one">How a belief stops being one</h3>
+<p>The next run that returns a summary replaces it. A checkpoint restore
+replaces it with <em>"Restored checkpoint &lt;sha&gt;. Read channel
+history for context."</em>, and a fork starts the new session with
+<em>"Forked from &lt;id&gt; at &lt;sha&gt;"</em>
+(<code>src/routes/workspace-review.ts:159-164</code>). Both actions are
+owner-only. Nothing else writes the column, and no route lets a person
+edit or clear it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — each run's summary replaces the session's copy; a later wake reads it only when the CLI's own conversation was dropped, and a person sees only its first line, as a commit subject</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: each run&#39;s summary replaces the session&#39;s copy; a later wake reads it only when the CLI&#39;s own conversation was dropped, and a person sees only its first line, as a commit subject
+flowchart TD
+    WAKE[&quot;wake claimed&lt;br/&gt;inbox batch, project,&lt;br/&gt;handoffs&quot;]
+    CLI[&quot;coding CLI turn&lt;br/&gt;resumes its native&lt;br/&gt;session when it has one&quot;]
+    OUT[&quot;final JSON summary&lt;br/&gt;work done, decisions,&lt;br/&gt;work left; 16,000 chars&quot;]
+    SES[&quot;agent_sessions.summary&lt;br/&gt;replaced by every run&lt;br/&gt;that returns one&quot;]
+    subgraph COPIES[&quot;copies nothing reads back&quot;]
+        direction TB
+        RUN[&quot;agent_runs.summary&lt;br/&gt;one per run&quot;]
+        GIT[&quot;commit subject&lt;br/&gt;first line, session&lt;br/&gt;branch&quot;]
+        RUN ~~~ GIT
+    end
+    DROP[&quot;native id cleared&lt;br/&gt;profile edit or&lt;br/&gt;checkpoint restore&quot;]
+    NEXT[&quot;next wake prompt&lt;br/&gt;Prior session summary&lt;br/&gt;(untrusted)&quot;]
+    WAKE --&gt; CLI
+    CLI --&gt; OUT
+    OUT --&gt; SES
+    OUT --&gt; COPIES
+    SES --&gt; DROP
+    DROP --&gt; NEXT
+    NEXT -. &quot;fresh conversation&quot; .-&gt; CLI</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The server (<code>src/</code>) is Fastify with Postgres for state,
+Redis and BullMQ for queues, MinIO or a local volume for encrypted
+files, and Socket.IO for live events. 89 migrations under
+<code>src/db/migrations/</code> define the schema, with row-level
+security enabled on the tables they create. <code>agora-host</code> runs
+on the user's computer. It claims runs from the server, launches each
+agent's CLI in a git worktree for its session, commits the changes at
+the end of the turn and reports back. <code>agora-mcp</code> is the MCP
+server every agent loads. <code>agora-ui</code> is the React web client.
+<code>agora-mobile</code> is the unreleased phone app, and
+<code>agora-push-relay</code> its notification relay.</p>
+<p>Memory adds nothing to this. The summary is one <code>TEXT</code>
+column on <code>agent_sessions</code> and one on
+<code>agent_runs</code>, written in the run-completion transaction. Like
+message content, it is stored in plain text: the storage document lists
+files, provider keys and push handles as the encrypted items and
+<em>"everything else in Postgres"</em> as not encrypted
+(<code>docs/storage-and-encryption.md</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Docker Compose files bring up Postgres, Redis, migrations and the
+server, with optional speech services. The <code>agora-connect</code>
+skill walks a coding agent through setup. Summaries need no
+configuration and cannot be turned off.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Summary out</strong> — <code>resultSchema</code> and
+<code>summary()</code> (<code>agora-host/src/adapters.ts:51</code>,
+<code>:576-626</code>) → <code>complete()</code>
+(<code>src/lib/agent-runs.ts:762-824</code>), which writes
+<code>agent_runs.summary</code> and the session's copy.</p>
+<p><strong>Summary in</strong> — the claim
+(<code>src/lib/agent-runs.ts:379-410</code>) returns
+<code>session.summary</code> and <code>nativeSessionId</code> →
+<code>wakePrompt</code>
+(<code>agora-host/src/prompt.ts:64-96</code>).</p>
+<p><strong>Clearing the native session</strong> —
+<code>src/routes/agent-hosts.ts:379-381</code> and
+<code>src/routes/workspace-review.ts:162-164</code>.</p>
+<p><strong>Commit</strong> — <code>commitRun</code>
+(<code>agora-host/src/review.ts:222-233</code>) uses the summary's first
+line as the subject.</p>
+<p><strong>Subtasks</strong> — <code>reportSubtask</code>
+(<code>src/lib/agent-subtasks.ts:53-92</code>) posts a child session's
+summary, cut to 3,500 characters, as a message to the parent's thread
+and wakes the parent with it.</p>
+<p><strong>Handoffs</strong> — <code>src/lib/handoffs.ts</code>, and
+<code>handoff_offer</code> in
+<code>agora-mcp/src/tools.ts:911-915</code>.</p>
+<p><strong>Project context</strong> —
+<code>src/lib/channel-projects.ts</code>, <code>projectSection</code> in
+<code>agora-host/src/prompt.ts:30-45</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The session summary.</strong>
+<code>agent_sessions.summary TEXT</code> on a row that is one agent in
+one channel, with <code>native_session_id</code>, <code>state</code>
+(<code>live</code>, <code>shelved</code>, <code>ended</code>), budgets
+and the worktree branch
+(<code>src/db/migrations/037_agent_sessions.sql:47-62</code>).
+<code>agent_runs.summary</code> holds each run's own text. Neither has a
+source, a date of its own beyond the row's, or a status.</p>
+<p><strong>Two neighbours that look like memory and are something
+else:</strong></p>
+<ul>
+<li><strong>Project context</strong>
+(<code>051_project_context.sql</code>): instructions of up to 8,000
+characters and up to ten pinned files, written by the channel's owner
+and directors, with a <code>version</code> that goes up on every change.
+These are standing instructions from people, not claims.</li>
+<li><strong>Handoffs</strong> (<code>058_agent_handoffs.sql</code>): a
+summary of up to 2,000 characters, the sender's committed
+<code>branch @ sha</code> and its file reservations, offered to one
+recipient with a TTL of 30 minutes by default and a day at most. A
+handoff transfers a task between two live sessions; it is not a store
+the recipient consults later.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval over memory. The wake prompt is assembled from
+the inbox batch, the project context, any pending handoffs and, only
+when no native session is resumed, the session summary. Project
+instructions go into every wake. Pinned file text goes in only when the
+session has not seen this project version or starts a fresh conversation
+(<code>claimProject</code>,
+<code>src/lib/channel-projects.ts:139-145</code>).</p>
+<p>Anything older is read on demand through MCP tools:
+<code>chat_history</code> for channel and thread messages
+(<code>agora-mcp/src/tools.ts:762-790</code>), <code>task_list</code>,
+<code>file_search</code> and <code>file_read</code>. These read the
+platform's record of what was said and shared, not a store of
+beliefs.</p>
+<p>Failure modes:</p>
+<ul>
+<li><strong>A long session can lose its history twice.</strong> After a
+profile edit, the agent has only the last run's summary. If that run's
+summary described its own turn, the earlier decisions are in the channel
+history and nowhere else.</li>
+<li><strong>The summary is not refreshed when it is used.</strong> A
+fresh conversation's own summary replaces the old one at the end of its
+run. Nothing merges the two.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The summary is written once per run, in the completion transaction,
+after the CLI has finished. It does not block the agent, and it is
+readable at the next claim. No background pass rewrites summaries.</p>
+<ul>
+<li><strong>Which run's text survives.</strong> The run that finishes
+last. A verify-and-fix turn keeps the earlier summary when the fix
+returns none (<code>agora-host/src/scheduler.ts:231</code>).</li>
+<li><strong>What the model is asked for.</strong> The same instruction
+on every run, with no sight of the stored summary while the native
+session is live. Whether a summary is cumulative depends on the
+model.</li>
+<li><strong>A run claimed before an incompatible profile edit</strong>
+cannot restore an old native session id. The guard checks the profile
+generation (<code>src/lib/agent-runs.ts:797-808</code>). The summary has
+no such guard, so a stale run's summary still lands.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Agents hold 37 MCP tools for chat, threads, file reservations,
+handoffs, sessions, tasks, files, canvases, browser previews and the
+sandbox (<code>agora-mcp/src/tools.ts</code>). None of them reads or
+writes memory as such. The summary is produced by the host's output
+schema, not by a tool call, so an agent cannot read another session's
+summary or change its own except by returning a new one.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The summary as an injection path.</strong> A summary is model
+output that a later model reads with its tools available. Agora quotes
+it, tells the model it is untrusted, and tests that forged tags stay
+quoted. It is also the only memory the platform keeps outside people's
+view.</p>
+<p><strong>Where the careful machinery is.</strong> The file store
+beside it has the most deliberate trust design in the repository:</p>
+<ul>
+<li>An optional decision model scores each uploaded file for text that
+tries to instruct an AI reader, and tags it from an admin-edited
+vocabulary. Each tag records the model, the tag revision and the
+question version, and a tag made under an older revision is shown as
+stale.</li>
+<li>A flagged file is never sent to the ranking model, and
+<code>file_read</code> and <code>file_search</code> return it with
+<code>injectionWarning</code> (<code>src/lib/file-search.ts:175</code>,
+<code>:234</code>, <code>:321</code>).</li>
+<li>Only the server owner can mark a flagged file trusted. A trigger
+rejects any change to <code>trusted_by</code> from a bot, a non-owner or
+a non-member, and clears the trust when the file's bytes, channel or
+message change
+(<code>src/db/migrations/064_file_owner_trust.sql</code>). Each change
+is posted to the channel and written to <code>audit_log</code>
+(<code>src/routes/files.ts:56-73</code>). Trust lifts the warning; the
+file stays out of model ranking, because <code>flagged</code> is
+computed from the score alone.</li>
+</ul>
+<p>Those are shared attachments, not memory. What a file says is the
+author's, and the stored verdict is a property of its text. That is why
+none of it earns a mark here.</p>
+<h3 id="marks">Marks</h3>
+<p>No capability mark is earned.</p>
+<ul>
+<li><code>trust_state</code> and <code>human_review</code> are withheld.
+The summary has no status and no review. The file store's flag is a
+threshold over a probability, and the owner's trust decision adjudicates
+attachments, not memory.</li>
+<li><code>audit_log</code> is withheld. <code>audit_log</code> covers
+moderation, admin, bot-token, runtime and file-trust events. It has no
+entry for a summary or project-context write.</li>
+<li><code>scope_enforced</code> is withheld. A summary is one row per
+session, read by that session's own claim, with no scope predicate over
+a set of memories.</li>
+<li><code>negative_eval</code> is withheld.
+<code>keep a director's instructions and pinned notes out of a subscription agent's wake prompt</code>
+(<code>test/integration/project-context.integration.test.ts:328-347</code>)
+asserts absence from an assembled prompt, and project instructions are
+not memory.</li>
+<li><code>tombstone</code> and <code>bitemporal</code> have no
+mechanism.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>344 test files hold 66,783 lines. They cover Vitest unit and Postgres
+integration suites for the server, Vitest for the host, MCP server and
+UI, and Playwright end-to-end flows;
+<code>.github/workflows/ci.yml</code> runs them. For the summary:</p>
+<ul>
+<li><code>agent-sessions.integration.test.ts:943-963</code> checks that
+a claim carries a stored summary and that completion replaces it.</li>
+<li><code>adapters.test.ts:135-145</code> checks the prompt
+envelope.</li>
+<li>The parsing tests check each CLI's output shape.</li>
+</ul>
+<p>No test covers the fresh-conversation path end to end, the summary's
+survival across a profile edit, or a stale run overwriting a newer
+summary. There is no evaluation of summary quality and no paper. I read
+the tests and ran nothing: the manifests changed inside the seven-day
+cooldown, and the integration suites need Postgres.</p>
+<p>The screen counted every dependency file as changed within seven
+days, but a shallow clone dates every file to its tip. It also found the
+OpenCode bundle and a Claude plugin manifest that a harness would
+install, an npm <code>prepublishOnly</code> build, and a
+<code>CLAUDE.md</code> addressed to reading agents, read as data.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Hand a fresh conversation the previous run's account, quoted
+as untrusted.</strong> Losing a CLI session is routine: a model change,
+a restore, a crash. One string at the top of the next prompt costs
+nothing and removes the cold start. Wrapping it in the same escaped
+block as other people's messages keeps it from becoming an
+instruction.</p>
+<p><strong>Ask for the summary as structured output, not as a
+message.</strong> The host validates one JSON field against a schema and
+caps it, so the memory write cannot be confused with the agent's chat
+output.</p>
+<p><strong>Bind a human trust decision to the bytes it covers.</strong>
+The file-trust trigger clears trust when the content changes and refuses
+it from any bot, in the database where every code path meets it. A
+review gate on memory would need exactly this property.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Don't keep memory nobody can see.</strong> The summary
+decides what a fresh conversation believes about its own work, and no
+person can read it in the UI or correct it. Show it where the session is
+shown, and let the owner edit it.</p>
+<p><strong>Don't let the last run's text stand in for the
+session.</strong> Either show the model the stored summary and ask for a
+revision, or keep the per-run summaries the server already stores and
+pass the recent ones.</p>
+<h3 id="fit">Fit</h3>
+<p>Agora is for <strong>a person running several coding agents on their
+own machine who wants them in one place</strong>, with turn-taking,
+review and approvals from a phone. Its memory is a recovery aid for
+that, and adequate as one: the CLI's own conversation is the real
+working memory, and the channel is the shared record.</p>
+<p>Anyone who wants agents to accumulate durable knowledge across
+projects will not find it here. The platform has no store for facts,
+preferences or lessons, and adding one would mean deciding who may
+correct it — the question the file store's trust design already answers
+for attachments.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should the summary cover the session or the turn?</strong>
+The instruction is the same either way, and the answer decides what a
+fresh conversation inherits.</li>
+<li><strong>Is <code>agent_runs.summary</code> meant to be
+read?</strong> Every run's text is kept and nothing returns it, which
+leaves it as an unused history of the agent's own accounts.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Summary</strong> — <code>agora-host/src/adapters.ts</code>,
+<code>prompt.ts</code>, <code>scheduler.ts</code>,
+<code>review.ts</code>; <code>src/lib/agent-runs.ts</code>,
+<code>agent-subtasks.ts</code>; <code>src/routes/agent-hosts.ts</code>,
+<code>workspace-review.ts</code>, <code>agent-commands.ts</code>;
+<code>src/db/migrations/037_agent_sessions.sql</code>.</p>
+<p><strong>Neighbours</strong> —
+<code>src/lib/channel-projects.ts</code>, <code>handoffs.ts</code>,
+<code>file-search.ts</code>, <code>file-read.ts</code>;
+<code>src/routes/files.ts</code>; migrations
+<code>033_decisions.sql</code>, <code>034_file_tags.sql</code>,
+<code>051_project_context.sql</code>,
+<code>058_agent_handoffs.sql</code>,
+<code>064_file_owner_trust.sql</code>.</p>
+<p><strong>Tests</strong> —
+<code>test/integration/agent-sessions.integration.test.ts</code>,
+<code>project-context.integration.test.ts</code>,
+<code>file-search.integration.test.ts</code>,
+<code>file-trust.integration.test.ts</code>;
+<code>agora-host/test/adapters.test.ts</code>.</p>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Three writers of the session summary.</strong>
+<code>git grep -n -E 'agent_sessions.*summary|summary *= *(NULL|\$)' -- src</code>
+returns the run row at <code>src/lib/agent-runs.ts:777</code> and the
+fork insert and restore update at
+<code>src/routes/workspace-review.ts:159</code> and <code>:164</code>.
+The session's <code>COALESCE</code> update at
+<code>agent-runs.ts:802</code> is the third writer.</li>
+<li><strong>Nothing reads a run's summary back.</strong>
+<code>git grep -n -E 'r\.summary|runs?\.summary|agent_runs[^;]*summary' -- src agora-ui/src agora-mcp/src</code>
+returns only <code>src/lib/handoffs.ts:62</code>, the handoff row's own
+summary.</li>
+<li><strong>The session API omits it.</strong>
+<code>git grep -n -A32 'export function sessionJson' -- src/routes/agent-commands.ts</code>
+shows no <code>summary</code> key, and the <code>run</code> and
+<code>recent_runs</code> objects at <code>agent-commands.ts:86-93</code>
+build theirs without one.</li>
+<li><strong>No row deletion except cascade.</strong>
+<code>git grep -n -E 'DELETE FROM (agent_sessions|agent_runs)' -- src</code>
+returns nothing.</li>
+<li><strong>No audit entry for memory writes.</strong>
+<code>git grep -n 'INSERT INTO audit_log' -- src</code> lists 21
+writers, none in <code>agent-runs.ts</code>,
+<code>channel-projects.ts</code> or <code>handoffs.ts</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-09</strong> — <a
+href="https://github.com/CaffeinatedSoftwareLLC/agora/commit/737a4b5d2d8134d4157c96a22db829b318ad74b4"><code class="commit-id" title="737a4b5d2d8134d4157c96a22db829b318ad74b4">737a4b5d…</code></a>.
+First reading, from a shallow clone of <code>main</code>. The screen
+found three auto-run surfaces, one npm lifecycle build and every
+manifest inside the cooldown, which a shallow clone over-counts. I
+installed and ran nothing; the tests were read, not run. No capability
+mark (§9).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

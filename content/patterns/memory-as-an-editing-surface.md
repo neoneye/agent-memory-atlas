@@ -227,6 +227,8 @@ In [marm-memory](../../systems/marm-memory/) the bundled console is not the seco
 
 **[Luna](../../systems/luna-local-agent/) gives a person five verbs over the rows the model reads, and a forget that reaches only those rows.** Its localhost memory page adds, edits, retires, restores and deletes facts by id in the same `facts.db` the prompt queries, so an edit is in the next turn. It also edits or forgets game feelings, deletes episode notes, and retires or restores lessons (`memory-manager/manager.py:194-285`). Nothing propagates. A fact deleted there stays in the episode note and the running summary written from the conversation that produced it, and in its subject page until the next dream pass (`mind/pages.py:164-166`, `mind/reflect.py:1007-1010`). Restore clears `superseded_at` without looking for the row that replaced it, so a restored fact sits active beside its replacement (`mind/factstore.py:431-442`). **An editor over one of the stores a fact lives in is a partial editor.**
 
+**[Agora](../../systems/agora/) is the absence of the surface, in a system that has one for everything else.** Its only memory is the summary a coding agent's CLI returns at the end of each run, which a fresh conversation inherits when the native session is dropped. The session and run APIs omit it and no route edits or clears it, so the one thing a person cannot see in a platform built to let them watch and steer agents is what a restarted agent will believe about its own work. Its only visible copy is the first line, used as a commit subject (`agora-host/src/review.ts:222-233`). **Memory that steers a later run belongs on the screen where the run is steered.**
+
 ## Tests to write first
 
 - Edit a unit, then run the automatic pass, and assert the edit survives.

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 795 reports.</strong></p>
+<p><strong>This page covers all 796 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33077,6 +33077,39 @@ action in a single-user client, or a cross-chat memory with no
 server.</li>
 <li>Do not copy when: a user must be able to make the companion forget,
 or facts can hold several values under one label.</li>
+</ul>
+<h3 id="agora"><a href="../systems/agora/"><code>agora</code></a></h3>
+<ul>
+<li>Best idea: <strong>a fresh conversation inherits the previous run's
+account, quoted as data.</strong> When an incompatible profile edit or a
+checkpoint restore drops the CLI's native session, the next wake carries
+the session's last summary as <em>"Prior session summary
+(untrusted)"</em> inside the same escaped block as other people's
+messages.</li>
+<li>Biggest risk: <strong>the memory is invisible to people.</strong>
+The session and run APIs omit the summary, nothing lets a person edit or
+clear it, and its only visible copy is the first line, used as the
+commit subject on the session branch.</li>
+<li>Second risk: each run that returns a summary replaces the last, the
+model is never shown the stored one while its native session is live,
+and nothing says whether a summary covers the turn or the session; every
+run's own text is kept in <code>agent_runs.summary</code> and read by
+nothing.</li>
+<li>Most reusable component: the file-trust trigger in
+<code>src/db/migrations/064_file_owner_trust.sql</code>, which accepts a
+trust decision only from the non-bot server owner and clears it when the
+file's bytes change.</li>
+<li>Maturity impression: AGPL-3.0; 80,111 lines outside test files
+across server, host, MCP server and clients; 985 commits between 15
+February and 8 November 2026; 344 test files with CI, not run here. No
+capability mark: the trust and review machinery guards shared files, and
+the one negative case is about an assembled prompt.</li>
+<li>Study when: you run several coding-agent CLIs on one machine and
+want to recover a dropped conversation cheaply, or want a human trust
+override that a database enforces.</li>
+<li>Do not copy when: agents must accumulate knowledge across sessions,
+or a person must be able to see and correct what an agent believes about
+its own work.</li>
 </ul>
         </article>
       </div>

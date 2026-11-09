@@ -496,6 +496,7 @@ page_kind: comparison
 - [`severian`](../systems/severian/)
 - [`pok-agent`](../systems/pok-agent/)
 - [`waifu-companion`](../systems/waifu-companion/)
+- [`agora`](../systems/agora/)
 
 ## Repos Inspected
 
@@ -1296,6 +1297,7 @@ page_kind: comparison
 - [Sahil-SS9/Severian](https://github.com/Sahil-SS9/Severian) at [`bdb14b04ffa014148d4665f239688ca0856561da`](https://github.com/Sahil-SS9/Severian/commit/bdb14b04ffa014148d4665f239688ca0856561da) — read only, from a full clone of `main` on 9 November 2026. No auto-run surface and nothing inside the seven-day cooldown; build-time execution in `native/build.rs` and `tests/conftest.py`, neither triggered; `CONTRIBUTING.md` and the README read as data. Nothing was installed, built or run, and the 1,203 test functions were not run. MIT, with no added terms.
 - [Acekorneya/POK-Agent](https://github.com/Acekorneya/POK-Agent) at [`e97bb68b78456319ee9650b3fd0b2384f84982b5`](https://github.com/Acekorneya/POK-Agent/commit/e97bb68b78456319ee9650b3fd0b2384f84982b5) — read only, from a full clone of `main` on 9 November 2026. No auto-run surface; five Cargo manifests inside the seven-day cooldown; a build-time `build.rs` in the Tauri app, not triggered; the README read as data. Nothing was installed, built or run, and the 786 Rust tests were not run. Apache-2.0, with no added terms.
 - [waifuai/waifu-companion](https://github.com/waifuai/waifu-companion) at [`f6f2b92a0c0d3576affd9e9c55473dc2035f8b71`](https://github.com/waifuai/waifu-companion/commit/f6f2b92a0c0d3576affd9e9c55473dc2035f8b71) — read only, from a full clone of `main` on 9 November 2026. The screen parsed nothing: there is no manifest, no build step and no CI, and by hand the run-time surface is the CDN scripts `app/index.html` loads, two of them unversioned. Nothing was opened, installed or run, and the 178 node tests were not run. MIT-0.
+- [CaffeinatedSoftwareLLC/agora](https://github.com/CaffeinatedSoftwareLLC/agora) at [`737a4b5d2d8134d4157c96a22db829b318ad74b4`](https://github.com/CaffeinatedSoftwareLLC/agora/commit/737a4b5d2d8134d4157c96a22db829b318ad74b4) — read only, from a shallow clone of `main` on 9 November 2026. The screen found an OpenCode bundle and a Claude plugin manifest a harness would install, an npm `prepublishOnly` build, and every manifest inside the cooldown, which a shallow clone over-counts. Nothing was installed or run, and the 344 test files were not run. AGPL-3.0.
 
 ## What the licences actually say
 

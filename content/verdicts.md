@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 795 reports.**
+**This page covers all 796 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7288,3 +7288,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT-0; 11,022 lines of browser JavaScript; 203 commits by one author between 26 December 2025 and 4 November 2026; 178 node tests and five browser-test files, no CI, not run here. No capability mark: editing after the fact is not a gate, and the negative case is about the assembled prompt.
 - Study when: you want summarisation that is safe against every user action in a single-user client, or a cross-chat memory with no server.
 - Do not copy when: a user must be able to make the companion forget, or facts can hold several values under one label.
+
+### [`agora`](../systems/agora/)
+- Best idea: **a fresh conversation inherits the previous run's account, quoted as data.** When an incompatible profile edit or a checkpoint restore drops the CLI's native session, the next wake carries the session's last summary as *"Prior session summary (untrusted)"* inside the same escaped block as other people's messages.
+- Biggest risk: **the memory is invisible to people.** The session and run APIs omit the summary, nothing lets a person edit or clear it, and its only visible copy is the first line, used as the commit subject on the session branch.
+- Second risk: each run that returns a summary replaces the last, the model is never shown the stored one while its native session is live, and nothing says whether a summary covers the turn or the session; every run's own text is kept in `agent_runs.summary` and read by nothing.
+- Most reusable component: the file-trust trigger in `src/db/migrations/064_file_owner_trust.sql`, which accepts a trust decision only from the non-bot server owner and clears it when the file's bytes change.
+- Maturity impression: AGPL-3.0; 80,111 lines outside test files across server, host, MCP server and clients; 985 commits between 15 February and 8 November 2026; 344 test files with CI, not run here. No capability mark: the trust and review machinery guards shared files, and the one negative case is about an assembled prompt.
+- Study when: you run several coding-agent CLIs on one machine and want to recover a dropped conversation cheaply, or want a human trust override that a database enforces.
+- Do not copy when: agents must accumulate knowledge across sessions, or a person must be able to see and correct what an agent believes about its own work.

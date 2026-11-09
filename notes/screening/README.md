@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 795 of 795 screened at the report's current pin.**
+**Progress: 796 of 796 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 376 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 356 |
-| Repositories with build-time execution (`EXEC`) | 577 |
+| Repositories with an auto-run surface (`RUNS`) | 377 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 357 |
+| Repositories with build-time execution (`EXEC`) | 578 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 7 |
 | Repositories that could not be screened | 0 |
 
@@ -46,6 +46,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`agentrecall-x`](../../content/systems/agentrecall-x.md) | `smithery.yaml` |
 | [`agentrt`](../../content/systems/agentrt.md) | `.gitmodules` |
 | [`agno`](../../content/systems/agno.md) | `.cursorrules` |
+| [`agora`](../../content/systems/agora.md) | `.claude-plugin/`, `.opencode/`, `plugins/agora-skills/.claude-plugin/plugin.json` |
 | [`ai-brain-starter`](../../content/systems/ai-brain-starter.md) | `-` |
 | [`ai-maestro`](../../content/systems/ai-maestro.md) | `.gitmodules`, `hooks/` |
 | [`ai-memory`](../../content/systems/ai-memory.md) | `.claude-plugin/`, `hooks/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/.mcp.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json` |
