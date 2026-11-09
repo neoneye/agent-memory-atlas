@@ -109,9 +109,9 @@ overflow to an append-only, substring-searchable archive.</p>
               <strong>GentianLine/clm-mem</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/GentianLine/clm-mem/commit/433bce18f67060c657be274d4ffdfb49c9bb2b60" title="433bce18f67060c657be274d4ffdfb49c9bb2b60">
+            <a class="meta-pill revision-pill" href="https://github.com/GentianLine/clm-mem/commit/26f9b14096f9b59f33ea7d4f1c657c2cbb8f70b8" title="26f9b14096f9b59f33ea7d4f1c657c2cbb8f70b8">
               <span>Analyzed revision</span>
-              <code>433bce18…</code>
+              <code>26f9b140…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
@@ -126,16 +126,16 @@ overflow to an append-only, substring-searchable archive.</p>
                       </div>
                               <div class="document-meta document-facts">
             <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
-            <div class="meta-pill fact-pill"><span>Size</span><strong>8,225
-lines of Python in 25 files under shatterling/, of which the memory
+            <div class="meta-pill fact-pill"><span>Size</span><strong>8,553
+lines of Python in 26 files under shatterling/, of which the memory
 engine in shatterling/engine/ is 1,769; 1,145 lines of JavaScript for
 the web studio</strong></div>
-            <div class="meta-pill fact-pill"><span>Activity</span><strong>55
-commits, 12 October – 7 November 2026, under five author identities:
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>56
+commits, 12 October – 9 November 2026, under five author identities:
 sandbox-agent, studio, clm-mem agent, Your Name and Mikela
 Clemmons</strong></div>
-            <div class="meta-pill fact-pill"><span>Tests</span><strong>119
-pytest functions in 7 files under tests/, run by a GitHub Actions
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>154
+pytest functions in 8 files under tests/, run by a GitHub Actions
 workflow on push; none run for this reading</strong></div>
           </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -200,11 +200,15 @@ recalling block 5 can bring back another run's block 5.</li>
 supersession on, a fact that changes from one value to another and back
 is matched against the superseded block holding the first value, and the
 third write never enters the window.</li>
-<li><strong>The server answers any web origin.</strong> It sends
-<code>Access-Control-Allow-Origin: *</code>, checks no inbound
-credential, accepts <code>tools_enabled</code> as an open-time option,
-and runs <code>sandbox/exec</code> with no approval step, in a jail its
-own docstring says has no filesystem or network isolation.</li>
+<li><strong>Without an API key, a web page can reach command
+execution.</strong> Cross-origin reads are refused by default and a
+bearer key is opt-in, but the server parses every POST body as JSON
+whatever its <code>Content-Type</code>. A cross-site
+<code>text/plain</code> POST, which a browser sends without a preflight,
+can open a workspace with tools enabled and run
+<code>sandbox/exec</code> with no approval step, in a jail its own
+docstring says has no filesystem or network isolation. With
+<code>--api-key</code> set, that route is closed.</li>
 </ul>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is <strong>a tagged block in the live window</strong>. The
@@ -309,8 +313,8 @@ nothing.</p>
 supervisor keeps one <code>MemoryHarness</code> per
 <code>ws:&lt;name&gt;</code> session id, each with its own directory
 under <code>&lt;workdir&gt;/workspaces/&lt;name&gt;</code>
-(<code>shatterling/purslane/server.py:1345-1455</code>). Session opens
-must use a <code>ws:</code> id (<code>server.py:763-820</code>). The
+(<code>shatterling/purslane/server.py:1391-1501</code>). Session opens
+must use a <code>ws:</code> id (<code>server.py:809-866</code>). The
 live window lives in the harness object; <code>mirror_files</code>
 writes it to <code>context.md</code> and <code>context.jsonl</code>
 after every turn, and nothing in the package reads either file back
@@ -320,7 +324,7 @@ its old archive.</p>
 many chats, and the source states the intent: <em>"The harness keeps one
 shared memory per project; chats partition who <em>sees</em> what
 (turns, activity, approvals, drafts) without splitting the memory"</em>
-(<code>server.py:105-108</code>). The partition is in the UI.
+(<code>server.py:109-110</code>). The partition is in the UI.
 <code>serialize_messages</code> sends every live block to the model with
 no slot filter (<code>harness.py:657-667</code>), so a chat's transient
 small talk is in another chat's prompt until phase 1 removes it.</p>
@@ -356,11 +360,13 @@ and <code>_classify_with_systemone</code>
 <code>recall</code>, <code>reinject</code>
 (<code>harness.py:598-655</code>).</p>
 <p><strong>Server</strong> — <code>Supervisor.harness_for</code>
-(<code>shatterling/purslane/server.py:1345-1455</code>), the
-session-open handler (<code>:763-820</code>), the archive read
-(<code>:725-738</code>), the tool surface <code>_clm_tools_post</code>
-(<code>:1040-1130</code>), and the CORS headers (<code>:264-270</code>).
-MCP tools <code>clm_recall</code> and <code>clm_reinject</code> in
+(<code>shatterling/purslane/server.py:1391-1501</code>), the
+session-open handler (<code>:809-866</code>), the archive read
+(<code>:771-784</code>), the tool surface <code>_clm_tools_post</code>
+(<code>:1087-1176</code>), and the CORS and key checks
+(<code>:267-306</code>) over <code>SecurityConfig</code> in
+<code>shatterling/purslane/security.py</code>. MCP tools
+<code>clm_recall</code> and <code>clm_reinject</code> in
 <code>shatterling/purslane/mcp.py</code>.</p>
 <p><strong>Tools</strong> — <code>ToolManager.execute</code>
 (<code>shatterling/tools/manager.py:465-511</code>) and
@@ -462,7 +468,7 @@ endpoint whose 14 tools include <code>clm_chat</code>,
 <code>clm_sandbox_exec</code>. <code>/v1/chat/completions</code> is a
 plain passthrough to the backend with no memory, and a client still
 sending the old session header gets a 410 pointing at the turns verb
-(<code>server.py:1285-1288</code>).</p>
+(<code>server.py:1331-1334</code>).</p>
 <p>The agent inside the harness is the chat model with an optional tool
 loop: web search and fetch, file read, write and list,
 <code>run_command</code> and <code>run_python</code>. Tool results enter
@@ -474,40 +480,60 @@ sandbox without asking
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <h3 id="the-server-and-the-browser">The server and the browser</h3>
-<p>The proxy sends <code>Access-Control-Allow-Origin: *</code>, allows
-<code>GET</code>, <code>POST</code>, <code>DELETE</code> and
-<code>OPTIONS</code> with <code>Content-Type</code> and
-<code>Authorization</code> headers, and answers every preflight
-(<code>server.py:264-270</code>, <code>:432-435</code>). No handler
-checks an inbound credential: the <code>Authorization</code> header is
-relayed to the backend rather than verified
-(<code>server.py:307-319</code>). The default bind is
-<code>127.0.0.1</code>.</p>
-<p>Three properties then compose:</p>
+<p>Cross-origin reads are refused by default. <code>_cors</code> sends
+<code>Access-Control-Allow-Origin</code> only for an origin listed in
+<code>--cors-origins</code> or <code>CLM_MEM_CORS_ORIGINS</code>, and
+the list is empty unless set (<code>server.py:267-284</code>,
+<code>shatterling/purslane/security.py:133-149</code>). A bearer key is
+opt-in: with <code>--api-key</code> or <code>CLM_MEM_API_KEY</code> set,
+every route except health, version and the studio's static files needs
+<code>Authorization: Bearer &lt;key&gt;</code>, compared in constant
+time (<code>server.py:286-306</code>, <code>security.py:103-129</code>).
+With no key, which is the default on loopback, every request passes. The
+default bind is <code>127.0.0.1</code>.</p>
+<p>Refusing the read does not refuse the write. A browser sends a
+cross-site POST with a <code>text/plain</code> body and no custom header
+without a preflight, and the server parses every body as JSON whatever
+its <code>Content-Type</code> (<code>server.py:322-324</code>,
+<code>:679-684</code>). Three properties then compose:</p>
 <ol type="1">
 <li>A session can be opened with <code>tools_enabled</code>,
 <code>sandbox_mode</code> and <code>approval_mode</code> as options,
 because all three are in <code>OPEN_KNOBS</code>
-(<code>server.py:62-90</code>).</li>
+(<code>server.py:64-92</code>).</li>
 <li><code>POST …/sandbox/exec</code> builds a <code>run_command</code>
 call with <code>origin="user"</code>, and <code>execute</code> skips the
-approval broker for user-origin calls (<code>server.py:1095-1118</code>,
+approval broker for user-origin calls (<code>server.py:1141-1164</code>,
 <code>shatterling/tools/manager.py:488-491</code>).</li>
 <li>The default <code>jail</code> sandbox is, in its own docstring,
 <em>"NOT a security boundary against a hostile script (no network or
 filesystem isolation)"</em>
 (<code>shatterling/tools/sandbox.py:8-13</code>).</li>
 </ol>
-<p>So while <code>clm-mem serve</code> runs, a page in the operator's
-browser can reach command execution on the host as the operator — and
-the MCP endpoint's <code>clm_sandbox_exec</code> reaches the same
-handler — unless the browser's local-network protections block requests
-to localhost. It can also read every workspace's archive through the
-archive route, and the archive holds what the classifier was told to
-keep long-term, credentials included. I traced this from the code and
-did not exercise it. The project's own
-<code>test_serve_sandbox_exec_files_write_read</code> drives the exec
-route over HTTP.</p>
+<p>So while <code>clm-mem serve</code> runs without a key, a page in the
+operator's browser can open a workspace and run a command on the host as
+the operator, in two blind POSTs whose responses it cannot read, unless
+the browser's local-network protections block requests to localhost. The
+MCP endpoint's <code>clm_sandbox_exec</code> reaches the same handler.
+Nothing reads the <code>Host</code> header (Recorded searches), so a
+page that rebinds its own hostname to <code>127.0.0.1</code> is
+same-origin and can also read every workspace's archive, which holds
+what the classifier was told to keep long-term, credentials included.
+With a key set, both routes are closed: a browser cannot attach
+<code>Authorization</code> without a preflight, and the preflight gets
+no allow header. I traced this from the code and did not exercise
+it.</p>
+<p>Two smaller edges. The studio's JavaScript sends no
+<code>Authorization</code> header (Recorded searches), so with a key set
+its own API calls are refused, while <code>do_GET</code> serves its
+shell before the check on the comment's assumption that the script
+authenticates (<code>server.py:535-540</code>). And
+<code>start_supervisor</code> reads the environment only when neither
+<code>api_key</code> nor <code>cors_origins</code> is passed
+(<code>server.py:1735-1744</code>), so <code>--cors-origins</code> on
+the command line with the key in <code>CLM_MEM_API_KEY</code> starts
+with auth off; the startup banner prints
+<code>api auth : disabled</code>.</p>
 <h3 id="scope">Scope</h3>
 <p>A workspace is a physical partition, a directory per <code>ws:</code>
 name, with no key on a record and no predicate on a read, so
@@ -546,13 +572,14 @@ mechanism.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>119 pytest functions in seven files cover tag splitting, the three
+<p>154 pytest functions in eight files cover tag splitting, the three
 eviction phases, the decision-server backstop, the forgetting
-strategies, the server routes, the tool loop and the web studio's
-layout. They run against stub and mock backends, so they need no GPU and
-no model. A GitHub Actions workflow runs them on push and pull request.
-Its matrix lists <code>python-version: [3.9, 3.10, 3.11]</code>
-unquoted, which YAML reads as 3.9, 3.1 and 3.11.</p>
+strategies, the server routes, the CORS policy and the API key, the tool
+loop and the web studio's layout. They run against stub and mock
+backends, so they need no GPU and no model. A GitHub Actions workflow
+runs them on push and pull request. Its matrix lists
+<code>python-version: [3.9, 3.10, 3.11]</code> unquoted, which YAML
+reads as 3.9, 3.1 and 3.11.</p>
 <p>The negative cases are about eviction order. Phase 1 must leave no
 old transient block; phase 2 must remove the two oldest short-term
 blocks; decay must not demote a reheated block; supersession must not
@@ -566,7 +593,10 @@ fire when it is off or when slots are unrelated.</p>
 <code>reinject</code> returns true for the first recall hit
 (<code>tests/test_harness.py:107-120</code>), not which content came
 back, and every test uses a fresh directory.</li>
-<li><strong>Cross-origin requests</strong> to the server.</li>
+<li><strong>A cross-site POST to a server with no key.</strong>
+<code>tests/test_security.py</code> asserts the allow header and the key
+over HTTP, not what a request the browser sends without a preflight can
+do (§9).</li>
 </ul>
 <p>The paper cited in the README reports its results on BrowseComp-Plus,
 EdgeBench and a multi-repository agent-swarm task with a model that
@@ -602,12 +632,14 @@ persisted beside the archive.</p>
 <p><strong>Don't match duplicates against superseded records.</strong> A
 value that returns after a change is an update; compare a new fact
 against the live, unsuperseded holder of each slot.</p>
-<p><strong>Don't answer every origin on a localhost server that executes
-commands.</strong> A wildcard CORS header plus an unauthenticated exec
-route is reachable from any page the operator visits. Check the
-<code>Origin</code>, require a token, and keep
-<code>tools_enabled</code> out of what a client can set at open
-time.</p>
+<p><strong>Don't treat a CORS policy as a write guard.</strong>
+Withholding the allow header stops a page reading the response, not
+sending a <code>text/plain</code> POST that the server then parses as
+JSON. On a localhost server that executes commands, require a token by
+default, refuse a body whose <code>Content-Type</code> is not
+<code>application/json</code>, check <code>Host</code> and
+<code>Origin</code>, and keep <code>tools_enabled</code> out of what a
+client can set at open time.</p>
 <p><strong>Don't tell the classifier to keep credentials.</strong> A
 memory that is shared across chats, mirrored to disk and never purged is
 the wrong place for a secret.</p>
@@ -621,8 +653,8 @@ engine is small enough to read in an evening.</p>
 restarts, shared between people, or held apart between conversations:
 the live window does not survive a restart, chats inside a workspace
 share it, and archive identity is unreliable once a directory is reused.
-Run it with tools off, or behind an origin check, before it is reachable
-from a browser.</p>
+Set an API key, or keep tools off, whenever a browser runs on the same
+machine.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
 <li><strong>Is reloading the mirror planned?</strong>
@@ -642,8 +674,8 @@ eviction is not measurable from the tree.</li>
 <code>harness.py</code>, <code>tagging.py</code>,
 <code>config.py</code>, <code>llm.py</code>, <code>tokens.py</code>.</p>
 <p><strong>Server</strong> —
-<code>shatterling/purslane/server.py</code>, <code>routes.py</code>,
-<code>mcp.py</code>, <code>processes.py</code>,
+<code>shatterling/purslane/server.py</code>, <code>security.py</code>,
+<code>routes.py</code>, <code>mcp.py</code>, <code>processes.py</code>,
 <code>mock_backends.py</code>.</p>
 <p><strong>Tools</strong> — <code>shatterling/tools/manager.py</code>,
 <code>sandbox.py</code>, <code>spec.py</code>, <code>web.py</code>.</p>
@@ -653,7 +685,8 @@ eviction is not measurable from the tree.</li>
 <p><strong>Tests</strong> — <code>tests/test_harness.py</code>,
 <code>test_forgetting.py</code>, <code>test_server.py</code>,
 <code>test_tools.py</code>, <code>test_web.py</code>,
-<code>test_backend_api_key.py</code>, <code>test_ui_layout.py</code>;
+<code>test_backend_api_key.py</code>, <code>test_ui_layout.py</code>,
+<code>test_security.py</code>;
 <code>.github/workflows/test_and_lint.yml</code>.</p>
 <p><strong>Design notes</strong> — <code>docs/refactor-plan.md</code>,
 <code>docs/library-migration.md</code>.</p>
@@ -672,18 +705,31 @@ the property at <code>:120-121</code> and the write at
 returns nothing; the same pattern over
 <code>shatterling/purslane/mcp.py</code> returns the MCP tools at
 <code>:220</code> and <code>:235</code>.</li>
-<li><strong>No inbound credential check.</strong>
-<code>git grep -n -i 'headers.get(.authorization' -- shatterling/purslane/server.py</code>
-returns <code>:319</code>, inside <code>_auth_header</code>, which
-relays the header to the backend, and <code>:482</code>, which copies it
-onto the MCP layer's own HTTP client.</li>
+<li><strong>The key is the only inbound check, and it is
+opt-in.</strong>
+<code>git grep -n -E 'check_auth|_auth_check' -- shatterling</code>
+returns the definition at <code>security.py:103</code>,
+<code>_auth_check</code> at <code>server.py:286</code> and its calls at
+<code>:539</code>, <code>:610</code> and <code>:645</code>;
+<code>is_auth_enabled</code> at <code>security.py:100-101</code> is
+false when no key is set.</li>
+<li><strong>Nothing reads <code>Content-Type</code> or <code>Host</code>
+on a request.</strong>
+<code>git grep -n -E 'self\.headers\.get\(.(Content-Type|Host|Origin)' -- shatterling/purslane/server.py</code>
+returns only the <code>Origin</code> read in <code>_cors</code> at
+<code>:274</code>.</li>
+<li><strong>The studio sends no key.</strong>
+<code>git grep -n -i -E 'authorization|bearer' -- shatterling/campion</code>
+returns nothing.</li>
+<li><strong>No test sends a <code>text/plain</code> body.</strong>
+<code>git grep -n -i 'text/plain' -- tests</code> returns nothing.</li>
 <li><strong>No lock around a turn.</strong>
 <code>git grep -n -w lock -- shatterling/purslane/server.py</code>
-returns only <code>self.lock</code> uses inside <code>Supervisor</code>
-session bookkeeping (<code>:500</code>, <code>:651</code>,
-<code>:804</code>, <code>:1325</code>, <code>:1371</code>,
-<code>:1423</code>, <code>:1453</code>, <code>:1457</code>,
-<code>:1546</code>) and none around <code>h.step</code>.</li>
+returns only <code>Supervisor.lock</code> uses for session bookkeeping
+(<code>:542</code>, <code>:697</code>, <code>:850</code>,
+<code>:1371</code>, <code>:1417</code>, <code>:1469</code>,
+<code>:1499</code>, <code>:1503</code>, <code>:1592</code>) and none
+around <code>h.step</code>.</li>
 <li><strong>No test returns to an earlier slot value.</strong>
 <code>git grep -n -i -E 'nova-1.*nova-2.*nova-1|revert' -- tests</code>
 returns nothing.</li>
@@ -693,6 +739,20 @@ returns the README line naming ContextBench and a section comment at
 <code>harness.py:621</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-09</strong> — <a
+href="https://github.com/GentianLine/clm-mem/commit/26f9b14096f9b59f33ea7d4f1c657c2cbb8f70b8"><code class="commit-id" title="26f9b14096f9b59f33ea7d4f1c657c2cbb8f70b8">26f9b140…</code></a>.
+One commit past <code>433bce1</code>, touching only the server, CLI, SDK
+and README. Cross-origin reads are refused unless an origin is listed,
+and an opt-in bearer key guards every API route. With no key, the
+default on loopback, a cross-site <code>text/plain</code> POST can still
+open a workspace with tools on and run <code>sandbox/exec</code>,
+because the server parses any body as JSON; with a key, the browser
+route is closed (<a href="#the-server-and-the-browser">§9</a>). The
+engine and tools are unchanged, so the reinject and supersession
+findings stand, and no mark moved. Re-screened with the same findings;
+recorded searches re-run and four added; size, activity and tests
+re-measured. I installed and ran nothing; the 35 new tests were read,
+not run.</p>
 <p><strong>2026-11-09</strong> — <a
 href="https://github.com/GentianLine/clm-mem/commit/433bce18f67060c657be274d4ffdfb49c9bb2b60"><code class="commit-id" title="433bce18f67060c657be274d4ffdfb49c9bb2b60">433bce18…</code></a>.
 First reading, from a full clone of <code>main</code>. Screened first:

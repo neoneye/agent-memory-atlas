@@ -7,13 +7,13 @@ page_kind: system
 source_name: "GentianLine/clm-mem"
 source_url: https://github.com/GentianLine/clm-mem
 archive_name: "GentianLine--clm-mem"
-revision: 433bce18f67060c657be274d4ffdfb49c9bb2b60
-revision_url: https://github.com/GentianLine/clm-mem/commit/433bce18f67060c657be274d4ffdfb49c9bb2b60
+revision: 26f9b14096f9b59f33ea7d4f1c657c2cbb8f70b8
+revision_url: https://github.com/GentianLine/clm-mem/commit/26f9b14096f9b59f33ea7d4f1c657c2cbb8f70b8
 analyzed_at: 2026-11-09
 licence: "MIT"
-size: "8,225 lines of Python in 25 files under shatterling/, of which the memory engine in shatterling/engine/ is 1,769; 1,145 lines of JavaScript for the web studio"
-activity: "55 commits, 12 October – 7 November 2026, under five author identities: sandbox-agent, studio, clm-mem agent, Your Name and Mikela Clemmons"
-tests: "119 pytest functions in 7 files under tests/, run by a GitHub Actions workflow on push; none run for this reading"
+size: "8,553 lines of Python in 26 files under shatterling/, of which the memory engine in shatterling/engine/ is 1,769; 1,145 lines of JavaScript for the web studio"
+activity: "56 commits, 12 October – 9 November 2026, under five author identities: sandbox-agent, studio, clm-mem agent, Your Name and Mikela Clemmons"
+tests: "154 pytest functions in 8 files under tests/, run by a GitHub Actions workflow on push; none run for this reading"
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -29,7 +29,7 @@ matrix:
   background: "None; every pass runs inside a turn"
   trust: "None on a record. A superseded block is prefixed `[superseded by #N]` and demoted to short-term, and stays in the prompt until FIFO evicts it"
   strengths: "A budget enforced by a deterministic engine, with the model deciding what matters as it writes; nothing evicted is destroyed"
-  risks: "Block ids restart at 0 in every process while the archive persists, so reinject can return another run's block; open CORS with no inbound auth reaches sandbox exec"
+  risks: "Block ids restart at 0 in every process while the archive persists, so reinject can return another run's block; with no API key, the default, a cross-site text/plain POST reaches sandbox exec"
 ---
 
 ## 1. Executive Summary
@@ -75,11 +75,13 @@ What is weak:
   fact that changes from one value to another and back is matched against the
   superseded block holding the first value, and the third write never enters
   the window.
-- **The server answers any web origin.** It sends
-  `Access-Control-Allow-Origin: *`, checks no inbound credential, accepts
-  `tools_enabled` as an open-time option, and runs `sandbox/exec` with no
-  approval step, in a jail its own docstring says has no filesystem or network
-  isolation.
+- **Without an API key, a web page can reach command execution.** Cross-origin
+  reads are refused by default and a bearer key is opt-in, but the server parses
+  every POST body as JSON whatever its `Content-Type`. A cross-site `text/plain`
+  POST, which a browser sends without a preflight, can open a workspace with
+  tools enabled and run `sandbox/exec` with no approval step, in a jail its own
+  docstring says has no filesystem or network isolation. With `--api-key` set,
+  that route is closed.
 
 ## 2. Mental Model
 
@@ -181,8 +183,8 @@ a URL the operator names; it downloads nothing.
 
 **State is per workspace and in process.** The supervisor keeps one
 `MemoryHarness` per `ws:<name>` session id, each with its own directory under
-`<workdir>/workspaces/<name>` (`shatterling/purslane/server.py:1345-1455`).
-Session opens must use a `ws:` id (`server.py:763-820`). The live window lives
+`<workdir>/workspaces/<name>` (`shatterling/purslane/server.py:1391-1501`).
+Session opens must use a `ws:` id (`server.py:809-866`). The live window lives
 in the harness object; `mirror_files` writes it to `context.md` and
 `context.jsonl` after every turn, and nothing in the package reads either file
 back (Recorded searches), so a restart starts every workspace empty beside its
@@ -191,7 +193,7 @@ old archive.
 **Chats are slots, not partitions.** A workspace holds many chats, and the
 source states the intent: *"The harness keeps one shared memory per project;
 chats partition who *sees* what (turns, activity, approvals, drafts) without
-splitting the memory"* (`server.py:105-108`). The partition is in the UI.
+splitting the memory"* (`server.py:109-110`). The partition is in the UI.
 `serialize_messages` sends every live block to the model with no slot filter
 (`harness.py:657-667`), so a chat's transient small talk is in another chat's
 prompt until phase 1 removes it.
@@ -225,9 +227,10 @@ in `shatterling/engine/tagging.py`; `classify_new` and
 **Archive** — `_drop`, `_archive`, `recall`, `reinject`
 (`harness.py:598-655`).
 
-**Server** — `Supervisor.harness_for` (`shatterling/purslane/server.py:1345-1455`),
-the session-open handler (`:763-820`), the archive read (`:725-738`), the tool
-surface `_clm_tools_post` (`:1040-1130`), and the CORS headers (`:264-270`).
+**Server** — `Supervisor.harness_for` (`shatterling/purslane/server.py:1391-1501`),
+the session-open handler (`:809-866`), the archive read (`:771-784`), the tool
+surface `_clm_tools_post` (`:1087-1176`), and the CORS and key checks
+(`:267-306`) over `SecurityConfig` in `shatterling/purslane/security.py`.
 MCP tools `clm_recall` and `clm_reinject` in `shatterling/purslane/mcp.py`.
 
 **Tools** — `ToolManager.execute` (`shatterling/tools/manager.py:465-511`) and
@@ -323,7 +326,7 @@ Three front doors onto one harness: the CLI chat, the
 include `clm_chat`, `clm_recall`, `clm_reinject`, `clm_set_forget`,
 `clm_tool_call` and `clm_sandbox_exec`. `/v1/chat/completions` is a plain
 passthrough to the backend with no memory, and a client still sending the old
-session header gets a 410 pointing at the turns verb (`server.py:1285-1288`).
+session header gets a 410 pointing at the turns verb (`server.py:1331-1334`).
 
 The agent inside the harness is the chat model with an optional tool loop: web
 search and fetch, file read, write and list, `run_command` and `run_python`. Tool
@@ -336,32 +339,49 @@ which mutating tools run inside the sandbox without asking
 
 ### The server and the browser
 
-The proxy sends `Access-Control-Allow-Origin: *`, allows `GET`, `POST`,
-`DELETE` and `OPTIONS` with `Content-Type` and `Authorization` headers, and
-answers every preflight (`server.py:264-270`, `:432-435`). No handler checks an
-inbound credential: the `Authorization` header is relayed to the backend rather
-than verified (`server.py:307-319`). The default bind is `127.0.0.1`.
+Cross-origin reads are refused by default. `_cors` sends
+`Access-Control-Allow-Origin` only for an origin listed in `--cors-origins` or
+`CLM_MEM_CORS_ORIGINS`, and the list is empty unless set (`server.py:267-284`,
+`shatterling/purslane/security.py:133-149`). A bearer key is opt-in: with
+`--api-key` or `CLM_MEM_API_KEY` set, every route except health, version and the
+studio's static files needs `Authorization: Bearer <key>`, compared in constant
+time (`server.py:286-306`, `security.py:103-129`). With no key, which is the
+default on loopback, every request passes. The default bind is `127.0.0.1`.
 
-Three properties then compose:
+Refusing the read does not refuse the write. A browser sends a cross-site POST
+with a `text/plain` body and no custom header without a preflight, and the
+server parses every body as JSON whatever its `Content-Type`
+(`server.py:322-324`, `:679-684`). Three properties then compose:
 
 1. A session can be opened with `tools_enabled`, `sandbox_mode` and
    `approval_mode` as options, because all three are in `OPEN_KNOBS`
-   (`server.py:62-90`).
+   (`server.py:64-92`).
 2. `POST …/sandbox/exec` builds a `run_command` call with `origin="user"`, and
    `execute` skips the approval broker for user-origin calls
-   (`server.py:1095-1118`, `shatterling/tools/manager.py:488-491`).
+   (`server.py:1141-1164`, `shatterling/tools/manager.py:488-491`).
 3. The default `jail` sandbox is, in its own docstring, *"NOT a security
    boundary against a hostile script (no network or filesystem isolation)"*
    (`shatterling/tools/sandbox.py:8-13`).
 
-So while `clm-mem serve` runs, a page in the operator's browser can reach
-command execution on the host as the operator — and the MCP endpoint's
-`clm_sandbox_exec` reaches the same handler — unless the browser's
-local-network protections block requests to localhost. It can also read every
-workspace's archive through the archive route, and the archive holds what the
-classifier was told to keep long-term, credentials included. I traced this from
-the code and did not exercise it. The project's own
-`test_serve_sandbox_exec_files_write_read` drives the exec route over HTTP.
+So while `clm-mem serve` runs without a key, a page in the operator's browser
+can open a workspace and run a command on the host as the operator, in two
+blind POSTs whose responses it cannot read, unless the browser's local-network
+protections block requests to localhost. The MCP endpoint's `clm_sandbox_exec`
+reaches the same handler. Nothing reads the `Host` header (Recorded searches),
+so a page that rebinds its own hostname to `127.0.0.1` is same-origin and can
+also read every workspace's archive, which holds what the classifier was told to
+keep long-term, credentials included. With a key set, both routes are closed: a
+browser cannot attach `Authorization` without a preflight, and the preflight
+gets no allow header. I traced this from the code and did not exercise it.
+
+Two smaller edges. The studio's JavaScript sends no `Authorization` header
+(Recorded searches), so with a key set its own API calls are refused, while
+`do_GET` serves its shell before the check on the comment's assumption that the
+script authenticates (`server.py:535-540`). And `start_supervisor` reads the
+environment only when neither `api_key` nor `cors_origins` is passed
+(`server.py:1735-1744`), so `--cors-origins` on the command line with the key in
+`CLM_MEM_API_KEY` starts with auth off; the startup banner prints
+`api auth : disabled`.
 
 ### Scope
 
@@ -399,9 +419,10 @@ No capability mark is earned.
 
 ## 10. Tests, Evals, and Benchmarks
 
-119 pytest functions in seven files cover tag splitting, the three eviction
+154 pytest functions in eight files cover tag splitting, the three eviction
 phases, the decision-server backstop, the forgetting strategies, the server
-routes, the tool loop and the web studio's layout. They run against stub and mock
+routes, the CORS policy and the API key, the tool loop and the web studio's
+layout. They run against stub and mock
 backends, so they need no GPU and no model. A GitHub Actions workflow runs them
 on push and pull request. Its matrix lists `python-version: [3.9, 3.10, 3.11]`
 unquoted, which YAML reads as 3.9, 3.1 and 3.11.
@@ -418,7 +439,9 @@ What the suite does not reach:
   asserts that `reinject` returns true for the first recall hit
   (`tests/test_harness.py:107-120`), not which content came back, and every test
   uses a fresh directory.
-- **Cross-origin requests** to the server.
+- **A cross-site POST to a server with no key.** `tests/test_security.py`
+  asserts the allow header and the key over HTTP, not what a request the browser
+  sends without a preflight can do (§9).
 
 The paper cited in the README reports its results on BrowseComp-Plus,
 EdgeBench and a multi-repository agent-swarm task with a model that edits its
@@ -459,10 +482,12 @@ process, their ids must too: a UUID, or a counter persisted beside the archive.
 a change is an update; compare a new fact against the live, unsuperseded holder
 of each slot.
 
-**Don't answer every origin on a localhost server that executes commands.** A
-wildcard CORS header plus an unauthenticated exec route is reachable from any
-page the operator visits. Check the `Origin`, require a token, and keep
-`tools_enabled` out of what a client can set at open time.
+**Don't treat a CORS policy as a write guard.** Withholding the allow header
+stops a page reading the response, not sending a `text/plain` POST that the
+server then parses as JSON. On a localhost server that executes commands,
+require a token by default, refuse a body whose `Content-Type` is not
+`application/json`, check `Host` and `Origin`, and keep `tools_enabled` out of
+what a client can set at open time.
 
 **Don't tell the classifier to keep credentials.** A memory that is shared across
 chats, mirrored to disk and never purged is the wrong place for a secret.
@@ -477,8 +502,8 @@ study and the eviction engine is small enough to read in an evening.
 It does not suit anyone who needs memory to be correct across restarts, shared
 between people, or held apart between conversations: the live window does not
 survive a restart, chats inside a workspace share it, and archive identity is
-unreliable once a directory is reused. Run it with tools off, or behind an
-origin check, before it is reachable from a browser.
+unreliable once a directory is reused. Set an API key, or keep tools off,
+whenever a browser runs on the same machine.
 
 ## 12. Open Questions
 
@@ -497,8 +522,8 @@ origin check, before it is reachable from a browser.
 **Engine** — `shatterling/engine/blocks.py`, `harness.py`, `tagging.py`,
 `config.py`, `llm.py`, `tokens.py`.
 
-**Server** — `shatterling/purslane/server.py`, `routes.py`, `mcp.py`,
-`processes.py`, `mock_backends.py`.
+**Server** — `shatterling/purslane/server.py`, `security.py`, `routes.py`,
+`mcp.py`, `processes.py`, `mock_backends.py`.
 
 **Tools** — `shatterling/tools/manager.py`, `sandbox.py`, `spec.py`, `web.py`.
 
@@ -506,7 +531,8 @@ origin check, before it is reachable from a browser.
 `shatterling/campion/app.js`.
 
 **Tests** — `tests/test_harness.py`, `test_forgetting.py`, `test_server.py`,
-`test_tools.py`, `test_web.py`, `test_backend_api_key.py`, `test_ui_layout.py`;
+`test_tools.py`, `test_web.py`, `test_backend_api_key.py`, `test_ui_layout.py`,
+`test_security.py`;
 `.github/workflows/test_and_lint.yml`.
 
 **Design notes** — `docs/refactor-plan.md`, `docs/library-migration.md`.
@@ -524,13 +550,22 @@ Run from the repository root at the pinned commit with `/usr/bin/git grep`.
   `git grep -n -E 'recall|reinject' -- shatterling/tools` returns nothing; the
   same pattern over `shatterling/purslane/mcp.py` returns the MCP tools at `:220`
   and `:235`.
-- **No inbound credential check.**
-  `git grep -n -i 'headers.get(.authorization' -- shatterling/purslane/server.py`
-  returns `:319`, inside `_auth_header`, which relays the header to the backend,
-  and `:482`, which copies it onto the MCP layer's own HTTP client.
+- **The key is the only inbound check, and it is opt-in.**
+  `git grep -n -E 'check_auth|_auth_check' -- shatterling` returns the
+  definition at `security.py:103`, `_auth_check` at `server.py:286` and its
+  calls at `:539`, `:610` and `:645`; `is_auth_enabled` at `security.py:100-101`
+  is false when no key is set.
+- **Nothing reads `Content-Type` or `Host` on a request.**
+  `git grep -n -E 'self\.headers\.get\(.(Content-Type|Host|Origin)' -- shatterling/purslane/server.py`
+  returns only the `Origin` read in `_cors` at `:274`.
+- **The studio sends no key.**
+  `git grep -n -i -E 'authorization|bearer' -- shatterling/campion` returns
+  nothing.
+- **No test sends a `text/plain` body.**
+  `git grep -n -i 'text/plain' -- tests` returns nothing.
 - **No lock around a turn.** `git grep -n -w lock -- shatterling/purslane/server.py`
-  returns only `self.lock` uses inside `Supervisor` session bookkeeping
-  (`:500`, `:651`, `:804`, `:1325`, `:1371`, `:1423`, `:1453`, `:1457`, `:1546`)
+  returns only `Supervisor.lock` uses for session bookkeeping
+  (`:542`, `:697`, `:850`, `:1371`, `:1417`, `:1469`, `:1499`, `:1503`, `:1592`)
   and none around `h.step`.
 - **No test returns to an earlier slot value.**
   `git grep -n -i -E 'nova-1.*nova-2.*nova-1|revert' -- tests` returns nothing.
@@ -539,5 +574,7 @@ Run from the repository root at the pinned commit with `/usr/bin/git grep`.
   line naming ContextBench and a section comment at `harness.py:621`.
 
 ## History
+
+**2026-11-09** — [`26f9b14096f9b59f33ea7d4f1c657c2cbb8f70b8`](https://github.com/GentianLine/clm-mem/commit/26f9b14096f9b59f33ea7d4f1c657c2cbb8f70b8). One commit past `433bce1`, touching only the server, CLI, SDK and README. Cross-origin reads are refused unless an origin is listed, and an opt-in bearer key guards every API route. With no key, the default on loopback, a cross-site `text/plain` POST can still open a workspace with tools on and run `sandbox/exec`, because the server parses any body as JSON; with a key, the browser route is closed ([§9](#the-server-and-the-browser)). The engine and tools are unchanged, so the reinject and supersession findings stand, and no mark moved. Re-screened with the same findings; recorded searches re-run and four added; size, activity and tests re-measured. I installed and ran nothing; the 35 new tests were read, not run.
 
 **2026-11-09** — [`433bce18f67060c657be274d4ffdfb49c9bb2b60`](https://github.com/GentianLine/clm-mem/commit/433bce18f67060c657be274d4ffdfb49c9bb2b60). First reading, from a full clone of `main`. Screened first: no auto-run or build-time execution; `pyproject.toml` inside the seven-day cooldown with no lockfile beside it, and `AGENTS.md` read as data. I installed and ran nothing; the suite was read, not run. The cited paper, [arXiv:2609.37725](https://arxiv.org/abs/2609.37725), was checked to resolve to *Context Language Models* by Shao et al. No capability mark is earned (§9).
