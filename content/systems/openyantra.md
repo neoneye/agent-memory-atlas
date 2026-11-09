@@ -7,12 +7,12 @@ page_kind: system
 source_name: "revanthlevaka/OpenYantra"
 source_url: https://github.com/revanthlevaka/OpenYantra
 archive_name: "revanthlevaka--OpenYantra"
-revision: 5ab49899bebb123bc973d139c5d0f3656a69f66a
-revision_url: https://github.com/revanthlevaka/OpenYantra/commit/5ab49899bebb123bc973d139c5d0f3656a69f66a
-analyzed_at: 2026-11-08
+revision: 5f7b72466f04079e2b9a4dbeb61fe262bc1f5fad
+revision_url: https://github.com/revanthlevaka/OpenYantra/commit/5f7b72466f04079e2b9a4dbeb61fe262bc1f5fad
+analyzed_at: 2026-11-09
 licence: "MIT in LICENSE, pyproject.toml and GitHub's detection; SPEC_LICENSE dedicates the specification, table schemas, sheet templates and interchange formats to the public domain under CC0 1.0"
 size: "11,449 lines of Python outside tests: 11,129 in openyantra/ (core.py 2,830, yantra_sqlite.py 1,003, yantra_ui.py 790), 267 in a demo-GIF script and 53 in examples/; 3,275 lines of HTML and JavaScript in UI/v4; 785 lines of installer shell and PowerShell"
-activity: "77 commits, 20 March – 8 November 2026: 60 by Revanth Levaka under three addresses, eight of them CodeQL autofix suggestions, 13 authored as Claude, 4 by dependabot; 49 of them on 7 November and 13 on 8 November; the repository was created on 15 March 2026 and its first commit is already v2.12"
+activity: "81 commits, 20 March – 9 November 2026: 64 by Revanth Levaka under three addresses, eight of them CodeQL autofix suggestions, 13 authored as Claude, 4 by dependabot; 49 of them on 7 November, 13 on 8 November and 4 on 9 November; the repository was created on 15 March 2026 and its first commit is already v2.12"
 tests: "91 pytest functions in 19 files, 2,327 lines with conftest.py, run by ci.yml on Ubuntu with Python 3.9–3.12 and on macOS and Windows with 3.11; none run for this reading"
 capabilities: "audit_log, human_review, negative_eval"
 capability_evidence:
@@ -886,6 +886,8 @@ Run from the repository root at the pinned commit with `/usr/bin/git grep`.
   returns nothing.
 
 ## History
+
+**2026-11-09** — [`5f7b72466f04079e2b9a4dbeb61fe262bc1f5fad`](https://github.com/revanthlevaka/OpenYantra/commit/5f7b72466f04079e2b9a4dbeb61fe262bc1f5fad). Four commits past `5ab4989`, with an identical tree. Pull request [28](https://github.com/revanthlevaka/OpenYantra/pull/28) replaced both file locks with a re-entrant per-path lock and filtered superseded beliefs on every context and search path. It was merged at 07:16 UTC and reverted by pull request [29](https://github.com/revanthlevaka/OpenYantra/pull/29) at 07:24, with CI green on both and no reason given. A refused write blocks on POSIX, and only the session context's `beliefs` list honours a supersession ([section 9](#9-reliability-safety-and-trust), [section 7](#7-write-mechanics)). Marks unchanged. I re-ran the recorded searches at the new head with the same results, screened again with the same findings, and installed and ran nothing.
 
 **2026-11-08** — [`5ab49899bebb123bc973d139c5d0f3656a69f66a`](https://github.com/revanthlevaka/OpenYantra/commit/5ab49899bebb123bc973d139c5d0f3656a69f66a). Twelve commits past `27aa1e3`; the last adds a demo GIF. `portalocker` is declared, a sheet change and its ledger row land in one save, and a workbook lock spans `_process`, which closes replay's second application while the lock is taken. The lock is taken again inside `_log_audit`, so on Linux and macOS a rejected or conflicting write blocks forever ([section 9](#9-reliability-safety-and-trust)). Empty decisions are no longer skipped, and Nidra supersedes a belief a revert names, by substring; only the session context's `beliefs` list honours the mark ([section 7](#7-write-mechanics)). The JSON store matches keys after redaction and refuses injections. Three marks hold, and `negative_eval` gains a Done-task case. I screened again and got the same findings; I installed and ran nothing from the tree.
 
