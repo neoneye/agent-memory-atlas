@@ -293,7 +293,7 @@ turns where it did, so the inline contract saves a call every turn it is kept.
 **Reverting a value is swallowed as a duplicate.** `_supersede_pass` builds its
 candidate list from every older non-pinned block, *including* ones already
 demoted, as its comment says: *"a restatement of a fact that already lost its
-long tag is still a duplicate write"* (`harness.py:381-383`). Take three
+long tag is still a duplicate write"* (`harness.py:379-385`). Take three
 long-term writes in order: `codename Nova-1`, then `codename Nova-2`, then
 `codename Nova-1` again. The second supersedes the first. The third is compared
 against the first before the second, all shared slots agree, and it is dropped as
