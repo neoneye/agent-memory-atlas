@@ -746,6 +746,7 @@ href="../systems/billion-context/"><code>billion-context</code></a></li>
 <li><a
 href="../systems/noosphere-lite-mcp/"><code>noosphere-lite-mcp</code></a></li>
 <li><a href="../systems/clm-mem/"><code>clm-mem</code></a></li>
+<li><a href="../systems/severian/"><code>severian</code></a></li>
 </ul>
 <h2 id="repos-inspected">Repos Inspected</h2>
 <ul>
@@ -7603,6 +7604,17 @@ No auto-run or build-time execution surface; <code>pyproject.toml</code>
 inside the seven-day cooldown, with no lockfile beside it;
 <code>AGENTS.md</code> and the README read as data. Nothing was
 installed, built or run, and the 119 test functions were not run. MIT,
+with no added terms.</li>
+<li><a
+href="https://github.com/Sahil-SS9/Severian">Sahil-SS9/Severian</a> at
+<a
+href="https://github.com/Sahil-SS9/Severian/commit/bdb14b04ffa014148d4665f239688ca0856561da"><code class="commit-id" title="bdb14b04ffa014148d4665f239688ca0856561da">bdb14b04…</code></a>
+— read only, from a full clone of <code>main</code> on 9 November 2026.
+No auto-run surface and nothing inside the seven-day cooldown;
+build-time execution in <code>native/build.rs</code> and
+<code>tests/conftest.py</code>, neither triggered;
+<code>CONTRIBUTING.md</code> and the README read as data. Nothing was
+installed, built or run, and the 1,203 test functions were not run. MIT,
 with no added terms.</li>
 </ul>
 <h2 id="what-the-licences-actually-say">What the licences actually
@@ -15911,45 +15923,43 @@ no report: it is a code index of one repository's git history, written
 only by its ingester, and nothing a model concludes is kept for a later
 question.</strong> AGPL-3.0 with no rider, beside a commercial licence
 and a CLA, read at <a
-href="https://github.com/DevLoops-ai/unified-brain/commit/16e7efb4648370b4a9dbfe935a159cffb05fd3c2"><code class="commit-id" title="16e7efb4648370b4a9dbfe935a159cffb05fd3c2">16e7efb4…</code></a>:
-six commits on 24 and 25 October 2026, 13,959 lines of Python.
-<code>next_claude.py</code> walks the history with tree-sitter and
-writes every version of every symbol, call and reference edges, an FTS5
+href="https://github.com/DevLoops-ai/unified-brain/commit/75461feca2ac69be089430b34cfcb4ed7b7bf4f8"><code class="commit-id" title="75461feca2ac69be089430b34cfcb4ed7b7bf4f8">75461fec…</code></a>:
+25 commits from 24 October to 8 November 2026, 14,366 lines of Python,
+of which only <code>codebase_qa_service.py</code> changed after the
+first examination at <code>16e7efb</code>. The README calls it
+<em>"Persistent memory for System One coding agents"</em>; the code is
+the same shape. <code>next_claude.py</code> and <code>ingester.py</code>
+walk the history with tree-sitter and write every version of every
+symbol (the code calls them skills), call and reference edges, an FTS5
 index and code vectors to <code>&lt;repo&gt;/.unified-brain.db</code>,
-with no model call and an empty description
-(<code>next_claude.py:225</code>). Correction is re-ingestion. The MCP
-server's one tool, <code>retrieve</code>
-(<code>unified_brain_mcp.py:49</code>), only reads, and its instructions
-tell the agent not to open files to verify. That is the line drawn for
-Fullerenes and kivgraph in this list. "Each answer is answered
-independently" holds literally. The page sends
-<code>AskRequest.history</code>
-(<code>codebase_qa_service.py:1971</code>) and the server never reads
-it; the per-question <code>JevMemory</code> lives in process. The one
-model-written state that persists is the timeline report: judge
-verdicts, findings and evidence under <code>report:&lt;id&gt;</code>
-keys that <em>"never expire"</em> (<code>:2619</code>) and leave only
-through the delete route (<code>:4582</code>). Every read of them is in
-the report endpoints, so no later question sees one. Absorbing new
-commits automatically is unbuilt, as the README says. Screened before
-reading: no auto-run or build-time surface, and
-<code>requirements.txt</code> inside the cooldown with four
-<code>&gt;=</code> ranges; nothing was installed or run. No evaluation
-result is committed. <code>benchmarks/open62541.md</code> is a
-five-question protocol with a blank grading sheet and
-<code>benchmarks/xz.md</code> is empty, though the README says the
-answers are there. The "18 times cheaper" figure has no derivation in
-the tree; the README's one comparison, 9% of a $20 plan against 2% plus
-<span class="math inline">$0.12, works out near 3.5 times. "Does not
-hallucinate" has no check behind it, and the answer writer samples at
-`temperature=0.2` (`:2011`). Searches at the pin: `git grep -n -E
-'req\.history' -- '*.py'` (nothing), and `git grep -n -E
-'report:|reports_index' -- '*.py' ':!templates.py'` (service lines 2565
-to 4974 only, after the ask path and before `/api/retrieve` at 5102).
-Also `git ls-files | grep -i -E
-'test|result|\.(json|csv|jsonl)$</span>'<code>(nothing);</code>git grep
--n -E '18 times|1/18'<code>(README line 5 only);</code>git grep -n -i -E
-'watchdog|inotify|fsevents' -- '*.py'` (nothing).</li>
+with no model call. Correction is re-ingestion. The MCP server's one
+tool, <code>retrieve</code> (<code>unified_brain_mcp.py:49</code>), only
+reads. <code>AskRequest.history</code>
+(<code>codebase_qa_service.py:2373</code>) is never read. The one
+model-written state that persists is the timeline report — judge
+verdicts, findings, evidence and a ten-entry verdict history per probe
+under <code>report:&lt;id&gt;</code> keys — and every read of it is in
+the report endpoints, so no later question sees one. That is the line
+drawn for Fullerenes and kivgraph in this list. Evaluation results are
+committed: <code>evals/results/</code> holds ten write-ups of the
+nine-question, 74-point xz set, and <code>evals/runs/</code> holds the
+Opus 5.5 and Fable 5.1 agents' per-question answers and a usage export.
+The README's cheap-profile figures recompute from
+<code>qa-xz-2026-11-06-pplx.md</code>: the nine per-question scores sum
+to 68.75, and $17.55 for the Fable agent against $0.253 is 69 times. The
+grader is Claude Fable 5.1, the same model as the Fable contestant, as
+the file states; each profile is one run, and the README says
+replicability has not been measured. Screened at this pin: no auto-run
+or build-time surface, one floating <code>requirements.txt</code>,
+nothing inside the cooldown; nothing was installed or run. Searches at
+the pin: <code>git grep -n -E 'req\.history|\.history' -- '*.py'</code>
+(only <code>templates.py:1809</code>, on the report page),
+<code>git grep -n -E 'report:|reports_index' -- '*.py' ':!templates.py'</code>
+(service lines 2972 to 5381 only, after the ask path at
+<code>:2544-2790</code> and before <code>/api/retrieve</code> at
+<code>:5509</code>), and
+<code>git grep -n -i -E 'watchdog|inotify|fsevents' -- '*.py'</code>
+(nothing).</li>
 <li><strong>Can LLMs Improve Their Own Harness? A Controlled Study on
 ARC-AGI-3 (<a
 href="https://arxiv.org/abs/2610.30499">arXiv:2610.30499</a>) was

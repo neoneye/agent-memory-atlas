@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 792 reports.**
+**This page covers all 793 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7261,3 +7261,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 8,225 lines of Python, 1,769 of them the engine; 55 commits under five author identities between 12 October and 7 November 2026; 119 pytest functions against mock backends, run by CI, not run here. No capability mark: the archive records evictions and not edits, the superseded label demotes without filtering, and the negative cases are about the assembled window.
 - Study when: you want a self-managed context window on a local open model with a predictable budget, or a clean separation of freshness from value when several chats touch one fact.
 - Do not copy when: memory must survive a restart, stay apart between conversations, or be reachable from a browser.
+
+### [`severian`](../systems/severian/)
+- Best idea: **every correction is a new record.** Revision supersedes the old head and re-derives in the same transaction, rollback restores a historical head, erasure supersedes with an `:erased` tombstone, and truth resolution closes a replaced memory with `valid_until` from the newer message's own time — so the `now`, `history` and `as_of` views read the same rows differently and nothing is ever deleted.
+- Biggest risk: **erasure removes a value from reads and keeps its text.** `erase_observation` updates only `superseded_by_id` on the original, so `content` and `raw_content` stay in the SQLite file, the PostgreSQL row and every export.
+- Second risk: the stdio MCP entry point binds no principal, so the model names all five scope dimensions, tenant included, on every call; and consolidation, curation and retention are `dream` jobs nothing in the product enqueues.
+- Most reusable component: `ProjectionCoordinator.apply` in `src/severian/application/projections.py:95-140`, which converges each touched id to its canonical state instead of replaying events in order.
+- Maturity impression: MIT; 23,543 lines of Python under `src/`, 25,998 of tests; 291 commits by one author between 31 July and 25 October 2026; 1,203 test functions run by CI with `mypy --strict` and pip-audit, not run here. Four marks: `scope_enforced`, `audit_log`, `bitemporal` and `negative_eval`. The OmniMemEval aggregates recompute from the committed JSON, from a run 35 commits before this pin.
+- Study when: you want correctable memory whose every derived row cites its evidence, or projections that a late event cannot make stale.
+- Do not copy when: a deletion request has to remove the text, or the memory server is reachable by a model that must not choose its own tenant.

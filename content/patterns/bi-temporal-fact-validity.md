@@ -292,6 +292,15 @@ thing to settle when a system claims one:
   attested_from)`. But it is consumed as a *bound on the world axis*, never as an
   axis of its own: there is no as-said parameter anywhere. A third column doing
   real work, and still two clocks.
+- **Said, and it is the query axis.** [Severian](../../systems/severian/) keeps
+  `created_at`, a message time read from the source's own `timestamp` key, and
+  `occurred_at`/`occurred_until` found by rules over the text. Its `as_of`
+  search keeps a memory only if its source message was written by then, and a
+  truth-resolution close is dated by the *newer message's* time, so a closure
+  after `as_of` counts as not yet made (`src/severian/application/retrieval.py:353-363`,
+  `src/severian/application/service.py:656-697`). The event period only boosts
+  ranking. Both switches are off by default. Here the said-clock passes Helm's
+  diagnostic and the world-clock is the one nothing filters on.
 
 The diagnostic is Helm's, applied once more: **can a writer set the third time
 independently of the other two, and does any read path query it?** A third clock

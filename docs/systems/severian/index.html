@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local memory engine over SQLite
+or PostgreSQL that keeps raw observations, derives cited memories, and
+corrects by revision, erasure tombstone and dated closure.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Severian — Agent Memory Atlas">
+    <meta property="og:description" content="A local memory engine over
+SQLite or PostgreSQL that keeps raw observations, derives cited
+memories, and corrects by revision, erasure tombstone and dated
+closure.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Severian — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local memory engine over
+SQLite or PostgreSQL that keeps raw observations, derives cited
+memories, and corrects by revision, erasure tombstone and dated
+closure.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Severian — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Severian",
+      "description": "A local memory engine over SQLite or PostgreSQL that keeps raw observations, derives cited memories, and corrects by revision, erasure tombstone and dated closure.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Correctable local memory with a five-part
+scope</p>
+          <h1>Severian</h1>
+          <p class="document-deck">A local memory engine over SQLite or
+PostgreSQL that keeps raw observations, derives cited memories, and
+corrects by revision, erasure tombstone and dated closure.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Sahil-SS9/Severian">
+              <span>Source</span>
+              <strong>Sahil-SS9/Severian</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Sahil-SS9/Severian/commit/bdb14b04ffa014148d4665f239688ca0856561da" title="bdb14b04ffa014148d4665f239688ca0856561da">
+              <span>Analyzed revision</span>
+              <code>bdb14b04…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-09</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Sahil-SS9--Severian" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Sahil-SS9--Severian</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>23,543
+lines of Python in 84 files under src/severian/, 25,998 lines of tests
+in 127 files, a 249-line optional Rust module, and a small web
+dashboard</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>291
+commits, 31 July – 25 October 2026, one author under five
+identities</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,203
+pytest functions in 125 files; ci.yml runs ruff, mypy --strict,
+pip-audit, pytest and a benchmark manifest check; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Severian is <strong>a local memory engine for agents</strong>. Every
+message is stored as an append-only, hashed observation. Severian
+derives short memories from it, each citing the observation it came
+from, and hands the answering model a cited context block within a
+character budget. It runs on SQLite by default or on PostgreSQL with
+pgvector, makes no network call unless a collection opts into a cloud
+deriver, and serves Hermes Agent, MCP clients, an HTTP API, a Python SDK
+and a CLI from one engine. It is MIT licensed.</p>
+<p>What is notable is the correction model:</p>
+<ul>
+<li><strong>Nothing is deleted.</strong> The SQLite backend imports no
+<code>delete</code>, and neither backend issues a <code>DELETE</code>
+against the canonical table.</li>
+<li><strong>Every correction keeps history.</strong> A revised
+observation supersedes its old head, the memories derived from that head
+are superseded, and graph relations lose it as a source. The revision is
+queued for derivation in the same transaction, so a corrected fact
+replaces the old one instead of vanishing.</li>
+<li><strong>Erasure is a tombstone.</strong> An erased memory is
+superseded by an <code>:erased</code> record, which is never itself an
+active head.</li>
+<li><strong>A newer fact closes an older one.</strong> With truth
+resolution on, the older memory gets <code>valid_until</code> and
+<code>replaced_by_id</code>, leaves the <code>now</code> view, and stays
+available to <code>history</code> and <code>as_of</code> reads.</li>
+</ul>
+<p>Four marks are earned: <code>scope_enforced</code>,
+<code>audit_log</code>, <code>bitemporal</code> and
+<code>negative_eval</code>.</p>
+<p>What is weak:</p>
+<ul>
+<li><strong>Erasure hides; it does not remove.</strong>
+<code>erase_observation</code> updates only the original's
+<code>superseded_by_id</code>, so the erased text stays in the canonical
+store and in every export.</li>
+<li><strong>On stdio MCP the model chooses the scope.</strong> The
+shipped entry point binds no principal, so every tool call names its own
+tenant, profile, collection, agent and session.</li>
+<li><strong>The self-maintenance the README advertises is
+unwired.</strong> Consolidation, curation and retention run only as
+<code>dream</code> jobs, and nothing in the product enqueues one; the
+tests and benchmark scripts do.</li>
+</ul>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a cited derivation from immutable
+evidence</strong>. The observation is what was said; a memory is one
+reading of it, carrying the model id, the prompt version and the source
+ids that produced it. A belief is whatever active memory heads the scope
+holds, and it can be traced to the observation that caused it.</p>
+<h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
+<p><code>ingest_observation</code> normalises the text, hashes the raw
+bytes and the content, and writes the observation and a
+<code>derive</code> job in one transaction. Identity is the content
+digest plus the source's <code>uri</code>, <code>source_id</code> or
+<code>idempotency_key</code> when one exists, so the same evidence
+ingested twice is one observation
+(<code>src/severian/infrastructure/sqlite.py:342-361</code>). A worker
+leases the job and runs the derivation gateway under the collection's
+policy, with cloud derivation off unless the policy allows it. The
+default gateway copies the observation into one <code>fact</code> memory
+at confidence 0.5. A Qwen model or the opt-in
+<code>SEVERIAN_USER_FACTS</code> pass extracts short facts per turn.
+Entity extraction upserts entities and typed relations with the
+observation as their lineage. Projection then upserts active heads into
+the FTS5 and vector indexes.</p>
+<h3 id="how-a-belief-stops-being-one">How a belief stops being one</h3>
+<p>Five ways, none of which deletes a row:</p>
+<ul>
+<li><em>Revision</em> (<code>revise_observation</code>,
+<code>revise_memory</code>) writes a new head, points the old one at it,
+supersedes memories derived from the old observation, and retracts
+relations that lose their last source
+(<code>src/severian/application/service.py:276-300</code>).</li>
+<li><em>Rollback</em> restores a historical revision as the active
+head.</li>
+<li><em>Erasure</em> writes an <code>[erased]</code> memory whose own
+<code>superseded_by_id</code> is the reserved <code>:erased</code>, then
+supersedes the original by it. Erasing an observation erases every
+active memory derived from it (<code>service.py:304-418</code>).</li>
+<li><em>Closure</em> (<code>SEVERIAN_TRUTH_RESOLUTION</code>) sets
+<code>valid_until</code> on an older memory when a newer one replaces
+it. Rules decide, and a model is consulted for user facts. The close is
+conditional on the memory still being open and unsuperseded
+(<code>src/severian/application/truthresolution.py:426-480</code>).</li>
+<li><em>Consolidation</em> supersedes near-duplicates in favour of the
+newest. It is reachable only as a <code>dream</code> job (§3).</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — evidence is never rewritten; every correction is a new record that supersedes or closes an older one, and the projections hold active, unclosed heads only</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: evidence is never rewritten; every correction is a new record that supersedes or closes an older one, and the projections hold active, unclosed heads only
+flowchart TD
+    OBS[&quot;observation&lt;br/&gt;raw text kept and hashed,&lt;br/&gt;identity = content + source&quot;]
+    JOB[&quot;derive job&lt;br/&gt;queued in the same&lt;br/&gt;transaction, leased&quot;]
+    MEM[&quot;memory&lt;br/&gt;cites its observations,&lt;br/&gt;model, prompt, confidence&quot;]
+    IDX[&quot;FTS5 and vector index&lt;br/&gt;active heads only&quot;]
+    REV[&quot;revision&lt;br/&gt;new head, old superseded,&lt;br/&gt;derived memories superseded&quot;]
+    ERA[&quot;erasure&lt;br/&gt;head superseded by an&lt;br/&gt;erased tombstone&quot;]
+    CLO[&quot;closure&lt;br/&gt;valid_until and replaced_by&lt;br/&gt;set by a newer fact&quot;]
+    NOW[&quot;now view&lt;br/&gt;hides superseded and closed&quot;]
+    HIST[&quot;history and as_of views&lt;br/&gt;show closed, dated&quot;]
+    OBS --&gt; JOB
+    JOB --&gt; MEM
+    MEM --&gt; IDX
+    IDX --&gt; NOW
+    IDX --&gt; HIST
+    MEM -. correction .-&gt; REV
+    MEM -. forget .-&gt; ERA
+    MEM -. newer fact .-&gt; CLO
+    REV -- &quot;re-derived&quot; --&gt; JOB
+    ERA -- &quot;removed from&quot; --&gt; IDX
+    CLO -- &quot;filtered in&quot; --&gt; NOW</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A hexagonal Python package. <code>domain/</code> holds the models.
+<code>application/</code> holds the services: ingestion, derivation,
+retrieval, truth resolution, event time, user facts, anticipation,
+dreaming, the worker and the projection coordinator.
+<code>infrastructure/</code> holds the SQLite and PostgreSQL
+repositories, the FTS5 index, the vector indexes, the embedding
+backends, the snapshot exporter, the rebuild tool and the integrity
+audit. Adapters for Hermes, MCP, HTTP, SDK and CLI sit on top of one
+composition root, <code>build_bundle</code>.</p>
+<p><strong>The canonical store is one table of typed JSON.</strong>
+<code>records</code> has an id, a <code>record_type</code>, the five
+scope columns, a content hash, an identity key, a status, lease columns
+and the payload. A partial unique index on
+<code>(record_type, scope…, identity_key)</code> makes ingestion
+idempotent per scope (<code>sqlite.py:52-80</code>). Observations,
+memories, entities, relations, jobs, outbox events, audit events and
+task notes are all rows of it.</p>
+<p><strong>The indexes are projections, and they can be
+rebuilt.</strong> Each write appends an outbox event in its own
+transaction; the projection coordinator claims events with a lease and
+converges each touched id to its current canonical state. An active head
+is upserted; anything superseded, erased or missing is removed from the
+index (<code>src/severian/application/projections.py:95-140</code>).
+<code>severian rebuild-vectors</code> rebuilds an index side by side.
+<code>severian audit</code> opens the store, the FTS index and the
+vector index read-only. It reports missing or orphaned index rows,
+memories citing gone sources, stuck or dead-lettered jobs, and broken
+replacement chains, and repairs only what it can fix without deleting
+(<code>src/severian/infrastructure/audit.py:1-17</code>).</p>
+<p><strong>Dreaming is a job kind with no producer.</strong>
+<code>ConsolidationService</code>, <code>CurationService</code> and
+<code>RetentionPolicyService</code> run when the worker drains a job of
+kind <code>dream</code> with a <code>mode</code>
+(<code>src/severian/application/worker.py:448-463</code>). Every
+<code>enqueue_job</code> call in <code>src/</code> and
+<code>scripts/</code> queues <code>derive</code> work or the extra kinds
+a saved turn adds. The only <code>dream</code> jobs in the tree are
+written by tests, and the scale lanes call the services directly. The
+README's <em>"Looks after itself"</em> describes code that a deployment
+does not run.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install severian</code> or the Hermes plugin; SQLite files
+under the Hermes data root by default. The canonical store and its WAL
+siblings are created mode 0600. PostgreSQL needs a DSN and the pgvector
+extension. Embeddings default to a deterministic hash;
+Qwen3-Embedding-0.6B runs locally or in a shared sidecar. An optional
+Rust module accelerates scoring. Behaviour is chosen by roughly twenty
+<code>SEVERIAN_*</code> environment switches. The README marks five as
+recommended, and the published benchmark ran with user facts, date
+stamps, truth resolution, the re-ranker and conflict notes on.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Ingest</strong> — <code>IngestionService</code> →
+<code>SQLiteRepository.add_observation_and_enqueue</code>
+(<code>src/severian/infrastructure/sqlite.py:364-444</code>).</p>
+<p><strong>Derive</strong> — <code>Worker</code>
+(<code>src/severian/application/worker.py</code>) →
+<code>DerivationService.derive_observation</code>
+(<code>src/severian/application/derivation.py:145</code>) →
+<code>add_memories_batch</code> / <code>publish_derivation</code>
+(<code>sqlite.py:712-944</code>) → truth resolution, event time and
+anticipation when switched on.</p>
+<p><strong>Search</strong> — <code>MemoryService.search</code>
+(<code>src/severian/application/service.py:520-654</code>) →
+<code>HybridRetrieval.search</code>
+(<code>src/severian/application/retrieval.py:154-312</code>) →
+<code>_apply_closures</code> / <code>_truth_view</code>
+(<code>service.py:656-727</code>) → <code>assemble_context</code>
+(<code>:780</code>).</p>
+<p><strong>Correction</strong> — <code>revise_observation</code>,
+<code>erase_memory</code>, <code>erase_observation</code>,
+<code>rollback_memory</code> (<code>service.py:276-460</code>);
+<code>revise_observation</code>, <code>supersede_memory</code>,
+<code>revise_memory</code>, <code>rollback_memory</code>,
+<code>close_memory</code> (<code>sqlite.py:598-1392</code>).</p>
+<p><strong>Truth resolution</strong> —
+<code>TruthResolver.resolve</code>, <code>_forward</code>,
+<code>_backward</code>
+(<code>src/severian/application/truthresolution.py:395-480</code>).</p>
+<p><strong>Maintenance</strong> —
+<code>ConsolidationService.consolidate</code>,
+<code>CurationService.curate</code>, <code>RetentionPolicyService</code>
+(<code>src/severian/application/dreaming.py</code>).</p>
+<p><strong>Adapters</strong> —
+<code>src/severian/integrations/hermes.py</code>,
+<code>src/severian/mcp/server.py</code> and <code>__main__.py</code>,
+<code>src/severian/api/app.py</code>,
+<code>src/severian/cli/app.py</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>An <code>Observation</code> carries the five-part <code>Scope</code>,
+the normalised <code>content</code> and its hash, the immutable
+<code>raw_content</code> and <code>raw_hash</code>, a
+<code>source</code> dictionary, attachment references with SHA-256
+digests, and <code>revision_of_id</code> / <code>superseded_by_id</code>
+(<code>src/severian/domain/models.py:114-150</code>).</p>
+<p>A <code>Memory</code> carries its scope, <code>kind</code>,
+<code>content</code>, <code>source_observation_ids</code> (required, at
+least one), <code>model_id</code>, <code>prompt_version</code>,
+<code>confidence</code>, the revision pair, <code>occurred_at</code> and
+<code>occurred_until</code>, <code>cues</code> and a
+<code>trigger</code> for instructions-for-later,
+<code>valid_until</code> and <code>replaced_by_id</code>, and a
+<code>usage_count</code> (<code>models.py:169-200</code>).
+<code>add_memory</code> rejects a source observation from another scope
+and dedups on
+<code>(kind, content, sources, model_id, prompt_version)</code>.</p>
+<p>A <code>Relation</code> carries subject, predicate, object,
+<code>valid_from</code>, <code>valid_to</code>, its source lineage and
+<code>retracted_at</code>. Three predicates — <code>works_at</code>,
+<code>located_in</code>, <code>based_in</code> — are single-valued, so a
+newer value ends the older relation (<code>models.py:21</code>,
+<code>:255-330</code>). Its <code>valid_to</code> is the wall clock when
+the newer relation arrives (<code>sqlite.py:1236-1262</code>), and the
+one producer of relations, <code>EntityExtractionService</code>
+(<code>src/severian/application/extraction.py:247</code>), passes no
+validity. So relation validity is record time.</p>
+<p><strong><code>TruthState</code> is computed, not stored.</strong>
+<code>current</code>, <code>historical</code>, <code>transition</code>
+and <code>concurrent</code> (<code>models.py:24-35</code>) are assigned
+to a ranked pool at read time, from the closure fields or from a text
+rule comparing results. No record carries a truth state, and no field
+holds candidate, verified or rejected.</p>
+<p><strong>Time is three things, kept apart.</strong>
+<code>created_at</code> is when Severian saved the record. Message time,
+read from the source's <code>timestamp</code> or a similar key, is when
+the user said it, and <code>as_of</code> filters on it.
+<code>occurred_at</code> and <code>occurred_until</code> are when the
+thing happened, found by rules over the text. For an imported history
+the first two differ by years, which is the case the benchmark harness
+ingests.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>HybridRetrieval.search</code> runs FTS5 BM25 and the vector
+index, each filtered on all five scope columns, plus an optional cue
+index. It fuses them by weighted reciprocal rank, with a floor that
+drops vector-only hits below <code>min_vector_score</code>, since a hash
+embedding always yields some positive score. It then adds session
+neighbours and graph links. With a query window it boosts memories whose
+event period overlaps
+(<code>src/severian/application/retrieval.py:154-375</code>). The
+service over-fetches, re-ranks with a cross-encoder when one is
+configured, demotes results that carry nothing, and applies the
+view:</p>
+<ul>
+<li><strong><code>now</code></strong> drops memories closed by a newer
+fact, unless the close came after <code>as_of</code>, and drops results
+the text rule judges replaced.</li>
+<li><strong><code>history</code></strong> keeps them, dated and labelled
+<code>historical</code>, with their predecessors listed.</li>
+<li><strong><code>changes</code></strong> keeps only memories that
+replaced something.</li>
+</ul>
+<p>A question that asks about the past switches <code>now</code> to
+<code>history</code> on its own (<code>service.py:619-622</code>).</p>
+<p><code>assemble_context</code> builds the cited block under a
+character budget. Hermes ships 8,000 characters; the benchmark write-up
+measures 16,000 as worth about 5 points on BEAM and LongMemEval.
+Conflict notes, on by default, add a line naming up to two disagreements
+among the returned memories. Only the user's own first-person statements
+count, and a denial is compared clause by clause
+(<code>src/severian/application/conflicts.py:1-12</code>).</p>
+<p><strong>Shared search widens one dimension.</strong>
+<code>search_shared</code> runs one exact-scope search for the caller's
+agent and for each agent the caller lists, then merges. The source
+states where the rule lives: <em>"the visibility rule lives at the call
+site, not in the store"</em> (<code>retrieval.py:457-519</code>). Over
+MCP the call site is the model, which supplies
+<code>agent_ids</code>.</p>
+<p>Failure modes:</p>
+<ul>
+<li><strong>Meta-memories compete with facts.</strong> Consolidation
+writes a <code>consolidated</code> memory per merged group, and curation
+writes a <code>curation_review</code> memory at confidence 1.0. Both are
+active heads, projected like any other, and no read filters on
+<code>kind</code>. Since nothing enqueues dreaming, this only happens
+where a caller runs it.</li>
+<li><strong>Event time only ranks.</strong> A question about last March
+boosts memories dated then and still returns the rest.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingest blocks only for the canonical write: the observation, its
+derive job, an outbox event and an audit row in one transaction.
+Derivation is asynchronous. A memory is searchable after the worker
+drains its job and projects it, or immediately when
+<code>search(..., derive=True)</code> derives pending observations
+inline, which the benchmark adapter uses. Jobs are leased, retried with
+backoff, and dead-lettered after their attempts; stale outbox claims are
+reaped back to pending.</p>
+<p><strong>An exact repeat of corrected or erased evidence is
+absorbed.</strong> The ingest identity is the content digest, plus a
+source identity when the source carries one. A verbatim re-ingest
+without a source id therefore matches the original observation even
+after it has been revised or erased.
+<code>add_observation_and_enqueue</code> then returns that superseded
+observation and its finished job, and nothing is derived
+(<code>sqlite.py:374-412</code>). A user who repeats a sentence after
+deleting it does not get it back. A changed word, or a source that
+carries a fresh message id, makes a new observation and a new memory, as
+<code>erase_memory</code>'s docstring says: <em>"erasure does not poison
+future ingestion"</em>. This is idempotency, not a rejection record, and
+it is the near-miss for <code>tombstone</code>.</p>
+<p>Truth resolution runs after each derivation. A newer user fact can
+close an older one by rule or by the configured model; a newer memory
+saved first can be closed backwards by rules only. Each closure is
+recorded on the memory itself and in an in-memory <code>Closure</code>
+list.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Default derivation makes no model call. User facts add one
+local-model call per turn in the background. The benchmark ran
+<code>gpt-4.1-mini</code> for that step. Search costs two index queries,
+one canonical read per candidate, and a re-rank when one is configured.
+Consolidation is pairwise over a scope's active memories, bounded by an
+LSH pre-filter.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><strong>Hermes</strong> is the primary host. The plugin is a memory
+provider with search, ingest, correct, forget, shared-search and
+task-note tools, and a prefetch that injects the context block before
+each turn. Scope comes from the plugin's configuration.</p>
+<p><strong>MCP</strong> exposes seven tools over stdio: ingest, search,
+get, correct, forget, task progress, shared search. Every call carries
+the full five-part scope as arguments
+(<code>src/severian/mcp/server.py:60-86</code>).
+<code>_resolve_mcp_scope</code> would pin tenant and profile to a bound
+principal, but <code>python -m severian.mcp</code> constructs the server
+without one, so the scope is whatever the model sends.</p>
+<p><strong>HTTP</strong> optionally resolves an API key to a principal
+and pins tenant and profile from it, rejecting a request that names
+others with 403 (<code>src/severian/api/app.py:57-72</code>). Without a
+resolver it runs in loopback development mode.</p>
+<p>Task notes are working state per task key, replaced in place with
+history kept, and never derived, projected or searched.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="scope">Scope</h3>
+<p>The boundary is in the storage layer. <code>_scope_predicates</code>
+applies all five dimensions to every canonical read,
+<code>_require_scope</code> refuses a blank one before any query,
+<code>_require_collection</code> refuses a collection owned by another
+tenant, and both indexes filter on all five columns. A cross-scope
+<code>get_observation</code> or <code>get_memory</code> raises
+<code>NotFoundError</code>, and <code>assemble_context</code> and
+<code>context_block</code> fail closed on a hit from another scope.</p>
+<p>The limit is who picks the scope. With an authenticated principal,
+tenant and profile are fixed and collection, agent and session are the
+client's choice, so the per-agent and per-session boundaries are
+parameters, not identities. Without a principal, the stdio MCP default,
+the model chooses all five.</p>
+<h3 id="erasure">Erasure</h3>
+<p><code>erase_observation</code> writes a tombstone observation,
+<code>[erased]</code>, as a revision of the original and supersedes the
+original by it. It erases each active memory derived from it, retracts
+relations, and rebuilds the projection. The original row keeps
+<code>content</code> and <code>raw_content</code>:
+<code>revise_observation</code> updates only
+<code>superseded_by_id</code> on it (<code>sqlite.py:598-648</code>). So
+"forget" removes the value from search, context and the indexes, as
+<code>test_erased_observation_leaves_no_trace_in_search</code> asserts,
+and leaves the text in the SQLite file, in a PostgreSQL row and in a
+<code>severian export</code> snapshot. The docstrings say history keeps
+the record <em>"for audit"</em>. A deployment that has to honour a
+deletion request needs a purge the tree does not provide.</p>
+<h3 id="audit">Audit</h3>
+<p>Each create, revision and rollback inserts an outbox event and an
+<code>audit</code> record in the write's own transaction, and the
+consolidation pass appends a <code>dreaming.merge</code> record per
+superseded duplicate. Nothing updates or deletes an audit row. The log
+names the action and the target id with empty metadata. The values are
+recoverable from the revision chain, which is append-only in the same
+sense. Five paths change a payload without an audit row:</p>
+<ul>
+<li><code>supersede_memory</code>;</li>
+<li><code>close_memory</code>;</li>
+<li><code>supersede_memories_for_source</code>;</li>
+<li><code>retract_relations_for_source</code>;</li>
+<li>relation ending.</li>
+</ul>
+<p>So an erasure shows in the log only as the tombstone's
+<code>memory.create</code>. <code>CurationService</code>'s marker memory
+says <em>"review proposals in audit"</em>, but it writes none, and the
+worker discards the report it returns (<code>worker.py:453</code>).</p>
+<h3 id="marks">Marks</h3>
+<p><code>scope_enforced</code>, <code>audit_log</code>,
+<code>bitemporal</code> and <code>negative_eval</code> are earned; the
+frontmatter records carry the evidence and the limits.</p>
+<ul>
+<li><code>tombstone</code> is withheld. The <code>:erased</code> record
+is a deletion marker keyed on a memory id, and the docstring rules out
+suppression. The verbatim-repeat absorption in §7 is keyed on evidence
+identity and records no rejection.</li>
+<li><code>trust_state</code> is withheld. Truth states are computed per
+read, supersession and closure are revision and time, and contradictions
+become a note.</li>
+<li><code>human_review</code> is withheld. Curation <em>"proposes,
+policy/approval disposes"</em>, and no approval surface exists in
+<code>src/</code> or <code>web/src</code>.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,203 test functions in 125 files: unit, application, contract tests
+run against both backends, adversarial repository cases, snapshot
+integrity, interface parity, auth, the CLI and the benchmark harness
+itself. CI runs ruff, <code>mypy --strict</code>, pip-audit and pytest,
+then validates the benchmark manifest. The negative cases behind the
+mark are in §9 and the frontmatter.</p>
+<p><strong>The OmniMemEval figures recompute from committed
+aggregates.</strong>
+<code>docs/benchmarks/omnimemeval/results-2026-10.json</code> holds
+per-category scores and counts for the run. The category-weighted means
+give 87.33 on LoCoMo against the stated 87.34, 90.60 on LongMemEval and
+71.62 on BEAM 100K. The file names the harness commit, the Severian
+commit (<code>4467853</code>, 35 commits before this pin, with 799 lines
+of <code>src/</code> changed since), the answer model
+<code>gpt-4.1-mini</code> and the judge <code>gpt-4o-mini</code>, and
+says each value was copied from run outputs under
+<code>~/data/benchmarks/h2h-p1</code>. Those per-question files are not
+committed, so the paired bootstrap ranges cannot be recomputed from the
+tree.</p>
+<p>The write-up is candid about its own limits:</p>
+<ul>
+<li>the Severian row is a self-run, not a board entry;</li>
+<li>it is one run, with the repeat dropped and the change
+disclosed;</li>
+<li>Severian hands the answering model more text than the systems it is
+compared with: 5,662 tokens per question on LoCoMo against LCM-X's
+1,660.</li>
+</ul>
+<p>It also reports re-running LCM-X through the same pipeline within
+0.65 of its published scores. No paper is cited.</p>
+<p>I read the tests and the evidence files and ran nothing. The screen
+found no auto-run surface and nothing inside the dependency cooldown,
+and two build-time execution paths, <code>native/build.rs</code> and
+<code>tests/conftest.py</code>, which a reading does not need to
+trigger.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Queue derivation in the same transaction as the
+evidence.</strong> An observation that exists without its derive job, or
+a job pointing at nothing, is the crash residue this rules out, and the
+revision path does the same so a correction cannot vanish between two
+writes.</p>
+<p><strong>Converge projections to canonical state, not to event
+order.</strong> Deciding each touched id by its current head — upsert if
+active, remove otherwise — means a late create event for a
+since-corrected memory cannot re-index a stale fact.</p>
+<p><strong>Close instead of overwrite, and date the close by the
+statement.</strong> Recording <code>valid_until</code> from the newer
+message's own time keeps <code>as_of</code> reads honest for imported
+histories, where save time is meaningless.</p>
+<p><strong>Make blank scope a storage error.</strong> Refusing a blank
+dimension before the query runs, and failing a cross-scope context hit
+closed, puts the boundary where a new call site cannot forget it.</p>
+<p><strong>Audit the store read-only.</strong> An integrity check that
+cannot write a byte, plus a repair that only re-queues and re-indexes,
+is safe to run against production.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Don't call it erasure if the text stays.</strong> Superseding
+a record removes it from reads; a deletion request needs the content
+gone from the row and the export, with the tombstone keeping only the
+fact that something was removed.</p>
+<p><strong>Don't let the client choose the security dimensions.</strong>
+An MCP entry point that binds no principal hands the model the tenant
+id; bind it at launch.</p>
+<p><strong>Don't advertise maintenance nothing schedules.</strong> A job
+kind with a consumer and no producer is a feature only in the
+README.</p>
+<p><strong>Don't index your own bookkeeping.</strong> A summary memory
+listing merged ids, or a review marker at confidence 1.0, spends the
+context budget the facts need.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits <strong>a developer or a small team running agents locally
+who need memory that can be corrected and traced</strong>. Every answer
+cites the turn it came from, a wrong fact can be revised or rolled back
+without losing history, and the scope model separates users and agents
+at the storage layer. The Hermes path is the most complete, and
+PostgreSQL is there when SQLite is not enough.</p>
+<p>It suits less well anyone who must delete on request, since erasure
+keeps the text, or who exposes the MCP server to a model across tenants
+without wrapping it in a principal. A deployment that wants the
+self-maintenance has to schedule the dream jobs itself.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is a purge planned?</strong> Erasure keeps raw text by
+design; whether a hard-delete mode for privacy requests is intended is
+not stated.</li>
+<li><strong>Which commit should the benchmark be read against?</strong>
+The published run is at <code>4467853</code>, and the 35 commits since
+touch derivation, retrieval and the Hermes adapter.</li>
+<li><strong>Is dreaming meant to be scheduled by the host?</strong> The
+services are complete and tested; neither the Hermes plugin nor the CLI
+enqueues them.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Domain</strong> — <code>src/severian/domain/models.py</code>,
+<code>text.py</code>, <code>errors.py</code>.</p>
+<p><strong>Services</strong> —
+<code>src/severian/application/service.py</code>,
+<code>retrieval.py</code>, <code>derivation.py</code>,
+<code>extraction.py</code>, <code>truthresolution.py</code>,
+<code>eventtime.py</code>, <code>userfacts.py</code>,
+<code>conflicts.py</code>, <code>fillbudget.py</code>,
+<code>projections.py</code>, <code>worker.py</code>,
+<code>dreaming.py</code>, <code>anticipation.py</code>,
+<code>graph.py</code>.</p>
+<p><strong>Storage</strong> —
+<code>src/severian/infrastructure/sqlite.py</code>,
+<code>postgresql.py</code>, <code>fts.py</code>, <code>vector.py</code>,
+<code>pgvector_index.py</code>, <code>snapshot.py</code>,
+<code>rebuild.py</code>, <code>audit.py</code>.</p>
+<p><strong>Adapters</strong> —
+<code>src/severian/integrations/hermes.py</code>,
+<code>src/severian/mcp/server.py</code>,
+<code>src/severian/mcp/__main__.py</code>,
+<code>src/severian/api/app.py</code>, <code>src/severian/auth/</code>,
+<code>src/severian/cli/app.py</code>,
+<code>plugins/hermes/severian/</code>.</p>
+<p><strong>Tests</strong> —
+<code>tests/benchmarks/test_retrieval_fixes.py</code>,
+<code>tests/application/test_correction_integrity.py</code>,
+<code>test_service.py</code>, <code>test_tier3_memory.py</code>,
+<code>test_dreaming.py</code>, <code>tests/contract/</code>.</p>
+<p><strong>Benchmarks</strong> —
+<code>docs/benchmarks/omnimemeval-2026-10.md</code>,
+<code>docs/benchmarks/omnimemeval/results-2026-10.json</code>,
+<code>docs/release-gates.md</code>.</p>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No row deletes.</strong>
+<code>git grep -n -E 'delete\(|DELETE' -- src/severian/infrastructure/postgresql.py</code>
+returns nothing, and the SQLite backend's <code>sqlalchemy</code> import
+at <code>sqlite.py:13</code> names no <code>delete</code>.</li>
+<li><strong>No update selects an audit row.</strong> Every
+<code>update(records)</code> in
+<code>src/severian/infrastructure/sqlite.py</code> filters on an id, an
+<code>observation</code>/<code>memory</code>/<code>job</code>/<code>outbox</code>
+record type or a status, and none on
+<code>record_type == "audit"</code>.</li>
+<li><strong>Nothing in the product enqueues dreaming.</strong>
+<code>git grep -n -E 'enqueue_job\(' -- src scripts plugins</code>
+returns the port, both backends' definitions, the extra-kinds loops at
+<code>sqlite.py:392</code> and <code>postgresql.py:522</code>, and a
+derive job in <code>scripts/run_derive_worker_profile.py:152</code>;
+<code>git grep -n '"dream"' -- tests</code> returns the five test
+enqueues.</li>
+<li><strong>No read filters on kind for meta-memories.</strong>
+<code>git grep -n -E 'curation_review|consolidated' -- src</code>
+returns only <code>dreaming.py</code>.</li>
+<li><strong>No approval surface.</strong>
+<code>git grep -n -i -E 'approve|approval|pending_review|review_queue|needs_review' -- src web/src</code>
+returns the dreaming docstring and the CLI's approved-path policy.</li>
+<li><strong>The stdio MCP server binds no principal.</strong>
+<code>git grep -n -E 'SeverianMCPServer\(|principal=' -- src</code>
+returns only <code>src/severian/mcp/__main__.py:42</code>, with no
+<code>principal</code> argument.</li>
+<li><strong>Relations get no validity from their producer.</strong>
+<code>git grep -n -E 'add_relation\(' -- src</code> returns the one
+caller at <code>extraction.py:247</code>, which passes subject,
+predicate and object only.</li>
+<li><strong>Event time and truth resolution are off by default.</strong>
+<code>git grep -n -E 'SEVERIAN_EVENT_TIME|SEVERIAN_TRUTH_RESOLUTION' -- src</code>
+returns the switch readers and comments marking both off by
+default.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|doi\.org' -- README.md docs</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-09</strong> — <a
+href="https://github.com/Sahil-SS9/Severian/commit/bdb14b04ffa014148d4665f239688ca0856561da"><code class="commit-id" title="bdb14b04ffa014148d4665f239688ca0856561da">bdb14b04…</code></a>.
+First reading, from a full clone of <code>main</code>. Screened first:
+no auto-run surface, nothing inside the seven-day cooldown, two
+build-time execution paths (<code>native/build.rs</code>,
+<code>tests/conftest.py</code>) and two floating manifests beside
+lockfiles. I installed and ran nothing; the suite was read, not run, and
+the OmniMemEval aggregates were recomputed from the committed JSON. Four
+marks: <code>scope_enforced</code>, <code>audit_log</code>,
+<code>bitemporal</code> and <code>negative_eval</code> (§9).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

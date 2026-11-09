@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 792 reports.</strong></p>
+<p><strong>This page covers all 793 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32973,6 +32973,44 @@ model with a predictable budget, or a clean separation of freshness from
 value when several chats touch one fact.</li>
 <li>Do not copy when: memory must survive a restart, stay apart between
 conversations, or be reachable from a browser.</li>
+</ul>
+<h3 id="severian"><a
+href="../systems/severian/"><code>severian</code></a></h3>
+<ul>
+<li>Best idea: <strong>every correction is a new record.</strong>
+Revision supersedes the old head and re-derives in the same transaction,
+rollback restores a historical head, erasure supersedes with an
+<code>:erased</code> tombstone, and truth resolution closes a replaced
+memory with <code>valid_until</code> from the newer message's own time —
+so the <code>now</code>, <code>history</code> and <code>as_of</code>
+views read the same rows differently and nothing is ever deleted.</li>
+<li>Biggest risk: <strong>erasure removes a value from reads and keeps
+its text.</strong> <code>erase_observation</code> updates only
+<code>superseded_by_id</code> on the original, so <code>content</code>
+and <code>raw_content</code> stay in the SQLite file, the PostgreSQL row
+and every export.</li>
+<li>Second risk: the stdio MCP entry point binds no principal, so the
+model names all five scope dimensions, tenant included, on every call;
+and consolidation, curation and retention are <code>dream</code> jobs
+nothing in the product enqueues.</li>
+<li>Most reusable component: <code>ProjectionCoordinator.apply</code> in
+<code>src/severian/application/projections.py:95-140</code>, which
+converges each touched id to its canonical state instead of replaying
+events in order.</li>
+<li>Maturity impression: MIT; 23,543 lines of Python under
+<code>src/</code>, 25,998 of tests; 291 commits by one author between 31
+July and 25 October 2026; 1,203 test functions run by CI with
+<code>mypy --strict</code> and pip-audit, not run here. Four marks:
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>bitemporal</code> and <code>negative_eval</code>. The OmniMemEval
+aggregates recompute from the committed JSON, from a run 35 commits
+before this pin.</li>
+<li>Study when: you want correctable memory whose every derived row
+cites its evidence, or projections that a late event cannot make
+stale.</li>
+<li>Do not copy when: a deletion request has to remove the text, or the
+memory server is reachable by a model that must not choose its own
+tenant.</li>
 </ul>
         </article>
       </div>
