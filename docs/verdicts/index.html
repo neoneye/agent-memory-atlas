@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 791 reports.</strong></p>
+<p><strong>This page covers all 792 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -32938,6 +32938,41 @@ reordering without a separate index.</li>
 <li>Do not copy when: more than one person or project shares the store,
 the journal will grow past a few thousand events, or rejected values
 must be correctable.</li>
+</ul>
+<h3 id="clm-mem"><a
+href="../systems/clm-mem/"><code>clm-mem</code></a></h3>
+<ul>
+<li>Best idea: <strong>the writer classifies and the engine
+enforces.</strong> The chat model wraps durable spans in
+<code>&lt;longterm&gt;</code> and working state in
+<code>&lt;shortterm&gt;</code> while it decodes, and a deterministic
+three-phase evictor holds the window to a token budget: transient first,
+short-term in FIFO rounds, long-term last and only to an archive with a
+pointer left behind.</li>
+<li>Biggest risk: <strong>the server answers any web origin and can
+execute commands.</strong> It sends
+<code>Access-Control-Allow-Origin: *</code>, checks no inbound
+credential, lets a client open a workspace with tools enabled, and runs
+<code>sandbox/exec</code> with no approval in a jail its own docstring
+says has no filesystem or network isolation.</li>
+<li>Second risk: archive ids restart at zero in every process while the
+archive persists, so <code>reinject</code> can return another run's
+block; and with supersession on, a value that returns after a change is
+dropped as a duplicate of the superseded block.</li>
+<li>Most reusable component: <code>MemoryHarness.evict</code> in
+<code>shatterling/engine/harness.py:434-538</code>, with the three
+reheating scopes in <code>reheat</code> at <code>:297-348</code>.</li>
+<li>Maturity impression: MIT; 8,225 lines of Python, 1,769 of them the
+engine; 55 commits under five author identities between 12 October and 7
+November 2026; 119 pytest functions against mock backends, run by CI,
+not run here. No capability mark: the archive records evictions and not
+edits, the superseded label demotes without filtering, and the negative
+cases are about the assembled window.</li>
+<li>Study when: you want a self-managed context window on a local open
+model with a predictable budget, or a clean separation of freshness from
+value when several chats touch one fact.</li>
+<li>Do not copy when: memory must survive a restart, stay apart between
+conversations, or be reachable from a browser.</li>
 </ul>
         </article>
       </div>

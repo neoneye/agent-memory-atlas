@@ -737,6 +737,23 @@ memories nearest dormancy are the ones skipped
 (<code>decay.py:51</code>, <code>:118-122</code>). <strong>Run decay on
 the agent's time, exempt the rules it obeys, and start a capped sweep
 from the end that should move.</strong></p>
+<p><strong><a href="../../systems/clm-mem/">clm-mem</a> separates
+freshness from value when several chats touch one fact.</strong>
+Effective importance halves every <code>decay_half_life</code> turns
+since the later of two stamps, own-chat access and cross-chat access,
+and a long-term block below the threshold is demoted to short-term,
+where FIFO eviction can reach it
+(<code>shatterling/engine/harness.py:274-283</code>,
+<code>:350-366</code>). Reheating has three scopes. <code>global</code>
+lets any chat raise a fact's importance; <code>chat</code> lets only the
+chat that produced it raise it, while another chat's touch refreshes
+freshness only; <code>fresh</code> refreshes both stamps everywhere and
+raises nothing (<code>:297-348</code>). A touch is a slot value or a
+versioned identifier such as <code>Nova-7</code> reappearing in a user
+message, and each scope has a test
+(<code>tests/test_forgetting.py:50-182</code>). Decay is off by default.
+<strong>When a store is shared, let other readers keep a fact alive
+without letting them make it more important.</strong></p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

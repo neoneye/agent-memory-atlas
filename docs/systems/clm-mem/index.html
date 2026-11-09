@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The chat model tags its own
+context long-term, short-term or transient, and a deterministic engine
+evicts overflow to an append-only, substring-searchable archive.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="clm-mem — Agent Memory Atlas">
+    <meta property="og:description" content="The chat model tags its own
+context long-term, short-term or transient, and a deterministic engine
+evicts overflow to an append-only, substring-searchable archive.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="clm-mem — Agent Memory Atlas">
+    <meta name="twitter:description" content="The chat model tags its
+own context long-term, short-term or transient, and a deterministic
+engine evicts overflow to an append-only, substring-searchable
+archive.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>clm-mem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "clm-mem",
+      "description": "The chat model tags its own context long-term, short-term or transient, and a deterministic engine evicts overflow to an append-only, substring-searchable archive.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Self-tagged context with a deterministic
+evictor</p>
+          <h1>clm-mem</h1>
+          <p class="document-deck">The chat model tags its own context
+long-term, short-term or transient, and a deterministic engine evicts
+overflow to an append-only, substring-searchable archive.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/GentianLine/clm-mem">
+              <span>Source</span>
+              <strong>GentianLine/clm-mem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/GentianLine/clm-mem/commit/433bce18f67060c657be274d4ffdfb49c9bb2b60" title="433bce18f67060c657be274d4ffdfb49c9bb2b60">
+              <span>Analyzed revision</span>
+              <code>433bce18…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-09</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/GentianLine--clm-mem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>GentianLine--clm-mem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>8,225
+lines of Python in 25 files under shatterling/, of which the memory
+engine in shatterling/engine/ is 1,769; 1,145 lines of JavaScript for
+the web studio</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>55
+commits, 12 October – 7 November 2026, under five author identities:
+sandbox-agent, studio, clm-mem agent, Your Name and Mikela
+Clemmons</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>119
+pytest functions in 7 files under tests/, run by a GitHub Actions
+workflow on push; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>clm-mem is <strong>a memory harness for open chat models</strong>.
+The model that writes each reply also classifies it: a system preamble
+asks it to wrap durable content in <code>&lt;longterm&gt;</code> and
+working state in <code>&lt;shortterm&gt;</code>, and the harness splits
+each reply on those markers into tagged blocks. A deterministic engine
+then holds the window to a token budget. It deletes transient blocks
+first, then evicts short-term ones oldest first in rounds, then offloads
+the oldest long-term blocks to <code>archive.jsonl</code>, leaving a
+pointer stub. It is MIT licensed, needs only the <code>openai</code>
+client, and runs against any OpenAI-compatible server. The design
+credits <em>Context Language Models</em> (<a
+href="https://arxiv.org/abs/2609.37725">arXiv:2609.37725</a>, Shao et
+al., submitted 29 September 2026).</p>
+<p>It is in scope by a narrow margin, and the margin is two mechanisms.
+Long-term blocks outlive any one chat: a workspace keeps one harness,
+every chat in it reads the same live window, and opt-in supersession
+labels and demotes a long-term block when a newer one changes its value.
+And every evicted block survives a restart in an append-only archive
+that an MCP client or a person can search and pull back into the window.
+Without those two, this would be conversation-window management.</p>
+<p>What is good:</p>
+<ul>
+<li><strong>The model decides what matters at write time, and code
+decides what fits.</strong> Eviction is ordered by tag, then turn, so
+the hardware load is predictable and the model's judgement is still the
+input.</li>
+<li><strong>Nothing evicted is destroyed.</strong> Every phase routes
+through <code>_drop</code> or <code>_archive</code>, which append the
+block to the archive before removing it
+(<code>shatterling/engine/harness.py:598-619</code>).</li>
+<li><strong>The forgetting strategies are named, opt-in and
+tested.</strong> Decay with three reheating scopes, and slot-keyed
+supersession, each have their own cases in
+<code>tests/test_forgetting.py</code>.</li>
+</ul>
+<p>What is weak:</p>
+<ul>
+<li><strong>Archive identity does not survive a process.</strong> Block
+ids start at 0 in every new harness (<code>harness.py:103</code>) while
+the archive in that directory persists, and <code>reinject</code>
+returns the first line with a matching id. In a reused workspace,
+recalling block 5 can bring back another run's block 5.</li>
+<li><strong>Reverting a value is dropped as a duplicate.</strong> With
+supersession on, a fact that changes from one value to another and back
+is matched against the superseded block holding the first value, and the
+third write never enters the window.</li>
+<li><strong>The server answers any web origin.</strong> It sends
+<code>Access-Control-Allow-Origin: *</code>, checks no inbound
+credential, accepts <code>tools_enabled</code> as an open-time option,
+and runs <code>sandbox/exec</code> with no approval step, in a jail its
+own docstring says has no filesystem or network isolation.</li>
+</ul>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a tagged block in the live window</strong>. The
+window is the prompt; the tag decides how long a block survives pressure
+on it; the archive is where a block goes when it stops fitting. There is
+no separate store that a query searches before generation. Recall is a
+person's or a client's act, not the model's: the model's own tool list
+carries no recall tool.</p>
+<h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
+<p><code>step</code> appends the user message as <code>transient</code>
+(or as whatever a decision server pre-classifies it to), evicts to make
+room, calls the model, and splits the reply on
+<code>&lt;longterm&gt;…&lt;/longterm&gt;</code> and
+<code>&lt;shortterm&gt;…&lt;/shortterm&gt;</code>
+(<code>harness.py:752-839</code>). Each tagged span becomes its own
+block; untagged prose stays <code>transient</code>. If the model used
+any marker, the turn's user message is promoted to
+<code>shortterm</code>. When the model tagged nothing, a post-turn
+router pass asks the same model, at temperature 0, to label the turn's
+transient blocks as JSON, or asks the decision server the same question
+as typed choices (<code>harness.py:175-272</code>).</p>
+<p>Base importance follows the tag — 1.0, 0.6 and 0.3
+(<code>harness.py:25</code>) — and matters only when decay is on. Two
+other writers exist: <code>remember</code> seeds a long-term block
+directly, optionally pinned, which is how the REST surface opens a chat
+with facts (<code>harness.py:963-987</code>); and <code>reinject</code>
+adds an archived block back as <code>shortterm</code> with a
+<code>[recalled #id]</code> prefix.</p>
+<p>The classifier prompts send credentials to long-term memory on
+purpose: the router is told that <em>"durable facts, decisions,
+requirements, identifiers, credentials"</em> are <code>longterm</code>
+(<code>shatterling/engine/tagging.py:59</code>), and the supersession
+slots include <code>password</code>, <code>secret</code>,
+<code>token</code> and <code>api_key</code>.</p>
+<h3 id="how-a-belief-stops-being-one">How a belief stops being one</h3>
+<p><em>Eviction</em> runs before and after each generation
+(<code>harness.py:434-538</code>). Phase 1 drops every transient block
+older than the last <code>keep_recent_turns</code> turns. Phase 2 evicts
+short-term blocks oldest first, keeping the newest
+<code>shortterm_keep_pct</code> of them per round, for up to ten rounds.
+Phase 3 offloads the oldest long-term block, or the lowest effective
+importance when decay is on, to the archive and replaces its content
+with <code>[offloaded longterm #id -&gt; archive.jsonl]</code>, retagged
+short-term so the stub can go later. A decision server, when configured,
+can veto any phase's candidates.</p>
+<p><em>Decay</em> (opt-in) discounts importance by a half-life in turns
+since the block was last touched, and demotes a long-term block below
+the threshold to short-term, where FIFO can reach it. <em>Reheating</em>
+raises importance when the block's identifiers or slot values appear in
+a user message, under one of three scopes: global, own-chat only, or
+freshness without lift (<code>harness.py:297-366</code>).</p>
+<p><em>Supersession</em> (opt-in) reads named slots —
+<code>codename</code>, <code>password</code>, <code>secret</code>,
+<code>token</code>, <code>api_key</code>, <code>version</code>,
+<code>port</code> — from each new long-term block. An older block
+sharing a slot with a different value is prefixed
+<code>[superseded by #N]</code> and demoted to short-term; a new block
+whose shared slots all agree with an older one is dropped as a
+duplicate, to the archive (<code>harness.py:368-432</code>). The
+superseded block stays in the prompt, labelled, until FIFO evicts
+it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a block's tag decides which eviction phase reaches it; every phase archives what it removes, and reinject brings an archived block back by an id that restarts at zero in each process</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a block&#39;s tag decides which eviction phase reaches it; every phase archives what it removes, and reinject brings an archived block back by an id that restarts at zero in each process
+flowchart TD
+    REPLY[&quot;model reply&lt;br/&gt;split on longterm and&lt;br/&gt;shortterm markers&quot;]
+    ROUTE[&quot;router pass&lt;br/&gt;labels what the model&lt;br/&gt;left untagged&quot;]
+    WIN[&quot;live window&lt;br/&gt;every block from every chat&lt;br/&gt;in the workspace&quot;]
+    SUP{&quot;supersession on and&lt;br/&gt;a slot value changed?&quot;}
+    DEMOTE[&quot;older block prefixed&lt;br/&gt;superseded by #N,&lt;br/&gt;retagged shortterm&quot;]
+    P1[&quot;phase 1&lt;br/&gt;transient outside the&lt;br/&gt;recent turns&quot;]
+    P2[&quot;phase 2&lt;br/&gt;oldest shortterm,&lt;br/&gt;in FIFO rounds&quot;]
+    P3[&quot;phase 3&lt;br/&gt;oldest longterm,&lt;br/&gt;pointer stub left&quot;]
+    ARC[&quot;archive.jsonl&lt;br/&gt;append-only, id, turn,&lt;br/&gt;chat, role, tag, content&quot;]
+    RE[&quot;recall by substring,&lt;br/&gt;reinject first line&lt;br/&gt;with a matching id&quot;]
+    REPLY --&gt; ROUTE
+    ROUTE --&gt; WIN
+    WIN --&gt; SUP
+    SUP -- yes --&gt; DEMOTE
+    DEMOTE --&gt; P2
+    SUP -- &quot;no, over budget&quot; --&gt; P1
+    P1 --&gt; P2
+    P2 --&gt; P3
+    P1 -. archived .-&gt; ARC
+    P2 -. archived .-&gt; ARC
+    P3 -. archived .-&gt; ARC
+    ARC --&gt; RE
+    RE -- &quot;back as shortterm&quot; --&gt; WIN</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Python package, <code>shatterling</code>, in four parts.
+<code>engine/</code> holds the block, the harness, the token counter,
+the tagging prompts and the backend clients. <code>purslane/</code> is
+the server: a threaded HTTP proxy that looks like one llama.cpp endpoint
+to clients, spawns or attaches a chat backend and an optional decision
+server ("System One"), and exposes <code>/v1/clm/*</code> and an MCP
+endpoint. <code>campion/</code> is the web studio. <code>tools/</code>
+is the agent tool loop, with web search and fetch, file tools, and
+command execution in a sandbox.</p>
+<p><code>clm-mem serve --use-mock</code> runs the whole topology against
+bundled fake backends, with no GPU and no weights. Against a real model
+it execs a binary or attaches to a URL the operator names; it downloads
+nothing.</p>
+<p><strong>State is per workspace and in process.</strong> The
+supervisor keeps one <code>MemoryHarness</code> per
+<code>ws:&lt;name&gt;</code> session id, each with its own directory
+under <code>&lt;workdir&gt;/workspaces/&lt;name&gt;</code>
+(<code>shatterling/purslane/server.py:1345-1455</code>). Session opens
+must use a <code>ws:</code> id (<code>server.py:763-820</code>). The
+live window lives in the harness object; <code>mirror_files</code>
+writes it to <code>context.md</code> and <code>context.jsonl</code>
+after every turn, and nothing in the package reads either file back
+(Recorded searches), so a restart starts every workspace empty beside
+its old archive.</p>
+<p><strong>Chats are slots, not partitions.</strong> A workspace holds
+many chats, and the source states the intent: <em>"The harness keeps one
+shared memory per project; chats partition who <em>sees</em> what
+(turns, activity, approvals, drafts) without splitting the memory"</em>
+(<code>server.py:105-108</code>). The partition is in the UI.
+<code>serialize_messages</code> sends every live block to the model with
+no slot filter (<code>harness.py:657-667</code>), so a chat's transient
+small talk is in another chat's prompt until phase 1 removes it.</p>
+<p><strong>Turns on one workspace are not serialised.</strong> The
+server is a <code>ThreadingHTTPServer</code> and nothing locks
+<code>step</code>, while <code>self.turn</code> and
+<code>self.slot</code> are harness-wide, so two chats posting at once
+can stamp one turn's blocks with the other chat's slot.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install -e .</code> and an OpenAI-compatible endpoint. The
+CLI chat works against a local harness; <code>serve</code> defaults to
+<code>127.0.0.1</code>. The archive is JSON lines a person can grep; the
+mirror is Markdown in the paper's <code>[[CTX_TURN …]]</code> form.
+There is no migration story because there is no schema beyond the
+block's fields.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Turn</strong> — <code>MemoryHarness.step</code>
+(<code>shatterling/engine/harness.py:752-839</code>): add, reheat,
+evict, generate (or the tool loop), split tags, router pass, evict,
+mirror.</p>
+<p><strong>Classification</strong> — <code>split_tagged</code>,
+<code>MEMORY_PREAMBLE</code> and <code>CLASSIFIER_SYSTEM</code> in
+<code>shatterling/engine/tagging.py</code>; <code>classify_new</code>
+and <code>_classify_with_systemone</code>
+(<code>harness.py:175-272</code>).</p>
+<p><strong>Forgetting</strong> — <code>eff_importance</code>,
+<code>reheat</code>, <code>_decay_demote</code>,
+<code>_supersede_pass</code>, <code>evict</code>,
+<code>_maintain</code>, <code>_backstop_eviction</code>
+(<code>harness.py:274-596</code>).</p>
+<p><strong>Archive</strong> — <code>_drop</code>, <code>_archive</code>,
+<code>recall</code>, <code>reinject</code>
+(<code>harness.py:598-655</code>).</p>
+<p><strong>Server</strong> — <code>Supervisor.harness_for</code>
+(<code>shatterling/purslane/server.py:1345-1455</code>), the
+session-open handler (<code>:763-820</code>), the archive read
+(<code>:725-738</code>), the tool surface <code>_clm_tools_post</code>
+(<code>:1040-1130</code>), and the CORS headers (<code>:264-270</code>).
+MCP tools <code>clm_recall</code> and <code>clm_reinject</code> in
+<code>shatterling/purslane/mcp.py</code>.</p>
+<p><strong>Tools</strong> — <code>ToolManager.execute</code>
+(<code>shatterling/tools/manager.py:465-511</code>) and
+<code>Sandbox</code> (<code>shatterling/tools/sandbox.py</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Block</code> carries <code>id</code>, <code>role</code>,
+<code>content</code>, <code>tag</code>, <code>turn</code>,
+<code>chat_slot</code>, <code>pinned</code>, <code>importance</code>,
+<code>last_access</code> and <code>last_seen</code>
+(<code>shatterling/engine/blocks.py</code>). The id is a per-harness
+counter starting at 0; the turn is a per-harness counter starting at 0.
+Neither is unique across processes, and nothing persists either
+counter.</p>
+<p>An archive line holds <code>id</code>, <code>turn</code>,
+<code>chat_slot</code>, <code>role</code>, <code>tag</code> and
+<code>content</code> (<code>harness.py:603-619</code>), so the archive
+keeps the tag the block had when it left and drops its importance and
+access times. A pointer stub offloaded in phase 3 and later dropped in
+phase 2 is archived a second time under the same id, with the stub as
+its content; <code>reinject</code> returns the first line with that id,
+which is the original.</p>
+<p>The only structured fields read from content are the seven
+supersession slots, parsed by a regular expression
+(<code>harness.py:31-36</code>), and free-standing versioned identifiers
+like <code>Nova-7</code> for reheating. Everything else a block says is
+opaque text.</p>
+<p>There is no provenance beyond role and chat slot, no source pointer,
+no validity time, and no status besides the tag and the
+<code>[superseded by #N]</code> prefix written into the content.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The prompt is the window.</strong> Every live block, in
+order, is sent to the model on every turn
+(<code>harness.py:657-667</code>). There is no query, no ranking, and no
+selection at read time; what the model sees is whatever eviction
+left.</p>
+<p><strong>Recall is a substring scan.</strong> <code>recall</code>
+reads <code>archive.jsonl</code> line by line and returns up to 50
+records whose content contains the query, case-insensitively
+(<code>harness.py:622-637</code>). It is reachable from the CLI's
+<code>/recall</code>, the REST archive route, the web studio and the MCP
+tool <code>clm_recall</code>. <strong><code>reinject</code></strong>
+copies one archived record back as a <code>shortterm</code> block by id,
+reachable the same ways. The model inside the harness cannot call
+either; the preamble tells it that offloaded items <em>"can be retrieved
+on request"</em>, which means a person or a client has to make the
+request.</p>
+<p>Failure modes:</p>
+<ul>
+<li><strong>Reinject resolves the wrong block in a reused
+directory.</strong> Ids restart at 0 with each process and the archive
+does not, so the first line matching an id can belong to a previous run
+or a previous CLI session pointed at the same
+<code>--workdir</code>.</li>
+<li><strong>A superseded fact keeps arguing.</strong> The demoted block
+stays in the prompt, labelled, beside the block that replaced it, until
+short-term FIFO reaches it.</li>
+<li><strong>Every chat reads every chat.</strong> A workspace's prompt
+is shared, so a fact or a credential stated in one chat is in the next
+chat's context.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are part of the turn: the reply is split and stored before the
+response returns, and a block is in the next prompt with no lag. The
+router pass adds a second model call on turns where the model used no
+marker, and is skipped on turns where it did, so the inline contract
+saves a call every turn it is kept.</p>
+<p><strong>Reverting a value is swallowed as a duplicate.</strong>
+<code>_supersede_pass</code> builds its candidate list from every older
+non-pinned block, <em>including</em> ones already demoted, as its
+comment says: <em>"a restatement of a fact that already lost its long
+tag is still a duplicate write"</em> (<code>harness.py:381-383</code>).
+Take three long-term writes in order: <code>codename Nova-1</code>, then
+<code>codename Nova-2</code>, then <code>codename Nova-1</code> again.
+The second supersedes the first. The third is compared against the first
+before the second, all shared slots agree, and it is dropped as a
+duplicate of the superseded block. <code>Nova-2</code> stays long-term,
+and the user's correction reaches only the archive. The tests cover
+update, duplicate, partial match and unrelated slots, and not a return
+to an earlier value. I traced this in the code and did not run it.</p>
+<p><strong>Supersession can promote a transient block.</strong>
+Candidates are any older block, so a transient user message that states
+a slot value is retagged <code>shortterm</code> when a newer long-term
+block changes it, which moves it out of phase 1's reach.</p>
+<p>Nothing rewrites the whole store, and nothing runs in the
+background.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>One model call per turn, plus a router call when the model skipped
+the markers, plus decision-server calls when one is configured: one
+pre-classification per user message and one batched backstop per
+eviction phase. Recall reads the whole archive file on every query and
+the archive is never compacted, so recall cost grows with everything a
+workspace has ever evicted.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Three front doors onto one harness: the CLI chat, the
+<code>/v1/clm/sessions/&lt;id&gt;/turns</code> REST verb, and an MCP
+endpoint whose 14 tools include <code>clm_chat</code>,
+<code>clm_recall</code>, <code>clm_reinject</code>,
+<code>clm_set_forget</code>, <code>clm_tool_call</code> and
+<code>clm_sandbox_exec</code>. <code>/v1/chat/completions</code> is a
+plain passthrough to the backend with no memory, and a client still
+sending the old session header gets a 410 pointing at the turns verb
+(<code>server.py:1285-1288</code>).</p>
+<p>The agent inside the harness is the chat model with an optional tool
+loop: web search and fetch, file read, write and list,
+<code>run_command</code> and <code>run_python</code>. Tool results enter
+the window as short-term blocks and compete for the same budget.
+<code>tools_enabled</code> is off by default; <code>approval_mode</code>
+defaults to <code>auto</code>, under which mutating tools run inside the
+sandbox without asking
+(<code>shatterling/engine/config.py:64-69</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-server-and-the-browser">The server and the browser</h3>
+<p>The proxy sends <code>Access-Control-Allow-Origin: *</code>, allows
+<code>GET</code>, <code>POST</code>, <code>DELETE</code> and
+<code>OPTIONS</code> with <code>Content-Type</code> and
+<code>Authorization</code> headers, and answers every preflight
+(<code>server.py:264-270</code>, <code>:432-435</code>). No handler
+checks an inbound credential: the <code>Authorization</code> header is
+relayed to the backend rather than verified
+(<code>server.py:307-319</code>). The default bind is
+<code>127.0.0.1</code>.</p>
+<p>Three properties then compose:</p>
+<ol type="1">
+<li>A session can be opened with <code>tools_enabled</code>,
+<code>sandbox_mode</code> and <code>approval_mode</code> as options,
+because all three are in <code>OPEN_KNOBS</code>
+(<code>server.py:62-90</code>).</li>
+<li><code>POST …/sandbox/exec</code> builds a <code>run_command</code>
+call with <code>origin="user"</code>, and <code>execute</code> skips the
+approval broker for user-origin calls (<code>server.py:1095-1118</code>,
+<code>shatterling/tools/manager.py:488-491</code>).</li>
+<li>The default <code>jail</code> sandbox is, in its own docstring,
+<em>"NOT a security boundary against a hostile script (no network or
+filesystem isolation)"</em>
+(<code>shatterling/tools/sandbox.py:8-13</code>).</li>
+</ol>
+<p>So while <code>clm-mem serve</code> runs, a page in the operator's
+browser can reach command execution on the host as the operator — and
+the MCP endpoint's <code>clm_sandbox_exec</code> reaches the same
+handler — unless the browser's local-network protections block requests
+to localhost. It can also read every workspace's archive through the
+archive route, and the archive holds what the classifier was told to
+keep long-term, credentials included. I traced this from the code and
+did not exercise it. The project's own
+<code>test_serve_sandbox_exec_files_write_read</code> drives the exec
+route over HTTP.</p>
+<h3 id="scope">Scope</h3>
+<p>A workspace is a physical partition, a directory per <code>ws:</code>
+name, with no key on a record and no predicate on a read, so
+<code>scope_enforced</code> does not apply. Inside a workspace the chat
+slot is attribution only. The model's prompt carries every chat's blocks
+(§3).</p>
+<h3 id="correction">Correction</h3>
+<p>The archive is a durable record of what left the window, and that is
+the whole of the history. A supersession label is written into the
+demoted block's content in place; a retag, a decay demotion and a reheat
+leave no record outside the in-memory event list. There is no delete
+verb for a block, and nothing removes a value from the archive, so a
+credential the model tagged long-term stays on disk for the life of the
+workspace directory.</p>
+<h3 id="marks">Marks</h3>
+<p>No capability mark is earned.</p>
+<ul>
+<li><code>audit_log</code> is withheld. The archive is append-only, but
+it records evictions and nothing else, so the edits that change what a
+block says — supersession labels, retags, demotions — are not in
+it.</li>
+<li><code>trust_state</code> is withheld. The superseded label and the
+demotion change how long a block survives, and no read keeps it out of
+the prompt.</li>
+<li><code>negative_eval</code> is withheld. The eviction tests assert
+that transient or old short-term blocks leave a populated live window
+while newer ones stay (<code>tests/test_harness.py:60-91</code>). That
+is a test of what the assembled context holds, not of what a retrieval
+returns, and the dedup case is a write decision. The scope test on what
+each mark rests on, in the <a
+href="../../methodology/atlas-rubric/">atlas rubric</a>, draws that
+line.</li>
+<li><code>tombstone</code>, <code>bitemporal</code>,
+<code>scope_enforced</code> and <code>human_review</code> have no
+mechanism.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>119 pytest functions in seven files cover tag splitting, the three
+eviction phases, the decision-server backstop, the forgetting
+strategies, the server routes, the tool loop and the web studio's
+layout. They run against stub and mock backends, so they need no GPU and
+no model. A GitHub Actions workflow runs them on push and pull request.
+Its matrix lists <code>python-version: [3.9, 3.10, 3.11]</code>
+unquoted, which YAML reads as 3.9, 3.1 and 3.11.</p>
+<p>The negative cases are about eviction order. Phase 1 must leave no
+old transient block; phase 2 must remove the two oldest short-term
+blocks; decay must not demote a reheated block; supersession must not
+fire when it is off or when slots are unrelated.</p>
+<p>What the suite does not reach:</p>
+<ul>
+<li><strong>A return to an earlier value under supersession</strong>
+(§7).</li>
+<li><strong>Reinject identity across processes.</strong>
+<code>test_phase3_offloads_longterm_with_pointer</code> asserts that
+<code>reinject</code> returns true for the first recall hit
+(<code>tests/test_harness.py:107-120</code>), not which content came
+back, and every test uses a fresh directory.</li>
+<li><strong>Cross-origin requests</strong> to the server.</li>
+</ul>
+<p>The paper cited in the README reports its results on BrowseComp-Plus,
+EdgeBench and a multi-repository agent-swarm task with a model that
+edits its own context file. The README states the difference itself:
+<em>"the paper's headline result comes from letting the model
+<em>edit</em> the context file itself"</em>, while here eviction is
+harness-defined and the model only tags. No benchmark or result is
+committed to this repository. I read the tests and did not run them,
+because <code>pyproject.toml</code> changed inside the seven-day
+dependency cooldown.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Let the writer classify at write time and let code enforce
+the budget.</strong> Asking the model to mark durable spans while it
+decodes costs nothing extra on turns it complies, and a deterministic
+evictor keyed on that tag makes the window's size a guarantee rather
+than a hope.</p>
+<p><strong>Evict in phases ordered by declared durability.</strong>
+Transient first, working state next in FIFO rounds that keep a fraction,
+long-term last and only to an archive with a pointer left behind. Each
+phase is simple enough to test alone, and the suite does.</p>
+<p><strong>Never delete on eviction.</strong> Routing every removal
+through one archive append means a wrong tag costs a recall rather than
+a fact.</p>
+<p><strong>Separate freshness from value when several sessions touch one
+store.</strong> The three reheating scopes let another chat keep a fact
+from going stale without letting it raise the fact's importance, which
+is a clean answer to cross-session reinforcement.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Don't key an archive on a counter that restarts.</strong> If
+records outlive the process, their ids must too: a UUID, or a counter
+persisted beside the archive.</p>
+<p><strong>Don't match duplicates against superseded records.</strong> A
+value that returns after a change is an update; compare a new fact
+against the live, unsuperseded holder of each slot.</p>
+<p><strong>Don't answer every origin on a localhost server that executes
+commands.</strong> A wildcard CORS header plus an unauthenticated exec
+route is reachable from any page the operator visits. Check the
+<code>Origin</code>, require a token, and keep
+<code>tools_enabled</code> out of what a client can set at open
+time.</p>
+<p><strong>Don't tell the classifier to keep credentials.</strong> A
+memory that is shared across chats, mirrored to disk and never purged is
+the wrong place for a secret.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits <strong>a single developer experimenting with a
+self-managed context window on a local open model</strong>, who wants a
+predictable token budget and a human-readable record of what was
+dropped. The mock topology makes it easy to study and the eviction
+engine is small enough to read in an evening.</p>
+<p>It does not suit anyone who needs memory to be correct across
+restarts, shared between people, or held apart between conversations:
+the live window does not survive a restart, chats inside a workspace
+share it, and archive identity is unreliable once a directory is reused.
+Run it with tools off, or behind an origin check, before it is reachable
+from a browser.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is reloading the mirror planned?</strong>
+<code>context.jsonl</code> is written every turn in the block's full
+dataclass form and read by nothing, which looks like the first half of a
+restart path.</li>
+<li><strong>Should chats see each other?</strong> The source says chats
+partition who <em>sees</em> what; the prompt carries every chat's
+blocks. Which of the two is intended for the model is not stated.</li>
+<li><strong>What does the decision server change in practice?</strong>
+Pre-classification and the eviction backstop run only when one is
+configured, and the tests use a mock, so how often a real one vetoes
+eviction is not measurable from the tree.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Engine</strong> — <code>shatterling/engine/blocks.py</code>,
+<code>harness.py</code>, <code>tagging.py</code>,
+<code>config.py</code>, <code>llm.py</code>, <code>tokens.py</code>.</p>
+<p><strong>Server</strong> —
+<code>shatterling/purslane/server.py</code>, <code>routes.py</code>,
+<code>mcp.py</code>, <code>processes.py</code>,
+<code>mock_backends.py</code>.</p>
+<p><strong>Tools</strong> — <code>shatterling/tools/manager.py</code>,
+<code>sandbox.py</code>, <code>spec.py</code>, <code>web.py</code>.</p>
+<p><strong>Clients</strong> — <code>shatterling/cli.py</code>,
+<code>shatterling/clients/sdk.py</code>,
+<code>shatterling/campion/app.js</code>.</p>
+<p><strong>Tests</strong> — <code>tests/test_harness.py</code>,
+<code>test_forgetting.py</code>, <code>test_server.py</code>,
+<code>test_tools.py</code>, <code>test_web.py</code>,
+<code>test_backend_api_key.py</code>, <code>test_ui_layout.py</code>;
+<code>.github/workflows/test_and_lint.yml</code>.</p>
+<p><strong>Design notes</strong> — <code>docs/refactor-plan.md</code>,
+<code>docs/library-migration.md</code>.</p>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Nothing reads the mirror back.</strong>
+<code>git grep -n -E 'context_jsonl_path|context\.jsonl' -- 'shatterling/*.py'</code>
+returns the help text at <code>cli.py:486</code>, the config comment at
+<code>config.py:78</code>, the docstring at <code>harness.py:60</code>,
+the property at <code>:120-121</code> and the write at
+<code>:682</code>, and no read.</li>
+<li><strong>The model's tool list has no recall.</strong>
+<code>git grep -n -E 'recall|reinject' -- shatterling/tools</code>
+returns nothing; the same pattern over
+<code>shatterling/purslane/mcp.py</code> returns the MCP tools at
+<code>:220</code> and <code>:235</code>.</li>
+<li><strong>No inbound credential check.</strong>
+<code>git grep -n -i 'headers.get(.authorization' -- shatterling/purslane/server.py</code>
+returns <code>:319</code>, inside <code>_auth_header</code>, which
+relays the header to the backend, and <code>:482</code>, which copies it
+onto the MCP layer's own HTTP client.</li>
+<li><strong>No lock around a turn.</strong>
+<code>git grep -n -w lock -- shatterling/purslane/server.py</code>
+returns only <code>self.lock</code> uses inside <code>Supervisor</code>
+session bookkeeping (<code>:500</code>, <code>:651</code>,
+<code>:804</code>, <code>:1325</code>, <code>:1371</code>,
+<code>:1423</code>, <code>:1453</code>, <code>:1457</code>,
+<code>:1546</code>) and none around <code>h.step</code>.</li>
+<li><strong>No test returns to an earlier slot value.</strong>
+<code>git grep -n -i -E 'nova-1.*nova-2.*nova-1|revert' -- tests</code>
+returns nothing.</li>
+<li><strong>No paper result is committed.</strong>
+<code>git grep -n -i -E 'browsecomp|edgebench|contextbench'</code>
+returns the README line naming ContextBench and a section comment at
+<code>harness.py:621</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-09</strong> — <a
+href="https://github.com/GentianLine/clm-mem/commit/433bce18f67060c657be274d4ffdfb49c9bb2b60"><code class="commit-id" title="433bce18f67060c657be274d4ffdfb49c9bb2b60">433bce18…</code></a>.
+First reading, from a full clone of <code>main</code>. Screened first:
+no auto-run or build-time execution; <code>pyproject.toml</code> inside
+the seven-day cooldown with no lockfile beside it, and
+<code>AGENTS.md</code> read as data. I installed and ran nothing; the
+suite was read, not run. The cited paper, <a
+href="https://arxiv.org/abs/2609.37725">arXiv:2609.37725</a>, was
+checked to resolve to <em>Context Language Models</em> by Shao et al. No
+capability mark is earned (§9).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

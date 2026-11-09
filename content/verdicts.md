@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 791 reports.**
+**This page covers all 792 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7252,3 +7252,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: GPL-3.0-or-later; 1,681 lines of Python in the package; 58 commits by one author, all on 8 November 2026, the day the repository was created; 71 unittest functions for the package with no CI, not run here. Five marks: `tombstone`, `trust_state`, `bitemporal`, `audit_log`, `negative_eval`. The link-suggestion pilot is one AI reviewer's labels on a private graph and says so.
 - Study when: you want claims that stay bound to the bytes they came from, a rejection keyed on the value, or an encrypted log that detects reordering without a separate index.
 - Do not copy when: more than one person or project shares the store, the journal will grow past a few thousand events, or rejected values must be correctable.
+
+### [`clm-mem`](../systems/clm-mem/)
+- Best idea: **the writer classifies and the engine enforces.** The chat model wraps durable spans in `<longterm>` and working state in `<shortterm>` while it decodes, and a deterministic three-phase evictor holds the window to a token budget: transient first, short-term in FIFO rounds, long-term last and only to an archive with a pointer left behind.
+- Biggest risk: **the server answers any web origin and can execute commands.** It sends `Access-Control-Allow-Origin: *`, checks no inbound credential, lets a client open a workspace with tools enabled, and runs `sandbox/exec` with no approval in a jail its own docstring says has no filesystem or network isolation.
+- Second risk: archive ids restart at zero in every process while the archive persists, so `reinject` can return another run's block; and with supersession on, a value that returns after a change is dropped as a duplicate of the superseded block.
+- Most reusable component: `MemoryHarness.evict` in `shatterling/engine/harness.py:434-538`, with the three reheating scopes in `reheat` at `:297-348`.
+- Maturity impression: MIT; 8,225 lines of Python, 1,769 of them the engine; 55 commits under five author identities between 12 October and 7 November 2026; 119 pytest functions against mock backends, run by CI, not run here. No capability mark: the archive records evictions and not edits, the superseded label demotes without filtering, and the negative cases are about the assembled window.
+- Study when: you want a self-managed context window on a local open model with a predictable budget, or a clean separation of freshness from value when several chats touch one fact.
+- Do not copy when: memory must survive a restart, stay apart between conversations, or be reachable from a browser.

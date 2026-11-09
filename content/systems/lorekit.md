@@ -21,7 +21,7 @@ capability_evidence:
   negative_eval: "the CLI's local store, with the hosted predicate asserted in SQL | packages/cli/test/store.test.mjs:115-132, supabase/tests/migrations.test.sql:2867-2928 | `list is newest-first and filters by tag; archived is hidden` writes two lessons to one scope, archives one, and asserts that `list` returns exactly the other and that `read` of the archived key returns null — a populated read with the archived entry absent and the live one present. The hosted read tools are covered one level down: §60c of the migration suite seeds an active, an archived and an expired row under one owner, asserts that the read tools' predicate returns the active row and neither of the others, and asserts that raw RLS returns both hidden rows, so the query-layer filter is shown to be the load-bearing one. The edge tools themselves are asserted only to apply the predicate (`list.spec.ts:163-172`, `read.spec.ts:141-150`, `search.spec.ts:164-167`), which is a test of the mechanism rather than of the result | packages/smoke-tests/src/byod-smoke.integration.spec.ts:396-407"
 stack_storage: "postgres, files"
 stack_retrieval: "lexical"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A record addressed by `(scope, key)` with a stable id — a Markdown or JSON value up to 64 KB, tags, kind, host, origin repo, branch, commit and PR, an open attributes map and an optional supersedes link"
   storage: "Supabase Postgres with row-level security, a generated FTS column and a dormant pgvector column; or a local two-tier Markdown store in the CLI whose frontmatter keeps fields it does not know"
