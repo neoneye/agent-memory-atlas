@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 793 reports.**
+**This page covers all 795 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7270,3 +7270,21 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 23,543 lines of Python under `src/`, 25,998 of tests; 291 commits by one author between 31 July and 25 October 2026; 1,203 test functions run by CI with `mypy --strict` and pip-audit, not run here. Four marks: `scope_enforced`, `audit_log`, `bitemporal` and `negative_eval`. The OmniMemEval aggregates recompute from the committed JSON, from a run 35 commits before this pin.
 - Study when: you want correctable memory whose every derived row cites its evidence, or projections that a late event cannot make stale.
 - Do not copy when: a deletion request has to remove the text, or the memory server is reachable by a model that must not choose its own tenant.
+
+### [`pok-agent`](../systems/pok-agent/)
+- Best idea: **two strengths of forgetting on one write path.** Deleting a fact tombstones its exact fingerprint, and "forget and prevent relearning" also stores its canonical text, so the curation pass can neither re-save it nor reword it back — while drafts the pass does save stay out of every read until a person approves them.
+- Biggest risk: **the agent's own `remember_fact` writes as the user.** It saves approved facts with explicit-user provenance on every call, while `memory_save` checks the user's request for "remember" first, and an explicit-user write deletes a matching tombstone and skips the suppression.
+- Second risk: a draft the curation pass sees in a second run is promoted to approved with no person involved, and an explicit correction rewrites a fact's text in place with no earlier wording kept.
+- Most reusable component: `save_with_provenance` in `crates/pok-ai-core/src/memory.rs:279-450`, with the skill trust rule in `session/skill_replay.rs` and `record_skill_failure` at `memory.rs:1515-1526`.
+- Maturity impression: Apache-2.0; 103,941 lines of Rust; 101 commits by one author between 24 September and 8 November 2026; 786 Rust tests under CI with clippy warnings denied, not run here. Three marks: `tombstone`, `trust_state` and `negative_eval`. The arena summary recomputes, and its own table shows replaying only a skill's opening steps raised planner calls from 24.1 to 28.3.
+- Study when: you want rejection remembered by value against an automatic extractor, or skills that lose the right to replay when they fail.
+- Do not copy when: the model must not be able to admit facts on the user's behalf, or memory is shared between people.
+
+### [`waifu-companion`](../systems/waifu-companion/)
+- Best idea: **a background summary that cannot overwrite a newer state.** Each compression captures the chat id, the summary, its checkpoint and two revision counters, and drops its result if any of them moved, so a reset, a deleted message, an edit or "forget everything" always wins; source messages leave only after the summary covering them is accepted.
+- Biggest risk: **forgetting clears the distillate and keeps the source.** "Forget everything" empties the cross-chat list while every chat summary it was distilled from stays, and the next compression reads those summaries back in.
+- Second risk: one label holds one value, so a new `Likes:` line erases the old ones; and by default every request, memory included, goes through WaifuAI's hosted proxy.
+- Most reusable component: `maybeSummarizeConversation` in `app/scripts/chat_controller.js:421-480`, with `compressionTask` and `accept` in `app/scripts/context_budget.js`.
+- Maturity impression: MIT-0; 11,022 lines of browser JavaScript; 203 commits by one author between 26 December 2025 and 4 November 2026; 178 node tests and five browser-test files, no CI, not run here. No capability mark: editing after the fact is not a gate, and the negative case is about the assembled prompt.
+- Study when: you want summarisation that is safe against every user action in a single-user client, or a cross-chat memory with no server.
+- Do not copy when: a user must be able to make the companion forget, or facts can hold several values under one label.

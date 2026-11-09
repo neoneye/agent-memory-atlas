@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A browser Live2D companion that
+keeps each chat's rolling summary and a cross-chat list of labelled
+facts in localStorage, both written by the summariser.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Waifu
+Companion — Agent Memory Atlas">
+    <meta property="og:description" content="A browser Live2D companion
+that keeps each chat's rolling summary and a cross-chat list of labelled
+facts in localStorage, both written by the summariser.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Waifu
+Companion — Agent Memory Atlas">
+    <meta name="twitter:description" content="A browser Live2D companion
+that keeps each chat's rolling summary and a cross-chat list of labelled
+facts in localStorage, both written by the summariser.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Waifu Companion — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Waifu Companion",
+      "description": "A browser Live2D companion that keeps each chat's rolling summary and a cross-chat list of labelled facts in localStorage, both written by the summariser.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A companion's memory in browser storage</p>
+          <h1>Waifu Companion</h1>
+          <p class="document-deck">A browser Live2D companion that keeps
+each chat's rolling summary and a cross-chat list of labelled facts in
+localStorage, both written by the summariser.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/waifuai/waifu-companion">
+              <span>Source</span>
+              <strong>waifuai/waifu-companion</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/waifuai/waifu-companion/commit/f6f2b92a0c0d3576affd9e9c55473dc2035f8b71" title="f6f2b92a0c0d3576affd9e9c55473dc2035f8b71">
+              <span>Analyzed revision</span>
+              <code>f6f2b92a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-09</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/waifuai--waifu-companion" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>waifuai--waifu-companion</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT-0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>11,022
+lines of browser JavaScript in 44 files under app/scripts/, plus 33
+interface locales and a generated multilingual landing
+site</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>203
+commits, 26 December 2025 – 4 November 2026, one author under two
+identities</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>178
+node:test cases in 17 .cjs files and five Python browser-test files
+under app/tests/; no CI workflow; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Waifu Companion is <strong>a browser AI companion</strong>: a Live2D
+character with voice, chatting through an LLM. It is a static web app
+with no build step. Memory has two layers, both in
+<code>localStorage</code>:</p>
+<ul>
+<li><strong>Per chat:</strong> the recent messages and one rolling
+summary. When the history outgrows its budget, a model compresses the
+oldest messages into the summary.</li>
+<li><strong>Across chats:</strong> a list of short facts the summariser
+marks as worth keeping (<em>"Durable across chats:"</em>). The list is
+merged by label and written into every conversation's system
+prompt.</li>
+</ul>
+<p>The code is MIT-0. By default every model call, including the
+summarisation, goes through WaifuAI's hosted proxy at
+<code>waifu-companion-proxy.thewaifuai.workers.dev</code>
+(<code>app/scripts/waifu_proxy.js:104-108</code>). A user can switch to
+OpenRouter, Groq or another OpenAI-compatible endpoint.</p>
+<p>What is good:</p>
+<ul>
+<li><strong>Compression cannot overwrite a newer state.</strong> Each
+run captures the chat id, the summary, its progress marker and the
+revision counters for both memories. It drops its result if any of them
+changed while the model was answering, so a reset, a deleted message, an
+edit or "forget everything" wins
+(<code>app/scripts/chat_controller.js:421-470</code>).</li>
+<li><strong>Source text is removed only after it has been
+summarised.</strong> Messages leave the history only once the summary
+that covers them is accepted. A message too large for one request is
+compressed in checkpointed parts that survive a reload.</li>
+<li><strong>The budgets never block a chat.</strong> An oversized legacy
+summary is compressed in parts while the chat continues on a trimmed
+copy.</li>
+</ul>
+<p>No capability mark is earned.</p>
+<p>What is weak:</p>
+<ul>
+<li><strong>Forgetting is partial.</strong> "Forget everything
+remembered between chats" clears the cross-chat list. The per-chat
+summaries the list was distilled from stay, and the next compression of
+any of those chats can put the same facts back.</li>
+<li><strong>One label holds one value.</strong> A durable line replaces
+the stored line whose first 24 characters before a colon match, so a new
+<code>Likes:</code> line erases the earlier likes.</li>
+</ul>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a line of text the companion is told it
+remembers</strong>. There are no records, ids or states; there are two
+strings, the chat's summary and the cross-chat list, and the model reads
+both on every turn.</p>
+<h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
+<p><code>maybeSummarizeConversation</code> runs when a chat has more
+messages than the trigger, or its older history exceeds 128 KB
+(<code>app/scripts/chat_controller.js:421-480</code>). It keeps the
+newest half of the memory size and builds a compression task for the
+rest, which carries the previous summary as input. The summariser's
+instruction asks for the new summary followed by a section starting
+<em>"Durable across chats:"</em>. That section lists <em>"the facts
+about the user and the relationship that should carry into future
+conversations (for example their name and personal details, likes and
+dislikes, open storylines, promises…)"</em>
+(<code>app/scripts/context_budget.js:92</code>).</p>
+<p><code>splitDurable</code> cuts the reply at that marker.
+<code>mergeDurable</code> folds each line into the stored list: a line
+with a short label, up to 24 characters before <code>": "</code>,
+replaces the stored line with the same label, and any other line
+replaces an identical line or appends
+(<code>context_budget.js:100-123</code>). The list is saved unpacked;
+<code>packUserMemory</code> keeps the newest lines within 8 KB when it
+is read.</p>
+<h3 id="how-a-belief-stops-being-one">How a belief stops being one</h3>
+<p>A stored line is replaced by a newer line with the same label, drops
+off the front when the list passes 8 KB at read time, is edited away by
+the user, or goes with the whole list when the user forgets everything.
+Nothing records that a line was removed or replaced.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the summariser writes both memories; forgetting clears the cross-chat list and leaves the chat summaries it came from, which the next compression reads again</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the summariser writes both memories; forgetting clears the cross-chat list and leaves the chat summaries it came from, which the next compression reads again
+flowchart TD
+    CHAT[&quot;chat history&lt;br/&gt;recent messages in&lt;br/&gt;localStorage&quot;]
+    COMP[&quot;compression&lt;br/&gt;oldest messages plus the&lt;br/&gt;previous summary&quot;]
+    SUM[&quot;chat summary&lt;br/&gt;first part of the reply,&lt;br/&gt;one per chat&quot;]
+    DUR[&quot;Durable across chats&lt;br/&gt;last part of the&lt;br/&gt;same reply&quot;]
+    LIST[&quot;cross-chat list&lt;br/&gt;merged by label,&lt;br/&gt;packed to 8 KB on read&quot;]
+    PROMPT[&quot;every system prompt&lt;br/&gt;list, then summary&quot;]
+    FORGET[&quot;forget everything&lt;br/&gt;clears the list only&quot;]
+    CHAT --&gt; COMP
+    COMP --&gt; SUM
+    SUM -- &quot;split at the marker&quot; --&gt; DUR
+    DUR --&gt; LIST
+    LIST --&gt; PROMPT
+    PROMPT ~~~ FORGET
+    SUM -. &quot;read again by the&lt;br/&gt;next compression&quot; .-&gt; COMP
+    FORGET -. empties .-&gt; LIST</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Plain browser scripts loaded in order by <code>app/index.html</code>,
+sharing state through an <code>AppState</code> object and window
+properties (<code>app/scripts/global_state.js</code>).
+<code>storage.js</code> wraps <code>localStorage</code> with a typed
+API. On a quota error it reclaims UI cache keys and retries once, and in
+an embedded restricted frame it falls back to an in-memory map
+(<code>app/scripts/storage.js:150-260</code>).
+<code>context_budget.js</code> holds the byte limits:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Limit</th>
+<th style="text-align: right;">Bytes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>history</td>
+<td style="text-align: right;">128 KB</td>
+</tr>
+<tr>
+<td>summary</td>
+<td style="text-align: right;">32 KB</td>
+</tr>
+<tr>
+<td>transcript</td>
+<td style="text-align: right;">128 KB</td>
+</tr>
+<tr>
+<td>request</td>
+<td style="text-align: right;">256 KB</td>
+</tr>
+<tr>
+<td>cross-chat list</td>
+<td style="text-align: right;">8 KB</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>chat_manager.js</code> keeps one
+<code>chatData_&lt;id&gt;</code> entry per chat with its messages,
+summary and progress. Live2D, PIXI, Kokoro TTS and the Cubism runtime
+load from CDNs at run time, two of them without a version
+(<code>app/index.html</code>); Google Analytics is included.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Open the site, or serve the folder. There is nothing to install, and
+memory lives in the browser profile, so it does not follow the user to
+another device or browser. The summary and the list are plain text areas
+in the settings panel.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Compression</strong> —
+<code>maybeSummarizeConversation</code>
+(<code>app/scripts/chat_controller.js:421-480</code>) →
+<code>ConversationBudget.compressionTask</code>, <code>accept</code>,
+<code>splitDurable</code>, <code>mergeDurable</code>
+(<code>app/scripts/context_budget.js:95-180</code>) →
+<code>requestMemorySummary</code>
+(<code>app/scripts/ai_interface.js:742-745</code>).</p>
+<p><strong>Prompt</strong> — <code>buildChatMessages</code> in
+<code>app/scripts/ai_interface.js:190-246</code>: core persona, custom
+persona, the packed cross-chat list as <em>"Things you remember about
+the user from earlier conversations"</em>, then the active summary.</p>
+<p><strong>Persistence</strong> —
+<code>persistConversationMemory</code>, <code>persistUserMemory</code>
+(<code>chat_controller.js:400-416</code>); <code>saveCurrentChat</code>
+and the welcome openers in <code>app/scripts/chat_manager.js</code>.</p>
+<p><strong>Editing and forgetting</strong> —
+<code>handleSavePersona</code> and <code>handleForgetEverything</code>
+(<code>app/scripts/settings_handlers.js:395-462</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Per chat (<code>chatData_&lt;id&gt;</code>): <code>id</code>,
+<code>name</code>, <code>messages</code>,
+<code>conversationSummary</code>, <code>summaryProgress</code> (a
+partial-compression checkpoint keyed by message id, offset and a content
+signature), <code>summaryBackup</code>,
+<code>messageCountSinceLastSummary</code> and timestamps. Global keys
+hold <code>userMemory</code>, the cross-chat list as one string, and
+<code>crossChatMemory</code>, the toggle, on by default.</p>
+<p>A durable line's only structure is its optional label. There is no
+source, no date, no confidence, and no link back to the chat or message
+it came from.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval step. The whole packed list and the active
+chat's summary go into every system prompt, the list before the summary,
+and the recent messages follow. A new chat with a non-empty list greets
+the user with the two newest lines. A restored chat with a summary
+greets them with its first 140 characters.</p>
+<p>Failure modes:</p>
+<ul>
+<li><strong>Everything competes for one prompt.</strong> At 8 KB of list
+and 32 KB of summary, the memory can take a large share of a small
+model's context on every turn.</li>
+<li><strong>The oldest facts drop first.</strong> Packing keeps the
+newest lines, whatever they are.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Compression is part of a user turn and runs at most once per turn,
+after a two minute cooldown if the previous attempt failed. The new
+summary replaces the old one only if nothing changed meanwhile; a
+durable section is merged only if the toggle was on at the start and is
+still on, and the list has not been edited or cleared since. Source
+messages are trimmed after the summary is accepted, so a failed or
+rejected compression keeps everything. The tests check each of these
+guards, including that an edit to <code>Name: Corrected</code> survives
+an in-flight compression that returns <code>Name: Rei</code>
+(<code>app/tests/test_memory_limit.cjs:261-282</code>).</p>
+<p><strong>The guard protects one compression, not the
+correction.</strong> The chat summaries are left intact by an edit and
+by "forget everything". A later compression reads the previous summary
+as input, so if a summary still says the user is Rei, the next durable
+section can say <code>Name: Rei</code> again and replace
+<code>Name: Corrected</code> by label. I traced this through
+<code>compressionTask</code> and <code>mergeDurable</code> and did not
+run it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The companion is the agent; there are no memory tools. An
+experimental setting lets the model change application settings. The
+memory is shaped entirely by the summariser prompt and the user's
+edits.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Where the memory goes.</strong> The cross-chat list and the
+summary are written into every request, and summarisation sends the
+chat's older messages. With the default provider, all of it goes to the
+WaifuAI proxy; with another provider, to that provider. The settings
+explain the provider choice; the memory itself never leaves the browser
+through any other path.</p>
+<p><strong>What forgetting does.</strong>
+<code>handleForgetEverything</code> empties the list after a
+confirmation that says <em>"This cannot be undone"</em>. Nothing marks
+the forgotten lines, and the per-chat summaries that produced them stay.
+A user who wants a fact gone has to remove it from every chat summary
+that mentions it as well.</p>
+<h3 id="marks">Marks</h3>
+<p>No capability mark is earned.</p>
+<ul>
+<li><code>human_review</code> is withheld. The text areas let a person
+rewrite or clear memory after it is written, which is editing after the
+fact, not a gate.</li>
+<li><code>negative_eval</code> is withheld.
+<code>the toggle removes cross-chat memory from requests</code> asserts
+that the list is absent from the assembled system prompt, which is not a
+retrieval result.</li>
+<li><code>tombstone</code>, <code>trust_state</code>,
+<code>bitemporal</code>, <code>scope_enforced</code> and
+<code>audit_log</code> have no mechanism.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>178 <code>node:test</code> cases in 17 <code>.cjs</code> files run
+the browser scripts against stub DOM and storage objects. They cover
+context budgets, compression checkpoints, stale-result rejection, the
+durable split and merge, cross-chat greetings, turn ownership, speech
+and locale loading. Five Python files drive a real browser. The memory
+suites are the strongest part, and they test the races that matter for a
+single-user store.</p>
+<p>There is no CI workflow and no evaluation of memory quality. I read
+the tests and ran nothing.</p>
+<p>The screen could not see this tree: it parses no manifest here, and
+there is none. By hand, the execution surface is the scripts
+<code>app/index.html</code> loads at run time. Pixi 5.3.3, Day.js 1.10.6
+and Kokoro 1.2.1 come from CDNs with pinned versions.
+<code>pixi-live2d-display</code> and a Live2D library from a GitHub path
+load with no version or ref. Google Analytics loads too. Nothing was
+opened in a browser.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Capture the state a background write depends on, and drop the
+write if any of it moved.</strong> Chat id, summary, progress and two
+revision counters, compared after the model answers, make a slow
+summariser safe against every user action.</p>
+<p><strong>Remove source only after the summary that covers it is
+accepted.</strong> A failed compression then costs a retry, not the
+conversation.</p>
+<p><strong>Ask the summariser for the durable part in the same
+call.</strong> One request yields the chat summary and the cross-chat
+facts, with a marker the client can split on.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Don't forget the output and keep the input.</strong> Clearing
+the distilled list while the summaries that produced it remain means the
+next compression can restore what the user removed. Remove the facts
+from the sources, or record what was forgotten.</p>
+<p><strong>Don't key a fact on a label that holds one value.</strong>
+<code>Likes:</code> and <code>Promises:</code> are lists; replacing by
+label erases them.</p>
+<p><strong>Don't send memory to a default hosted endpoint without saying
+so where the memory is.</strong> The memory panel is where the user
+decides what to keep.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits <strong>someone building a single-user companion in a
+browser</strong> who wants continuity across chats without a server, and
+wants the user to see and edit what the companion remembers. The
+compression engineering is worth copying on its own.</p>
+<p>It is not a memory to rely on for anything the user needs gone, or
+for facts that must not overwrite each other, and it stays with one
+browser profile.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should "forget everything" also clean the chat
+summaries?</strong> Its wording promises the cross-chat memory only;
+whether the summaries are meant to keep the facts is not stated.</li>
+<li><strong>Should labelled lines accumulate?</strong> The merge rule
+treats every label as single-valued, while the prompt's own examples
+include likes, dislikes and promises.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Memory</strong> — <code>app/scripts/context_budget.js</code>,
+<code>chat_controller.js</code>, <code>chat_manager.js</code>,
+<code>storage.js</code>, <code>global_state.js</code>,
+<code>settings_handlers.js</code>, <code>ai_interface.js</code>,
+<code>waifu_proxy.js</code>.</p>
+<p><strong>Tests</strong> —
+<code>app/tests/test_memory_limit.cjs</code>,
+<code>test_context_budget.cjs</code>,
+<code>test_cross_chat_memory.cjs</code>.</p>
+<p><strong>Docs</strong> — <code>app/docs/memory.md</code>.</p>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Forgetting touches only the list.</strong>
+<code>git grep -n -A10 'function handleForgetEverything' -- app/scripts</code>
+shows <code>userMemory</code> and its storage key cleared and no chat
+summary touched.</li>
+<li><strong>No record of a removed line.</strong>
+<code>git grep -n -i -E 'tombstone|forgotten|suppress' -- app/scripts</code>
+returns the <code>user_memory_forgotten</code> analytics event at
+<code>settings_handlers.js:460</code> and two unrelated suppressions of
+completion hooks and duplicate sends in
+<code>chat_controller.js</code>.</li>
+<li><strong>No CI.</strong> <code>ls .github</code> fails.</li>
+<li><strong>Unversioned run-time scripts.</strong>
+<code>git grep -n -E 'pixi-live2d-display/dist|gh/dylanNew' -- app/index.html</code>
+returns the two script tags with no version or ref.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-09</strong> — <a
+href="https://github.com/waifuai/waifu-companion/commit/f6f2b92a0c0d3576affd9e9c55473dc2035f8b71"><code class="commit-id" title="f6f2b92a0c0d3576affd9e9c55473dc2035f8b71">f6f2b92a…</code></a>.
+First reading, from a full clone of <code>main</code>. The screen found
+nothing it parses; by hand, there is no manifest, no build step and no
+CI, and the run-time CDN scripts include two with no version. I opened,
+installed and ran nothing; the tests were read, not run. No capability
+mark (§9).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

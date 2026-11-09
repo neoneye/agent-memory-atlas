@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Windows computer-use agent whose
+SQLite memory holds draft and approved facts behind value tombstones,
+and replayable skills that earn trust per run.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="POK-Agent — Agent Memory Atlas">
+    <meta property="og:description" content="A Windows computer-use
+agent whose SQLite memory holds draft and approved facts behind value
+tombstones, and replayable skills that earn trust per run.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="POK-Agent — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Windows computer-use
+agent whose SQLite memory holds draft and approved facts behind value
+tombstones, and replayable skills that earn trust per run.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>POK-Agent — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "POK-Agent",
+      "description": "A Windows computer-use agent whose SQLite memory holds draft and approved facts behind value tombstones, and replayable skills that earn trust per run.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Muscle memory for a Windows computer-use
+agent</p>
+          <h1>POK-Agent</h1>
+          <p class="document-deck">A Windows computer-use agent whose
+SQLite memory holds draft and approved facts behind value tombstones,
+and replayable skills that earn trust per run.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Acekorneya/POK-Agent">
+              <span>Source</span>
+              <strong>Acekorneya/POK-Agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Acekorneya/POK-Agent/commit/e97bb68b78456319ee9650b3fd0b2384f84982b5" title="e97bb68b78456319ee9650b3fd0b2384f84982b5">
+              <span>Analyzed revision</span>
+              <code>e97bb68b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-09</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Acekorneya--POK-Agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Acekorneya--POK-Agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>103,941
+lines of Rust in 92 files, of which the memory store and its hygiene are
+3,553 (memory.rs and memory/budget.rs); 8,713 lines in the Tauri desktop
+front end and 6,430 of Python scripts</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>101
+commits by one author, 24 September – 8 November 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>786
+Rust #[test] functions; ci.yml runs cargo fmt, clippy with warnings
+denied, and cargo test for four crates; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>POK-Agent is <strong>a Windows computer-use agent written in
+Rust</strong>. A large model plans (System 2), and an optional small
+decision model (System 1) answers typed questions and replays recorded
+action programs on screen: local Laya, or the hosted JEV. It runs as a
+Tauri desktop app with voice, a CLI and a WhatsApp gateway. It is
+Apache-2.0.</p>
+<p>Its memory has two halves in one SQLite file. <strong>Facts</strong>
+are short durable statements about the user, a project or the
+environment. <strong>Procedures</strong> are reusable skills; a workflow
+can carry an action program that System 1 replays when the same task
+comes back. That replay is the "muscle memory" the README is named
+for.</p>
+<p>What is good:</p>
+<ul>
+<li><strong>Rejection is remembered by value.</strong> Rejecting a
+draft, deleting a fact, or "forget and prevent relearning" records the
+fact's fingerprint, and forgetting also records its canonical text, so
+the curation pass cannot learn it again in the same or similar words
+(<code>crates/pok-ai-core/src/memory.rs:279-306</code>).</li>
+<li><strong>Drafts stay out of every read.</strong> All three fact reads
+that reach the model select approved, enabled rows only.</li>
+<li><strong>Skills earn and lose trust.</strong> Replay requires a trust
+score of <code>(successes + 1) / (uses + 2)</code>; a grounded success
+raises it, and three failures that outnumber successes disable the
+skill.</li>
+</ul>
+<p>Three marks are earned: <code>tombstone</code>,
+<code>trust_state</code> and <code>negative_eval</code>.</p>
+<p>What is weak:</p>
+<ul>
+<li><strong>The agent's own tool writes approved facts.</strong>
+<code>remember_fact</code> saves with <code>approved=true</code> and
+explicit-user provenance on every call. Its sibling
+<code>memory_save</code> checks the user's request for "remember" first.
+An explicit-user write deletes a matching tombstone and skips the
+semantic suppression, so the model can restate a value the user chose to
+forget.</li>
+<li><strong>Repetition stands in for review.</strong> An inferred draft
+seen in a second run is promoted to approved by the fact budget, with no
+person involved.</li>
+<li><strong>An explicit correction rewrites in place.</strong> A
+statement similar enough to a stored fact replaces its text and
+fingerprint, and the earlier wording is kept nowhere.</li>
+</ul>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A fact is <strong>a statement with a provenance and an admission
+state</strong>. Provenance says who asserted it:
+<code>explicit_user</code>, <code>inferred_curation</code>,
+<code>user_approved</code> or <code>legacy</code>. Admission decides
+whether the model reads it. A procedure is <strong>a recipe with a track
+record</strong>: what it is for, its steps, and how often it worked.</p>
+<h3 id="how-a-thing-becomes-a-belief">How a thing becomes a belief</h3>
+<p>Four producers:</p>
+<ul>
+<li><strong><code>remember_fact</code></strong>
+(<code>crates/pok-ai-core/src/builtins/memory_tools.rs:16-54</code>),
+registered for every desktop session with risk class
+<code>ReadOnly</code>. It saves the text approved, as an explicit user
+statement. Its description asks the model to use it only when the user
+asks; the handler does not check.</li>
+<li><strong><code>memory_save</code></strong>
+(<code>memory_tools.rs:184-231</code>) takes an <code>approved</code>
+flag and honours it only when the task's root request contains
+"remember", "save this", "store this" or "keep this in memory".
+Otherwise the fact is an inferred draft.</li>
+<li><strong>The curation pass</strong>
+(<code>crates/pok-ai-core/src/session/curation.rs</code>) proposes facts
+after a run. With a System 1 router configured and the text not flagged
+as sensitive, the router chooses create, reject, reinforce, propose an
+update, or conflict against up to four related facts; otherwise the fact
+is saved locally as a draft.</li>
+<li><strong>Skills</strong> are saved from runs the agent's own checks
+call successful, with the action program System 1 recorded.</li>
+</ul>
+<p><code>save_with_provenance</code> then decides
+(<code>memory.rs:279-450</code>):</p>
+<ol type="1">
+<li>A tombstoned fingerprint is refused unless the write is approved and
+explicit.</li>
+<li>An inferred write similar to a suppressed text is refused.</li>
+<li>An exact repeat reinforces.</li>
+<li>An inferred write that fails the hygiene rules is refused. The rules
+exclude task findings and notes about website behaviour.</li>
+<li>A near-duplicate reinforces an inferred repeat. An explicit
+statement rewrites the stored fact's text instead.</li>
+<li>Anything else is inserted, marked <code>possible_duplicate</code>
+when it is close to an existing fact.</li>
+</ol>
+<p>The fact budget then runs
+(<code>crates/pok-ai-core/src/memory/budget.rs:114-160</code>):</p>
+<ul>
+<li>it promotes inferred drafts reinforced twice;</li>
+<li>it expires unreinforced drafts after 14 days;</li>
+<li>it caps drafts at 15, inferred facts at 60 and swarm playbooks at 8,
+keeping the most reinforced.</li>
+</ul>
+<h3 id="how-a-belief-stops-being-one">How a belief stops being one</h3>
+<p>A person rejects a draft, disables, deletes or forgets a fact, or
+merges duplicates, which can be undone. Each of reject, delete and
+forget writes a tombstone; forget also writes a semantic suppression.
+The budget deletes inferred facts past their caps without a tombstone,
+so a capped-out fact can come back. A skill is disabled after three
+failures that outnumber its successes, or deleted with a task-key
+tombstone.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — only approved, enabled facts are read; a tombstone stops the curation pass from relearning a rejected value, and an explicit-user write lifts it, which is what remember_fact always is</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: only approved, enabled facts are read; a tombstone stops the curation pass from relearning a rejected value, and an explicit-user write lifts it, which is what remember_fact always is
+flowchart TD
+    CUR[&quot;curation pass&lt;br/&gt;after a run, optionally&lt;br/&gt;judged by System 1&quot;]
+    SAVE[&quot;memory_save&lt;br/&gt;approved only if the user&lt;br/&gt;said remember&quot;]
+    REM[&quot;remember_fact&lt;br/&gt;always approved,&lt;br/&gt;explicit-user provenance&quot;]
+    GATE{&quot;tombstoned or&lt;br/&gt;suppressed?&quot;}
+    DRAFT[&quot;draft&lt;br/&gt;approved = 0,&lt;br/&gt;never read by the model&quot;]
+    APP[&quot;approved fact&lt;br/&gt;read at session start,&lt;br/&gt;per turn, and by search&quot;]
+    TOMB[&quot;tombstone and&lt;br/&gt;semantic suppression&quot;]
+    CUR --&gt; GATE
+    SAVE --&gt; GATE
+    GATE -- &quot;inferred: refused&quot; --&gt; TOMB
+    GATE -- &quot;not blocked&quot; --&gt; DRAFT
+    REM -- &quot;deletes the tombstone&quot; --&gt; APP
+    DRAFT -- &quot;person approves,&lt;br/&gt;or seen in a second run&quot; --&gt; APP
+    DRAFT -- &quot;person rejects&quot; --&gt; TOMB
+    APP -- &quot;person deletes or forgets&quot; --&gt; TOMB</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Cargo workspace. <code>pok-ai-core</code> holds the session loop,
+the decision router, the tool registry, the browser and Windows
+automation, the coding tools, the swarm, the gateway, and the memory
+store. <code>pok-ai-windows</code> binds the Windows accessibility tree,
+and <code>pok-ai-voice</code> the speech stack. <code>pok-ai-cli</code>
+is the command line. <code>apps/desktop</code> is the Tauri app.</p>
+<p>The memory store is one SQLite file under the data directory's
+<code>memory/</code> folder. It holds <code>memories</code> with an FTS5
+index, <code>procedures</code> with an FTS5 index,
+<code>memory_tombstones</code>,
+<code>memory_semantic_suppressions</code>, and
+<code>memory_merges</code>, which records the merged rows as JSON so
+<code>undo_memory_merge</code> can restore them. Every call takes one
+process-wide mutex on the connection. Skills are also written as
+Markdown files for the user to read.</p>
+<p>The desktop app exposes the review surface as Tauri commands
+(<code>apps/desktop/src-tauri/src/lib.rs:1345-1460</code>):</p>
+<ul>
+<li>approve or reject a draft;</li>
+<li>list the memory library;</li>
+<li>enable, disable, delete, or forget and prevent relearning;</li>
+<li>scan for duplicates, merge, and undo a merge;</li>
+<li>enable or disable a procedure.</li>
+</ul>
+<p>The CLI has <code>memory approve</code> and a context query.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A Windows build of the desktop app, or the CLI. Planning needs a
+model provider; System 1 is optional, and its hosted form, JEV, receives
+typed state and memory proposals when configured. The store is local and
+readable with any SQLite client. Cargo manifests changed inside the
+seven-day cooldown at this pin.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Store</strong> —
+<code>crates/pok-ai-core/src/memory.rs</code>:
+<code>save_with_provenance</code> (<code>:279-450</code>),
+<code>search</code> (<code>:452-491</code>), <code>approve</code> and
+<code>reject_draft</code> (<code>:508-543</code>),
+<code>delete_memory</code> and
+<code>forget_memory_and_prevent_relearning</code>
+(<code>:837-906</code>), <code>merge_memories</code> and
+<code>undo_memory_merge</code> (<code>:718-828</code>),
+<code>retrieve_context</code> (<code>:1620-1687</code>).</p>
+<p><strong>Hygiene</strong> —
+<code>crates/pok-ai-core/src/memory/budget.rs</code>:
+<code>inferred_fact_rejection</code>, <code>enforce_fact_budgets</code>
+(<code>:114-160</code>).</p>
+<p><strong>Tools</strong> —
+<code>crates/pok-ai-core/src/builtins/memory_tools.rs</code>:
+<code>remember_fact</code>, <code>memory_search</code>,
+<code>memory_save</code>, <code>context_search</code>,
+<code>context_read</code>, <code>skill_create</code>,
+<code>skill_search</code>, <code>skill_load</code>.</p>
+<p><strong>Curation</strong> —
+<code>crates/pok-ai-core/src/session/curation.rs</code>, with the router
+in <code>session/decision_router.rs</code>.</p>
+<p><strong>Skills</strong> — <code>save_or_reinforce_procedure</code>,
+<code>record_skill_failure</code>, <code>mark_skill_verified</code>
+(<code>memory.rs:908-1572</code>);
+<code>crates/pok-ai-core/src/session/skill_replay.rs</code> and
+<code>fast_actions.rs</code>.</p>
+<p><strong>Injection</strong> —
+<code>crates/pok-ai-core/src/session/mod.rs:449</code> and
+<code>session/run_loop.rs:418</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> carries <code>id</code>, <code>source</code>,
+<code>text</code>, <code>approved</code>, <code>enabled</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>fingerprint</code> (SHA-256 of the canonical text),
+<code>kind</code>, <code>reinforcement_count</code>,
+<code>review_status</code>, <code>related_memory_id</code>,
+<code>version</code> and <code>provenance</code>
+(<code>memory.rs:20-36</code>). <code>version</code> increments on every
+reinforcement or rewrite, and an explicit rewrite replaces
+<code>text</code> and <code>fingerprint</code> on the same row. The
+version count records that a change happened, not what it replaced.</p>
+<p><code>procedures</code> carries a kind, a task signature, title,
+summary, applications, steps, an optional command template and
+replayable <code>program</code>, evidence, <code>enabled</code>,
+<code>success_count</code>, <code>failure_count</code>,
+<code>retrieval_count</code> and a <code>previous_version</code> added
+by migration, so one earlier version of a rewritten skill can be
+reverted to.</p>
+<p><code>memory_tombstones</code> is
+<code>(fingerprint, item_type, deleted_at)</code>;
+<code>memory_semantic_suppressions</code> holds canonical texts.
+Ordinary deletion stores only the exact fingerprint, and the test says
+so: <em>"ordinary deletion retains only an exact fingerprint"</em>
+(<code>memory.rs:2352-2385</code>). A rewording of a deleted fact can
+therefore be relearned, and a rewording of a forgotten one cannot.</p>
+<p>There is no scope on a fact, no confidence, and no validity time.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Facts are found by FTS5 BM25 over approved, enabled rows, then
+re-scored by <code>deterministic_relevance</code>, a term-overlap
+measure with a floor of 0.5. <code>retrieve_context</code> returns at
+most two workflows and the facts that clear the floor for the current
+prompt. The session also injects up to 50 approved facts from source
+<code>user</code> at start. Skills are searched separately by title,
+summary and applications; replay requires local relevance and the trust
+score, and each step's labels must not name a value from the skill's
+original task that the new request does not ask for
+(<code>crates/pok-ai-core/src/session/skill_replay.rs:1-60</code>).</p>
+<p>Failure modes:</p>
+<ul>
+<li><strong>Lexical only.</strong> A fact phrased differently from the
+prompt is found only through shared terms.</li>
+<li><strong>Session-start facts are not ranked.</strong> The 50 most
+recent approved user facts are injected whatever the request.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Fact writes are synchronous and block the tool call for one
+transaction; the fact is readable on the next turn. The curation pass
+runs after a run and may call System 1 once per proposal that has
+related facts. Skill saves happen after a run judged successful.</p>
+<p><strong>A correction leaves no history.</strong> An explicit
+statement at 0.78 similarity or more to a stored fact, sharing its
+protected terms, rewrites that row's text and fingerprint
+(<code>memory.rs:347-385</code>). The design intent is stated: <em>"a
+corrected fact never sits next to its old version"</em>. The old wording
+is gone. Because the old fingerprint is not tombstoned, the curation
+pass can propose it again as a fresh draft.</p>
+<p><strong>Budget deletions are silent forgetting.</strong> Expired and
+over-cap inferred facts are deleted without a tombstone, which is
+consistent with a cap rather than a rejection, and means a fact the
+budget dropped can return.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>One mutex-guarded SQLite connection per store, with the budget
+running on every inferred write; candidate lookups and merges are
+bounded to small result sets. The cost that matters is System 1, which
+the README reports doing about half of the on-screen actions in the best
+run.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent holds eight memory tools: <code>remember_fact</code>,
+<code>memory_search</code>, <code>memory_save</code>,
+<code>context_search</code>, <code>context_read</code>,
+<code>skill_create</code>, <code>skill_search</code> and
+<code>skill_load</code>. None approves a draft, deletes a fact or lifts
+a tombstone directly. <code>remember_fact</code> makes the first two
+unnecessary for any fact the model chooses to state, and it lifts a
+tombstone as a side effect. The person's surface is the desktop memory
+library and the CLI.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="who-can-admit-a-fact">Who can admit a fact</h3>
+<p>The review queue is real at the read end: a draft is invisible to the
+model until it is approved. At the write end it has two bypasses, which
+is why <code>human_review</code> is withheld.</p>
+<ul>
+<li><code>remember_fact</code> writes approved. The rubric's test asks
+whether <em>"the agent that wrote the memory [can] also clear its
+review"</em>, and here the agent writes past it.</li>
+<li><code>enforce_fact_budgets</code> promotes an inferred-curation
+draft with <code>review_status = 'independent'</code> from source
+<code>user</code>, <code>project</code> or <code>lesson</code> once it
+is reinforced twice. The test names the intent: <em>"a draft seen in a
+second run becomes a fact without review"</em>
+(<code>crates/pok-ai-core/src/memory/budget.rs:446-460</code>).</li>
+</ul>
+<h3 id="what-the-tombstone-covers">What the tombstone covers</h3>
+<p>Against the curation pass and <code>memory_save</code> without the
+user's words, the tombstone and the suppression hold, and the tests
+assert it. Against an explicit-user write it is deliberately lifted, so
+that a user who re-states a fact gets it back.
+<code>remember_fact</code> counts every call as that user, so the
+protection depends on the model calling it only when asked.</p>
+<h3 id="data-leaving-the-machine">Data leaving the machine</h3>
+<p>When the hosted JEV is the System 1 router, curation sends a proposed
+fact and up to four related stored facts to it, after
+<code>memory_text_may_be_sensitive</code> screens the proposal
+(<code>crates/pok-ai-core/src/session/curation.rs:1626-1660</code>,
+<code>:1767</code>).</p>
+<h3 id="marks">Marks</h3>
+<p><code>tombstone</code>, <code>trust_state</code> and
+<code>negative_eval</code> are earned; the frontmatter records carry the
+evidence and the limits.</p>
+<ul>
+<li><code>human_review</code> is withheld for the two bypasses
+above.</li>
+<li><code>audit_log</code> is withheld. <code>memory_merges</code> logs
+merges for undo, and nothing logs approvals, rejections, rewrites or
+deletions.</li>
+<li><code>scope_enforced</code> and <code>bitemporal</code> have no
+mechanism.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>786 Rust test functions, with the session suite alone at 9,542 lines.
+CI runs <code>cargo fmt</code>, clippy with warnings denied, and the
+core, CLI and voice test suites. The memory tests cover draft hiding,
+rejection tombstones, semantic forgetting, undoable merges, budgets,
+hygiene rules and skill relearning in a different step order.</p>
+<p><strong>The muscle-memory figure recomputes for its bucket, and the
+file shows the others.</strong>
+<code>docs/results/arena-summary.json</code> records five Windows Agent
+Arena runs over 154 tasks and splits the second v5 pass by what replay
+did:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Bucket</th>
+<th style="text-align: right;">Tasks</th>
+<th>Planner calls, 1st → 2nd</th>
+<th>Median</th>
+<th>Passed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>whole program replayed</td>
+<td style="text-align: right;">26</td>
+<td>20.6 → 14.8</td>
+<td>15.5 → 9.0</td>
+<td>18.0 → 17.0</td>
+</tr>
+<tr>
+<td>program partly replayed</td>
+<td style="text-align: right;">22</td>
+<td>18.5 → 18.6</td>
+<td>13.5 → 17.5</td>
+<td>15.0 → 14.0</td>
+</tr>
+<tr>
+<td>opening steps only</td>
+<td style="text-align: right;">18</td>
+<td>24.1 → 28.3</td>
+<td>22.0 → 33.5</td>
+<td>13.0 → 11.9</td>
+</tr>
+<tr>
+<td>no replay</td>
+<td style="text-align: right;">88</td>
+<td>19.7 → 20.7</td>
+<td>16.5 → 20.0</td>
+<td>41.8 → 45.8</td>
+</tr>
+</tbody>
+</table></div>
+<p>The README's <em>"28% fewer calls on average and 42% fewer at the
+median"</em> is the first row. Replaying only a skill's opening steps
+cost more planner calls, not fewer. The aggregates are committed; the
+per-task runs that <code>scripts/arena/make_report.py</code> regenerates
+them from are not. The README also states that the planner is an
+anonymous preview model and that about 3 in 10 runs the agent saved as
+skills failed the benchmark's stricter check.</p>
+<p>No paper describes the system; <code>docs/SWARM.md</code> cites three
+papers for the swarm design. I read the tests and the summary file and
+ran nothing, because the Cargo manifests changed inside the dependency
+cooldown.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Key the tombstone on the value, and add a semantic one for
+"forget".</strong> An exact fingerprint for ordinary deletion, and a
+canonical-text suppression when the user says never learn this, gives
+two strengths of forgetting with one check on the write path.</p>
+<p><strong>Make admission a column every read filters on.</strong>
+Drafts that no read can return make the curation pass safe to run
+aggressively.</p>
+<p><strong>Let skills lose trust.</strong> A Laplace-smoothed success
+rate for replay, failures counted per run, and a disable rule when
+failures outnumber successes, keeps a bad recording from replaying
+forever.</p>
+<p><strong>Refuse replay of a step that names the old task's
+values.</strong> Checking step labels against the new request stops a
+"Pacific (US &amp; Canada)" click from replaying into a request about
+another time zone.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Don't give the agent a write path that claims the user's
+authority.</strong> Derive explicit-user provenance from the user's own
+words, as <code>memory_save</code> does, or don't offer it.</p>
+<p><strong>Don't let repetition approve.</strong> A draft the same model
+proposes twice is the same model's opinion twice.</p>
+<p><strong>Don't rewrite a corrected fact in place without keeping the
+old value.</strong> Keep the prior text, or tombstone its fingerprint,
+so the correction is visible and the old wording cannot drift back.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits <strong>one person who wants a desktop agent that gets
+faster at the tasks they repeat</strong> and is willing to review what
+it remembers. The memory library, the forget-and-prevent action and the
+skill trust rules are built for that.</p>
+<p>It is not a memory to share between people or agents. There is no
+scope on a fact. The fact store is small by design, with 60 inferred
+facts at most. And the guarantees around admission depend on the model
+using <code>remember_fact</code> only when asked.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should <code>remember_fact</code> check the request like
+<code>memory_save</code>?</strong> The two tools set the same provenance
+under different rules.</li>
+<li><strong>Is recurrence promotion meant to bypass the queue?</strong>
+It is tested and intentional; whether it should require a different run
+or a different source is not stated.</li>
+<li><strong>How do replayed programs behave on a stronger
+planner?</strong> The arena runs use one preview model.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Memory</strong> —
+<code>crates/pok-ai-core/src/memory.rs</code>,
+<code>memory/budget.rs</code>,
+<code>builtins/memory_tools.rs</code>.</p>
+<p><strong>Session</strong> —
+<code>crates/pok-ai-core/src/session/curation.rs</code>,
+<code>decision_router.rs</code>, <code>skill_replay.rs</code>,
+<code>fast_actions.rs</code>, <code>run_loop.rs</code>,
+<code>mod.rs</code>.</p>
+<p><strong>Apps</strong> —
+<code>apps/desktop/src-tauri/src/lib.rs</code>,
+<code>crates/pok-ai-cli/src/main.rs</code>.</p>
+<p><strong>Evidence</strong> —
+<code>docs/results/arena-summary.json</code>,
+<code>scripts/arena/make_report.py</code>.</p>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>remember_fact always writes approved, as the user.</strong>
+<code>git grep -n -E 'ExplicitUser' -- crates/pok-ai-core/src/builtins</code>
+returns <code>memory_tools.rs:42</code>, unconditional, and
+<code>:215</code>, behind the root-request phrase check.</li>
+<li><strong>No agent tool approves, rejects or deletes.</strong>
+<code>git grep -n -E '\.(approve|reject_draft|delete_memory|forget_memory_and_prevent_relearning)\(' -- crates apps</code>
+returns the Tauri commands in
+<code>apps/desktop/src-tauri/src/lib.rs</code>, the CLI at
+<code>crates/pok-ai-cli/src/main.rs:892</code>, the gateway's unrelated
+access-code <code>approve</code>, and tests.</li>
+<li><strong>Every fact read that reaches the model filters on
+admission.</strong>
+<code>git grep -n -E '\.(retrieve_context|list_approved)\(' -- crates</code>
+returns <code>session/mod.rs:449</code>,
+<code>session/run_loop.rs:418</code> and the CLI;
+<code>list_memories</code> and <code>related_memories</code>, which do
+not filter, are called by the desktop library, duplicate scanning and
+curation.</li>
+<li><strong>No audit of approvals or deletions.</strong>
+<code>git grep -n -E 'INSERT INTO memory_' -- crates</code> outside
+tests returns the merge log at <code>memory.rs:743</code> and the
+suppression at <code>:881</code>; tombstones are written with
+<code>INSERT OR REPLACE</code>, and nothing records an approval, a
+rejection or a rewrite.</li>
+<li><strong>No scope on a fact.</strong>
+<code>git grep -n -i -E 'scope|tenant|profile_id' -- crates/pok-ai-core/src/memory.rs</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-09</strong> — <a
+href="https://github.com/Acekorneya/POK-Agent/commit/e97bb68b78456319ee9650b3fd0b2384f84982b5"><code class="commit-id" title="e97bb68b78456319ee9650b3fd0b2384f84982b5">e97bb68b…</code></a>.
+First reading, from a full clone of <code>main</code>. Screened first:
+no auto-run surface, five Cargo manifests inside the seven-day cooldown,
+one build-time <code>build.rs</code> and one floating
+<code>package.json</code> beside a lockfile. I installed, built and ran
+nothing; the suite was read, not run, and the arena summary was
+recomputed from the committed JSON. Three marks: <code>tombstone</code>,
+<code>trust_state</code> and <code>negative_eval</code> (§9).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

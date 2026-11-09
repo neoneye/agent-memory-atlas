@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 793 reports.</strong></p>
+<p><strong>This page covers all 795 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33011,6 +33011,72 @@ stale.</li>
 <li>Do not copy when: a deletion request has to remove the text, or the
 memory server is reachable by a model that must not choose its own
 tenant.</li>
+</ul>
+<h3 id="pok-agent"><a
+href="../systems/pok-agent/"><code>pok-agent</code></a></h3>
+<ul>
+<li>Best idea: <strong>two strengths of forgetting on one write
+path.</strong> Deleting a fact tombstones its exact fingerprint, and
+"forget and prevent relearning" also stores its canonical text, so the
+curation pass can neither re-save it nor reword it back — while drafts
+the pass does save stay out of every read until a person approves
+them.</li>
+<li>Biggest risk: <strong>the agent's own <code>remember_fact</code>
+writes as the user.</strong> It saves approved facts with explicit-user
+provenance on every call, while <code>memory_save</code> checks the
+user's request for "remember" first, and an explicit-user write deletes
+a matching tombstone and skips the suppression.</li>
+<li>Second risk: a draft the curation pass sees in a second run is
+promoted to approved with no person involved, and an explicit correction
+rewrites a fact's text in place with no earlier wording kept.</li>
+<li>Most reusable component: <code>save_with_provenance</code> in
+<code>crates/pok-ai-core/src/memory.rs:279-450</code>, with the skill
+trust rule in <code>session/skill_replay.rs</code> and
+<code>record_skill_failure</code> at
+<code>memory.rs:1515-1526</code>.</li>
+<li>Maturity impression: Apache-2.0; 103,941 lines of Rust; 101 commits
+by one author between 24 September and 8 November 2026; 786 Rust tests
+under CI with clippy warnings denied, not run here. Three marks:
+<code>tombstone</code>, <code>trust_state</code> and
+<code>negative_eval</code>. The arena summary recomputes, and its own
+table shows replaying only a skill's opening steps raised planner calls
+from 24.1 to 28.3.</li>
+<li>Study when: you want rejection remembered by value against an
+automatic extractor, or skills that lose the right to replay when they
+fail.</li>
+<li>Do not copy when: the model must not be able to admit facts on the
+user's behalf, or memory is shared between people.</li>
+</ul>
+<h3 id="waifu-companion"><a
+href="../systems/waifu-companion/"><code>waifu-companion</code></a></h3>
+<ul>
+<li>Best idea: <strong>a background summary that cannot overwrite a
+newer state.</strong> Each compression captures the chat id, the
+summary, its checkpoint and two revision counters, and drops its result
+if any of them moved, so a reset, a deleted message, an edit or "forget
+everything" always wins; source messages leave only after the summary
+covering them is accepted.</li>
+<li>Biggest risk: <strong>forgetting clears the distillate and keeps the
+source.</strong> "Forget everything" empties the cross-chat list while
+every chat summary it was distilled from stays, and the next compression
+reads those summaries back in.</li>
+<li>Second risk: one label holds one value, so a new <code>Likes:</code>
+line erases the old ones; and by default every request, memory included,
+goes through WaifuAI's hosted proxy.</li>
+<li>Most reusable component: <code>maybeSummarizeConversation</code> in
+<code>app/scripts/chat_controller.js:421-480</code>, with
+<code>compressionTask</code> and <code>accept</code> in
+<code>app/scripts/context_budget.js</code>.</li>
+<li>Maturity impression: MIT-0; 11,022 lines of browser JavaScript; 203
+commits by one author between 26 December 2025 and 4 November 2026; 178
+node tests and five browser-test files, no CI, not run here. No
+capability mark: editing after the fact is not a gate, and the negative
+case is about the assembled prompt.</li>
+<li>Study when: you want summarisation that is safe against every user
+action in a single-user client, or a cross-chat memory with no
+server.</li>
+<li>Do not copy when: a user must be able to make the companion forget,
+or facts can hold several values under one label.</li>
 </ul>
         </article>
       </div>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-793, generated from each report's frontmatter —
+795, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-793, generated from each report's frontmatter —
+795, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-793, generated from each report's frontmatter —
+795, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 793, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 795, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-793, generated from each report's frontmatter —
+795, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 793 systems by the seven mechanisms
+filters all 795 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -26939,6 +26939,41 @@ index by default; dashboard POST endpoints check no origin; the only
 default injection recall is unscoped</td>
 </tr>
 <tr>
+<td><a href="../systems/pok-agent/"><code>pok-agent</code></a></td>
+<td>A fact (text, source, approved, enabled, provenance, reinforcement
+count, review status) or a procedure (task signature, steps, an optional
+replayable action program, success and failure counts) with a Markdown
+skill file</td>
+<td>One SQLite file with FTS5 indexes for facts and procedures,
+tombstone and suppression tables, and a merge log; skills mirrored as
+Markdown files</td>
+<td>FTS5 BM25 over approved, enabled facts and enabled workflows,
+re-scored by a deterministic term-overlap floor; approved user facts
+injected at session start</td>
+<td>The agent's remember_fact and memory_save tools, an
+inferred-curation pass after runs that an optional System 1 router can
+judge, and skills saved from runs the agent's own checks call
+successful</td>
+<td>Exact repeats reinforce, near-duplicates merge, an explicit
+statement rewrites a similar fact in place; reject, delete and forget
+write tombstones; budgets expire and cap inferred facts; merges are
+undoable</td>
+<td>None on a record; one local store per data directory</td>
+<td>A Tauri desktop app with voice, a CLI, a WhatsApp gateway sidecar,
+MCP client support, and the agent's own memory and skill tools</td>
+<td>The fact budget runs on every inferred write; skill consolidation
+folds near-duplicate procedures</td>
+<td>Draft, approved, rejected and disabled facts, with only approved and
+enabled ones read; skills earn replay by (successes + 1) / (uses + 2)
+and are disabled after repeated failure</td>
+<td>A value-keyed tombstone and a semantic suppression that stop
+inferred relearning, an approval state every read respects, and skills
+that lose trust when a replay fails</td>
+<td>remember_fact writes approved facts with explicit-user provenance on
+every call, which lifts a tombstone; a draft seen twice is approved
+without review; an explicit rewrite keeps no prior wording</td>
+</tr>
+<tr>
 <td><a
 href="../systems/polyphony-arc/"><code>polyphony-arc</code></a></td>
 <td>A per-game workspace of model-written files (the Heuristic System's
@@ -34322,6 +34357,36 @@ edit and delete over MCP; conflict resolution and canonicalisation leave
 no audit event</td>
 </tr>
 <tr>
+<td><a
+href="../systems/waifu-companion/"><code>waifu-companion</code></a></td>
+<td>Per chat, the recent messages and one rolling summary; across chats,
+a newline-separated list of short facts, labelled or not</td>
+<td>Browser localStorage, one key per setting and one chatData_ entry
+per chat; an in-memory map when embedded in a restricted frame</td>
+<td>None; the whole cross-chat list, packed newest-first to 8 KB, and
+the active chat's summary are written into every system prompt</td>
+<td>The summariser model, when a chat outgrows its message budget,
+returns a new summary and an optional Durable across chats section that
+is merged into the list</td>
+<td>A durable line replaces the stored line with the same short label
+and otherwise appends; the user can edit both texts or forget the whole
+list</td>
+<td>One browser profile per user; chats separate their summaries and
+share the cross-chat list</td>
+<td>A static web app over WaifuAI's hosted proxy by default, or
+OpenRouter, Groq or any OpenAI-compatible endpoint</td>
+<td>None; compression runs inside a user turn, once per turn, with a
+two-minute cooldown after a failure</td>
+<td>None; every stored line is stated to the model as something it
+remembers</td>
+<td>Race-safe compression that cannot overwrite a user's edit or a
+reset, source messages trimmed only after the summary is accepted, and
+byte budgets that never block a chat</td>
+<td>Forgetting the cross-chat list leaves the chat summaries that
+produced it, so a forgotten fact can return; one label holds one value;
+the memory goes to a hosted proxy by default</td>
+</tr>
+<tr>
 <td><a href="../systems/waku-agent/"><code>waku-agent</code></a></td>
 <td>Fact (semantic), episode (episodic), and SKILL.md (procedural)</td>
 <td>SQLite by default; Supabase, mem0, Zep or LangMem selectable for
@@ -35603,7 +35668,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>73 of 793:</em> <a
+<p><em>74 of 795:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -35652,6 +35717,7 @@ href="../systems/ownmem/"><code>ownmem</code></a>, <a
 href="../systems/particles/"><code>particles</code></a>, <a
 href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
 href="../systems/plur1bus/"><code>plur1bus</code></a>, <a
+href="../systems/pok-agent/"><code>pok-agent</code></a>, <a
 href="../systems/project-golem/"><code>project-golem</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
@@ -35680,7 +35746,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>203 of 793:</em> <a
+<p><em>204 of 795:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -35841,6 +35907,7 @@ href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
 href="../systems/plur/"><code>plur</code></a>, <a
 href="../systems/plur1bus/"><code>plur1bus</code></a>, <a
 href="../systems/pluribus/"><code>pluribus</code></a>, <a
+href="../systems/pok-agent/"><code>pok-agent</code></a>, <a
 href="../systems/potpie/"><code>potpie</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
@@ -35890,7 +35957,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>134 of 793:</em> <a
+<p><em>134 of 795:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -36032,7 +36099,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>333 of 793:</em> <a
+<p><em>333 of 795:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -36381,7 +36448,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>266 of 793:</em> <a
+<p><em>266 of 795:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -36658,7 +36725,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>101 of 793:</em> <a
+<p><em>101 of 795:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -36763,7 +36830,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>508 of 793:</em> <a
+<p><em>509 of 795:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -37164,6 +37231,7 @@ href="../systems/plur/"><code>plur</code></a>, <a
 href="../systems/plur1bus/"><code>plur1bus</code></a>, <a
 href="../systems/pluribus/"><code>pluribus</code></a>, <a
 href="../systems/pmb/"><code>pmb</code></a>, <a
+href="../systems/pok-agent/"><code>pok-agent</code></a>, <a
 href="../systems/pond/"><code>pond</code></a>, <a
 href="../systems/portable-handoff/"><code>portable-handoff</code></a>,
 <a href="../systems/potpie/"><code>potpie</code></a>, <a
@@ -37308,8 +37376,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-508 repositories of
-793 assert that particular material must
+509 repositories of
+795 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -37382,7 +37450,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 793 is the real figure for the second kind, and
+of 795 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not
