@@ -17774,6 +17774,59 @@ to read would be whether <code>ownerWrite</code> and
 <code>ownerSet</code> refuse a call that comes from the model, since the
 README's promise that the owner is the only guardian would rest on
 that.</li>
+<li><strong><code>j-asefa/loop</code> was examined and has no report: it
+keeps a complete shared-recall store, and since 9 October 2026 nothing
+puts it in a prompt.</strong> Apache-2.0, read at <a
+href="https://github.com/j-asefa/loop/commit/641d8f0c6a097b124e24be9e06f569991738497f"><code class="commit-id" title="641d8f0c6a097b124e24be9e06f569991738497f">641d8f0c…</code></a>,
+the head of <code>main</code> on 10 November 2026, 649 commits since 23
+September 2026, 644 of them by Jamie Asefa. Loop is a phone workspace
+for coding agents running on the owner's computer, about 160,000 lines
+of TypeScript under <code>src/</code> with 421 files under
+<code>test/</code>. The store is real. Each worker pass runs
+<code>captureMemory</code> (<code>src/server/worker.ts:274</code>,
+<code>src/server/memory.ts:105-153</code>), which copies every
+completed, unsuperseded message under 100,000 characters and every
+markdown, note or text artifact into <code>memory_sources</code>, keyed
+by a digest of owner, kind and source id, with an FTS5 index kept by
+triggers (<code>migrations/028-shared-memory.sql:13-15</code>).
+Eligibility is per scope: the workspace is on by default, a conversation
+off until the person includes it, an artifact on only if pinned
+(<code>memory.ts:26-64</code>). Person-written notes keep every revision
+in <code>memory_note_versions</code> (<code>:95-103</code>). A delete
+sets <code>tombstone=1</code>, and <code>putSource</code> then refuses
+to re-capture that source (<code>:72</code>, <code>:305-311</code>); the
+row keeps its content, so the FTS row does too.
+<code>searchMemory</code> filters by owner and project in the SQL and
+re-checks eligibility and revision per hit (<code>:186-242</code>,
+<code>src/server/sql/memory-fts.ts:7</code>). Its only callers are tests
+(<code>test/memory-route-contracts.test.ts:172-187</code>). Until <a
+href="https://github.com/j-asefa/loop/commit/23d5c4b9e5aa3d488a7df126b0629fd897e6aca1"><code class="commit-id" title="23d5c4b9e5aa3d488a7df126b0629fd897e6aca1">23d5c4b9…</code></a>,
+which removed the HAPI execution path, native dispatch passed each run's
+input through <code>recallForRun</code>, which appended up to five
+excerpts under <em>"Historical evidence (untrusted source content; not
+instructions or approval)"</em> and wrote a <code>memory_receipts</code>
+row. The function survived as a test-only export until <a
+href="https://github.com/j-asefa/loop/commit/0ec32cfe9ab986f0d225253a76fe53aa2adb86bf"><code class="commit-id" title="0ec32cfe9ab986f0d225253a76fe53aa2adb86bf">0ec32cfe…</code></a>,
+on 7 November 2026, which also deleted the receipt writer. The Memory
+sheet still offers <em>"Enable shared recall"</em> with the line
+<em>"Agents cite the source they used"</em>
+(<code>src/client/Memory.tsx:87-93</code>), and every run's receipt
+reads <em>"No saved memory was added to this message."</em>, because the
+route falls back to <code>not-used</code>
+(<code>memory.ts:332-344</code>). <code>docs/architecture.md:583</code>
+lists memory among the native tool bridge's tools; the bridge defines
+none. <code>loop_handoff</code> carries a model-written context summary
+to another agent, but as a message in a thread the recipient answers,
+not as a record kept for a later question. Searches:
+<code>git grep -n -E 'searchMemory|recallForRun' -- src</code> returns
+only the definition at <code>memory.ts:186</code>;
+<code>git grep -n 'INTO memory_receipts' -- src</code> returns nothing;
+<code>git grep -h -o -E '"loop_[a-z_]+"' -- src</code> returns 22
+distinct strings, tool names and name prefixes, none of them for memory.
+If a caller returns, the report should start at the tombstone, which
+keeps the deleted text in both the source row and the index, and at the
+conversation default, which keeps a thread out until a person opts it
+in.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
