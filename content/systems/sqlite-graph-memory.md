@@ -1,19 +1,19 @@
 ---
 title: "sqlite-graph-memory"
-eyebrow: "Wikilinks as the graph, and a ledger nothing reads back"
-description: "A Graph RAG recall layer over a folder of markdown notes: dense retrieval, one hop along hand-written wikilinks and a cross-encoder rerank, served over MCP."
+eyebrow: "Wikilinks as the graph, ordered by the score that left them out"
+description: "A Graph RAG recall layer over a folder of markdown notes: dense retrieval plus one hop along hand-written wikilinks, served over MCP."
 root: ../..
 page_kind: system
 source_name: "tonydzi/sqlite-graph-memory"
 source_url: https://github.com/tonydzi/sqlite-graph-memory
 archive_name: "tonydzi--sqlite-graph-memory"
-revision: a22da114bb714b75281ae86b0bd8c3ece274ec8c
-revision_url: https://github.com/tonydzi/sqlite-graph-memory/commit/a22da114bb714b75281ae86b0bd8c3ece274ec8c
-analyzed_at: 2026-11-05
+revision: cff9420d70a8a033cd85d9e18b972af361f188c7
+revision_url: https://github.com/tonydzi/sqlite-graph-memory/commit/cff9420d70a8a033cd85d9e18b972af361f188c7
+analyzed_at: 2026-11-10
 licence: "MIT"
-size: "2,310 lines in the package (2,265 Python, 45 SQL), plus 3,175 lines of Python in the bench harness, eval and scripts"
-activity: "133 commits, 3 July – 4 November 2026; 114 under the maintainer's names and the lab's account, 19 from ten other contributors"
-tests: "202 pytest functions in 22 files, 3,290 lines, run in CI on Python 3.9–3.13 with a mutation gate on the eval metric; none run for this reading"
+size: "2,411 lines in the package (2,366 Python, 45 SQL), plus 3,431 lines of Python in the bench harness, eval and scripts"
+activity: "145 commits, 3 July – 10 November 2026; 121 under the maintainer's names and the lab's account, 24 from ten other contributors"
+tests: "224 pytest functions in 24 files, 3,723 lines, run in CI on Python 3.9–3.13 with a mutation gate on the eval metric; none run for this reading"
 capabilities: ""
 stack_storage: "sqlite, files"
 stack_retrieval: "vector, graph"
@@ -21,34 +21,40 @@ stack_source: "reviewed"
 matrix:
   memory_unit: "A markdown note the user wrote, chunked into 1,200-character windows with 200 overlap; title is the file stem, date from frontmatter; a per-turn ledger row beside it"
   storage: "The notes folder is canonical; a float32 .npy matrix, a pickled chunk list and a JSON manifest of size, mtime and SHA-256 per note in BRAIN_INDEX_DIR; SQLite holds the turns ledger and ab_recall telemetry"
-  retrieval: "e5-base cosine over every chunk, best chunk per file, top 60; optional 1-hop outgoing wikilinks from the top 15 parsed from the live note files, up to 40 added; cross-encoder rerank to 12; opt-in personalized PageRank fused by RRF"
+  retrieval: "e5-base cosine over every chunk, best chunk per file, top 60; optional 1-hop outgoing wikilinks from the top 15 parsed from the live note files, up to 40 added, or only superseded_by targets when the entity gate fires; dense order to 12, which no neighbour from outside the top 60 can enter; opt-in cross-encoder rerank and personalized PageRank fused by RRF"
   write: "The user, or an agent with its own file tools, edits markdown; sgm-index re-embeds new and changed notes by hash on demand; a Claude Code Stop hook appends one regex-extracted row per turn with no model"
-  update_delete: "Editing or deleting a note takes effect at the next sgm-index run, which re-embeds or drops its rows; superseded_by frontmatter is never read; ledger rows are never updated or deleted"
+  update_delete: "Editing or deleting a note takes effect at the next sgm-index run, which re-embeds or drops its rows; superseded_by frontmatter is followed as a link and demotes nothing; ledger rows are never updated or deleted"
   scoping: "None on the note index; one index per BRAIN_INDEX_DIR; ledger rows carry session_id and project, filtered only in the human viewer"
   integration: "A one-tool stdio MCP server, memory_recall, that shells out to the CLI per call; CLI commands for index, ask, stats, doctor and the ledger; a Stop-hook snippet to paste into Claude Code settings"
   background: "None in the package; the README describes a nightly rebuild in the maintainer's own setup"
-  trust: "Notes are taken as true; no status, confidence or supersession is read on any recall path"
+  trust: "Notes are taken as true; status is never read, and superseded_by adds the replacement as a candidate without demoting the replaced note"
   strengths: "No extraction and no graph store: the graph is the user's links, read live; a public bench whose result files carry every per-question output, rescored by CI and reproduced from a clean index"
-  risks: "A replaced decision outranks its replacement and nothing reads the supersession the note declares; the installed hook entry point bypasses its own crash guard; relative index paths silently disable the graph hop"
+  risks: "A replaced decision outranks its replacement on 5 of 6 bench questions at the default order and 6 of 6 reranked; at the default order the graph hop and the superseded_by target cannot reach the eight snippets the agent receives; the installed hook entry point bypasses its own crash guard; relative index paths silently disable the graph hop"
 ---
 
 ## 1. Executive Summary
 
 sqlite-graph-memory is a recall layer for coding agents over a folder of markdown
 notes. Dense retrieval finds entry points, one hop along the user's own
-`[[wikilinks]]` adds neighbours, and a cross-encoder decides what survives. The
-design question it is built to answer is whether the hop earns its place, and its
-committed bench answers no on that vault, which the project publishes. The weak
-point is correction: a note that declares itself replaced is retrieved first
-anyway, and the per-turn ledger the Stop hook writes reaches no recall path.
+`[[wikilinks]]` adds neighbours, and dense similarity orders the pool; a
+cross-encoder rerank is opt-in. The design question it is built to answer is
+whether the hop earns its place, and its committed bench answers no on that
+vault, which the project publishes. At the default order the hop cannot earn
+it: a neighbour enters from outside the 60 best files, so it ranks below all of
+them and never reaches the eight snippets the agent receives.
+
+The weak point is correction. A note that declares itself replaced is retrieved
+first anyway, because its `superseded_by` field is followed as a link and
+demotes nothing, and the per-turn ledger the Stop hook writes reaches no recall
+path.
 
 The memory is whatever the user wrote. Nothing extracts, summarises or rewrites
 it, and the only machine-written store is the ledger, which only a terminal
 viewer reads. That makes it a small, auditable retrieval pipeline rather than a
 memory system with a lifecycle. No capability mark is earned. The near-misses
-are a supersession field present in the bench vault that no reader consults and
-two indexer tests that keep material out of the index rather than out of a
-result.
+are a supersession field that adds the replacement as a candidate and withholds
+nothing, and tests that keep material out of the index or the candidate list
+rather than out of a result.
 
 ## 2. Mental Model
 
@@ -63,14 +69,17 @@ There is no state machine. A note becomes retrievable when the indexer embeds
 it, and stops being retrievable when the indexer next runs after the file is
 deleted (`index_notes.py:219-225`). Between those two runs, an edited note is
 retrieved with its old snippet and its new links, because the graph hop reads
-the live file (`brain_ask.py:140-146`) while text comes from the pickled index.
+the live file (`brain_ask.py:146-152`) while text comes from the pickled index.
 
 Nothing is verified, ranked by trust or superseded. The bench vault encodes
 supersession the way an Obsidian user would, `status: superseded` and
 `superseded_by: "[[decision-2025-08-16-heron-deadline]]"` in frontmatter
 (`bench/vault/decision-2025-02-07-heron-deadline.md:6-7`). The indexer reads only
 `date` from frontmatter (`index_notes.py:70-72`), so both decisions are equal
-candidates and the reranker picks between them on wording.
+candidates and dense similarity picks between them on wording. Recall reads
+`superseded_by` from the live file only as a link to follow
+(`brain_ask.py:155-177`), which puts the replacement in the pool and demotes
+nothing.
 
 The second store is the **turns ledger**. After every assistant turn a Claude
 Code Stop hook parses the new transcript bytes and appends one row: last user
@@ -80,7 +89,7 @@ of what happened, so nothing in it can turn out to be false. It is read by
 `sgm-turnstate-show` and by nothing the agent calls.
 
 ```mermaid
-%% caption: notes reach recall only through a manual index run; the supersession a note declares and the ledger the hook writes never reach the agent
+%% caption: notes reach recall only through a manual index run; at the default dense order nothing the hop adds can pass the 60 vector hits, superseded_by is a link to follow, and the ledger the hook writes never reaches the agent
 flowchart TD
   subgraph writers["Who writes"]
     direction TB
@@ -95,10 +104,11 @@ flowchart TD
   MCP --> DENSE["cosine, best chunk<br/>per file, top 60"]
   DENSE --> GATE{"name-shaped query?"}
   GATE -->|"no"| HOP["1 hop from top 15<br/>links read live<br/>up to 40 added"]
-  GATE -->|"yes"| RR
-  HOP --> RR["cross-encoder<br/>rerank to 12"]
+  GATE -->|"yes"| SUPH["superseded_by<br/>targets only"]
+  SUPH --> RR
+  HOP --> RR["dense order to 12:<br/>every added note<br/>ranks below the 60;<br/>cross-encoder only<br/>with --rerank"]
   RR --> OUT["8 snippets<br/>to the agent"]
-  NOTES -.->|"never read"| SUP["superseded_by"]
+  NOTES -.->|"status never read"| SUP["status: superseded"]
   SUP ~~~ HOOK["Stop hook<br/>regex over transcript"]
   HOOK --> TURNS["turns ledger<br/>append only"]
   TURNS --> SHOW["sgm-turnstate-show<br/>a person's terminal"]
@@ -115,28 +125,28 @@ and `[embeddings]` brings torch (`pyproject.toml:42-69`).
   The manifest fingerprints the chunking settings and the model name, and a
   mismatch forces a full rebuild (`:119-121`, `:187-188`).
 - **Recall.** `sgm-ask` loads the whole matrix and computes one dot product per
-  chunk per query (`brain_ask.py:216-220`). There is no ANN index and no
+  chunk per query (`brain_ask.py:247-251`). There is no ANN index and no
   vector table in SQLite.
 - **MCP server.** `sgm-mcp`, or `sqlite-graph-memory` under `uvx`, is a
   stdlib JSON-RPC loop with one tool. Each call spawns `brain_ask.py` in a
   child process with a 180-second default deadline, so a model crash kills the
   child and not the server (`mcp_server.py:26-29`, `:98-172`).
 - **SQLite.** `turns` and `ab_recall` are created on first write
-  (`turnstate_hook.py:119-128`, `brain_ask.py:509-522`). `schema.sql` documents
+  (`turnstate_hook.py:119-128`, `brain_ask.py:604-617`). `schema.sql` documents
   both and says it is not a migration (`schema.sql:1-4`). A third table,
   `gold_eval`, is appended by `eval/run_eval.py --sqlite` (`run_eval.py:224-245`).
 
-The README calls this "one SQLite file" (`README.md:15`). The vectors and chunk
+The README calls this "one SQLite file" (`README.md:17`). The vectors and chunk
 list are numpy and pickle files beside it. The two tables share a file only when
 both processes see the same `TURNSTATE_DB`. The hook defaults to
 `~/.claude/turnstate/turnstate.db` (`turnstate_hook.py:29-38`). `brain_ask`
-defaults to `./turnstate.db` in its working directory (`brain_ask.py:36`).
+defaults to `./turnstate.db` in its working directory (`brain_ask.py:42`).
 
 ### Deployment and ergonomics
 
 Nothing has to run between calls. Install is one `uvx` line pinned to Python
 3.12, because onnxruntime has no wheels for 3.14 on an Intel Mac
-(`README.md:23-31`). The first index run downloads `intfloat/multilingual-e5-base`
+(`README.md:25-33`). The first index run downloads `intfloat/multilingual-e5-base`
 and the reranker from the Hugging Face Hub at the repository's default branch
 with no revision pin (`onnx_backend.py:27-49`). After that it runs offline on CPU,
 and no API key is used anywhere. The notes stay human-readable and are the
@@ -152,25 +162,29 @@ indexed from.
   (`:201-214`), keeps rows of unchanged notes, re-chunks new and changed ones
   (`:227-232`), and writes the three files in sequence with no temporary file
   or rename (`:246-249`).
-- **Recall.** `main` (`brain_ask.py:434-566`): `load_index` (`:155-159`),
-  `query_sims` (`:216-220`), `retrieve_candidates` keeping the best chunk per
-  path to 60 files (`:223-231`), `expand_1hop` (`:305-332`), `rerank_candidates`
-  on title plus snippet (`:335-340`).
+- **Recall.** `main` (`brain_ask.py:528-667`): `load_index` (`:186-190`),
+  `query_sims` (`:247-251`), `retrieve_candidates` keeping the best chunk per
+  path to 60 files (`:254-262`), `expand_1hop` (`:336-369`), and
+  `rerank_candidates`, which keeps dense order unless `--rerank` or
+  `SGM_RERANK=1` loads the cross-encoder to score title plus snippet
+  (`:372-391`, `:576-577`). `--pool N` or `BRAIN_TOPK_RETRIEVE` changes the 60
+  (`:485-525`).
 - **Entity gate.** `looks_like_entity` returns true for a query of at most five
   tokens holding a capitalised or CamelCase word, a snake_case token or one of
-  six tool names, and the hop is then skipped (`brain_ask.py:109-133`, `:545-548`).
+  six tool names, and the hop then follows only each top note's
+  `superseded_by` target (`brain_ask.py:115-139`, `:159-177`, `:642-649`).
 - **PageRank lane.** Off unless `SGM_PPR=1` or `--ppr`. `ppr_file_order` seeds
   personalized PageRank with the dense hits (`ppr.py:156-189`), and
-  `fuse_after_rerank` fuses it with the reranker order by RRF, leaving the first
+  `fuse_after_rerank` fuses it with the dense or reranked order by RRF, leaving the first
   five positions untouched (`ppr.py:205-234`). It is never applied under `--ab`
-  (`brain_ask.py:476-477`).
+  (`brain_ask.py:571-572`).
 - **Context assembly.** In `--ask` mode the top eight hits are written as a
   header and the 600-character snippet each, to `BRAIN_ANSWER_OUT`
-  (`brain_ask.py:552-566`). The MCP server points that variable at a temporary
+  (`brain_ask.py:653-667`). The MCP server points that variable at a temporary
   file and returns its contents (`mcp_server.py:132-162`).
-- **A/B telemetry.** `--ab`, or MCP mode `ab`, reranks both pools and inserts one
+- **A/B telemetry.** `--ab`, or MCP mode `ab`, orders both pools and inserts one
   `ab_recall` row with the counts and promoted titles, swallowing any error
-  (`brain_ask.py:490-522`).
+  (`brain_ask.py:585-617`).
 - **Ledger.** `turnstate_hook.main` (`turnstate_hook.py:131-235`), viewer
   `turnstate_show.main` (`turnstate_show.py:33-89`).
 - **Correction and deletion.** Edit or delete the markdown, then rerun
@@ -195,7 +209,7 @@ Scope does not exist on the note index. Isolation is by directory: one
 only by the viewer's `--session` flag (`turnstate_show.py:66-67`).
 
 The only temporal field on a note is the frontmatter `date`, shown in the
-context bundle header and used nowhere in ranking (`brain_ask.py:556`).
+context bundle header and used nowhere in ranking (`brain_ask.py:657`).
 `docs/bitemporal.md` and `BITEMPORAL.md` specify `valid_from`, `valid_to` and
 `observed_at` for a materialized edge table that the package does not have.
 
@@ -203,12 +217,30 @@ context bundle header and used nowhere in ranking (`brain_ask.py:556`).
 
 Retrieval is a fixed pipeline with no query rewriting: e5 `query:` prefix,
 exact cosine over every chunk, deduplicate to one chunk per file, then the
-optional hop, then the reranker. The hop follows **outgoing** links only from
+optional hop, then dense similarity, or the cross-encoder when asked for. The
+hop follows **outgoing** links only from
 the top 15 files. It resolves each target by file stem, preferring exact
 vault-relative paths over suffix matches, adds the neighbour's best chunk for
-this query, and stops at 40 (`brain_ask.py:273-302`, `:305-332`). Any exception
+this query, and stops at 40 (`brain_ask.py:304-333`, `:336-369`). Any exception
 in the hop returns an empty list and recall proceeds on vector hits alone
-(`:329-331`).
+(`:366-368`).
+
+**At the default order the hop cannot reach the bundle.** `retrieve_candidates`
+keeps the best chunk of each of the 60 best files (`brain_ask.py:254-262`). The
+hop adds a neighbour's best chunk only when that chunk is not already among
+them (`:355-365`), so the neighbour's file is outside the 60 and its similarity
+is at most the 60th file's. Dense ordering then places every added chunk below
+all 60, and the top 12 equal the vector-only top 12, ties aside.
+
+The same holds
+for the `superseded_by` target the gated path adds, and for `--ab`, whose
+associative arm can promote nothing. Only `--rerank`, the PageRank lane or a
+`--pool` below 12 lets a neighbour in. The MCP server passes none of them
+(`mcp_server.py:120-130`), so its associative mode returns the direct mode's
+snippets unless the server's environment sets `SGM_RERANK=1` or `SGM_PPR=1`. The README's reason for leaving the hop on, that an
+irrelevant neighbour is buried in the shared ranking pool, holds for a relevant
+one too (`README.md:216-218`), and its demo of a note entering the top five
+through the hop shows the reranked path (`README.md:12`, `:128`).
 
 The MCP tool defaults to `associative`, which is `--graph --ask`, so the entity
 gate applies; `direct` is `--ask`; `ab` returns the comparison table
@@ -217,7 +249,7 @@ characters with headers, roughly 5 KB, on every call.
 
 The package has three readers of the link graph, and they parse targets two ways. The hop
 and `sgm-stats` normalise `[[folder/note]]` and `[[note.md]]` through
-`_normalize_target` (`brain_ask.py:234-239`, `vault_stats.py:73`). The PageRank
+`_normalize_target` (`brain_ask.py:265-270`, `vault_stats.py:73`). The PageRank
 lane looks a target up as `tgt.strip().lower()` against file stems
 (`ppr.py:144`), so a folder-qualified or `.md`-suffixed link is no edge there.
 Its graph cache key also hashes a `sha` field that the indexer never writes
@@ -225,11 +257,11 @@ Its graph cache key also hashes a `sha` field that the indexer never writes
 and each MCP call is a fresh process.
 
 Each hop reads the neighbour's file from the path stored at index time
-(`brain_ask.py:142`). The MCP server starts the child in its own working
+(`brain_ask.py:148`). The MCP server starts the child in its own working
 directory (`mcp_server.py:140-148`). An index built from `sgm-index ./notes`, the
-form the README's three-command quickstart uses (`README.md:96-98`), therefore
+form the README's three-command quickstart uses (`README.md:98-100`), therefore
 resolves no file from a server started in another directory. `_links_in` returns an empty
-list on the failed read (`brain_ask.py:142-143`), and associative recall
+list on the failed read (`brain_ask.py:148-149`), and associative recall
 degrades to vector recall with no message.
 
 ## 7. Write Mechanics
@@ -254,10 +286,10 @@ ledger row.
 
 Nothing blocks the agent on a write. A note is retrievable after the next
 `sgm-index` run and not before; the package schedules none, and the README
-describes a nightly rebuild in the maintainer's own setup (`README.md:153`).
+describes a nightly rebuild in the maintainer's own setup (`README.md:156`).
 Each recall loads the full matrix and both models in a fresh process. The
 README reports 7.0 seconds per MCP recall on the bench vault with ONNX and 33.8
-with torch on one machine (`README.md:84-86`); I did not measure it. The Stop
+with torch on one machine (`README.md:86-88`); I did not measure it. The Stop
 hook is one file read and one SQLite insert per turn. No pass rewrites the
 store. The index writes are three sequential overwrites, so a recall that starts
 between them can load a matrix and a chunk list of different lengths.
@@ -267,9 +299,9 @@ between them can load a matrix and a chunk list of different lengths.
 The agent has one verb, `memory_recall(query, mode)` (`mcp_server.py:67-95`). It
 cannot save, correct or forget through the server. Retrieval is tool-mediated;
 nothing injects context at session start. Installation snippets exist for Claude
-Code, Cursor, VS Code and Codex (`README.md:37-79`). `server.json` registers
+Code, Cursor, VS Code and Codex (`README.md:39-81`). `server.json` registers
 the package in the MCP Registry as a `uvx` launch of
-`sqlite-graph-memory[lite]==0.3.6`.
+`sqlite-graph-memory[lite]==0.3.8`.
 
 The Stop hook is opt-in: `examples/claude-code-stop-hook.json` is a snippet for
 `~/.claude/settings.json` that runs `sgm-turnstate-hook` with a 20-second
@@ -287,20 +319,24 @@ non-blocking hook error.
 ### The replaced decision wins
 
 On the six bench questions asking for a project's current deadline, both
-committed sqlite-graph-memory result files rank the superseded decision first
-and cite it, in graph and in vector mode. I recomputed this from
-`bench/results/sqlite-graph-memory.json` and `sqlite-graph-memory-vector.json`
-against the vault's `superseded_by` fields without running the project's code.
-The old note is first in 6 of 6, both decisions are in the top five in 6 of 6,
-and the answer is correct in 0 of 6. The extractor keeps the first note on an
+committed sqlite-graph-memory result files, which use the cross-encoder, rank
+the superseded decision first and cite it, in graph and in vector mode: first
+in 6 of 6, correct in 0 of 6. The `plain-rag` row ranks by
+`retrieve_candidates` over the same index with no hop and no reranker
+(`bench/adapters/plain_rag.py:69-80`), which is the default order's top 12. It
+ranks the old note first in 5 of 6 and answers 1 of 6 correctly. Both decisions
+are in the top five in 6 of 6 on all three rows. I recomputed these from the
+committed result files against the vault's `superseded_by` fields without
+running the project's code. The extractor keeps the first note on an
 overlap tie (`bench/adapters/_extract.py:49-53`), so the cited value is the
 higher-ranked one. The committed BM25 row cites the replacement in all six.
 
 The fix is in the tree, in the wrong directory. The TangleClaw reference adapter
 stores frontmatter `status` and `superseded_by` in a `notes_meta` table and
 promotes an active successor over a superseded hit
-(`bench/adapters/tangleclaw.py:20-24`, `:106-136`). `src/` holds no reader of
-either field.
+(`bench/adapters/tangleclaw.py:20-24`, `:106-136`). `src/` reads
+`superseded_by` only as a link target, which the default order ranks below the
+cut, and reads `status` nowhere.
 
 ### Correction is a file operation
 
@@ -317,7 +353,7 @@ Notes are the user's own writing, so prompt injection reaches memory only
 through a note someone wrote or an agent was told to write. The ledger stores
 assistant text and shell commands verbatim, clipped, under `~/.claude/turnstate/`
 with no retention. `load_index` unpickles `_brain_e5_meta.pkl`
-(`brain_ask.py:157`), so anyone who can write the index directory can run code in
+(`brain_ask.py:188`), so anyone who can write the index directory can run code in
 the next recall.
 
 ### Marks
@@ -325,8 +361,9 @@ the next recall.
 None is carried.
 
 - **`tombstone`** — no rejected value is recorded; deletion is file removal.
-- **`trust_state`** — `status: superseded` exists in the bench vault's
-  frontmatter and no code under `src/` reads it.
+- **`trust_state`** — no code under `src/` reads `status: superseded`, and
+  `superseded_by` adds the replacement as a candidate without withholding the
+  replaced note from any read.
 - **`bitemporal`** — the one note-level time is a frontmatter `date` used for
   display; validity windows are a design note.
 - **`scope_enforced`** — the note index has no scope key. The ledger's
@@ -340,7 +377,7 @@ None is carried.
 
 ## 10. Tests, Evals, and Benchmarks
 
-The suite is 202 pytest functions in 22 files. CI runs it on Python 3.9 to 3.13
+The suite is 224 pytest functions in 24 files. CI runs it on Python 3.9 to 3.13
 and then reruns `tests/test_eval.py` with `EVAL_MUTANT=1`, which makes nDCG
 return 1.0, and fails the build if that run stays green
 (`.github/workflows/tests.yml:38-47`). I did not run the suite.
@@ -351,17 +388,22 @@ forced-rebuild conditions. `test_turnstate_hook.py:93-126` asserts exit code 0 o
 bad input and a missing transcript. Both cases run `python -m
 sqlite_graph_memory.turnstate_hook`, which takes the guarded path, and neither
 runs the console script the hook snippet installs. `tests/test_ppr.py` has no
-folder-qualified link.
+folder-qualified link. `tests/test_rerank_default.py` pins the cross-encoder as
+opt-in and the dense order without it.
 
-`negative_eval` is withheld because no case asserts on a retrieval result. Two
-come close and both are populated:
+`negative_eval` is withheld because no case asserts on a retrieval result.
+Three come close and all are populated:
 
 - `test_index_notes_dotfiles.py:54-59` asserts `.drafts/inside.md` is not
   enumerated while `ok.md` is;
 - `test_incremental_index.py:129-145` asserts a deleted note's rows are gone
-  while two others remain.
+  while two others remain;
+- `test_brain_ask.py:235-274` asserts that the gated hop adds an outdated
+  note's `superseded_by` target and not a body-linked note.
 
-Both keep material out of the index rather than out of what recall returns. A
+The first two keep material out of the index and the third out of the
+candidate list, none out of what recall returns. The third never orders its
+candidates, so it does not show the replacement reaching a result. A
 `retrieve_candidates` call over the rebuilt index, with a query that matched
 the deleted note before, would close the gap.
 
@@ -371,24 +413,28 @@ file carries every per-question output, and `validate.py` rescores it with the
 shared scorer and rejects any claimed number that differs
 (`bench/validate.py:41-62`, `bench/bench_core.py:105-170`, `:181`). I recomputed
 recall@5 from the committed outputs with my own script. It matches the files:
-0.8478 in graph mode and 0.8841 vector-only over 69 answerable questions. Graph
-mode gains on `bridge` (1.00 against 0.97) and loses on `paraphrase` (0.50
-against 0.80). The answers come from an extractive adapter, so answer metrics
+0.8478 in graph mode and 0.8841 vector-only over 69 answerable questions, both
+with the cross-encoder. Graph mode gains on `bridge` (1.00 against 0.97) and
+loses on `paraphrase` (0.50 against 0.80). The `plain-rag` row, the default
+order, scores 0.9275, with 0.87 on `bridge` and 1.00 on `paraphrase`. The answers come from an extractive adapter, so answer metrics
 measure `_extract.py` as much as the library.
 
-The `reproduce` job reruns both sqlite-graph-memory rows from a clean index and
-allows no per-question change (`validate.py:175-197`). Its hosted run on
-[`e4f31b9ae5c1dea6ceb5838d3a0ccb80a1737f06`](https://github.com/tonydzi/sqlite-graph-memory/commit/e4f31b9ae5c1dea6ceb5838d3a0ccb80a1737f06),
-whose `src/` and `bench/` trees equal the pin's, reports both jobs successful. I
-read the job conclusions, not the logs. The result files are labelled 0.3.0 and
-dated 10 October 2026; the package at the pin is 0.3.6.
+The `reproduce` job reruns both sqlite-graph-memory rows and `plain-rag` from a
+clean index and allows no per-question change (`validate.py:175-197`,
+`bench/ci_reproduced.txt`). Its hosted run on
+[`73349274ec0b8efc05e7d9faac2f3ef2c2a3020a`](https://github.com/tonydzi/sqlite-graph-memory/commit/73349274ec0b8efc05e7d9faac2f3ef2c2a3020a),
+whose `src/` and `bench/` trees equal the pin's, reports success. I read the job
+conclusion, not the logs. The two sqlite-graph-memory result files are labelled
+0.3.0 and dated 10 October 2026, and their adapter passes the cross-encoder, so
+they describe the opt-in path; the package at the pin is 0.3.8
+(`bench/adapters/sgm.py:4-10`).
 
 The paper is a Zenodo preprint of 7 September 2026,
 [DOI 10.5281/zenodo.22639718](https://doi.org/10.5281/zenodo.22639718). Its
 abstract reports a production A/B over 10 logged queries, in which the hop
 changed the top 12 in five, and names the stratified evaluation protocol as the
 contribution. I read the abstract and metadata, not the PDF. The README's
-home-vault table and rejected-swap list (`README.md:409-475`) come from a
+home-vault table and rejected-swap list (`README.md:415-481`) come from a
 private corpus and are claims, not artifacts in the tree.
 
 ## 11. For Your Own Build
@@ -398,9 +444,10 @@ private corpus and are claims, not artifacts in the tree.
 - **Use the links people have written as the graph, and read them live.** No
   extraction pass, no edge table to keep in sync, and an edit to a link reaches
   the next query without a rebuild.
-- **Let the graph propose and the reranker decide.** Neighbours enter the same
-  pool as vector hits, so a hop that drags in noise is buried rather than
-  promoted.
+- **Measure a stage and turn it off when it loses.** The cross-encoder shipped
+  from the start; measured on the project's gold set and an outside dataset, it
+  cut recall on long queries, and it became opt-in with the numbers in the
+  changelog.
 - **Make a benchmark row an output file, not a number.** Ranked ids, answer and
   quotes per question, rescored in CI and rerun from a clean index with zero
   tolerance per question, leave a typed-in figure nowhere to go.
@@ -411,10 +458,12 @@ private corpus and are claims, not artifacts in the tree.
 
 ### Avoid
 
-- **Asking the corpus to declare supersession and then not reading it.** A
-  frontmatter field the user maintains is the cheapest correction signal
-  there is; a ranker that ignores it returns the replaced value with
-  confidence.
+- **Ordering a hop's additions by the score that left them out.** A neighbour
+  admitted from below the dense cut can never pass it when the same dense score
+  orders the pool; the hop needs a scorer of its own, or it changes nothing.
+- **Reading a declared supersession as a link.** A frontmatter field the user
+  maintains is the cheapest correction signal there is; adding the replacement
+  to the pool leaves the replaced value ranked where it was.
 - **Testing the guarded wrapper instead of the shipped entry point.** A
   console script that calls `main` skips everything under `__main__`.
 - **Storing paths as typed.** Resolve at write time, or every reader that runs
@@ -430,7 +479,7 @@ service and little maintenance, and its bench makes the graph's value something
 to measure on your own notes. Walk away if the agent must remember on its own,
 if old decisions sit beside new ones without being deleted, or if more than one
 person or project shares a machine. The package has no write path, no
-supersession and no scope.
+supersession that demotes, and no scope.
 
 ## 12. Open Questions
 
@@ -441,6 +490,8 @@ supersession and no scope.
   in practice, and whether `sgm-doctor` should check for it.
 - Whether the `ab_recall` rows are queried anywhere outside the tree; no code in
   it reads them.
+- Whether associative recall is meant to equal direct recall at the default
+  order, or the hop is meant to run only with `--rerank` or the PageRank lane.
 - Recall latency on a 28,000-note index, which the README cites and the tree
   cannot reproduce.
 
@@ -462,9 +513,12 @@ supersession and no scope.
 
 Run from the repository root at the pinned commit with `/usr/bin/git grep`.
 
-- **No reader of supersession or validity in the package.**
+- **Supersession is read as a link target only; no validity or status reader.**
   `git grep -n -i -E 'valid_?(from|to)|observed_at|as_of|superseded|status:' -- src eval/run_eval.py bench/adapters/sgm.py`
-  returns nothing; `git grep -n -i superseded_by -- bench/adapters` matches
+  returns `SUPERSEDED_BY_RX` and `_superseded_links_in` at
+  `brain_ask.py:156-170`, the `only_superseded` parameter and its use at
+  `:337-357`, and the gated call at `:640-645`; nothing matches `status:` or a
+  validity field; `git grep -n -i superseded_by -- bench/adapters` matches
   `tangleclaw.py` nine times.
 - **The ledger is read only by the viewer.**
   `git grep -n -E 'from turns|FROM turns' -- src` returns `turnstate_show.py`
@@ -490,8 +544,14 @@ Run from the repository root at the pinned commit with `/usr/bin/git grep`.
 - **No scheduler.** `git grep -n -i -E 'watch|inotify|watchdog|cron|schedule' -- src`
   returns a comment in `brain_ask.py` and the `vault_stats.py` docstring.
 - **No entity lane.** `git grep -n -i entity -- src` returns
-  `looks_like_entity`, `ENTITY_TOOLS` and the gate's comments only.
+  `looks_like_entity`, `ENTITY_TOOLS`, the gate and its comments and
+  docstrings only.
+- **The MCP server passes no ordering flag.**
+  `git grep -n -E -e '--rerank|SGM_RERANK|--pool|--ppr' -- src/sqlite_graph_memory/mcp_server.py`
+  returns nothing; over `src` the rerank flag matches `brain_ask.py` alone.
 
 ## History
+
+**2026-11-10** — [`cff9420d70a8a033cd85d9e18b972af361f188c7`](https://github.com/tonydzi/sqlite-graph-memory/commit/cff9420d70a8a033cd85d9e18b972af361f188c7). Twelve commits past `a22da11`. The cross-encoder is opt-in since 0.3.7, and dense similarity orders the pool, so at the default order no hop neighbour can pass the 60 vector hits and associative recall returns direct recall's snippets ([section 6](#6-retrieval-mechanics)). The gated hop follows a note's `superseded_by` target, which adds the replacement and demotes nothing; the `plain-rag` row, the default order, ranks the replaced decision first in 5 of 6 and scores R@5 0.9275 ([section 9](#9-reliability-safety-and-trust), [section 10](#10-tests-evals-and-benchmarks)). The maintainer's comment on [atlas issue 30](https://github.com/neoneye/agent-memory-atlas/issues/30#issuecomment-6766785188) matches the code. No marks. Screened again with the same findings; nothing installed or run.
 
 **2026-11-05** — [`a22da114bb714b75281ae86b0bd8c3ece274ec8c`](https://github.com/tonydzi/sqlite-graph-memory/commit/a22da114bb714b75281ae86b0bd8c3ece274ec8c). First reading, from a full clone, 52 commits past the nominated [`378baf0c5d3a91b0dddad231339ec7084dfcb045`](https://github.com/tonydzi/sqlite-graph-memory/commit/378baf0c5d3a91b0dddad231339ec7084dfcb045); incremental indexing, the PageRank lane, the ONNX backend and the TangleClaw bench adapter landed between them. Screened first: one auto-run surface, `server.json` launching the PyPI package through `uvx`; `pyproject.toml` inside the seven-day cooldown; three unpinned surfaces. The Stop hook is an example snippet, not registered in the tree. MIT, no rider. Nothing installed, built or run; the bench figures were recomputed from committed outputs. No marks: nothing reads the declared supersession, and no case asserts on a result ([section 9](#9-reliability-safety-and-trust)).

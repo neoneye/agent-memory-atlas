@@ -11387,13 +11387,15 @@ href="../systems/sqlite-graph-memory/">sqlite-graph-memory</a> takes its
 graph from the wikilinks a person wrote, and reads them from the live
 files at query time.</strong> Dense e5 retrieval finds the top 60 files,
 one hop of outgoing links from the top 15 adds up to 40 neighbours, and
-a cross-encoder reranks the pool, so structure proposes candidates and
-never ranks them. Unlike <a href="../systems/hipporag/">HippoRAG</a>,
-nothing is extracted and no edge is stored. The project's own bench
-recomputes to recall@5 of 0.85 with the hop and 0.88 without it. Its
-vault marks replaced decisions with <code>superseded_by</code>, which no
-reader under <code>src/</code> consults, and both modes cite the
-replaced decision on all six current-deadline questions.</p>
+dense similarity orders the pool, so at the default order no neighbour
+passes the 60 vector hits; an opt-in cross-encoder lets one through.
+Unlike <a href="../systems/hipporag/">HippoRAG</a>, nothing is extracted
+and no edge is stored. The project's own bench recomputes to recall@5 of
+0.85 with the hop and 0.88 without it, both reranked, and 0.93 at the
+default order. Its vault marks replaced decisions with
+<code>superseded_by</code>, which recall follows as a link and never as
+a demotion, and the replaced decision ranks first on five or six of the
+six current-deadline questions.</p>
 <p><strong><a href="../systems/zettelforge/">ZettelForge</a> builds a
 threat-intelligence graph from regex entities and lets one shared entity
 decide what is current.</strong> A Python library and MCP server over

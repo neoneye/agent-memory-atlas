@@ -31137,15 +31137,18 @@ BRAIN_INDEX_DIR; SQLite holds the turns ledger and ab_recall
 telemetry</td>
 <td>e5-base cosine over every chunk, best chunk per file, top 60;
 optional 1-hop outgoing wikilinks from the top 15 parsed from the live
-note files, up to 40 added; cross-encoder rerank to 12; opt-in
-personalized PageRank fused by RRF</td>
+note files, up to 40 added, or only superseded_by targets when the
+entity gate fires; dense order to 12, which no neighbour from outside
+the top 60 can enter; opt-in cross-encoder rerank and personalized
+PageRank fused by RRF</td>
 <td>The user, or an agent with its own file tools, edits markdown;
 sgm-index re-embeds new and changed notes by hash on demand; a Claude
 Code Stop hook appends one regex-extracted row per turn with no
 model</td>
 <td>Editing or deleting a note takes effect at the next sgm-index run,
-which re-embeds or drops its rows; superseded_by frontmatter is never
-read; ledger rows are never updated or deleted</td>
+which re-embeds or drops its rows; superseded_by frontmatter is followed
+as a link and demotes nothing; ledger rows are never updated or
+deleted</td>
 <td>None on the note index; one index per BRAIN_INDEX_DIR; ledger rows
 carry session_id and project, filtered only in the human viewer</td>
 <td>A one-tool stdio MCP server, memory_recall, that shells out to the
@@ -31153,14 +31156,17 @@ CLI per call; CLI commands for index, ask, stats, doctor and the ledger;
 a Stop-hook snippet to paste into Claude Code settings</td>
 <td>None in the package; the README describes a nightly rebuild in the
 maintainer's own setup</td>
-<td>Notes are taken as true; no status, confidence or supersession is
-read on any recall path</td>
+<td>Notes are taken as true; status is never read, and superseded_by
+adds the replacement as a candidate without demoting the replaced
+note</td>
 <td>No extraction and no graph store: the graph is the user's links,
 read live; a public bench whose result files carry every per-question
 output, rescored by CI and reproduced from a clean index</td>
-<td>A replaced decision outranks its replacement and nothing reads the
-supersession the note declares; the installed hook entry point bypasses
-its own crash guard; relative index paths silently disable the graph
+<td>A replaced decision outranks its replacement on 5 of 6 bench
+questions at the default order and 6 of 6 reranked; at the default order
+the graph hop and the superseded_by target cannot reach the eight
+snippets the agent receives; the installed hook entry point bypasses its
+own crash guard; relative index paths silently disable the graph
 hop</td>
 </tr>
 <tr>
