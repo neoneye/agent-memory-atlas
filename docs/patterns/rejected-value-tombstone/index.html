@@ -126,7 +126,7 @@ belief.</p>
 <blockquote>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
-recurs across the corpus. 74 systems of
+recurs across the corpus. 75 systems of
 796 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
@@ -291,7 +291,7 @@ near-miss, and the argument that the expensive half of the pattern is
 not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
-<p><strong>74 systems of
+<p><strong>75 systems of
 796 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -1604,15 +1604,21 @@ paraphrase passes. The one committed test restates the claim in a source
 that also cites the suppressed source, which a separate rule,
 <code>link_source</code>, suppresses on its own, so no test isolates the
 value-keyed rule.</p>
-<p><a href="../../systems/uteke/">Uteke</a> asserts the opposite of a
-tombstone in a committed test. Its dedup gate checks each index hit
-against the database and skips rows that are deprecated or gone, which
-is right for the stale-index bug it fixed;
-<code>test_dedup_skips_deprecated_stale_index_entry</code> then asserts
-that writing a soft-deleted memory's text again creates a new live
-memory. The rejection is recorded, as a <code>superseded_by</code> edge
-and a reason, but keyed on the row, and thirty days later the server
-prunes the row, the edge and its events.</p>
+<p><a href="../../systems/uteke/">Uteke</a> records the tombstone only
+when the reason says the value was wrong. A forget or supersede with the
+reason <code>wrong</code> writes the SHA-256 of the value's normalised
+text — NFKC, lowercase, invisible characters removed, whitespace
+collapsed — to <code>rejected_values</code>, and
+<code>commit_memory</code>, the step every memory insert passes, refuses
+a match; update and the structural import check it too
+(<code>crates/uteke-core/src/tombstone.rs:35</code>,
+<code>:62-116</code>,
+<code>crates/uteke-core/src/operations/write.rs:437</code>). An ordinary
+forget records nothing, so the dedup gate's skipping of deprecated rows
+lets that text return as new. A test asserts the tombstone survives the
+thirty-day prune. Two paths leave a gap: <code>undo_supersession</code>
+restores a row superseded as wrong and leaves its tombstone standing
+beside it, and documents are never checked.</p>
 <p><a href="../../systems/utopia/">Utopia</a> writes the <em>triple</em>
 rather than the row: rejecting a queued fact inserts
 <code>(kb_id, subject_id, predicate_id, object_id)</code> into

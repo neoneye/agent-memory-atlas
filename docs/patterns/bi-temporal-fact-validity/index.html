@@ -336,17 +336,19 @@ was. The single-axis version is genuinely useful and much cheaper; the
 distinction is worth drawing explicitly, because a reader comparing
 feature lists will see <code>as_of</code> and <code>valid_to</code> and
 assume the pair.</p>
-<p><a href="../../systems/uteke/">Uteke</a> ships
-<code>valid_from</code>, <code>valid_until</code> and
-<code>recall --at</code>, and all three are record time.
-<code>valid_from</code> equals <code>created_at</code> on every path,
-and outside import and restore <code>valid_until</code> is written only
-by a deprecation, to the moment it happened, or by its undo.
-Point-in-time recall draws candidates from a vector index that drops a
-row when it is deprecated, and <code>list --at</code> filters
-<code>deprecated = 0</code> in SQL, so a memory retired after the
-requested time is missing from the answer about that time. The predicate
-that would keep it is correct and never receives such a row.</p>
+<p><a href="../../systems/uteke/">Uteke</a> puts caller-supplied
+<code>valid_from</code> and <code>valid_until</code> in columns on every
+surface, and its point-in-time read returns rows retired after the
+instant. The read applies both axes at that one instant — created before
+it, not deprecated before it, and valid at it
+(<code>crates/uteke-core/src/operations/time_travel.rs:164-188</code>,
+<code>crates/uteke-core/src/memory/crud.rs:972-975</code>) — so "what
+was true then" and "what did we believe then" are one query, and a fact
+back-dated before its write cannot be returned for any earlier instant.
+When the caller sets no end, a deprecation writes its own time into
+<code>valid_until</code>, and a committed test asserts that equality.
+The project's design note names the valid-time-only query as a
+follow-up.</p>
 <p><a href="../../systems/janus-graph/">Janus-Graph</a> is Graphiti seen
 from a caller, and both of its temporal defects live in the wrapper
 rather than the engine. It dates every episode by the sweep that

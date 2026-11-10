@@ -458,12 +458,14 @@ vector at weight 1.7 and a vector-plus-FTS5 RRF at 1.0,
 <code>k = 60</code> — with the tuning set and plateau written in the
 constant's comment, and the committed LongMemEval-S raw output
 recomputes the published 98.4% recall_any@5. After fusion a memory's
-score is the RRF sum, at most <code>2.7 / 61 ≈ 0.044</code>; the default
-path then adds <code>0.1 × salience + 0.1 × recency</code> and applies
-thresholds written for cosine, so <code>--strict</code> at 0.5, the
-Hermes hook at 0.40 and the pi hook at 0.45 exclude every memory. RRF's
-virtue of not pretending incomparable scores share a scale lasts only
-until something downstream pretends again.</p>
+score is the RRF sum, at most <code>2.7 / 61 ≈ 0.044</code>, and the
+default path then adds <code>0.1 × salience + 0.1 × recency</code>,
+which inside the 56-candidate window weighs about as much as the rank
+gap between first and thirty-fifth. <code>--strict</code> filters on the
+vector leg's cosine in its own field, but <code>--min</code> compares a
+cosine-scale number against the fused sum. RRF's virtue of not
+pretending incomparable scores share a scale lasts only until something
+downstream pretends again.</p>
 <p><strong><a href="../../systems/claude-self-reflect/">Claude
 Self-Reflect</a> is the case for fusion, made accidentally by a system
 that does not fuse.</strong> Its FTS5 arm runs only when the best

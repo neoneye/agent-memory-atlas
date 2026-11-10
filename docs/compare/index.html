@@ -33586,49 +33586,59 @@ private; delete is final</td>
 <tr>
 <td><a href="../systems/uteke/"><code>uteke</code></a></td>
 <td>A row of text or JSON with a namespace, one of nine types, tags,
-metadata, importance, a pin, access counters, author and source types, a
-write-time SHA-256, a deprecation flag with reason and timestamps, and
-typed edges to other memories; beside it a versioned, chunked document
-store</td>
+metadata, importance, a pin, author and source types, an author,
+caller-settable validity, a content hash, a deprecation flag with reason
+and timestamps, and typed edges; beside it a versioned document store, a
+rejected-value table and a queue of raw captured turns</td>
 <td>One SQLite database in WAL mode with FTS5 over memories and
 documents, plus a usearch HNSW index file held under an exclusive lock
-for the life of the process</td>
+for the life of the process and saved after 64 mutations or 2
+seconds</td>
 <td>Default fusion: weighted RRF of a vector ranking (x1.7) and a
 vector-plus-FTS5 RRF ranking (x1), then additive salience and recency
-boosts; namespace and tag filters; documents merged by RRF on the
-default unified path; opt-in graph rerank and relationship
-expansion</td>
-<td><code>remember</code> over CLI, HTTP or MCP embeds on the CPU and
-returns the existing id for a live row at cosine 0.95 or above in the
-namespace; an optional contradiction mode deprecates the nearest row
-above 0.65; LLM extraction only on opt-in import</td>
-<td>Partial update re-embeds in place; forget, supersede, dedup, aging
-and room consolidation all soft-deprecate with a reason and drop the
-vector; promote and undo restore; a prune hard-deletes deprecated rows
-after 30 days in the <code>default</code> namespace, cascading edges and
-events</td>
-<td>A caller-chosen namespace enforced on memory recall; rooms are a
-cross-namespace join with caller-supplied authors; documents are global;
-the server has two store-wide tokens</td>
-<td>One binary family: a CLI, an HTTP daemon with 75 registered routes
-and MCP over HTTP, a stdio MCP server with 46 tools, init commands for
-pi, Claude Code, Cursor, OpenCode and Hermes, a pi extension and a
-Hermes auto-recall plugin</td>
+boosts; namespace and tag filters; a strict mode on vector similarity;
+an opt-in filter on a derived trust tier; documents fused on the default
+path; point-in-time reads by created and valid time at one instant</td>
+<td><code>remember</code> over CLI, HTTP or MCP masks secrets, refuses a
+value tombstoned as wrong, embeds on the CPU and returns the existing id
+for a live row at cosine 0.95 or above in the namespace; an optional
+contradiction mode retires the nearest row above 0.65; an opt-in capture
+queue extracts facts by offline rules, or by a model only with mode
+llm</td>
+<td>Update re-embeds in place and records an updated event; forget,
+supersede, dedup, aging, namespace deletion and room consolidation
+soft-deprecate with a reason and an event; a forget or supersede with
+reason wrong records a value tombstone; promote and undo restore; a
+prune hard-deletes deprecated rows after 30 days in the
+<code>default</code> namespace and keeps their timeline and
+tombstones</td>
+<td>A caller-chosen namespace enforced on memory recall, search, list
+and export when named; all namespaces when omitted over HTTP; rooms span
+namespaces; documents are scoped only on the unified path; two
+store-wide server tokens</td>
+<td>A CLI, an HTTP daemon with 83 registered routes and MCP over HTTP, a
+stdio MCP server with 52 tools (25 for a read-only token) whose read
+results are fenced as untrusted data, a read-only browser viewer,
+<code>uteke connect</code> hooks for Claude Code, Codex and Cursor, pi
+and Hermes auto-recall hooks, and a hosted remote listed in
+server.json</td>
 <td>Server mode only: a weekly lifecycle cycle that ages out cold rows
-and prunes deprecated ones, and a three-day dream cycle of dedup,
-contradiction scan, prune and verify</td>
-<td>Author and source types map to a derived trust tier shown in a
-provenance report with a write-time content hash; nothing on the recall
-path filters on either</td>
-<td>A careful local hybrid retriever with a LongMemEval headline that
-recomputes from committed raw output, a namespace predicate in SQL with
-CI-run negative tests, and a transactional supersession whose undo
-records itself</td>
-<td>Corrections leave no durable trace: time travel never returns
-deprecated rows, the timeline misses edits and most automatic
-deprecations, prune erases the rest and a retired value can be written
-back; at the defaults neither shipped auto-recall hook injects a
-memory</td>
+and prunes deprecated ones, a three-day dream cycle of dedup,
+contradiction scan, prune and verify, and a capture worker when capture
+is enabled</td>
+<td>Author and source types map to a derived tier that an opt-in
+min_trust filter applies; a value forgotten as wrong is refused on every
+memory write path; recalled memories reach MCP fenced as untrusted
+data</td>
+<td>A careful local hybrid retriever whose LongMemEval headline
+recomputes from committed raw output, a value tombstone every memory
+write path consults, a timeline that survives the prune, and
+scope-isolation suites over core, HTTP, MCP and CLI</td>
+<td>Boosts sized for cosine are added to RRF sums inside the ranking
+window; point-in-time reads apply valid and record time at one instant;
+tokens bind no namespace and HTTP reads every namespace by default;
+background dedup crosses namespaces; undoing a wrong-supersession leaves
+the value live beside its tombstone</td>
 </tr>
 <tr>
 <td><a href="../systems/utopia/"><code>utopia</code></a></td>
@@ -35708,7 +35718,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>74 of 796:</em> <a
+<p><em>75 of 796:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -35777,7 +35787,8 @@ href="../systems/sqlite-memory-mcp/"><code>sqlite-memory-mcp</code></a>,
 href="../systems/tidemind/"><code>tidemind</code></a>, <a
 href="../systems/titen/"><code>titen</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
-<a href="../systems/utopia/"><code>utopia</code></a>, <a
+<a href="../systems/uteke/"><code>uteke</code></a>, <a
+href="../systems/utopia/"><code>utopia</code></a>, <a
 href="../systems/velantrim-exocortex-crystal/"><code>velantrim-exocortex-crystal</code></a>,
 <a href="../systems/verel/"><code>verel</code></a>, <a
 href="../systems/vir/"><code>vir</code></a>, <a
@@ -36489,7 +36500,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>266 of 796:</em> <a
+<p><em>267 of 796:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -36746,7 +36757,8 @@ href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
 href="../systems/trueforge/"><code>trueforge</code></a>, <a
 href="../systems/ultracontext/"><code>ultracontext</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
-<a href="../systems/utopia/"><code>utopia</code></a>, <a
+<a href="../systems/uteke/"><code>uteke</code></a>, <a
+href="../systems/utopia/"><code>utopia</code></a>, <a
 href="../systems/velantrim-exocortex-crystal/"><code>velantrim-exocortex-crystal</code></a>,
 <a href="../systems/veracium/"><code>veracium</code></a>, <a
 href="../systems/verel/"><code>verel</code></a>, <a

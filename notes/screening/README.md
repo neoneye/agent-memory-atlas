@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 377 |
+| Repositories with an auto-run surface (`RUNS`) | 378 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 357 |
 | Repositories with build-time execution (`EXEC`) | 578 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 7 |
@@ -385,6 +385,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`ulpia`](../../content/systems/ulpia.md) | `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `.mcp.json` |
 | [`understand-anything`](../../content/systems/understand-anything.md) | `.claude-plugin/`, `understand-anything-plugin/.claude-plugin/plugin.json`, `understand-anything-plugin/hooks/`, `understand-anything-plugin/hooks/hooks.json` |
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.claude-plugin/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
+| [`uteke`](../../content/systems/uteke.md) | `server.json` |
 | [`velesdb`](../../content/systems/velesdb.md) | `.githooks/`, `server.json`, `smithery.yaml` |
 | [`veracium`](../../content/systems/veracium.md) | `server.json` |
 | [`verimem`](../../content/systems/verimem.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.claude/hooks/`, `.githooks/`, `hooks/`, `server.json` |

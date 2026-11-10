@@ -7201,23 +7201,22 @@ only by its byte-identical content. A query with no text runs exact tag
 and external-id filters instead, and the project's own GitHub Actions
 log cache is built on that path.</p>
 <p><strong><a href="../systems/uteke/">Uteke</a> measures its retriever
-carefully and forgets its own corrections.</strong> A single-binary Rust
-engine — SQLite with FTS5, a usearch HNSW index and EmbeddingGemma on
-the CPU behind a CLI, an HTTP daemon and 46 MCP tools — whose default
-recall is a weighted RRF of a vector ranking and a vector-plus-FTS5
-ranking; the committed LongMemEval-S raw output recomputes to the
-README's 98.4% recall_any@5, 492 correct out of 500. The namespace is a
-real predicate, in SQL on the lexical arm, and two CI-run tests assert
-that a same-text row from another namespace and a deprecated row stay
-out of a populated result. Every retirement — forget,
-<code>supersede</code>, contradiction-on-write, dedup, aging — is the
-same soft delete: point-in-time recall never returns a deprecated row,
-the timeline records supersessions but not edits or background
-deprecations, a thirty-day prune removes the row with its edges and
-events, and a committed test asserts that the retired text is accepted
-again as new. Downstream of the fusion, cosine-scale boosts and
-thresholds are applied to RRF scores that top out at 0.044, so at the
-defaults neither shipped auto-recall hook injects a memory.</p>
+carefully and refuses a value it was told is wrong.</strong> A
+single-binary Rust engine — SQLite with FTS5, a usearch HNSW index and
+EmbeddingGemma on the CPU behind a CLI, an HTTP daemon and 52 MCP tools
+— whose default recall is a weighted RRF of a vector ranking and a
+vector-plus-FTS5 ranking; the committed LongMemEval-S raw output
+recomputes to the README's 98.2% recall_any@5, 491 correct out of 500.
+Forgetting or superseding a memory as <code>wrong</code> records a hash
+of its normalised text that every memory write path checks, and the
+timeline records edits and every deprecation with its reason and
+survives the thirty-day prune. The namespace is a real predicate in SQL,
+and isolation suites over core, HTTP, MCP and CLI assert that one
+namespace's rows stay out of another's populated result; no token binds
+it, and HTTP reads every namespace by default. Downstream of the fusion,
+cosine-scale boosts are added to RRF scores that top out at 0.044, and a
+point-in-time read applies valid and record time at one instant. Four
+marks.</p>
 <p><strong><a href="../systems/claude-self-reflect/">Claude
 Self-Reflect</a> indexes Claude Code's own transcripts and then spends
 most of its engineering on the two problems that creates.</strong> One
