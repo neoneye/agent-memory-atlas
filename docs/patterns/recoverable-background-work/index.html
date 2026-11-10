@@ -467,23 +467,25 @@ ledger-aware <code>flush()</code> to later releases
 is built; the worker that reads it back is the missing half.</p>
 <p><strong><a href="../../systems/openyantra/">OpenYantra</a> keys
 replay on a request id saved with the row, under a lock its refusal path
-takes twice.</strong> <code>LedgerAgent.submit</code> appends the
-request to <code>sanchitta.json</code>, processes it, and removes the
-entry by request id in a <code>finally</code> block; the next process to
+re-enters.</strong> <code>LedgerAgent.submit</code> appends the request
+to <code>sanchitta.json</code>, processes it, and removes the entry by
+request id in a <code>finally</code> block; the next process to
 construct <code>OpenYantra</code> empties the file and runs whatever is
-in it (<code>openyantra/core.py:280-286</code>, <code>:315-326</code>,
-<code>:645-647</code>). <code>_process</code> skips a request whose id
+in it (<code>openyantra/core.py:344-350</code>, <code>:379-390</code>,
+<code>:690-692</code>). <code>_process</code> skips a request whose id
 the ledger sheet holds, and <code>_commit_and_audit</code> writes the
 row and its ledger entry in one atomic replace, all under an exclusive
-file lock (<code>:332-373</code>, <code>:453-569</code>), so neither a
+file lock (<code>:396-418</code>, <code>:498-614</code>), so neither a
 crash nor a second process can apply a request twice while the lock is
-taken. The lock is not reentrant: a rejected or conflicting request logs
-through <code>_write_sheet</code>, which locks the same file on a second
-handle, and on Linux and macOS <code>flock</code> blocks it forever
-(<code>:383-391</code>, <code>:571-572</code>). The entry is then never
-acknowledged, so the next start's replay blocks on it too. A replay
-guard is only as sound as the lock around it, and the lock needs a test
-that sends a refusal through it.</p>
+taken. A rejected or conflicting request logs through
+<code>_write_sheet</code>, which enters the same lock again; the lock is
+one class keyed on the path, with a thread <code>RLock</code> and a
+depth count, so the nested entry reuses the held file lock and the
+request returns (<code>:262-313</code>, <code>:428-436</code>,
+<code>:616-617</code>). When <code>portalocker</code> raises, the class
+logs at debug level and carries on under the thread lock alone
+(<code>:285-296</code>), and the guard against a second process goes
+with it. A replay guard is only as sound as the lock around it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>

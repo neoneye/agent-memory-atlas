@@ -25651,15 +25651,16 @@ config, ledger, inbox, corrections, quarantine) with Confidence, Source,
 Importance and Last Updated; separately a keyed JSON note for the MCP
 memory tools</td>
 <td>chitrapat.ods, rewritten whole by pandas and odfpy through a
-temporary file and an atomic replace on every write, under an exclusive
-portalocker lock on a sibling lock file; a sanchitta.json write queue;
-FAISS, BM25 and registry files beside it; cognitive_memories.json; a
-chitrapat.db SQLite file whose only written table is a graph of
-edges</td>
+temporary file and an atomic replace on every write, under a per-path
+re-entrant lock, a thread lock plus an exclusive portalocker lock on a
+sibling lock file; a sanchitta.json write queue; FAISS, BM25 and
+registry files beside it; cognitive_memories.json; a chitrapat.db SQLite
+file whose only written table is a graph of edges</td>
 <td>A session-context builder filtering projects, loops, goals and tasks
 by status; FAISS over TF-IDF with SVD or MiniLM fused with BM25, then
-importance and recency, with no status filter; substring search on the
-JSON notes; a six-hop bidirectional edge walk</td>
+importance and recency, dropping superseded beliefs and applying no
+other status filter; substring search on the JSON notes; a six-hop
+bidirectional edge walk</td>
 <td>Explicit calls only, from MCP, the dashboard and HUD, the CLI,
 Telegram, mail, an iOS Shortcut endpoint, an Obsidian import, a git
 post-commit hook and three framework adapters; no model on the write
@@ -25687,13 +25688,12 @@ and add_project writes are stamped User-stated</td>
 <td>One choke point that scans, filters, validates and ledgers every
 sheet write; a quarantine the agent's tools cannot release; a store a
 person can open and read in LibreOffice</td>
-<td>On Linux and macOS a write that validation rejects or the conflict
-guard refuses waits forever on the workbook lock its own call holds, and
-blocks every later write in that process; the JSON store behind the MCP
-memory tools has a secret filter and an injection block but no admission
-filter or ledger; a superseded belief leaves only the session-context
-list and reaches search and both context compilers; the SQLite engine
-and incremental index have no producer</td>
+<td>Both file locks fall back to a thread lock when portalocker fails,
+and the replay guard relies on the file lock; the JSON store behind the
+MCP memory tools has a secret filter and an injection block but no
+admission filter or ledger; search ranks resolved loops, Done tasks and
+Cancelled projects like live ones; the SQLite engine and incremental
+index have no producer</td>
 </tr>
 <tr>
 <td><a
@@ -35780,7 +35780,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>204 of 796:</em> <a
+<p><em>205 of 796:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -35931,6 +35931,7 @@ href="../systems/open-graph-memory/"><code>open-graph-memory</code></a>,
 href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
 <a href="../systems/openakashic/"><code>openakashic</code></a>, <a
 href="../systems/openmemory/"><code>openmemory</code></a>, <a
+href="../systems/openyantra/"><code>openyantra</code></a>, <a
 href="../systems/osiris/"><code>osiris</code></a>, <a
 href="../systems/ostk-recall/"><code>ostk-recall</code></a>, <a
 href="../systems/ouroboros-agent-os/"><code>ouroboros-agent-os</code></a>,
