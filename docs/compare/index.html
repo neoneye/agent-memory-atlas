@@ -27398,26 +27398,29 @@ agent writes into its Docker workspace; no database, no index, no
 embeddings</td>
 <td>None supplied. The agent greps and parses the log itself with Bash
 and Python, which is the entire thesis</td>
-<td>The harness appends every action and board state; the agent's
-<code>[PLAN]</code> block is folded into the same file unless the
-stateless arm suppresses it</td>
+<td>The harness appends every action and board state, and folds the
+agent's briefing and <code>[PLAN]</code> into the same file; no flag at
+the pin suppresses them</td>
 <td>Neither, on the harness side. Nothing is ever rewritten or removed —
-but what reaches the agent is a truncated copy governed by
-<code>--log-window</code></td>
+but what reaches the agent is a copy governed by
+<code>--log-window</code>: the whole log, the last N sections, or
+none</td>
 <td>A directory per game and a Docker bind mount; no scope key is stored
 on a record or applied as a filter</td>
 <td>Two backends — Claude Code and Codex — each driven headless in a
-network-isolated container with a proxy to the model API only</td>
+container whose default network reaches only the model API through a
+proxy</td>
 <td>None. Everything happens on the turn boundary; the runner appends,
 copies, and calls the agent again</td>
 <td>No field. The agent keeps hypothesis-versus-confirmed in prose in
 its own <code>notes.md</code>, and nothing reads it</td>
-<td>Committed per-game results with third-party replay links, matched
-ablation arms, and a budget-matched rerun published because the
-unmatched comparison flattered the result</td>
+<td>Committed per-game results with third-party replay links, a matched
+no-log arm, and a budget-matched rerun published because the unmatched
+comparison flattered the result</td>
 <td>The incremental log sync takes its offset from the size of a file
 the agent is invited to write to, so an agent that edits its own log
-silently loses history</td>
+silently loses history; most ablations the paper reports have no flag in
+the published CLI</td>
 </tr>
 <tr>
 <td><a
