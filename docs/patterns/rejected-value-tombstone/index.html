@@ -1641,13 +1641,15 @@ this pattern. The table is keyed on agent and session with removed paths
 — a record of what the rolling memory-file window dropped, so a privacy
 removal survives a re-index — and the route forces a soft delete.
 Nothing is keyed on the rejected value: the uniqueness index and the
-dedup lookup both filter out deleted rows, and the retention worker
-hard-deletes the row after thirty days, taking the content hash with it.
-The consequence is sharper here than in most systems that lack the
-pattern, because the same store runs a background pass that re-derives
-beliefs from evidence: a value the user forgot is accepted as a new
-memory the next time it is said, and the next dreaming pass may cite it
-and re-assert the claim it was removed from.</p>
+dedup lookups both filter out deleted rows. The retention worker copies
+a row it hard-deletes after thirty days, content hash included, into a
+cold table that only a repair statistics route reads, so the hash
+survives and the write path never consults it. The consequence is
+sharper here than in most systems that lack the pattern, because the
+same store runs a background pass that re-derives beliefs from evidence:
+a value the user forgot is accepted as a new memory the next time it is
+said, and the next dreaming pass may cite it and re-assert the claim it
+was removed from.</p>
 <p><strong><a href="../../systems/graymatter/">GrayMatter</a> builds the
 durable half and skips the value-keyed half.</strong> Its supersession
 marker excludes a fact from recall immediately and unconditionally,

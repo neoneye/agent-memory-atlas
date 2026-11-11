@@ -30206,59 +30206,67 @@ type, tags, importance, <code>agent_id</code>, <code>visibility</code>,
 <code>scope</code>, <code>project</code>, a content hash,
 <code>memory_kind = 'episodic'</code> and a canonical
 <code>evidence_meta</code> payload — and a derived semantic layer of
-entities, aspects, grouped claim values, dependencies and epistemic
-assertions that Dreaming writes from those rows and projects back as
+entities, aspects, grouped claim values with optional event and validity
+times, dependencies and epistemic assertions that Dreaming writes from
+those rows and projects back as
 <code>memory_kind = 'derived'</code></td>
-<td>One SQLite file behind a single owner process, WAL, 152 migrations
-and 114 tables, with FTS5 over memories, artifacts and transcripts and a
-<code>vec0</code> virtual table from sqlite-vec; identity files
-(AGENTS.md, SOUL.md, USER.md, MEMORY.md) and a libsodium-encrypted
-<code>.secrets/secrets.enc</code> on disk beside it</td>
-<td>Hybrid: FTS5 lexical, sqlite-vec vector at alpha 0.7, graph
-traversal candidates, prospective hints and a temporal-facet arm, fused
-as structured evidence, dampened and optionally reranked by an LLM; a
-content-safety join drops instruction-shaped rows before scoring</td>
+<td>One SQLite file, WAL except on a network filesystem, 171 migrations
+and 127 tables, with FTS5 over memories, artifacts, hints, entities and
+transcripts and a <code>vec0</code> virtual table from sqlite-vec;
+identity files (AGENTS.md, SOUL.md, USER.md, MEMORY.md) and a
+libsodium-encrypted <code>.secrets/secrets.enc</code> on disk beside
+it</td>
+<td>Hybrid: FTS5 lexical and sqlite-vec vector hits fused by reciprocal
+rank with k = 60, plus graph traversal, prospective-hint, temporal-facet
+and structured-evidence arms, dampened and reranked by a local ONNX
+cross-encoder by default; credential spans are redacted from every
+returned projection and nothing is withheld for content</td>
 <td>Harness hooks stream transcripts into the store;
 <code>remember</code> over MCP, HTTP, CLI or a plugin writes an episodic
-row synchronously, retrievable at once. No extraction on the hot path —
-the semantic layer is built later by Dreaming</td>
+row synchronously, deduplicated by content hash within agent, project,
+scope and visibility, and retrievable at once. No extraction on the hot
+path — the semantic layer is built later by Dreaming</td>
 <td>Soft delete with <code>is_deleted</code>/<code>deleted_at</code>,
 <code>superseded_by</code> and <code>stale_at</code>, all three excluded
 by one shared <code>currentMemorySql</code> predicate; a
 preview-then-execute forget; a source purge that also deletes the claim
-projections derived from it; the retention worker hard-deletes
-soft-deleted rows after 30 days and history after 180</td>
+projections derived from it, while an edited source keeps its Dreaming
+claims and flags the ones whose quote vanished; the retention worker
+hard-deletes soft-deleted rows after 30 days and history after 180</td>
 <td><code>agent_id</code> plus a three-valued roster read policy
-(isolated, group, shared) applied as SQL on every recall arm, with
-<code>visibility != 'archived'</code>; project and a nullable
-<code>scope</code> column layer on top. In the default
-<code>local</code> auth mode no token binds a caller to an agent id</td>
-<td>A daemon with a Hono HTTP API, a stdio and HTTP MCP server whose
-base tool set names 62 tools, hooks for session start, prompt submit,
-pre-compaction and session end, connectors for ten harnesses, a CLI, a
-dashboard, a tray and desktop app, and a browser extension</td>
+(isolated, group, shared) applied as SQL on every recall arm and every
+memory read route, with <code>visibility != 'archived'</code>; project
+and a nullable <code>scope</code> column layer on top. In the default
+<code>local</code> auth mode no token binds a caller to an agent id; the
+Docker image starts in <code>team</code> mode</td>
+<td>A daemon with a Hono HTTP API, a stdio and HTTP MCP server
+registering 62 tools, hooks for session start, prompt submit,
+pre-compaction and session end, connectors for eleven harnesses, a CLI,
+a dashboard, a tray and desktop app, a browser extension, a cross-agent
+message board, and a Docker image</td>
 <td>A dreaming worker sweeping every 5 minutes for content and hygiene
 passes, plus transcript capture, transcript recovery and import workers,
-embedding and synthesis workers, reflection, a 6-hourly retention sweep,
-database integrity and vacuum</td>
-<td>A deterministic content-safety ledger scoring every memory,
-artifact, transcript and summary
-<code>clean</code>/<code>tainted</code>/<code>blocked</code> with a
-reason vocabulary, joined into recall so only <code>clean</code> rows
-are eligible; contradictions are recorded as durable observations rather
-than resolved into a winner; every Dreaming write must cite a quote that
-is a verbatim substring of a scoped episodic source</td>
-<td>An exact-quote citation gate enforced in code before any graph
+embedding, embedding-repair and synthesis workers, reflection, a
+6-hourly retention sweep, database integrity and vacuum</td>
+<td>Every Dreaming claim write must cite a quote that is a verbatim
+substring of a scoped episodic source, checked in code before any write;
+contradictions are recorded as durable observations rather than resolved
+into a winner; a deterministic credential detector redacts keys, tokens
+and secret-named assignments from every prompt- and agent-facing
+projection, while stored evidence keeps the raw text</td>
+<td>An exact-quote citation gate enforced in code before any claim
 write, an immutable evidence layer the derived layer can always be
-rebuilt from, a prompt-injection ledger on the read path, agent scope in
-SQL with tests that cannot pass vacuously, and source deletion that
+rebuilt from, valid-time ordering of claims under a test that fails on
+write order, agent scope in SQL on recall and every read route with
+tests that cannot pass vacuously and run in CI, and source deletion that
 reaches the derived claims</td>
-<td>The published 97.6% LongMemEval figure has no committed artifact and
-the in-tree ledger's largest sample is 12 questions; CI runs about
-twenty named test files while the tree holds 464; a forgotten value can
-be written straight back; <code>/api/memory/review-queue</code> selects
-three event names nothing writes; and captured transcripts reach SQLite
-with no credential scrubbing at all</td>
+<td>The published 97.6% LongMemEval figure has no per-question artifact
+and the repository's own committed run ledger peaks at 45 correct out of
+50; history is pruned at 180 days and agent purge deletes it; a
+forgotten value can be written straight back;
+<code>/api/memory/review-queue</code> selects three event names nothing
+writes; and captured transcripts are stored with no credential
+scrubbing</td>
 </tr>
 <tr>
 <td><a href="../systems/silica/"><code>silica</code></a></td>
@@ -36500,7 +36508,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>267 of 796:</em> <a
+<p><em>266 of 796:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -36737,7 +36745,6 @@ href="../systems/severian/"><code>severian</code></a>, <a
 href="../systems/shellbrain/"><code>shellbrain</code></a>, <a
 href="../systems/shisad/"><code>shisad</code></a>, <a
 href="../systems/shodh-memory/"><code>shodh-memory</code></a>, <a
-href="../systems/signetai/"><code>signetai</code></a>, <a
 href="../systems/simplemem/"><code>simplemem</code></a>, <a
 href="../systems/smriti/"><code>smriti</code></a>, <a
 href="../systems/somnigraph/"><code>somnigraph</code></a>, <a

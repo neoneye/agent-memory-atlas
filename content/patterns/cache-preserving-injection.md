@@ -262,7 +262,7 @@ a *different* mechanism — reusing model state rather than positioning text —
 falls under the KV-cache scope boundary in the
 [comparative report](../../families/#not-in-scope-the-kv-cache).
 
-[Signet AI](../../systems/signetai/) splits the session-start payload rather than the memory design. Its session-start handler returns a stable system prompt separately from a dynamic context block, with identity files selected by preset and budgeted per file. A second session-start for the same session hits a dedupe guard and returns a minimal stub rather than re-injecting, on the stated ground that the identity files are already in the context. The invariant block sits ahead of the variable one, and per-turn recall arrives through the prompt-submit hook and the MCP tools instead of being woven into the system prompt.
+[Signet AI](../../systems/signetai/) splits the session-start payload rather than the memory design. Its session-start handler returns a short stable banner separately from a dynamic context block, with identity files selected by preset and budgeted per file. A second session-start for the same session hits a dedupe guard and returns the same stable banner with a one-line marker and no memories rather than re-injecting. The invariant block sits ahead of the variable one, and per-turn recall arrives through the prompt-submit hook and the MCP tools instead of being woven into the system prompt.
 
 ## The same constraint, one layer down
 
