@@ -7,29 +7,29 @@ page_kind: system
 source_name: "OmniNode-ai/omnimemory"
 source_url: https://github.com/OmniNode-ai/omnimemory
 archive_name: "OmniNode-ai--omnimemory"
-revision: 7be7aa9ea56a498ec6c10fe366927e7ec2fc0650
-revision_url: https://github.com/OmniNode-ai/omnimemory/commit/7be7aa9ea56a498ec6c10fe366927e7ec2fc0650
-analyzed_at: 2026-10-12
+revision: 92b9c1a20bef7bbd32a4e0ba557d116d5c9fbb2d
+revision_url: https://github.com/OmniNode-ai/omnimemory/commit/92b9c1a20bef7bbd32a4e0ba557d116d5c9fbb2d
+analyzed_at: 2026-11-12
 licence: "MIT"
-size: "126,298 lines of Python in 500 files: 59,308 in 313 files under src, 60,429 in 156 files under tests"
-activity: "639 commits on dev by 6 author names, three of them bots, 13 September 2025 – 12 October 2026; version 0.18.4"
-tests: "2,688 test functions in 125 files, mypy strict, ruff, pre-commit; none run for this reading"
+size: "128,692 lines of Python in 555 files: 60,201 in 341 files under src, 63,155 in 189 files under tests"
+activity: "762 commits on dev by 7 author names, three of them bots, 13 September 2025 – 12 November 2026; version 0.18.14"
+tests: "2,814 test functions in 156 files, mypy strict, ruff, pre-commit; none run for this reading"
 capabilities: ""
 stack_storage: "postgres, graph, qdrant, redis, files"
 stack_retrieval: ""
 stack_source: "reviewed"
 matrix:
   memory_unit: "A row in a memories table carrying lifecycle_state and lifecycle_revision, plus Pydantic domain models; nothing in this repository inserts a memories row"
-  storage: "Adapters for Qdrant, Memgraph, Valkey, Postgres and the filesystem; the memories table migration has expires_at and archived_at but no expired_at column"
-  retrieval: "A hybrid node (vector and full-text legs fused by weighted reciprocal rank, then activation decay) whose only initialisable backends are in-memory test doubles that nothing seeds; any non-stub configuration raises NotImplementedError"
+  storage: "Adapters for Qdrant, Memgraph, Valkey, Postgres and the filesystem; the memories table migration has expires_at and archived_at but no expired_at column, and it is the only DDL for that table in this repository, omnimarket or omnibase_infra"
+  retrieval: "A hybrid node (each leg gated on its own relevance floor, then plain reciprocal-rank fusion, then activation decay) whose only initialisable backends are in-memory test doubles that nothing seeds; any non-stub configuration raises NotImplementedError"
   write: "ONEX nodes dispatched from Kafka topics through a runtime plugin; lifecycle writes are one compare-and-set UPDATE per expire command"
   update_delete: "A five-state lifecycle with a frozen transition map that nothing consults; ACTIVE to EXPIRED is the one routed transition, archive is acknowledged without acting, DELETED has no writer"
   scoping: "No memory-level scope key on any read path; persona snapshots are fetched by user_id and subscriptions by agent_id"
-  integration: "A kernel plugin registered at the onex.domain_plugins entry point, Kafka topics, contract.yaml per node"
+  integration: "A kernel plugin registered at the onex.domain_plugins entry point, Kafka topics, contract.yaml per node; omnimarket registers copies of the lifecycle node and contract shells that route storage and retrieval back into this package"
   background: "A lifecycle tick sweeping expired and unarchived rows exists with no caller in this repository; runtime-tick commands reach a bridge that only starts adapters"
   trust: "A six-level trust enum derived from a float by threshold; a promotion tier with QUARANTINE and BLACKLISTED that nothing writes or reads; a lifecycle state the read path never consults"
   strengths: "A default-deny AST gate with positive and negative controls over its own checker, and a test that names what the suite does not prove. The expire dispatcher publishes exactly one outcome event per command and nacks when no publisher is wired. Compare-and-set with both revision and source state in the WHERE clause"
-  risks: "The routed retrieval node serves empty in-memory doubles and cannot be configured onto Qdrant. archive-memory and runtime-tick are acknowledged without effect. The expire UPDATE writes an expired_at column the shipped migration does not create, and its tests run against a pool that ignores the SQL"
+  risks: "The routed retrieval node serves empty in-memory doubles and cannot be configured onto Qdrant. archive-memory and runtime-tick are acknowledged without effect. The expire UPDATE writes an expired_at column the shipped migration does not create, and its tests run against a pool that ignores the SQL. omnimarket carries a second copy of the lifecycle handlers with the same SQL and no runtime that initialises them"
 ---
 
 ## 1. Executive Summary
@@ -71,13 +71,13 @@ subject is the boundary of the suite's own evidence.
 **The second mechanism is a compare-and-set on lifecycle, wired to outcome
 events.** `HandlerMemoryExpire` transitions a memory with a WHERE clause
 carrying both the expected revision *and* the expected source state, and
-reports zero affected rows as a conflict (`handler_memory_expire.py:381-391`).
+reports zero affected rows as a conflict (`handler_memory_expire.py:382-393`).
 `create_expire_memory_dispatch_handler` routes every `expire-memory` command to
 it and publishes exactly one event: `memory-expired.v1` on success,
 `lifecycle-transition-failed.v1` on refusal, malformed command, missing
 database or conflict. With no publisher wired it raises before touching the
 database, so the message is nacked rather than acknowledged in silence
-(`runtime/dispatch_handlers.py:927-1082`).
+(`runtime/dispatch_handlers.py:912-1072`).
 
 **The finding that governs the report is on the read side.** The retrieval
 dispatcher builds `HandlerMemoryRetrieval` from `build_retrieval_config_from_env()`.
@@ -85,13 +85,23 @@ dispatcher builds `HandlerMemoryRetrieval` from `build_retrieval_config_from_env
 mocks that nothing in `src` seeds; any other value reaches
 `raise NotImplementedError("Production handlers not yet implemented. Set
 use_stub_handlers=True")` at initialisation
-(`handler_memory_retrieval.py:151-170`). `HandlerQdrant` exists, is tested, and
-has no constructor in `src`.
+(`handler_memory_retrieval.py:159-190`), under the comment *"stub-ok: OMN-4475 —
+HandlerQdrant production wiring deferred to Task 5"*. `HandlerQdrant` exists, is
+tested, and has no constructor in `src`.
 
 The other two lifecycle commands are acknowledged without acting.
 `archive-memory` reaches a bridge that logs "archive-memory command not yet
 implemented … acknowledging as no-op", and `runtime-tick` reaches the same
 bridge, which starts adapters and returns.
+
+**The lifecycle has a second home, and it is a copy.** The
+[`omnimarket`](https://github.com/OmniNode-ai/omnimarket) workflow registry
+registers its own `node_memory_lifecycle_orchestrator` whose tick, expire and
+archive handlers import their models from this package and carry the same
+`UPDATE memories` SQL. Its storage and retrieval nodes are contract shells that
+name this package's handlers. No repository in the organisation creates a
+`memories` table other than this one's migration, and no runtime found
+initialises the copies (section 3).
 
 ## 2. Mental Model
 
@@ -152,14 +162,59 @@ the `onex.domain_plugins` entry point, builds a `MessageDispatchEngine` in
 declare. The lifecycle orchestrator's `contract.yaml` routes `tick`, `expire`
 and `archive` operations to `HandlerMemoryTick`, `HandlerMemoryExpire` and
 `HandlerMemoryArchive`, but its package is not in
-`_OMNIMEMORY_HANDLER_NODE_PACKAGES` (`runtime/wiring.py:44-51`), and in this
-repository only the expire handler is constructed, by
-`PluginMemory._build_expire_handler` (`runtime/plugin.py:466-519`).
+`_OMNIMEMORY_HANDLER_NODE_PACKAGES` (`runtime/wiring.py:45-52`), and in this
+repository only the expire handler is constructed, through
+`bind_memory_expire` in `container/registry_memory_lifecycle.py`, called from
+`PluginMemory._build_expire_handler` (`runtime/plugin.py:457-512`).
 
-The README lists node handlers as "contract-carrying nodes in
-`src/omnimemory/nodes/`, migrating to `omnimarket`", and names PostgreSQL and
-Kafka as owned by `omnibase_infra`. The boundary document it links lives in a
-separate knowledge-base repository.
+The README is four lines naming the package and linking the public knowledge
+base. The two repositories the code points at are public.
+
+### The second home: omnimarket and omnibase_infra
+
+Read at [`omnimarket@d62a297bebb7a8ec2e7a5de9580c5ec99da132a5`](https://github.com/OmniNode-ai/omnimarket/commit/d62a297bebb7a8ec2e7a5de9580c5ec99da132a5)
+and [`omnibase_infra@26706331dab7c300e9d305bdbd3e27c0675e6783`](https://github.com/OmniNode-ai/omnibase_infra/commit/26706331dab7c300e9d305bdbd3e27c0675e6783),
+both heads of their default branches on 12 November 2026. Neither is pinned by
+this report; they answer where this package's handlers went.
+
+**omnimarket copies the lifecycle and borrows the rest.**
+`src/omnimarket/nodes/node_memory_lifecycle_orchestrator/` ships tick, expire
+and archive handlers of 705, 778 and 1,237 lines that import
+`EnumLifecycleState` and the command and result models from this package
+(`handler_memory_expire.py:99-110`). Its `_EXPIRE_SQL` (`:162-172`) is the same
+statement as this package's, `expired_at = $2` included, and the archive writes
+`archived_at`. The node is registered under `onex.nodes` (`pyproject.toml:942`),
+its contract routes `tick`, `expire` and `archive` by operation, and the
+contract names the command's producer as *"the onex skill/CLI dispatcher"*.
+The storage node's contract names this package's `HandlerFileSystemAdapter`
+and the retrieval node's names this package's `HandlerMemoryRetrieval`, so a
+deployment of either serves the same filesystem writes and the same unseeded
+mocks.
+
+**Nothing found runs the copies.** Each handler requires a container and an
+`initialize(db_pool=…)` or `initialize(projection_reader=…)` before `handle`,
+and raises *"Handler not initialized"* otherwise. omnimarket's local dispatcher
+builds handlers with only `event_bus`, `state_store` and `dispatch_port`
+(`adapters/codex/local_runtime_dispatch.py:757-783`), so it would call the
+lifecycle handlers without the container they require. Nothing in either
+repository implements `ProtocolMemoryLifecycleProjectionReader`, which the
+tick handler reads from. Its tests build the handlers over a mock container.
+
+**No other repository creates the table.** Across omnibase_infra's migrations
+and Python, and omnimarket's, no `CREATE` or `ALTER TABLE` names `memories`.
+`deployment/database/migrations/002_create_memories_table.sql` in this package
+is the only DDL for it, and it has no `expired_at`. omnibase_infra does create
+`agent_learnings` and `user_persona_snapshots`; the second is written and read by
+this package's persona adapter, the first by nothing in the three repositories.
+
+**The other memory nodes in omnimarket are seams.** `node_recall_compute`,
+`node_agent_learning_retrieval_effect` and the knowledge-context assembler fan
+out to backend protocols with no implementation in the three repositories, and
+answer *"no recall backends configured"* or an empty result without one. The
+persona storage and retrieval nodes raise `NotImplementedError`. omnibase_infra's
+vector-store search builds a Qdrant filter only from a caller-supplied
+`metadata_filter` and drops it silently on `ImportError`
+(`handler_vector_search.py:103-115`).
 
 ### Deployment and ergonomics
 
@@ -171,7 +226,7 @@ single-process mode and nothing an agent installs directly.
 
 ## 4. Essential Implementation Paths
 
-**Expire** — `runtime/plugin.py:711` builds the handler; `runtime/dispatch_handlers.py:927`
+**Expire** — `runtime/plugin.py:702` builds the handler; `runtime/dispatch_handlers.py:912`
 `create_expire_memory_dispatch_handler` validates the payload as
 `ModelExpireMemoryCommand` in lax mode after dropping the envelope keys
 `correlation_id`, `requested_by` and `timestamp`, calls `HandlerMemoryExpire.handle`
@@ -179,8 +234,8 @@ once, and publishes one event. `handle_with_retry` is not on this path.
 
 **Transition** —
 `nodes/node_memory_lifecycle_orchestrator/handlers/handler_memory_expire.py`
-(`_EXPIRE_SQL` `:381`, `_READ_STATE_SQL` `:394`, `_VALID_FROM_STATES` `:404`,
-`handle` `:565`). A Postgres error is caught and returned as
+(`_EXPIRE_SQL` `:382`, `_READ_STATE_SQL` `:395`, `_VALID_FROM_STATES` `:405`,
+`handle` `:579`). A Postgres error is caught and returned as
 `success=False, error_message="Database error: …"`, which the dispatcher turns
 into a failure event.
 
@@ -194,15 +249,15 @@ NOT NULL AND expires_at <= :now`, then `lifecycle_state = 'expired' AND
 archived_at IS NULL`). Their only constructors in `src` are docstring examples
 and the two adapters in `adapters/`, which nothing constructs.
 
-**Lifecycle bridge** — `runtime/dispatch_handlers.py:825`
+**Lifecycle bridge** — `runtime/dispatch_handlers.py:810`
 `_create_lifecycle_bridge_handler`: reads `payload["command"]`, starts
 `HandlerMemoryLifecycle` if needed, calls `handle_shutdown()` only for
 `"shutdown"`, logs and acknowledges `"archive-memory"`.
 
-**Retrieve** — `runtime/dispatch_handlers.py:467` `build_retrieval_config_from_env`,
-`:515` `create_memory_retrieval_dispatch_handler`, then
+**Retrieve** — `runtime/dispatch_handlers.py:452` `build_retrieval_config_from_env`,
+`:500` `create_memory_retrieval_dispatch_handler`, then
 `nodes/node_memory_retrieval_effect/handlers/handler_memory_retrieval.py`
-(`initialize` `:151-170`, `_execute_hybrid` `:347`).
+(`initialize` `:159-190`, `_execute_hybrid` `:365`).
 
 ## 5. Memory Data Model
 
@@ -214,9 +269,8 @@ values, default `active`), `expires_at`, `archived_at`, `lifecycle_revision`,
 `HandlerMemoryArchive._read_memory` selects it. Against a table built from this
 migration the UPDATE names a column that does not exist; the handler would
 return the Postgres error and the dispatcher would publish
-`lifecycle-transition-failed`. The README places PostgreSQL ownership in
-`omnibase_infra`, so whether the deployed table has the column is outside this
-tree.
+`lifecycle-transition-failed`. No other repository in the organisation creates
+the table (section 3), so this migration is the schema the UPDATE meets.
 
 `EnumLifecycleState` is five states with the transitions written down: STALE can
 return to ACTIVE ("refreshed / promoted"), ARCHIVED can return to ACTIVE
@@ -260,12 +314,15 @@ here.
 ### The composed read path
 
 `_execute_hybrid` fans out to a semantic leg and a full-text leg and fuses
-their *rankings* rather than their scores, with the reason written down:
-fusing first "would let a leg that matched" on a stray term carry a document
-into the answer on one leg's strength alone. `fuse_rrf_scores` is
-reciprocal-rank fusion at `RRF_K_DEFAULT = 60` (`handler_fusion.py:53`),
-weighted rather than plain, because on a paraphrase query the lexical leg can
-match a stray token and unweighted RRF would promote it.
+their *rankings* rather than their scores, because cosine similarity and
+Postgres `ts_rank` are on scales with no principled mapping between them.
+`HandlerRankFusion` first gates each leg against its own floor —
+`MIN_VECTOR_COSINE = 0.5`, `MIN_LEXICAL_TS_RANK = 0.15` — and then applies plain
+reciprocal-rank fusion at `RRF_K_DEFAULT = 60` (`handler_fusion.py:50-116`). The
+gate is the reason it exists: on a paraphrase query the lexical leg can match a
+stray lexeme, and RRF alone *"gives whatever sits at rank 1 the full `1/(k+1)`
+weight either way"*. Gating never compares one leg's scores with the other's,
+so it does not reintroduce the scale problem.
 
 `handler_decay.py` then modulates the fused score multiplicatively —
 `A(t) = A_0 * exp(-lambda * dt)` with `DECAY_LAMBDA_PER_DAY = 0.015` — and the
@@ -275,16 +332,17 @@ ranked list inside the fusion."
 The freshness input degrades **per instance** rather than per model: the plan
 specifies `max(created_at, last_accessed_at)`, but the retrieval path returns a
 frozen `ModelMemorySnapshot` from a shared core package that carries only
-`created_at`, so `freshest_timestamp` (`:83`) falls back per record. The
+`created_at`, so `HandlerActivationDecay` takes the freshest timestamp a record
+has (`handler_decay.py:80-100`) and the hybrid path passes `created_at` alone. The
 docstring states the policy that follows — whether the `created_at`-only path
 costs ranking quality "is a question to answer with the fixture harness, not by
 assumption."
 
-`STALE_ACTIVATION_THRESHOLD = 0.3` (`:73`) is exported with the stated reason
+`STALE_ACTIVATION_THRESHOLD = 0.3` (`:69`) is exported with the stated reason
 that "ranking and the lifecycle orchestrator must agree on what 'stale' means".
-`is_stale` appears in `src` only at its definition and in the module's
-`__all__`; six committed cases are its only callers. Staleness is a defined,
-tested predicate that nothing filters or expires on.
+The decay handler computes `is_stale` into its response (`:99`), and the hybrid
+path reads only `.activation` from that response (`handler_memory_retrieval.py:453-460`).
+Staleness is a defined, tested value that nothing filters or expires on.
 
 All of this runs over the mocks. The fusion and decay code is real and tested;
 the backends it fuses in a deployment are the empty doubles above.
@@ -390,8 +448,21 @@ publish failure and a missing publisher each raise. A last one asserts the
 lifecycle bridge does not read `expire-memory` as shutdown.
 
 `tests/unit/nodes/test_hybrid_retrieval_fusion.py` scores fusion against a
-committed 32-query corpus by nDCG and asserts that unweighted RRF *does*
-regress paraphrase queries, so a change that removes the weighting fails.
+committed 32-query corpus — eight each of `exact_token`, `paraphrase`,
+`agreement` and `recency` — by NDCG@10. Exact-token queries must improve on the
+vector leg alone, paraphrase and agreement queries must not regress, and
+`test_ungated_rrf_regresses_paraphrase_queries` asserts that fusion without the
+per-leg gate *does* regress paraphrase, so removing the gate fails a test.
+`test_corpus_is_discriminating_by_construction` checks the corpus can tell the
+arms apart before any of that is trusted.
+
+omnimarket carries the organisation's other memory evaluation,
+`node_memory_pilot_effect`: a Cognee 1.6.6 run against a lexical baseline over
+planted notes, scored by positive regular expressions per question. Its
+threshold file lists a negative control — a baseline run with the planted notes
+removed must lose the planted questions — and no code or test in that
+repository runs it. Its two abstain questions are answer-absent cases checked
+against fixed strings, not material a populated store must withhold.
 
 I ran nothing.
 
@@ -437,6 +508,10 @@ I ran nothing.
 - **Do not let a score wear a state's clothes.** Six labels derived from a float
   by threshold are a float. If UNTRUSTED means "should not be used", something
   on the read path has to refuse it.
+- **Do not migrate a handler by copying it.** omnimarket's lifecycle handlers
+  carry the same `UPDATE memories … expired_at` statement and import their
+  models from the package they replace, so the missing column has two
+  homes and neither has a runtime that initialises it.
 - **Do not ship an audit schema with no writer.** `old_value`, `new_value`,
   `ip_address` and `user_agent`, fully specified and never constructed, reads to
   a reviewer as an audit trail that exists.
@@ -454,15 +529,20 @@ handler that cannot fail silently.
 
 ## 12. Open Questions
 
-- **Is the lifecycle wired anywhere outside this repository?** The README lists
-  node handlers as migrating to `omnimarket`, which was not read; the lifecycle
-  orchestrator's `contract.yaml` declares tick, expire and archive routing that
-  a runtime there might consume.
-- **Who creates the `memories` table in a deployment, and does it have
-  `expired_at`?** PostgreSQL is listed as owned by `omnibase_infra`, which was
-  not read.
+- **What deployment initialises the lifecycle handlers, here or in
+  omnimarket?** Both copies need a container and an `initialize` call with a
+  database pool or a projection reader. This package builds only the expire
+  handler, on `OMNIMEMORY_DB_URL`; omnimarket's local dispatcher passes neither,
+  and no implementation of `ProtocolMemoryLifecycleProjectionReader` is in
+  either repository.
+- **Is the `memories` table created outside the public repositories?** Only
+  this package's migration creates it, without `expired_at`. A private
+  deployment schema could differ.
 - **Who sends `expire-memory`, and from where does it learn
-  `expected_revision`?** No producer is in this tree.
+  `expected_revision`?** omnimarket's contract names *"the onex skill/CLI
+  dispatcher"* as the producer. Outside the handlers' own `handle_with_retry`,
+  which reads the revision from the row and has no production caller, nothing
+  in the three repositories builds the command.
 - **What does OMN-2437 say?** The ticket that turned a fail-fast lifecycle
   handler into the logged no-op that `create_lifecycle_dispatch_handler`
   returns is referenced and not public; that factory has no caller outside
@@ -478,14 +558,20 @@ handler that cannot fail silently.
 | `tests/gates/test_consumer_group_name_authorization.py:1-58` | The rationale for each test, including the residual |
 | `tests/gates/test_consumer_group_name_authorization.py:263-389` | The AST walk, the empty-allowlist assertion and the five checker controls |
 | `tests/gates/test_consumer_group_name_authorization.py:446`, `:472` | The seam pin and the residual test |
-| `src/omnimemory/runtime/dispatch_handlers.py:927-1082` | The expire dispatcher and its one-outcome contract |
-| `src/omnimemory/runtime/dispatch_handlers.py:825-887` | The lifecycle bridge that acknowledges archive and tick |
-| `src/omnimemory/runtime/dispatch_handlers.py:467-512` | `build_retrieval_config_from_env` and the stub default |
-| `src/omnimemory/runtime/plugin.py:466-519`, `:711` | Building the expire handler on `OMNIMEMORY_DB_URL` |
-| `src/omnimemory/nodes/node_memory_lifecycle_orchestrator/handlers/handler_memory_expire.py:381-404`, `:565-768` | The compare-and-set and its result mapping |
+| `src/omnimemory/runtime/dispatch_handlers.py:912-1072` | The expire dispatcher and its one-outcome contract |
+| `src/omnimemory/runtime/dispatch_handlers.py:810-875` | The lifecycle bridge that acknowledges archive and tick |
+| `src/omnimemory/runtime/dispatch_handlers.py:452-497` | `build_retrieval_config_from_env` and the stub default |
+| `src/omnimemory/runtime/plugin.py:457-512`, `:702`; `nodes/node_memory_lifecycle_orchestrator/container/registry_memory_lifecycle.py` | Building the expire handler on `OMNIMEMORY_DB_URL` |
+| `src/omnimemory/nodes/node_memory_lifecycle_orchestrator/handlers/handler_memory_expire.py:382-405`, `:579-783` | The compare-and-set and its result mapping |
 | `src/omnimemory/nodes/node_memory_lifecycle_orchestrator/validators/validator_lifecycle_transition.py:63-96` | The frozen transition map |
-| `src/omnimemory/nodes/node_memory_retrieval_effect/handlers/handler_memory_retrieval.py:151-170`, `:347` | Stub-or-raise initialisation; the hybrid path |
-| `src/omnimemory/nodes/node_memory_retrieval_effect/handlers/handler_decay.py`, `handler_fusion.py` | Rank fusion, post-fusion decay, the unwired stale predicate |
+| `src/omnimemory/nodes/node_memory_retrieval_effect/handlers/handler_memory_retrieval.py:159-190`, `:365` | Stub-or-raise initialisation; the hybrid path |
+| `src/omnimemory/nodes/node_memory_retrieval_effect/handlers/handler_decay.py`, `handler_fusion.py` | Per-leg gating and rank fusion, post-fusion decay, the unread stale flag |
+| `tests/unit/nodes/test_hybrid_retrieval_fusion.py`, `tests/unit/nodes/fixtures/omn16765/hybrid_retrieval_corpus.json` | The 32-query NDCG gate and the ungated control |
+| omnimarket `src/omnimarket/nodes/node_memory_lifecycle_orchestrator/` | The copied lifecycle handlers and their routing contract |
+| omnimarket `src/omnimarket/nodes/node_memory_storage_effect/contract.yaml`, `node_memory_retrieval_effect/contract.yaml` | Contract shells naming this package's handlers |
+| omnimarket `src/omnimarket/adapters/codex/local_runtime_dispatch.py:757-783` | How the local dispatcher builds a handler |
+| omnimarket `src/omnimarket/nodes/node_memory_pilot_effect/pilot/stage1/bar.json` | The pilot's thresholds and its unimplemented negative control |
+| omnibase_infra `src/omnibase_infra/nodes/node_vector_store_effect/handlers/handler_vector_search.py:103-115` | The caller filter dropped on `ImportError` |
 | `src/omnimemory/enums/enum_promotion_tier.py`, `models/scoring/model_context_policy_config.py` | The unwired quarantine tier |
 | `src/omnimemory/enums/enum_trust_level.py`, `models/foundation/model_trust_score.py:161` | The float-derived trust level |
 | `src/omnimemory/models/foundation/model_audit_metadata.py` | The audit model with no writer |
@@ -498,15 +584,15 @@ Run at the tree root of the pinned checkout with `/usr/bin/git grep`.
 
 - `git grep -n 'lifecycle_state' -- src/omnimemory/nodes/node_memory_retrieval_effect src/omnimemory/runtime` — no match; no read path consults lifecycle.
 - `git grep -nE 'HandlerQdrant\(' -- src` — no match; the Qdrant retrieval handler is never constructed.
-- `git grep -n 'Production handlers not yet implemented' -- src` — `handler_memory_retrieval.py:169`, the non-stub branch.
-- `git grep -n 'seed_snapshots(' -- src` — docstrings and the handlers' own methods only.
-- `git grep -nE '(HandlerMemoryArchive|HandlerMemoryTick|HandlerMemoryExpire|AdapterRuntimeTickMemory|AdapterPostgresDeactivateMemory)\(' -- src` — docstring examples, the two unconstructed adapters, and `runtime/plugin.py:517`, the one production constructor.
+- `git grep -n 'Production handlers not yet implemented' -- src` — `handler_memory_retrieval.py:187`, the non-stub branch.
+- `git grep -n 'seed_snapshots(' -- src` — docstrings, the mock store and the handlers' own methods only.
+- `git grep -nE '(HandlerMemoryArchive|HandlerMemoryTick|HandlerMemoryExpire|AdapterRuntimeTickMemory|AdapterPostgresDeactivateMemory)\(' -- src` — docstring examples, the two unconstructed adapters, and `container/registry_memory_lifecycle.py:30`, the one production constructor.
 - `git grep -nE 'validate_transition|VALID_TRANSITIONS' -- src ':!src/omnimemory/nodes/node_memory_lifecycle_orchestrator/validators'` — no match.
 - `git grep -n 'expired_at' -- '*.sql'` — no match; the migration lacks the column the expire UPDATE writes.
 - `git grep -niE 'insert into memories' -- .` — no match.
 - `git grep -nE '(AuditMetadata|AuditEventDetails|SecurityAuditDetails|ResourceUsageMetadata)\(' -- . ':!src/omnimemory/models/foundation/model_audit_metadata.py'` — four hits, all in `tests/models/test_frozen_boundary_models.py`.
 - `git grep -nE 'TrustScore\(' -- src` — the class definition only.
-- `git grep -nw is_stale -- src` — the definition and `__all__`.
+- `git grep -nw is_stale -- src` — the decay handler's response field and its model; nothing reads it.
 - `git grep -nw -e include_quarantine -e ContextSelectorNode -- src` — the field and a docstring.
 - `git grep -nE 'ModelPromotionDecision\(' -- src` — the class definition only.
 - `git grep -nE '(WHERE|AND).{0,80}(user_id|tenant_id|agent_id|project_id|session_id|owner_id|namespace|workspace|scope)' -- . ':!uv.lock'` — subscriptions by `agent_id`, persona by `user_id`, and test SQL on `navigation_sessions`.
@@ -518,7 +604,18 @@ Run at the tree root of the pinned checkout with `/usr/bin/git grep`.
 - `git grep -niE 'arxiv|bibtex|@article|@misc|doi\.org' -- README.md CLAUDE.md CHANGELOG.md` — no match; no paper.
 - `git grep -niE 'anthropic|machine learning|not (be )?used (for|to)' -- LICENSE` — no match; the MIT text carries no rider.
 
+Run in the sibling checkouts named in section 3, omnimarket at `d62a297bebb7a8ec2e7a5de9580c5ec99da132a5` and omnibase_infra at `26706331dab7c300e9d305bdbd3e27c0675e6783`.
+
+- `git grep -n -i -E '(CREATE|ALTER) TABLE[^;]*[[:space:]."]memories([[:space:]"(]|$)'` in each — no match; the only DDL is this package's migration.
+- `git grep -n -i -E 'INSERT INTO[[:space:]]+"?memories'` in each — no match.
+- `git grep -n -E 'ProtocolMemoryLifecycleProjectionReader' -- ':!src/omnimarket/nodes/node_memory_lifecycle_orchestrator/handlers'` in omnimarket, and `git grep -n -E 'ProtocolMemoryLifecycleProjectionReader'` in omnibase_infra — no match; no projection reader is implemented.
+- `git grep -n -E 'ProtocolAgentLearningRetrievalBackend'` in omnimarket — the defining module and its re-export only.
+- `git grep -n -i -E 'planted notes removed|without_planted|remove.*planted' -- src/omnimarket/nodes/node_memory_pilot_effect ':(glob)tests/**/*memory_pilot*'` in omnimarket — `bar.json:67` only; the negative control is listed and not implemented.
+- `git grep -n -i -E 'forbidden|must_not|irrelevant|distractor|negative|exclude' -- src/omnimarket/models/retrieval_eval src/omnimarket/nodes/node_retrieval_eval_compute` in omnimarket — no match; the retrieval eval has no negative slot.
+
 ## History
+
+**2026-11-12** — [`92b9c1a20bef7bbd32a4e0ba557d116d5c9fbb2d`](https://github.com/OmniNode-ai/omnimemory/commit/92b9c1a20bef7bbd32a4e0ba557d116d5c9fbb2d), 123 commits on, mostly a refactor that builds handlers at container binding sites and resolves settings from node contracts. Marks unchanged at none; retrieval is still stub-or-raise, and archive and tick still reach the bridge. omnimarket and omnibase_infra were read at their heads ([section 3](#3-architecture)): omnimarket copies the lifecycle handlers with the same `expired_at` SQL, its storage and retrieval contracts name this package's handlers, no runtime found initialises the copies, and neither repository creates a `memories` table. Wrong at the old pin, now corrected: fusion is a per-leg relevance gate then plain RRF, not weighted RRF, and a quoted fusion rationale was not in the source. Screened: no auto-run surface here, `uv.lock` and `pyproject.toml` inside the cooldown; omnibase_infra carries a `.claude/settings.local.json` hook. Nothing was installed or run.
 
 **2026-10-12** — [`7be7aa9ea56a498ec6c10fe366927e7ec2fc0650`](https://github.com/OmniNode-ai/omnimemory/commit/7be7aa9ea56a498ec6c10fe366927e7ec2fc0650) — 96 commits on. `7be7aa9` routes `expire-memory` to `HandlerMemoryExpire` with one outcome event per command ([section 4](#4-essential-implementation-paths)); the compare-and-set has a production caller. Marks unchanged at none. Four claims were wrong at the previous pin, the first three at every pin: the routed lifecycle handler was a bridge, not the no-op factory; retrieval stubs were the only initialisable path, not a default ([section 6](#6-retrieval-mechanics)); the checker controls number five; the migration-boundary quotation and `docs/migrations/` path were gone by 1 September 2026. Newly described: the unwired promotion tier and the missing `expired_at` column ([section 5](#5-memory-data-model)). Screened from a full clone: no auto-run surfaces, four pytest `conftest.py` files, `pyproject.toml` and `uv.lock` inside the cooldown, `CLAUDE.md` read as data. Nothing was installed or run.
 

@@ -7232,7 +7232,10 @@ test doubles that nothing seeds —
 <code>NotImplementedError("Production handlers not yet implemented")</code>
 — so the running system returns nothing from memory.
 <code>archive-memory</code> and <code>runtime-tick</code> are
-acknowledged without acting.</li>
+acknowledged without acting. omnimarket's copy of the lifecycle carries
+the same <code>expired_at</code> SQL, and no repository in the
+organisation creates the <code>memories</code> table with that column or
+initialises the copied handlers.</li>
 <li>Most reusable component: the expire path —
 <code>WHERE id = ? AND lifecycle_revision = ? AND lifecycle_state = 'active'</code>,
 zero rows reported as a conflict, and a dispatcher that publishes
@@ -7252,7 +7255,8 @@ assertion fails when violated, or you need a command handler that cannot
 succeed silently.</li>
 <li>Do not copy when: you want a memory system to adopt — this is a
 platform domain package, and its read side is not implemented in this
-repository.</li>
+repository, and omnimarket's retrieval contract routes back to the same
+stub-or-raise handler.</li>
 </ul>
 <h3 id="wax"><a href="../systems/wax/"><code>wax</code></a></h3>
 <ul>

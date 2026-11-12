@@ -24105,9 +24105,10 @@ lifecycle_revision, plus Pydantic domain models; nothing in this
 repository inserts a memories row</td>
 <td>Adapters for Qdrant, Memgraph, Valkey, Postgres and the filesystem;
 the memories table migration has expires_at and archived_at but no
-expired_at column</td>
-<td>A hybrid node (vector and full-text legs fused by weighted
-reciprocal rank, then activation decay) whose only initialisable
+expired_at column, and it is the only DDL for that table in this
+repository, omnimarket or omnibase_infra</td>
+<td>A hybrid node (each leg gated on its own relevance floor, then plain
+reciprocal-rank fusion, then activation decay) whose only initialisable
 backends are in-memory test doubles that nothing seeds; any non-stub
 configuration raises NotImplementedError</td>
 <td>ONEX nodes dispatched from Kafka topics through a runtime plugin;
@@ -24118,7 +24119,9 @@ acknowledged without acting, DELETED has no writer</td>
 <td>No memory-level scope key on any read path; persona snapshots are
 fetched by user_id and subscriptions by agent_id</td>
 <td>A kernel plugin registered at the onex.domain_plugins entry point,
-Kafka topics, contract.yaml per node</td>
+Kafka topics, contract.yaml per node; omnimarket registers copies of the
+lifecycle node and contract shells that route storage and retrieval back
+into this package</td>
 <td>A lifecycle tick sweeping expired and unarchived rows exists with no
 caller in this repository; runtime-tick commands reach a bridge that
 only starts adapters</td>
@@ -24134,7 +24137,9 @@ source state in the WHERE clause</td>
 be configured onto Qdrant. archive-memory and runtime-tick are
 acknowledged without effect. The expire UPDATE writes an expired_at
 column the shipped migration does not create, and its tests run against
-a pool that ignores the SQL</td>
+a pool that ignores the SQL. omnimarket carries a second copy of the
+lifecycle handlers with the same SQL and no runtime that initialises
+them</td>
 </tr>
 <tr>
 <td><a
