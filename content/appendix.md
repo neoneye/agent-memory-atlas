@@ -497,6 +497,8 @@ page_kind: comparison
 - [`pok-agent`](../systems/pok-agent/)
 - [`waifu-companion`](../systems/waifu-companion/)
 - [`agora`](../systems/agora/)
+- [`managed-agents-dreaming`](../systems/managed-agents-dreaming/)
+- [`managed-agents-knowledge-wiki`](../systems/managed-agents-knowledge-wiki/)
 
 ## Repos Inspected
 
@@ -1298,6 +1300,8 @@ page_kind: comparison
 - [Acekorneya/POK-Agent](https://github.com/Acekorneya/POK-Agent) at [`e97bb68b78456319ee9650b3fd0b2384f84982b5`](https://github.com/Acekorneya/POK-Agent/commit/e97bb68b78456319ee9650b3fd0b2384f84982b5) — read only, from a full clone of `main` on 9 November 2026. No auto-run surface; five Cargo manifests inside the seven-day cooldown; a build-time `build.rs` in the Tauri app, not triggered; the README read as data. Nothing was installed, built or run, and the 786 Rust tests were not run. Apache-2.0, with no added terms.
 - [waifuai/waifu-companion](https://github.com/waifuai/waifu-companion) at [`f6f2b92a0c0d3576affd9e9c55473dc2035f8b71`](https://github.com/waifuai/waifu-companion/commit/f6f2b92a0c0d3576affd9e9c55473dc2035f8b71) — read only, from a full clone of `main` on 9 November 2026. The screen parsed nothing: there is no manifest, no build step and no CI, and by hand the run-time surface is the CDN scripts `app/index.html` loads, two of them unversioned. Nothing was opened, installed or run, and the 178 node tests were not run. MIT-0.
 - [CaffeinatedSoftwareLLC/agora](https://github.com/CaffeinatedSoftwareLLC/agora) at [`737a4b5d2d8134d4157c96a22db829b318ad74b4`](https://github.com/CaffeinatedSoftwareLLC/agora/commit/737a4b5d2d8134d4157c96a22db829b318ad74b4) — read only, from a shallow clone of `main` on 9 November 2026. The screen found an OpenCode bundle and a Claude plugin manifest a harness would install, an npm `prepublishOnly` build, and every manifest inside the cooldown, which a shallow clone over-counts. Nothing was installed or run, and the 344 test files were not run. AGPL-3.0.
+- [anthropics/claude-cookbooks (managed_agents dreaming)](https://github.com/anthropics/claude-cookbooks/tree/main/managed_agents) at [`ce8b2629efe8b24048b127b4c79af1e9cbab93d4`](https://github.com/anthropics/claude-cookbooks/commit/ce8b2629efe8b24048b127b4c79af1e9cbab93d4) — read only, from a sparse clone of `managed_agents/`; no auto-run surface, one build-time execution point, two unpinned dependency surfaces. Nothing was installed or run; the notebook's saved outputs were read as data. MIT
+- [anthropics/claude-quickstarts (managed-agents/knowledge-wiki)](https://github.com/anthropics/claude-quickstarts/tree/main/managed-agents/knowledge-wiki) at [`4a4224bdf0e9cfb3332167b69c90457403813625`](https://github.com/anthropics/claude-quickstarts/commit/4a4224bdf0e9cfb3332167b69c90457403813625) — read only, from a full clone; no auto-run surface, five build-time execution points, 28 unpinned dependency surfaces across the repository, and the directory's `requirements.txt` inside the seven-day cooldown. Nothing was installed or run; the notebook's saved outputs were read as data. MIT
 
 ## What the licences actually say
 

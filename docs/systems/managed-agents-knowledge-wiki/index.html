@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Anthropic quickstart in which
+Managed Agents distil documents into a linked Markdown wiki that keeps
+every fact's source, superseded values and conflicts.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Managed Agents knowledge
+wiki — Agent Memory Atlas">
+    <meta property="og:description" content="An Anthropic quickstart in
+which Managed Agents distil documents into a linked Markdown wiki that
+keeps every fact's source, superseded values and conflicts.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Managed Agents knowledge
+wiki — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Anthropic quickstart in
+which Managed Agents distil documents into a linked Markdown wiki that
+keeps every fact's source, superseded values and conflicts.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Managed Agents knowledge wiki — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Managed Agents knowledge wiki",
+      "description": "An Anthropic quickstart in which Managed Agents distil documents into a linked Markdown wiki that keeps every fact's source, superseded values and conflicts.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A wiki that keeps its sources and its
+conflicts</p>
+          <h1>Managed Agents knowledge wiki</h1>
+          <p class="document-deck">An Anthropic quickstart in which
+Managed Agents distil documents into a linked Markdown wiki that keeps
+every fact's source, superseded values and conflicts.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/anthropics/claude-quickstarts/tree/main/managed-agents/knowledge-wiki">
+              <span>Source</span>
+              <strong>anthropics/claude-quickstarts
+(managed-agents/knowledge-wiki)</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/anthropics/claude-quickstarts/commit/4a4224bdf0e9cfb3332167b69c90457403813625" title="4a4224bdf0e9cfb3332167b69c90457403813625">
+              <span>Analyzed revision</span>
+              <code>4a4224bd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/anthropics--claude-quickstarts" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>anthropics--claude-quickstarts</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>3,426
+lines of Python in 5 files (utilities.py 2,979), a 44-cell notebook with
+972 lines of code, and 121 lines of agent prompts in 4
+files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>5
+commits on the directory by 2 authors, 3 August – 6 November
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>none;
+the notebook checks each recorded run against the platform's
+records</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>The knowledge wiki is an Anthropic quickstart that reads a document
+corpus once into a linked Markdown wiki and then answers questions from
+the wiki instead of the documents. What is notable is its schema: every
+fact carries its source and an as-of date, a superseded figure is closed
+rather than deleted, and two documents that disagree stay a recorded
+conflict. What is weak is that all of it is prompt text a model follows.
+The code checks that the run happened, not that the rules held.</p>
+<p>It accompanies Anthropic's article <a
+href="https://www.anthropic.com/research/components-of-agent-memory"><em>The
+components of agent memory</em></a> (6 November 2026), which links it as
+the starting point for "knowledge wikis". The article's wiki experiments
+— a 25-question evaluation over about 350,000 internal Stainless
+documents, and Harvey LAB briefs — are not in this tree; the
+quickstart's own evaluation is a different one, on public SEC filings
+(section 10). Its sibling, the dreaming cookbook, applies variants of
+the same analyzer and organizer prompts to agent transcripts and has <a
+href="../managed-agents-dreaming/">its own report</a>.</p>
+<p>The worked example is a real take-private, Squarespace by Permira,
+from eight EDGAR filings and two files marked synthetic. Everything runs
+on Claude Managed Agents, a hosted beta: the memory store, the sessions,
+the agents and the workflow engine are the platform's, and this tree is
+the client that configures and checks them. MIT, no <code>LICENSE</code>
+file in the directory and one at the repository root.</p>
+<p><strong>The one finding to take away is the schema, because it is
+written for the reader who has only the wiki.</strong> The analyst that
+answers questions gets no documents. So the schema puts
+<code>[source: &lt;doc&gt; | as-of: &lt;date&gt;]</code> on every line
+and forbids merging <em>"figures computed on different bases (e.g. two
+EBITDA definitions)"</em>. A superseded fact is closed <em>"with
+valid_to"</em> rather than deleted. Any node past about 8,000 characters
+opens with a <code>## Current picture</code> of at most 30 lines, with
+<em>"one line per CONFLICT mark or superseded value recorded
+below"</em>. The recorded run shows the effect: asked for the merger
+price, the analyst leads with $46.50 and names $44.00 as superseded,
+citing both filings.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a line in a Markdown file. The wiki is a directory:
+<code>entities/</code> holds one node per real-world entity, keyed by a
+slug and carrying every alias seen (<em>"including code names"</em>);
+<code>relations/</code>, <code>metrics/</code> and
+<code>open_questions/</code> hold one file per source document.
+<code>_index.md</code> is the catalog, <code>escalations.md</code> a
+ranked list of red flags, <code>SKILL.md</code> a note on how to read
+the wiki, and <code>_schema.md</code> the rules, seeded by the notebook
+and never edited.</p>
+<p><strong>How a claim becomes a fact.</strong> An extractor reads its
+batch and files what each document says, citing the document's
+provenance header on every line. The resolver takes up to ten of the
+open questions the extractors raised, answers each from the wiki or the
+documents and marks it <code>RESOLVED</code> with a link, or marks it
+<code>CONFIRMED UNRESOLVABLE</code> and names the document to request.
+Then an analyzer per batch re-reads its documents against what was
+filed, and the organizer tidies the whole store.</p>
+<p><strong>How a fact stops being current.</strong> Three ways, all by
+prompt rule:</p>
+<ul>
+<li><em>Supersession.</em> A relation line carries
+<code>valid_from</code> and <code>valid_to</code>; a later document
+closes the old line with <code>valid_to</code> and adds the new
+one.</li>
+<li><em>Correction.</em> An analyzer that finds a filed claim
+contradicted by its documents fixes it and keeps the old value as
+history (<code>was X until &lt;date&gt;</code>). An agent's inference —
+<em>"above all one drawn from a search that found nothing"</em> — does
+not overrule a recorded decision; both are kept under a
+<code>CONFLICT:</code> mark.</li>
+<li><em>Merging.</em> Agents cannot delete. The organizer folds a
+duplicate node into the surviving slug, replaces the old file's content
+with one line, <code>MOVED TO [[slug]]</code>, and repoints every link.
+After the run, code deletes those stubs.</li>
+</ul>
+<p><strong>How a fact is withheld.</strong> It is not. Every file is
+readable by every analyst, and the analyst is told to report a CONFLICT
+line as a conflict and a superseded value as superseded. The rules
+decide how a fact is <em>labelled</em>; no read excludes one.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one build session writes the wiki through four kinds of agent in sequence under prompt rules, every write landing in the store as a version; code then removes the merge stubs and checks the run, and each question session reads the wiki read-only</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one build session writes the wiki through four kinds of agent in sequence under prompt rules, every write landing in the store as a version; code then removes the merge stubs and checks the run, and each question session reads the wiki read-only
+flowchart TD
+    S[&quot;_schema.md, seeded first&lt;br/&gt;the rules every agent reads&quot;] --&gt; E
+    D[&quot;document batches&lt;br/&gt;about 120,000 characters,&lt;br/&gt;mounted read-only&quot;] --&gt; E[&quot;wiki-extractor per batch&lt;br/&gt;files facts with&lt;br/&gt;source and as-of&quot;]
+    E --&gt; R[&quot;wiki-resolver&lt;br/&gt;up to 10 open questions:&lt;br/&gt;RESOLVED or&lt;br/&gt;CONFIRMED UNRESOLVABLE&quot;]
+    R --&gt; A[&quot;wiki-analyzer per batch&lt;br/&gt;re-reads its documents:&lt;br/&gt;fix, keep the old value,&lt;br/&gt;or mark CONFLICT&quot;]
+    A --&gt; O[&quot;wiki-organizer, alone&lt;br/&gt;merges duplicates,&lt;br/&gt;leaves MOVED TO stubs,&lt;br/&gt;writes _index.md&quot;]
+    O --&gt; W[(&quot;memory store: the wiki&lt;br/&gt;one versioned write each&quot;)]
+    W --&gt; C[&quot;code after the run&lt;br/&gt;delete stubs if hash matches,&lt;br/&gt;_schema.md unchanged?&lt;br/&gt;lint links and aliases&quot;]
+    C --&gt; Q[&quot;question session&lt;br/&gt;store mounted read-only&lt;br/&gt;map, first 60 lines,&lt;br/&gt;then the section&quot;]
+    Q --&gt; ANS[&quot;answer with source&lt;br/&gt;and as-of, or&lt;br/&gt;&#39;Not in the wiki&#39;&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>What has to be running: an Anthropic API organisation with
+Managed Agents enabled, and a Python kernel.</strong> The notebook
+creates an environment with networking limited to an empty allowlist, no
+package managers and no MCP servers; a memory store; five agents; and
+one build session that mounts the documents read-only and the store
+read-write. The lead agent, <code>wiki-builder</code>, holds read and
+glob only and a <code>multiagent</code> block naming exactly the four
+worker agents, with inline agents and subagents disabled, so every
+thread in the run is one of those four. The workers hold
+<code>read</code>, <code>write</code>, <code>edit</code>,
+<code>glob</code> and <code>grep</code>, every call under the platform's
+<code>auto</code> permission policy, and the notebook declines every
+pause for approval because nobody is there to answer (cell 16).</p>
+<p><strong>The workflow is written by a model.</strong> The notebook
+sends an ordinary <code>user.message</code> naming the batch directories
+and saying, one sentence per agent, what each does and what it waits on;
+the lead agent writes the workflow script from that and starts it (cell
+18). The recorded run's script is printed in the notebook: extract in
+parallel with one retry, halt if any batch could not be extracted,
+resolve, analyze in parallel with one retry, organize, report. The lead
+agent's prompt carries the halting rule and its reason: <em>"a wiki
+built from part of the corpus answers as if the missing documents said
+nothing."</em></p>
+<p><strong>Code checks what ran against the platform's records</strong>
+rather than trusting the lead agent's report: the run and its phases,
+the agents, every batch read, the tasks each agent was given compared
+with the prompts, and no errors (<code>check_build</code>,
+<code>check_run</code> at <code>utilities.py:1355</code>).</p>
+<p><strong>Cost to an operator.</strong> The recorded build on the
+<code>core</code> tier — 10 documents in 29 files, 25 batches, 2,761 KB
+of text — took about 17 minutes of run time and cost $16.02 at list
+price against an estimate of $25.77 and a $60 budget. The README gives
+23 minutes for the same run. A question from the wiki cost a few
+cents.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema and prompts</strong> — notebook cell 12:
+<code>EXTRACTOR_SYSTEM</code>, <code>WIKI_SCHEMA</code> (seeded with
+<code>memory_stores.memories.create(path="/_schema.md")</code>) and
+<code>RESOLVER_SYSTEM</code>; <code>prompts/analyzer_system.md</code>,
+<code>prompts/organizer_system.md</code> and
+<code>prompts/lead_system.md</code>, filled with the
+<code>STEERING</code> string in cell 16.</li>
+<li><strong>Agents and tools</strong> — cell 16:
+<code>WORKER_TOOLS</code>, <code>RESOLVER_TOOLS</code> (web tools only
+when <code>ALLOW_WEB_RESEARCH</code>), <code>LEAD_TOOLS</code>,
+<code>READER_TOOLS</code>, and the five <code>agents.create</code>
+calls.</li>
+<li><strong>Build</strong> — cell 20 creates the session with the store
+mounted <code>read_write</code>, sends the message and calls
+<code>kw.follow_pass</code>; <code>finish_pass</code>
+(<code>utilities.py:2288</code>) stops an open run, sweeps stubs, saves
+records, archives the session and deletes the uploads, whatever happened
+before.</li>
+<li><strong>Stub sweep</strong> — <code>find_stubs</code> and
+<code>sweep_stubs</code> (<code>utilities.py:300-351</code>).</li>
+<li><strong>Store checks</strong> — <code>describe_store</code>
+(<code>utilities.py:2467-2501</code>) compares <code>/_schema.md</code>
+with the seeded text and counts the memory versions the build session
+wrote; <code>written_by_session</code> (<code>:550-555</code>) lists
+them.</li>
+<li><strong>Lint</strong> — <code>wiki_lint</code>
+(<code>utilities.py:438-504</code>): dangling links, links written as
+paths, bad slugs, frontmatter names that differ from the file, aliases
+split by an unquoted comma, aliases claimed by two entities, stubs,
+files missing from the index, index entries with no file, and oversized
+files.</li>
+<li><strong>Ask</strong> — cell 30: <code>ANALYST_SYSTEM</code> and
+<code>ask()</code>, one fresh session per question with the store
+mounted <code>read_only</code> and a $2 budget.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Shape</th>
+<th>How it changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>entities/&lt;slug&gt;.md</code></td>
+<td>Frontmatter <code>name</code>, <code>description</code>, quoted
+<code>aliases</code>, <code>metadata.type</code>; facts under
+<code>## &lt;topic&gt;</code> headings, one per line, each ending
+<code>[source: &lt;doc&gt; | as-of: &lt;date&gt;]</code>; a
+<code>## Current picture</code> atop nodes past about 8,000
+characters</td>
+<td>Shared: read-then-merge, never rewrite; a contract node is written
+only by the agent reading that contract</td>
+</tr>
+<tr>
+<td><code>relations/&lt;doc-slug&gt;.md</code></td>
+<td><code>[[subject]] | relation | [[object]] | valid_from=&lt;date&gt; | valid_to=&lt;date or open&gt; | [source]</code></td>
+<td>Single writer: the agent reading that document</td>
+</tr>
+<tr>
+<td><code>metrics/&lt;doc-slug&gt;.md</code></td>
+<td><code>metric | value | basis/definition | period | [source]</code></td>
+<td>Single writer; different bases never merged</td>
+</tr>
+<tr>
+<td><code>open_questions/&lt;doc-slug&gt;.md</code></td>
+<td>One gap per line</td>
+<td>Marked <code>RESOLVED</code> with a link, or
+<code>CONFIRMED UNRESOLVABLE</code> with the document to request</td>
+</tr>
+<tr>
+<td><code>_index.md</code>, <code>escalations.md</code>,
+<code>SKILL.md</code></td>
+<td>The catalog with a "Where to start" map, the ranked red flags with a
+digest, the reading note</td>
+<td>Written at consolidation</td>
+</tr>
+<tr>
+<td><code>_schema.md</code></td>
+<td>The rules</td>
+<td>Never edited; code checks it after the run</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Two clocks, and neither is read by code.</strong> Facts carry
+an as-of date, the document's own date; relations carry
+<code>valid_from</code> and <code>valid_to</code>, the world's validity;
+the platform keeps a memory version for every write, the record time.
+That is the shape of a bi-temporal store. Nothing in the tree reads
+<code>valid_to</code> or filters on an as-of date: the analyst model
+reads the lines and is told that <em>"A projection, estimate or
+superseded value is not the figure asked for: name it as what it
+is."</em> <code>bitemporal</code> is withheld because the axis is a
+convention a model applies, not a predicate the code applies.</p>
+<p><strong>The single-writer rule has its reason written into
+it.</strong> Per-document files under <code>relations/</code>,
+<code>metrics/</code> and <code>open_questions/</code> are written only
+by the agent reading that document. The schema says why: <em>"a shared
+append-file invites one agent to overwrite another's work wholesale (we
+learned this the hard way: one wholesale rewrite silently destroyed
+other agents' verbatim provision text)"</em>. Entity nodes stay shared,
+because one entity named in many documents has to land in one node, and
+the README prices the cost: <em>"about 5% of the lines filed to the
+busiest entity page lose content"</em>. Agents are told to read back
+every write and merge if a peer replaced it; nothing in code checks that
+they did.</p>
+<p><strong>Conflicts are kept, not resolved.</strong> An analyzer and
+the organizer apply the same rule. When one statement is plainly the
+later correction of the other, they keep the current value and record
+what it replaced, with both dates and sources. Otherwise they mark
+<code>CONFLICT: &lt;source A, date&gt; says …; &lt;source B, date&gt; says …</code>
+and say which side is a decision recorded by people and which an agent's
+observation. The recorded run's damages cap, stated differently by two
+filings, is the README's example.</p>
+<p><strong>No rejected value is remembered.</strong> A claim an analyzer
+fixes keeps its old value as history, and a
+<code>CONFIRMED UNRESOLVABLE</code> line records a question nothing
+answers. Neither stops a later build from filing the same wrong value
+again, and a new document needs a new build, so <code>tombstone</code>
+is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is an agent reading files. The analyst holds
+<code>read</code>, <code>glob</code> and <code>grep</code> and is told
+how the wiki is laid out: read the first 60 lines of
+<code>_index.md</code>, open a file's first 60 lines, where a long node
+starts with its Current picture and names its other sections, then
+search that file for the term or heading and read those lines. No index,
+embedding or ranking exists; <code>_index.md</code>'s map and each
+node's Current picture are the retrieval structure, written by the
+organizer.</p>
+<p><strong>The layout is priced, not assumed.</strong> Analysts <em>"pay
+for every line they read"</em>, so the steering puts the "Where to
+start" map at the top of <code>_index.md</code>, the Current picture at
+the top of each long node, and a digest at the top of
+<code>escalations.md</code>. Every recorded answer prints its token cost
+and the number of reads and searches it took: the four Step 2 questions
+took between 4 and 11 reads.</p>
+<p><strong>A miss is stated, never filled.</strong> The analyst says
+<em>"Not in the wiki"</em> first and names the document that would
+answer. The recorded trap question, FY2025 revenue for a company
+delisted in October 2024, is answered exactly that way, naming the
+buyer-side reporting that would be needed. The notebook notes the limit
+beside it: an analyst can miss what the wiki holds, so a "Not in the
+wiki" answer should be checked against the documents.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes happen once, in one build, and block nothing.</strong>
+No agent writes during a question; question sessions mount the store
+read-only, and the notebook says why: <em>"a guess at query time would
+become the next analyst's fact."</em> A new document needs a new build
+run.</p>
+<p><strong>Ordering is the workflow's, and the organizer runs
+alone.</strong> Extractors and analyzers run in parallel and may only
+add facts, create files and link; they <em>"do not merge, rename or
+empty a file"</em>. The organizer runs once, after every analyzer,
+because a whole-file rewrite while peers are writing <em>"can silently
+drop their work"</em>.</p>
+<p><strong>The only delete is in code, and it is guarded.</strong>
+<code>sweep_stubs</code> deletes a memory only when
+<code>find_stubs</code> has read its whole content as one
+<code>MOVED TO [[slug]]</code> line, the target slug exists as a file
+that is not itself a stub (following chains of stubs), and the delete
+call carries <code>expected_content_sha256</code> of the content just
+read, so a stub that changed in between is left in place
+(<code>utilities.py:333-351</code>). A stub whose target does not exist
+is reported, not deleted. The recorded run removed one.</p>
+<p><strong>Untrusted documents are fenced at three levels.</strong>
+Every prompt says the documents and the wiki are data, not instructions.
+The build environment has no network unless
+<code>ALLOW_WEB_RESEARCH</code> is set, and then only the resolver gets
+web tools, on listed domains. And the notebook's own comment names what
+web access would risk: <em>"A planted instruction in a document could
+then send wiki text out in a search query or a fetched URL."</em> Every
+write is a memory version that can be rolled back for 30 days, which is
+the platform's mechanism, not this code's.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The wiki is consumed by any Managed Agents session that mounts the
+store; the notebook's analyst is one example. The memory store's
+<code>instructions</code> string tells a mounting agent where to start
+and how provenance is written. The <code>SKILL.md</code> the organizer
+writes at the store root is a note for that agent, and its name may not
+contain <em>"claude"</em> or <em>"anthropic"</em>.</p>
+<p>The quickstart also ships <code>skill.md</code> and a
+<code>CLAUDE.md</code> for setting it up with a coding agent: <em>"Do
+not improvise the setup — the SDK version, the SEC user-agent, and the
+fetch order all matter."</em></p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No marks.</strong> Each candidate fails the same test: the
+mechanism is a rule in a prompt, executed by the model, and the rubric
+credits code.</p>
+<ul>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>CONFIRMED UNRESOLVABLE</code>, <code>RESOLVED</code> and
+<code>CONFLICT</code> are discrete labels, and nothing filters on them;
+the analyst is told to report a CONFLICT line with both sides.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>valid_from</code>/<code>valid_to</code> and as-of dates are
+written by models and read by models (section 5).</li>
+<li><strong><code>audit_log</code> — withheld.</strong> The platform
+records a memory version for every write, and
+<code>written_by_session</code> reads them to count the build's 1,096
+versions (884 modified, 212 created). The versioning is the hosted
+store's, not anything this tree implements.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Nobody
+approves a fact before analysts read it; the run is unattended and the
+notebook declines every tool pause. <code>escalations.md</code> is a
+list of leads <em>"for a diligence team to check, not findings about
+anyone's conduct"</em>, written for people, and nothing waits on
+them.</li>
+<li><strong><code>scope_enforced</code>, <code>tombstone</code>,
+<code>negative_eval</code> — no.</strong> One store per corpus is a
+physical boundary; no rejected value is recorded; the trap question's
+correct refusal is recorded output, not an assertion (section 10).</li>
+</ul>
+<p><strong>What code does check is the run.</strong>
+<code>check_build</code> compares the platform's records with what was
+asked: one run, the named phases, the four agents, every batch read,
+each agent's task against the prompt it was given.
+<code>describe_store</code> fails loudly if <code>_schema.md</code>
+changed — <em>"CHANGED: read it before trusting the wiki"</em>.
+<code>wiki_lint</code> reports the structural defects a reader would
+hit. On the recorded run that was 30 dangling links, 6 aliases claimed
+by two nodes, 12 files over 20 KB, and no stubs or unindexed files.
+<code>entities/squarespace.md</code> reached 102,386 bytes, at the
+store's 100 KB cap.</p>
+<p><strong>The quality rules are the project's own findings.</strong>
+The notebook's design rules come from its runs: <em>"Truth is won at
+extraction"</em>, <em>"Write the wiki for a reader who has only the
+wiki"</em>, and <em>"Treat absence claims as hypotheses. In our testing,
+extraction, query answers, judging and even our own answer keys made
+false "not disclosed" claims at times."</em> That last rule is enforced
+in prompt text only — the extractor may record <em>"not in this
+document"</em>, never a global absence.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No test files.</strong>
+<code>git ls-files managed-agents/knowledge-wiki</code> lists no test,
+and no CI workflow in the repository names the directory. The notebook's
+saved outputs are a recorded run, and <code>CLAUDE.md</code> asks
+contributors not to regenerate them.</p>
+<p><strong>The headline evaluation is described and its questions are
+not committed.</strong> The notebook's introduction reports 21 questions
+with answer keys over 27 runs, graded out of 100 by two judge models
+with 95% intervals:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Analyst</th>
+<th>Source</th>
+<th>Score</th>
+<th>Cost per answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude Haiku 5.5</td>
+<td>wiki</td>
+<td>91.9 ± 0.7</td>
+<td>$0.0056</td>
+</tr>
+<tr>
+<td>Claude Sonnet 5.5</td>
+<td>raw documents</td>
+<td>92.8 ± 0.5</td>
+<td>$0.086</td>
+</tr>
+<tr>
+<td>Claude Sonnet 5.5</td>
+<td>wiki</td>
+<td>92.6 ± 0.6</td>
+<td>$0.064</td>
+</tr>
+<tr>
+<td>Claude Haiku 5.5</td>
+<td>raw documents</td>
+<td>88.9 ± 0.6</td>
+<td>$0.0066</td>
+</tr>
+</tbody>
+</table></div>
+<p>The questions and answer keys are <em>"not included in this
+folder"</em>, and the benchmark <em>"ran with an earlier wording of two
+prompts"</em>, so none of it recomputes from the tree. A build averaged
+$19 on that benchmark, and the break-even against a Sonnet analyst on
+the raw documents is put at about 240 questions.</p>
+<p><strong>What the recorded run shows.</strong> Four questions from the
+wiki — the price change, the EBITDA reconciliation, the buyer-side
+entities and the FY2025 trap — and six held-out questions each answered
+from the wiki and from the raw documents, with cost lines. The answers
+are shown, not graded. The trap's refusal and the EBITDA answer keeping
+$235.4M and about $252M apart are what the schema is for; they are one
+run each, and nothing asserts them.</p>
+<p><strong>The article's numbers belong to other corpora.</strong>
+<em>The components of agent memory</em> reports wiki results on about
+350,000 Stainless documents: 13% to 48% of graded criteria as dreaming
+scaled from two sessions to 128, and 61% with search and wiki against
+53% with search alone. On Harvey LAB merger questions it reports 87%
+from the wiki against 73% from search. On one LAB task, contract facts
+in the brief rose from 41 to all 57 once each contract got its own page,
+written by one agent and quoted word for word. That last result is the
+reason for the schema's contract-node rule here. None of those corpora
+or harnesses is in this tree.</p>
+<p>I ran nothing; every figure above is read from the notebook's saved
+outputs, its text, or the article.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Write the store for the reader who gets nothing
+else.</strong> Provenance and an as-of date on every line, a map at the
+top of the index and a short current picture at the top of every long
+page cost the writer once and save every reader.</li>
+<li><strong>Never merge figures on different bases.</strong> Two EBITDA
+definitions are two facts. Keeping both with their bases is cheaper than
+a reconciliation an agent will get wrong.</li>
+<li><strong>Close a superseded fact instead of deleting it.</strong>
+<code>valid_to</code> on the old line and <code>valid_from</code> on the
+new one lets a reader say "superseded", which is the answer most
+questions about a changed number want.</li>
+<li><strong>Give each per-source file a single writer.</strong> Shared
+append-files under concurrent agents lose work wholesale; the project
+learned it the hard way and wrote the reason into the schema.</li>
+<li><strong>Mount memory read-only at query time.</strong> A guess made
+while answering should not become the next reader's fact.</li>
+<li><strong>Delete with a content hash.</strong>
+<code>expected_content_sha256</code> on the delete call makes a cleanup
+that cannot remove a file someone changed after you read it.</li>
+<li><strong>Check what ran, not what the orchestrator says ran.</strong>
+Compare the platform's records with the plan: every batch read, every
+agent the one you named, the schema file unchanged.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Do not rely on a prompt to keep a rule your evaluation
+depends on.</strong> Supersession, conflicts and provenance hold here
+only as far as the model follows them, and no check would notice a line
+without a source.</li>
+<li><strong>Do not let concurrent writers share a page you then call
+authoritative.</strong> Five percent of lines lost on the busiest page
+is a known, accepted cost; an analyst reading that page cannot tell
+which five percent.</li>
+<li><strong>Do not publish a benchmark without its questions.</strong>
+The 21-question evaluation is the case for the design, and a reader
+cannot rerun or inspect it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team whose agents answer <strong>repeated questions over
+a corpus that changes slowly</strong> — diligence, discovery, product
+documentation — and that is already on Managed Agents. It needs a budget
+for a build of tens of dollars and a person willing to read
+<code>escalations.md</code> and the lint output after each one.</p>
+<p>It is not agent memory from experience; nothing an agent learns while
+answering reaches the wiki. For that, the <a
+href="../managed-agents-dreaming/">dreaming cookbook</a> is the
+companion piece. Walk away if your documents change daily, if you need a
+fact withheld rather than labelled, or if you cannot run on a hosted
+platform.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What are the 21 benchmark questions, and how do the wiki's answers
+fail on the ones it misses: a fact never filed, a fact lost on a shared
+page, or a fact filed and not found?</li>
+<li>How often does a superseded or CONFLICT line lose its label when the
+organizer merges two nodes? Nothing in the run checks it.</li>
+<li>What happens to a wiki built twice from overlapping corpora? The
+store can be reused across runs, and nothing in the schema says how a
+second build treats a fact the first one closed.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>managed-agents/knowledge-wiki/distill_documents_into_knowledge_wiki.ipynb</code>,
+cell 12</td>
+<td>The extractor prompt, the schema and the resolver prompt</td>
+</tr>
+<tr>
+<td>same notebook, cell 16</td>
+<td>The steering string, the tool sets and the five agents</td>
+</tr>
+<tr>
+<td>same notebook, cells 20, 24, 26, 28</td>
+<td>The build, the run checks, the store check and the lint</td>
+</tr>
+<tr>
+<td>same notebook, cells 30–35</td>
+<td>The analyst prompt, <code>ask()</code> and the four recorded
+questions</td>
+</tr>
+<tr>
+<td><code>managed-agents/knowledge-wiki/prompts/analyzer_system.md</code>,
+<code>organizer_system.md</code>, <code>lead_system.md</code>,
+<code>baseline_system.md</code></td>
+<td>The consolidation method, the workflow rules and the raw-documents
+baseline</td>
+</tr>
+<tr>
+<td><code>managed-agents/knowledge-wiki/utilities.py:300-351</code></td>
+<td>Finding and deleting MOVED TO stubs with a content-hash guard</td>
+</tr>
+<tr>
+<td><code>managed-agents/knowledge-wiki/utilities.py:438-504</code></td>
+<td><code>wiki_lint</code></td>
+</tr>
+<tr>
+<td><code>managed-agents/knowledge-wiki/utilities.py:550-555</code>,
+<code>:2467-2501</code></td>
+<td>Reading the platform's memory versions; the schema-unchanged
+check</td>
+</tr>
+<tr>
+<td><code>managed-agents/knowledge-wiki/utilities.py:1355</code></td>
+<td><code>check_run</code>, what ran against what was asked</td>
+</tr>
+<tr>
+<td><code>managed-agents/knowledge-wiki/README.md</code></td>
+<td>Cost, tiers, the 100 KB cap and the shared-page loss</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of a clone at
+<code class="commit-id" title="4a4224bdf0e9cfb3332167b69c90457403813625">4a4224bd…</code>. Each backs an
+absence claim in the body.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No code reads <code>valid_to</code> or filters on an as-of date</td>
+<td><code>git grep -n -e valid_to -e as-of -- managed-agents/knowledge-wiki/utilities.py</code></td>
+<td>one hit, <code>:2942</code>, the provenance header written into a
+demo document; no read</td>
+</tr>
+<tr>
+<td>No code filters on a CONFLICT, RESOLVED or UNRESOLVABLE label</td>
+<td><code>git grep -n -e CONFLICT -e RESOLVED -e UNRESOLVABLE -- managed-agents/knowledge-wiki/utilities.py</code></td>
+<td>nothing</td>
+</tr>
+<tr>
+<td>No test files in the directory</td>
+<td><code>git ls-files managed-agents/knowledge-wiki</code></td>
+<td>no file named for tests</td>
+</tr>
+<tr>
+<td>No CI workflow names the directory</td>
+<td><code>git grep -n -e knowledge-wiki -- .github</code></td>
+<td>nothing</td>
+</tr>
+<tr>
+<td>The only delete call in code is the stub sweep</td>
+<td><code>git grep -n -e 'memories.delete' -- managed-agents/knowledge-wiki/utilities.py</code></td>
+<td><code>sweep_stubs</code> only</td>
+</tr>
+<tr>
+<td>The benchmark questions are not committed</td>
+<td><code>git grep -n -i -e 'answer key' -- managed-agents/knowledge-wiki</code></td>
+<td>two notebook lines: the statement that they are not included, and
+the design rule about false absence claims</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-11-12</strong> — <a
+href="https://github.com/anthropics/claude-quickstarts/commit/4a4224bdf0e9cfb3332167b69c90457403813625"><code class="commit-id" title="4a4224bdf0e9cfb3332167b69c90457403813625">4a4224bd…</code></a>
+— first reading, of the commit that rebuilt the quickstart on a dynamic
+workflow on 6 November 2026, prompted by Anthropic's article <em>The
+components of agent memory</em>, which links it. Screened from a full
+clone of the repository: no auto-run surface, five build-time execution
+points and 28 unpinned dependency surfaces across the repository, and
+this directory's <code>requirements.txt</code> inside the seven-day
+cooldown; <code>CLAUDE.md</code> read as data. Nothing was installed or
+run; the notebook's saved outputs were read as data.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

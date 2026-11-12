@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 796 reports.**
+**This page covers all 798 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7298,3 +7298,21 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0; 80,111 lines outside test files across server, host, MCP server and clients; 985 commits between 15 February and 8 November 2026; 344 test files with CI, not run here. No capability mark: the trust and review machinery guards shared files, and the one negative case is about an assembled prompt.
 - Study when: you run several coding-agent CLIs on one machine and want to recover a dropped conversation cheaply, or want a human trust override that a database enforces.
 - Do not copy when: agents must accumulate knowledge across sessions, or a person must be able to see and correct what an agent believes about its own work.
+
+### [`managed-agents-dreaming`](../systems/managed-agents-dreaming/)
+
+- Best idea: the working agent never writes memory. Its store is mounted read-only during work, and each night analyzers read its finished sessions' transcripts — told that tool results, not the agent's account of them, are *"the source of truth"* — so a guess made mid-task reaches memory only through a second agent reading what actually happened.
+- Biggest risk: the property the design is named for is prompt text. Nothing in code compares a memory file with the transcript that produced it, there is no review by default, and a failed night is dreamed again over the partial writes it left. The example transcripts plant an agent's inference against a recorded decision, and nothing checks which one the store kept.
+- Most reusable component: `sweep_stubs`, which deletes the organizer's MOVED TO stubs only when the platform's version history shows this session wrote them after the organizer started, the content is exactly the stub line, the target exists and the content hash still matches.
+- Maturity impression: one commit, 2,705 lines of Python and a 35-cell notebook, no tests for these files. A night counts as done only when every transcript reached an analyzer that finished and the organizer finished, and a failed night keeps its window. The recorded run covered 11 transcripts for $0.36.
+- Study when: you want an agent to learn from its own sessions without letting it write its own memory mid-task.
+- Do not copy when: a wrong fact reaching the agent the next morning is unacceptable without a person approving it, or the agent cannot run on a hosted platform.
+
+### [`managed-agents-knowledge-wiki`](../systems/managed-agents-knowledge-wiki/)
+
+- Best idea: a schema written for the reader who has only the wiki — `[source | as-of]` on every line, figures on different bases never merged, a superseded fact closed with `valid_to` rather than deleted, disagreements kept as `CONFLICT` lines, and a short `## Current picture` atop every long node.
+- Biggest risk: every one of those rules is prompt text a model follows, and nothing in code checks a line's provenance or label. Concurrent agents overwrite shared entity pages, by the project's own measurement about 5% of lines on the busiest one, and the 21-question benchmark behind the headline scores is not in the tree.
+- Most reusable component: the single-writer rule for per-document files, with the reason written into the schema after a shared file lost an agent's verbatim text.
+- Maturity impression: five commits, 3,426 lines of Python and a 44-cell notebook with a recorded run, no tests. Code checks the run against the platform's records, the schema file and the link structure; the recorded build cost $16.02 and left 30 dangling links.
+- Study when: agents answer repeated questions over a slow-changing document corpus and you want the cross-document reconciliation done once.
+- Do not copy when: you need memory that learns from an agent's own work, a fact withheld rather than labelled, or a store off a hosted platform.

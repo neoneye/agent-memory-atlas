@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 796 reports.</strong></p>
+<p><strong>This page covers all 798 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33111,6 +33111,64 @@ override that a database enforces.</li>
 <li>Do not copy when: agents must accumulate knowledge across sessions,
 or a person must be able to see and correct what an agent believes about
 its own work.</li>
+</ul>
+<h3 id="managed-agents-dreaming"><a
+href="../systems/managed-agents-dreaming/"><code>managed-agents-dreaming</code></a></h3>
+<ul>
+<li>Best idea: the working agent never writes memory. Its store is
+mounted read-only during work, and each night analyzers read its
+finished sessions' transcripts — told that tool results, not the agent's
+account of them, are <em>"the source of truth"</em> — so a guess made
+mid-task reaches memory only through a second agent reading what
+actually happened.</li>
+<li>Biggest risk: the property the design is named for is prompt text.
+Nothing in code compares a memory file with the transcript that produced
+it, there is no review by default, and a failed night is dreamed again
+over the partial writes it left. The example transcripts plant an
+agent's inference against a recorded decision, and nothing checks which
+one the store kept.</li>
+<li>Most reusable component: <code>sweep_stubs</code>, which deletes the
+organizer's MOVED TO stubs only when the platform's version history
+shows this session wrote them after the organizer started, the content
+is exactly the stub line, the target exists and the content hash still
+matches.</li>
+<li>Maturity impression: one commit, 2,705 lines of Python and a 35-cell
+notebook, no tests for these files. A night counts as done only when
+every transcript reached an analyzer that finished and the organizer
+finished, and a failed night keeps its window. The recorded run covered
+11 transcripts for $0.36.</li>
+<li>Study when: you want an agent to learn from its own sessions without
+letting it write its own memory mid-task.</li>
+<li>Do not copy when: a wrong fact reaching the agent the next morning
+is unacceptable without a person approving it, or the agent cannot run
+on a hosted platform.</li>
+</ul>
+<h3 id="managed-agents-knowledge-wiki"><a
+href="../systems/managed-agents-knowledge-wiki/"><code>managed-agents-knowledge-wiki</code></a></h3>
+<ul>
+<li>Best idea: a schema written for the reader who has only the wiki —
+<code>[source | as-of]</code> on every line, figures on different bases
+never merged, a superseded fact closed with <code>valid_to</code> rather
+than deleted, disagreements kept as <code>CONFLICT</code> lines, and a
+short <code>## Current picture</code> atop every long node.</li>
+<li>Biggest risk: every one of those rules is prompt text a model
+follows, and nothing in code checks a line's provenance or label.
+Concurrent agents overwrite shared entity pages, by the project's own
+measurement about 5% of lines on the busiest one, and the 21-question
+benchmark behind the headline scores is not in the tree.</li>
+<li>Most reusable component: the single-writer rule for per-document
+files, with the reason written into the schema after a shared file lost
+an agent's verbatim text.</li>
+<li>Maturity impression: five commits, 3,426 lines of Python and a
+44-cell notebook with a recorded run, no tests. Code checks the run
+against the platform's records, the schema file and the link structure;
+the recorded build cost $16.02 and left 30 dangling links.</li>
+<li>Study when: agents answer repeated questions over a slow-changing
+document corpus and you want the cross-document reconciliation done
+once.</li>
+<li>Do not copy when: you need memory that learns from an agent's own
+work, a fact withheld rather than labelled, or a store off a hosted
+platform.</li>
 </ul>
         </article>
       </div>
