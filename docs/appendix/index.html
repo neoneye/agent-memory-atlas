@@ -17831,6 +17831,64 @@ If a caller returns, the report should start at the tombstone, which
 keeps the deleted text in both the source row and the index, and at the
 conversation default, which keeps a thread out until a person opts it
 in.</li>
+<li><strong><code>Tufalabs/duck-harness</code> and the NVIDIA team's
+ARC-AGI-3 write-up were examined and have no report: everything the Duck
+carries is overwritten within one game and discarded with it, and what
+NVIDIA added ends with the game too.</strong> No <code>LICENSE</code>
+file in the tree, so no grant, at <a
+href="https://github.com/Tufalabs/duck-harness/commit/7652836056c59e044f093e3c13ed7438c814169e"><code class="commit-id" title="7652836056c59e044f093e3c13ed7438c814169e">76528360…</code></a>,
+two commits on 1 July 2026, 19,806 lines of Python across 46 files
+beside a 3,521-file example run; the screen found two Makefiles to read
+before a bare <code>make</code> and nothing else, and nothing was
+installed or run. The Duck plays ARC-AGI-3 through Tufa's TAAF framework
+with one Python tool, and <em>"Every Python tool call starts fresh"</em>
+(<code>ARC3-Inference/README.md:87</code>). Its memory is a seven-field
+world model — <code>World model</code>, <code>Goal model</code>,
+<code>Action model</code>, <code>Recent findings</code>,
+<code>Open questions</code>, <code>Plan</code>,
+<code>Cross-level notes</code> — parsed from labelled lines in the
+model's own replies
+(<code>ARC3-Inference/inference/agent/tool_agent.py:263-293</code>),
+each field replaced by its newest non-empty value and re-injected every
+turn under <em>"Revise any item above immediately if
+<code>current_frame</code> or <code>history</code> contradicts it"</em>
+(<code>:1128-1144</code>). A level change, game over or run end clears
+six fields and keeps <code>Cross-level notes</code>
+(<code>:1113-1126</code>), and the conversation keeps the last 30
+assistant turns inside a 32,768-token window (<code>:151</code>,
+<code>:1653-1670</code>). Both are attributes of the agent object,
+emptied whenever the run directory changes (<code>:975-984</code>):
+<code>git grep -n -e _summarized_knowledge -e _history_messages -- ARC3-Inference</code>
+finds no write to disk, and the one state file,
+<code>tool_runtime_state.json</code>, holds observed frames rather than
+claims. A field that is replaced stops being current rather than turning
+out false, which puts this on the <a
+href="../families/#not-in-scope-conversation-window-management">context-engineering
+side of the line</a>. The bundled run, 25 games at 20 passes for a TAAF
+final score of 1.60, shows how little crosses even a level: the carried
+block reaches 174 of 500 prompt logs, and
+<code>grep -rl -e '- Cross-level notes: ' example-run/prompts</code>
+returns none. <a
+href="https://www.kaggle.com/competitions/arc-prize-2026-arc-agi-3/writeups/arc-agi-3-nvidia-team-solution"><em>ARC-AGI-3:
+NVIDIA team solution</em></a>, third place in ARC Prize 2026 ARC-AGI-3,
+published on 12 November 2026 by Darragh, Ivan, Gal Kaplun, Elad
+Sarafian, CPMP, Yeyin Zhu and Giba, takes the Duck's loop through Daniel
+Franzen's public Milestone-2 harness and adds a Python interpreter that
+persists for the game, level-completion summaries and history-trim
+summaries, so that <em>"Level lessons survive resets and trimming"</em>
+— within one game. Level notes were <em>"the only prompt change that
+gave a clear gain"</em>, the summaries took about 4% of calls, and the
+persistent interpreter cut missing-variable errors from 54 to 2 per run.
+The two selected submissions scored 56.26 and 60.95 on the public
+leaderboard and the final version 73.3 on the team's 110-game local
+test, and most of the reported gain is serving: a pruned,
+quantization-aware-distilled Qwen3.8-Flash-Next and a sparse-attention
+KV cache offloaded to CPU memory to play 96 games at once, which is <a
+href="../families/#not-in-scope-the-kv-cache">out of scope here as
+well</a>. Its code is in datasets attached to the selected Kaggle
+notebooks and a zip on the write-up page, not a repository at a commit.
+A harness that writes its notes to disk and reads them back in a later
+pass or game is what would be read first.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
