@@ -1998,7 +1998,10 @@ adds to the four above is the *refresh* half: `verified` is the single sanctione
 in-place edit on an otherwise append-only ledger, so a re-check has somewhere to
 land that is not a rewrite of history, and the auditor is report-only by
 construction — it classifies and prints, and `--file-tasks` is an explicit stub
-seam rather than a write path.
+seam rather than a write path. Its memory desk carries the evidence-based half
+for a second store: `mem recheck` lists index rows whose source file's last git
+commit postdates the row's `checked` date, and *"reports suspicion, never a
+verdict."*
 
 **Klypix MCP is the sixth, and it names its own ceiling.** An `ev:` marker on a
 card records a `file:line` plus the git blob OID of that path at capture time,

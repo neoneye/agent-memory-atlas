@@ -571,7 +571,10 @@ required reasons, so the log shows what an entry used to say and what it
 was forbidden to say again. It records no actor — a single-operator kit
 does not need one — and, more consequentially, it records nothing on the
 trust axis: promoting a fact to <code>verified</code> mutates the row in
-place and writes no event.</p>
+place and writes no event. Writing first has a cost there too: the
+<code>SUPERSEDED</code> row is appended before <code>store_fact()</code>
+validates its <code>scope</code> argument, so an unknown scope leaves a
+record of an overwrite that then raises.</p>
 <p><strong>What that costs is visible in the same repository, one
 function away.</strong> <code>build_context(as_of=…)</code> replays the
 store as of a past moment by filtering facts on a

@@ -424,7 +424,9 @@ rows with their required reasons, so the log shows what an entry used to say and
 what it was forbidden to say again. It records no actor — a single-operator kit
 does not need one — and, more consequentially, it records nothing on the trust
 axis: promoting a fact to `verified` mutates the row in place and writes no
-event.
+event. Writing first has a cost there too: the `SUPERSEDED` row is appended
+before `store_fact()` validates its `scope` argument, so an unknown scope leaves
+a record of an overwrite that then raises.
 
 **What that costs is visible in the same repository, one function away.**
 `build_context(as_of=…)` replays the store as of a past moment by filtering

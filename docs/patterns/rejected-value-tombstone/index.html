@@ -328,9 +328,10 @@ href="../../systems/wenlan/">Wenlan</a> puts one on the
 mind-map node keeps its row so its fingerprint stays occupied, and every
 insert is <code>ON CONFLICT … DO NOTHING</code>. <a
 href="../../systems/breadcrumbs/">breadcrumbs</a> keeps a JSON file of
-rejected values that the fact setter raises on, in a repository that
-also argues, correctly, against applying the same mechanism to its other
-store. Its commit describes the mechanism as closing <em>"the two
+rejected values that the fact setter raises on and a TSV of retired desk
+answers that its CI check fails on, in a repository that also argues,
+correctly, against applying the same mechanism to its conclusions
+ledger. Its commit describes the mechanism as closing <em>"the two
 remaining code-shaped gaps from the Agent Memory Atlas round-2
 evaluation"</em>. Discussed at length below. <a
 href="../../systems/memora/">Memora</a>, <a
@@ -1438,13 +1439,13 @@ legitimate one is present, with a separate passthrough case establishing
 the filter returns candidates when nothing is denied, so neither half
 can pass vacuously.</p>
 <h3
-id="the-one-that-answered-the-question-twice-differently-in-two-stores">The
-one that answered the question twice, differently, in two stores</h3>
+id="the-one-that-answered-the-question-three-times-in-three-stores">The
+one that answered the question three times, in three stores</h3>
 <p><a href="../../systems/breadcrumbs/">breadcrumbs</a> reaches the
-value-keyed question twice in one repository, answers <em>no</em> for
-one store on grounds this page has to take seriously, and <em>yes</em>
-for another. Both answers are in the same repository and neither is a
-compromise.</p>
+value-keyed question three times in one repository, answers <em>no</em>
+for one store on grounds this page has to take seriously, and
+<em>yes</em> for the other two. All three answers are in the same
+repository and none is a compromise.</p>
 <p>Take the <em>no</em> first, because it is the argument. The
 conclusions ledger's correction model is ordinary supersession: a newer
 JSONL line names the older one through <code>obsoleted_by</code>, keyed
@@ -1486,10 +1487,23 @@ is as unauditable as an unexplained verification"</em>. Seven selftest
 checks pin the behaviour, including that a different value under the
 same key still stores and that a rejection naming an alternative cites
 it in the refusal.</p>
-<p>Note what the two answers do <em>not</em> do: reconcile. The engine
-and the ledger are separate stores with separate write paths, and
-nothing in the ledger tooling consults <code>tombstones.json</code>. So
-the backfill hazard the project documents — <code>PROVENANCE.md</code>'s
+<p><strong>Its memory desk gives a second <em>yes</em>, keyed on key and
+answer together.</strong> <code>mem reject "&lt;key&gt;" --reason</code>
+removes the index row and appends the key, the retired answer, the
+reason and the date to <code>tombstones.tsv</code>;
+<code>mem check</code> fails in CI when that key returns carrying that
+answer, a different answer under the same key passes as a correction,
+and the gardener's <code>promote.py</code> refuses a matching candidate
+before it writes. It guards curation rather than capture:
+<code>mem add</code> never reads the file, the tombstone holds the
+canonical key only, so an entry keyed on the retired row's old alias
+passes, and the gardener's case-and-whitespace normalisation is looser
+than <code>mem</code>'s token one, so a punctuation variant is caught
+only by the <code>check</code> after the write.</p>
+<p>Note what the answers do <em>not</em> do: reconcile. The engine, the
+desk and the ledger are separate stores with separate write paths, and
+nothing in the ledger tooling consults either tombstone file. So the
+backfill hazard the project documents — <code>PROVENANCE.md</code>'s
 mining pass, <code>CONCLUSIONS_TEMPLATE.md</code>'s record of one that
 <em>"swamped the session-verified entries"</em> — sits on the side that
 answered no.</p>

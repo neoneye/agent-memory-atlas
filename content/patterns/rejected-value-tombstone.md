@@ -173,8 +173,9 @@ resurrect a revocation, at the price of a ninety-day expiry discussed below.
 the fact layer: a dismissed mind-map node keeps its row so its fingerprint stays
 occupied, and every insert is `ON CONFLICT … DO NOTHING`.
 [breadcrumbs](../../systems/breadcrumbs/) keeps a JSON file of rejected values
-that the fact setter raises on, in a repository that also argues, correctly,
-against applying the same mechanism to its other store. Its commit describes the
+that the fact setter raises on and a TSV of retired desk answers that its CI
+check fails on, in a repository that also argues, correctly, against applying
+the same mechanism to its conclusions ledger. Its commit describes the
 mechanism as closing *"the two remaining code-shaped gaps from the Agent Memory
 Atlas round-2 evaluation"*. Discussed at length below.
 [Memora](../../systems/memora/), [memoir](../../systems/memoir-cli/) and
@@ -861,12 +862,12 @@ denied object is absent while a legitimate one is present, with a separate
 passthrough case establishing the filter returns candidates when nothing is
 denied, so neither half can pass vacuously.
 
-### The one that answered the question twice, differently, in two stores
+### The one that answered the question three times, in three stores
 
-[breadcrumbs](../../systems/breadcrumbs/) reaches the value-keyed question twice
-in one repository, answers *no* for one store on grounds this page has to take
-seriously, and *yes* for another. Both answers are in the same
-repository and neither is a compromise.
+[breadcrumbs](../../systems/breadcrumbs/) reaches the value-keyed question three
+times in one repository, answers *no* for one store on grounds this page has to
+take seriously, and *yes* for the other two. All three answers are in the same
+repository and none is a compromise.
 
 Take the *no* first, because it is the argument. The conclusions ledger's
 correction model is ordinary supersession: a newer JSONL line names the
@@ -906,9 +907,20 @@ unexplained verification"*. Seven selftest checks pin the behaviour, including
 that a different value under the same key still stores and that a rejection
 naming an alternative cites it in the refusal.
 
-Note what the two answers do *not* do: reconcile. The engine and the ledger are
-separate stores with separate write paths, and nothing in the ledger tooling
-consults `tombstones.json`. So the backfill hazard the project documents —
+**Its memory desk gives a second *yes*, keyed on key and answer together.**
+`mem reject "<key>" --reason` removes the index row and appends the key, the
+retired answer, the reason and the date to `tombstones.tsv`; `mem check` fails
+in CI when that key returns carrying that answer, a different answer under the
+same key passes as a correction, and the gardener's `promote.py` refuses a
+matching candidate before it writes. It guards curation rather than capture:
+`mem add` never reads the file, the tombstone holds the canonical key only, so
+an entry keyed on the retired row's old alias passes, and the gardener's
+case-and-whitespace normalisation is looser than `mem`'s token one, so a
+punctuation variant is caught only by the `check` after the write.
+
+Note what the answers do *not* do: reconcile. The engine, the desk and the
+ledger are separate stores with separate write paths, and nothing in the ledger
+tooling consults either tombstone file. So the backfill hazard the project documents —
 `PROVENANCE.md`'s mining pass, `CONCLUSIONS_TEMPLATE.md`'s record of one that
 *"swamped the session-verified entries"* — sits on the side that answered no.
 
