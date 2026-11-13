@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A source-available coding-agent
+workbench whose memory is a local SQLite catalog of lessons, each tied
+to files and retired when Git shows those files changed.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="QualityLayer — Agent Memory Atlas">
+    <meta property="og:description" content="A source-available
+coding-agent workbench whose memory is a local SQLite catalog of
+lessons, each tied to files and retired when Git shows those files
+changed.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="QualityLayer — Agent Memory Atlas">
+    <meta name="twitter:description" content="A source-available
+coding-agent workbench whose memory is a local SQLite catalog of
+lessons, each tied to files and retired when Git shows those files
+changed.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>QualityLayer — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "QualityLayer",
+      "description": "A source-available coding-agent workbench whose memory is a local SQLite catalog of lessons, each tied to files and retired when Git shows those files changed.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Project lessons checked against the commits
+that touch their files</p>
+          <h1>QualityLayer</h1>
+          <p class="document-deck">A source-available coding-agent
+workbench whose memory is a local SQLite catalog of lessons, each tied
+to files and retired when Git shows those files changed.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/maxritter/qualitylayer">
+              <span>Source</span>
+              <strong>maxritter/qualitylayer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/maxritter/qualitylayer/commit/8635ab90a2d13084be33bddfaa74afa5d4d43e49" title="8635ab90a2d13084be33bddfaa74afa5d4d43e49">
+              <span>Analyzed revision</span>
+              <code>8635ab90…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-13</strong>
+            </div>
+                                  </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>QualityLayer
+Commercial Source-Available Licence: reading, evaluation and
+contribution forks are permitted; redistribution, reuse in another
+product and independent complete builds are not</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>357,668
+lines of TypeScript in 1,773 readable files; the memory code is 8,094
+lines across src/core/memory, src/memory-store, src/memory-engine and
+five top-level modules. 5,022 of the 7,613 tracked files are git-crypt
+ciphertext</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>4,857
+commits on main, 24 October 2025 – 13 November 2026, 4,248 of them by
+the maintainer</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,415
+files under qualitylayer/tests, of which 2,411 are git-crypt ciphertext,
+including all 75 memory test and fixture files; four licensing and
+workflow tests are readable</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>QualityLayer is a commercial, source-available desktop and
+command-line product that runs coding agents through a plan, implement
+and verify workflow. Its memory keeps <em>lessons</em> about a
+repository — decisions, fixes, constraints, terms — and about the
+person, in one local SQLite catalog. Agents search, read, save and
+maintain them through four tools, and receive pinned and matching
+lessons when a session starts and after compaction.</p>
+<p>What is notable is that a lesson is tied to files and checked against
+Git. Each lesson records the commit it was last read against. When later
+commits touch its files the lesson is labelled as changed, an agent
+finishing a task is handed those lessons to confirm, rewrite or retire,
+and a lesson left unchecked for 90 days retires itself with the reason
+written down. Retired lessons are kept, excluded from every agent read,
+and restorable.</p>
+<p>What is weak, from the outside, is evidence. The licence permits
+reading and evaluation, and most of the tree is not readable: 5,022 of
+7,613 tracked files are git-crypt ciphertext, including every memory
+test. The memory source itself is plain. Within it, the agent holds the
+restore verb for anything a person retired, and the recorded evidence of
+passing checks is a field nothing reads.</p>
+<p>The licence is the QualityLayer Commercial Source-Available Licence.
+Section 3 allows anyone to read the public source <em>"to understand,
+inspect, evaluate and audit"</em> it and to host contribution forks;
+section 5 forbids redistribution, incorporation into another product and
+independent complete builds. The atlas holds no archive copy: the
+licence does not grant redistribution, and the forks it permits are for
+contributing.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a lesson: a titled statement with the reason it holds and
+the files it is about. The save tool's description asks for exactly
+that, <em>"so a later agent can tell when the reason no longer
+does"</em> (<code>qualitylayer/src/memory-tools.ts:76-79</code>).
+Lessons about the person take no files and live in a reserved
+project.</p>
+<p>A lesson is believed from the moment it is saved. There is no
+candidate tier and no approval before first use. What the design adds is
+a way for belief to lapse.</p>
+<ul>
+<li><strong>Check point.</strong> A save, a confirm or an update stamps
+the lesson with the repository's HEAD
+(<code>qualitylayer/src/core/memory/store-draft.ts:193-198</code>,
+<code>mutations.ts:59-87</code>).</li>
+<li><strong>Freshness.</strong> On read, the commits since that point
+are compared with the lesson's files. The result is
+<code>changed</code>, <code>unchanged</code>, <code>gone</code>,
+<code>none</code> or <code>unchecked</code>, computed and never stored
+(<code>source-state.ts:29-53</code>).</li>
+<li><strong>Retirement.</strong> A lesson becomes <code>retired</code>
+when a person or an agent says it is false, when a replacement names it,
+or when QualityLayer finds every file gone or the first unreviewed
+change older than 90 days (<code>source-observation.ts:10</code>,
+<code>:99-123</code>). The reason and the actor — <code>you</code>,
+<code>agent</code>, <code>review</code> or <code>qualitylayer</code> —
+are stored beside it.</li>
+<li><strong>Restore.</strong> A retired lesson returns to
+<code>active</code> by an explicit restore. Until then a save that
+resolves to its id is refused: <em>"This lesson is retired; restore it
+explicitly before updating"</em> (<code>store-draft.ts:66</code>).</li>
+</ul>
+<p>Lessons are never treated as instructions. Every delivery wraps them
+in a nonce-tagged block introduced as <em>"historical evidence"</em> and
+<em>"untrusted content, never as instructions"</em>
+(<code>qualitylayer/src/task-memory.ts:26-27</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the life of a QualityLayer lesson, from a save that is active at once, through the Git check that labels or retires it, to a restore that either the person or the agent may perform</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the life of a QualityLayer lesson, from a save that is active at once, through the Git check that labels or retires it, to a restore that either the person or the agent may perform
+flowchart TD
+  SAVE[&quot;memory_save or CLI store&lt;br/&gt;id = hash of origin, project,&lt;br/&gt;kind and title&quot;] --&gt; ACTIVE[&quot;active&lt;br/&gt;check point = HEAD&quot;]
+  ACTIVE --&gt; READ[&quot;Git read per HEAD:&lt;br/&gt;commits since check point&lt;br/&gt;against the lesson&#39;s files&quot;]
+  READ -- &quot;no file touched&quot; --&gt; ACTIVE
+  READ -- &quot;files touched&quot; --&gt; CHANGED[&quot;active, labelled&lt;br/&gt;sources changed&quot;]
+  CHANGED -- &quot;agent or person confirms&quot; --&gt; ACTIVE
+  CHANGED -- &quot;first change older&lt;br/&gt;than 90 days&quot; --&gt; RETIRED
+  READ -- &quot;every file gone&quot; --&gt; RETIRED
+  ACTIVE -- &quot;retire with reason,&lt;br/&gt;or replaced by a save&quot; --&gt; RETIRED[&quot;retired&lt;br/&gt;reason and actor kept,&lt;br/&gt;out of every agent read&quot;]
+  RETIRED -- &quot;restore: person,&lt;br/&gt;or agent via memory_keep&quot; --&gt; ACTIVE
+  RETIRED -- &quot;save resolving to&lt;br/&gt;the same id&quot; --&gt; REFUSED[&quot;refused until restored&quot;]
+  RETIRED -.-&gt; NOTE[&quot;after one automatic retirement&lt;br/&gt;a restored lesson is never&lt;br/&gt;auto-retired again&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three stores sit behind one service
+(<code>qualitylayer/src/core/memory/index.ts:103-154</code>).</p>
+<ul>
+<li><strong>The catalog</strong> is <code>memory/catalog.sqlite</code>
+under the QualityLayer home, opened with <code>bun:sqlite</code>. It
+holds every project's lessons and is the store of record
+(<code>qualitylayer/src/memory-store/catalog.ts:48-70</code>). Tables
+cover records, an FTS5 mirror of title and content, vectors, projects,
+publications, retained conflicts, pending index work and a key-value
+<code>metadata</code> table that carries check points, retirement
+reasons and pins' retry markers.</li>
+<li><strong>The index</strong> is a build of <a
+href="../engram/">Engram</a> at upstream commit
+<code class="commit-id" title="ec2bf0482139360bf61a8eadb76380ffe762de44">ec2bf048…</code>, shipped as a
+compressed binary per platform. A 60-line Go shim exposes seven of
+Engram's MCP tools over stdio, applies a page-count cap through a
+connection hook, and refuses any command-line argument
+(<code>qualitylayer/src/memory-engine/shim.go.txt</code>,
+<code>qualification.json</code>). Each project gets its own data
+directory named by a hash of the project id, with an
+<code>identity.db</code> mapping lesson ids to observation numbers. The
+index is disposable: a failed call marks the project and search
+continues on the catalog.</li>
+<li><strong>The vectors</strong> come from all-MiniLM-L6-v2,
+int8-quantized, run on ONNX Runtime WebAssembly in a worker
+(<code>qualitylayer/src/memory-embed/index.ts</code>). No lesson leaves
+the machine to be embedded.</li>
+</ul>
+<p>A fourth, optional surface is the repository. With sharing turned on
+for a project, export writes eligible lessons as JSON under
+<code>docs/memories/</code> with a readable <code>LESSONS.md</code>; the
+person commits them.</p>
+<p>The engine payloads and the embedding model are among the encrypted
+files at this commit, so the shim's source and the pin are readable and
+the binaries are not.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing runs as a service; the product's own process opens the
+catalog and spawns the index on demand. Use requires a trial or
+subscription and a licence check, with an offline allowance of seven
+days. Memory needs no API key. Every store has a byte cap — 128 MiB for
+the catalog, 64 MiB per project index, 256 MiB for all indexes, 32 KiB
+per record, 20,000 records
+(<code>qualitylayer/src/core/home-caps.ts:89-91</code>,
+<code>core/memory/limits.ts:1-3</code>). The catalog is one SQLite file
+and is repairable with ordinary tools; the public checkout cannot build
+the application, which the licence states in section 4.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>runMemoryTool</code> →
+<code>MemoryWriter.store</code> → <code>MemoryDraft</code>
+(<code>memory-tools.ts:345-380</code>,
+<code>core/memory/store.ts:53-84</code>,
+<code>store-draft.ts:34-199</code>). State changes in
+<code>db.save</code> inside <code>db.atomic</code>, with the replaced
+lesson retired in the same transaction.</li>
+<li><strong>Evidence.</strong> <code>MemoryWriter.evidence</code> loads
+the task, requires stage <code>verify</code> or <code>shipped</code> and
+all checks passed, and records up to 100 passing commands and HEAD
+(<code>store.ts:17-52</code>).</li>
+<li><strong>Lifecycle.</strong> <code>saveLifecycle</code>
+(<code>lifecycle.ts:13-59</code>), called by
+<code>MemoryMutations.retire</code>, the replacement path and the source
+observation.</li>
+<li><strong>Search.</strong> <code>MemorySearch.search</code> →
+<code>MemoryCandidates.collect</code> → <code>searchResults</code> →
+<code>fuseRanks</code> (<code>search/index.ts:24-48</code>,
+<code>search/candidates.ts:14-63</code>,
+<code>search/results.ts:8-72</code>,
+<code>ranking.ts:127-143</code>).</li>
+<li><strong>Freshness and auto-retirement.</strong>
+<code>MemorySourceCatalog.sources</code> →
+<code>MemorySourceObservation.read</code> → <code>settle</code> →
+<code>retire</code> (<code>source-catalog.ts:24-38</code>,
+<code>source-observation.ts:64-123</code>).</li>
+<li><strong>Session delivery.</strong>
+<code>qualitylayer/src/memory-session.ts</code>: up to five pinned and
+five matched lessons in 3 KiB, with a two-second lookup budget
+(<code>:23-27</code>).</li>
+<li><strong>Task delivery and upkeep.</strong>
+<code>withTaskMemory</code> and <code>lessonsToKeep</code>
+(<code>task-memory.ts:115-143</code>, <code>:224-361</code>).</li>
+<li><strong>Exchange.</strong> <code>restoreRecords</code> and
+<code>restoreOne</code> (<code>restore.ts:19-125</code>),
+<code>reconcileRecord</code> (<code>reconcile.ts:9-54</code>), the
+privacy filter (<code>privacy.ts:2-34</code>).</li>
+<li><strong>Tools and CLI.</strong> <code>MEMORY_TOOLS</code>
+(<code>memory-tools.ts:45-111</code>),
+<code>cli/commands/memory.ts:24-25</code> for the verb list.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryRecord</code> is the unit
+(<code>qualitylayer/src/memory-contracts.ts:31-58</code>). It carries
+<code>id</code>, <code>project</code>, <code>origin</code>,
+<code>revision</code>, <code>kind</code>, <code>title</code>,
+<code>content</code>, <code>tags</code>, <code>files</code>,
+<code>source</code>, optional <code>sourceId</code> and
+<code>author</code>, <code>evidence</code>, <code>visibility</code>,
+<code>state</code>, two timestamps, and four history fields:
+<code>ancestry</code>, <code>provenance</code>, <code>replaces</code>
+and <code>retirement</code>.</p>
+<p>Identity is derived. A new lesson's id is the hash of the catalog's
+origin, the project, the kind and the trimmed title, or of the task and
+a key for task captures (<code>store-draft.ts:43-49</code>). A second
+save under the same kind and title is therefore a revision of the first,
+and an update by id must name the revision it read
+(<code>:60-65</code>).</p>
+<p><code>source</code> is <code>task</code>, <code>session</code>,
+<code>pilot</code>, <code>repository</code> or <code>manual</code>.
+<code>provenance</code> records where a lesson restored from the
+repository originally came from. <code>ancestry</code> is a list of up
+to 256 content digests of accepted ancestors, which lets two machines
+tell an older copy from a divergent one.</p>
+<p>Several facts are deliberately kept outside the record, in
+<code>metadata</code>, so they never travel through Git: the check
+point, the retirement reason and actor, the pin
+(<code>core/memory/local-facts.ts:4-24</code>). Session attribution is
+likewise stripped from exported files.</p>
+<p>Time is a creation stamp, an update stamp and the check point's
+commit and time. There is no validity interval; a corrected lesson is
+either the same row at a higher revision or a new row whose
+<code>replaces</code> names the old one.</p>
+<p>Scope is the project id, plus the reserved <code>personal</code>
+project. Visibility is <code>private</code> or <code>project</code>: a
+lesson is <code>project</code> only if it passes the privacy filter,
+which rejects credential shapes, home paths, e-mail addresses, the
+<code>preference</code> kind and anything resembling a prompt or
+transcript (<code>privacy.ts:2-34</code>). A lesson that fails stays
+local and usable.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A search needs a project and a text of at most 500 characters. Word
+hits come from two places: the Engram index, skipped while any of the
+project's lessons await indexing, and the catalog's FTS5 table ordered
+by <code>bm25(search,0,4,1)</code>, which weights the title four times
+the content (<code>search/candidates.ts:20-43</code>,
+<code>catalog.ts:457-469</code>). Meaning hits are cosines against every
+active vector of the project; up to 64 missing vectors are computed
+during the search itself.</p>
+<p>Fusion is <code>1/(10 + rank) + 2 x cosine</code>, with cosines under
+0.15 contributing nothing (<code>ranking.ts:13</code>,
+<code>:115-143</code>). The comment beside the floor gives its
+calibration: twelve paraphrases scoring 0.158 to 0.435 against their
+lesson and six unrelated queries at most 0.113. A query matching neither
+way returns no lesson.</p>
+<p>Three narrowing rules follow. A query of five to twenty content words
+is treated as a keyword list and a hit must carry half of them. File
+paths in the query put lessons on those files first and admit others
+only at a cosine of 0.55 or more. Code symbols must appear in the lesson
+(<code>search/results.ts:8-34</code>). Pinned lessons sort first, a
+retired or foreign id is dropped, and identical content is returned once
+(<code>:36-72</code>).</p>
+<p>Delivery is both automatic and tool-mediated. A session's first
+message and each compaction trigger a block of at most five pinned and
+five matched lessons in 3 KiB. Each tool hit carries its scope, saved
+and checked dates and freshness, and the search tool's description tells
+the agent to read a hit in full and check it against current code. Two
+of every page's slots are held for lessons about the person
+(<code>ranking.ts:146-162</code>).</p>
+<p>The failure mode the design accepts is a missed delivery: the
+documentation says a slow or disabled hook skips the block, and the
+agent is expected to search.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit. An agent calls <code>memory_save</code>, a
+task's verify step captures the lessons it decided to keep, or a person
+uses the CLI or the App. No extractor reads transcripts.</p>
+<p>A save validates its input, takes the mutation lock, verifies the
+project's registration, builds the record and compares it with the
+stored one; an unchanged save returns the old record without a new
+revision (<code>store.ts:53-84</code>). A changed save writes the record
+and its publication copy and retires any lesson named in
+<code>replaces</code>, in one transaction. Indexing and embedding
+follow, outside the transaction; an index failure is recorded and does
+not fail the save.</p>
+<p>After a save without <code>replaces</code>, the tool searches for the
+new title and returns up to three similar lessons, so the agent can
+merge (<code>memory-tools.ts:384-389</code>). Deduplication is otherwise
+the id rule and the agent's judgement.</p>
+<p>Upkeep is assigned to the agent. At a task's review stage the reply
+lists up to eight active lessons on files the task's diff touched,
+changed ones first, with the instruction that the agent <em>"keep the
+project's lessons true; the person does not maintain them"</em>
+(<code>task-memory.ts:103-143</code>). Review subagents are read-only:
+with <code>QUALITYLAYER_REVIEW_READ_ONLY=1</code> the save and keep
+tools refuse (<code>memory-tools.ts:214-218</code>).</p>
+<p>Exchange through Git never happens by itself. Export writes files;
+import is an explicit command; neither commits, pushes or pulls. An
+imported lesson that diverges from the local one is stored in
+<code>conflicts</code> and the local version stays in use until
+<code>memory reconcile</code> names the winner, which becomes a new
+revision carrying both ancestries (<code>restore.ts:49-53</code>,
+<code>reconcile.ts:9-54</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A save blocks on a lock, a SQLite transaction, one index call with a
+five-second default timeout and one local embedding. A lesson is
+searchable by words as soon as the transaction commits. No pass rewrites
+the store. The freshness read is one bounded Git log per HEAD, cached in
+<code>metadata</code> under a key that includes HEAD and the lessons'
+revisions. Session delivery is capped at 3 KiB and two seconds and
+arrives with the first message.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The tools are <code>memory_search</code>, <code>memory_read</code>,
+<code>memory_save</code> and <code>memory_keep</code>, served by
+<code>qualitylayer memory mcp</code> and by native plugins for OpenCode
+and Pi (<code>memory-tools.ts:45-111</code>). The CLI carries the same
+verbs and more: pin, pause, sessions, share, export, import, conflicts,
+reconcile and a Pilot Shell importer. The project's skills tell agents
+without native tools to use the CLI for search, read, store, confirm,
+retire and restore.</p>
+<p>The agent's authority is broad. It can save, revise, replace, retire
+and restore any lesson of the current project and of the person, and
+confirm any repository lesson at HEAD. It cannot reach another project's
+lessons by id, and it has no tool for sharing, import or reconcile.</p>
+<p>The App's server exposes list, search, read, pin, confirm, retire,
+restore and the Pilot import
+(<code>qualitylayer/src/server/memory.ts:421-482</code>). The
+documentation describes App controls for restoring from the repository
+and choosing between conflicting versions; at this commit the readable
+server has no route for either, and both exist as CLI verbs
+(<code>cli/commands/memory.ts:275-281</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The lifecycle state filters.</strong> <code>filter</code>
+begins every agent query with <code>state='active'</code>, the vector
+read joins on it, and <code>currentRecord</code> rechecks each ranked id
+(<code>catalog.ts:716-717</code>, <code>:334-340</code>,
+<code>search/results.ts:36-40</code>). Management searches opt in to
+retired lessons so they can be found and restored. This is the
+<code>trust_state</code> mark: two stored values, one of which
+withholds.</p>
+<p><strong>Freshness is a label with one automatic consequence.</strong>
+<code>changed</code> never removes a lesson from a result; it appends
+<em>" · sources changed"</em> to its line and puts it first in the
+review hand-off. Its only enforced effect is the 90-day retirement.</p>
+<p><strong>That retirement fires once per lesson.</strong> The
+observation sets <code>auto-retired:&lt;id&gt;</code> before retiring
+and returns early whenever the marker is present, so that <em>"a
+restore's local marker wins over an older Git observation"</em>
+(<code>source-observation.ts:104-114</code>). Nothing clears the marker.
+A lesson restored after an automatic retirement keeps its label and is
+never retired by QualityLayer again, however long its files go on
+changing or even if they are deleted.</p>
+<p><strong>A retired lesson blocks its own title, not its
+content.</strong> Because the id includes kind and title, saving the
+same statement under a reworded title or another kind creates a new
+active lesson. The refusal at <code>store-draft.ts:66</code> is keyed on
+the record, and the restore verb is on the agent's own tool, so this is
+not a tombstone.</p>
+<p><strong>Evidence is recorded and unread.</strong> A task lesson
+carries the commit and the passing check commands only when the task
+reached verify with all checks passed; otherwise <code>evidence</code>
+is null and the lesson is saved all the same
+(<code>store.ts:17-52</code>, <code>:62</code>). Outside
+<code>src/ui</code>, the readable source reads the field in the
+migration timestamp and the privacy text only.</p>
+<p><strong>No review gate on admission.</strong> The one place a lesson
+waits is a retained conflict from an import. Its resolver is a CLI verb
+with no check on who runs it, in the binary agents are told to use for
+six other memory verbs, and it covers foreign revisions only.
+<code>human_review</code> is withheld.</p>
+<p><strong>No append-only mutation record.</strong> Revisions overwrite
+the row; <code>ancestry</code> keeps digests, not content; a task's
+memory file lists at most 20 used and saved ids and 10 revised, retired
+and confirmed per step. Exported lessons keep prior versions as files
+under a <code>history/</code> folder in the repository, which is Git's
+record. <code>audit_log</code> is withheld.</p>
+<p><strong>Concurrency and failure.</strong> One file lock serialises
+mutations across processes, updates carry an expected revision, and the
+source observation discards its result if any lesson changed while Git
+was being read (<code>runtime.ts:60-63</code>,
+<code>source-observation.ts:84-97</code>). The index is treated as lossy
+throughout.</p>
+<p><strong>Injection.</strong> Lessons are fenced and labelled untrusted
+at every delivery, and titles handed to the review step are capped at
+200 characters. Imported repository lessons pass the same privacy filter
+as exported ones and are tagged <code>repository</code>; nothing ranks
+or filters on that tag.</p>
+<p>Validity time and committed negative retrieval cases are not found in
+the readable tree; the tests that might hold the latter cannot be
+read.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran nothing, and the tests cannot be read.
+<code>.gitattributes</code> sends <code>qualitylayer/**</code> through a
+git-crypt filter and re-opens a named list of source files. Of the 2,415
+files under <code>qualitylayer/tests/</code>, 2,411 are ciphertext at
+this commit, among them all 75 whose path names memory: 26 files under
+<code>tests/core</code>, 26 under <code>tests/memory-e2e</code>, the
+CLI, end-to-end, server and frontend memory tests, and the fixtures
+<code>ranking-set.json</code> and <code>search-relevance.json</code>
+that the ranking comment cites. The four readable tests cover the
+licensing client and the workflow asset bundle.</p>
+<p>So the file names show that a memory suite exists —
+<code>memory-retirement-race</code>,
+<code>memory-portable-boundaries</code>,
+<code>memory-search-relevance</code>, <code>retention-memory</code> —
+and nothing about what it asserts. The calibration numbers in
+<code>ranking.ts</code> are the code's own comment, not a result that
+can be recomputed here. The workflow files under
+<code>.github/private-workflows/</code> are ciphertext as well.</p>
+<p>No paper accompanies the project and no benchmark is claimed in the
+README.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Tie a memory to the files it is about, and store the commit
+it was last checked at.</strong> Staleness then becomes a Git query
+instead of a clock, and "still true" becomes an action with a commit
+attached.</li>
+<li><strong>Hand the stale ones to the agent at the moment it has the
+diff open.</strong> The review step lists lessons on the files the task
+changed, so the check happens when the evidence is in context.</li>
+<li><strong>Keep local facts out of the portable record.</strong> Check
+points, retirement reasons, pins and session attribution live beside the
+lesson, so sharing a lesson cannot leak who said what on which
+machine.</li>
+<li><strong>Derive visibility from a filter, not a flag.</strong> A
+lesson that looks like a credential, a home path or a transcript stays
+local without anyone deciding.</li>
+<li><strong>Treat the search index as disposable.</strong> A canonical
+catalog with a pending table and a per-project failure mark lets the
+index break without losing a save or a search.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A one-way latch on an automatic rule.</strong> A marker that
+stops a second auto-retirement also stops every later one.</li>
+<li><strong>An identity that includes the wording.</strong> Blocking a
+retired title leaves the retired claim free to return under
+another.</li>
+<li><strong>A proof field with no reader.</strong> Recorded passing
+checks that neither rank nor filter are provenance for a person, and a
+save without them looks the same to an agent.</li>
+<li><strong>A documented control without a route.</strong> Restore and
+reconcile are described for the App and served only by the CLI at this
+commit.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is memory for one developer's repositories on one machine,
+maintained by the agents that use it, inside a paid product. The design
+suits a codebase that changes often enough for file-level staleness to
+mean something, and a person who wants lessons kept true without
+reviewing each one. It does not suit a team that needs an approval
+before a lesson is believed, an audit of who changed what, or a deletion
+that removes a lesson. The licence rules out reuse of the code; the
+mechanisms above are what can be taken.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What do the 75 encrypted memory tests assert, and do any pin that a
+retired or foreign lesson stays out of a result?</li>
+<li>Is the missing clear of <code>auto-retired:&lt;id&gt;</code>
+intended as permanent immunity after a restore?</li>
+<li>Which App build serves restore-from-repository and conflict choice,
+given that the readable server has neither route?</li>
+<li>How often does the two-second session lookup time out on a large
+catalog?</li>
+<li>Does the bundled index ever return an id the catalog has retired,
+and is <code>currentRecord</code> the only guard?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p>Paths are under <code>qualitylayer/src/</code>.</p>
+<ul>
+<li><strong>Contracts and schema:</strong>
+<code>memory-contracts.ts</code>, <code>memory-store/catalog.ts</code>,
+<code>core/memory/limits.ts</code>, <code>core/home-caps.ts</code>.</li>
+<li><strong>Write path:</strong> <code>core/memory/store.ts</code>,
+<code>store-draft.ts</code>, <code>lifecycle.ts</code>,
+<code>mutations.ts</code>, <code>record-validation.ts</code>,
+<code>privacy.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>core/memory/search/</code>
+(<code>index.ts</code>, <code>query.ts</code>,
+<code>candidates.ts</code>, <code>results.ts</code>),
+<code>core/memory/ranking.ts</code>.</li>
+<li><strong>Freshness:</strong>
+<code>core/memory/source-catalog.ts</code>,
+<code>source-observation.ts</code>, <code>source-state.ts</code>,
+<code>sources.ts</code>, <code>changed-lessons.ts</code>.</li>
+<li><strong>Exchange:</strong> <code>core/memory/portability.ts</code>,
+<code>restore.ts</code>, <code>reconcile.ts</code>,
+<code>export-batch.ts</code>, <code>history-storage.ts</code>,
+<code>portable.ts</code>.</li>
+<li><strong>Index and vectors:</strong>
+<code>memory-engine/index.ts</code>,
+<code>memory-engine/shim.go.txt</code>,
+<code>memory-engine/qualification.json</code>,
+<code>memory-embed/index.ts</code>,
+<code>core/memory/runtime.ts</code>.</li>
+<li><strong>Agent surface:</strong> <code>memory-tools.ts</code>,
+<code>memory-session.ts</code>, <code>task-memory.ts</code>,
+<code>cli/commands/memory.ts</code>,
+<code>cli/commands/memory-mcp.ts</code>, <code>server/memory.ts</code>,
+<code>skills/</code>.</li>
+<li><strong>Documentation:</strong>
+<code>docs/docusaurus/docs/memory.mdx</code>, <code>LICENSE</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git grep</code> from the root of a checkout
+at <code class="commit-id" title="8635ab90a2d13084be33bddfaa74afa5d4d43e49">8635ab90…</code>, without a
+git-crypt key.</p>
+<ul>
+<li>A script reading the first ten bytes of every tracked file for the
+git-crypt header — 5,022 encrypted, 2,591 plain; 2,411 encrypted under
+<code>qualitylayer/tests/</code>, 75 of them with <code>memory</code> in
+the path; no encrypted file under <code>qualitylayer/src/</code> except
+the engine payloads, their scan streams and the embedding assets.</li>
+<li><code>git grep -n -E 'auto-retired' -- qualitylayer/src</code> —
+<code>source-observation.ts:105</code> and <code>:114</code> only; the
+marker is read and set, never cleared.</li>
+<li><code>git grep -n -i 'DELETE FROM' -- qualitylayer/src/memory-store qualitylayer/src/core/memory</code>
+— eight statements over projects, metadata, search, vectors,
+index_pending, index_issues, exchange and conflicts; none over
+<code>records</code>.</li>
+<li><code>git grep -n -E '\.evidence' -- qualitylayer/src ':!qualitylayer/src/ui'</code>
+— in memory code, <code>core/memory/migrate.ts:32</code> and
+<code>core/memory/privacy.ts:21</code>; the other hits are task
+attestations and code-quality records.</li>
+<li><code>git grep -n -E '\.reconcile\(|reconcileRecord\(' -- qualitylayer/src</code>
+— <code>cli/commands/memory.ts:281</code>,
+<code>core/memory/portability.ts:58</code> and the definition; no server
+route.</li>
+<li><code>git grep -n -E '\.restoreProject\(|restoreRecords\(' -- qualitylayer/src</code>
+— <code>cli/commands/memory.ts:275</code>,
+<code>core/memory/portability.ts:33</code> and the definition.</li>
+<li><code>git grep -n -i -E 'reconcile|memory conflicts|memory import' -- qualitylayer/src/skills qualitylayer/src/workflow qualitylayer/src/task-memory.ts qualitylayer/src/memory-session.ts</code>
+— no match; no prompt tells an agent to import or reconcile.</li>
+<li><code>git grep -h -o -E 'qualitylayer memory [a-z-]+' -- qualitylayer/src/skills qualitylayer/src/workflow</code>
+— confirm, read, restore, retire, search and store.</li>
+<li><code>git grep -n -i -E 'conflict|restore|exchange|import' -- qualitylayer/src/server/memory.ts</code>
+— imports, a comment about restoring retired lessons, and the Pilot
+import route at <code>:463-482</code>; no exchange, repository restore
+or conflict route.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|CITATION\.cff' -- README.md docs/docusaurus/docs</code>
+— no match.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-13</strong> — <a
+href="https://github.com/maxritter/qualitylayer/commit/8635ab90a2d13084be33bddfaa74afa5d4d43e49"><code class="commit-id" title="8635ab90a2d13084be33bddfaa74afa5d4d43e49">8635ab90…</code></a>
+— first reading, at the head of <code>main</code>, dated 13 November
+2026. Marks: <code>trust_state</code> on the active/retired column,
+<code>scope_enforced</code> on the project predicate. LICENSE read in
+full: reading, evaluation and contribution forks permitted, no rider
+against analysis. Screened before reading: one auto-run surface, a
+<code>.gitattributes</code> naming 65 git-crypt filter drivers, none
+configured on this machine, so encrypted files were checked out as
+ciphertext; eight dependency surfaces inside the seven-day cooldown, one
+build-time execution point, two unpinned manifests. Nothing was
+installed or run. The bundled Engram build was not opened; its shim
+source and upstream pin were read.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -407,6 +407,8 @@ permanent."*
 
 **[clm-mem](../../systems/clm-mem/) separates freshness from value when several chats touch one fact.** Effective importance halves every `decay_half_life` turns since the later of two stamps, own-chat access and cross-chat access, and a long-term block below the threshold is demoted to short-term, where FIFO eviction can reach it (`shatterling/engine/harness.py:274-283`, `:350-366`). Reheating has three scopes. `global` lets any chat raise a fact's importance; `chat` lets only the chat that produced it raise it, while another chat's touch refreshes freshness only; `fresh` refreshes both stamps everywhere and raises nothing (`:297-348`). A touch is a slot value or a versioned identifier such as `Nova-7` reappearing in a user message, and each scope has a test (`tests/test_forgetting.py:50-182`). Decay is off by default. **When a store is shared, let other readers keep a fact alive without letting them make it more important.**
 
+**[QualityLayer](../../systems/qualitylayer/) decays on repository change instead of on a clock.** A lesson stores the commit it was last checked at and the files it is about; nothing ages while those files are untouched. Commits that touch them label the lesson changed, a confirm at HEAD resets the check point, and the lesson retires when its first unreviewed change is more than 90 days old or every file is gone (`qualitylayer/src/core/memory/source-observation.ts:99-123`). Retrieval does not reinforce. The rule latches: a marker set at the first automatic retirement is never cleared, so a restored lesson is exempt from then on.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.

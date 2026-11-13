@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **799 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **800 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -727,6 +727,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## Q
 
 <ul class="az">
+<li><a class="az-row" href="../systems/qualitylayer/"><span class="az-id">QualityLayer</span><span class="az-what">Project lessons checked against the commits that touch their files</span><code class="az-repo">maxritter/qualitylayer</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/qwen-code/"><span class="az-id">Qwen Code</span><span class="az-what">Team memory in git</span><code class="az-repo">QwenLM/qwen-code</code><span class="az-caps"><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/qwen-mm-plugins/"><span class="az-id">Qwen MM Plugins</span><span class="az-what">Memory of what was seen</span><code class="az-repo">QwenLM/Qwen-MM-Plugins</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 </ul>

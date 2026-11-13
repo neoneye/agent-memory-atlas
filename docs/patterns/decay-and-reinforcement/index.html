@@ -754,6 +754,17 @@ message, and each scope has a test
 (<code>tests/test_forgetting.py:50-182</code>). Decay is off by default.
 <strong>When a store is shared, let other readers keep a fact alive
 without letting them make it more important.</strong></p>
+<p><strong><a href="../../systems/qualitylayer/">QualityLayer</a> decays
+on repository change instead of on a clock.</strong> A lesson stores the
+commit it was last checked at and the files it is about; nothing ages
+while those files are untouched. Commits that touch them label the
+lesson changed, a confirm at HEAD resets the check point, and the lesson
+retires when its first unreviewed change is more than 90 days old or
+every file is gone
+(<code>qualitylayer/src/core/memory/source-observation.ts:99-123</code>).
+Retrieval does not reinforce. The rule latches: a marker set at the
+first automatic retirement is never cleared, so a restored lesson is
+exempt from then on.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

@@ -500,6 +500,7 @@ page_kind: comparison
 - [`managed-agents-dreaming`](../systems/managed-agents-dreaming/)
 - [`managed-agents-knowledge-wiki`](../systems/managed-agents-knowledge-wiki/)
 - [`openagents-control`](../systems/openagents-control/)
+- [`qualitylayer`](../systems/qualitylayer/)
 
 ## Repos Inspected
 
@@ -1304,12 +1305,13 @@ page_kind: comparison
 - [anthropics/claude-cookbooks (managed_agents dreaming)](https://github.com/anthropics/claude-cookbooks/tree/main/managed_agents) at [`ce8b2629efe8b24048b127b4c79af1e9cbab93d4`](https://github.com/anthropics/claude-cookbooks/commit/ce8b2629efe8b24048b127b4c79af1e9cbab93d4) — read only, from a sparse clone of `managed_agents/`; no auto-run surface, one build-time execution point, two unpinned dependency surfaces. Nothing was installed or run; the notebook's saved outputs were read as data. MIT
 - [anthropics/claude-quickstarts (managed-agents/knowledge-wiki)](https://github.com/anthropics/claude-quickstarts/tree/main/managed-agents/knowledge-wiki) at [`4a4224bdf0e9cfb3332167b69c90457403813625`](https://github.com/anthropics/claude-quickstarts/commit/4a4224bdf0e9cfb3332167b69c90457403813625) — read only, from a full clone; no auto-run surface, five build-time execution points, 28 unpinned dependency surfaces across the repository, and the directory's `requirements.txt` inside the seven-day cooldown. Nothing was installed or run; the notebook's saved outputs were read as data. MIT
 - [darrenhinde/OpenAgentsControl](https://github.com/darrenhinde/OpenAgentsControl) at [`1ed1dd88d14ce0a4e32b458b6817cdda6f6b1590`](https://github.com/darrenhinde/OpenAgentsControl/commit/1ed1dd88d14ce0a4e32b458b6817cdda6f6b1590) — read only, from a full clone; five auto-run surfaces, two build-time execution points, seven unpinned dependency surfaces, every lockfile unchanged for 25 days. Nothing was installed or run. MIT
+- [maxritter/qualitylayer](https://github.com/maxritter/qualitylayer) at [`8635ab90a2d13084be33bddfaa74afa5d4d43e49`](https://github.com/maxritter/qualitylayer/commit/8635ab90a2d13084be33bddfaa74afa5d4d43e49) — read only, from a full clone without a git-crypt key, so 5,022 of 7,613 tracked files were ciphertext, every test among them; one auto-run surface (git-crypt filter drivers, not configured here), eight dependency surfaces inside the seven-day cooldown, one build-time execution point, two unpinned dependency surfaces. Nothing was installed or run. QualityLayer Commercial Source-Available Licence
 
 ## What the licences actually say
 
 A licence is an operational caveat, not a memory mechanism, so it lives in the
 appendix — but a reader deciding whether they can *use* something needs it.
-"Publicly readable source" is not "open source": **twenty-one carry a licence
+"Publicly readable source" is not "open source": **twenty-two carry a licence
 that is not open source**, each named in its own report and collected here.
 
 | Licence | Systems |
@@ -1319,14 +1321,15 @@ that is not open source**, each named in its own report and collected here.
 | Non-commercial — read and run, do not build a product on it | [Memento](../systems/memento/) (PolyForm Noncommercial 1.0.0), [Project Golem](../systems/project-golem/) (its own source-available non-commercial licence), [NouGenShards](../systems/nougenshards/) (its own source-available licence; inspection and personal use granted, commercial use, competing hosted services and use to build competing AI memory or retrieval products prohibited) |
 | Conditional MIT — three added conditions, revocable at the author's discretion | [Z-Waif](../systems/z-waif/) (a 2% royalty on gross income above $100,000 lifetime; an "ethical treatment" clause *"DEFINED AT SugarcaneDefender's SOLE DESCRECION"*; and — the one that constrains the memory itself — no collection or storage of "user logs, character configurations, or other user data" without consent obtained through terms the user "MUST ACCEPT UPON OPENING" the software) |
 | Conditional BSD — branding may not be altered above fifty users | [Open WebUI](../systems/open-webui/) (the "Open WebUI License": BSD-3 plus a fourth clause making removal of the branding "a material breach" in any deployment reaching fifty end users in a rolling thirty days, absent a written permission or an enterprise licence) |
+| Commercial source-available — read, evaluate and fork to contribute; a subscription to run; no redistribution or reuse | [QualityLayer](../systems/qualitylayer/) (its own licence, under German law; the public tree is a deliberate projection and most of it is encrypted) |
 | All rights reserved — publicly readable, no grant at all | [Aura](../systems/aura/), [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) (whose README asserts MIT with no licence file under it), [SESA](../systems/sesa/) (no licence file, which defaults to this), [Master Agent System](../systems/master-agent-system/) (no licence file at the root, beside vendored packages that carry their own), [Sol0mon](../systems/sol0mon/) (no licence file, and a README saying none has been selected) and [Vanilla RAG Memory](../systems/vanilla-rag-memory/) (no licence file, and no licence statement in the README or `pyproject.toml`) |
 
 Two things this table is not. It is **not a complete licence taxonomy of the
 corpus**: it collects what the reports happened to record, and a report is
 written about mechanisms, so a permissive licence usually goes unmentioned. The
-rest have not each been checked — the honest claim is that twenty-one are known
+rest have not each been checked — the honest claim is that twenty-two are known
 non-open-source and the others are unrecorded, not that the others are MIT. And
-it is **not a reason to skip those twenty-one**: every mechanism in this atlas is
+it is **not a reason to skip those twenty-two**: every mechanism in this atlas is
 described so it can be re-implemented rather than copied, which is the only way a
 restrictively licensed system can be read usefully. What changes is what you may
 do with the code afterwards, and that is worth knowing before you open the file

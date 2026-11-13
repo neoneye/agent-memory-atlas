@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 799 reports.**
+**This page covers all 800 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7325,3 +7325,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 225 commits, 293 context files, 1,341 unit cases and 263 agent eval cases, with pull requests running an offline allowlist only. No test covers a write to the library, and the one committed eval result is a failed case from 17 January 2026.
 - Study when: you want coding standards in the repository, read by agents before they write, curated by a person through an agent-run workflow.
 - Do not copy when: memory must accumulate unattended, a fact must be withheld until checked, or an approval has to hold against the agent that asked for it.
+
+### [`qualitylayer`](../systems/qualitylayer/)
+
+- Best idea: a lesson names the files it is about and stores the commit it was last checked at, so staleness is a Git query. Commits touching those files label the lesson changed, the agent closing a task is handed the changed ones, and 90 days without a re-check retires it with the reason recorded.
+- Biggest risk: nothing here is shown tested, because all 75 memory test and fixture files are git-crypt ciphertext in the public tree. In the readable code, the agent holds the restore verb for anything a person retired, a lesson restored after an automatic retirement is never auto-retired again, and the evidence of passing checks is a field no read consults.
+- Most reusable component: the split between the portable lesson record and the local facts beside it — check point, retirement reason, pin and session attribution stay on the machine, and a privacy filter, not a flag, decides which lessons may be exported.
+- Maturity impression: 4,857 commits in under 13 months by one maintainer, 8,094 lines of memory code with optimistic revisions, one mutation lock, byte caps on every store and an index treated as disposable. Commercial licence; the public checkout cannot build the product.
+- Study when: you want coding-agent memory that is kept true against a changing repository by the agents that use it.
+- Do not copy when: a lesson must be approved before it is believed, a deletion must remove it, or you need the code itself, which the licence does not grant.
