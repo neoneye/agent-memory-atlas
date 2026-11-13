@@ -6,7 +6,7 @@ root: ../..
 page_kind: system
 source_name: "maxritter/qualitylayer"
 source_url: https://github.com/maxritter/qualitylayer
-archive_name: ""
+archive_name: "maxritter--qualitylayer"
 revision: 8635ab90a2d13084be33bddfaa74afa5d4d43e49
 revision_url: https://github.com/maxritter/qualitylayer/commit/8635ab90a2d13084be33bddfaa74afa5d4d43e49
 analyzed_at: 2026-11-13
@@ -61,8 +61,6 @@ The licence is the QualityLayer Commercial Source-Available Licence. Section 3
 allows anyone to read the public source *"to understand, inspect, evaluate and
 audit"* it and to host contribution forks; section 5 forbids redistribution,
 incorporation into another product and independent complete builds.
-The atlas holds no archive copy: the licence does not grant redistribution,
-and the forks it permits are for contributing.
 
 ## 2. Mental Model
 
