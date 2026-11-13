@@ -17914,6 +17914,50 @@ well</a>. Its code is in datasets attached to the selected Kaggle
 notebooks and a zip on the write-up page, not a repository at a commit.
 A harness that writes its notes to disk and reads them back in a later
 pass or game is what would be read first.</li>
+<li><strong><code>matiasbattocchia/open-bsp-api</code> was examined and
+has no report: it is a messaging platform whose agent reads a window of
+the conversation, and its one memory field has had no writer since the
+code was first committed.</strong> Unlicense, read at <a
+href="https://github.com/matiasbattocchia/open-bsp-api/commit/f2e8b0248a45bb489f4ccdb0d332eaacff38621a"><code class="commit-id" title="f2e8b0248a45bb489f4ccdb0d332eaacff38621a">f2e8b024…</code></a>,
+395 commits from 21 August 2025 to 3 November 2026, 392 of them by
+Matías Battocchia, 30,526 lines of TypeScript across 87 files and 18,887
+of SQL; the screen found a format-and-lint hook, a plugin session-start
+hook that prints a setup notice, and the plugin's MCP server started
+with <code>deno run</code>, and nothing was installed or run. OpenBSP is
+a multi-tenant WhatsApp, Instagram, TikTok and Slack business platform
+on Supabase: Postgres tables behind PostgREST and row-level security,
+Deno edge functions per channel, and a Claude Code plugin that reads and
+answers the inbox. Its <code>agent-client</code> function answers an
+inbound message by selecting that conversation's rows from
+<code>messages</code> newer than seven days, newest first, capped at 50
+(<code>supabase/functions/agent-client/index.ts:71-72</code>,
+<code>:300-308</code>), and each protocol handler cuts the list again to
+the agent's <code>max_messages</code>
+(<code>protocols/chat-completions.ts:355-361</code>). A contact's
+<code>/new</code> drops everything before it. That is a window over a
+transcript, on the <a
+href="../families/#not-in-scope-conversation-window-management">context-engineering
+side of the line</a>: the rows record what was said, and nothing derives
+a claim from them. The conversation row does declare a memory,
+<code>ConversationExtra.memory</code>, a nested string map
+(<code>_shared/types/extra_types.ts:7-9</code>, <code>:141</code>). Its
+only reader is the <code>/new</code> branch, which empties it when it is
+non-empty (<code>agent-client/index.ts:363-372</code>); the block that
+would persist a <code>conversation.extra</code> returned by the model
+sits inside a comment (<code>:1060-1073</code>), as it did in <a
+href="https://github.com/matiasbattocchia/open-bsp-api/commit/a0a25acd03f1b64a87e2f1d5981ac764b50d622a"><code class="commit-id" title="a0a25acd03f1b64a87e2f1d5981ac764b50d622a">a0a25acd…</code></a>,
+the commit that added the code on 21 August 2025, and no handler puts
+the map in a prompt. The agent's tools are a calculator, code execution,
+HTTP, MCP, attachments and parameterised SQL against a database the
+operator names, so anything an agent keeps there belongs to the
+operator's schema. The tree holds no test file. Searches:
+<code>git grep -n -w memory -- supabase plugin</code> returns six lines,
+the type, the three-line reset and two uses of the word in prose;
+<code>git grep -n -i -E 'embedding|pgvector|tsvector' -- supabase</code>
+returns nothing, and <code>supabase/schemas/00_extensions.sql</code>
+creates eight extensions, none of them a vector one. A writer for
+<code>extra.memory</code> and a handler that serialises it are what
+would be read first.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
