@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 796 of 796 screened at the report's current pin.**
+**Progress: 799 of 799 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 378 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 357 |
-| Repositories with build-time execution (`EXEC`) | 578 |
+| Repositories with an auto-run surface (`RUNS`) | 379 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 358 |
+| Repositories with build-time execution (`EXEC`) | 581 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 7 |
 | Repositories that could not be screened | 0 |
 
@@ -293,6 +293,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`omniclaude`](../../content/systems/omniclaude.md) | `.claude-plugin/`, `plugins/onex-delegate/.claude-plugin/plugin.json`, `plugins/onex/.claude-plugin/plugin.json`, `plugins/onex/hooks/`, `plugins/onex/hooks/hooks.json` |
 | [`open-bridge`](../../content/systems/open-bridge.md) | `.claude/hooks/`, `.claude/settings.json`, `.github/copilot-instructions.md` |
 | [`open-second-brain`](../../content/systems/open-second-brain.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
+| [`openagents-control`](../../content/systems/openagents-control.md) | `.claude-plugin/`, `.opencode/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json` |
 | [`openai-codex`](../../content/systems/openai-codex.md) | `.vscode/settings.json` |
 | [`openakashic`](../../content/systems/openakashic.md) | `server.json`, `smithery.yaml` |
 | [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |

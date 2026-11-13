@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 798 reports.**
+**This page covers all 799 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7316,3 +7316,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: five commits, 3,426 lines of Python and a 44-cell notebook with a recorded run, no tests. Code checks the run against the platform's records, the schema file and the link structure; the recorded build cost $16.02 and left 30 dangling links.
 - Study when: agents answer repeated questions over a slow-changing document corpus and you want the cross-document reconciliation done once.
 - Do not copy when: you need memory that learns from an agent's own work, a fact withheld rather than labelled, or a store off a hosted platform.
+
+### [`openagents-control`](../systems/openagents-control/)
+
+- Best idea: knowledge enters the library as a previewed diff. Harvest sorts an agent's leftover summary into five functions, drops planning talk, duplicates and TODO lists, and asks twice — which items, then the minimised text that will be written.
+- Biggest risk: every gate and limit is prompt text. The subagent that proposes a context file holds the edit permission, no script checks size or header, 83 shipped context files exceed the 200-line limit, and the context-loading evaluator rejects the file names the agent prompt and root index give.
+- Most reusable component: ContextScout, a discovery subagent denied edit, write, bash and task, which walks `navigation.md` indexes and returns verified paths ranked by priority.
+- Maturity impression: 225 commits, 293 context files, 1,341 unit cases and 263 agent eval cases, with pull requests running an offline allowlist only. No test covers a write to the library, and the one committed eval result is a failed case from 17 January 2026.
+- Study when: you want coding standards in the repository, read by agents before they write, curated by a person through an agent-run workflow.
+- Do not copy when: memory must accumulate unattended, a fact must be withheld until checked, or an approval has to hold against the agent that asked for it.

@@ -499,6 +499,7 @@ page_kind: comparison
 - [`agora`](../systems/agora/)
 - [`managed-agents-dreaming`](../systems/managed-agents-dreaming/)
 - [`managed-agents-knowledge-wiki`](../systems/managed-agents-knowledge-wiki/)
+- [`openagents-control`](../systems/openagents-control/)
 
 ## Repos Inspected
 
@@ -1302,6 +1303,7 @@ page_kind: comparison
 - [CaffeinatedSoftwareLLC/agora](https://github.com/CaffeinatedSoftwareLLC/agora) at [`737a4b5d2d8134d4157c96a22db829b318ad74b4`](https://github.com/CaffeinatedSoftwareLLC/agora/commit/737a4b5d2d8134d4157c96a22db829b318ad74b4) — read only, from a shallow clone of `main` on 9 November 2026. The screen found an OpenCode bundle and a Claude plugin manifest a harness would install, an npm `prepublishOnly` build, and every manifest inside the cooldown, which a shallow clone over-counts. Nothing was installed or run, and the 344 test files were not run. AGPL-3.0.
 - [anthropics/claude-cookbooks (managed_agents dreaming)](https://github.com/anthropics/claude-cookbooks/tree/main/managed_agents) at [`ce8b2629efe8b24048b127b4c79af1e9cbab93d4`](https://github.com/anthropics/claude-cookbooks/commit/ce8b2629efe8b24048b127b4c79af1e9cbab93d4) — read only, from a sparse clone of `managed_agents/`; no auto-run surface, one build-time execution point, two unpinned dependency surfaces. Nothing was installed or run; the notebook's saved outputs were read as data. MIT
 - [anthropics/claude-quickstarts (managed-agents/knowledge-wiki)](https://github.com/anthropics/claude-quickstarts/tree/main/managed-agents/knowledge-wiki) at [`4a4224bdf0e9cfb3332167b69c90457403813625`](https://github.com/anthropics/claude-quickstarts/commit/4a4224bdf0e9cfb3332167b69c90457403813625) — read only, from a full clone; no auto-run surface, five build-time execution points, 28 unpinned dependency surfaces across the repository, and the directory's `requirements.txt` inside the seven-day cooldown. Nothing was installed or run; the notebook's saved outputs were read as data. MIT
+- [darrenhinde/OpenAgentsControl](https://github.com/darrenhinde/OpenAgentsControl) at [`1ed1dd88d14ce0a4e32b458b6817cdda6f6b1590`](https://github.com/darrenhinde/OpenAgentsControl/commit/1ed1dd88d14ce0a4e32b458b6817cdda6f6b1590) — read only, from a full clone; five auto-run surfaces, two build-time execution points, seven unpinned dependency surfaces, every lockfile unchanged for 25 days. Nothing was installed or run. MIT
 
 ## What the licences actually say
 

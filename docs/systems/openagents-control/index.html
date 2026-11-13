@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An OpenCode and Claude Code agent
+framework whose agents read a Markdown library of project standards and
+extend it through approval workflows written as prompts.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenAgents
+Control — Agent Memory Atlas">
+    <meta property="og:description" content="An OpenCode and Claude Code
+agent framework whose agents read a Markdown library of project
+standards and extend it through approval workflows written as prompts.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenAgents
+Control — Agent Memory Atlas">
+    <meta name="twitter:description" content="An OpenCode and Claude
+Code agent framework whose agents read a Markdown library of project
+standards and extend it through approval workflows written as prompts.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenAgents Control — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenAgents Control",
+      "description": "An OpenCode and Claude Code agent framework whose agents read a Markdown library of project standards and extend it through approval workflows written as prompts.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A context library written through
+prompt-defined approval workflows</p>
+          <h1>OpenAgents Control</h1>
+          <p class="document-deck">An OpenCode and Claude Code agent
+framework whose agents read a Markdown library of project standards and
+extend it through approval workflows written as prompts.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/darrenhinde/OpenAgentsControl">
+              <span>Source</span>
+              <strong>darrenhinde/OpenAgentsControl</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/darrenhinde/OpenAgentsControl/commit/1ed1dd88d14ce0a4e32b458b6817cdda6f6b1590" title="1ed1dd88d14ce0a4e32b458b6817cdda6f6b1590">
+              <span>Analyzed revision</span>
+              <code>1ed1dd88…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-13</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/darrenhinde--OpenAgentsControl" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>darrenhinde--OpenAgentsControl</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>164,232
+lines of Markdown in 569 files, 293 of them context files under
+.opencode/context; 59,333 lines of TypeScript in 191 files, most of it
+the eval framework, the CLI and a compatibility layer</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>225
+commits on main, 14 August 2025 – 19 October 2026, 190 of them under the
+maintainer's two author names</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,341
+it/test cases in 66 test files and 263 YAML agent eval cases; pull
+requests run an offline Vitest allowlist only; none covers a context
+write, and the one committed eval result is a single failed case from 17
+January 2026</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenAgents Control (OAC) is a set of agents, subagents, slash
+commands and context files for OpenCode, with a Claude Code plugin
+carrying a subset. Its memory is a Markdown library of project standards
+under <code>.opencode/context/</code>. Agents are told to read the
+relevant files before any write, edit or shell call, and a person
+extends the library through commands that run staged approval
+workflows.</p>
+<p>What is notable is the write path. <code>/context harvest</code>
+reads the summary files an agent leaves behind, sorts each passage into
+one of five functions, drops planning talk, duplicates and TODO lists,
+and shows a lettered preview before anything is written. A second
+preview shows the minimised text, and a third choice decides what
+happens to the source file. The retrieval subagent has no write, edit or
+shell permission.</p>
+<p>What is weak is that every one of those rules is prose the model
+follows. The subagent that runs the workflows holds an unrestricted edit
+permission outside three secret-file globs, no script checks a context
+file's size or header, and the shipped library breaks both limits. The
+project's evaluator for context loading accepts file names that the
+agent prompt and the root index no longer use. No capability mark is
+earned.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a context file: a short Markdown page about one topic,
+opened by a one-line header.</p>
+<pre class="text"><code>&lt;!-- Context: {category}/{function} | Priority: {level} | Version: X.Y | Updated: YYYY-MM-DD --&gt;</code></pre>
+<p>The header is required on every file
+(<code>.opencode/context/core/context-system/standards/frontmatter.md:11-17</code>).
+Priority is one of <code>critical</code>, <code>high</code>,
+<code>medium</code>, <code>low</code>, defined by the share of use cases
+a file serves (<code>:28-32</code>). Version starts at 1.0, and
+<code>/add-context</code> bumps the minor number for a content change
+and the major for a structural one
+(<code>.opencode/command/add-context.md:40-41</code>).</p>
+<p>A passage becomes a context file in one of two ways. A person answers
+the six questions of <code>/add-context</code>, which writes
+<code>technical-domain.md</code> under
+<code>project-intelligence/</code>. Or an agent's leftover summary is
+harvested: the workflow reads the file, keeps design decisions, working
+patterns, errors with their fixes and reference data, and skips planning
+discussion, conversational notes, duplicates and TODO lists
+(<code>.opencode/context/core/context-system/operations/harvest.md:64-85</code>,
+<code>:296-309</code>).</p>
+<p>Nothing is a candidate in the store. A proposed item exists only as a
+lettered line in the agent's reply until the person types its letter;
+after that it is a file with the same standing as every other file.
+There is no state that withholds a file from being read, and no record
+of a rejected item, so a passage the person declined is offered again
+the next time its source file is scanned.</p>
+<p>A file stops being current by being edited in place.
+<code>/context update</code> asks what changed, greps the library for
+the topic, shows a per-line diff, copies the old files to
+<code>.tmp/backup/</code>, then rewrites them and adds a migration note
+under <code>errors/</code> (<code>operations/update.md:22-140</code>).
+Project-intelligence files are renamed
+<code>filename.deprecated.md</code> with <code>DEPRECATED</code> and
+<code>REPLACED BY</code> comments, and decision history is never deleted
+(<code>.opencode/context/core/standards/project-intelligence-management.md:131-144</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a passage becomes an OpenAgents Control context file through two prompted previews, how agents find and read it, and that both gates are prose the writing agent could skip</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a passage becomes an OpenAgents Control context file through two prompted previews, how agents find and read it, and that both gates are prose the writing agent could skip
+flowchart TD
+  subgraph SRC[&quot;Sources&quot;]
+    direction TB
+    S1[&quot;Agent summaries&lt;br/&gt;SESSION-*.md, .tmp/&quot;]
+    S2[&quot;Person&#39;s answers&lt;br/&gt;to /add-context&quot;]
+    S3[&quot;Docs, code, URLs&lt;br/&gt;/context extract&quot;]
+    S1 ~~~ S2 ~~~ S3
+  end
+  SRC --&gt; ORG[&quot;ContextOrganizer subagent&lt;br/&gt;categorise by function&lt;br/&gt;skip plans, duplicates, TODOs&quot;]
+  ORG --&gt; P1{&quot;Lettered preview&lt;br/&gt;person types A B C&quot;}
+  P1 -- &quot;cancel&quot; --&gt; KEEP[&quot;Source kept&lt;br/&gt;nothing recorded&quot;]
+  P1 -- &quot;approved&quot; --&gt; P2{&quot;Minimised text&lt;br/&gt;shown as a diff&quot;}
+  P2 --&gt; FILE[&quot;Context file&lt;br/&gt;header: priority,&lt;br/&gt;version, updated&quot;]
+  FILE --&gt; NAV[&quot;navigation.md&lt;br/&gt;updated by the agent&quot;]
+  NAV --&gt; SCOUT[&quot;ContextScout subagent&lt;br/&gt;read, grep, glob only&lt;br/&gt;ranks critical to medium&quot;]
+  SCOUT --&gt; MAIN[&quot;Main agent reads files&lt;br/&gt;before write, edit, bash&quot;]
+  MAIN --&gt; EVAL[&quot;Evaluator checks a context&lt;br/&gt;read precedes execution&quot;]
+  GATE[&quot;Every gate above is prose.&lt;br/&gt;The organizer may edit&lt;br/&gt;any non-secret file.&quot;] -.-&gt; P1
+  GATE -.-&gt; P2</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The system is files. Agents live in <code>.opencode/agent/</code>,
+commands in <code>.opencode/command/</code>, and the library in
+<code>.opencode/context/</code>, which holds 293 Markdown files and
+three symlinks at this commit. <code>core/</code> carries universal
+standards and the context system's own rules;
+<code>project-intelligence/</code> carries six project files, which ship
+as unfilled templates. Each directory has a
+<code>navigation.md</code>.</p>
+<p>Two roots exist. <code>core/config/paths.json</code> names
+<code>.opencode/context</code> as local and
+<code>~/.config/opencode/context</code> as global, and ContextScout
+falls back to the global root for <code>core/</code> only, never for
+project intelligence
+(<code>.opencode/agent/subagents/core/contextscout.md:30-39</code>).</p>
+<p>The Claude Code plugin under <code>plugins/claude-code/</code> ships
+the same library through a symlink, twelve skills, six commands and a
+<code>SessionStart</code> hook. The hook prints the
+<code>using-oac</code> skill, a skill catalogue and an instruction to
+run context discovery once per session
+(<code>plugins/claude-code/hooks/session-start.sh:71</code>). Discovery
+reads <code>.oac.json</code> or tries five roots in order and takes the
+first with a <code>navigation.md</code>
+(<code>plugins/claude-code/skills/context-discovery/context-discovery-protocol.md:19-58</code>).</p>
+<p>Beside the prompts sit a TypeScript eval framework
+(<code>evals/framework/</code>), a CLI and a compatibility layer that
+converts agents for other tools (<code>packages/</code>), and an
+OpenCode plugin, <code>agent-validator.ts</code>, that logs context
+reads and execution calls for later analysis.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to be running. Installation copies files, either by
+<code>install.sh</code> or by the plugin's installer, which
+sparse-clones the <code>main</code> branch and writes the fetched commit
+into <code>.context-manifest.json</code>. No API key is needed beyond
+the host's model. The store is readable and repairable by hand, and a
+team shares it by committing <code>.opencode/context/</code>. Backups
+and harvest archives go under <code>.tmp/</code>, which
+<code>.gitignore:192</code> excludes.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Command entry.</strong>
+<code>.opencode/command/context.md</code> defines four rules
+(<code>:15-29</code>), a map of which rule files each operation must
+read first (<code>:156-192</code>), and routing: harvest, extract,
+organize, update, error, create and migrate go to ContextOrganizer, map
+and validate to ContextScout (<code>:200-212</code>).</li>
+<li><strong>Harvest.</strong> <code>operations/harvest.md</code>:
+detection patterns (<code>:21-36</code>), six stages — scan, analyze,
+approve, extract, cleanup, report (<code>:43-245</code>).</li>
+<li><strong>Update.</strong> <code>operations/update.md</code>: eight
+stages, with approval at stages 1 and 3 and a backup at stage 4
+(<code>:22-161</code>).</li>
+<li><strong>Error entries.</strong> <code>operations/error.md</code>:
+search for a similar entry, choose between a new entry, an update or a
+skip, preview, write (<code>:22-204</code>).</li>
+<li><strong>Project patterns.</strong>
+<code>.opencode/command/add-context.md</code>: detect existing files
+with their versions (<code>:201-251</code>), review each pattern
+(<code>:275-345</code>), delegate the write to ContextOrganizer.</li>
+<li><strong>Writer.</strong>
+<code>.opencode/agent/subagents/system-builder/context-organizer.md</code>:
+permissions (<code>:6-13</code>), one-file-per-fact rule
+(<code>:26-28</code>), operations (<code>:105-128</code>).</li>
+<li><strong>Reader.</strong>
+<code>.opencode/agent/subagents/core/contextscout.md</code>: permissions
+(<code>:5-19</code>), rules (<code>:27-49</code>), four steps
+(<code>:69-76</code>).</li>
+<li><strong>Load rule.</strong>
+<code>.opencode/agent/core/openagent.md:30-56</code> and
+<code>:243-267</code>.</li>
+<li><strong>Check.</strong>
+<code>evals/framework/src/evaluators/context-loading-evaluator.ts</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A context file has four metadata fields, all in the header comment,
+and a body shaped by its function. An error entry, for instance, is
+<code>Symptom</code>, <code>Cause</code>, <code>Solution</code>,
+<code>Code</code>, <code>Prevention</code>, <code>Frequency</code> and
+<code>Reference</code> (<code>operations/error.md:166-178</code>).</p>
+<p>The size rule is stated four ways. <code>/context</code> says files
+MUST be under 200 lines (<code>command/context.md:15-17</code>).
+ContextOrganizer gives per-function limits of 100 for concepts and
+lookup, 150 for guides and errors, 80 for examples
+(<code>context-organizer.md:50</code>). The error workflow says 150. The
+shipped library follows none of them consistently: 83 of its 293 files
+are over 200 lines, the longest 4,616.</p>
+<p>Project intelligence adds two files with internal structure.
+<code>decisions-log.md</code> gives each decision a date, an owner and a
+<code>Status</code> of Decided, Pending, Under Review or Deprecated,
+plus a table of overturned decisions with what replaced them
+(<code>.opencode/context/project-intelligence/decisions-log.md:11</code>,
+<code>:110-116</code>). <code>living-notes.md</code> holds debt, open
+questions and known issues, each with its own status vocabulary. Both
+are templates at this commit, and no agent prompt or script reads either
+status field.</p>
+<p>There is no provenance field. Harvest's minimised text carries a
+<em>"Reference link: to original source"</em>
+(<code>harvest.md:157</code>), and the source is then archived to a
+git-ignored directory or deleted. Scope is the directory a file sits in.
+Time is the <code>Updated</code> date and whatever git records.</p>
+<p>Session state is separate and short-lived. OpenCoder writes
+<code>.tmp/sessions/{date}-{slug}/context.md</code> after approval, as
+the hand-off to its subagents
+(<code>.opencode/agent/core/opencoder.md:180-183</code>), and the
+plugin's cleanup script removes session directories older than seven
+days (<code>plugins/claude-code/scripts/cleanup-tmp.sh:23</code>). These
+are work orders for one task and nothing later reads them as knowledge,
+unless a person harvests them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is a subagent reading an index. ContextScout resolves the
+root, reads <code>navigation.md</code> there, follows the links that
+match the request, verifies each path exists, and returns a list grouped
+Critical, High, Medium with one line per file
+(<code>contextscout.md:69-76</code>). It may use read, grep and glob;
+bash, edit, write and task are denied in its permission block
+(<code>:5-19</code>). The caller reads the files itself.</p>
+<p>Five files bypass discovery. OpenAgent's prompt names the standard to
+read for code, docs, tests, review and delegation tasks, and tells the
+agent to stop if it finds itself executing without one loaded
+(<code>openagent.md:36-53</code>). The root index gives the same five
+paths under <em>Quick Routes</em>
+(<code>.opencode/context/navigation.md:25-36</code>).</p>
+<p>Nothing bounds what is loaded except the file size rule, and nothing
+ranks by anything but the index's layout and the header's priority. A
+file that is not linked from a <code>navigation.md</code> is reachable
+only by grep. A superseded passage still in a file, or a
+<code>.deprecated.md</code> file still linked, is returned like any
+other; the deprecation process asks the agent to mark the file in the
+index (<code>project-intelligence-management.md:131-139</code>) and no
+reader checks the mark.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is started by a person typing a command. No hook,
+schedule or agent rule writes to the library on its own; the nearest
+thing is the harvest scan, which lists candidate files when
+<code>/context</code> runs with no argument.</p>
+<p>Harvest's approval stage is specific. Each item gets a letter, a
+target path and a 60-character preview, with skipped items shown and the
+reason given, and the person types letters, <code>all</code>,
+<code>none</code> or <code>cancel</code>
+(<code>harvest.md:87-143</code>). The rule beside it reads <em>"NEVER
+auto-harvest without user confirmation"</em> (<code>:90-93</code>). One
+option cuts across the other safeguards: <code>none</code> means
+<em>"Skip harvesting, delete files anyway"</em> (<code>:136</code>),
+while the cleanup rule two stages later says only files whose content
+was harvested may be cleaned up (<code>:236-239</code>).</p>
+<p>Deduplication is the agent's reading. ContextOrganizer must call
+ContextScout before writing and must keep each fact in one file
+(<code>context-organizer.md:20-28</code>). The error workflow searches
+existing entries and offers to extend a similar one instead of adding
+another (<code>error.md:22-73</code>). <code>/context organize</code>
+handles a target that already exists by offering merge, rename or
+skip.</p>
+<p>The workflows disagree in small ways about their own store. The error
+workflow tells the agent to update <code>README.md</code> after a new
+file (<code>error.md:183-186</code>); every other workflow, and
+ContextScout, use <code>navigation.md</code>. The context-manager skill
+ships a <code>router.sh</code> whose every operation prints its name and
+a pointer to <code>SKILL.md</code> and does nothing else.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write blocks the person, by design: harvest has three prompts and
+update two. A written file is retrievable on the next ContextScout call.
+No pass rewrites the store. On the read path each task costs one
+subagent call that reads several index files, then the standards
+themselves; the plugin's hook injects the skill catalogue at the top of
+every session.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent has wide agency over the library and narrow instructions
+about it. Any OpenCode agent with edit permission can change a context
+file directly; the commands are the sanctioned route. The main agents
+are told to call ContextScout first, propose a plan, and wait for
+approval before any write (<code>opencoder.md:53-55</code>).</p>
+<p>In Claude Code the plugin offers discovery and installation only. Its
+commands are brainstorm, debug, install-context, cleanup, help and
+status, and no harvest or add-context path is ported. Its session hook
+warns when no <code>.context-manifest.json</code> exists under
+<code>.claude/</code> or <code>~/.claude/</code>
+(<code>session-start.sh:54-59</code>), which is where the shell and
+JavaScript installers write it (<code>install-context.js:227</code>).
+The <code>/oac-status</code> command and the TypeScript installer use
+the plugin root instead (<code>commands/oac-status.md:11</code>,
+<code>install-context.ts:23</code>), so status reports whatever manifest
+ships with the plugin, not the project's.</p>
+<p>Porting the design means porting prompts. The frontmatter rule, the
+five-function layout and the harvest stages are host-neutral text.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The approval gates are instructions, not checks.</strong> The
+workflow files say MUST wait for user input. ContextOrganizer's
+permission block denies edits to <code>*.env*</code>, <code>*.key</code>
+and <code>*.secret</code> paths and the task tool for all but
+ContextScout, and grants everything else
+(<code>context-organizer.md:6-13</code>). The agent that proposes an
+item is the agent that writes it, with the same tool, whether or not the
+person answered. <code>agent-validator.ts</code> observes tool calls
+through <code>tool.execute.before</code> (<code>:126</code>) and
+contains no statement that refuses one. This is why
+<code>human_review</code> is withheld: no stored state holds an item
+until someone other than the producing agent resolves it, and nothing
+distinguishes a file written after approval from one written without
+it.</p>
+<p><strong>The format rules are not checked either.</strong> No script
+under <code>scripts/</code>, <code>.github/</code>,
+<code>.opencode/plugin/</code> or <code>.opencode/skills/</code> parses
+the header comment or counts a context file's lines; the two results are
+in the Recorded Searches. Ten shipped context files do not open with the
+header and 83 exceed the size limit, in a library whose command file
+calls both absolute.</p>
+<p><strong>A status that nothing filters on is a label.</strong> A
+decision marked Deprecated, a file renamed <code>.deprecated.md</code>
+and a living-notes issue marked Fixed all stay where ContextScout can
+return them. That keeps <code>trust_state</code> off the record: the
+fields are discrete, and none withholds anything.</p>
+<p><strong>A declined item leaves no trace.</strong> There is no
+rejected-value record, so there is no tombstone, and a harvest over the
+same source re-proposes it.</p>
+<p><strong>Recovery is local and untracked.</strong> Update backups and
+harvest archives live under <code>.tmp/</code>, ignored by git. The
+library itself is meant to be committed, which makes git the only
+history of a mutation; there is no append-only record of the system's
+own, so <code>audit_log</code> is not earned.</p>
+<p><strong>Injected text.</strong>
+<code>/context extract from {url}</code> distils a web page into a file
+every later agent is told to treat as a standard. The preview is the one
+defence, and it shows 60 characters per item at the first gate.</p>
+<p>Bitemporal validity, a scope key on reads and negative retrieval
+cases are absent; the searches are recorded below.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran nothing. The counts are from the tree: 1,341 <code>it(</code>
+or <code>test(</code> cases in 66 files, and 263 YAML cases under
+<code>evals/agents/</code>. Pull requests run
+<code>npm run test:ci</code>, described in the workflow as <em>"the
+offline, deterministic Vitest allowlist only"</em>, with model-dependent
+agent tests not run
+(<code>.github/workflows/pr-checks.yml:220-232</code>). The model-run
+workflow sits at
+<code>.github/workflows/evals/run-evaluations.yml</code>, a
+subdirectory.</p>
+<p>The memory-relevant check is <code>ContextLoadingEvaluator</code>. It
+classifies a session by regex over the user message, finds reads of
+paths matching a context pattern, and fails a session whose first
+execution precedes any such read
+(<code>context-loading-evaluator.ts:45-53</code>, <code>:92-130</code>).
+It then checks that the right file was read, by substring against a map
+(<code>:59-87</code>, <code>:171</code>).</p>
+<p>That map is out of step with the prompt it grades. It accepts
+<code>code.md</code>, <code>docs.md</code>, <code>tests.md</code>,
+<code>review.md</code> and <code>delegation.md</code>. OpenAgent's
+prompt and the root index name <code>code-quality.md</code>,
+<code>documentation.md</code>, <code>test-coverage.md</code>,
+<code>code-review.md</code> and <code>task-delegation-basics.md</code>.
+Three old names survive as symlinks and two as stub files pointing at
+the new ones, so both resolve on disk, but the evaluator compares the
+path string the agent read. Only <code>code-review.md</code> contains
+its expected pattern; the other four produce a
+<code>wrong-context-file</code> error (<code>:384-389</code>). The eval
+cases under <code>evals/agents/</code> are split the same way: 46
+references to <code>standards/code.md</code> against 21 to
+<code>standards/code-quality.md</code>.</p>
+<p>The committed result shows it. <code>evals/results/latest.json</code>
+holds one case, run on 17 January 2026 against
+<code>core/opencoder</code>, failed with four errors. One is
+<code>wrong-context-file</code> for a delegation task, listing
+<code>code-quality.md</code> and <code>test-coverage.md</code> among the
+files the agent had loaded (<code>:41</code>).</p>
+<p>No case covers a write to the library. No file under
+<code>evals/</code> mentions harvest or add-context, so the approval
+stages, the skip rules, the version bump and the backup have no test. No
+paper accompanies the project; the two arXiv references in the tree are
+citations in prompt-design notes.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Preview the minimised text, not the source.</strong> Harvest
+asks twice: once for which items to keep and once for what will be
+written. The second prompt is the one that shows what a later agent will
+read.</li>
+<li><strong>State what is not memory.</strong> The skip list — planning
+talk, conversational notes, duplicates, TODO lists, session metadata —
+is a write filter a person can audit in five lines.</li>
+<li><strong>A retrieval agent with no write tools.</strong> Denying
+edit, write, bash and task in the permission block makes discovery safe
+to run without approval.</li>
+<li><strong>Check the read happened.</strong> An evaluator that orders
+context reads against the first execution call turns "load standards
+first" into something a run can fail.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A limit only a prompt enforces.</strong> The size and header
+rules cost one script to check, and the library drifted past both
+without one.</li>
+<li><strong>Renaming a file the grader knows by its old name.</strong>
+Symlinks kept the paths alive and hid that the evaluator and half the
+eval cases still expect them.</li>
+<li><strong>An approval gate inside the approved agent.</strong> If the
+writer holds the edit tool, the gate holds only as long as the model
+follows the workflow. Put the write behind a tool call the host can
+prompt on, or a staging directory a person promotes from.</li>
+<li><strong>A destructive option beside a safety rule.</strong>
+<code>none</code>, which deletes sources without harvesting them,
+contradicts the rule that only harvested files are cleaned up.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that wants its coding standards in the repository,
+read by agents before they write, and is willing to curate them by hand.
+The cost is attention: every addition is a three-prompt conversation,
+and nothing ages a file out. It does not suit memory an agent
+accumulates unattended, anything that needs a fact withheld until
+checked, or a store too large for a model to navigate by index. A reader
+who wants only the standards-loading habit can take the header format,
+the five folders and ContextScout, and leave the rest.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does ContextOrganizer write without waiting? Only model
+runs with the validator's logs would show it.</li>
+<li>Does ContextScout return <code>.deprecated.md</code> files in
+practice, or does the navigation marking keep them out?</li>
+<li>Which name do agents read under the prompt variants in
+<code>.opencode/prompts/</code>, and does the evaluator pass on any of
+them?</li>
+<li>Is the 200-line rule meant for the shipped <code>core/</code>
+library, or only for files the workflows create?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Commands:</strong>
+<code>.opencode/command/context.md</code>,
+<code>.opencode/command/add-context.md</code>.</li>
+<li><strong>Workflows:</strong>
+<code>.opencode/context/core/context-system/operations/</code>
+(<code>harvest.md</code>, <code>extract.md</code>,
+<code>update.md</code>, <code>error.md</code>, <code>organize.md</code>,
+<code>migrate.md</code>).</li>
+<li><strong>Format rules:</strong>
+<code>.opencode/context/core/context-system/standards/</code>
+(<code>frontmatter.md</code>, <code>mvi.md</code>,
+<code>structure.md</code>, <code>templates.md</code>),
+<code>.opencode/context/core/standards/project-intelligence-management.md</code>.</li>
+<li><strong>Agents:</strong>
+<code>.opencode/agent/subagents/system-builder/context-organizer.md</code>,
+<code>.opencode/agent/subagents/core/contextscout.md</code>,
+<code>.opencode/agent/core/openagent.md</code>,
+<code>.opencode/agent/core/opencoder.md</code>.</li>
+<li><strong>Store:</strong>
+<code>.opencode/context/navigation.md</code>,
+<code>.opencode/context/core/config/paths.json</code>,
+<code>.opencode/context/project-intelligence/</code>.</li>
+<li><strong>Claude Code plugin:</strong>
+<code>plugins/claude-code/hooks/session-start.sh</code>,
+<code>plugins/claude-code/skills/context-discovery/context-discovery-protocol.md</code>,
+<code>plugins/claude-code/scripts/install-context.js</code>,
+<code>plugins/claude-code/scripts/cleanup-tmp.sh</code>.</li>
+<li><strong>Checks:</strong>
+<code>evals/framework/src/evaluators/context-loading-evaluator.ts</code>,
+<code>evals/results/latest.json</code>,
+<code>.opencode/plugin/agent-validator.ts</code>,
+<code>.github/workflows/pr-checks.yml</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git grep</code> from the root of a checkout
+at <code class="commit-id" title="1ed1dd88d14ce0a4e32b458b6817cdda6f6b1590">1ed1dd88…</code>.</p>
+<ul>
+<li><code>git grep -l -i -E 'harvest|add-context' -- evals</code> — no
+match; no eval or test names either write command.</li>
+<li><code>git grep -n -c -i 'harvest' -- plugins/claude-code</code> — no
+match; the plugin ports no harvest path.</li>
+<li><code>git grep -n -F '&lt;!-- Context' -- '*.ts' '*.js' '*.sh' '*.py'</code>
+— no match, where the same pattern matches line 1 of
+<code>.opencode/context/core/navigation.md</code>; no code reads the
+header comment.</li>
+<li><code>git grep -n -E 'wc -l|-gt 200|&gt; 200' -- scripts .github .opencode/plugin .opencode/skills</code>
+— four <code>wc -l</code> counts of agents, tests and prompt variants
+and one 200-character summary check in <code>task-cli.ts</code>; none
+over a context file.</li>
+<li><code>git grep -n -E 'throw|deny|block|abort' -- .opencode/plugin/agent-validator.ts</code>
+— no match; the validator refuses nothing.</li>
+<li><code>git grep -n -E 'Under Review|Deprecated Decisions' -- .opencode plugins ':!*decisions-log.md'</code>
+— no match; no prompt or script reads the decision status.</li>
+<li><code>git grep -n -E 'code-quality\.md|documentation\.md|test-coverage\.md|task-delegation-basics\.md' -- evals/framework/src</code>
+— <code>context-loading-evaluator.ts:516</code>, three lines of
+<code>minimax-prompt-variant.test.ts</code> and two agent-path entries
+in <code>test-runner.ts</code>; none in the evaluator's file map.</li>
+<li><code>git grep -h -o -E 'standards/(code|code-quality|docs|documentation|tests|test-coverage)\.md' -- evals/agents | sort | uniq -c</code>
+— 46 <code>code.md</code>, 21 <code>code-quality.md</code>, 26
+<code>docs.md</code>, 2 <code>documentation.md</code>, 16
+<code>tests.md</code>, 7 <code>test-coverage.md</code>.</li>
+<li><code>git ls-files -s '.opencode/context/*.md'</code> — 293 regular
+files and 3 symlinks; a loop over the regular files finds 83 with more
+than 200 lines and 10 whose first line does not start
+<code>&lt;!-- Context:</code>.</li>
+<li><code>git grep -l -i -E 'embedding|sqlite|pgvector|chroma|fts5' -- '*.ts' '*.js' '*.sh' '*.py'</code>
+— <code>plugins/claude-code/hooks/session-start.sh</code> only, for the
+phrase "JSON embedding"; no index or database.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|CITATION\.cff'</code> —
+citations in
+<code>dev/ai-tools/opencode/context/how-context-works.md</code> and
+<code>docs/agents/research-backed-prompt-design.md</code>; no paper
+about this project.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-13</strong> — <a
+href="https://github.com/darrenhinde/OpenAgentsControl/commit/1ed1dd88d14ce0a4e32b458b6817cdda6f6b1590"><code class="commit-id" title="1ed1dd88d14ce0a4e32b458b6817cdda6f6b1590">1ed1dd88…</code></a>
+— first reading, at the head of <code>main</code>, dated 19 October
+2026. No marks: the approval gates, the size and header rules and the
+deprecation states are prompt text with no check and no reader that
+filters. LICENSE read in full: MIT with no rider. Screened before
+reading: five auto-run surfaces (the OpenCode bundle, the Claude Code
+marketplace and plugin manifests, and a <code>SessionStart</code> hook
+that prints a skill file as context), two build-time execution points,
+seven unpinned manifests, every lockfile unchanged for 25 days. Nothing
+was installed or run; one line of plain Node reproduced the evaluator's
+substring test on the five file names.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
