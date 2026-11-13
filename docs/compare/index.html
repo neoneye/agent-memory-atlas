@@ -20608,9 +20608,9 @@ confidence alone chooses promoted</td>
 <td>Three kinds in one Qdrant instance: a memory chunk of up to 500
 characters keyed by a UUIDv5 of library and content; a vectorless fact
 triple keyed by a UUIDv5 of subject, predicate and object with a
-lifecycle status, a confirmation count, and an optional world-time
-valid_from and world_until; and procedures and skills stored as typed
-points in the memories collection</td>
+lifecycle status, a review state, a confirmation count, and an optional
+world-time valid_from and world_until; and procedures and skills stored
+as typed points in the memories collection</td>
 <td>A local Qdrant the binary downloads and starts on loopback: a
 memories collection with dense and sparse vectors, a _kg_facts
 collection, a predicate registry and a procedure-stats side collection.
@@ -20626,13 +20626,15 @@ Procedures and skills: dense plus sparse over their own type</td>
 scan, a cheap relevance gate, a token-novelty check and a near-duplicate
 check, routing rejects to quarantine; mind_fact add refuses an
 invalidated triple or its case and whitespace variant, then runs the
-duel rule under a per-axis and a cross-process lock. An optional local
-Qwen extractor is behind a cargo feature that is off by default</td>
+duel rule under a per-axis and a cross-process lock, and a contested
+result is queued for a person. An optional local Qwen extractor is
+behind a cargo feature that is off by default</td>
 <td>Memories: content-addressed upsert, delete by id, soft archive and
 restore, quarantine promote and expire. Facts: the duel marks a loser
 stale or superseded with valid_until, and world_until when the winner is
 dated; a loser re-added within 24 hours lands contested beside the
-winner, and later duels again; invalidate sets valid false and
+winner and waits on a person, whose accept retires the rivals and whose
+reject is refused on re-add; invalidate sets valid false and
 valid_until, and the triple and its case and whitespace variants are
 refused until an explicit restore</td>
 <td>A library key on every memory, applied as an optional caller filter
@@ -20640,37 +20642,38 @@ on MCP and for unscoped HTTP tokens, and enforced for library-scoped
 HTTP tokens, which reach only confined memory routes and get no facts or
 procedures from JSON recall. Facts, procedures, skills and sessions are
 global</td>
-<td>MCP over stdio, which the README counts at 29 live tools plus 15
+<td>MCP over stdio, which the README counts at 30 live tools plus 15
 deprecated aliases hidden from tools/list and dispatched by name; a
 loopback HTTP API with per-agent tokens and a library allowlist; a CLI;
-a loopback viewer with delete, edit and promote; a Python client; an npm
-wrapper that downloads the release binary. No host hook;
-AI_INSTRUCTIONS.md asks the model to call mind_session and mind_context
-at session start</td>
+a loopback viewer with delete, edit, promote and a PIN-gated review tab;
+a Python client; an npm wrapper that downloads the release binary. No
+host hook; AI_INSTRUCTIONS.md asks the model to call mind_session and
+mind_context at session start</td>
 <td>Inside the warm MCP process an hourly, load-aware re-test loop
 recomputes confidence_score on up to 50 entrenched facts per tick and
 moves the doubt counter; access counts flush to a journal; consolidate,
 archive and prune are CLI-only</td>
 <td>Fact status filters stale, superseded and quarantine_candidate from
 the fact query, the session briefing and the duel's rival set; contested
-stays visible; an invalidated triple and its case and whitespace
-variants are refused on re-add; memory quarantine is excluded from
-search and history; the doubt window ships in shadow mode and only
-reorders</td>
+stays visible, labelled disputed, and pending a person's answer; an
+invalidated triple and its case and whitespace variants are refused on
+re-add; memory quarantine is excluded from search and history; the doubt
+window ships in shadow mode and only reorders</td>
 <td>One status-visibility function drives the Rust gate and every fact
 reader's Qdrant filter; an explicit invalidate refused on every fact
 write path, case and whitespace variants included; a world-time end
-written from the successor's valid_from; per-axis plus cross-process
-locking around the fact duel; a library-scope canary with positive
-controls that runs in CI; audit lines chained by BLAKE3 under a
+written from the successor's valid_from; a fact review answered only at
+a terminal or with a PIN, with no answer verb on MCP; per-axis plus
+cross-process locking around the fact duel; a library-scope canary with
+positive controls that runs in CI; audit lines chained by BLAKE3 under a
 cross-process lock, with skill, pinned-block and restore rows; benchmark
 figures that recompute exactly from committed per-question files</td>
 <td>On the default path a once-asserted fact younger than about four
-months flips to any contradiction; a loser re-asserted within 24 hours
-returns as contested beside the winner, unlabelled, and the duel's rival
-set includes the challenger's own row, so a re-assertion on a contested
-axis can retire itself and report won; library scope is optional on
-MCP</td>
+months flips to any contradiction; a contested value is returned beside
+the winner while it waits on a person, and one open question stops every
+duel on its axis; an agent's ask reopens an accepted fact, and the
+review gate assumes an agent without a shell; library scope is optional
+on MCP</td>
 </tr>
 <tr>
 <td><a href="../systems/midas/"><code>midas</code></a></td>
@@ -36884,7 +36887,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>101 of 798:</em> <a
+<p><em>102 of 798:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -36939,6 +36942,7 @@ href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
 href="../systems/memorywhale/"><code>memorywhale</code></a>, <a
 href="../systems/memseek/"><code>memseek</code></a>, <a
 href="../systems/memspec/"><code>memspec</code></a>, <a
+href="../systems/mgi-mind/"><code>mgi-mind</code></a>, <a
 href="../systems/mimir/"><code>mimir</code></a>, <a
 href="../systems/mind-mem/"><code>mind-mem</code></a>, <a
 href="../systems/mnemory/"><code>mnemory</code></a>, <a
