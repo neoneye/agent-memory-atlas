@@ -156,6 +156,34 @@ it. "No ablation" is a claim about the work; "no result is committed to this
 repository" is a claim about the artifact, and only the second is one a reading
 of the tree can support.
 
+## Re-read the licence
+
+A licence changes between pins more often than a mechanism does, and a report
+that still names the old one misleads on the first line of its header.
+
+```sh
+git diff --stat <pinned-sha>..HEAD -- $(git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|contributing)') .gitattributes
+git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|contributing|third.party)'
+```
+
+Read every licence-bearing file in full at the new pin, whether or not the diff
+is empty: a report first written before the licence check existed has never had
+one. Apply the list under *Read the licence, and say what is wrong with it* in
+the `add-memory-system` skill, and write or rewrite the `**Licence.**` paragraph
+in section 1 to its rules: the primary issue first with its clause, secondary
+issues only if they are really bad, minor ones omitted, about 120 words.
+
+Three things are specific to a re-read:
+
+- **A relicensing is a finding about the project.** State the date and the
+  commit, what the old licence granted that the new one does not, and whether
+  the new text leaves earlier versions under their earlier terms.
+- **Files that went dark.** A tree can keep its licence and encrypt or remove
+  what the licence invites people to read. Compare the count of readable files,
+  and check that the anchors the report cites are still plain text.
+- **A critique that stopped being true is removed, not softened.** If the
+  upstream fixed the issue, delete the sentence and say so in History.
+
 ## Decide the shape, then write
 
 Four outcomes. Name which one you are in before editing, because they call for
@@ -240,6 +268,9 @@ them, not in a campaign.
 ## What must be updated together
 
 - `revision`, `revision_url`, `analyzed_at` in the report frontmatter.
+- `licence` in the frontmatter and the `**Licence.**` paragraph in section 1,
+  if the licence text, the files it covers or what the tree withholds changed;
+  and the row under *What the licences actually say* in `content/appendix.md`.
 - Any `matrix:` value the change touches, and `capabilities:` if a mark moved.
 - A new entry at the top of the report's `## History`, dated to `analyzed_at`,
   with the full 40-char sha and what changed — including, when a published claim

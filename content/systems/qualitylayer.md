@@ -57,10 +57,19 @@ are git-crypt ciphertext, including every memory test. The memory source itself
 is plain. Within it, the agent holds the restore verb for anything a person
 retired, and the recorded evidence of passing checks is a field nothing reads.
 
-The licence is the QualityLayer Commercial Source-Available Licence. Section 3
-allows anyone to read the public source *"to understand, inspect, evaluate and
-audit"* it and to host contribution forks; section 5 forbids redistribution,
-incorporation into another product and independent complete builds.
+**Licence.** The QualityLayer Commercial Source-Available Licence grants an
+audit and withholds the means to perform one. Section 3 invites anyone to read
+the public source *"to understand, inspect, evaluate and audit"* it. In the
+tree, 5,022 of 7,613 tracked files are git-crypt ciphertext, every test among
+them; section 4 says the public checkout *"intentionally lacks inputs needed to
+build the complete application"*; and section 3(c) limits running to
+*"explicitly documented focused public-component checks with synthetic data"*.
+Two further terms are as bad. What may be read is whatever the licensor
+*"deliberately releases"* in a *"designated public source projection"* that
+neither the licence nor `CONTRIBUTING.md` identifies. And a contributor grants
+a perpetual, irrevocable, sublicensable commercial licence to code for which
+`CONTRIBUTING.md` offers no *"supported self-build route"*. Section 5 forbids
+redistribution and reuse in another product.
 
 ## 2. Mental Model
 

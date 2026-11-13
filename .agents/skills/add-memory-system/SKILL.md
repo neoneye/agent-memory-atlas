@@ -52,6 +52,67 @@ Confirm the system is in scope before writing. The atlas compares memory that ou
 
 Inspect repository-level instructions in both repositories before proceeding. Check the atlas worktree and preserve unrelated changes.
 
+## Read the licence, and say what is wrong with it
+
+Do this while screening, before the mechanism read. Open every licence-bearing
+file in full, not the badge and not GitHub's label for it:
+
+```sh
+git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|contributing|third.party)'
+git grep -n -i -E '"licen[sc]e"|^licen[sc]e *=' -- '*.json' '*.toml' '*.cfg'
+git grep -n 'filter=' -- .gitattributes
+```
+
+A permissive or copyleft licence whose file is in the tree and agrees with the
+manifests needs nothing beyond the `licence` field. Anything else is checked
+against this list, because each item has turned out to change what a reader may
+do with what they read:
+
+- **No grant at all, or a claimed one.** No licence file; a README or manifest
+  asserting a licence the tree does not contain; two files that disagree.
+- **A grant the tree does not honour.** The licence invites reading, auditing or
+  contributing and the repository withholds the means: files stored as
+  ciphertext (a `filter=git-crypt` line; count them by reading the first ten
+  bytes of each tracked file for the `GITCRYPT` header), tests or build inputs
+  absent by design, the engine closed behind an open wrapper.
+- **Use restrictions.** Non-commercial, no hosted service, no competing product,
+  field-of-use limits, a royalty, a user cap, a licence key the code enforces.
+- **Terms that depend on the licensor.** Revocable at discretion, clauses the
+  author alone defines, a scope stated as whatever the licensor chose to
+  release, a conversion date that can move.
+- **One-sided contribution terms.** A contributor agreement granting broad,
+  irrevocable, sublicensable rights with nothing in return, most of all where
+  the contributor cannot build or run the result.
+- **Components under other terms.** Bundled binaries, model weights or vendored
+  code whose licence differs from the repository's and is not stated.
+- **A rider against analysis.** A clause barring automated or AI-directed
+  analysis is the one case that stops the work: delete the clone, write no
+  report, and record the exclusion in Known Limitations.
+
+**Then write the critique, in section 1, as one paragraph opening `**Licence.**`.**
+It is brief and it is harsh: a reader deciding whether to open the code is owed
+the worst thing about the licence in the first sentence, not a summary of its
+terms.
+
+- **The primary issue first, alone, in a sentence that names the clause.** One
+  issue. If two compete, the primary one is the one that most changes what the
+  reader can do.
+- **Secondary issues only if they are really bad** — each would be a primary
+  issue in another repository. At most two, a sentence each. Omit minor ones:
+  attribution wording, ordinary copyleft duties, trademark reservations,
+  governing law and warranty disclaimers are not findings.
+- **Quote or cite, do not characterise.** Section number, the phrase in italics
+  where the wording is the point, and a count where the tree contradicts the
+  grant. No adjectives doing the work of evidence, and no legal advice: say what
+  the text grants and withholds, not whether it would hold.
+- **About 120 words.** The `licence` frontmatter field carries the name and the
+  one-line effect; the paragraph carries the critique; neither repeats the other.
+
+A restrictive licence remains a caveat, not an exclusion: the report is still
+written, the source is still archived, and the system is added to the table
+under *What the licences actually say* in `content/appendix.md`, whose count is
+written by hand in three places.
+
 ## Scaffold the report
 
 After an initial orientation pass, choose a concise title, eyebrow, and one-sentence description. Run:
