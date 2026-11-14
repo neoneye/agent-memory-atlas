@@ -444,6 +444,8 @@ captures, evaluated per read, and no query can select by it. It is the
 evidence-derived ladder this page argues for, without the field, so no
 `trust_state` mark follows from it.
 
+[Bolt PCHIE](../../systems/bolt-pchie/) stores the state inside the hash and so cannot move it. Each row of its plan file carries `Unverified`, `SimVerified`, `HumanVerified` or `Refuted`, the reader returns nothing below a floor set by a flag, and a committed test stores all four kinds and asserts which keys miss. The state is part of the body each row's SHA-256 covers, so promotion in place would break the chain, and the lookup returns on the first row for a situation, so a `Refuted` row appended later never takes effect. The one writer outside test fixtures stamps `SimVerified` after a simulator walk reached the exit. A filter with a policy floor, and no transitions: the working correction is deleting the file.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

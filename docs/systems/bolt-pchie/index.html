@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A C++ on-device inference harness
+for maze control whose two file memories, a 16-run episodic ring and a
+hash-chained plan store, only shift search priors.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Bolt PCHIE — Agent Memory Atlas">
+    <meta property="og:description" content="A C++ on-device inference
+harness for maze control whose two file memories, a 16-run episodic ring
+and a hash-chained plan store, only shift search priors.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Bolt
+PCHIE — Agent Memory Atlas">
+    <meta name="twitter:description" content="A C++ on-device inference
+harness for maze control whose two file memories, a 16-run episodic ring
+and a hash-chained plan store, only shift search priors.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Bolt PCHIE — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Bolt PCHIE",
+      "description": "A C++ on-device inference harness for maze control whose two file memories, a 16-run episodic ring and a hash-chained plan store, only shift search priors.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A 16-receipt run ledger and a hash-chained
+plan store that bias a deterministic maze search</p>
+          <h1>Bolt PCHIE</h1>
+          <p class="document-deck">A C++ on-device inference harness for
+maze control whose two file memories, a 16-run episodic ring and a
+hash-chained plan store, only shift search priors.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/wetwaferworks/bolt-pch-ie">
+              <span>Source</span>
+              <strong>wetwaferworks/bolt-pch-ie</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/wetwaferworks/bolt-pch-ie/commit/570840ea12db38bb66f285fbe98289daf9d861e7" title="570840ea12db38bb66f285fbe98289daf9d861e7">
+              <span>Analyzed revision</span>
+              <code>570840ea…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-14</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/wetwaferworks--bolt-pch-ie" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>wetwaferworks--bolt-pch-ie</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>34,909
+lines of C++ and CUDA in 239 files outside third_party/; the two
+memories are 987 lines in five headers (727 for the episodic ledger, 260
+for the plan store) and a 67-line reader tool. third_party/pch-public is
+a vendored snapshot of 1,853 files that names neither
+memory</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>11
+commits by one author on 13 and 14 November 2026. The episodic ledger
+arrived in the fourth, on 13 November 2026; the plan store is in the
+first</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>51
+add_test registrations in CMakeLists.txt. Memory is covered by 36 checks
+in tests/pchie_neml_test.cpp, the L2 block of
+tests/rl/pchie_rl_contract_test.cpp and the L2 cases of
+tests/rl/pchie_rl_l1l2_test.cpp --unit. No CI configuration is in the
+tree. I ran none of them</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Bolt PCHIE is a C++ test bed that runs a small language model inside
+a deterministic control harness and has it walk simulated mazes, sealing
+every decision into a hash chain so a run can be replayed. Memory is a
+small part of it.</p>
+<p>It has two memories, and neither holds text the model wrote.</p>
+<ul>
+<li><strong>The episodic ledger (NEML)</strong> is a ring of sixteen
+256-byte receipts, one per finished run. On a later run of the same
+maze, a move that led into a recorded dead end from the same junction
+has its search prior divided.</li>
+<li><strong>The plan store (layer L2, "query before plan")</strong> is
+an append-only JSONL file of situation-to-action rows chained by
+SHA-256. A matching row moves half the root prior mass onto one
+move.</li>
+</ul>
+<p>What is notable is how the harness bounds what memory may do. A
+recalled item never commits an action. It changes a prior, and the
+search still applies legal-move masking and the gate. The ledger is read
+once, as a snapshot whose SHA-256 is appended to the run's chain, so a
+memory-informed run can be reproduced from the ledger bytes. A plan row
+carries a truth state, and the reader returns nothing below a configured
+floor.</p>
+<p>What is weak is correction and coverage. Neither store has an edit or
+delete verb. A receipt keeps the first five non-exit events of a run, so
+dead ends met later are never remembered. In the plan store a
+<code>Refuted</code> row appended after a verified row for the same
+situation has no effect, because the lookup stops at the first match.
+The one writer of plan rows outside test fixtures is a seeding mode in a
+test binary, fed by an oracle.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The harness treats memory as <em>side data</em>. The ledger header's
+first comment says so: <em>"nothing in this file is read by a decision
+unless a caller passes a Snapshot (NemlQuery.h) to the memory prior on
+purpose"</em> (<code>include/pchie/neml/NemlLedger.h:2-3</code>).</p>
+<p><strong>A receipt</strong> is what the harness observed about one
+run, not what the model said about it. Four triggers, all computed by
+code from committed steps, fill it
+(<code>include/pchie/neml/NemlTrack.h:2-8</code>):</p>
+<ul>
+<li><code>DeadEnd</code> — a step into a new cell whose single open way
+is back. It is filed at the last junction the branch left, with the
+direction taken out of it.</li>
+<li><code>VisualRecovery</code> — the first new cell after a dead
+end.</li>
+<li><code>ForkPivot</code> — a committed move that differs from the
+highest-prior move.</li>
+<li><code>ExitFound</code> — the step that reaches the exit.</li>
+</ul>
+<p><strong>A plan row</strong> is a claim that in situation <em>S</em>
+the action sequence <em>P</em> is good, with a statement of who checked
+it. The file's header gives the rule: <em>"A hit is a proposal, not a
+bypass"</em> (<code>include/pchie/rl/PlanMemory.h:2-3</code>).</p>
+<p>Both memories express themselves the same way: integer arithmetic on
+the prior of an edge in a PUCT search tree. Neither is retrieved into a
+prompt on any default path.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Two file memories feed one search. Receipts written at run teardown divide the prior of a remembered dead-end move on the same maze; chained plan rows that pass the truth floor, legality and the gate move prior mass onto one move.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Two file memories feed one search. Receipts written at run teardown divide the prior of a remembered dead-end move on the same maze; chained plan rows that pass the truth floor, legality and the gate move prior mass onto one move.
+flowchart TD
+  R[&quot;Run commits a step&quot;] --&gt; T[&quot;GridTracker fires&lt;br/&gt;one of four triggers&quot;]
+  T --&gt; W[&quot;write_receipt&lt;br/&gt;at run teardown&quot;]
+  W --&gt; L[(&quot;nemo_episodic.bin&lt;br/&gt;ring of 16 receipts&quot;)]
+  L --&gt; S[&quot;Snapshot at next run start&lt;br/&gt;bytes and SHA-256&quot;]
+  S --&gt; C[&quot;Chain record&lt;br/&gt;neml.snap.v1&quot;]
+  S --&gt; J[&quot;junction lookup&lt;br/&gt;same maze key, same cell&quot;]
+  J --&gt; P[&quot;Dead-end direction keeps&lt;br/&gt;1 over 1+n of its prior&quot;]
+  O[&quot;Oracle walk reaches exit&lt;br/&gt;test binary, seed mode&quot;] --&gt; F[(&quot;plan store JSONL&lt;br/&gt;rows chained by SHA-256&quot;)]
+  F --&gt; Q[&quot;query_verified&lt;br/&gt;chain valid, truth at floor&quot;]
+  Q --&gt; G[&quot;Move is legal&lt;br/&gt;and passes PchGate&quot;]
+  G --&gt; B[&quot;Half the root prior&lt;br/&gt;moves to that edge&quot;]
+  P --&gt; M[&quot;PUCT search&lt;br/&gt;chooses the move&quot;]
+  B --&gt; M</code></pre></details></figure>
+<p>Everything is header-only C++ linked into the maze drivers.</p>
+<ul>
+<li><strong>Ledger files.</strong> <code>nemo_episodic.bin</code> is a
+32-byte header and sixteen 256-byte slots, 4,128 bytes in all
+(<code>NemlLedger.h:48-53</code>, <code>:79-80</code>).
+<code>nemo_priors.txt</code> is rewritten from it on every write
+(<code>include/pchie/neml/NemlStore.h:179-180</code>). Both live in the
+user data folder and never in the repository
+(<code>NemlStore.h:43-52</code>).</li>
+<li><strong>Locking.</strong> One process mutex and a lock directory,
+stolen when it is older than 60 seconds
+(<code>NemlStore.h:126-146</code>). Writes go through a temporary file
+and a rename (<code>:111-123</code>).</li>
+<li><strong>Plan store.</strong> One JSONL file per store.
+<code>append_file</code> refuses any path that does not contain
+<code>/scratch/rl/</code> (<code>PlanMemory.h:235-243</code>).</li>
+<li><strong>Readers.</strong> <code>HeadlessMaze</code> holds a pointer
+to a ledger snapshot (<code>include/pchie/HeadlessMaze.h:217</code>);
+<code>MazeRl</code> holds a pointer to a plan store
+(<code>include/pchie/rl/MazeL1.h:97</code>).</li>
+<li><strong>Inspection.</strong> <code>pchie_neml</code> prints the
+receipts, the priors text or the prompt block, and writes nothing
+(<code>tools/pchie_neml.cpp:1-6</code>).</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>There is no service, schema migration or dependency beyond the
+standard library. Recording is on by default and the memory prior is on
+by default where a driver supports it; <code>PCHIE_NEML=0</code>,
+<code>PCHIE_NEML_REASON=0</code> and matching flags turn each off
+(<code>NemlStore.h:4-11</code>, <code>:54-61</code>). A v1 ledger still
+loads, with the maze identity read as unknown
+(<code>NemlLedger.h:118-129</code>, <code>:152-156</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Receipt write.</strong>
+<code>HeadlessMaze::run_common</code> starts the tracker, runs, then
+calls <code>neml_write_</code> (<code>HeadlessMaze.h:838-850</code>,
+<code>:932-945</code>), which calls <code>write_receipt</code>
+(<code>NemlStore.h:163-182</code>). The Stage B door maze and the vision
+driver have their own call sites
+(<code>include/pchie/StageBDoorMaze.h:822-834</code>,
+<code>vision/pchie_lk_visnav.cpp:979-991</code>).</li>
+<li><strong>Snapshot.</strong> <code>Snapshot::take</code> reads the
+ring under the write lock and hashes it
+(<code>include/pchie/neml/NemlQuery.h:36-42</code>).</li>
+<li><strong>Provenance.</strong> With a snapshot set, the run appends a
+custom chain record, the tag <code>neml.snap.v1</code> followed by the
+snapshot hash (<code>HeadlessMaze.h:870-874</code>).</li>
+<li><strong>Memory prior.</strong> <code>mem_adjust_</code> runs at root
+and tree expansion (<code>HeadlessMaze.h:523</code>, <code>:579</code>,
+<code>:922-926</code>) and calls <code>apply_memory_prior</code>
+(<code>NemlQuery.h:113-137</code>).</li>
+<li><strong>Plan lookup.</strong> <code>MazeRl::l2_query</code> builds
+the key, calls <code>query_verified</code>, checks legality and the
+gate, and shifts the prior (<code>MazeL1.h:550-598</code>).</li>
+<li><strong>Plan write.</strong> <code>append_between_runs</code>
+(<code>PlanMemory.h:120-134</code>), reached from the
+<code>--seed-mem</code> mode of
+<code>tests/rl/pchie_rl_l1l2_test.cpp:652-700</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Receipt</strong> (<code>NemlLedger.h:32-47</code>): a
+lifetime run id, a timestamp, total steps, a count of fork pivots and of
+dead ends, an exit flag, two flag bits (the model decided; the run read
+memory), an eight-byte maze key, seed, width and height, a path kind
+(maze, vision or Stage B), six event slots and a 32-byte note.</p>
+<p><strong>Event</strong> (<code>NemlLedger.h:22-31</code>): step index,
+type, an eight-bit confidence, grid cell, direction and a 22-byte
+tag.</p>
+<p>Three fields are written and read by nothing that decides.</p>
+<ul>
+<li><code>timestamp_utc</code> is commented <em>"never read by a
+query"</em> and no query reads it.</li>
+<li>The two flag bits are set at <code>HeadlessMaze.h:941</code> and
+read nowhere.</li>
+<li><code>confidence_q8</code> is printed nowhere and weighs
+nothing.</li>
+</ul>
+<p><strong>Plan row</strong> (<code>PlanMemory.h:41-48</code>): a
+32-byte situation hash, a list of action ids (<em>"not free text"</em>),
+a 32-byte provenance hash, the row hash, a <code>chain_valid</code> flag
+set on load, and <code>truth</code>.</p>
+<p><strong>Situation key</strong> (<code>PlanMemory.h:21-39</code>):
+task id, observation tokens, a belief digest, the model's weights hash
+and a domain version, hashed together. A row recorded under other
+weights or another domain version can never match.</p>
+<p><strong>Chat notes.</strong> A second ring of sixteen 64-byte notes,
+<code>nemo_chat_notes.bin</code>, has a writer that is off by default
+and has no caller outside its test
+(<code>NemlStore.h:184-215</code>).</p>
+<p>There is no identity for a fact beyond a ring slot or a line number,
+no supersession link, and no time field that any reader consults.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Ledger, for a decision.</strong>
+<code>Query::junction(maze_key, x, y)</code> walks every receipt in the
+snapshot, skips those whose <code>maze_key</code> differs, and counts
+events at that cell per direction (<code>NemlQuery.h:71-99</code>). It
+fills three arrays: <code>dead_ends</code>, <code>pivots</code> and
+<code>exits</code>. <code>apply_memory_prior</code> reads
+<code>dead_ends</code> alone (<code>:118-123</code>). For each move
+whose direction has <em>n</em> recorded dead ends, the prior becomes
+prior / (1 + <em>n</em>); all priors are then scaled back to the
+original total in integer Q20 arithmetic, with the remainder given to
+the lowest token (<code>:125-136</code>). The result is a pure function
+of snapshot bytes and edges.</p>
+<p>A remembered success changes nothing. <code>pivots</code>,
+<code>exits</code>, <code>runs_for</code> and
+<code>recent_outcomes</code> are read by the test file and by no
+driver.</p>
+<p><strong>Ledger, for a prompt.</strong> <code>digest()</code> renders
+a block headed <code>[SYSTEM: EPISODIC MEMORY LEDGER]</code>: lifetime
+counts, one line per run, three derived priors and any chat notes. It is
+capped at 384 tokens counted by the model's own tokenizer, dropping chat
+notes first, then the oldest run lines, then the priors
+(<code>NemlLedger.h:216-268</code>). It lists runs from every maze. The
+vision driver computes it on every run and prepends it to the trusted
+rules prefix when <code>--neml-inject</code> is passed
+(<code>vision/pchie_lk_visnav.cpp:327</code>, <code>:632-636</code>);
+the flag's own comment says <em>"off by default; not approved for
+runs"</em> (<code>:526</code>).</p>
+<p><strong>Plan store.</strong> <code>query_verified</code> hashes the
+key and scans rows in file order (<code>PlanMemory.h:96-118</code>). It
+returns nothing if the store has a broken link, if the first matching
+row is not chain-valid, or if that row's truth is below the floor. It
+returns the first matching row and never looks at a second.</p>
+<p>A returned row is still a proposal. <code>l2_query</code> takes the
+first action id, checks it is legal in the current grid, applies it to a
+copy, passes the extended token prefix through <code>PchGate</code>, and
+requires the edge to exist in the search. Only then does it scale every
+prior by one half and add half the total to the hit edge
+(<code>MazeL1.h:563-585</code>). A row that fails is counted as
+<code>hit_rejected_illegal</code> or <code>hit_rejected_gate</code>.
+Every query, hit or miss, is appended to a chained JSONL log
+(<code>:589-597</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Receipts.</strong> <code>GridTracker::step</code> is called
+with the grid before and after each committed step and fires events
+(<code>NemlTrack.h:47-67</code>). At teardown
+<code>Recorder::finish</code> selects which six survive: the first five
+non-exit events in step order plus <code>ExitFound</code>, or the first
+six when there is no exit (<code>NemlLedger.h:101-115</code>). The
+counters <code>dead_ends_hit</code> and
+<code>mcts_forks_triggered</code> cover every event fired, but the cell
+and direction of a seventh event are discarded.</p>
+<p><code>write_receipt</code> takes the lock, loads the ring, appends
+into slot <code>total_written % 16</code> and renames the new file into
+place (<code>NemlStore.h:163-182</code>,
+<code>NemlLedger.h:165-167</code>). Two failure cases are quiet.</p>
+<ul>
+<li>If the existing ledger does not parse, the function returns 0 and
+writes nothing (<code>NemlStore.h:172</code>). A corrupt file stops
+recording until a person removes it; the reason is placed in
+<code>MazeResult::neml_err</code>.</li>
+<li><code>memory_block</code> treats an unreadable ledger as empty
+(<code>NemlStore.h:220-225</code>).</li>
+</ul>
+<p>A miss is recorded like an exit. The vision driver makes one
+exception: a game or transport failure writes no receipt, with the log
+line <em>"not an honest miss"</em>
+(<code>vision/pchie_lk_visnav.cpp:980</code>).</p>
+<p><strong>Which runs feed which reads.</strong> Three paths write
+receipts; one reads them for a decision.</p>
+<ul>
+<li>Plain maze runs write receipts with a maze key and directions, and
+<code>HeadlessMaze</code> reads them back.</li>
+<li>Stage B runs write receipts (<code>StageBDoorMaze.h:822-834</code>)
+and that driver has no <code>set_memory</code>.</li>
+<li>Vision runs write receipts with no maze key, and their dead-end
+events carry no direction (<code>vision/pchie_lk_visnav.cpp:891</code>,
+<code>:948</code>, <code>:982-986</code>). Both the key filter and the
+direction test in <code>junction</code> skip them.</li>
+</ul>
+<p><strong>Plan rows.</strong> <code>append_between_runs</code> refuses
+while a run is live, refuses on a broken chain, computes
+<code>SHA256(previous head || body)</code> and appends one line
+(<code>PlanMemory.h:120-134</code>, <code>:60-68</code>). The truth
+value is whatever the caller passed. The seeding mode runs the official
+loop with an oracle supplying prior and value, refuses to seed unless
+the walk reached the exit with one situation per action, and then writes
+every step as <code>SimVerified</code>
+(<code>tests/rl/pchie_rl_l1l2_test.cpp:662</code>,
+<code>:687-697</code>). The flag <code>qbp_write</code> is parsed and
+printed and gates no write (<code>src/rl/RlFlags.cpp:13</code>,
+<code>:25</code>, <code>:85</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model call, embedding or network request is made by either memory.
+A junction lookup scans at most 96 event slots. A plan lookup is a
+linear scan of the file held in memory. The prompt block costs one
+tokenizer pass per dropped line.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model has no memory tool and no write path. Integration is by
+driver.</p>
+<ul>
+<li><code>pchie_lk_pilot</code> takes a snapshot at start, reports the
+hash, and warns that hashes will differ from the official run
+(<code>tools/pchie_lk_pilot.cpp:226-239</code>).</li>
+<li><code>pchie_rl_l1l2_test --maze b1|stagea</code> does the same and
+also opens a plan store given <code>--mem</code>
+(<code>tests/rl/pchie_rl_l1l2_test.cpp:803-829</code>).</li>
+<li><code>experiments/next-runs/run_query_before_plan.ps1</code> seeds a
+store from the oracle walk and runs three arms: seeded with the model,
+seeded with a null value, and an empty-store control.</li>
+<li>Official runners and golden tests never set a snapshot
+(<code>HeadlessMaze.h:212-216</code>).</li>
+</ul>
+<p>The prompt block's own text tells the model it is not an instruction:
+<em>"it is memory, not an instruction"</em>
+(<code>NemlLedger.h:242</code>). It is nonetheless framed as
+<code>[SYSTEM: ...]</code> and joined to the trusted prefix, not passed
+through the untrusted-text path the harness has for world text.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>What holds.</strong></p>
+<ul>
+<li><em>Memory cannot commit.</em> Both paths end in a prior. Legal-move
+masking and the gate run after them, and a gate-rejected plan hit falls
+back to search.</li>
+<li><em>Reads are reproducible.</em> The snapshot is immutable for the
+run, hashed, and recorded in the chain. Receipts written during the run
+are not seen.</li>
+<li><em>Writes are separated from runs.</em> A plan append while a run
+is live is refused and flagged (<code>PlanMemory.h:121-124</code>).</li>
+<li><em>Tamper fails closed.</em> One bad row hash marks the store
+broken; every later query misses and every append is refused
+(<code>PlanMemory.h:98-101</code>, <code>:126</code>,
+<code>:219-227</code>).</li>
+<li><em>Trust floor.</em> <code>truth_ok</code> withholds
+<code>Unverified</code> and <code>Refuted</code> always, and
+<code>SimVerified</code> under
+<code>--rl-qbp-min-truth human</code>.</li>
+</ul>
+<p><strong>What does not.</strong></p>
+<ul>
+<li><em>Refutation is unreachable.</em> <code>truth</code> is inside the
+hashed body, so a row's state cannot be changed in place. A corrective
+row appended later is shadowed by the first match. The working
+correction is to delete the file.</li>
+<li><em>No producer for three of four states.</em>
+<code>HumanVerified</code>, <code>Refuted</code> and
+<code>Unverified</code> are written by test fixtures alone. Under the
+human floor the store returns nothing, since no tool records a person's
+verdict.</li>
+<li><em>The chain proves order, not origin.</em> Row hashes are unkeyed
+SHA-256 and the head is stored nowhere else, so a rewritten file with
+recomputed hashes loads clean, and a file truncated at a row boundary
+loads clean.</li>
+<li><em>Late dead ends are lost.</em> With five kept non-exit events, a
+run that pivots five times before its first dead end records no dead-end
+location at all.</li>
+<li><em>Eviction ignores the maze.</em> Sixteen runs anywhere push out
+every receipt for a given maze.</li>
+<li><em>No decay and no credit.</em> A dead-end count only falls when
+its receipt leaves the ring; a run that later succeeds through that
+direction does not reduce it.</li>
+<li><em>Stale lock theft.</em> A lock directory older than 60 seconds is
+removed without checking its owner, and <code>Snapshot::take</code>
+reads whether or not it obtained the lock
+(<code>NemlQuery.h:40-41</code>).</li>
+</ul>
+<p><strong>Marks withheld.</strong></p>
+<ul>
+<li><code>tombstone</code> — a dead-end record is knowledge about the
+world, keyed on a cell and direction; no rejected memory value is
+recorded anywhere.</li>
+<li><code>bitemporal</code> — one timestamp per receipt, read by
+nothing.</li>
+<li><code>audit_log</code> — the plan file is the store itself, not a
+record of mutations to it, and the ring overwrites without trace. The
+chained query log records reads.</li>
+<li><code>human_review</code> — <code>HumanVerified</code> is a value
+with no surface that sets it.</li>
+</ul>
+<p>The project's own limitations page and security notes do not mention
+either memory.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran nothing; the tree was read from a clone without a checkout or a
+build.</p>
+<p><code>tests/pchie_neml_test.cpp</code> holds 36 checks against
+throwaway ledgers: struct sizes, switches, byte-identical runs with
+recording on and off, ring wrap at twenty appends, v1 conversion, the
+384-token cap, chat write-back off by default, query determinism, the
+prior flipping a choice at a junction, the snapshot hash in the chain,
+and another maze's memory changing nothing.</p>
+<p><code>tests/rl/pchie_rl_contract_test.cpp:174-262</code> covers the
+plan store alone: mid-run refusal, reload, the three-state mixed file,
+and a tampered hash.</p>
+<p><code>tests/rl/pchie_rl_l1l2_test.cpp:318-446</code> runs whole
+mazes.</p>
+<ul>
+<li>A correct seeded store hits on every decision and leaves the walk
+unchanged.</li>
+<li>The human floor, bad-truth rows and a tampered file each give zero
+hits and a walk identical to the control.</li>
+<li>An illegal move and a gate-rejected id are both rejected.</li>
+<li>A legal but divergent row is used as a proposal. The test prints
+what smaller boosts do without asserting on them.</li>
+</ul>
+<p>No test appends a <code>Refuted</code> row after a verified row for
+the same situation.</p>
+<p>The project reports one memory measurement, dated 13 November 2026
+(<code>docs/guide/results.md:25-31</code>). On the B1 maze at 25 steps,
+a seeded plan store hit on 25 of 25 decisions and the committed walk was
+the same as with an empty store; the seeded arm used 3.7% fewer model
+forwards. The page's closing section says the work <em>"does not show
+that query-before-plan changes the committed walk"</em>
+(<code>:61</code>). No measurement of the ledger prior is in the
+tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Hash the memory a decision read.</strong> One snapshot per
+run, its digest in the run's own log. It makes "why did it do that"
+answerable from bytes.</li>
+<li><strong>Recall as a prior, not an action.</strong> Let the recalled
+item reweight a choice that the normal validators still judge.</li>
+<li><strong>Receipts from triggers the host computes.</strong> The model
+cannot flatter its own record.</li>
+<li><strong>A truth floor as reader policy.</strong> The same store
+serves a permissive and a strict consumer.</li>
+<li><strong>Refuse writes during a run.</strong> It removes a whole
+class of self-poisoning.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>First-match lookup in an append-only store.</strong> Either
+the last row wins or correction does not exist.</li>
+<li><strong>Keeping the first <em>k</em> events.</strong> Keep the
+salient ones, or the memory describes how runs begin.</li>
+<li><strong>One eviction ring across scopes</strong> when reads are per
+scope.</li>
+<li><strong>An unkeyed chain with no external head</strong> if the claim
+is tamper evidence.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Useful as a reference for memory inside a deterministic or replayable
+control loop, and for bounding what recall may do. Not a general memory
+system: it holds fixed binary records about grid mazes, no text, and
+nothing a person can correct short of deleting a file.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the ledger prior improve results on any maze? The tree holds
+the test that it changes a choice, not a measurement that the change
+helps. The one reported plan-store run left the walk unchanged.</li>
+<li>Should a successful pivot offset a recorded dead end?
+<code>Junction.exits</code> is computed and unused, which reads like an
+unfinished design.</li>
+<li>What sets <code>HumanVerified</code>? <code>RlFlags.h:15</code>
+calls the default floor <em>"an open design question"</em>.</li>
+<li>What does the chat interface do with the block and the 64-byte
+notes? No chat interface is in the tree.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Episodic ledger:</strong>
+<code>include/pchie/neml/NemlLedger.h</code>,
+<code>include/pchie/neml/NemlStore.h</code>,
+<code>include/pchie/neml/NemlQuery.h</code>,
+<code>include/pchie/neml/NemlTrack.h</code>.</li>
+<li><strong>Plan store:</strong>
+<code>include/pchie/rl/PlanMemory.h</code>,
+<code>include/pchie/rl/RlFlags.h</code>,
+<code>src/rl/RlFlags.cpp</code>.</li>
+<li><strong>Readers and writers:</strong>
+<code>include/pchie/HeadlessMaze.h</code>,
+<code>include/pchie/StageBDoorMaze.h</code>,
+<code>include/pchie/rl/MazeL1.h</code>,
+<code>tools/pchie_lk_pilot.cpp</code>,
+<code>vision/pchie_lk_visnav.cpp</code>.</li>
+<li><strong>Inspection:</strong> <code>tools/pchie_neml.cpp</code>.</li>
+<li><strong>Tests:</strong> <code>tests/pchie_neml_test.cpp</code>,
+<code>tests/rl/pchie_rl_contract_test.cpp</code>,
+<code>tests/rl/pchie_rl_l1l2_test.cpp</code>,
+<code>CMakeLists.txt</code>.</li>
+<li><strong>Experiments:</strong>
+<code>experiments/next-runs/run_query_before_plan.ps1</code>.</li>
+<li><strong>Documentation:</strong>
+<code>docs/guide/quick-start-maze.md</code> section 6,
+<code>docs/guide/reasoning-layers.md</code>,
+<code>docs/specs/README.md</code>, <code>vision/README.md</code>,
+<code>PROVENANCE.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git grep</code> over the tree at
+<code class="commit-id" title="570840ea12db38bb66f285fbe98289daf9d861e7">570840ea…</code>.</p>
+<ul>
+<li><code>git grep -n 'chat_writeback(' -- ':!third_party'</code> — the
+definition at <code>NemlStore.h:198</code> and two calls in
+<code>tests/pchie_neml_test.cpp</code>; no driver calls it.</li>
+<li><code>git grep -n 'set_memory(' -- ':!third_party'</code> — the
+definition, two comments, and three callers:
+<code>tests/pchie_neml_test.cpp:65</code>,
+<code>tests/rl/pchie_rl_l1l2_test.cpp:827</code>,
+<code>tools/pchie_lk_pilot.cpp:233</code>. None in
+<code>StageBDoorMaze.h</code> or <code>vision/</code>.</li>
+<li><code>git grep -n 'FilePlanMemory' -- include src tools vision experiments</code>
+— the class and the <code>MazeL1.h:97</code> pointer; it is constructed
+in <code>tests/</code> alone.</li>
+<li><code>git grep -n -E 'HumanVerified|Refuted|Unverified' -- include src tools vision</code>
+— six lines, all in <code>PlanMemory.h</code>: the enum, the default and
+<code>truth_ok</code>. No assignment of any of the three outside
+<code>tests/</code>.</li>
+<li><code>git grep -n -E 'qbp_write' -- include src tools vision</code>
+— <code>RlFlags.h:26</code>, <code>RunCompare.h:149</code>,
+<code>RlFlags.cpp:13</code>, <code>:25</code>, <code>:85</code>; no
+branch that writes a row.</li>
+<li><code>git grep -n -i -E 'forget|erase|purge|delete|remove\(' -- include/pchie/neml include/pchie/rl/PlanMemory.h tools/pchie_neml.cpp</code>
+— three hits in <code>NemlStore.h</code>, the rename fallback and the
+lock directory; no verb that removes a receipt or a row.</li>
+<li><code>git grep -n 'timestamp_utc' -- include/pchie/neml</code> — the
+two struct fields, the assignment in <code>finish</code> and the v1
+copy; no comparison.</li>
+<li><code>git grep -n -E 'kFlagMemoryPrior|kFlagModel' -- ':!third_party'</code>
+— the field, the enum and three assignments
+(<code>HeadlessMaze.h:941</code>, <code>StageBDoorMaze.h:832</code>,
+<code>vision/pchie_lk_visnav.cpp:986</code>); no read.</li>
+<li><code>git grep -n -E '\.exits|\.pivots|recent_outcomes|runs_for' -- include tools vision</code>
+— the definitions and the increments in <code>NemlQuery.h</code>;
+readers are in <code>tests/pchie_neml_test.cpp</code> alone.</li>
+<li><code>git grep -n -i -E 'embedding|cosine|bm25' -- include/pchie/neml include/pchie/rl/PlanMemory.h</code>
+— no match. Control:
+<code>git grep -c 'maze_key' -- include/pchie/neml/NemlQuery.h</code>
+returns a nonzero count.</li>
+<li><code>git grep -l -i -E 'neml|PlanMemory' -- third_party</code> — no
+match; the vendored engine has neither memory.</li>
+<li><code>git grep -n -i -E 'memory|neml|ledger' -- docs/guide/limitations-and-threat-model.md SECURITY.md docs/ROADMAP.md</code>
+— one hit, about wiping secrets from process memory.</li>
+<li><code>git grep -n -i -E 'FetchContent|ExternalProject|execute_process|DOWNLOAD' -- CMakeLists.txt anchoring vision</code>
+— no match; the two <code>execute_process</code> calls in the tree are
+in a vendored <code>.cmake</code> file the root build does not
+include.</li>
+<li><code>git grep -n 'filter=' -- .gitattributes</code> — no such file.
+<code>git ls-tree -r --name-only HEAD | grep -E '^\.github|\.ya?ml$'</code>
+— no match; no CI configuration.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-14</strong> — <a
+href="https://github.com/wetwaferworks/bolt-pch-ie/commit/570840ea12db38bb66f285fbe98289daf9d861e7"><code class="commit-id" title="570840ea12db38bb66f285fbe98289daf9d861e7">570840ea…</code></a>
+— first reading, at the head of <code>main</code>, dated 14 November
+2026. Marks: <code>trust_state</code> on the plan store's truth field
+and read floor, <code>scope_enforced</code> on the maze key in the
+ledger's junction lookup, <code>negative_eval</code> on the registered
+absence checks for both stores. <code>tombstone</code>,
+<code>bitemporal</code>, <code>audit_log</code> and
+<code>human_review</code> withheld. Read from a clone without a
+checkout; nothing was built or run. The screening tool recognises no C++
+or CMake manifest, so the build files were read by hand:
+<code>CMakeLists.txt</code> fetches nothing and the tree has no hook or
+agent file.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

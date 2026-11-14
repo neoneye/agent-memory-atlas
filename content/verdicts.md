@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 802 reports.**
+**This page covers all 803 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7354,3 +7354,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 34,492 lines of memory code in `services/memory` and 1,038 Vitest files across the tree, with leak, conflict, deletion and erasure asserted absent on named read paths against real Postgres in CI. The public history is eight bot commits from 29 October to 4 November 2026, so none of the design history is readable, and the hosted measurements come from a harness outside the repository.
 - Study when: several agents and people share one memory and the failure you cannot tolerate is one of them reading or overwriting what it should not.
 - Do not copy when: you need the database to enforce tenant isolation, a single-user store that runs without Postgres, Neo4j, a Python service and a queue, or approval before any fact is believed.
+
+### [`bolt-pchie`](../systems/bolt-pchie/)
+
+- Best idea: recall is a prior and never an action. A remembered dead end divides one move's search prior and a stored plan row moves half the root prior onto one move; legal-move masking and the gate still judge the result, and the ledger snapshot a run read is hashed into that run's chain so the decision replays from bytes.
+- Biggest risk: correction does not exist. Neither store has an edit or delete verb, a plan row's truth state is inside its hash and cannot change, and a `Refuted` row appended later is shadowed by the first match. A receipt keeps the first five non-exit events, so dead ends met later in a run are never remembered.
+- Most reusable component: the read snapshot. The ledger is read once at run start as immutable bytes with a SHA-256, every query is a pure function of those bytes, and the hash goes into the run's own log.
+- Maturity impression: 727 lines for the episodic ledger and 260 lines for the plan store, with 36 checks on the ledger and absence cases on the plan store registered in CTest. The repository is 11 commits by one author over two days; no CI configuration; the one reported plan-store run left the committed walk unchanged. MIT.
+- Study when: you are putting memory inside a deterministic or replayable control loop and need to bound what a recalled item may do.
+- Do not copy when: memory must hold text, be corrected by a person, or survive more than sixteen runs.

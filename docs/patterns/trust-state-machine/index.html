@@ -797,6 +797,18 @@ event's writer and of stored captures, evaluated per read, and no query
 can select by it. It is the evidence-derived ladder this page argues
 for, without the field, so no <code>trust_state</code> mark follows from
 it.</p>
+<p><a href="../../systems/bolt-pchie/">Bolt PCHIE</a> stores the state
+inside the hash and so cannot move it. Each row of its plan file carries
+<code>Unverified</code>, <code>SimVerified</code>,
+<code>HumanVerified</code> or <code>Refuted</code>, the reader returns
+nothing below a floor set by a flag, and a committed test stores all
+four kinds and asserts which keys miss. The state is part of the body
+each row's SHA-256 covers, so promotion in place would break the chain,
+and the lookup returns on the first row for a situation, so a
+<code>Refuted</code> row appended later never takes effect. The one
+writer outside test fixtures stamps <code>SimVerified</code> after a
+simulator walk reached the exit. A filter with a policy floor, and no
+transitions: the working correction is deleting the file.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>
