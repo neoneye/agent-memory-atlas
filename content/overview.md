@@ -1620,7 +1620,7 @@ Pattern guide: [Zero-LLM capture](../patterns/zero-llm-capture/).
 
 Repos: strongest in [`agentmemory`](../systems/agentmemory/), [`claude-mem`](../systems/claude-mem/), [`llm-wiki-memory`](../systems/llm-wiki-memory/),
 [`tencentdb-agent-memory`](../systems/tencentdb-agent-memory/), and message-first [`honcho`](../systems/honcho/); [`engram`](../systems/engram/) demonstrates the
-small no-extraction baseline; [`csm`](../systems/csm/) is the largest instance by an order of
+no-model baseline, with one regex extractor over `## Key Learnings` sections; [`csm`](../systems/csm/) is the largest instance by an order of
 magnitude; [`daimon`](../systems/daimon/) applies it *beside* an LLM path rather than instead of one.
 
 Persist a scoped event before any model call, make it searchable through exact
@@ -2340,7 +2340,7 @@ against [NOOA](../systems/nooa-memory/)'s myelination, and against the
 reinforcement terms in [Mnemopi](../systems/mnemopi/) and
 [PowerMem](../systems/powermem/). A use signal feeding a trust field means the
 memories that get retrieved most become the memories that are trusted most,
-which is a popularity contest wearing an epistemics costume. [Engram](../systems/engram/) also refuses
+which is a popularity contest wearing an epistemics costume. [Engram Alpha](../systems/engram-alpha/) also refuses
 to let its own drift scan demote anything, on the ground that a bad scan would
 mass-bury the graph — knowing which of your signals are too noisy to act on is
 the same discipline applied twice.

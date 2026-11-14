@@ -366,7 +366,7 @@ same ask-on-conflict posture as the hook adapters (`src/harnesses/mcpClientConfi
 **The trust model is supersession, not status.** There is no `verified`, no
 `rejected`, no confidence beyond an `importance` scalar. An entry is live or
 superseded, and superseded is one-way. That is a narrower trust model than
-[RunarForge](../runar-forge/)'s verify flag or [Engram](../engram/)'s states,
+[RunarForge](../runar-forge/)'s verify flag or [Engram Alpha](../engram-alpha/)'s states,
 and it is internally consistent: the system never claims an entry is *true*, only
 that it is *current*, and currency is corrected by writing a replacement. The
 `trust_state` mark is withheld because live-vs-superseded is a lifecycle

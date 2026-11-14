@@ -342,6 +342,8 @@ signed-in route, and the route's own header says the graph-side effect is not
 wired: the row changes status and the losing edge is still served
 (`app/api/facts/disputes/[id]/resolve/route.ts:1-5`).
 
+[Engram](../../systems/engram/) detects after the write and resolves by label. A save commits, an FTS query on its title inserts `pending` relation rows for up to three same-project candidates, and the agent is told to call `mem_judge` on each. A `supersedes` verdict is stored and printed beside later hits; neither row leaves search until the agent deletes or consolidates it.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

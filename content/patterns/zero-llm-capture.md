@@ -134,7 +134,7 @@ its Markdown corpus on `/new` or `/reset`, beside a sanitizing exporter nothing 
 to an L4 layer on a 12-hour cron; [agentmemory](../../systems/agentmemory/) keeps
 a synthetic observation path on the hot loop; [Claude-Mem](../../systems/claude-mem/)
 queues hook events durably before its observer runs; and
-[engram](../../systems/engram/) remains the small no-extraction baseline.
+[engram](../../systems/engram/) is the no-model baseline: the agent writes each observation, and `mem_capture_passive` adds a regex extractor over `## Key Learnings` sections.
 
 [Daimon](../../systems/daimon/) is the variant worth studying if you have already
 decided you need an LLM. Its extraction is a model call and cannot be anything

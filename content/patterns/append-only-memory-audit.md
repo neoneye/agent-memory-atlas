@@ -576,6 +576,8 @@ scopes and not the text written. And a read's target is the query text itself
 (`services/memory/guarded-store.ts:603-607`), so a name typed into a search
 outlives a person erasure in a table the erasure cannot change.
 
+[Engram](../../systems/engram/) has the record on its sync server and not in the local store. Each mutation pushed for an enrolled project is one row in `cloud_mutations` — sequence, project, entity, key, op, full payload, timestamp — and nothing outside a migration updates or deletes a row; peers pull it by sequence and the dashboard folds its read model from it. The local journal that feeds it is skipped for unenrolled projects, so a local-only install has version history for overwritten text and no mutation record. The row has no actor, and a payload pushed before a hard delete stays in the journal.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

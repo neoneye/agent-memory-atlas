@@ -186,7 +186,7 @@ Strengths of the model:
 What is absent:
 
 - **No epistemic state.** There is no candidate/verified/rejected lifecycle and no rejected-value tombstone. Extracted memories become active context directly; `operation_mode` constrains *how* a record changes, not whether the claim was ever confirmed.
-- **No conflict surface.** Merge operations resolve overlapping writes, but there is no operator-facing review queue for contradictions of the kind [RainBox](../rainbox/) or [engram](../engram/) expose.
+- **No conflict surface.** Merge operations resolve overlapping writes, but there is no operator-facing review queue for contradictions of the kind [RainBox](../rainbox/) exposes, nor the agent-judged candidate queue of [engram](../engram/).
 - **Provenance is structural, not evidential.** URIs, types, and timestamps are recorded; a memory does not carry the source message spans that justify it in the way [MemPalace](../mempalace/) or [Graphiti](../graphiti/) episodes do.
 
 ## 6. Retrieval Mechanics

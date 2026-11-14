@@ -96,12 +96,13 @@ and the two should not be read with the same confidence.
 - Do not copy when: all you need is a local memory file.
 
 ### [`engram`](../systems/engram/)
-- Best idea: local SQLite/FTS MCP memory with conflict-oriented writes.
-- Biggest risk: lexical retrieval and agent-mediated judgment may hit limits.
-- Most reusable component: `AddObservation()` and MCP `handleSave()`.
-- Maturity impression: compact, inspectable, purpose-built for coding agents.
-- Study when: building local developer-agent memory.
-- Do not copy when: you need hosted multi-tenant vector retrieval.
+
+- Best idea: a topic key turns a save into an upsert that keeps the overwritten text as a version, with conflict candidates searched after the commit and handed back to the agent.
+- Biggest risk: the agent that saved also judges the conflict, and a `supersedes` verdict only labels the hit; search and context filter on deletion, project and scope alone.
+- Most reusable component: `AddObservationWithResult()` with its replay ledger and topic-key branch, and `FindCandidates()`.
+- Maturity impression: 1,340 commits, 3,990 Go test functions in 518 test files, CI on three operating systems. Three marks; `audit_log` rests on the cloud server's insert-only `cloud_mutations` journal and is absent from a local-only install, and `negative_eval` on scope-boundary cases with positive controls.
+- Study when: building local developer-agent memory with no model on the write path.
+- Do not copy when: recall must survive paraphrase, or a person must approve what the agent remembers.
 
 ### [`mempalace`](../systems/mempalace/)
 - Best idea: verbatim drawers as the authoritative memory, with hybrid retrieval and extracted indexes as boosts.

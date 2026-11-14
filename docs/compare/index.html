@@ -9715,18 +9715,47 @@ anywhere in the tree</td>
 </tr>
 <tr>
 <td><a href="../systems/engram/"><code>engram</code></a></td>
-<td>Observation and prompt records</td>
-<td>Local SQLite WAL, FTS5</td>
-<td>FTS5, topic-key lookup, context assembly</td>
-<td>MCP <code>mem_save</code>, conflict candidate flow, dedupe/update
-rules</td>
-<td>Topic-key updates, duplicate counts, soft delete/sync mutation</td>
-<td>Project, scope, session, topic key</td>
-<td>MCP tools for coding agents</td>
-<td>Sync queue, local conflict workflows</td>
-<td>Source/session/project metadata, explicit judgment path</td>
-<td>Simple durable local design, inspectable code</td>
-<td>Lexical retrieval limits; conflict UX depends on agent behavior</td>
+<td>An observation: title, content up to 50,000 bytes, type, project,
+scope, optional org and topic key, revision and duplicate counters, pin
+flag, review date. Beside it saved user prompts, sessions, and relation
+rows between two observations</td>
+<td>One local SQLite file in WAL mode with two trigram FTS5 tables; an
+optional cloud server keeps pushed mutations and chunks in Postgres</td>
+<td>FTS5 BM25 weighted title 5, content 1, topic key 3, reordered by
+small pin, recency and stability boosts; exact topic-key lookup for
+queries containing a slash; a LIKE fallback for terms under three
+characters. No vector arm: three embedding columns exist and nothing
+writes them</td>
+<td><code>mem_save</code>, synchronous and serialized through one queue:
+a matching topic key overwrites in place and keeps the prior text as a
+version, an identical save within 15 minutes increments a counter,
+anything else inserts. Conflict candidates are searched after the
+commit</td>
+<td><code>mem_update</code> with find-and-replace, soft delete by
+default and hard delete on request, <code>mem_consolidate</code> merging
+several rows into one behind a plan fingerprint; deletes on enrolled
+projects travel as sync mutations</td>
+<td>Project and scope predicates on search, context, timeline and
+candidate queries, resolved from the working directory or an explicit
+argument; <code>all_projects</code> and personal scope widen on request;
+get-by-id is unscoped</td>
+<td>27 MCP tools, an HTTP API, a CLI and TUI, hook plugins for Claude
+Code, Codex, OpenCode and Pi, an Obsidian exporter</td>
+<td>Opt-in per-project cloud sync with a mutation journal, deferred
+relation replay, and a CLI conflict scan that can ask an external agent
+CLI for verdicts</td>
+<td>No stored trust state. A relation row records the agent's verdict on
+a pair and annotates search hits; <code>needs_review</code> is derived
+from a date at read time; only <code>deleted_at</code> removes a row
+from recall</td>
+<td>Single binary with a pure-Go SQLite driver; version history on
+overwrite; replay-safe saves keyed on an operation id; host-confirmed
+session binding on Claude Code writes; a large committed test suite run
+in CI on three operating systems</td>
+<td>The agent that saves also judges its own conflicts and no
+person-facing verb exists; a <code>supersedes</code> verdict hides
+nothing; the local HTTP API is open unless a token is set; a hard delete
+does not reach payloads held in the cloud journal</td>
 </tr>
 <tr>
 <td><a href="../systems/engraphis/"><code>engraphis</code></a></td>
@@ -36815,7 +36844,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>267 of 802:</em> <a
+<p><em>268 of 802:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -36885,6 +36914,7 @@ href="../systems/edda/"><code>edda</code></a>, <a
 href="../systems/elai/"><code>elai</code></a>, <a
 href="../systems/elephantasm-core/"><code>elephantasm-core</code></a>,
 <a href="../systems/empirica/"><code>empirica</code></a>, <a
+href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a>, <a
 href="../systems/engram-cognitive/"><code>engram-cognitive</code></a>,
 <a href="../systems/engram-provable/"><code>engram-provable</code></a>,
@@ -37199,7 +37229,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>511 of 802:</em> <a
+<p><em>512 of 802:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -37332,6 +37362,7 @@ href="../systems/elai/"><code>elai</code></a>, <a
 href="../systems/elastic-atlas/"><code>elastic-atlas</code></a>, <a
 href="../systems/elizaos/"><code>elizaos</code></a>, <a
 href="../systems/emem/"><code>emem</code></a>, <a
+href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a>, <a
 href="../systems/engram-cognitive/"><code>engram-cognitive</code></a>,
 <a href="../systems/engram-mcp/"><code>engram-mcp</code></a>, <a
@@ -37747,7 +37778,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-511 repositories of
+512 repositories of
 802 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
