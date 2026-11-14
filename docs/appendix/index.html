@@ -18032,6 +18032,46 @@ returns nothing, and <code>supabase/schemas/00_extensions.sql</code>
 creates eight extensions, none of them a vector one. A writer for
 <code>extra.memory</code> and a handler that serialises it are what
 would be read first.</li>
+<li><strong>LongCapHarness (<a
+href="https://arxiv.org/abs/2611.10463">arXiv:2611.10463</a>) was
+examined and has no report: the paper describes no memory, and no code
+is released.</strong> <em>LongCapHarness: Capability-Guided
+Auto-Harnessing for Long-Context Reasoning</em> (Tao Zhang and Yuhang
+He, Microsoft Research Asia, v1 7 November 2026, no venue named) has a
+strong model, GPT-5.6-Sol, study a development set of questions with
+reference answers and write a harness per capability: primitives
+implemented as code or as a bounded model call, control logic that
+sequences them, and a <em>capability state</em> that says how a question
+is prepared and which intermediate outputs are kept. The harness is
+revised by comparing its answers with the references, and then, in
+§3.2's words, it <em>"is frozen and saved to the capability
+library"</em>. At test time a small model picks a harness by matching
+each one's text description against the question and runs it inside an
+8K or 32K window. <strong>Nothing is written after development.</strong>
+Per-input state is created for one run and dropped; the library gains no
+entry, loses none and records no outcome, and the word <em>memory</em>
+does not occur in the paper. What it has is the write half of <a
+href="../patterns/skills-as-procedural-memory/">skills as procedural
+memory</a> with the feedback loop closed before deployment: a library of
+procedures selected by description, authored offline against labelled
+data, with no path by which a failing harness is noticed or retired in
+use. The development split is drawn from the evaluated benchmarks
+themselves, 2,242 development and 59,826 held-out examples with no
+overlap, chosen so that harness development sees <em>"each evaluated
+task type"</em> (§4.1); the result is therefore reuse on new inputs of
+known task types, not on new tasks. Reported averages on HELMET are
+79.32 for Llama3-8B at 8K against 70.15 for the post-trained NExtLong
+model at 128K, and 78.73 for Qwen2.5-3B against 64.10 for PolicyLong; on
+LongBench-v2's Long subset the harness trails PolicyLong, 27.85 to
+31.50. Development cost is estimated at $541.47 of API charges against
+$3,696.00 and $1,858.82 of training. §6 states the dependency:
+performance drops sharply when the small models write their own
+harnesses. No repository is linked from the abstract page or the HTML
+full text, the text contains no code-availability statement, and on 14
+November 2026 a GitHub repository search and a code search for
+<code>LongCapHarness</code> returned two reading lists and no
+implementation. Read from the arXiv HTML of v1; no experiment was
+reproduced.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
