@@ -502,6 +502,7 @@ page_kind: comparison
 - [`openagents-control`](../systems/openagents-control/)
 - [`qualitylayer`](../systems/qualitylayer/)
 - [`zeroshot`](../systems/zeroshot/)
+- [`willder`](../systems/willder/)
 
 ## Repos Inspected
 
@@ -1308,6 +1309,7 @@ page_kind: comparison
 - [darrenhinde/OpenAgentsControl](https://github.com/darrenhinde/OpenAgentsControl) at [`1ed1dd88d14ce0a4e32b458b6817cdda6f6b1590`](https://github.com/darrenhinde/OpenAgentsControl/commit/1ed1dd88d14ce0a4e32b458b6817cdda6f6b1590) — read only, from a full clone; five auto-run surfaces, two build-time execution points, seven unpinned dependency surfaces, every lockfile unchanged for 25 days. Nothing was installed or run. MIT
 - [maxritter/qualitylayer](https://github.com/maxritter/qualitylayer) at [`8635ab90a2d13084be33bddfaa74afa5d4d43e49`](https://github.com/maxritter/qualitylayer/commit/8635ab90a2d13084be33bddfaa74afa5d4d43e49) — read only, from a full clone without a git-crypt key, so 5,022 of 7,613 tracked files were ciphertext, every test among them; one auto-run surface (git-crypt filter drivers, not configured here), eight dependency surfaces inside the seven-day cooldown, one build-time execution point, two unpinned dependency surfaces. Nothing was installed or run. QualityLayer Commercial Source-Available Licence
 - [the-open-engine/zeroshot](https://github.com/the-open-engine/zeroshot) at [`7353598ff2025de12acd60f1be15223317fa918b`](https://github.com/the-open-engine/zeroshot/commit/7353598ff2025de12acd60f1be15223317fa918b) — read only, from a full clone at the head of `main` on 13 November 2026. Three auto-run surfaces: a plugin marketplace file, a Claude plugin manifest and a plugin `.mcp.json` naming a hosted HTTP MCP server at `api.app.zeroshot.sh`, which was not contacted; `Cargo.lock`, both `Cargo.toml` files and `package.json` inside the seven-day cooldown; five build-time execution points (`npm/zeroshot` postinstall, a husky `prepare`, `sdks/python/setup.py` and `conftest.py`, `zeroshot/build.rs`); `sdks/python/pyproject.toml` unpinned with no lockfile; `AGENTS.md` and `CLAUDE.md` read as data. Nothing was installed, built or run, and the 183 Active Memory test cases were not run. The hosted service's Memory operations are not in the tree. MIT, four identical licence files, no added terms.
+- [willderai/willder-core](https://github.com/willderai/willder-core) at [`48794d116e95a6843a9ea812b20c65b6c692299d`](https://github.com/willderai/willder-core/commit/48794d116e95a6843a9ea812b20c65b6c692299d) — read only, from a full clone of eight commits; no auto-run surface (`hooks/` holds React hooks), two build-time execution points (`memory-service/tests/conftest.py`, the `prisma generate` postinstall), four unpinned dependency surfaces. Nothing was installed or run; graphiti-core 0.30.2, a pinned dependency, was not opened. MIT
 
 ## What the licences actually say
 

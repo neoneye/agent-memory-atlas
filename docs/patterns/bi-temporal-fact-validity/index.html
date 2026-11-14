@@ -535,6 +535,22 @@ are published with the index documents as one generation. The world-time
 fields beside it, an incident's <code>started_at</code> to
 <code>resolved_at</code> and its <code>affected</code> windows, are
 stored and returned, and no query reads them.</p>
+<p><a href="../../systems/willder/">Willder</a> inherits edge validity
+from <a href="../../systems/graphiti/">Graphiti</a> and adds a stated
+event time on its own rows, then keeps the two apart on purpose.
+Connector items pass the source's timestamp as the graph's reference
+time, and the edge search filters to edges whose <code>invalid_at</code>
+is null or ahead
+(<code>memory-service/app/graph/search.py:86-98</code>). An agent's
+<code>occurredAt</code> is clamped to the store time and written to the
+chunk only; <code>withoutOccurredAt</code> strips it before the graph
+write so that a stated date <em>"never decides which of two
+contradicting edges the graph retires"</em>
+(<code>lib/inngest/memory-ingest.ts:509-518</code>).</p>
+<p>Not proposed for any <em>Read these first</em> list; the integrator
+may judge <code>append-only-memory-audit</code> (three-row split plus
+trigger) and <code>scope-as-a-first-class-key</code> (derived-write
+rule) against the current entries.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

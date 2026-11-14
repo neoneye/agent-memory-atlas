@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 801 of 801 screened at the report's current pin.**
+**Progress: 802 of 802 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 381 |
+| Repositories with an auto-run surface (`RUNS`) | 382 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 360 |
-| Repositories with build-time execution (`EXEC`) | 583 |
+| Repositories with build-time execution (`EXEC`) | 584 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 7 |
 | Repositories that could not be screened | 0 |
 
@@ -398,6 +398,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`vortx-emem`](../../content/systems/vortx-emem.md) | `.claude-plugin/`, `.gitmodules`, `plugins/emem/.claude-plugin/plugin.json`, `plugins/emem/.mcp.json`, `server.json` |
 | [`waggle`](../../content/systems/waggle.md) | `.mcp.json`, `server.json`, `smithery.yaml` |
 | [`wenlan`](../../content/systems/wenlan.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
+| [`willder`](../../content/systems/willder.md) | `hooks/` |
 | [`windie-sandbox`](../../content/systems/windie-sandbox.md) | `.gitmodules` |
 | [`windieos`](../../content/systems/windieos.md) | `.vscode/settings.json` |
 | [`windvane`](../../content/systems/windvane.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |

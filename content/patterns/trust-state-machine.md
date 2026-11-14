@@ -431,6 +431,19 @@ visible only in the data.
 
 **[obsidian-second-brain](../../systems/obsidian-second-brain/) has a status vocabulary and spends every value of it as a weight.** Ten values, `superseded` and `rejected` among them, multiply a note's search score by 0.6 in the cached scan and again in the post-fusion rerank, and a `supersedes:` link from another candidate does the same (`integrations/obsidian-mcp-server/vault_ops.py:127-139`, `:158-193`, `:445-452`). The update tool tells the model that setting one fades the note in all future search. No search read excludes a note on status, so the one strong match for a query is returned first whatever its status says. Crew's lesson status gates a copy into a rules file and is not filtered on read.
 
+[Willder](../../systems/willder/) computes a five-value status and stores none
+of it. `claimStatusOf` returns *verified* only for a person's own record; an
+agent's claim is *proposed* until the capture of its own session, in the
+claim's scope and written after it, shows a test run, and then *untested*,
+*failing* or *tested*, the last only when the run passed on files the claim
+names and the session did not edit the tests it passed on
+(`services/memory/claim-status.ts:107-136`). The task-start block orders and
+labels by it, so an untested plan is read after the cause that says where to
+look. The status is a function of the change event's writer and of stored
+captures, evaluated per read, and no query can select by it. It is the
+evidence-derived ladder this page argues for, without the field, so no
+`trust_state` mark follows from it.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

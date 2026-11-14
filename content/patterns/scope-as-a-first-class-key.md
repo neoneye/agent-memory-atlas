@@ -960,6 +960,26 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 [Zeroshot](../../systems/zeroshot/) keeps every repository's lessons in one SQLite file and separates them in one query. The snapshot a run starts from selects rows whose `repository` column equals a key hashed from the checkout's own forge identity, or whose `graph_hash` equals the hash of the authored graph with a null or matching repository, and each decoded lesson is rechecked against the same predicate. Retrieval then runs over that snapshot alone. A committed test writes lessons for another repository, another node and another graph hash and asserts the exact in-scope list. A graph lesson with no repository qualifier is, by design, read by that graph in every repository; and the capacity limits are counted across the whole file, so the scopes share one budget.
 
+[Willder](../../systems/willder/) applies the key three times and says where
+it stops. Scope is an `ltree` path on every memory row. `check()` decides
+whether a grant or a live token covers the target by `@>`, the vector read
+repeats the containment in its own SQL with untagged rows admitted only when
+the checked scope covers the org root, and the graph, which matches `group_id`
+exactly, is asked for a partition list the guard computes and then verifies
+each returned fact against (`services/memory/guarded-store.ts:596-773`,
+`services/memory/pgvector-store.ts:400-415`). It also closes the gap this page
+names under the mark's limits, the summary that crosses a boundary: the server
+records every scope an agent id was served content from, and a later write into
+a scope whose subtree does not contain them is refused unless it lists them in
+`intentionalShareFrom`, which writes a `memory.write.declassified` audit row
+and announces the share to the source scope's readers
+(`services/access/derived-writes.ts`). The record never expires; a 30-minute
+idle expiry was removed on 24 October 2026. What the key does not reach is
+stated in the README: no row-level security, a memory-service key that reads
+any partition, and graph writes from a few routes that bypass the guarded
+store. A nine-case real-Postgres table tests the predicate, including a sibling
+that matches only through `LIKE`'s `_` wildcard.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

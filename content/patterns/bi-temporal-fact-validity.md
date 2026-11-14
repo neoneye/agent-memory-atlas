@@ -252,6 +252,20 @@ gains a closed copy and an open copy that both claim validity from the start.
 
 [KYB](../../systems/kyb/) has one clock and reads it correctly. `as_of` resolves each key's newest version committed at or before T, drops a key whose dated retraction marker is newer, and only then lets that version match the words and filters, so a superseded value that still says the word cannot answer (`src/index.rs:659-670`, `:685-745`). The markers are published with the index documents as one generation. The world-time fields beside it, an incident's `started_at` to `resolved_at` and its `affected` windows, are stored and returned, and no query reads them.
 
+[Willder](../../systems/willder/) inherits edge validity from
+[Graphiti](../../systems/graphiti/) and adds a stated event time on its own
+rows, then keeps the two apart on purpose. Connector items pass the source's
+timestamp as the graph's reference time, and the edge search filters to edges
+whose `invalid_at` is null or ahead (`memory-service/app/graph/search.py:86-98`).
+An agent's `occurredAt` is clamped to the store time and written to the chunk
+only; `withoutOccurredAt` strips it before the graph write so that a stated
+date *"never decides which of two contradicting edges the graph retires"*
+(`lib/inngest/memory-ingest.ts:509-518`).
+
+Not proposed for any *Read these first* list; the integrator may judge
+`append-only-memory-audit` (three-row split plus trigger) and
+`scope-as-a-first-class-key` (derived-write rule) against the current entries.
+
 ## A third clock
 
 Two clocks answer *what was true* and *what did we believe*. The temporal

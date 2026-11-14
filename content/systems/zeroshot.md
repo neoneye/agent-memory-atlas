@@ -98,20 +98,18 @@ Every delivery wraps cards in an `<active_memory>` block that opens
 flowchart TD
   RUN["Run starts:<br/>scoped snapshot frozen"] --> INJ["Cards injected by<br/>tool hook or node prompt"]
   INJ --> MAN["Supplied manifest:<br/>id@revision returned"]
-  MAN --> PM["Graph settles:<br/>four model specialists"]
-  PM --> DISC["Discovery proposes<br/>a lesson"]
-  PM --> MAINT["Maintenance decides<br/>every supplied card"]
-  DISC --> GATE{"Cites this node's<br/>completion or receipt,<br/>and a current file?"}
+  MAN --> PM["Graph settles: four<br/>model specialists propose<br/>and maintain lessons"]
+  PM --> GATE{"Discovery: cites this<br/>node's completion or<br/>receipt, and a current file?"}
   GATE -- "no" --> REJ["Whole specialist<br/>rejected, stage logged"]
   GATE -- "yes" --> ID["id = sha256 of scope<br/>and normalized advice"]
-  MAINT --> SRC{"Card's source commit<br/>is ancestor of<br/>a clean HEAD?"}
+  ID ~~~ SRC{"Maintenance: card's<br/>source commit is ancestor<br/>of a clean HEAD?"}
+  PM --> SRC
+  ID --> PUB
   SRC -- "no, or no commit" --> STUCK["keep or defer only:<br/>never adapted or retired"]
-  SRC -- "yes" --> PUB
-  ID --> PUB["One transaction:<br/>every reviewed revision<br/>must still match"]
-  PUB -- "upsert" --> LIVE["Live lesson,<br/>revision + 1"]
+  SRC -- "yes" --> PUB["One transaction:<br/>every reviewed revision<br/>must still match"]
+  PUB -- "upsert" --> LIVE["Live lesson, revision + 1,<br/>in later runs' snapshots"]
   PUB -- "retire" --> TOMB["Tombstone: id and<br/>revision, body NULL"]
   TOMB -- "same id proposed" --> FAIL["RevisionConflict:<br/>whole publication<br/>discarded"]
-  LIVE --> RUN
 ```
 
 ## 3. Architecture

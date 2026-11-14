@@ -331,6 +331,17 @@ reader sees.
 
 [ZettelForge](../../systems/zettelforge/) detects in one place and disposes in another, and neither records why. Its consolidation pass flags a pair of notes sharing an entity when exactly one carries a negation word, counts the older as contradicted, and puts the count in a log event (`src/zettelforge/consolidation.py:286-305`, `:341-384`). Supersession runs on every write with no detector: a later note sharing one CVE, named tool or city sets `superseded_by` on the older, and the LLM updater's DELETE does the same to the nearest vector hit (`memory_manager.py:1579-1650`, `memory_updater.py:82-100`). Neither names an actor or a reason. The MCP and web recall pass `exclude_superseded=False`, so the disposition never reaches the agent.
 
+[Willder](../../systems/willder/) detects and does not resolve, by rule. Two
+writers of one fact inside a second are settled by storage order, the loser is
+kept as superseded, and its writer is told on its next tool call; the
+task-start block serves the conflicting versions together and asks the person
+(`services/memory/conflict.ts:74`, `:338`). Two agents claiming one task are
+both stored and each is told of the other. The failure is one layer up. A fact
+dispute between same-tier writers can be resolved by a scope admin through a
+signed-in route, and the route's own header says the graph-side effect is not
+wired: the row changes status and the losing edge is still served
+(`app/api/facts/disputes/[id]/resolve/route.ts:1-5`).
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

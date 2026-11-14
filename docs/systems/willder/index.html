@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hostable Postgres and Neo4j
+memory service where people and agents share versioned facts under
+scope-tree grants, per-agent tokens and an append-only audit.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Willder — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hostable Postgres
+and Neo4j memory service where people and agents share versioned facts
+under scope-tree grants, per-agent tokens and an append-only audit.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Willder — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hostable Postgres
+and Neo4j memory service where people and agents share versioned facts
+under scope-tree grants, per-agent tokens and an append-only audit.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Willder — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Willder",
+      "description": "A self-hostable Postgres and Neo4j memory service where people and agents share versioned facts under scope-tree grants, per-agent tokens and an append-only audit.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Shared agent memory behind one access
+check, with versions, a change feed and an audit chain</p>
+          <h1>Willder</h1>
+          <p class="document-deck">A self-hostable Postgres and Neo4j
+memory service where people and agents share versioned facts under
+scope-tree grants, per-agent tokens and an append-only audit.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/willderai/willder-core">
+              <span>Source</span>
+              <strong>willderai/willder-core</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/willderai/willder-core/commit/48794d116e95a6843a9ea812b20c65b6c692299d" title="48794d116e95a6843a9ea812b20c65b6c692299d">
+              <span>Analyzed revision</span>
+              <code>48794d11…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-14</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/willderai--willder-core" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>willderai--willder-core</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>372,437
+lines of TypeScript in 1,723 files, 246,396 of them in 1,038 test files;
+19,710 lines of Python in 74 files; 112 SQL migrations. Outside test
+files the memory code is services/memory (34,492 lines), services/access
+(6,056), mcp (7,090) and memory-service/app (6,005 lines of
+Python)</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>8
+commits on main, 29 October – 4 November 2026, all by willder-crew[bot];
+the first adds 2,022 files, and its migrations are dated from 8 June
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,038
+Vitest files with 8,337 it/test call sites, 420 of them real-Postgres
+suites gated on QA_DATABASE_URL, which the CI workflow sets; 46 pytest
+files with 398 test functions; nothing was run for this
+report</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Willder is a multi-tenant memory service that several agents and
+people read and write at once. Facts are versioned rows in Postgres with
+pgvector, mirrored as temporal edges in Neo4j through <a
+href="../graphiti/">Graphiti</a>. Agents connect over MCP, each with its
+own scoped, expiring token. What is notable is how much of the
+shared-memory problem is settled by deterministic code. One audited
+access check runs before every store call, a write made from a stale
+read is refused, races are settled first-stored-wins, and the database
+keeps the audit table append-only. What is weak is where the boundary
+sits and what can be seen of its history. Every guarantee is application
+code over stores that trust their caller, and the public repository is
+eight bot commits.</p>
+<p>The design philosophy is stated in the contribution guide: <em>"No
+model in any decision path: visibility, relevance, staleness or
+ordering"</em> (<code>CONTRIBUTING.md</code>). Models distil and extract
+on the write side and answer in the chat route. They do not decide who
+may read, which version is current, or whether a claim is settled.</p>
+<p>The strongest part is the test suite around negative outcomes. Scope
+leaks, superseded versions, deleted facts and erased people are each
+asserted absent on named read paths, with a positive control beside the
+assertion, and the CI workflow gives those suites the database they
+need.</p>
+<p>The least proven parts are the governance features above the graph. A
+fact dispute can be opened and resolved, and resolving it changes no
+edge. An agent's decision waits for a person, and an agent's convention
+does not.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a version of a fact: a piece of text filed under an
+entity name in one scope, written by a named person, agent or connector.
+A second write under the same name is a new fact unless it names the
+version it replaces. Rules are a second kind of record, conventions and
+decisions, served unasked at the start of each session. Working notes
+are a third kind, and they expire.</p>
+<p>A version is believed when it is stored. There is no candidate tier
+for facts. What the system controls is which version is current and how
+a claim is labelled when it is served.</p>
+<ul>
+<li><strong>Replacement.</strong> A write that names
+<code>baseVersion</code> replaces that version if it is still current,
+and is refused with <code>stale_version:</code> otherwise
+(<code>services/memory/fact-update.ts:185-233</code>).</li>
+<li><strong>Stale reads.</strong> The server records every version it
+showed each agent. A write with no base is refused when the fact has a
+newer version its writer never read, stored more than one second earlier
+(<code>services/memory/fact-reads.ts:262-319</code>).</li>
+<li><strong>Races.</strong> Two writers of one name in one scope inside
+one second, neither having seen the other: the version stored first
+stays current and the other is kept, marked superseded
+(<code>services/memory/conflict.ts:74</code>, <code>:338</code>).</li>
+<li><strong>Retirement.</strong> A rule leaves service by being
+superseded once or retired. A graph edge leaves when Graphiti ends it. A
+deleted fact is removed.</li>
+<li><strong>Status.</strong> A claim's status is computed when it is
+served. A person's record is <em>verified</em>. An agent's is
+<em>proposed</em>, <em>untested</em>, <em>failing</em> or
+<em>tested</em>, from what the capture of its own session recorded after
+the write (<code>services/memory/claim-status.ts:107-136</code>).</li>
+</ul>
+<p>Nothing an agent writes can call itself settled. The file that
+computes status says a claim's status comes <em>"from recorded evidence
+only, never from its text or its writer's declared role"</em>
+(<code>services/memory/claim-status.ts:8-9</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a Willder write from an agent's token to a later read, showing where a write is refused, where a losing version is kept, and how an agent's decision stays a lead until a signed-in person confirms it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a Willder write from an agent&#39;s token to a later read, showing where a write is refused, where a losing version is kept, and how an agent&#39;s decision stays a lead until a signed-in person confirms it
+flowchart TD
+  W[&quot;memory_ingest&lt;br/&gt;token, content, name&quot;] --&gt; CHK{&quot;check(): token live,&lt;br/&gt;scope covers,&lt;br/&gt;write permission&quot;}
+  CHK -- deny --&gt; REFUSED[&quot;refused, nothing stored:&lt;br/&gt;audit_log deny row,&lt;br/&gt;derived write, or&lt;br/&gt;stale_version&quot;]
+  CHK -- allow --&gt; TAINT{&quot;agent id was shown a&lt;br/&gt;scope outside the target?&quot;}
+  TAINT -- &quot;yes, undeclared&quot; --&gt; REFUSED
+  TAINT -- &quot;no, or declared&quot; --&gt; STALE{&quot;newer version this&lt;br/&gt;agent has not read?&quot;}
+  STALE -- &quot;yes, over 1 s old&quot; --&gt; REFUSED
+  STALE -- no --&gt; ROW[&quot;memory_chunks row,&lt;br/&gt;change event, applied&lt;br/&gt;audit row: one transaction&quot;]
+  ROW --&gt; RACE{&quot;other writer within 1 s,&lt;br/&gt;same name and scope?&quot;}
+  RACE -- &quot;stored second&quot; --&gt; LOSER[&quot;kept as superseded&lt;br/&gt;readable by id only&quot;]
+  RACE -- no --&gt; CUR[&quot;current version&quot;]
+  CUR --&gt; GX[&quot;queued job: distil,&lt;br/&gt;extract Graphiti edges&quot;]
+  GX -.-&gt; RETRY[&quot;model or graph down:&lt;br/&gt;row stays readable,&lt;br/&gt;extraction retried&quot;]
+  CUR --&gt; READ[&quot;read: check(), then&lt;br/&gt;pgvector within scope,&lt;br/&gt;graph partitions asked&quot;]
+  READ --&gt; OUT[&quot;current versions only&lt;br/&gt;writer, date, version id&quot;]
+  OUT --&gt; KIND{&quot;a rule: which kind&lt;br/&gt;did the agent send?&quot;}
+  KIND -- decision --&gt; LEAD[&quot;served as a lead&lt;br/&gt;to verify&quot;]
+  LEAD -- &quot;signed-in person&lt;br/&gt;confirms&quot; --&gt; RULE[&quot;person&#39;s rule in force&lt;br/&gt;no agent can replace it&quot;]
+  KIND -- convention --&gt; ARULE[&quot;rule in force at once&lt;br/&gt;tagged as an agent&#39;s&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Four processes and two databases make up the engine.</p>
+<ul>
+<li><strong>Postgres</strong> with <code>pgvector</code> and
+<code>ltree</code> holds orgs, the scope tree, grants, capability token
+hashes, <code>audit_log</code>, <code>memory_chunks</code>,
+<code>fact_edges</code>, <code>change_events</code>,
+<code>conventions</code>, <code>working_notes</code>, briefs and the
+erasure tables (<code>prisma/schema.prisma</code>). The 112 migrations
+create the triggers that the audit chain, the change-feed sequence and
+the erasure re-apply flag rest on.</li>
+<li><strong>Neo4j 5.26</strong> holds Graphiti's entities, edges and
+episodes. Each scope path is one <code>group_id</code>
+(<code>services/memory/graphiti-store.ts:274</code>).</li>
+<li><strong>The memory service</strong> is a FastAPI application that
+owns Graphiti and Neo4j. It embeds with BGE-small-en-v1.5 on the CPU and
+calls an OpenAI-compatible endpoint for extraction when one is
+configured (<code>memory-service/app/main.py</code>,
+<code>memory-service/requirements.txt</code>). It pins
+<code>graphiti-core==0.30.2</code>.</li>
+<li><strong>The MCP server</strong> runs as a route of the web app or as
+a local stdio process, registering the same tools either way
+(<code>mcp/tools.ts:39-53</code>).</li>
+<li><strong>The web app</strong> is Next.js with Clerk for sign-in. It
+carries the grant and token screens, the audit view, the confirm page
+and the delete routes.</li>
+<li><strong>Inngest</strong> runs the queued jobs.</li>
+</ul>
+<p>The Node side reaches memory through <code>GuardedMemoryStore</code>,
+which wraps a hybrid store over the pgvector and Graphiti clients
+(<code>services/memory/guarded-store.ts:567-594</code>,
+<code>services/memory/hybrid-store.ts:201</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Self-hosting means Docker Compose with three containers, Node, a
+Prisma migration and a token minted from the command line
+(<code>docker-compose.yml</code>, <code>README.md</code>). Postgres and
+the memory service bind to <code>127.0.0.1</code> and Neo4j is not
+published. Reads need no model key. Writes are stored and readable
+without one, and only graph extraction is skipped. The embedding model
+is about 130 MB and loads offline.</p>
+<p>The web app is optional and needs a Clerk instance. Without it there
+is no confirm page and no fact-delete route, since neither exists as an
+MCP tool or a self-host script. <code>npm run selfhost:export</code>
+writes one JSON Lines file in a documented format
+(<code>docs/export-format.md</code>). The store is repairable with SQL
+and Cypher, and anyone holding either database credential reads every
+tenant.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Access decision.</strong> <code>check</code> →
+<code>evaluate</code> → <code>recordAudit</code>
+(<code>services/access/check.ts:565-585</code>, <code>:958-980</code>,
+<code>:1058-1083</code>). Capability lookup with live grant
+re-derivation is <code>loadMatchingCapabilities</code>
+(<code>:706-835</code>).</li>
+<li><strong>Write.</strong> <code>handleMemoryIngest</code> →
+<code>ingestMemory</code> → <code>storeForReading</code> →
+<code>PgvectorMemoryStore.ingestOnce</code>
+(<code>mcp/tools/memory-ingest.ts:122-200</code>,
+<code>lib/inngest/memory-ingest.ts:736-835</code>,
+<code>:481-505</code>,
+<code>services/memory/pgvector-store.ts:756-822</code>).</li>
+<li><strong>Stale and conflicting writes.</strong>
+<code>assertBaseVersionCurrent</code>,
+<code>assertNoUnreadVersion</code>, <code>recordSupersession</code>
+(<code>services/memory/fact-update.ts:185</code>,
+<code>services/memory/fact-reads.ts:262</code>,
+<code>services/memory/conflict.ts:338</code>).</li>
+<li><strong>Extraction.</strong> <code>runMemoryIngest</code> →
+<code>distillFacts</code> → <code>extractIntoGraph</code> → the memory
+service's <code>/ingest</code>
+(<code>lib/inngest/memory-ingest.ts:328-360</code>,
+<code>:146-239</code>, <code>:362-432</code>;
+<code>memory-service/app/main.py:474-555</code>).</li>
+<li><strong>Retrieval.</strong> <code>memory_query</code> →
+<code>GuardedMemoryStore.retrieve</code> →
+<code>HybridMemoryStore.retrieve</code> →
+<code>PgvectorMemoryStore.retrieve</code> and
+<code>GraphitiMemoryStore.retrieve</code> → <code>search_edges</code>
+(<code>mcp/tools/memory-query.ts:76</code>,
+<code>services/memory/guarded-store.ts:596-888</code>,
+<code>services/memory/hybrid-store.ts:256</code>,
+<code>services/memory/pgvector-store.ts:907-1125</code>,
+<code>services/memory/graphiti-store.ts:423-460</code>,
+<code>memory-service/app/graph/search.py:48-98</code>).</li>
+<li><strong>Context injection.</strong>
+<code>readServableTaskStart</code> and the block builder
+(<code>services/memory/task-start.ts:1397</code>,
+<code>mcp/task-start-notice.ts</code>); change notices
+(<code>mcp/change-notices.ts</code>,
+<code>services/memory/change-feed.ts:134</code>).</li>
+<li><strong>Rules.</strong> <code>recordAuthorizedConvention</code>,
+<code>confirmConvention</code>, <code>retireConvention</code>
+(<code>services/memory/conventions.ts:149-176</code>,
+<code>:406-437</code>, <code>:330-362</code>).</li>
+<li><strong>Deletion.</strong>
+<code>PATCH</code>/<code>DELETE /api/memory/facts/[id]</code> →
+<code>GuardedMemoryStore.removeFact</code>
+(<code>app/api/memory/facts/[id]/route.ts:27</code>, <code>:148</code>;
+<code>services/memory/guarded-store.ts:1212-1294</code>).</li>
+<li><strong>Erasure.</strong> <code>runPersonErasure</code> →
+<code>recordSuppressions</code>; <code>reapplyErasures</code>
+(<code>services/memory/person-erasure.ts:273-290</code>,
+<code>services/memory/erasure-suppression.ts:552</code>,
+<code>services/memory/erasure-reapply.ts:104</code>).</li>
+<li><strong>Cross-scope writes.</strong>
+<code>authorizeDerivedWrite</code>
+(<code>mcp/derived-write.ts:49</code>,
+<code>services/access/derived-writes.ts</code>).</li>
+<li><strong>Audit.</strong> <code>writeAuditRow</code>,
+<code>recordAppliedChange</code>, <code>recordWriteEffect</code>
+(<code>services/access/audit-row.ts:36-52</code>,
+<code>services/access/check.ts:1106</code>, <code>:1409</code>); the
+chain verifier (<code>services/access/audit-chain.ts</code>,
+<code>scripts/verify-audit-chain.ts</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryChunk</code> is the version
+(<code>prisma/schema.prisma:1697-1790</code>). Its fields are
+<code>content</code>, <code>entityName</code>, <code>scopePath</code>,
+<code>actorType</code>, <code>actorId</code>, <code>sourceId</code> or
+<code>uploadId</code>, <code>contentKey</code>,
+<code>factVersion</code>, <code>baseVersionId</code>, <code>role</code>,
+<code>embedding</code>, <code>occurredAt</code>,
+<code>receivedAt</code>, <code>createdAt</code> and
+<code>storedSeq</code>. <code>entityName</code> and scope together are
+the contention key. <code>factVersion</code> separates a row the fact
+path stored from a file passage or connector item that shares the
+name.</p>
+<p><code>FactEdge</code> records relations between records by id:
+<code>supersedes</code>, <code>derivedFrom</code>,
+<code>dependsOn</code>, <code>ownedBy</code>, <code>deliveredTo</code>,
+<code>causedBy</code> (<code>prisma/schema.prisma:2412-2449</code>).
+Whether a version is current is the absence of an incoming
+<code>supersedes</code> edge, and no other place records it
+(<code>services/memory/superseded-facts.ts:11-13</code>).</p>
+<p><code>Convention</code> is a rule: kind, subject, text, scope,
+writer, a unique <code>supersedesId</code>, <code>supersededById</code>
+for a version that lost a race, and <code>retiredAt</code>
+(<code>prisma/schema.prisma:2118-2148</code>). A rule is never
+edited.</p>
+<p><code>ChangeEvent</code> is one row per governed write, inserted in
+the write's own transaction with a gapless per-org <code>seq</code>, the
+writer, the entry point, a 200-character summary, the authorizing audit
+row, and the task and session the writer's connection named
+(<code>prisma/schema.prisma:1969-2038</code>). <code>AgentCursor</code>
+holds each agent's position.</p>
+<p>Three tables record what an agent has been shown.
+<code>FactVersionRead</code> holds one row per agent and version, read
+whole or only sighted. <code>SessionScopeRead</code> holds the scopes
+whose content the agent id was ever served. Both drive write refusals
+(<code>prisma/schema.prisma:1889-1930</code>).</p>
+<p>Time is carried four ways on a chunk: stated event time, receipt on
+the database clock, creation, and insertion order. Graph edges carry
+Graphiti's <code>valid_at</code>, <code>invalid_at</code>,
+<code>created_at</code> and <code>expired_at</code>.</p>
+<p>Scope is an <code>ltree</code> path rooted at
+<code>org_&lt;orgId&gt;</code>. Rows written by paths that name no scope
+are untagged, and only a caller whose checked scope covers the org root
+reads them (<code>services/memory/pgvector-store.ts:386-398</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A read runs <code>check()</code> first and nothing is searched on a
+denial. The account tier then decides which stores answer, the token
+budget and a per-call latency ceiling: 2,000, 6,000 or 16,000 tokens
+(<code>services/memory/account-tiers.ts:49-53</code>). The Starter tier
+allows neither the graph nor the vector store, so its memory search
+returns no facts, which the README lists under Limits.</p>
+<p>The vector store takes the nearest rows by their own embedding and
+the nearest passages, inside one visibility predicate: tenant, non-null
+embedding, no incoming <code>supersedes</code> edge, and scope
+containment (<code>services/memory/pgvector-store.ts:400-415</code>). A
+query quoting four or more words also runs a trigram match, and its
+ranking is fused by reciprocal rank with <code>k = 60</code>
+(<code>services/memory/text-match-fusion.ts:93</code>). Rows an erasure
+suppresses are excluded and the search runs again, at most three rounds
+(<code>services/memory/pgvector-store.ts:313</code>).</p>
+<p>The graph leg is Graphiti's edge search, BM25 and cosine fused by
+reciprocal rank, with a filter that drops ended edges
+(<code>memory-service/app/graph/search.py:48-98</code>). Graphiti
+matches <code>group_id</code> exactly, so the guard asks three legs: the
+checked scope, the bare org partition when the scope covers the org
+root, and every registered descendant scope in one call
+(<code>services/memory/guarded-store.ts:696-773</code>). At most 1,000
+descendants are searched and the rest are named in the reply
+(<code>services/access/check.ts:987</code>).</p>
+<p>The merge deduplicates by normalized text and by the chunk ids
+stamped on graph episodes. It fills the page by writer tier, person
+before agent before extraction, with a small floor per tier and reserved
+slots for close vector hits. It then cuts from the bottom to the token
+budget (<code>services/memory/guarded-store.ts:814-830</code>). A
+retired version that ranked is replaced by its current successor
+(<code>services/memory/current-versions.ts</code>).</p>
+<p>Delivery is tool-mediated for search and automatic for context. The
+first tool result of a session carries a task-start block with a
+600-token budget for its records
+(<code>mcp/task-start-notice.ts:169</code>), and later results carry
+change notices. Ranking inside the block is lexical, by term rarity,
+with no embedding (<code>services/memory/task-start.ts</code>).</p>
+<p>Each fact is returned with its writer, date and version id. A read
+reports the stores that failed and the scopes it did not search, so a
+partial answer is not presented as complete
+(<code>services/memory/guarded-store.ts:860-877</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every writer calls <code>ingestMemory</code>. For an agent's write
+the row is embedded and inserted in the request, in one transaction with
+its change event, its conflict outcome and its
+<code>memory.write.applied</code> audit row
+(<code>lib/inngest/memory-ingest.ts:481-505</code>). The reply carries
+the version id. The embedding call has a 15-second ceiling, after which
+the write is left to the queued job (<code>:453</code>).</p>
+<p>The queued job distils and extracts. Content from a person or from
+<code>memory_ingest</code> longer than 15 characters goes to a model
+that returns facts, typed entities, attribute facts and decisions
+(<code>lib/inngest/memory-ingest.ts:59-63</code>,
+<code>:146-239</code>). Each derived sentence becomes a Graphiti
+episode. When extraction yields no relation, the memory service writes a
+verbatim <code>Fact</code> node by raw Cypher so the text stays visible
+in the graph
+(<code>memory-service/app/graph/visibility.py:198-262</code>). A failed
+extraction leaves the row readable and queues a retry
+(<code>services/memory/graph-extraction-retry.ts</code>).</p>
+<p>Deduplication is a content key over org, scope, name, normalized
+content and base version, with a unique index. A retried identical
+ingest keeps one row, and an <code>idempotencyKey</code> replays the
+first reply (<code>services/memory/ingest-key.ts</code>).</p>
+<p>Correction by a person is <code>PATCH /api/memory/facts/[id]</code>:
+the old version is removed under a <code>memory.delete</code> decision,
+the corrected text is ingested, and the feed reports a supersede. An
+agent corrects by writing with <code>baseVersion</code>. MCP has no
+delete tool.</p>
+<p>A write can be refused for a reason unrelated to its own scope. If
+the agent id was ever served content from a scope outside the target's
+subtree, the write is refused unless it lists those scopes in
+<code>intentionalShareFrom</code>. A declared share writes a
+<code>memory.write.declassified</code> audit row and a
+<code>derivedFrom</code> edge, and announces itself to the source
+scope's readers (<code>services/access/derived-writes.ts</code>,
+<code>mcp/derived-write.ts:49</code>). The record never expires; a
+30-minute idle expiry was removed on 24 October 2026 because an agent's
+context outlives it.</p>
+<p>Connector and upload writes pass the erasure list first. A connected
+source takes the access of the scope it lands in, and connecting one
+where more readers would see it requires a recorded acknowledgement
+(<code>services/access/source-widening.ts</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>An agent's write blocks on one local embedding and one Postgres
+transaction. <code>docs/architecture.md</code> reports a write-to-read
+median of 538 ms for one writer on the hosted service, from a harness
+that is not in the repository. Extraction is deferred: one model call to
+distil and Graphiti's own calls per episode. No pass rewrites the store.
+A read is two or three store calls and one to three audit inserts; each
+audit insert takes a row lock on the org's chain head, so audit writes
+for one org are serial
+(<code>prisma/migrations/20261006160000_audit_log_tamper_evident/migration.sql:120-143</code>).
+The task-start block and notices ride on tool results, not on the system
+prompt, so they do not disturb a cached prefix.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers thirteen tools: <code>memory_query</code>,
+<code>memory_entity</code>, <code>memory_version</code>,
+<code>memory_ingest</code>, <code>fact_link_source</code>,
+<code>get_my_brief</code>, <code>memory_stale</code>,
+<code>memory_changes</code>, <code>memory_note</code>, three contact
+tools and <code>send_feedback</code> (<code>mcp/tools.ts:39-53</code>).
+A connection that sends <code>X-Willder-Tools: coding</code> lists four
+of them, to save schema tokens (<code>mcp/tool-set.ts:22</code>).</p>
+<p>The agent's authority is read and write inside its token's scope. It
+can replace versions it has read, record rules, post notes and link a
+fact to a source. It cannot delete a fact, confirm a rule, resolve a
+dispute, retire a person's rule, export, or mint or extend a token. Only
+a person issues a token, for seven days by default and at most ninety,
+and an admin token lasts two hours
+(<code>services/access/issue-capability.ts:30-33</code>,
+<code>:87-95</code>).</p>
+<p>Server instructions tell the agent to record a rule only when the
+person stated it, to prefer <code>decision</code> when unsure, and to
+show the person the confirm link
+(<code>mcp/willder-server.ts:23-30</code>). That is prompt text. The
+enforced half is that the link opens a route an agent's token cannot
+use.</p>
+<p>Claude Code hooks under <code>cli/hooks/</code> surface change
+notices while the agent is busy, send the files a claim touches, and
+capture session state: the files changed and the last test run,
+redacted. That capture is the evidence the claim status reads. A session
+names its task with a <code>willder/task</code> hint or header, and
+later sessions of the same task are served what earlier ones wrote.</p>
+<p>The documentation carries a connection page per client under
+<code>docs/connect/</code>. OAuth for clients that cannot send a bearer
+header is built and off by default.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope is enforced twice on the Postgres side and once on the
+graph side.</strong> <code>check()</code> decides, and the SQL repeats
+the containment. The graph has no containment, so the guard computes the
+partition list and verifies each returned fact names a partition it
+asked for (<code>services/memory/guarded-store.ts:766-773</code>). This
+is the <code>scope_enforced</code> mark. The README names what it does
+not cover: no row-level security, a memory-service key that reads any
+<code>group_id</code>, and graph writes from a few routes and jobs that
+go around the guarded store.</p>
+<p><strong>The audit records mutations and cannot be edited by the
+application.</strong> A write produces an authorization row, an applied
+row and, for destructive calls, an effect row naming the executed
+partition. Triggers refuse update, delete and truncate, and a per-org
+hash chain makes a dropped trigger detectable after the fact. This is
+the <code>audit_log</code> mark. The row holds ids and scopes, not
+content.</p>
+<p><strong>Query text is stored in that table.</strong> A read's audit
+target is <code>query:&lt;the query text&gt;</code>
+(<code>services/memory/guarded-store.ts:603-607</code>). Person erasure
+writes audit rows and reads them for its counts; nothing in
+<code>services/memory/person-erasure*.ts</code> or
+<code>erasure-*.ts</code> changes one, and the trigger would refuse it.
+A name typed into a search before an erasure stays in
+<code>audit_log</code> until the org is deleted, and an admin's export
+writes audit rows as stored (<code>docs/export-format.md</code>).</p>
+<p><strong>Erasure leaves a value-keyed list.</strong> The digests stop
+a connector re-sync, a late upload extraction and an import from writing
+an erased person back, and hide rows a restored backup returned until a
+re-apply removes them. While a re-apply is due, <code>check()</code>
+refuses everything in the org except <code>access.manage</code>
+(<code>services/access/check.ts:662-672</code>). This is the
+<code>tombstone</code> mark. A deleted fact has no such record: an agent
+may write the same sentence again.</p>
+<p><strong>An agent's decision waits for a person; its convention does
+not.</strong> <code>ruleIsSettled</code> returns true for any rule whose
+kind is not <code>decision</code>
+(<code>services/memory/claim-status.ts:33-35</code>). The server comment
+says a convention <em>"is served at once, marked as recorded by an
+agent"</em> (<code>mcp/willder-server.ts:8-9</code>). The
+<code>kind</code> is the agent's own tool argument. On the decision path
+the confirming actor is verified from a session and no tool reaches the
+verb, but the argument that selects that path is the producer's. An
+agent that wants a rule in force without a person has a documented way
+to get one, with a tag, so <code>human_review</code> is withheld.</p>
+<p><strong>Status is computed, not stored.</strong> The five-value claim
+status and the settled-or-lead split are functions of the create event's
+writer and of session captures, evaluated per read. No column holds them
+and no query can select by them. Stored lifecycle is supersession edges
+and a retirement timestamp, both keyed on the record.
+<code>trust_state</code> is withheld.</p>
+<p><strong>Dispute resolution is a record with no effect.</strong>
+Disputes are opened by a brief correction, an architecture run and a
+staleness scan. A scope admin resolves one through a signed-in route,
+and the route's header says the graph side <em>"is NOT wired here
+yet"</em>
+(<code>app/api/facts/disputes/[id]/resolve/route.ts:1-5</code>). No
+retrieval file reads <code>fact_disputes</code>, and the
+<code>rejected</code> status has no writer.</p>
+<p><strong>Lost updates are refused without client cooperation.</strong>
+The server-side read record means a client that never sends
+<code>baseVersion</code> is still protected. A sighting in a change
+notice does not count as a read, so an agent cannot write past a version
+it saw only as a truncated line.</p>
+<p><strong>Races are settled by storage order.</strong> The winner is
+whichever row was inserted first, which is deterministic and unrelated
+to which statement is correct. The task-start block serves conflicting
+versions together and asks the person
+(<code>services/memory/served-conflicts.ts</code>).</p>
+<p><strong>Event time reaches chunks and not the graph for agent
+writes.</strong> <code>withoutOccurredAt</code> strips the stated date
+before every graph write, so that <em>"a stated date never decides which
+of two contradicting edges the graph retires"</em>
+(<code>lib/inngest/memory-ingest.ts:509-518</code>). This is the
+<code>bitemporal</code> mark with its limit: the graph's validity is
+real for connector content and server-clock for agent content.</p>
+<p><strong>Injection.</strong> Task-start lines name their source, and
+leads are headed <em>"Leads to verify"</em>
+(<code>mcp/task-start-headings.ts:91</code>). Connector content enters
+at extraction tier, which ranks last. Nothing scans content for
+instructions.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran nothing. I counted 1,038 Vitest files and 46 pytest files with
+<code>git ls-files</code>, and 8,337 line-leading <code>it(</code> or
+<code>test(</code> call sites and 398 <code>def test_</code> functions
+with <code>git grep -c</code>. Of the Vitest files, 420 carry
+<code>realdb</code> in the name and 441 contain a
+<code>skipIf</code>.</p>
+<p>The real-Postgres suites open with
+<code>describe.skipIf(!QA_URL)</code>. The CI workflow sets
+<code>QA_DATABASE_URL</code> on each of four shards against a
+<code>pgvector/pgvector:pg16</code> service, builds a template database
+from the migrations, and gives each worker a copy
+(<code>.github/workflows/ci.yml:164-171</code>,
+<code>tests/setup/test-databases.ts</code>). A final job passes only if
+the shards together ran every file <code>vitest list</code> names. The
+workflow's own comment records that these suites once skipped in CI
+without notice. A local <code>npm test</code> without the variable is
+green having skipped them, which the contribution guide says.</p>
+<p>A separate job starts the memory service against a disposable Neo4j
+and runs two graph-delete suites, failing unless every case passed and
+none skipped (<code>.github/workflows/ci.yml:369-378</code>). The Python
+suite runs under <code>pytest</code> in its own job; twenty of its files
+are named as integration tests, and the ones I opened skip without a
+Neo4j URI variable.</p>
+<p>The tests I read can fail. The containment suite pairs reachable and
+unreachable cases through the store's real SQL. The conflict suite
+asserts <code>toContain</code> for the winner beside
+<code>not.toContain</code> for the loser on each read path. The erasure
+suite writes the message once before the erasure as a control. The leak
+evals run the real guard over a fixture store and add a case that pins
+the SQL the real vector store sends.</p>
+<p>The static gates are part of the evidence. One ESLint rule fails any
+memory-table query outside <code>services/access</code> and
+<code>services/memory</code>, and another allows a single audit writer.
+CI also runs a dead-code gate, a migration drift check, and a script
+that fails when the code reads a credential the README's bypass table
+omits.</p>
+<p>The README's latency and deletion figures were measured on the hosted
+service by a harness that, in its words, <em>"is not in this
+repository"</em>. No retrieval quality benchmark is claimed and none is
+committed. No paper accompanies the project.</p>
+<p>The public history cannot show how any of this was arrived at. The
+first commit, dated 29 October 2026, adds 2,022 files whose migrations
+run from 8 June 2026. The CI workflow fetches full history for a
+<code>deploy-identity.test.ts</code> that is not in the tree, and code
+comments cite design documents and tracker ids that are absent.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Record what each agent was shown, and refuse writes against
+it.</strong> A per-agent table of served versions turns optimistic
+concurrency into a server-side rule that works for clients that send no
+version.</li>
+<li><strong>Separate a read from a sighting.</strong> A truncated feed
+line puts the writer under the stale rule without counting as having
+read the version.</li>
+<li><strong>Write the authorization, the applied effect and the executed
+partition as three audit rows.</strong> The first proves permission, the
+second that the write landed, the third where.</li>
+<li><strong>Give every negative assertion a positive twin in the same
+test.</strong> The contribution guide requires a leak test with each new
+read surface.</li>
+<li><strong>Track scopes read per agent id and refuse the summarising
+write.</strong> A read in one scope and a write in another are each
+permitted; only a record of what was served sees the flow between
+them.</li>
+<li><strong>Publish the list of credentials that bypass the check, and
+fail the build when it drifts.</strong></li>
+<li><strong>Keep the suppression list as digests bound to the
+tenant.</strong> It recognises an erased person without holding the
+name.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A review gate selected by the producer's own
+argument.</strong> If one value of an enum waits for a person and
+another does not, the writer decides.</li>
+<li><strong>A resolution route ahead of its effect.</strong> A dispute
+that can be resolved while the losing edge stays served reads as
+governance and is a ledger.</li>
+<li><strong>User-typed text in an immutable log.</strong> An append-only
+table needs its inputs chosen with deletion in mind.</li>
+<li><strong>A taint that only the operator can clear.</strong> A
+permanent per-agent record is safe and pushes operators toward minting
+fresh agent ids, which also resets the stale-read record.</li>
+<li><strong>Two stores with different notions of time.</strong> The
+stated date on the row and the server clock on the graph will disagree
+for backdated facts.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is memory for a team running several agents against shared
+business or project context, where the failure that hurts is one agent
+reading or overwriting what it should not. It assumes an operator
+willing to run Postgres, Neo4j, a Python service with a local model, a
+queue and, for people, a web app with a hosted identity provider. The
+amount of machinery is proportionate to multi-tenant use and excessive
+for one developer and one agent. A reader who needs the database to
+enforce isolation should walk away, because the design places every
+boundary in application code and says so. A reader who needs approval
+before any fact is believed should walk away too: facts are believed on
+arrival, and the review that exists covers decisions.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What does the private history hold, and which commits does
+<code>deploy-identity.test.ts</code> read?</li>
+<li>Is the convention path's lack of confirmation intended, or does a
+later version route agent conventions through the same lead state?</li>
+<li>When is the graph-side effect of a dispute resolution wired, and
+which edge does it end?</li>
+<li>Does any process remove or redact <code>query:</code> targets in
+<code>audit_log</code> after a person erasure on the hosted
+service?</li>
+<li>How does graphiti-core 0.30.2 choose <code>invalid_at</code> for an
+agent fact when the reference time is the server clock and the text
+states an older date?</li>
+<li>How often does the 1,000-descendant bound leave scopes unsearched in
+a large org, and do agents act on the <code>unsearchedScopes</code>
+note?</li>
+<li>Do the hosted measurements recompute from an artifact the project
+could publish?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema:</strong> <code>prisma/schema.prisma</code>,
+<code>prisma/migrations/</code>,
+<code>docs/willder_database.md</code>.</li>
+<li><strong>Access:</strong> <code>services/access/check.ts</code>,
+<code>scope-containment.ts</code>, <code>issue-capability.ts</code>,
+<code>derived-writes.ts</code>, <code>audit-row.ts</code>,
+<code>audit-chain.ts</code>, <code>source-widening.ts</code>;
+<code>lib/access-context.ts</code>.</li>
+<li><strong>Write path:</strong>
+<code>mcp/tools/memory-ingest.ts</code>,
+<code>lib/inngest/memory-ingest.ts</code>,
+<code>services/memory/pgvector-store.ts</code>,
+<code>fact-update.ts</code>, <code>fact-reads.ts</code>,
+<code>conflict.ts</code>, <code>edges.ts</code>,
+<code>ingest-key.ts</code>, <code>graph-extraction-retry.ts</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>services/memory/guarded-store.ts</code>,
+<code>hybrid-store.ts</code>, <code>graphiti-store.ts</code>,
+<code>account-tiers.ts</code>, <code>routing-policy.ts</code>,
+<code>text-match-fusion.ts</code>, <code>current-versions.ts</code>,
+<code>superseded-facts.ts</code>;
+<code>memory-service/app/graph/search.py</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>services/memory/task-start.ts</code>,
+<code>mcp/task-start-notice.ts</code>,
+<code>mcp/change-notices.ts</code>,
+<code>services/memory/change-feed.ts</code>,
+<code>claim-status.ts</code>, <code>session-state.ts</code>,
+<code>working-notes.ts</code>.</li>
+<li><strong>Rules and disputes:</strong>
+<code>services/memory/conventions.ts</code>,
+<code>rule-copies.ts</code>, <code>fact-disputes.ts</code>,
+<code>scope-dispute-scan.ts</code>, <code>fact-provenance.ts</code>;
+<code>app/api/memory/conventions/[id]/confirm/route.ts</code>,
+<code>app/api/facts/disputes/[id]/resolve/route.ts</code>.</li>
+<li><strong>Deletion and erasure:</strong>
+<code>app/api/memory/facts/[id]/route.ts</code>,
+<code>services/memory/person-erasure.ts</code>,
+<code>erasure-suppression.ts</code>, <code>erasure-reapply.ts</code>,
+<code>org-export.ts</code>, <code>org-import.ts</code>;
+<code>memory-service/app/graph/erasure.py</code>,
+<code>retirement.py</code>.</li>
+<li><strong>Graph service:</strong>
+<code>memory-service/app/main.py</code>,
+<code>graphiti_client.py</code>, <code>graph/visibility.py</code>,
+<code>graph/entities.py</code>, <code>graph/facts.py</code>.</li>
+<li><strong>MCP and CLI:</strong> <code>mcp/tools.ts</code>,
+<code>mcp/tools/</code>, <code>mcp/willder-server.ts</code>,
+<code>mcp/tool-set.ts</code>, <code>mcp/derived-write.ts</code>,
+<code>cli/hooks/</code>.</li>
+<li><strong>Tests and gates:</strong>
+<code>services/memory/access-leakage-eval.test.ts</code>,
+<code>pgvector-store.scope-containment.realdb.test.ts</code>,
+<code>person-erasure-aftermath.realdb.test.ts</code>,
+<code>mcp/conflict-every-read-path.realdb.test.ts</code>,
+<code>mcp/rule-confirmation.realdb.test.ts</code>, <code>eslint/</code>,
+<code>.github/workflows/ci.yml</code>.</li>
+<li><strong>Documentation:</strong> <code>README.md</code>,
+<code>docs/architecture.md</code>, <code>mcp/README.md</code>,
+<code>docs/consent-deletion-suite.md</code>,
+<code>docs/export-format.md</code>, <code>CONTRIBUTING.md</code>,
+<code>LICENSE</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git grep</code> from the root of a checkout
+at <code class="commit-id" title="48794d116e95a6843a9ea812b20c65b6c692299d">48794d11…</code>.</p>
+<ul>
+<li><code>git grep -n -i -E 'CREATE POLICY|ENABLE ROW LEVEL SECURITY' -- prisma</code>
+— no match. Control:
+<code>git grep -c -i -E 'CREATE TRIGGER' -- prisma/migrations/20261006160000_audit_log_tamper_evident/migration.sql</code>
+returns 5.</li>
+<li><code>git grep -n -i -E 'confirmConvention|approve|resolveFactDispute|removeFact\(|deleteRetiredConvention|retireConvention' -- mcp ':!*.test.ts' ':!*.testsupport.ts'</code>
+— two hits, both prose: <code>mcp/README.md:368</code> saying the draft
+approval tools are not registered, and the comment at
+<code>mcp/willder-server.ts:8</code>. No handler.</li>
+<li><code>git grep -n -E 'confirmConvention\(' -- ':!*.test.ts'</code> —
+the definition and
+<code>app/api/memory/conventions/[id]/confirm/route.ts:19</code>.</li>
+<li><code>git grep -l -E 'resolveCapability\(' -- app lib mcp scripts services ':!*.test.ts'</code>
+— <code>app/api/changes/notice/route.ts</code>,
+<code>app/api/changes/route.ts</code>,
+<code>app/api/mcp/route.ts</code>, <code>mcp/server.ts</code>,
+<code>mcp/tools/send-feedback.ts</code> and two files under
+<code>services/access</code>. No memory delete, confirm or dispute
+route.</li>
+<li><code>git grep -n -E 'confirmConvention|removeFact\(|resolveFactDispute|retireConvention|removeEntity\(' -- services/agents lib app/api/memory/chat ':!*.test.ts'</code>
+— no match; the product's own agents hold <code>memory_read</code> and
+<code>memory_write</code> only
+(<code>services/agents/tools.ts:89</code>, <code>:156</code>).</li>
+<li><code>git grep -n -E 'ruleIsSettled|claimStatusOf\(' -- ':!*.test.ts'</code>
+— the definitions, <code>mcp/task-start-notice.ts:1159</code> and
+<code>:1360</code>, and <code>services/memory/rule-copies.ts:132</code>.
+No SQL reads a status.</li>
+<li><code>git grep -n -w 'rejected' -- services/memory/fact-disputes.ts services/memory/scope-dispute-scan.ts app/api/facts services/agents/architecture-run.ts 'app/api/briefs/[id]/correct/route.ts'</code>
+— no match. Control:
+<code>git grep -c -w 'disputed' -- services/memory/fact-disputes.ts</code>
+returns 6.</li>
+<li><code>git grep -n -E 'factDispute|fact_disputes' -- services/memory/guarded-store.ts services/memory/pgvector-store.ts services/memory/graphiti-store.ts services/memory/hybrid-store.ts services/memory/task-start.ts mcp/tools</code>
+— no match. Control:
+<code>git grep -c -E 'fact_edges|factEdge' -- services/memory/pgvector-store.ts</code>
+returns 2.</li>
+<li><code>git grep -n -E 'auditLog\.(update|updateMany|delete|deleteMany|upsert)|(UPDATE|DELETE FROM) "?audit_log' -- ':!*.test.ts' ':!*.testsupport.ts' ':!prisma/migrations'</code>
+— no match. Control:
+<code>git grep -n -E 'auditLog\.create' -- ':!*.test.ts'</code> returns
+<code>services/access/audit-row.ts:40</code>.</li>
+<li><code>git grep -n -i -E 'audit_log|auditLog' -- 'services/memory/person-erasure*.ts' 'services/memory/erasure-*.ts' ':!*.test.ts'</code>
+— three hits in <code>erasure-accounting.ts</code>, a client type and
+two <code>SELECT</code>s.</li>
+<li><code>git grep -n -E 'loadErasedPersonMatcher|loadErasedContentFilter' -- mcp/tools/memory-ingest.ts lib/inngest/memory-ingest.ts</code>
+— no match; an agent's write is not checked against the name digests.
+The same pattern hits
+<code>lib/inngest/connector-text-items.ts:368</code>.</li>
+<li><code>git grep -n -E 'referenceTime' -- ':!*.test.ts' ':!*.testsupport.ts'</code>
+— connector readers, the retry job and the graph client;
+<code>mcp/tools/memory-ingest.ts</code> is not among them.</li>
+<li><code>git grep -n -E 'removeFact|confirmConvention|DELETE' -- scripts/selfhost-token.ts scripts/selfhost-export.ts scripts/selfhost-smoke.ts scripts/lib/selfhost.ts</code>
+— one hit, a comment about revoking a capability at
+<code>scripts/lib/selfhost.ts:198</code>.</li>
+<li><code>git ls-files | grep -c 'deploy-identity'</code> — 0.
+<code>git grep -c 'KNOWN_MIGRATION_EDITS' -- .github/workflows/ci.yml</code>
+returns 1 and the same pattern outside <code>.github</code> returns
+nothing.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|CITATION\.cff|doi\.org' -- README.md docs memory-service/README.md mcp/README.md</code>
+— no match.</li>
+<li><code>git ls-files | grep -i -E 'results?/|\.jsonl$|benchmark|locomo|longmemeval'</code>
+— no file.</li>
+<li><code>git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|third.party)'</code>
+— <code>LICENSE</code> only among licence files;
+<code>package.json:5</code> says MIT; no <code>.gitattributes</code> is
+tracked.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-14</strong> — <a
+href="https://github.com/willderai/willder-core/commit/48794d116e95a6843a9ea812b20c65b6c692299d"><code class="commit-id" title="48794d116e95a6843a9ea812b20c65b6c692299d">48794d11…</code></a>
+— first reading, at the head of <code>main</code>, dated 4 November
+2026. Marks: <code>tombstone</code> on the erasure suppression list,
+<code>bitemporal</code> on Graphiti edges and chunk event time,
+<code>scope_enforced</code> on the check and its predicates,
+<code>audit_log</code> on the trigger-guarded table,
+<code>negative_eval</code> on the real-Postgres leak, conflict and
+deletion suites. <code>trust_state</code> withheld: claim status is
+computed per read. <code>human_review</code> withheld: a decision waits
+for a person, and the agent's own <code>kind</code> argument decides
+whether its rule is a decision. LICENSE read in full: MIT, matching
+<code>package.json</code>, no rider. Screened before reading: no
+auto-run surface, two build-time execution points, four unpinned
+dependency surfaces. Nothing was installed or run. graphiti-core, a
+pinned dependency, was not opened.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -126,8 +126,8 @@ belief.</p>
 <blockquote>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
-recurs across the corpus. 76 systems of
-801 carry the mark, and <a
+recurs across the corpus. 77 systems of
+802 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -291,8 +291,8 @@ near-miss, and the argument that the expensive half of the pattern is
 not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
-<p><strong>76 systems of
-801 in the atlas carry the mark.</strong> The
+<p><strong>77 systems of
+802 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -1828,6 +1828,23 @@ is a transaction failure, not a filter: every other mutation in that
 publication is rolled back, the retry sees an unchanged snapshot, and
 the run publishes nothing. The tombstone holds no content, only id and
 revision.</p>
+<p><a href="../../systems/willder/">Willder</a> keeps the tombstone for
+one kind of value, an erased person, and none for an ordinary deleted
+fact. <code>erasure_suppressions</code> holds a SHA-256 over org id,
+kind and the normalized email, full name, contact id or version id,
+written before the erasure removes anything
+(<code>services/memory/person-erasure.ts:282-284</code>). A connector
+sync loads the list per item and records a matching item as seen without
+writing it (<code>lib/inngest/connector-text-items.ts:368-378</code>);
+an upload extraction and an import check it too, and the read paths
+apply it to rows a restored backup brought back until a re-apply removes
+them. Like <a href="../../systems/fireweed-mcp/">Fireweed</a>, the
+record that protects the person does not retain the person. The limit is
+the write path it guards: <code>memory_ingest</code> and the app's own
+ingest are not checked, on the stated ground that a member or agent
+naming the person again is a new act. A fact deleted through the app
+leaves <code>memory.delete</code> audit rows and a change event keyed on
+its id, and the same sentence can be written again.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

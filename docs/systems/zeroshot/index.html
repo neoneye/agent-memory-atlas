@@ -215,20 +215,18 @@ source"</em>
 flowchart TD
   RUN[&quot;Run starts:&lt;br/&gt;scoped snapshot frozen&quot;] --&gt; INJ[&quot;Cards injected by&lt;br/&gt;tool hook or node prompt&quot;]
   INJ --&gt; MAN[&quot;Supplied manifest:&lt;br/&gt;id@revision returned&quot;]
-  MAN --&gt; PM[&quot;Graph settles:&lt;br/&gt;four model specialists&quot;]
-  PM --&gt; DISC[&quot;Discovery proposes&lt;br/&gt;a lesson&quot;]
-  PM --&gt; MAINT[&quot;Maintenance decides&lt;br/&gt;every supplied card&quot;]
-  DISC --&gt; GATE{&quot;Cites this node&#39;s&lt;br/&gt;completion or receipt,&lt;br/&gt;and a current file?&quot;}
+  MAN --&gt; PM[&quot;Graph settles: four&lt;br/&gt;model specialists propose&lt;br/&gt;and maintain lessons&quot;]
+  PM --&gt; GATE{&quot;Discovery: cites this&lt;br/&gt;node&#39;s completion or&lt;br/&gt;receipt, and a current file?&quot;}
   GATE -- &quot;no&quot; --&gt; REJ[&quot;Whole specialist&lt;br/&gt;rejected, stage logged&quot;]
   GATE -- &quot;yes&quot; --&gt; ID[&quot;id = sha256 of scope&lt;br/&gt;and normalized advice&quot;]
-  MAINT --&gt; SRC{&quot;Card&#39;s source commit&lt;br/&gt;is ancestor of&lt;br/&gt;a clean HEAD?&quot;}
+  ID ~~~ SRC{&quot;Maintenance: card&#39;s&lt;br/&gt;source commit is ancestor&lt;br/&gt;of a clean HEAD?&quot;}
+  PM --&gt; SRC
+  ID --&gt; PUB
   SRC -- &quot;no, or no commit&quot; --&gt; STUCK[&quot;keep or defer only:&lt;br/&gt;never adapted or retired&quot;]
-  SRC -- &quot;yes&quot; --&gt; PUB
-  ID --&gt; PUB[&quot;One transaction:&lt;br/&gt;every reviewed revision&lt;br/&gt;must still match&quot;]
-  PUB -- &quot;upsert&quot; --&gt; LIVE[&quot;Live lesson,&lt;br/&gt;revision + 1&quot;]
+  SRC -- &quot;yes&quot; --&gt; PUB[&quot;One transaction:&lt;br/&gt;every reviewed revision&lt;br/&gt;must still match&quot;]
+  PUB -- &quot;upsert&quot; --&gt; LIVE[&quot;Live lesson, revision + 1,&lt;br/&gt;in later runs&#39; snapshots&quot;]
   PUB -- &quot;retire&quot; --&gt; TOMB[&quot;Tombstone: id and&lt;br/&gt;revision, body NULL&quot;]
-  TOMB -- &quot;same id proposed&quot; --&gt; FAIL[&quot;RevisionConflict:&lt;br/&gt;whole publication&lt;br/&gt;discarded&quot;]
-  LIVE --&gt; RUN</code></pre></details></figure>
+  TOMB -- &quot;same id proposed&quot; --&gt; FAIL[&quot;RevisionConflict:&lt;br/&gt;whole publication&lt;br/&gt;discarded&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Active Memory is a module of the <code>zeroshot</code> binary, not a
 service (<code>zeroshot/src/active_memory.rs:1-20</code>). Its header

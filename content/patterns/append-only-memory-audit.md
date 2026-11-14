@@ -559,6 +559,23 @@ report withholds `audit_log` on that ground.
 **[ZizkaDB](../../systems/zizkadb/) makes the memory table its own log and chains the deletions into it.** No path rewrites an event's content in `events`, and a correction is a new event naming the old one. Each insert checksums the row's content and audit fields and links it to the agent's previous chain hash under the agent row lock (`core/services/event_write.py:322-390`). Forget and retention move each deleted row's link and checksum into `event_tombstones` with a reason and a time, and seal the batch with a receipt digest, so `verify_chain` walks across an erasure (`core/services/audit_chain.py:150-218`). The chain is unkeyed, a tombstone names no actor, and deleting an agent or an account removes its tombstones with it.
 
 
+[Willder](../../systems/willder/) makes append-only a property of the table
+and splits one mutation into three rows. `check()` writes the authorization
+before any store is touched; `recordAppliedChange` writes
+`memory.write.applied` or `memory.delete.applied` in the transaction that
+writes the change-feed event, so a failed ingest leaves an authorization and no
+applied row; `recordWriteEffect` records the partition the mutation ran against,
+which differs from the authorized scope whenever the caller passed none
+(`services/access/check.ts:1058-1140`, `:1409-1429`). A `BEFORE UPDATE OR
+DELETE` trigger and a `BEFORE TRUNCATE` trigger refuse every role but a
+superuser, with the cascade of a deleted org as the one exception, and an
+insert trigger sets each row's position and SHA-256 in a per-org chain under a
+row lock (`prisma/migrations/20261006160000_audit_log_tamper_evident/migration.sql:120-183`).
+An ESLint rule allows one writer of the table. Two costs. The row holds ids and
+scopes and not the text written. And a read's target is the query text itself
+(`services/memory/guarded-store.ts:603-607`), so a name typed into a search
+outlives a person erasure in a table the erasure cannot change.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

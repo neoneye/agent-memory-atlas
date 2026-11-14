@@ -1061,6 +1061,21 @@ decision.
 
 [Zeroshot](../../systems/zeroshot/) gets a value-keyed tombstone without a tombstone table. A discovered lesson's id is the SHA-256 of its canonical scope and its whitespace- and case-normalized recommendation, and retirement keeps the row with a null body at the next revision. A later postmortem that proposes the same advice derives the same id and arrives as an insert expecting no row, which the revision check refuses inside the transaction; a committed test recomputes the hash and asserts the store stays empty. Two limits come with the economy. The key is exact, so a reworded recommendation or a different file list is a new id, and an adapted lesson keeps its first id, so retiring it tombstones text it no longer carries. And the refusal is a transaction failure, not a filter: every other mutation in that publication is rolled back, the retry sees an unchanged snapshot, and the run publishes nothing. The tombstone holds no content, only id and revision.
 
+[Willder](../../systems/willder/) keeps the tombstone for one kind of value, an
+erased person, and none for an ordinary deleted fact. `erasure_suppressions`
+holds a SHA-256 over org id, kind and the normalized email, full name, contact
+id or version id, written before the erasure removes anything
+(`services/memory/person-erasure.ts:282-284`). A connector sync loads the list
+per item and records a matching item as seen without writing it
+(`lib/inngest/connector-text-items.ts:368-378`); an upload extraction and an
+import check it too, and the read paths apply it to rows a restored backup
+brought back until a re-apply removes them. Like [Fireweed](../../systems/fireweed-mcp/),
+the record that protects the person does not retain the person. The limit is
+the write path it guards: `memory_ingest` and the app's own ingest are not
+checked, on the stated ground that a member or agent naming the person again is
+a new act. A fact deleted through the app leaves `memory.delete` audit rows and
+a change event keyed on its id, and the same sentence can be written again.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

@@ -655,6 +655,18 @@ does the same to the nearest vector hit
 reason. The MCP and web recall pass
 <code>exclude_superseded=False</code>, so the disposition never reaches
 the agent.</p>
+<p><a href="../../systems/willder/">Willder</a> detects and does not
+resolve, by rule. Two writers of one fact inside a second are settled by
+storage order, the loser is kept as superseded, and its writer is told
+on its next tool call; the task-start block serves the conflicting
+versions together and asks the person
+(<code>services/memory/conflict.ts:74</code>, <code>:338</code>). Two
+agents claiming one task are both stored and each is told of the other.
+The failure is one layer up. A fact dispute between same-tier writers
+can be resolved by a scope admin through a signed-in route, and the
+route's own header says the graph-side effect is not wired: the row
+changes status and the losing edge is still served
+(<code>app/api/facts/disputes/[id]/resolve/route.ts:1-5</code>).</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert

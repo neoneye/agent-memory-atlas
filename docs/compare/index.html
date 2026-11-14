@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-801, generated from each report's frontmatter —
+802, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-801, generated from each report's frontmatter —
+802, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-801, generated from each report's frontmatter —
+802, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 801, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 802, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-801, generated from each report's frontmatter —
+802, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 801 systems by the seven mechanisms
+filters all 802 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -34851,6 +34851,56 @@ and default to self-grading; the published LoCoMo result files are not
 committed</td>
 </tr>
 <tr>
+<td><a href="../systems/willder/"><code>willder</code></a></td>
+<td>A fact version: a memory_chunks row with text, entity name, scope
+path, writer, optional role, event time and a 384-dimension embedding;
+beside it Graphiti edges distilled from the text, conventions and
+decisions, short-lived working notes, and briefs</td>
+<td>Postgres with pgvector and ltree for versions, rules, notes, the
+change feed, grants, tokens and the audit log; Neo4j through
+graphiti-core for entities and temporal edges, one group_id per scope
+path; private blob storage for uploaded files</td>
+<td>Vector search over rows and passages plus a trigram match on quoted
+text, fused by reciprocal rank with k 60; Graphiti edge search fusing
+BM25 and cosine; entity lookup in the graph. Legs run in parallel under
+a per-tier latency ceiling, the page is filled by provenance tier and
+cut to a per-tier token budget</td>
+<td>memory_ingest, app routes, connectors and uploads all call one
+ingest path. The row is embedded and stored in the request, with its
+change event and applied audit row in one transaction; distillation and
+graph extraction run in a queued job that never blocks the reply</td>
+<td>A write naming baseVersion replaces that version or is refused as
+stale; a write without one is refused if the writer has not read the
+newest version. Two writers inside one second: first stored wins, the
+loser is kept as superseded. Deletion is an app route for signed-in
+people; person erasure removes every copy and leaves a digest list</td>
+<td>An ltree scope tree per org. A grant or token on a scope covers its
+subtree. check() decides every guarded call, the SQL repeats the
+containment, the graph is asked by exact partition, and a write into a
+scope after reading outside its subtree is refused unless declared</td>
+<td>An MCP server over Streamable HTTP and stdio with thirteen tools, a
+four-tool coding set, server instructions and Claude Code hooks for
+change notices and session capture; a Next.js app and REST routes;
+connectors for GitHub, Drive, Slack, Figma, PostHog and websites</td>
+<td>Inngest jobs for ingest, file extraction, connector sync, graph
+extraction retry, erasure and org deletion. No pass rewrites the store;
+no model takes part in an access, ranking or staleness decision</td>
+<td>Writer tier (person, agent, extraction) orders the page; a claim's
+status (proposed, untested, failing, tested, verified) is computed per
+read from who wrote it and what its session's captured test run showed;
+an agent's decision is a lead until a person confirms it</td>
+<td>One audited check before every store call; value-level leak,
+conflict and deletion tests on real Postgres; lost updates refused
+server-side even without a base version; a tamper-evident audit; erasure
+that survives re-sync and restore; documentation that lists its own
+bypass credentials and limits</td>
+<td>Enforcement is application code, with no row-level security and a
+graph service that trusts its caller; an agent can make a standing rule
+by calling it a convention; dispute resolution changes no graph edge;
+query text sits in an audit table erasure cannot touch; eight public
+commits from a bot leave the design history unreadable</td>
+</tr>
+<tr>
 <td><a
 href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></td>
 <td>One message row — id, conversation id, parent message id, role,
@@ -35961,7 +36011,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>76 of 801:</em> <a
+<p><em>77 of 802:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -36037,11 +36087,12 @@ href="../systems/velantrim-exocortex-crystal/"><code>velantrim-exocortex-crystal
 href="../systems/vir/"><code>vir</code></a>, <a
 href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/wenlan/"><code>wenlan</code></a>, <a
+href="../systems/willder/"><code>willder</code></a>, <a
 href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>206 of 801:</em> <a
+<p><em>206 of 802:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -36254,7 +36305,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>133 of 801:</em> <a
+<p><em>134 of 802:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -36388,6 +36439,7 @@ href="../systems/virtual-context/"><code>virtual-context</code></a>, <a
 href="../systems/vortx-emem/"><code>vortx-emem</code></a>, <a
 href="../systems/waggle/"><code>waggle</code></a>, <a
 href="../systems/wax/"><code>wax</code></a>, <a
+href="../systems/willder/"><code>willder</code></a>, <a
 href="../systems/xerj/"><code>xerj</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
@@ -36395,7 +36447,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>335 of 801:</em> <a
+<p><em>336 of 802:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -36732,6 +36784,7 @@ href="../systems/verel/"><code>verel</code></a>, <a
 href="../systems/vllm-semantic-router/"><code>vllm-semantic-router</code></a>,
 <a href="../systems/waggle/"><code>waggle</code></a>, <a
 href="../systems/weknora/"><code>weknora</code></a>, <a
+href="../systems/willder/"><code>willder</code></a>, <a
 href="../systems/windieos/"><code>windieos</code></a>, <a
 href="../systems/yacmemo/"><code>yacmemo</code></a>, <a
 href="../systems/yantrik-mind/"><code>yantrik-mind</code></a>, <a
@@ -36746,7 +36799,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>266 of 801:</em> <a
+<p><em>267 of 802:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -37015,6 +37068,7 @@ href="../systems/vortx-emem/"><code>vortx-emem</code></a>, <a
 href="../systems/wax/"><code>wax</code></a>, <a
 href="../systems/weave/"><code>weave</code></a>, <a
 href="../systems/widemem-ai/"><code>widemem-ai</code></a>, <a
+href="../systems/willder/"><code>willder</code></a>, <a
 href="../systems/xerj/"><code>xerj</code></a>, <a
 href="../systems/yantrikdb/"><code>yantrikdb</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
@@ -37023,7 +37077,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>102 of 801:</em> <a
+<p><em>102 of 802:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -37129,7 +37183,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>510 of 801:</em> <a
+<p><em>511 of 802:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -37641,6 +37695,7 @@ href="../systems/wax/"><code>wax</code></a>, <a
 href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/wenlan/"><code>wenlan</code></a>, <a
 href="../systems/widemem-ai/"><code>widemem-ai</code></a>, <a
+href="../systems/willder/"><code>willder</code></a>, <a
 href="../systems/windie-sandbox/"><code>windie-sandbox</code></a>, <a
 href="../systems/windvane/"><code>windvane</code></a>, <a
 href="../systems/wordcell/"><code>wordcell</code></a>, <a
@@ -37676,8 +37731,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-510 repositories of
-801 assert that particular material must
+511 repositories of
+802 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -37750,7 +37805,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 801 is the real figure for the second kind, and
+of 802 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not
