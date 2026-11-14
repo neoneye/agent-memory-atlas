@@ -2591,8 +2591,9 @@ own store. `forget(term, scope)` deletes the matching records, appends the term'
 **token set** to a per-tenant erased registry, and emits an erasure certificate;
 every later recall excludes any record whose tokens are a superset. That is a
 value-keyed, normalized, tenant-scoped tombstone — a looser and more forgiving key
-than Daimon's canonical-text hash — though unlike Daimon it suppresses at read rather
-than refusing at write, so the store still holds what a subject asked to erase.
+than Daimon's canonical-text hash — though unlike Daimon it stores a re-ingested
+erased value quarantined instead of refusing it, and the registry and the
+erasure certificate keep the erased term in clear.
 Recall returns a *reason* per excluded record, and the subject-scope rule closes
 the bypass explicitly: a query naming no entity must not be served a
 subject-scoped record, "otherwise scope isolation is bypassable by simply omitting

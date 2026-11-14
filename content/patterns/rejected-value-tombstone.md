@@ -152,8 +152,8 @@ are rejected or superseded, and model writes check them before asserting.
 checkpoint write, discussed below.
 [Provem](../../systems/provem/) arrives at it from regulation rather than from a
 failure, discussed below.
-[memsem](../../systems/memsem/) refuses the write like Verel, RainBox and Daimon
-rather than filtering the read like Provem, and arms the mechanism only on a
+[memsem](../../systems/memsem/) refuses the write like Verel, RainBox and Daimon,
+where Provem stores it quarantined, and arms the mechanism only on a
 candidate review — discussed below.
 [Perseus Vault](../../systems/perseus-vault/) refuses a value by its digest
 without storing it — discussed below.
@@ -289,9 +289,10 @@ crosses. Elaboration is not the property. Being on the path is.
 **Provem arrived from a regulation, and its key is a token subset.**
 [Provem](../../systems/provem/)'s `forget(term, scope)` deletes the matching
 records, appends the term's **token set** to a per-tenant `erased_terms`
-registry, and writes an erasure certificate into the audit log. Every later
-recall computes the record's tokens and excludes it with reason `"erased"` if any
-registered set is a subset.
+registry, and writes an erasure certificate into the audit log. A later write
+whose tokens contain a registered set is stored quarantined with the reason
+`erased_term_reingest`, and every recall computes a record's tokens and excludes
+it with reason `"erased"` if any registered set is a subset.
 
 Two things separate it from Verel, RainBox and Daimon. Its key is a *normalized token
 subset* rather than an exact string or a canonicalised value, so a later record
@@ -302,11 +303,12 @@ surface nobody has measured. And it is **tenant-scoped**, so an erasure for one
 customer cannot silently censor another — scope is part of the rejection's
 identity, as it is in memsem's project key and Argos's user scope.
 
-Its limitation is one Daimon does not share: suppression at read, not refusal at write.
-A re-ingested erased value still lands in the backing store and is stopped on the
-way out. For a system whose stated purpose is GDPR Article 17 that is the sharper
-version of the same criticism — the regulation is about what you hold, and this
-mechanism governs what you serve.
+Its limitation is one Daimon does not share: it holds the write instead of
+refusing it. A re-ingested erased value is stored as a quarantined record that
+no recall serves, and the registry and the erasure certificate keep the erased
+term itself in clear. For a system whose stated purpose is GDPR Article 17 that
+is the sharper version of the same criticism — the regulation is about what you
+hold, and this mechanism governs what you serve.
 
 **memsem's tombstone is armed by a candidate review, and the review verb is an MCP tool the agent holds too.**
 [memsem](../../systems/memsem/) parks an uncertain fact in a `memory_candidates`
@@ -377,7 +379,7 @@ the mechanism: propagation reaches exactly as far as the provenance is declared,
 so a derived writer that omits its source ids escapes.
 
 Three further details. It **refuses at the write path** rather than filtering at
-read, like Verel, RainBox and Daimon and unlike Provem, enforced in
+read, like Verel, RainBox and Daimon, where Provem quarantines the write, enforced in
 `remember_impl` with a comment claiming the reach — agent remember, capture,
 ingest, connectors, derived writers. Its **override is an audited act**, not a
 bypass: a deliberate write passes `allow_rejected=true` and is journaled into the
@@ -550,8 +552,8 @@ completes?* The method is set out in
 | --- | --- | --- |
 | **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [Noosphere Lite MCP](../../systems/noosphere-lite-mcp/), [POK-Agent](../../systems/pok-agent/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/), [remem-mcp](../../systems/remem-mcp/), [aimee](../../systems/aimee/), [fireweed-mcp](../../systems/fireweed-mcp/), [NexusMem](../../systems/nexusmem/), [RCK](../../systems/rck/), [OpenMake LLM](../../systems/openmake-llm/), [Argos](../../systems/argos/), [no_human](../../systems/no-human/), [SAGE](../../systems/sage-memory/), [Memora](../../systems/memora/), [Scope Recall](../../systems/scope-recall-hermes/), [MeMesh](../../systems/memesh/), [Recollect](../../systems/recollect/), [TideMind](../../systems/tidemind/), [Utopia](../../systems/utopia/), [Velantrim Crystal](../../systems/velantrim-exocortex-crystal/), [marm-memory](../../systems/marm-memory/), [vir](../../systems/vir/), [MGI-Mind](../../systems/mgi-mind/) | The write is refused. No row, or no activation |
 | **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Wenlan](../../systems/wenlan/), [memoir-cli](../../systems/memoir-cli/), [ShellBrain](../../systems/shellbrain/) | The write lands *on* the rejected row, which stays rejected. Accidental in Mnemosyne, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
-| **Suppressed** — the read path hides it | [Provem](../../systems/provem/), [OmniMem](../../systems/omnimem/) | A copy enters the store and is stopped on the way out — in OmniMem by a suppression set matched on word boundaries against content, written only by `suppress_topic` and applied by the recall pipeline and not by the briefing its session-start hook injects |
-| **Hybrid** | [Daimon](../../systems/daimon/) | Consulted at every checkpoint write, where `drop_forgotten` removes the value before it reaches disk; also collided by content-addressed id, suppressed on every read, and consulted by one emitter |
+| **Suppressed** — the read path hides it | [OmniMem](../../systems/omnimem/) | A copy enters the store and is stopped on the way out — in OmniMem by a suppression set matched on word boundaries against content, written only by `suppress_topic` and applied by the recall pipeline and not by the briefing its session-start hook injects |
+| **Hybrid** | [Daimon](../../systems/daimon/), [Provem](../../systems/provem/) | Daimon is consulted at every checkpoint write, where `drop_forgotten` removes the value before it reaches disk; also collided by content-addressed id, suppressed on every read, and consulted by one emitter. Provem is consulted at write, where the re-asserted record is stored quarantined rather than dropped, and suppressed on every read |
 
 **The Consulted row, then, is the strong form** — value-keyed, consulted before
 the write, refusing activation. The collided form

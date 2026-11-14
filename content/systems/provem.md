@@ -1,49 +1,57 @@
 ---
 title: "Provem"
 eyebrow: "Governance as the product"
-description: "A GDPR-native governance layer over agent memory that carries all seven marks, and whose replay script asserts every published number and passes on a clean clone."
+description: "A governance layer over agent memory: erasure, tenant and subject scope, injection quarantine and hash-chained audit, with a replay script that asserts its published numbers."
 root: ../..
 page_kind: system
 source_name: "BernhardJackiewicz/provem"
 source_url: https://github.com/BernhardJackiewicz/provem
 archive_name: "BernhardJackiewicz--provem"
-revision: f6ce1b69c27a8c7eee78a0d15d6cb018d836922f
-revision_url: https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f
-analyzed_at: 2026-09-19
+revision: c162543623a722ec8c1d212f46d611678024113c
+revision_url: https://github.com/BernhardJackiewicz/provem/commit/c162543623a722ec8c1d212f46d611678024113c
+analyzed_at: 2026-11-14
+licence: "Apache-2.0"
+size: "25,574 lines of Python in 52 files under src/cognitive_memory; the governed engine is reliability.py at 1,711 lines, with dsar.py at 1,109 and mcp_server.py at 590"
+activity: "147 commits on main by one author under two names, 1 May – 2 November 2026"
+tests: "827 test functions in 49 files, 12,214 lines; no CI configuration in the tree; not run for this reading"
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
-  tombstone: "the erased-term registry, consulted on the recall path | src/cognitive_memory/reliability.py:443,674-690,1057, src/cognitive_memory/scope.py:137-188 | `forget(term, scope, requester=…)` tokenizes the term and adds it to a per-tenant `erased_terms` registry keyed on the value, and recall consults it through `_exclusion_reason` before returning a record, so an erased value cannot be re-asserted into an answer. The registry is the durable record: it survives restart and rehydrates from SQLite. The limit the report states stands — exclusion happens at recall rather than refusal at write, so the store still retains a re-ingested erased value | tests/test_tombstone_persistence.py (five cases including survive-restart and duplicate-recorded-once), tests/test_semantic_erasure.py"
-  trust_state: "a six-value review status that gates what enters memory, beside a recall that is allowed to answer nothing | src/cognitive_memory/models.py:290-296, :151-175, src/cognitive_memory/review.py:121, :196, :217, :225, :271-283, src/cognitive_memory/consolidation_eval.py:631, :644, src/cognitive_memory/reliability.py:144-145, :379, :836, :871 | `ReviewStatus` is `pending`, `approved`, `rejected`, `needs_more_evidence`, `deferred` and `expired`, and only `approved` moves an item into memory — `test_rejected_items_do_not_mutate_memory` pins the negative case. The middle values are the interesting part of the vocabulary: `needs_more_evidence` and `deferred` are distinct from `rejected`, so a reviewer can decline to admit something without ruling against it, and the auto-reviewer returns a named blocker and a confidence with each verdict rather than a bare decision. A high-risk item is refused outright with the reason `high_risk_requires_human_review`. Separately every `TemporalFact` carries `source_trust` and a `source_conflict_policy` defaulting to `abstain_on_conflict`, and the recall path can return `answer=None, abstained=True` — so the read withholds by declining to answer rather than by returning the best of a contested set | the suite argues the abstention is calibrated rather than reflexive, keeping the equal-trust one-against-one case out of the governed arm so a policy that abstained on everything could not score well"
-  bitemporal: "TemporalFact, validity time separate from record time | src/cognitive_memory/models.py:151-175 | `valid_at` and `invalid_at` carry when the fact was true; `created_at` carries when the row was written; `supersedes` and `superseded_by` chain corrections without overwriting. The two axes are distinct fields, which is what the mark requires — a fact can be recorded today about a period that ended last year, and a correction closes an interval rather than replacing a value | tests/test_temporal.py, tests/test_claim_lineage.py"
-  scope_enforced: "MemoryScope as a read-path exclusion, not a tag | src/cognitive_memory/scope.py:11-24,137-202 | `scope_exclusion_reason(query_scope, fact)`, `reflection_scope_exclusion_reason` and `memory_scope_exclusion_reason` each return a *reason* when a record falls outside the querying scope, and recall drops the record on that reason rather than ranking it down. The scope is inferred for both the fact and the query, so the key is resolved on both sides of the comparison | tests/test_scoped_reflections.py"
-  audit_log: "AuditLog, a hash-chained append-only record in the system's own store | src/cognitive_memory/audit.py:27-61,199 | each entry is hashed over `(seq, action, details, timestamp, prev_hash)`, so the chain detects a removed or edited entry rather than merely recording events in order, and `verify_export(data, expected_count, expected_head)` checks a published export against a count and a head hash. This is the mechanism erasure certificates rest on | tests/test_audit.py, tests/test_signing.py"
-  human_review: "the review queue, where a person adjudicates what enters memory | src/cognitive_memory/review.py, src/cognitive_memory/models.py:290-296 | the sleep cycle creates review items for its decisions, a review-required mode queues only the decisions that need it, and high-risk items are not auto-approved. The case that makes it a gate rather than a display is `test_rejected_items_do_not_mutate_memory`: a rejected item leaves the store unchanged | tests/test_review_queue.py"
-  negative_eval: "semantic erasure, as paired committed cases | tests/test_semantic_erasure.py:95-118 | `test_paraphrase_refused_with_reason_erased_semantic` asserts a paraphrase of an erased term is refused from a populated store, and it is paired both ways — `test_off_by_default_paraphrase_leaks` asserts the same paraphrase *does* come back when the semantic matcher is off, and `test_below_threshold_not_blocked` asserts an unrelated near-miss is not blocked. So an empty or uniformly-refusing result fails the suite rather than passing it, which is the control most negative suites in this corpus omit | this is the test"
-stack_storage: "delegated"
-stack_retrieval: "vector"
-stack_source: "seeded"
+  tombstone: "the erased-term registry, consulted on write and on recall | src/cognitive_memory/reliability.py:443, :681-687, :576-580, :1220-1227, :1375-1376; src/cognitive_memory/adapters/sqlite_backend.py:45 | `_execute_forget` tokenizes the term, adds the token set to a per-tenant `erased_terms` registry and persists it to a `tombstones` table, from which a restart rebuilds it. `remember` asks `_turn_hits_erased` before storing: a write whose tokens contain an erased set is stored quarantined with the reason `erased_term_reingest` and audited. `_exclusion_reason` applies the same subset test to every stored record on recall. The key is the value's token set, so a restatement inside other text is caught and a paraphrase is caught only when the optional semantic matcher is on. The re-ingested text stays in the store, held, and the audit chain keeps the erased term in clear | tests/test_tombstone_persistence.py:111-125 asserts a re-ingest after restart is quarantined with that reason; tests/test_mcp_server.py:85-92 asserts the same over the MCP tool; tests/test_tombstone_persistence.py:48-56 covers survival of a restart"
+  trust_state: "quarantine on the governed record, the first test recall applies | src/cognitive_memory/reliability.py:107, :556-581, :601-602, :743-775, :1371-1373 | a `MemoryRecord` carries `quarantined` and `quarantine_reason`. `remember` sets them for four reasons: instruction-risk text, a sensitive channel without consent, source trust under the policy floor, and a re-ingested erased term. `_exclusion_reason` returns the reason for a quarantined record before any other check, so the record is stored and never served; `release_quarantined` is the only path back. The state has two values with a reason attached. The six-value `ReviewStatus` in review.py is a different object: its decisions come from `simulate_review`, and the one function that applies an approved decision writes to an evaluation copy and says it is not a production apply path. Recall can also return `abstained=True` with no answer | tests/test_channel_sensitivity.py:32-43 asserts a quarantined record is not recalled and :82-94 asserts it is served after release"
+  bitemporal: "TemporalFact in the controller path, validity time separate from record time | src/cognitive_memory/models.py:151-175; src/cognitive_memory/controller.py:282, :326-329, :556 | `valid_at` and `invalid_at` carry when the fact held and `created_at` when the row was written. The controller stamps `valid_at` from the episode's own timestamp and closes a superseded fact by setting its `invalid_at` to the newer episode's timestamp, keeping the old row. The governed `MemoryRecord` served over MCP is not bitemporal: its `valid_at` is a logical write counter beside an ISO `created_at` (reliability.py:603-604) | tests/test_temporal.py, tests/test_claim_lineage.py"
+  scope_enforced: "tenant and subject scope as exclusion reasons on both recall paths | src/cognitive_memory/reliability.py:1390-1399, :868; src/cognitive_memory/scope.py:11-24, :137-188 | the governed recall returns `wrong_tenant` for a record of another tenant unless the policy allows cross-tenant reads, and `wrong_scope` for a subject-scoped record when the query names another subject or none; the two-phase `release` refuses an id whose tenant differs. In the controller path `scope_exclusion_reason` and its two siblings return a reason for a fact, reflection or memory outside the query's inferred scope, and recall drops it. The tenant and subject of an MCP call are the caller's own arguments | tests/test_scoped_reflections.py; tests/test_channel_sensitivity.py:106-114 for the tenant check on release"
+  audit_log: "AuditLog, a hash-chained append-only record of governance actions | src/cognitive_memory/audit.py:49-77, :112-133, :134-162, :212-235, :257 | each entry hashes its sequence number, action, details, timestamp and the previous hash. `record` is the only appender; quarantine, release, erasure, restriction, consent withdrawal, held and approved revocations and DSAR steps each write one. `verify` and `verify_export` check a chain against an expected count and head. An erasure certificate stores the erased term and the removed ids in clear, which the semantic matcher needs; `disclosure_report` is a separate view that replaces term and requester with SHA-256 digests and anchors to the chain head | tests/test_audit.py, tests/test_signing.py, tests/test_disclosure_report.py:42-75"
+  human_review: "a quarantined record waits for a release no shipped agent surface carries | src/cognitive_memory/reliability.py:743-775, :1371-1373; src/cognitive_memory/mcp_server.py:322-474 | a quarantined record is excluded from recall until `release_quarantined` rewrites it, and a record held for instruction risk needs `override_injection` as well. The method has no caller under src: it is not among the ten MCP tools, the CLI verbs or the DSAR gateway routes, so the agent that wrote the record cannot release it through anything the repository ships. Limits: no person-facing surface ships either, LICENSING.md lists approval workflows as a future proprietary layer, the method checks no principal, and an agent with a Python shell on the host could call it. Two of the four hold reasons key on `source`, `trust` and `consent`, which an MCP caller supplies. The review queue in review.py is not this gate: its only decider is a simulator | tests/test_channel_sensitivity.py:82-114 covers release, the injection override and the tenant check"
+  negative_eval: "semantic erasure and write-side erasure, as paired committed cases | tests/test_semantic_erasure.py:95-117; tests/test_tombstone_persistence.py:111-125; tests/test_mcp_server.py:85-92 | `test_paraphrase_refused_with_reason_erased_semantic` asserts a paraphrase of an erased term is refused from a populated store. It is paired both ways: `test_off_by_default_paraphrase_leaks` asserts the same paraphrase comes back when the matcher is off, and `test_below_threshold_not_blocked` asserts an unrelated near-miss is served. An empty or uniformly refusing result therefore fails. The MCP case stores a note, forgets a term in it, stores it again and asserts the recall abstains | these are the tests; none was run for this reading"
+stack_storage: "sqlite, delegated"
+stack_retrieval: "lexical, vector"
+stack_source: "reviewed"
 matrix:
-  memory_unit: "A `TemporalFact` — subject, relation, object — with valid/invalid times, confidence, evidence ids, supersession links, source type and trust, and a privacy policy"
-  storage: "Pluggable backends behind a governance layer; its own local store, or Mem0 and Graphiti adapters"
-  retrieval: "Dense recall with an exclusion pass that returns a reason per rejected record — erased, do_not_use, wrong_tenant, scope mismatch, quarantined"
-  write: "Governed admission — prompt-injection quarantine, sensitive-without-consent hold, provenance and scope stamped at write"
-  update_delete: "`forget(term, scope)` deletes matching records, appends the term's tokens to a per-tenant erased set consulted on every later recall, and writes an erasure certificate"
+  memory_unit: "Two models: a governed `MemoryRecord` (text, subject, relation, object, tenant and subject scope, source, trust, provenance, quarantine flag and reason, purposes) served over MCP, and a `TemporalFact` with valid and invalid times, evidence ids and supersession links in the controller path"
+  storage: "Pluggable backends behind the governance layer: in-memory, a SQLite backend with records, tombstones and purposes tables, or Mem0 and Graphiti adapters"
+  retrieval: "Lexical candidates from the backend (blended BM25 in SQLite, token overlap in memory), then an exclusion pass returning a reason per withheld record: quarantined, erased, do_not_use, consent_revoked, wrong_tenant, wrong_scope. The benchmarked answer stack adds dense embeddings"
+  write: "Governed admission, synchronous: instruction-risk text, a sensitive channel without consent, low source trust or a re-ingested erased term stores the record quarantined; provenance and scope are stamped at write"
+  update_delete: "`forget(term, scope)` deletes matching records, persists the term's tokens to a per-tenant erased set consulted on every later write and recall, sweeps registered derivative stores and writes an erasure certificate; a strict profile holds the request for a second operator"
   scoping: "Tenant and subject scope enforced on the read path, with cross-tenant defense in depth for backends that do not pre-filter"
-  integration: "An MCP server, a CLI, and adapters that let the governance layer sit over Mem0 or Graphiti rather than replacing them"
+  integration: "A ten-tool MCP server, a CLI, a DSAR service with a token-guarded REST gateway, and adapters that let the governance layer sit over Mem0 or Graphiti"
   background: "Reflection, consolidation, and a deterministic governance benchmark that needs no API key"
-  trust: "Discrete statuses — hypothesis, accepted, proposed, pending review, quarantined — plus source trust, confidence and an abstain-on-conflict policy"
+  trust: "Quarantine with a reason as the state recall filters on, released only by an explicit call; source trust with a policy floor; abstention on conflict. The review-status vocabulary belongs to a simulated consolidation queue"
   strengths: "A replay script that asserts every published number and passes; a claim register that marks its own claims unsupported; losing configurations published"
-  risks: "Erasure suppresses at read rather than refusing at write, so the store retains what a subject asked to erase; the governance benchmark is self-authored"
+  risks: "The audit chain and the tombstone table keep the erased term in clear; over MCP the caller supplies source, trust, consent and requester, which decide two quarantine reasons and the strict-revocation check; no approval surface ships; the governance benchmark is self-authored"
 ---
 
 ## 1. Executive Summary
 
-Provem is 25,506 lines of Python under `src/` with 12,111 lines of tests,
-positioned not as a memory but as a **governance layer over one** —
-right-to-erasure, tenant
-isolation, injection defense and a tamper-evident audit, able to run over Mem0 or
-Graphiti or as its own store. Its README states the thesis in a sentence: the
-hard question is no longer *"can I find it?"* but *"am I allowed to use it?"*
+Provem is positioned not as a memory but as a **governance layer over one**:
+right-to-erasure, tenant and subject isolation, injection quarantine and a
+tamper-evident audit, able to run over Mem0 or Graphiti or over its own SQLite
+store. What is notable is that erasure is a registry of erased values consulted
+on write and on recall, beside a replay script that asserts every published
+number. What is weak is authority: over MCP the caller supplies the source,
+trust, consent and requester that several of the checks decide on, and the
+erased term itself stays in the audit chain in clear. Its README states the
+thesis in a sentence: the hard question is no longer *"can I find it?"* but
+*"am I allowed to use it?"*
 
 It carries **all seven capability marks**. Where [Verel](../verel/) arrived at
 them under red-team pressure, Provem arrived at them because a regulation names
@@ -52,8 +60,8 @@ each one.
 **The evidence practice is the most disciplined in the corpus.** The repository
 ships `scripts/verify_repro.sh`, described in its own header as a *"self-checking
 EUR-0 replay of every published benchmark number"* that *"ASSERTS the exact
-published values; any missing input or drifted number exits non-zero."* Run at
-this commit from a clean clone:
+published values; any missing input or drifted number exits non-zero."* Run from
+a clean clone at `fc722f0` and again at `9cc7401`, both on 4 August 2026:
 
 ```text
 == dataset integrity ==  == baseline ==  == optimized ==  == post empty-fix ==
@@ -88,10 +96,11 @@ register that carries a rejected claim is the artifact this atlas has been
 describing in the abstract for months.
 
 Reservations. The governance benchmark that produces the headline compliance
-numbers is self-authored, which the repository says plainly. And the erasure
-guard is **read-side suppression rather than write-side refusal**, which matters
-in the way described below and is the sharpest thing to press on an Article 17
-claim.
+numbers is self-authored, which the repository says plainly. The erasure
+certificate records the erased term in clear inside a chain that cannot be
+edited, so the log of a deletion holds what was deleted. And the authority
+checks trust their caller: a strict-revocation profile compares a `requester`
+string with the subject named in the same call.
 
 It is Apache 2.0 licensed, with `license = "Apache-2.0"` and
 `license-files = ["LICENSE"]` declared in `pyproject.toml` rather than left to a
@@ -112,43 +121,47 @@ A fact is admitted or quarantined, ranked or excluded with a reason, and erasure
 leaves behind a durable token set that outlives the records it deleted.
 
 ```mermaid
-%% caption: erasure writes durable per-tenant token sets that every later recall consults, so forgetting outlives the rows it deleted and produces a certificate in the audit log
-flowchart TB
-    IN["ingest"] --> ADM{"governed admission"}
-    ADM -->|"injection detected<br/>or sensitive without consent"| Q["quarantined<br/><i>quarantine_reason</i>"]
-    ADM -->|"lawful basis, provenance,<br/>scope stamped"| LIVE["TemporalFact<br/>valid_at / invalid_at<br/>+ created_at"]
-
+%% caption: a Provem write is stored live or quarantined, erasure leaves a per-tenant token set that every later write and recall consults, and a quarantined record returns only through an explicit release
+flowchart TD
+    IN["remember"] --> ADM{"governed admission"}
+    ADM -->|"instruction risk, sensitive<br/>channel, low trust, or<br/>erased term re-ingested"| Q["stored quarantined<br/>with a reason, audited"]
+    ADM -->|"clean: provenance<br/>and scope stamped"| LIVE["live record"]
+    Q -->|"release_quarantined:<br/>library call, no shipped<br/>agent surface"| LIVE
     LIVE --> REC{"recall:<br/>_exclusion_reason"}
-    REC -->|"erased"| X1["excluded"]
-    REC -->|"do_not_use"| X1
-    REC -->|"wrong_tenant"| X1
-    REC -->|"scope mismatch"| X1
     Q --> REC
+    REC -->|"quarantined, erased,<br/>do_not_use, consent_revoked,<br/>wrong_tenant, wrong_scope"| X1["excluded,<br/>reason returned"]
     REC -->|"admitted"| ANS["answer or abstain"]
-
-    F["forget(term, scope)"] --> DEL["delete matching records"]
-    F --> ERT[("erased_terms[tenant]<br/><b>token sets, durable</b>")]
-    F --> CERT["erasure certificate<br/>into the audit log"]
-    ERT -.->|"consulted on every recall"| REC
-
-    style ERT fill:#e7efe9,stroke:#3d6b59
+    F["forget(term, scope)"] --> HOLD{"strict profile:<br/>requester authorised?"}
+    HOLD -->|"no"| PEND["pending revocation<br/>until approved or rejected"]
+    HOLD -->|"yes"| DEL["delete matching records,<br/>sweep derivative stores"]
+    DEL --> ERT[("erased_terms per tenant<br/>token sets, persisted")]
+    DEL --> CERT["erasure certificate<br/>in the audit chain,<br/>term in clear"]
+    ERT -.->|"consulted on write"| ADM
+    ERT -.->|"consulted on recall"| REC
 ```
 
-The dotted edge is the mark most systems here lack. `forget` does not only
-delete: it tokenizes the term and appends the token set to a per-tenant
-`erased_terms` registry, and every later recall excludes any record whose tokens
-are a **superset** of an erased set. Deleting the rows removes what exists;
-keeping the token set is what survives the next ingest.
+The dotted edges are the mark most systems here lack. `forget` does not only
+delete: it tokenizes the term and persists the token set to a per-tenant
+`erased_terms` registry. Every later write whose tokens are a **superset** of an
+erased set is stored quarantined, and every later recall excludes any stored
+record that is. Deleting the rows removes what exists; keeping the token set is
+what survives the next ingest.
 
 ## 3. Architecture
 
-Forty-eight Python modules under `src/cognitive_memory/`. The governance core is
+Fifty-two Python files under `src/cognitive_memory/`. The governance core is
 `reliability.py` (admission, erasure, exclusion), `compliance.py` (regime
 profiles, erasure modes), `policy.py`, `scope.py`, `safety.py`, `audit.py` and
 `review.py`. Around it sit `retrieval.py`, `ranking.py`, `temporal.py`,
 `reflection.py`, `consolidation_eval.py` and an answerer stack. `adapters/`
-carries the Mem0 and Graphiti bridges plus mocks, and `mcp_server.py` exposes the
-whole thing over MCP.
+carries the Mem0 and Graphiti bridges, a SQLite backend and mocks.
+`mcp_server.py` serves the governed engine as ten tools, and `dsar.py` with
+`dsar_gateway.py` carries data-subject requests from plan to certificate.
+
+Two memory models live side by side. `GovernedMemory` in `reliability.py`
+holds `MemoryRecord`s and is what MCP and the DSAR service drive. The older
+`MemoryController` holds `TemporalFact`s, reflections and the sleep cycle, and
+is what the CLI demos and the consolidation evaluation drive.
 
 `docs/` is unusually load-bearing: a claim register, a research journal
 documenting *"every synthetic suite, every negative result"*, an optimization log
@@ -197,20 +210,29 @@ call, and 25 with `--full`.
 ### Erasure that outlives the record
 
 ```python
-def forget(self, term: str, scope: Scope) -> int:
+def _execute_forget(self, term, scope, requester="", source="user"):
     term_tokens = tokenize(term)
-    if term_tokens:
-        self.erased_terms.setdefault(scope.tenant, []).append(term_tokens)
+    self._add_tombstone(self.erased_terms, scope.tenant, term_tokens)
+    self._persist_tombstone("erased", scope.tenant, term, term_tokens)
     ...
     removed = self.backend.delete_ids(remove)
-    self.audit.erasure_certificate(term, remove, scope.tenant, removed)
+    derivatives = self._purge_derivatives(matched)
+    self.audit.erasure_certificate(term, remove, scope.tenant, removed, ...)
 ```
 
-and on the read path, in `_exclusion_reason`:
+On the read path, in `_exclusion_reason`:
 
 ```python
 if any(term <= erasure_tokens for term in self.erased_terms.get(record.scope.tenant, [])):
     return "erased"
+```
+
+And on the write path, in `remember`
+(`src/cognitive_memory/reliability.py:576-580`):
+
+```python
+if not reason and self._turn_hits_erased(turn):
+    reason = "erased_term_reingest"
 ```
 
 Three things make this a
@@ -221,12 +243,21 @@ inside different surrounding text is still caught, which is a looser and more
 forgiving key than the exact-text hash [Daimon](../daimon/) uses. And it is
 **tenant-scoped**, so an erasure in one tenant does not silently censor another.
 
-The limitation is the same one this atlas records for Daimon: it is suppression
-at read rather than refusal at write. A re-ingested erased value still lands in
-the backing store and is stopped on the way out, so every future read path has to
-consult the registry, and the store holds content a subject asked to erase. For a
-system whose stated purpose is GDPR Article 17, that distinction is the one a
-reader should press hardest on.
+The registry is consulted in both directions. Since `b18b1d5`, on 5 August
+2026, a write naming an erased term is stored quarantined with the reason
+`erased_term_reingest` rather than as a clean record; the code comment gives the
+choice: *"Quarantine instead of refusing so the block is auditable"*. The
+re-ingested text is therefore in the store, held, and a release does not
+unblock it, because recall applies the erased test to every record.
+
+What the design keeps is the term. The SQLite `tombstones` table stores it, the
+semantic matcher needs its text, and the erasure certificate carries `term` and
+`removed_ids` in a hash chain that cannot be edited
+(`src/cognitive_memory/audit.py:134-162`). Since `c162543`, on 2 November 2026,
+`disclosure_report` gives a second view for a regulator in which term and
+requester appear only as SHA-256 digests (`:164-204`). The chain itself is
+unchanged, and a test asserts that the raw term is still in it
+(`tests/test_disclosure_report.py:83-91`).
 
 ### Exclusion with a reason, and scope that cannot be dodged
 
@@ -254,8 +285,28 @@ quarantine, a sensitive-without-consent hold, provenance and scope stamped at
 write. A quarantined record keeps a `quarantine_reason` and is excluded at
 recall rather than dropped, so the hold is inspectable. That is a
 [governed write gateway](../../patterns/governed-write-gateway/) whose refusal
-state is durable and reviewable, and it is what `review.py`'s `ReviewStatus`
-workflow adjudicates.
+state is durable. A held record comes back only through `release_quarantined`,
+which rewrites it clean, audits the release with the prior reasons, and skips a
+record held for instruction risk unless `override_injection` is set
+(`src/cognitive_memory/reliability.py:743-775`). Nothing under `src/` calls it.
+
+`review.py` is a separate thing. Its queue holds the sleep cycle's consolidation
+proposals, its decisions come from `simulate_review` under a named policy, and
+the one function that applies an approved decision is
+`apply_approved_review_decisions_to_evaluation_copy`, whose docstring says it
+*"should not be used as a production apply path"* (`src/cognitive_memory/review.py:66-116`).
+
+### Subject requests through one service
+
+`DSARService` gives erasure, consent withdrawal and access one request shape,
+with `plan` as a read-only dry run, `execute` exactly once per `request_id`,
+and `verify` as a later re-check (`src/cognitive_memory/dsar.py`). Under a
+strict-revocation profile a request from an unauthorised requester becomes a
+`PendingRevocation`, and `approve` or `reject` closes it with a reviewer's
+name recorded in the audit (`src/cognitive_memory/reliability.py:945-1022`).
+The gateway reaches both over HTTP behind one shared token and states that
+real authentication belongs in a proxy in front of it
+(`src/cognitive_memory/dsar_gateway.py:14-18`, `:319-330`).
 
 ## 5. Memory Data Model
 
@@ -269,17 +320,21 @@ which is the [bi-temporal](../../patterns/bi-temporal-fact-validity/) mark, and
 `source_timestamp` defaults to `valid_at` when unstated rather than to now — a
 small choice that keeps an undated source from looking freshly observed.
 
-Trust is several fields rather than one: discrete statuses (`hypothesis`,
-`accepted`, `proposed`, `pending`, plus `quarantined` as a flag with a reason),
-`source_trust` as a separate axis from `confidence`, and
-`source_conflict_policy` defaulting to **`abstain_on_conflict`** — a store whose
-default answer to a contradiction is to say nothing is unusual and is the correct
-default for the regulated setting it targets.
+Trust is several fields rather than one. On the governed record it is
+`quarantined` with a `quarantine_reason`, which recall filters on, and `trust`,
+which the write path compares with a policy floor. On a `TemporalFact` it is
+`source_trust` beside `confidence`, and `source_conflict_policy` defaulting to
+**`abstain_on_conflict`** — a store whose default answer to a contradiction is
+to say nothing is unusual and is the correct default for the regulated setting
+it targets. The review statuses belong to the simulated queue described in
+section 4.
 
 ## 6. Retrieval Mechanics
 
-Dense recall in the recommended tier, with the exclusion pass above between
-candidates and answer, and abstention as a first-class outcome rather than an
+The governed recall takes lexical candidates from its backend, blended BM25 in
+SQLite and token overlap in memory, and runs the exclusion pass above between
+candidates and answer; the recommended benchmark tier adds dense embeddings in
+the answer stack, and abstention as a first-class outcome rather than an
 empty result. The headline recall figures come from LoCoMo: 0.614 for the dense
 tier against Mem0's 0.565 and Zep's 0.449, with p-values reported
 (`Provem>Mem0 p = 2.5×10⁻⁴`, `Provem>Zep p = 1×10⁻³⁴`) and the ordering stated as
@@ -294,7 +349,8 @@ failure mode.
 
 Writes pass admission, are stamped with provenance and scope, and either land
 live or land quarantined with a reason. Erasure is synchronous: delete, register
-the token set, emit a certificate. Background work covers reflection and
+the token set, sweep derivative stores, emit a certificate; under a strict
+profile it is held first. Background work covers reflection and
 consolidation.
 
 ### Operational cost
@@ -307,7 +363,12 @@ than no memory, which is the trade named rather than hidden.
 
 ## 8. Agent Integration
 
-An MCP server, a CLI, and adapters for Mem0 and Graphiti. The adapter posture is
+An MCP server with ten tools — `remember`, `recall`, `forget`, `verify`,
+`list_profiles`, `audit_export`, `cleanup` and three DSAR tools — a CLI, and
+adapters for Mem0 and Graphiti (`src/cognitive_memory/mcp_server.py:322-474`).
+The MCP caller supplies `tenant`, `source`, `trust` and `requester`, and the
+handler also reads a `consent` argument the tool schema does not list
+(`:178-190`). The adapter posture is
 the product thesis: the governance layer is meant to sit *over* an existing
 memory rather than replace it, which is why `mem0_audit.py`, `mem0_env.py` and
 the Graphiti bridge exist alongside its own store. `docs/trust_model.md` states
@@ -319,7 +380,7 @@ security document is worth more than claiming it.
 Strengths:
 
 - **A replay that asserts every published number** and exits non-zero on drift;
-  21 assertions, 25 with `--full`, passing at this commit.
+  21 assertions, 25 with `--full`, passing when last run, at `9cc7401`.
 - **A hash-pinned external dataset** fetched rather than redistributed, with an
   overwrite refusal on hash mismatch.
 - **Losing configurations published** in the same table as the winner, including
@@ -332,26 +393,39 @@ Strengths:
   level and risk per row.
 - **A research journal of negative results** and an optimization log including
   failures and a bug post-mortem.
-- **Value-keyed, normalized, tenant-scoped erasure** with a certificate in the
-  audit log.
+- **Value-keyed, normalized, tenant-scoped erasure**, consulted on write and on
+  recall, with a certificate in the audit log.
+- **A disclosure view of the audit** that carries digests in place of the term
+  and requester and anchors to the chain head.
 - **Exclusion reasons returned per record**, so a withheld memory is explainable.
 - **Scope isolation closed against the omitted-parameter bypass.**
 - **`abstain_on_conflict` as the default** source-conflict policy.
 
 Gaps:
 
-- **Erasure is read-side suppression**, so the store retains content a subject
-  asked to erase and every read path must consult the registry.
+- **The erased term stays on record.** The tombstone table and the erasure
+  certificate hold it in clear, in a chain built not to be edited; the
+  disclosure view hides it from a reader, not from the store.
+- **Authority is the caller's word over MCP.** `source`, `trust` and `consent`
+  decide two of the four quarantine reasons, and a strict-revocation profile
+  authorises a `requester` equal to the subject named in the same call
+  (`src/cognitive_memory/reliability.py:945-958`).
+- **No approval surface ships.** `release_quarantined` has no caller under
+  `src/`, the review queue is decided by a simulator, and `LICENSING.md` places
+  approval workflows in a future proprietary layer.
 - **The governance benchmark is self-authored**, and its 240 → 0 and 100% → 0%
   figures are measurements of the author's own scenario suite.
 - **The local-embeddings tier is unbuilt**, marked projected.
 
 ## 10. Tests, Evals, and Benchmarks
 
-12,111 lines of tests across 48 files, run as part of `verify_repro.sh --full`.
-The suite was **not** run for this reading — the dependency surface was inside
-the cooldown — so what follows reports the published figures and what asserts
-them, not a fresh verification.
+12,214 lines of tests across 49 files, 827 test functions, run as part of
+`verify_repro.sh --full`. I ran nothing for this reading, so what follows
+reports the published figures and what asserts them, not a fresh verification.
+The tree holds no CI configuration. `docs/measurement_changelog.md` records a
+fresh LoCoMo run on 2 November 2026 scoring 0.647 for Provem against the
+published 0.614, with the Mem0 and Zep arms declared invalid and unpublished
+because an account limit and an unfinished graph build blocked them.
 
 The compliance headline — *"Compliance violations 240 → 0, memory-poisoning
 success 100% → 0%, silent compounding errors 72.6% → 0.0% (paired: governance
@@ -369,9 +443,14 @@ which is why the README separates *"independent third-party evaluations (quoted
 verbatim, their setups)"* into a second ranking labelled as not comparable to the
 first.
 
-The `negative_eval` mark rests on the compliance arm: committed, deterministic
-cases asserting that erased, restricted and poisoned material is **not** returned,
-wired into a gate that fails if the count moves off zero.
+The `negative_eval` mark rests on committed cases that assert material is
+**not** returned from a populated store: a paraphrase of an erased term under
+the semantic matcher, paired with the same paraphrase leaking when the matcher
+is off (`tests/test_semantic_erasure.py:95-117`), and a note stored, erased and
+stored again over MCP, after which recall abstains
+(`tests/test_mcp_server.py:85-92`). No test drives `release_quarantined`
+through a shipped surface, because none exists, and no test covers the
+strict-revocation check against a caller who names itself the subject.
 
 ## 11. For Your Own Build
 
@@ -399,9 +478,11 @@ wired into a gate that fails if the count moves off zero.
 
 ### Avoid
 
-- **Read-side suppression as the whole of an erasure story.** It is a real
-  defence and it leaves the erased content in the store, which is exactly the
-  property the regulation is about.
+- **An erasure log that holds what it erased.** A certificate naming the erased
+  term in clear, in an append-only chain, keeps the datum the request was
+  about. Store a digest in the chain and keep the matcher's text elsewhere.
+- **An authority check on two fields of one request.** Comparing `requester`
+  with `subject` proves nothing when one caller writes both.
 - **Shipping without a licence file** when the pitch is enterprise compliance —
   the one thing a compliance-minded adopter cannot do with an unlicensed
   repository is use it. Worth keeping as a general rule because it is the cheapest
@@ -420,13 +501,15 @@ evidence practice around the claims is the strongest in this atlas.
 
 Wrong as a drop-in recall upgrade: the recall win is real and modest, its author
 calls it a tie, and two of the four deployment tiers are slower or worse than the
-baseline. And wrong wherever "erased" has to mean the store no longer holds it,
-rather than no longer serves it.
+baseline. And wrong wherever "erased" has to mean the system no longer holds
+the term at all: the registry and the certificate keep it.
 
 ## 12. Open Questions
 
-- Could the erasure registry move to the write path, so an erased value is
-  refused at ingest rather than filtered at recall?
+- Who is meant to call `release_quarantined`, and through what, before the
+  proprietary approval layer exists?
+- Does any deployment bind `requester`, `source` and `consent` to an
+  authenticated identity before they reach the engine?
 - The erased-token subset test is looser than an exact hash — what is its false
   positive rate on innocent records that happen to contain the term?
 - The governance benchmark is self-authored. Is there an external attack suite it
@@ -440,8 +523,11 @@ rather than no longer serves it.
 - Governance core: `src/cognitive_memory/reliability.py` (`forget`,
   `erased_terms`, `_exclusion_reason`, quarantine), `compliance.py` (regime
   profiles, `erasure_mode`), `policy.py`, `scope.py`, `safety.py`.
-- Audit and review: `src/cognitive_memory/audit.py` (erasure certificates),
-  `review.py` (`ReviewStatus`).
+- Audit and review: `src/cognitive_memory/audit.py` (erasure certificates,
+  `disclosure_report`), `review.py` (`ReviewStatus`, `simulate_review`).
+- Subject requests: `src/cognitive_memory/dsar.py`, `dsar_gateway.py`,
+  `signing.py`.
+- Stores: `src/cognitive_memory/adapters/sqlite_backend.py`, `controller.py`.
 - Model: `src/cognitive_memory/models.py` (`TemporalFact`), `temporal.py`.
 - Adapters and integration: `src/cognitive_memory/adapters/`, `mem0_audit.py`,
   `mem0_env.py`, `graphiti_env.py`, `mcp_server.py`, `cli.py`.
@@ -453,7 +539,24 @@ rather than no longer serves it.
   `docs/locomo_benchmark.md`.
 - Licensing: `LICENSE` (Apache 2.0), declared in `pyproject.toml` as `license = "Apache-2.0"` with `license-files`, and the open/closed boundary in `LICENSING.md`.
 
+### Recorded searches
+
+Run with `/usr/bin/git grep` from the root of a checkout at
+`c162543623a722ec8c1d212f46d611678024113c`.
+
+- `git grep -n 'release_quarantined'` — the definition at `src/cognitive_memory/reliability.py:743` and nine lines in `tests/test_channel_sensitivity.py` and `tests/test_mem0_reliability_adapter.py`; no caller under `src/`.
+- `git grep -n -E 'approve_revocation|reject_revocation' -- src` — the two definitions and `dsar.py:298`, `:333`; reached from the gateway at `dsar_gateway.py:319-330`, not from `mcp_server.py`.
+- `git grep -n -E '"name": *"' -- src/cognitive_memory/mcp_server.py` — ten tool names: remember, recall, forget, verify, list_profiles, audit_export, cleanup, dsar_plan, dsar_execute, dsar_verify; none approves or releases.
+- `git grep -n -E 'simulate_review\(' -- src tests` — `cli.py:344`, `:761`, `consolidation_eval.py:501`, the definition, and the cases in `tests/test_review_queue.py`.
+- `git grep -n 'ReviewStatus.APPROVED' -- src` — `review.py` and `consolidation_eval.py:631`, `:644` only; the single applier is `apply_approved_review_decisions_to_evaluation_copy` at `review.py:105`.
+- `git grep -n 'erased_term_reingest' -- src tests` — set at `reliability.py:580`, asserted in `tests/test_mcp_server.py:92`, `tests/test_reliability.py:111`, `tests/test_tombstone_persistence.py:124` and named in `tests/test_memory_core.py:70`.
+- `git log --format='%h %cs %s' -S'erased_term_reingest' -- src` — `b18b1d5 2026-08-05 Enforce erasure on the write path: quarantine re-ingested erased terms`.
+- `ls .github/workflows` — no such directory; no CI configuration.
+- `git grep -n -i -E 'arxiv|bibtex|CITATION\.cff' -- README.md docs` — citations of other systems' papers in `README.md` and `docs/agentic_reliability_benchmark.md`; no paper about Provem.
+
 ## History
+
+**2026-11-14** — [`c162543623a722ec8c1d212f46d611678024113c`](https://github.com/BernhardJackiewicz/provem/commit/c162543623a722ec8c1d212f46d611678024113c) — two commits on, four files: a PII-free disclosure view of the audit and a fresh LoCoMo run recorded. All seven marks hold; `trust_state` and `human_review` move from the review queue to the quarantine flag and its release. Three published claims were wrong at the previous pin. Erasure was called read-side only; since `b18b1d5` on 5 August 2026 a re-ingested erased term is quarantined at write. The review queue was said to adjudicate held writes; its only decider is `simulate_review`, called from the CLI and the evaluation as well as the tests, and approvals apply to an evaluation copy. The DSAR service and its held revocations were undescribed. LICENSE read: Apache-2.0, no rider. Screened: one LFS filter, one unpinned manifest. Nothing was installed or run.
 
 **2026-09-25** — [`f6ce1b69c27a8c7eee78a0d15d6cb018d836922f`](https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f) — census re-measured at the same commit from a depth-1 fetch, read and never run. The summary's 21,444 and 7,658 are the first reading's figures: at `fc722f0` Python under `src/` counts exactly 21,444 lines and `tests/` 7,658, which fixes the definition. At this pin the same count gives 25,506 lines across 52 files under `src/`, and 12,111 lines across 48 files under `tests/`, matching section 10. The summary and the verdict now carry those figures. No mark moved.
 

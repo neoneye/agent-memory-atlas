@@ -304,8 +304,8 @@ refuses at the checkpoint write, discussed below. <a
 href="../../systems/provem/">Provem</a> arrives at it from regulation
 rather than from a failure, discussed below. <a
 href="../../systems/memsem/">memsem</a> refuses the write like Verel,
-RainBox and Daimon rather than filtering the read like Provem, and arms
-the mechanism only on a candidate review — discussed below. <a
+RainBox and Daimon, where Provem stores it quarantined, and arms the
+mechanism only on a candidate review — discussed below. <a
 href="../../systems/perseus-vault/">Perseus Vault</a> refuses a value by
 its digest without storing it — discussed below. <a
 href="../../systems/kibisis/">Kibisis</a> stores an exact and an
@@ -481,9 +481,10 @@ subset.</strong> <a href="../../systems/provem/">Provem</a>'s
 <code>forget(term, scope)</code> deletes the matching records, appends
 the term's <strong>token set</strong> to a per-tenant
 <code>erased_terms</code> registry, and writes an erasure certificate
-into the audit log. Every later recall computes the record's tokens and
-excludes it with reason <code>"erased"</code> if any registered set is a
-subset.</p>
+into the audit log. A later write whose tokens contain a registered set
+is stored quarantined with the reason <code>erased_term_reingest</code>,
+and every recall computes a record's tokens and excludes it with reason
+<code>"erased"</code> if any registered set is a subset.</p>
 <p>Two things separate it from Verel, RainBox and Daimon. Its key is a
 <em>normalized token subset</em> rather than an exact string or a
 canonicalised value, so a later record that restates the erased term
@@ -494,12 +495,13 @@ surface nobody has measured. And it is <strong>tenant-scoped</strong>,
 so an erasure for one customer cannot silently censor another — scope is
 part of the rejection's identity, as it is in memsem's project key and
 Argos's user scope.</p>
-<p>Its limitation is one Daimon does not share: suppression at read, not
-refusal at write. A re-ingested erased value still lands in the backing
-store and is stopped on the way out. For a system whose stated purpose
-is GDPR Article 17 that is the sharper version of the same criticism —
-the regulation is about what you hold, and this mechanism governs what
-you serve.</p>
+<p>Its limitation is one Daimon does not share: it holds the write
+instead of refusing it. A re-ingested erased value is stored as a
+quarantined record that no recall serves, and the registry and the
+erasure certificate keep the erased term itself in clear. For a system
+whose stated purpose is GDPR Article 17 that is the sharper version of
+the same criticism — the regulation is about what you hold, and this
+mechanism governs what you serve.</p>
 <p><strong>memsem's tombstone is armed by a candidate review, and the
 review verb is an MCP tool the agent holds too.</strong> <a
 href="../../systems/memsem/">memsem</a> parks an uncertain fact in a
@@ -576,18 +578,18 @@ it. The limit is honest and worth stating with the mechanism:
 propagation reaches exactly as far as the provenance is declared, so a
 derived writer that omits its source ids escapes.</p>
 <p>Three further details. It <strong>refuses at the write path</strong>
-rather than filtering at read, like Verel, RainBox and Daimon and unlike
-Provem, enforced in <code>remember_impl</code> with a comment claiming
-the reach — agent remember, capture, ingest, connectors, derived
-writers. Its <strong>override is an audited act</strong>, not a bypass:
-a deliberate write passes <code>allow_rejected=true</code> and is
-journaled into the same hash-chained ledger, which is the shape the
-tradeoff list above asks for when a trusted human correction has to win.
-And the lookup matches on <strong>predicate and digest without the
-subject</strong>, so a rejected value is refused under any key in scope
-— deliberate, named in a test, and an aggressive reading of the
-normalization tradeoff, with a correspondingly larger false-positive
-surface.</p>
+rather than filtering at read, like Verel, RainBox and Daimon, where
+Provem quarantines the write, enforced in <code>remember_impl</code>
+with a comment claiming the reach — agent remember, capture, ingest,
+connectors, derived writers. Its <strong>override is an audited
+act</strong>, not a bypass: a deliberate write passes
+<code>allow_rejected=true</code> and is journaled into the same
+hash-chained ledger, which is the shape the tradeoff list above asks for
+when a trusted human correction has to win. And the lookup matches on
+<strong>predicate and digest without the subject</strong>, so a rejected
+value is refused under any key in scope — deliberate, named in a test,
+and an aggressive reading of the normalization tradeoff, with a
+correspondingly larger false-positive surface.</p>
 <p>The open edge is reach rather than existence: the comment names
 connectors and derived writers, and no committed test walks the
 background consolidation passes, which is the condition under which
@@ -966,8 +968,7 @@ no-op is a named outcome the caller handles</td>
 </tr>
 <tr>
 <td><strong>Suppressed</strong> — the read path hides it</td>
-<td><a href="../../systems/provem/">Provem</a>, <a
-href="../../systems/omnimem/">OmniMem</a></td>
+<td><a href="../../systems/omnimem/">OmniMem</a></td>
 <td>A copy enters the store and is stopped on the way out — in OmniMem
 by a suppression set matched on word boundaries against content, written
 only by <code>suppress_topic</code> and applied by the recall pipeline
@@ -975,11 +976,14 @@ and not by the briefing its session-start hook injects</td>
 </tr>
 <tr>
 <td><strong>Hybrid</strong></td>
-<td><a href="../../systems/daimon/">Daimon</a></td>
-<td>Consulted at every checkpoint write, where
+<td><a href="../../systems/daimon/">Daimon</a>, <a
+href="../../systems/provem/">Provem</a></td>
+<td>Daimon is consulted at every checkpoint write, where
 <code>drop_forgotten</code> removes the value before it reaches disk;
 also collided by content-addressed id, suppressed on every read, and
-consulted by one emitter</td>
+consulted by one emitter. Provem is consulted at write, where the
+re-asserted record is stored quarantined rather than dropped, and
+suppressed on every read</td>
 </tr>
 </tbody>
 </table></div>

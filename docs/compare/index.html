@@ -27728,34 +27728,46 @@ path of any kind</td>
 </tr>
 <tr>
 <td><a href="../systems/provem/"><code>provem</code></a></td>
-<td>A <code>TemporalFact</code> — subject, relation, object — with
-valid/invalid times, confidence, evidence ids, supersession links,
-source type and trust, and a privacy policy</td>
-<td>Pluggable backends behind a governance layer; its own local store,
-or Mem0 and Graphiti adapters</td>
-<td>Dense recall with an exclusion pass that returns a reason per
-rejected record — erased, do_not_use, wrong_tenant, scope mismatch,
-quarantined</td>
-<td>Governed admission — prompt-injection quarantine,
-sensitive-without-consent hold, provenance and scope stamped at
+<td>Two models: a governed <code>MemoryRecord</code> (text, subject,
+relation, object, tenant and subject scope, source, trust, provenance,
+quarantine flag and reason, purposes) served over MCP, and a
+<code>TemporalFact</code> with valid and invalid times, evidence ids and
+supersession links in the controller path</td>
+<td>Pluggable backends behind the governance layer: in-memory, a SQLite
+backend with records, tombstones and purposes tables, or Mem0 and
+Graphiti adapters</td>
+<td>Lexical candidates from the backend (blended BM25 in SQLite, token
+overlap in memory), then an exclusion pass returning a reason per
+withheld record: quarantined, erased, do_not_use, consent_revoked,
+wrong_tenant, wrong_scope. The benchmarked answer stack adds dense
+embeddings</td>
+<td>Governed admission, synchronous: instruction-risk text, a sensitive
+channel without consent, low source trust or a re-ingested erased term
+stores the record quarantined; provenance and scope are stamped at
 write</td>
-<td><code>forget(term, scope)</code> deletes matching records, appends
+<td><code>forget(term, scope)</code> deletes matching records, persists
 the term's tokens to a per-tenant erased set consulted on every later
-recall, and writes an erasure certificate</td>
+write and recall, sweeps registered derivative stores and writes an
+erasure certificate; a strict profile holds the request for a second
+operator</td>
 <td>Tenant and subject scope enforced on the read path, with
 cross-tenant defense in depth for backends that do not pre-filter</td>
-<td>An MCP server, a CLI, and adapters that let the governance layer sit
-over Mem0 or Graphiti rather than replacing them</td>
+<td>A ten-tool MCP server, a CLI, a DSAR service with a token-guarded
+REST gateway, and adapters that let the governance layer sit over Mem0
+or Graphiti</td>
 <td>Reflection, consolidation, and a deterministic governance benchmark
 that needs no API key</td>
-<td>Discrete statuses — hypothesis, accepted, proposed, pending review,
-quarantined — plus source trust, confidence and an abstain-on-conflict
-policy</td>
+<td>Quarantine with a reason as the state recall filters on, released
+only by an explicit call; source trust with a policy floor; abstention
+on conflict. The review-status vocabulary belongs to a simulated
+consolidation queue</td>
 <td>A replay script that asserts every published number and passes; a
 claim register that marks its own claims unsupported; losing
 configurations published</td>
-<td>Erasure suppresses at read rather than refusing at write, so the
-store retains what a subject asked to erase; the governance benchmark is
+<td>The audit chain and the tombstone table keep the erased term in
+clear; over MCP the caller supplies source, trust, consent and
+requester, which decide two quarantine reasons and the strict-revocation
+check; no approval surface ships; the governance benchmark is
 self-authored</td>
 </tr>
 <tr>
