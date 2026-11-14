@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python SQLite memory library
+that runs a regex gate before each write, filters every read by actor
+and scope, and hard-deletes on forget.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Rakho — Agent Memory Atlas">
+    <meta property="og:description" content="A Python SQLite memory
+library that runs a regex gate before each write, filters every read by
+actor and scope, and hard-deletes on forget.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Rakho — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python SQLite memory
+library that runs a regex gate before each write, filters every read by
+actor and scope, and hard-deletes on forget.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Rakho — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Rakho",
+      "description": "A Python SQLite memory library that runs a regex gate before each write, filters every read by actor and scope, and hard-deletes on forget.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A regex gate before every write, an actor
+key on every read, and a forget that also deletes the record of what was
+refused</p>
+          <h1>Rakho</h1>
+          <p class="document-deck">A Python SQLite memory library that
+runs a regex gate before each write, filters every read by actor and
+scope, and hard-deletes on forget.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/krishyaid-coder/rakho-">
+              <span>Source</span>
+              <strong>krishyaid-coder/rakho-</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/krishyaid-coder/rakho-/commit/7c2f0e60d90411bb9b645586ebbc0f1282eff51f" title="7c2f0e60d90411bb9b645586ebbc0f1282eff51f">
+              <span>Analyzed revision</span>
+              <code>7c2f0e60…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-14</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/krishyaid-coder--rakho-" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>krishyaid-coder--rakho-</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>1,797
+lines of Python in 12 files under src/rakho; the store, storage engine
+and gate are 838 of them. Two example agents add 503
+lines</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>Five
+commits from 9 to 11 November 2026. Version 0.2.0 in
+pyproject.toml</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>37
+test functions in seven files, 578 lines, run with pytest. The one
+workflow publishes to PyPI on a release and runs no tests. I ran none of
+them; the ranking and regex findings were re-derived in my own
+script</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Rakho is a small Python library that stores an agent's notes in one
+SQLite file and puts a filter in front of the write. <code>keep</code>
+passes the text to a <em>gate</em>. The gate returns one of three
+decisions: store it, store it with secrets masked, or refuse it. A
+refusal is recorded as a row that holds a reason and a mask and never
+the text.</p>
+<p>Three things are built with care.</p>
+<ul>
+<li><strong>Gate first, embed after.</strong> The embedder sees the
+gate's output, so a refused note is never embedded and a redacted one is
+embedded without its secret. With a remote embedder that is also what
+leaves the machine.</li>
+<li><strong>An actor on every read.</strong> <code>recall</code> and
+<code>audit</code> raise without an <code>actor_id</code>, and every
+query in the storage engine carries it.</li>
+<li><strong>A bounded delete.</strong> <code>forget</code> refuses to
+run without an actor, a session or an id, and removes the row, its
+full-text entry and its vector together.</li>
+</ul>
+<p>Four things do not hold up against the README.</p>
+<ul>
+<li><strong>"You can prove it."</strong> The proof of forgetting is an
+empty <code>audit</code>. <code>forget</code> writes no record of
+itself, and when called by actor it deletes that actor's refusal rows
+too. An actor that was forgotten and an actor that never wrote anything
+are indistinguishable.</li>
+<li><strong>The keyword leg of ranking is inverted.</strong> The
+normalisation gives the strongest BM25 match a score near zero and a
+sole match exactly zero.</li>
+<li><strong>The gate inspects <code>content</code> and nothing
+else.</strong> <code>metadata</code>, <code>source</code> and the recall
+query bypass it.</li>
+<li><strong>The injection check is ten phrases.</strong>
+<code>Ignore the previous instructions</code> passes.</li>
+</ul>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The README's own picture is <em>"the agent's diary with a bouncer at
+the door"</em> (<code>README.md:24</code>). The diary is a table of
+episodes. The bouncer is a <code>PolicyGate</code> with one method,
+<code>inspect(content, context)</code>, returning a
+<code>Decision</code> (<code>src/rakho/gate.py:10-15</code>,
+<code>src/rakho/models.py:22-31</code>).</p>
+<p>There are four verbs and no others: <code>keep</code>,
+<code>recall</code>, <code>forget</code>, <code>audit</code>
+(<code>src/rakho/languages.py:3</code>). Hindi and German names for the
+same four ship in the box, and <code>learn</code> adds a language as
+rows in a <code>verb_packs</code> table. The aliases resolve through
+<code>__getattr__</code> to the English methods
+(<code>src/rakho/store.py:195-202</code>). They change nothing about
+storage.</p>
+<p>The design note states what is deliberately absent: <em>"Episodes
+only. No <code>kind: summary</code> until lineage exists"</em>
+(<code>rakho_onepager.md:47</code>). There is no extraction, no summary,
+no consolidation and no background work.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — A keep passes one gate. Clean or redacted text is embedded and stored under an actor and scope; refused text leaves only a masked refusal row. Recall scores every row of that actor and scope. Forget by actor deletes memories and refusals alike and records nothing.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: A keep passes one gate. Clean or redacted text is embedded and stored under an actor and scope; refused text leaves only a masked refusal row. Recall scores every row of that actor and scope. Forget by actor deletes memories and refusals alike and records nothing.
+flowchart TD
+    K[&quot;keep(content, actor_id, scope)&quot;] --&gt; G{&quot;PolicyGate.inspect&lt;br/&gt;content only&quot;}
+    G --&gt;|store| E[&quot;Embedder&lt;br/&gt;hash, Jina or HF&quot;]
+    G --&gt;|redact: secrets masked| E
+    G --&gt;|skip| R[(&quot;refusals&lt;br/&gt;reason, labels, masked preview&quot;)]
+    E --&gt; M[(&quot;memories + memories_fts&lt;br/&gt;actor_id, scope, embedding&quot;)]
+    Q[&quot;recall(query, actor_id, scope)&quot;] --&gt; S[&quot;load every row&lt;br/&gt;WHERE actor_id AND scope&quot;]
+    M --&gt; S
+    S --&gt; SC[&quot;score = 0.5 cosine&lt;br/&gt;+ 0.3 keyword + 0.2 recency&quot;]
+    SC --&gt; P[&quot;top k, packed to a token budget&quot;]
+    A[&quot;audit(actor_id)&quot;] --&gt; M
+    A --&gt; R
+    F[&quot;forget(actor_id | session_id | id)&quot;] --&gt;|DELETE| M
+    F --&gt;|DELETE when by actor| R
+    F --&gt; N[&quot;no record of the forget&quot;]</code></pre></details></figure>
+<p>Five modules carry the mechanism: <code>store.py</code> (the four
+verbs), <code>storage.py</code> (the SQLite engine),
+<code>gate.py</code> (the default regex gate),
+<code>sluice_gate.py</code> (an adapter to the separate
+<code>sluice-taint</code> package) and <code>embeddings.py</code> (a
+hashing embedder and two HTTPS clients).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The package declares no runtime dependencies
+(<code>pyproject.toml:26</code>). <code>mcp</code> and
+<code>sluice-taint</code> are optional extras. The default embedder is
+an offline character-trigram hash of 256 dimensions, so
+<code>pip install</code> and one constructor call give a working store
+with no key and no download.</p>
+<p>The three entry points default differently. The library and the CLI
+default to the hashing embedder
+(<code>src/rakho/embeddings.py:218</code>,
+<code>src/rakho/cli.py:45</code>). The MCP server defaults to
+<code>auto</code> (<code>src/rakho/mcp_server.py:65</code>), which picks
+Jina when <code>JINA_API_KEY</code> is set and Hugging Face when
+<code>HF_TOKEN</code> is set
+(<code>src/rakho/embeddings.py:208-214</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write:</strong> <code>Rakho.keep</code>
+(<code>src/rakho/store.py:67-111</code>) calls the gate, then either
+<code>put_refusal</code> or embeds and <code>put</code>.</li>
+<li><strong>Default gate:</strong>
+<code>DefaultPolicyGate.inspect</code>
+(<code>src/rakho/gate.py:108-171</code>).</li>
+<li><strong>Read:</strong> <code>Rakho.recall</code>
+(<code>src/rakho/store.py:113-134</code>) and
+<code>SQLiteEngine.search</code>
+(<code>src/rakho/storage.py:209-272</code>).</li>
+<li><strong>Delete:</strong> <code>Rakho.forget</code>
+(<code>src/rakho/store.py:136-157</code>) and
+<code>SQLiteEngine.delete</code>
+(<code>src/rakho/storage.py:311-370</code>).</li>
+<li><strong>Inspect:</strong> <code>Rakho.audit</code>
+(<code>src/rakho/store.py:159-166</code>).</li>
+<li><strong>MCP binding:</strong> <code>bind_tools</code>
+(<code>src/rakho/mcp_server.py:15-59</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The schema is one string
+(<code>src/rakho/storage.py:16-62</code>).</p>
+<ul>
+<li><strong><code>memories</code></strong> — <code>id</code>,
+<code>content</code>, <code>embedding</code> (float32 blob),
+<code>kind</code> (always <code>episode</code>), <code>source</code>,
+<code>session_id</code>, <code>actor_id</code>,
+<code>origin_tool</code>, <code>created_at</code>,
+<code>last_used_at</code>, <code>sensitivity</code>, <code>scope</code>,
+<code>metadata</code> (JSON).</li>
+<li><strong><code>memories_fts</code></strong> — an FTS5 table over
+<code>content</code> with the memory id as an unindexed column. It is
+not an external-content table, so it holds a second copy of the
+text.</li>
+<li><strong><code>refusals</code></strong> — <code>id</code>,
+<code>actor_id</code>, <code>scope</code>, <code>reason</code>,
+<code>labels</code>, <code>preview</code>, <code>created_at</code>. No
+content, no hash of the content, no session.</li>
+<li><strong><code>verb_packs</code></strong> — language, action and
+verb, with a unique index on the verb so one word cannot mean two
+actions.</li>
+</ul>
+<p><code>sensitivity</code> is <code>clean</code> or
+<code>redacted</code> and is set once from the gate's decision
+(<code>src/rakho/models.py:29-31</code>). Nothing reads it except the
+audit printout. <code>last_used_at</code> is updated on every recall
+(<code>src/rakho/storage.py:372-379</code>) and is read by nothing: the
+recency term uses <code>created_at</code>.</p>
+<p>There is no validity interval, no version, no link between rows and
+no deleted marker.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>search</code> loads every row of the actor and scope,
+deserialises each vector and scores in Python
+(<code>src/rakho/storage.py:218-272</code>).</p>
+<pre class="text"><code>score = 0.5 * max(0, cosine) + 0.3 * fts_score + 0.2 / (1 + age_days)</code></pre>
+<p>The query's word tokens are joined with <code>OR</code> into an FTS5
+match. If SQLite rejects the expression, the engine falls back to a
+<code>LIKE</code> over the whole query string. Every row is kept and
+sorted, the top <code>k</code> are returned, and
+<code>pack_to_budget</code> trims them to an estimated token count,
+always keeping the first (<code>src/rakho/store.py:23-36</code>).</p>
+<p><strong>The keyword score is inverted.</strong> FTS5's
+<code>bm25()</code> is negative, and more negative is better; the code's
+own comment says so. The normalisation is
+<code>1 - abs(rank) / (worst + 1e-9)</code> where <code>worst</code> is
+the largest magnitude (<code>src/rakho/storage.py:241-245</code>). The
+largest magnitude is the best match. So the best keyword match scores
+about 0, the weakest matching row scores highest, and when one row
+matches it scores 0, the same as a row with no match. I rebuilt the
+formula over a three-row FTS5 table in my own script: the row with three
+occurrences of the query word scored 0.0006, the long row with one
+occurrence scored 0.60, and a sole match scored 1e-09. The keyword leg
+therefore adds nothing in the commonest case and ranks backwards
+otherwise. The <code>LIKE</code> fallback assigns 1.0 and is
+unaffected.</p>
+<p><strong>There is no score floor.</strong> Recency is always positive,
+so any query returns up to <code>k</code> rows of the actor however
+unrelated. The tests that assert an empty recall do so against an actor
+with no rows (<code>tests/test_v1.py:66</code>,
+<code>tests/test_paypal_agent.py:82</code>).</p>
+<p><strong>Vectors carry no model identity.</strong> A row stores a
+float32 blob and no record of which embedder made it.
+<code>cosine</code> returns 0.0 when lengths differ
+(<code>src/rakho/embeddings.py:30-32</code>), so a store written with
+the 256-dimension hash and read through the Hugging Face model loses the
+vector leg without an error. The Jina client also requests 256
+dimensions (<code>src/rakho/embeddings.py:139</code>), the same length
+as the hash, so those two mix without any signal and the cosine is
+computed across unrelated spaces. The README states the requirement in
+prose: recall <em>"needs the same embedder you wrote with"</em>
+(<code>README.md:182</code>). Since the MCP server and the library
+default to different embedders, one file served both ways reaches this
+state whenever an API key is in the environment.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>keep</code> builds a context of actor, scope, source, session
+and tool, and calls <code>gate.inspect(content, context)</code>
+(<code>src/rakho/store.py:78-86</code>).</p>
+<p>The default gate (<code>src/rakho/gate.py:108-171</code>) works in
+this order.</p>
+<ol type="1">
+<li>Empty text is skipped.</li>
+<li>If an injection phrase matches, the whole note is skipped.</li>
+<li>Nine secret patterns are substituted with
+<code>[REDACTED:label]</code>: private key blocks, five token formats,
+bearer headers, and a <code>password is …</code> form in English, German
+and Hindi.</li>
+<li>Five identifier patterns follow: PAN, IBAN, Aadhaar, the German tax
+id and a Luhn-checked card number.</li>
+<li>With no label the note is stored as written. If fewer than eight
+characters survive outside the masks, the note is skipped as
+<code>secret_or_pii</code>. Otherwise the masked text is stored as
+<code>redacted</code>.</li>
+</ol>
+<p>On a skip, <code>keep</code> writes a <code>Refusal</code> whose
+preview is <code>[refused:&lt;labels&gt;]</code>
+(<code>src/rakho/gate.py:174-184</code>) and returns without embedding.
+Otherwise it embeds <code>decision.content</code>, the masked text, and
+inserts the memory and its FTS row in one transaction
+(<code>src/rakho/storage.py:136-167</code>).</p>
+<p><code>SluiceGate</code> adapts hits from the
+<code>sluice-taint</code> package into the same three decisions
+(<code>src/rakho/sluice_gate.py:25-67</code>). That package is a
+separate distribution and is not in this tree; I did not read it.</p>
+<p>There is no deduplication. Keeping the same note twice stores two
+rows, and keeping the same poisoned text twice stores two refusals.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write is one regex pass and one embedding call: local for the hash,
+one HTTPS request for Jina or Hugging Face. A read is one embedding call
+and a full scan of the actor's rows with a Python cosine per row. No
+index bounds the scan.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The library is called by application code that owns the agent loop.
+Nothing is injected into a prompt.</p>
+<p>The MCP server registers eight tools, the four verbs under English
+and Hindi names (<code>src/rakho/mcp_server.py:70-83</code>). Each takes
+<code>actor_id</code> as a tool argument. <code>keep</code> and
+<code>recall</code> take <code>scope</code>; <code>forget</code> takes
+an actor and an optional scope, with no id or session form. The server
+binds no principal: a model connected to it names the actor on every
+call.</p>
+<p>The PayPal example (<code>examples/paypal/agent.py</code>) uses the
+store as a ledger for an invoice agent and adds a per-session <em>origin
+index</em> that fingerprints email addresses found in content the gate
+flagged (<code>examples/paypal/origin.py</code>). The origin index is
+held in process memory and is not part of the library.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>What holds.</strong></p>
+<ul>
+<li><em>The secret is not embedded.</em> The embedder receives
+<code>decision.content</code> (<code>src/rakho/store.py:108</code>), and
+a skipped note never reaches it.</li>
+<li><em>Refusals hold no content.</em> A skip sets
+<code>decision.content</code> to an empty string, so the preview is
+built from labels alone.</li>
+<li><em>Reads are partitioned.</em> Every <code>SELECT</code> on
+<code>memories</code> and <code>refusals</code> used by
+<code>recall</code> and <code>audit</code> carries
+<code>actor_id</code>.</li>
+<li><em>Delete is whole within the row.</em> The FTS entry and the blob
+go in the same transaction as the row.</li>
+<li><em>No unbounded delete.</em> Both <code>forget</code> and
+<code>delete</code> raise on an empty filter
+(<code>src/rakho/store.py:144-147</code>,
+<code>src/rakho/storage.py:333-334</code>).</li>
+</ul>
+<p><strong>What does not.</strong></p>
+<ul>
+<li><em>Forgetting leaves no evidence.</em> No table records a delete.
+<code>forget</code> by actor also deletes that actor's refusals
+(<code>src/rakho/storage.py:362-365</code>), which the design note lists
+as intended (<code>rakho_onepager.md:99</code>). The audit after a
+forget is empty by construction, and the same empty result follows from
+never having written.</li>
+<li><em>Delete is logical.</em> The connection opens in WAL mode and
+sets no <code>secure_delete</code>; nothing checkpoints or vacuums.
+Deleted text can remain in the WAL file, free pages and FTS5 segments
+until SQLite reuses them.</li>
+<li><em>The gate covers one field.</em> <code>metadata</code> is stored
+as given and returned by <code>audit</code>
+(<code>src/rakho/store.py:107</code>,
+<code>src/rakho/models.py:64</code>). <code>source</code>,
+<code>session_id</code> and <code>origin_tool</code> are stored as
+given. The recall query is embedded without inspection
+(<code>src/rakho/store.py:123</code>), so with a remote embedder a query
+containing a secret is sent to the provider.</li>
+<li><em>The injection check is a phrase list.</em>
+<code>_INJECTION</code> holds ten alternatives in three languages
+(<code>src/rakho/gate.py:25-37</code>), matched with single literal
+spaces. In my own copy of the English half,
+<code>Ignore previous instructions</code> matched.
+<code>Ignore the previous instructions</code>,
+<code>Disregard prior instructions</code> and the same phrase with two
+spaces did not.</li>
+<li><em>Pattern order mislabels a card.</em> The Aadhaar pattern runs
+before the card pattern. On <code>4111 1111 1111 1111</code> it masks
+the first twelve digits as <code>aadhaar</code> and leaves
+<code>1111</code> in the stored text.</li>
+<li><em>No email or phone pattern.</em> The default gate has neither;
+the README's <em>"Secret, personal, shady"</em>
+(<code>README.md:26</code>) is narrower in code than in prose.</li>
+<li><em>Unscoped delete forms.</em> <code>forget(id=…)</code> and
+<code>forget(session_id=…)</code> carry no actor predicate. The example
+agent writes every actor's rows under the constant session
+<code>paypal-demo</code>.</li>
+<li><em>A redaction that may not redact.</em> <code>SluiceGate</code>
+masks a hit when its span is valid and still labels the note
+<code>redacted</code> when it is not
+(<code>src/rakho/sluice_gate.py:50-53</code>). Whether
+<code>sluice-taint</code> can return a hit without a span was not
+checked.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Seven files hold 37 test functions. The core story test
+(<code>tests/test_v1.py:19-55</code>) stores a mixed note, a bare key
+and a second actor's note, then asserts the password is absent from
+recall, that recall does not cross actors, and that audit is empty after
+forget with the second actor untouched. Seven cases cover German and
+Hindi secrets, the tax id and injection phrases. The Sluice adapter is
+tested against a fake scanner; the cases needing the real package skip
+when it is absent.</p>
+<p>What the suite does not assert:</p>
+<ul>
+<li>recall after forget; deletion is checked through <code>audit</code>
+alone;</li>
+<li>any ranking order, so the inverted keyword score passes;</li>
+<li>an empty recall against a populated actor;</li>
+<li><code>metadata</code> or the query passing the gate;</li>
+<li>forget by id or session.</li>
+</ul>
+<p>There is no benchmark and no evaluation of the gate's detection rate.
+The repository's one workflow builds and publishes the package on a
+release (<code>.github/workflows/publish.yml</code>) and runs no
+tests.</p>
+<p><code>examples/paypal/SIMULATION.md</code> is a candid run log. It
+records that masked payee addresses collide, that recall mixed invoice
+text with payment lines, and that <em>"Gate is on write, not on
+read"</em>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Gate before embed.</strong> Order the write so the embedder,
+local or remote, receives the text the gate allowed.</li>
+<li><strong>Record the refusal without the content.</strong> A reason
+and labels make the gate's behaviour inspectable without recreating the
+leak.</li>
+<li><strong>Refuse the empty delete filter</strong> at both the API and
+the storage layer.</li>
+<li><strong>Skip when too little survives.</strong> A note that is all
+mask is noise.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Deleting the refusal log with the data</strong> if the claim
+is provable forgetting. Keep a content-free receipt of the delete.</li>
+<li><strong>Normalising BM25 by magnitude without checking the
+sign.</strong> Assert a ranking order in one test.</li>
+<li><strong>A vector column with no embedder identity.</strong> Store
+the model name and dimension, and refuse or re-embed on mismatch.</li>
+<li><strong>Gating one field</strong> of a record that has five
+caller-supplied ones.</li>
+<li><strong>A phrase list as the injection defence.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>A reasonable starting shape for a single-application, per-user note
+store where the failure to prevent is a credential landing in memory. It
+is not a compliance mechanism for deletion, and its actor key is a
+partition for a trusted caller, not a boundary against the agent holding
+the tools.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is deleting refusals on forget meant to survive a receipt
+requirement? The design note lists it as intended and the tagline
+promises proof.</li>
+<li>Should <code>last_used_at</code> feed ranking or eviction? It is
+written on every recall and read by nothing.</li>
+<li>Does <code>sluice-taint</code> always return spans? The adapter's
+<code>redacted</code> label depends on it.</li>
+<li>What does recall look like at a few thousand rows per actor? Every
+read is a full scan with a Python cosine.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Verbs:</strong> <code>src/rakho/store.py</code>,
+<code>src/rakho/languages.py</code>.</li>
+<li><strong>Storage:</strong> <code>src/rakho/storage.py</code>,
+<code>src/rakho/models.py</code>.</li>
+<li><strong>Gates:</strong> <code>src/rakho/gate.py</code>,
+<code>src/rakho/sluice_gate.py</code>.</li>
+<li><strong>Embedders:</strong>
+<code>src/rakho/embeddings.py</code>.</li>
+<li><strong>Surfaces:</strong> <code>src/rakho/cli.py</code>,
+<code>src/rakho/mcp_server.py</code>.</li>
+<li><strong>Examples:</strong> <code>examples/agent.py</code>,
+<code>examples/paypal/agent.py</code>,
+<code>examples/paypal/origin.py</code>,
+<code>examples/paypal/SIMULATION.md</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_v1.py</code>,
+<code>tests/test_gate_i18n.py</code>, <code>tests/test_mcp.py</code>,
+<code>tests/test_paypal_agent.py</code>,
+<code>tests/test_sluice_gate.py</code>,
+<code>tests/test_sluice_roundtrip.py</code>,
+<code>tests/test_embedders.py</code>.</li>
+<li><strong>Design note:</strong> <code>rakho_onepager.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git grep</code> over the tree at
+<code class="commit-id" title="7c2f0e60d90411bb9b645586ebbc0f1282eff51f">7c2f0e60…</code>.</p>
+<ul>
+<li><code>git grep -n -i -E 'secure_delete|vacuum|wal_checkpoint'</code>
+— no match in the whole tree.</li>
+<li><code>git grep -n -E 'DELETE FROM|UPDATE ' -- src</code> — four
+lines, all in <code>storage.py</code>: three deletes at
+<code>:345</code>, <code>:349</code>, <code>:364</code> and the
+<code>last_used_at</code> update at <code>:376</code>. No insert into
+any table records a delete.</li>
+<li><code>git grep -n -E '\.inspect\(' -- src</code> — one call,
+<code>store.py:86</code>, on <code>content</code>.</li>
+<li><code>git grep -n 'last_used_at' -- src</code> — nine lines: the
+field, the column, the insert, the row mapping, the public dict and the
+update. No comparison or sort.</li>
+<li><code>git grep -n -i -E 'tombstone|deleted_at|is_deleted|valid_from|valid_to|supersed' -- src</code>
+— no match.</li>
+<li><code>git grep -n -E 'embedder_name|embed_model|model_id|embedding_model' -- src</code>
+— no match.</li>
+<li><code>git grep -n -E 'threshold|min_score' -- src</code> — no
+match.</li>
+<li><code>git grep -n -i -E 'email|phone' -- src/rakho/gate.py</code> —
+no match. Control:
+<code>git grep -c 'aadhaar' -- src/rakho/gate.py</code> returns a
+nonzero count.</li>
+<li><code>git grep -n -E 'forget\(' -- tests examples</code> — four
+lines: three by actor and the empty call that must raise. None by id or
+session.</li>
+<li><code>git grep -n -E 'recall\(|nikaalo\(|leta\(' -- tests</code> —
+eight lines; none follows a <code>forget</code>.</li>
+<li><code>git grep -n -c 'metadata' -- src tests examples</code> — hits
+in <code>models.py</code>, <code>storage.py</code> and
+<code>store.py</code> alone; no test or example passes metadata.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-14</strong> — <a
+href="https://github.com/krishyaid-coder/rakho-/commit/7c2f0e60d90411bb9b645586ebbc0f1282eff51f"><code class="commit-id" title="7c2f0e60d90411bb9b645586ebbc0f1282eff51f">7c2f0e60…</code></a>
+— first reading, at the head of <code>main</code>, dated 11 November
+2026. Marks: <code>scope_enforced</code> on the actor and scope
+predicates in every read of the storage engine,
+<code>negative_eval</code> on the committed absence assertions over a
+populated recall. <code>tombstone</code>, <code>trust_state</code>,
+<code>bitemporal</code>, <code>audit_log</code> and
+<code>human_review</code> withheld: delete is a hard delete,
+<code>sensitivity</code> is a label fixed at write, and the refusal
+table records refused writes, is not append-only, and is emptied by
+forget. Nothing from the tree was installed or run. The BM25
+normalisation and the gate's regular expressions were re-derived in a
+separate script against the standard library. The screen reported an
+unpinned dependency surface in <code>pyproject.toml</code>, changed
+inside the seven-day cooldown, and no auto-run or build-time
+execution.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

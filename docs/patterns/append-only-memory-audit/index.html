@@ -1009,6 +1009,16 @@ is skipped for unenrolled projects, so a local-only install has version
 history for overwritten text and no mutation record. The row has no
 actor, and a payload pushed before a hard delete stays in the
 journal.</p>
+<p><a href="../../systems/rakho/">Rakho</a> keeps a record of refused
+writes and deletes it with the data. A <code>keep</code> that its gate
+refuses writes a <code>refusals</code> row holding a reason, labels and
+a masked preview with none of the refused text, which is the right shape
+for a content-free receipt. <code>forget</code> by actor then deletes
+those rows along with the memories and writes nothing
+(<code>src/rakho/storage.py:349</code>, <code>:362-365</code>), so the
+audit after a forget is empty by construction and cannot be told apart
+from an actor that never wrote. The mark is withheld: the table records
+refusals, not mutations, and it is not append-only.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

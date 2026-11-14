@@ -578,6 +578,8 @@ outlives a person erasure in a table the erasure cannot change.
 
 [Engram](../../systems/engram/) has the record on its sync server and not in the local store. Each mutation pushed for an enrolled project is one row in `cloud_mutations` — sequence, project, entity, key, op, full payload, timestamp — and nothing outside a migration updates or deletes a row; peers pull it by sequence and the dashboard folds its read model from it. The local journal that feeds it is skipped for unenrolled projects, so a local-only install has version history for overwritten text and no mutation record. The row has no actor, and a payload pushed before a hard delete stays in the journal.
 
+[Rakho](../../systems/rakho/) keeps a record of refused writes and deletes it with the data. A `keep` that its gate refuses writes a `refusals` row holding a reason, labels and a masked preview with none of the refused text, which is the right shape for a content-free receipt. `forget` by actor then deletes those rows along with the memories and writes nothing (`src/rakho/storage.py:349`, `:362-365`), so the audit after a forget is empty by construction and cannot be told apart from an actor that never wrote. The mark is withheld: the table records refusals, not mutations, and it is not append-only.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 803 reports.**
+**This page covers all 804 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7363,3 +7363,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 727 lines for the episodic ledger and 260 lines for the plan store, with 36 checks on the ledger and absence cases on the plan store registered in CTest. The repository is 11 commits by one author over two days; no CI configuration; the one reported plan-store run left the committed walk unchanged. MIT.
 - Study when: you are putting memory inside a deterministic or replayable control loop and need to bound what a recalled item may do.
 - Do not copy when: memory must hold text, be corrected by a person, or survive more than sixteen runs.
+
+### [`rakho`](../systems/rakho/)
+
+- Best idea: the gate runs before the embedder. A refused note is never embedded and a masked one is embedded without its secret, so with a remote embedder the secret also never leaves the machine; the refusal is recorded as a reason and labels with no content.
+- Biggest risk: the claims outrun the code. `forget` writes no record and deletes the actor's refusals, so an empty audit is the only proof; the gate inspects `content` and not `metadata` or the recall query; the injection check is ten literal phrases; and the keyword score is inverted, giving a sole match zero.
+- Most reusable component: the three-way gate decision — store, redact or skip — with a skip rule for notes where fewer than eight characters survive the masks.
+- Maturity impression: 1,797 lines of Python and 37 test functions, five commits over three days, version 0.2.0. No test asserts a ranking order or recalls after a forget, and no workflow runs the suite. MIT.
+- Study when: the failure to prevent is a credential or an obvious identifier landing in an agent's notes, in a single application that owns its callers.
+- Do not copy when: deletion must be demonstrable afterwards, the agent holding the tools must not choose the actor, or keyword ranking matters.
