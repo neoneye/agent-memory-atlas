@@ -18,7 +18,7 @@ Neither counts as screened.
 | Result | Count |
 | --- | ---: |
 | Repositories with an auto-run surface (`RUNS`) | 382 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 360 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 359 |
 | Repositories with build-time execution (`EXEC`) | 584 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 7 |
 | Repositories that could not be screened | 0 |

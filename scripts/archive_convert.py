@@ -124,11 +124,27 @@ def delete_fork(name: str) -> str | None:
     return "fork still visible a minute after deletion"
 
 
+PUSH_BATCH = 150
+
+
 def push(bare: Path, name: str, pins: set[str]) -> str | None:
-    refspecs = ["refs/heads/*:refs/heads/*", "refs/tags/*:refs/tags/*"]
+    """Push every branch, tag and pin, a batch of refs at a time.
+
+    One push of all refs returned HTTP 500 from GitHub on RakuenSoftware/aimee
+    (1,355 branches, 209 tags, 660 MB) after the fork was already deleted, which
+    left the archive empty until the refs were pushed by hand in batches.
+    """
+    listed = am.git("for-each-ref", "--format=%(refname)", "refs/heads", "refs/tags", cwd=bare)
+    if listed.returncode != 0:
+        return f"could not list refs: {listed.stderr.strip()[-200:]}"
+    refspecs = [f"{ref}:{ref}" for ref in listed.stdout.split()]
     refspecs += [f"{sha}:refs/tags/atlas-pin-{sha}" for sha in sorted(pins)]
-    r = am.git("push", "--quiet", f"https://github.com/{ORG}/{name}.git", *refspecs, cwd=bare, auth=True)
-    return None if r.returncode == 0 else f"push failed: {r.stderr.strip()[-200:]}"
+    url = f"https://github.com/{ORG}/{name}.git"
+    for start in range(0, len(refspecs), PUSH_BATCH):
+        r = am.git("push", "--quiet", url, *refspecs[start:start + PUSH_BATCH], cwd=bare, auth=True)
+        if r.returncode != 0:
+            return f"push failed at ref {start} of {len(refspecs)}: {r.stderr.strip()[-200:]}"
+    return None
 
 
 def convert(owner: str, repo: str, dry_run: bool) -> str:
