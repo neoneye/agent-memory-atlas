@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 800 of 800 screened at the report's current pin.**
+**Progress: 801 of 801 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 380 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 359 |
-| Repositories with build-time execution (`EXEC`) | 582 |
+| Repositories with an auto-run surface (`RUNS`) | 381 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 360 |
+| Repositories with build-time execution (`EXEC`) | 583 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 7 |
 | Repositories that could not be screened | 0 |
 
@@ -406,6 +406,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`yourmemory`](../../content/systems/yourmemory.md) | `server.json` |
 | [`zcode`](../../content/systems/zcode.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`zep`](../../content/systems/zep.md) | `.cursor/mcp.json` |
+| [`zeroshot`](../../content/systems/zeroshot.md) | `.claude-plugin/`, `plugins/zeroshot-claude/.claude-plugin/plugin.json`, `plugins/zeroshot-claude/.mcp.json` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |
 | [`zettelforge`](../../content/systems/zettelforge.md) | `server.json` |
 | [`zizkadb`](../../content/systems/zizkadb.md) | `.cursor/rules/`, `.github/copilot-instructions.md` |

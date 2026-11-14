@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust multi-agent orchestration
+engine for coding agents whose Active Memory stores postmortem-written
+lessons in SQLite and injects them by file, identifier and graph node.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Zeroshot — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust multi-agent
+orchestration engine for coding agents whose Active Memory stores
+postmortem-written lessons in SQLite and injects them by file,
+identifier and graph node.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Zeroshot — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust multi-agent
+orchestration engine for coding agents whose Active Memory stores
+postmortem-written lessons in SQLite and injects them by file,
+identifier and graph node.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Zeroshot — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Zeroshot",
+      "description": "A Rust multi-agent orchestration engine for coding agents whose Active Memory stores postmortem-written lessons in SQLite and injects them by file, identifier and graph node.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Postmortem-written lessons, host-validated
+and injected by file and graph node</p>
+          <h1>Zeroshot</h1>
+          <p class="document-deck">A Rust multi-agent orchestration
+engine for coding agents whose Active Memory stores postmortem-written
+lessons in SQLite and injects them by file, identifier and graph
+node.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/the-open-engine/zeroshot">
+              <span>Source</span>
+              <strong>the-open-engine/zeroshot</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/the-open-engine/zeroshot/commit/7353598ff2025de12acd60f1be15223317fa918b" title="7353598ff2025de12acd60f1be15223317fa918b">
+              <span>Analyzed revision</span>
+              <code>7353598f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-14</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/the-open-engine--zeroshot" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>the-open-engine--zeroshot</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>376,104
+lines of Rust in 1,341 files; Active Memory is 8,156 lines in 30
+non-test files under zeroshot/src/active_memory, with 7,568 lines of
+tests in 23 files beside them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>898
+commits on main, 25 December 2025 – 13 November 2026; three maintainers
+under seven author identities account for 767. Active Memory first
+landed on 23 October 2026 and 16 commits touch it</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>183
+#[test] and #[tokio::test] cases in 23 files under
+zeroshot/src/active_memory, 12 more in the supervisor's postmortem tests
+and 4 on the config type; CI's native job runs cargo test --workspace on
+Linux and a test script on Windows. One live provider test is
+#[ignore]</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Zeroshot is a Rust engine that runs coding agents as graphs of
+workers and verifiers, so that one agent's output is checked by another.
+Its memory, <em>Active Memory</em>, carries short lessons from finished
+runs into later ones. A postmortem made of four model specialists writes
+them after the graph settles; the host validates every proposal and owns
+the SQLite store. Later runs receive matching lessons through tool hooks
+and through the node's private prompt.</p>
+<p>What is notable is how little the model is trusted on the write side.
+A worker has no write path at all. A specialist's proposal must cite an
+event the host itself recorded for the named node, and a repository
+lesson must cite a file that exists. The host derives the lesson's id
+from its content, stamps the checkout commit, and publishes with a
+compare-and-swap over every lesson it reviewed. Maintenance may change
+only cards with delivery evidence and a compatible source commit.</p>
+<p>What is weak is correction. No person can list, edit or delete a
+lesson: the only verbs belong to the next postmortem. A lesson admitted
+while the checkout was dirty records no source commit, and the code then
+refuses to adapt or retire it, permanently. Replaced text is not kept,
+and a lesson has no timestamp.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <em>lesson</em>: one line of title and one of
+recommendation, written for a future agent, with the reason it is
+expected to recur. The type's own comment states the admission bar:
+<em>"Only costly, recurring lessons are admitted"</em>, and the schema
+<em>"deliberately has no low-impact tier"</em>
+(<code>zeroshot/src/active_memory/model.rs:41-42</code>).</p>
+<p>Lessons come in two scopes. A repository lesson names files, folders,
+identifiers or keyword groups in one repository and is recalled when a
+tool call touches them. A graph lesson belongs to one node of one
+authored graph, identified by the graph's hash, and is recalled whenever
+that node runs (<code>model.rs:65-80</code>).</p>
+<p>A lesson is believed from the moment it is published. There is no
+candidate tier in the store. The epistemic work happens before
+publication and at each later run:</p>
+<ul>
+<li><strong>Proposal.</strong> Only the discovery specialists propose,
+and only after the main graph has settled. Workers never write.</li>
+<li><strong>Admission.</strong> The host accepts a proposal when it
+cites a completion or a tool receipt the host recorded for that node,
+and, for a repository lesson, a current file matching one of its
+associations (<code>postmortem/proposals.rs:509-533</code>).</li>
+<li><strong>Maintenance.</strong> Each later postmortem must keep,
+adapt, retire or defer every lesson the run was actually given, one
+decision per id (<code>proposals.rs:414-441</code>).</li>
+<li><strong>Retirement.</strong> A retired lesson's row stays, with no
+body. Its id is a hash of scope and advice, so proposing the same advice
+again is refused.</li>
+</ul>
+<p>Every delivery wraps cards in an <code>&lt;active_memory&gt;</code>
+block that opens <em>"Previously observed guidance; check current
+source"</em>
+(<code>zeroshot/src/active_memory/retrieval.rs:9</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the life of a Zeroshot lesson, from a postmortem proposal the host checks against its own run records, through the compare-and-swap publication, to the two places correction stops</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the life of a Zeroshot lesson, from a postmortem proposal the host checks against its own run records, through the compare-and-swap publication, to the two places correction stops
+flowchart TD
+  RUN[&quot;Run starts:&lt;br/&gt;scoped snapshot frozen&quot;] --&gt; INJ[&quot;Cards injected by&lt;br/&gt;tool hook or node prompt&quot;]
+  INJ --&gt; MAN[&quot;Supplied manifest:&lt;br/&gt;id@revision returned&quot;]
+  MAN --&gt; PM[&quot;Graph settles:&lt;br/&gt;four model specialists&quot;]
+  PM --&gt; DISC[&quot;Discovery proposes&lt;br/&gt;a lesson&quot;]
+  PM --&gt; MAINT[&quot;Maintenance decides&lt;br/&gt;every supplied card&quot;]
+  DISC --&gt; GATE{&quot;Cites this node&#39;s&lt;br/&gt;completion or receipt,&lt;br/&gt;and a current file?&quot;}
+  GATE -- &quot;no&quot; --&gt; REJ[&quot;Whole specialist&lt;br/&gt;rejected, stage logged&quot;]
+  GATE -- &quot;yes&quot; --&gt; ID[&quot;id = sha256 of scope&lt;br/&gt;and normalized advice&quot;]
+  MAINT --&gt; SRC{&quot;Card&#39;s source commit&lt;br/&gt;is ancestor of&lt;br/&gt;a clean HEAD?&quot;}
+  SRC -- &quot;no, or no commit&quot; --&gt; STUCK[&quot;keep or defer only:&lt;br/&gt;never adapted or retired&quot;]
+  SRC -- &quot;yes&quot; --&gt; PUB
+  ID --&gt; PUB[&quot;One transaction:&lt;br/&gt;every reviewed revision&lt;br/&gt;must still match&quot;]
+  PUB -- &quot;upsert&quot; --&gt; LIVE[&quot;Live lesson,&lt;br/&gt;revision + 1&quot;]
+  PUB -- &quot;retire&quot; --&gt; TOMB[&quot;Tombstone: id and&lt;br/&gt;revision, body NULL&quot;]
+  TOMB -- &quot;same id proposed&quot; --&gt; FAIL[&quot;RevisionConflict:&lt;br/&gt;whole publication&lt;br/&gt;discarded&quot;]
+  LIVE --&gt; RUN</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Active Memory is a module of the <code>zeroshot</code> binary, not a
+service (<code>zeroshot/src/active_memory.rs:1-20</code>). Its header
+states the boundary: <em>"the store and matcher never invoke a model, a
+process, or a network service."</em></p>
+<ul>
+<li><strong>Store.</strong> One SQLite file,
+<code>active-memory/lessons.sqlite3</code> under the user's state
+directory, or under the target's storage for a Docker target
+(<code>zeroshot/src/native_v2_target/serve.rs:145</code>). It is opened
+in WAL mode with <code>synchronous=FULL</code>, and the file, its
+directory and its sidecars must be private to the user and free of
+symlinks and hard links (<code>store.rs:36-54</code>,
+<code>:465-574</code>). Placement inside the checkout is refused
+(<code>runtime.rs:61-63</code>).</li>
+<li><strong>Index.</strong> Each run builds in-memory inverted indexes
+from its snapshot (<code>retrieval.rs:40-67</code>).</li>
+<li><strong>Broker.</strong> A loopback TCP listener on one thread
+answers hook callbacks. A harness receives a private file holding the
+endpoint and a random 32-byte token bound to one invocation, never the
+database path (<code>hooks/broker.rs:96-158</code>).</li>
+<li><strong>Postmortem.</strong> A second, synthetic graph of four
+verifier nodes run through the finished run's own provider binding
+(<code>postmortem/plan.rs:107-146</code>).</li>
+</ul>
+<h3 id="what-the-hosted-service-holds">What the hosted service
+holds</h3>
+<p>The tree defines the storage boundary as a trait,
+<code>ActiveMemoryBackend</code>, with <code>snapshot</code> and
+<code>publish</code> (<code>backend.rs:52-68</code>). Its one
+implementation in the tree is <code>SqliteMemoryBackend</code>.
+<code>ProductionHostingConfig.memory_backend</code> is the slot for
+another, and defaults to <code>None</code>
+(<code>zeroshot/src/native_v2_hosting.rs:106</code>,
+<code>:460</code>).</p>
+<p>The Claude and OpenAI plugins register an HTTP MCP server at
+<code>https://api.app.zeroshot.sh/mcp</code>. The bundled skill says
+that server <em>"exposes typed environment and Memory operations"</em>
+and that <em>"human-only Memory permissions still apply"</em>
+(<code>npm/zeroshot/skills/zeroshot/SKILL.md:92-94</code>). No MCP
+server, no memory tool and no such permission check is in this tree.
+Those operations, and whatever store sits behind the hosted platform,
+are outside what this report reads.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to be running. Memory is on by default and needs no key
+of its own; the postmortem spends the run's own model connection, and
+its usage counts toward the run. The store is an ordinary SQLite file
+whose lesson bodies are JSON, so it can be read with
+<code>sqlite3</code>. Hand repair is possible and unsupported: the guide
+offers a stop-and-copy backup, and the reference states <em>"there is no
+built-in undo"</em> (<code>docs/guides/active-memory.md:100-103</code>,
+<code>docs/reference/active-memory.md:148-149</code>). Local and
+Docker-target stores do not synchronize.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Paths are under <code>zeroshot/src/active_memory/</code>.</p>
+<ul>
+<li><strong>Preparation and snapshot.</strong>
+<code>PreparedActiveMemory::prepare</code> →
+<code>ActiveMemoryStore::snapshot</code> →
+<code>read_scoped_lessons</code> (<code>runtime.rs:53-83</code>,
+<code>store.rs:123-136</code>, <code>:177-212</code>).</li>
+<li><strong>Repository recall.</strong> harness hook →
+<code>Broker</code> → <code>RunMemorySource::tool_context</code> →
+<code>MemoryIndex::retrieve</code> → <code>render</code>
+(<code>hooks/broker.rs:171-190</code>, <code>runtime.rs:322-350</code>,
+<code>retrieval.rs:103-123</code>, <code>:168-215</code>).</li>
+<li><strong>Graph recall.</strong>
+<code>ActiveMemoryHooks::invocation</code> → <code>graph_context</code>
+→ <code>graph_guidance</code> (<code>hooks.rs:108-127</code>,
+<code>runtime.rs:352-359</code>,
+<code>retrieval.rs:157-166</code>).</li>
+<li><strong>Delivery receipts.</strong>
+<code>RunMemorySource::select</code> and <code>manifest</code>
+(<code>runtime.rs:299-318</code>, <code>:385-394</code>); carrier
+acknowledgement in <code>return_context</code>
+(<code>hooks/broker.rs:228-246</code>).</li>
+<li><strong>Evidence.</strong> <code>evidence::collect_inner</code>
+pages the run ledger; <code>ImpactEvidence::new</code> indexes
+completions and tool receipts per node
+(<code>postmortem/evidence.rs:107-140</code>,
+<code>postmortem/impact.rs:34-65</code>).</li>
+<li><strong>Proposal validation.</strong>
+<code>ProposalContext::mutations</code>, <code>discovery</code>,
+<code>maintenance</code>, <code>adaptation</code>
+(<code>postmortem/proposals.rs:375-412</code>, <code>:475-507</code>,
+<code>:589-700</code>).</li>
+<li><strong>Source provenance.</strong>
+<code>SourceGuard::capture</code>, <code>permits</code>,
+<code>stamp</code> (<code>source_guard.rs:24-109</code>).</li>
+<li><strong>Publication.</strong>
+<code>BuiltinPostmortem::reconcile</code> → <code>publish</code> →
+<code>SqliteMemoryBackend::publish</code> →
+<code>apply_checked_batch</code> (<code>postmortem.rs:341-386</code>,
+<code>:245-266</code>, <code>backend.rs:85-112</code>,
+<code>store.rs:85-104</code>).</li>
+<li><strong>Schema.</strong> <code>initialize</code>
+(<code>store.rs:214-244</code>).</li>
+<li><strong>Backfill.</strong> <code>zeroshot memory init</code> →
+<code>initialize::init</code> → <code>publish::commit</code>
+(<code>zeroshot/src/native_v2_cli/memory.rs:33-48</code>,
+<code>postmortem/initialize/publish.rs:16-30</code>).</li>
+<li><strong>Supervisor hook-up.</strong> <code>run_postmortem</code>
+(<code>zeroshot/src/native_v2_supervisor/postmortem.rs:22-95</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Lesson</code> has seven fields: <code>schema_version</code>,
+<code>id</code>, <code>revision</code>, <code>scope</code>,
+<code>title</code>, <code>recommendation</code> and
+<code>evidence</code> (<code>model.rs:53-63</code>). The whole record is
+capped at 8,192 bytes.</p>
+<p><code>LessonScope</code> is an enum. <code>Repository</code> carries
+the repository key and four association lists: up to 32 files, 16
+folders, 32 identifiers and 8 keyword groups of two to four lowercase
+terms. At least one association is required, paths must be literal and
+root-relative, and eleven generic words such as <code>file</code>,
+<code>code</code> and <code>tool</code> are refused as keyword terms
+(<code>model.rs:336-417</code>). <code>Graph</code> carries a lowercase
+SHA-256 graph hash, a node id and an optional repository.</p>
+<p><code>LessonEvidence</code> holds the run id, the node id, one to
+eight reference strings and a <code>costly_recurring_reason</code>
+(<code>model.rs:82-90</code>). References are pointers, not copies:
+ledger cursors, <code>node:</code> and <code>hook:</code> receipts,
+<code>repository:</code> paths, <code>graph:</code> nodes, and one
+host-written <code>source:&lt;commit&gt;</code>.</p>
+<p>The table mirrors the scope into columns — <code>kind</code>,
+<code>repository</code>, <code>graph_hash</code>, <code>node_id</code> —
+beside <code>id</code>, <code>revision</code>, <code>deleted</code> and
+a JSON <code>body</code> (<code>store.rs:228-239</code>). A
+<code>CHECK</code> ties <code>deleted=1</code> to a null body.</p>
+<p>Time is absent. A lesson has no creation or update stamp; the only
+clocks are the monotonic <code>revision</code> per id and a store-wide
+<code>generation</code>. The <code>source:</code> commit is the nearest
+thing to a date, and it records which code the lesson was checked
+against, not when it held.</p>
+<p>Text validation is shared by every field: no control or bidirectional
+characters, no leading or trailing space, and four credential prefixes
+are refused (<code>model.rs:318-334</code>). The repository key must be
+an identity and not a locator: <code>://</code> and <code>@</code> are
+rejected (<code>model.rs:297-303</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is deterministic and local. A run freezes one scoped
+snapshot at start and never reads the store again for recall, so a
+lesson published during a run reaches the next run and not this one.</p>
+<p>For a tool call, the query is the tool's path fields and a bounded
+concatenation of its string arguments. Paths are normalized lexically
+against the tool's working directory and the workspace root; a path
+escaping the workspace yields no match. Shell text is split on
+<code>;</code>, newline and <code>&amp;&amp;</code>, and a leading
+<code>cd</code> moves the working directory for that segment
+(<code>retrieval.rs:266-299</code>). The comment calls this
+<em>"deliberately a bounded shell heuristic"</em>: a script that hides
+its paths matches nothing.</p>
+<p>Scores are fixed and take the maximum per card: exact file 1000,
+containing folder 800, whole identifier 700, a keyword group with all
+its terms present 500 (<code>retrieval.rs:101-153</code>). Identifiers
+match whole tokens; tokens are also split on underscores and camel-case
+boundaries to feed keyword groups. Ranking is score descending, then
+lesson id.</p>
+<p>Rendering walks the ranking and admits each complete card that fits
+the byte budget, skipping one that does not and continuing
+(<code>retrieval.rs:186-205</code>). The budgets are per injection:
+8,000 approximate tokens per hook and 16,000 per node invocation by
+default, at four bytes a token, with a ceiling of 64,000. There is no
+cumulative budget for a conversation.</p>
+<p>Deduplication is by exact id and revision per provider session
+(<code>runtime.rs:299-318</code>). Compaction does not reset it, so a
+card pushed out of context by compaction is not sent again in that
+conversation.</p>
+<p>Failure modes follow from exactness. A renamed file silences its
+lesson until maintenance adapts the association. Folder associations are
+broad: a lesson on a top-level folder matches every tool call beneath it
+at 800. Nothing ranks by age or use, and ties fall to the id, which is a
+hash.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen once per run, after the main graph's outcome is
+latched. The supervisor starts the postmortem only when memory and the
+postmortem are enabled and the source node did not end on an
+authentication or model-availability refusal
+(<code>zeroshot/src/native_v2_supervisor/postmortem.rs:6-42</code>,
+<code>:125-154</code>).</p>
+<p>Four specialists run in parallel as verifier nodes with structured
+outputs: graph maintenance, repository maintenance, graph discovery and
+repository discovery (<code>postmortem/plan.rs:20-25</code>,
+<code>:107-127</code>). They inherit one main node's model and
+connections and are told to work read-only. Their input is a frozen
+evidence document: the authored graph and runtime, per-execution state,
+a 32 KiB tail of ledger records reclaimed from the largest consumer
+first, and up to 512 tool receipts
+(<code>postmortem/evidence.rs:11</code>, <code>:35-70</code>).</p>
+<p>The host then validates, and a single failure rejects that
+specialist's whole output
+(<code>postmortem/execution.rs:145-161</code>).</p>
+<ul>
+<li>A discovery must name an agent node that executed, cite at least one
+reference owned by that node's completions or tool receipts, and resolve
+every reference (<code>proposals.rs:509-527</code>,
+<code>impact.rs:19-24</code>).</li>
+<li>A repository discovery must also cite a <code>repository:</code>
+file that opens and that is one of its files, sits under one of its
+folders, or contains one of its identifiers
+(<code>proposals.rs:788-817</code>).</li>
+<li>Advice containing a <code>path:line</code> position is refused
+(<code>proposals.rs:836-876</code>).</li>
+<li>A proposal whose id, or whose scope and normalized recommendation,
+already exists is dropped silently
+(<code>proposals.rs:398-411</code>).</li>
+</ul>
+<p>Maintenance is exhaustive by construction. The set of supplied ids is
+taken from the input the host built; a missing, duplicate or foreign
+decision fails the specialist (<code>proposals.rs:422-440</code>).
+<code>keep</code> needs a current citation and a reason.
+<code>adapt</code> and <code>retire</code> need current-run evidence as
+well. If the delivery manifest is unknown, because a hook failed or a
+provider execution errored, maintenance is refused outright
+(<code>proposals.rs:594-596</code>,
+<code>runtime.rs:385-394</code>).</p>
+<p>Publication is one <code>BEGIN IMMEDIATE</code> transaction. Every
+lesson in the reviewed snapshot is checked against its stored revision
+first, then each mutation is checked again, and any mismatch rolls the
+batch back (<code>store.rs:85-104</code>, <code>:336-366</code>). On a
+conflict the postmortem re-reads the store, reruns maintenance only, and
+carries the validated discoveries forward
+(<code>postmortem.rs:341-386</code>,
+<code>execution.rs:44-47</code>).</p>
+<p>Backfill uses the same validators. <code>zeroshot memory init</code>
+exports task files from local run history, a host agent's subagents
+write response files, and the command validates and publishes everything
+in one transaction with an idempotency receipt
+(<code>postmortem/initialize/publish.rs:16-30</code>,
+<code>store.rs:76-83</code>). The command makes no model calls.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The agent never blocks on a write. The cost is at the end of the run:
+up to four model sessions, more when maintenance is batched at 256 KiB
+of input, and again on each conflict retry. All of it shares a deadline
+of at most ten minutes plus a 30-second settlement grace
+(<code>postmortem.rs:31</code>). The run stays <code>running</code>
+meanwhile. A lesson is retrievable from the next run that starts after
+the commit.</p>
+<p>No pass rewrites the store, but maintenance reads every lesson the
+run was given, so its token cost grows with deliveries, not with the
+corpus. On the read path a hook callback has a 250 ms socket budget per
+step and the Claude and Codex handler declares a one-second timeout
+(<code>hooks/broker.rs:20</code>, <code>hooks/native.rs:64-69</code>).
+Repository cards arrive mid-conversation as hook context or appended
+tool results, after the cached prefix. Graph cards are added to the
+invocation's host context (<code>hooks.rs:108-127</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model has no memory tool. Recall is automatic, and writing
+belongs to the postmortem. Six harness carriers share one broker
+protocol:</p>
+<ul>
+<li>Claude Code and Codex get a <code>PreToolUse</code> command hook
+that calls the hidden <code>zeroshot __active-memory-hook</code> helper.
+For Codex the installer computes the trust hash of exactly that handler,
+so no blanket hook trust is granted
+(<code>zeroshot/src/harnesses/adapters/core/claude/memory.rs:9-43</code>,
+<code>core/codex/memory.rs:19-47</code>).</li>
+<li>Copilot uses its RPC <code>preToolUse</code> callback.</li>
+<li>Pi, OpenCode and Hermes get a generated extension that appends cards
+to the tool result (<code>core/pi/memory.rs:29-80</code>,
+<code>contributed/opencode/memory.rs:25-76</code>,
+<code>contributed/hermes/native_memory.py</code>).</li>
+</ul>
+<p>A pre-tool hook cannot change the call already issued, which the
+reference documentation states; the card informs the next decision.</p>
+<p>Each carrier acknowledges with one byte after it has handed the
+context to the harness. A missing acknowledgement marks the run's
+delivery as unknown, and that single flag is what makes maintenance
+abstain (<code>hooks/broker.rs:228-246</code>). The postmortem's own
+specialists are marked auxiliary and receive no cards
+(<code>hooks.rs:70-72</code>, <code>:141-143</code>).</p>
+<p>Authored instructions are untouched. Graph cards go into a host
+context field beside them, and the graph hash that scopes them is
+computed from the authored graph alone
+(<code>runtime.rs:539-544</code>). Editing the graph therefore orphans
+its graph lessons: they stay in the store under the old hash, and a run
+of the edited graph queries the new one.</p>
+<p>Porting the carrier to another harness needs a tool hook that can
+return context and a way to pass one file path. The store and the
+postmortem are bound to Zeroshot's run ledger and node runner.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The producer cannot publish.</strong> A specialist returns
+JSON; the host builds the <code>LessonDraft</code>, sets the run id,
+derives the id, and discards any field the schema does not name. A
+<code>source:</code> reference in model output is refused with
+<em>"source provenance is host-owned"</em>
+(<code>source_guard.rs:81-88</code>). A maintenance specialist that
+returns an id from the other scope fails
+(<code>proposals.rs:604-607</code>).</p>
+<p><strong>Evidence is checked for existence and ownership, not for
+support.</strong> The gate proves the cited event happened for that node
+and the cited file exists and bears the association. Whether the lesson
+follows from them is the specialist's judgement.
+<code>costly_recurring_reason</code> is a length-checked string.</p>
+<p><strong>No person is in the loop.</strong> Admission, adaptation and
+retirement are all decided by models and validated by code. The backfill
+is driven by a host agent that writes the response files and calls the
+CLI; the command checks no terminal and takes no approval. No lesson
+waits in a state. <code>human_review</code> is withheld. The hosted
+service's <em>"human-only Memory permissions"</em> are not in the
+tree.</p>
+<p><strong>A lesson from a dirty checkout is permanent.</strong>
+<code>SourceGuard::capture</code> returns no reference unless
+<code>git status</code> is empty, including untracked files
+(<code>source_guard.rs:149-168</code>). <code>stamp</code> then adds
+nothing, and the lesson is published without a <code>source:</code>
+commit (<code>proposals.rs:535-560</code>). Every later
+<code>adapt</code> or <code>retire</code> of a repository-bound lesson
+requires <code>permits</code>, which requires that commit
+(<code>source_guard.rs:61-64</code>, <code>proposals.rs:609-616</code>).
+The only code that adds a <code>source:</code> reference to an existing
+lesson is adaptation, behind the same check. The reference documentation
+says such cards <em>"need trustworthy revalidation"</em>; no such path
+exists at this commit. A postmortem runs after agents have edited the
+workspace, so an uncommitted tree is a plausible state at admission.</p>
+<p><strong>The tombstone is exact, and its refusal is
+expensive.</strong> A retired id blocks the same scope and advice. The
+insert is refused inside the transaction, so every other mutation the
+postmortem produced is rolled back with it. The retry finds the visible
+snapshot unchanged and stops with a storage error
+(<code>postmortem.rs:303-306</code>). Until discovery words the advice
+differently, each run that rediscovers it publishes nothing.</p>
+<p><strong>Scope holds on reads.</strong> One query and one recheck
+stand between a run and another repository's lessons
+(<code>store.rs:177-212</code>). On writes, a mutation's scope is built
+by the host from the run's own repository key and graph hash, so the
+boundary is by construction; <code>SqliteMemoryBackend::publish</code>
+ignores the <code>scope</code> it is passed
+(<code>backend.rs:85-112</code>).</p>
+<p><strong>No mutation record.</strong> An adapt overwrites the body,
+and the documentation states <em>"Previous contents are not
+archived"</em>. The run ledger receives a count of published mutations
+and the list of supplied id-revisions, in the run's own log.
+<code>audit_log</code> is withheld. The <code>evidence</code> block is
+replaced on each adapt, so the original discovery's run and references
+are lost with the text.</p>
+<p><strong>No state and no time.</strong> A lesson is live or
+tombstoned. Nothing marks a lesson as unverified, disputed or stale, and
+nothing records when it was true. <code>trust_state</code> and
+<code>bitemporal</code> are withheld.</p>
+<p><strong>Concurrency.</strong> Across runs,
+<code>BEGIN IMMEDIATE</code>, a five-second busy timeout and the
+whole-snapshot revision check serialize publication. Within a run, one
+mutex guards delivery state and one thread serves hooks in turn. The
+capacity limits are store-wide: 10,000 live lessons and 64 MiB across
+all repositories, and 100,000 tombstones, past which <code>open</code>
+itself fails (<code>model.rs:6-9</code>, <code>store.rs:444-463</code>,
+<code>:50-51</code>).</p>
+<p><strong>Injection.</strong> Lesson text is model-written from run
+transcripts and reaches later prompts. The defences are length limits,
+character filtering, the framing sentence, and the specialists'
+instruction to treat supplied text as evidence. A graph lesson without a
+repository qualifier is delivered to that node in every repository that
+runs the same graph.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran nothing. I counted 183 <code>#[test]</code> and
+<code>#[tokio::test]</code> attributes in 23 test files under
+<code>zeroshot/src/active_memory</code>, 12 in
+<code>zeroshot/src/native_v2_supervisor/tests/postmortem.rs</code>, 4 on
+the config type and 1 on the Codex installer. CI's native job runs
+<code>cargo test --workspace</code> on Linux and a separate test script
+on Windows (<code>.github/workflows/ci.yml:315-323</code>). The two
+cases in <code>harnesses/live_tests/active_memory_tests.rs</code> need a
+real provider, and one is marked <code>#[ignore]</code>.</p>
+<p>The tests I read assert outcomes, and the negative ones carry
+controls.
+<code>snapshots_enforce_repo_graph_node_and_independent_toggles</code>
+compares the snapshot with an exact list of three ids out of seven
+written.
+<code>rediscovery_of_a_retired_id_stops_without_repeating_unchanged_model_work</code>
+recomputes the id from scope and advice, asserts the store stays empty,
+counts four model invocations and finds the conflict line in the ledger.
+<code>a_maintenance_specialist_cannot_retire_the_other_scopes_lesson</code>
+asserts both lessons survive and that the legitimate adapt in the same
+run still landed.
+<code>dirty_unknown_and_missing_source_never_gain_mutation_authority</code>
+pins the behaviour behind the permanent-lesson finding as intended.</p>
+<p>The postmortem tests drive a scripted model, so they cover the host's
+validation and not the quality of lessons a real model proposes. No
+committed case measures whether an injected lesson changes an agent's
+behaviour, how often retrieval fires on irrelevant tool calls, or what
+the postmortem costs.</p>
+<p>The README's one benchmark sentence concerns verification loops, not
+memory. No paper, citation file or memory benchmark is in the README or
+<code>docs/</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the producer's citation checkable against records the
+host wrote.</strong> A proposal that must name an event id from the
+host's own ledger, owned by the node it blames, cannot be supported by
+text the model invented.</li>
+<li><strong>Track what was delivered, and let that bound
+maintenance.</strong> A per-run manifest of id-revisions that were
+handed to an agent, invalidated by any carrier failure, keeps a reviewer
+from judging advice nobody received.</li>
+<li><strong>Require one decision per supplied id.</strong> Building the
+expected id set on the host and failing on a missing or foreign one
+turns "the model skipped it" into an error.</li>
+<li><strong>Derive the id from scope and normalized content.</strong>
+Deduplication and a retirement that blocks the same advice then need no
+extra table.</li>
+<li><strong>Stamp provenance the model cannot write.</strong> Refusing a
+<code>source:</code> reference in model output and adding the host's own
+makes the commit trustworthy.</li>
+<li><strong>Freeze recall per run.</strong> A snapshot at start gives
+every agent in the run the same memory and makes the delivery manifest
+meaningful.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A safety rule with no exit.</strong> Deferring destructive
+changes on unknown provenance is sound; leaving no path that ever
+establishes provenance turns a deferral into immortality.</li>
+<li><strong>A refusal that takes the batch with it.</strong> A tombstone
+hit should drop one proposal, before the transaction, not the
+transaction.</li>
+<li><strong>An id that stops describing its content.</strong> Keeping
+the id across an adapt preserves revision history and detaches the
+tombstone from the text retired.</li>
+<li><strong>A memory only models can correct.</strong> Without a list
+and a delete for the person, a wrong lesson is fixed when a postmortem
+happens to agree it is wrong.</li>
+<li><strong>Global caps on a shared store.</strong> A limit counted
+across every repository lets one busy project fill it for the rest.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is memory for a team already running its coding work through
+Zeroshot graphs, and it is not separable from that runtime. The evidence
+gate needs the run ledger, the carrier needs the harness adapters, and
+the writer needs a model session at the end of every run. Inside that
+setting it suits repositories where the same mistakes recur and where
+spending some minutes of model time per run on upkeep is acceptable. It
+does not suit anyone who needs to see, approve or remove what the agents
+have been told, or who must account for what a lesson said before it
+changed. A reader building their own should take the validation design
+and add the person.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the checkout normally clean when the postmortem runs, or do
+typical graphs leave uncommitted work, making unstamped lessons the
+common case?</li>
+<li>Is the permanent keep-or-defer state of an unstamped lesson
+intended, and what is the planned <em>"trustworthy
+revalidation"</em>?</li>
+<li>How often does discovery reproduce a retired lesson's exact scope
+and wording, and so discard a run's publication?</li>
+<li>What do the hosted <em>"Memory operations"</em> and <em>"human-only
+Memory permissions"</em> at <code>api.app.zeroshot.sh</code> do, and do
+they share this lesson model?</li>
+<li>What does a postmortem cost in tokens on a real run, and what share
+of injected cards are relevant to the tool call that triggered
+them?</li>
+<li>Are orphaned graph lessons from superseded graph hashes ever
+removed?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p>Paths are under <code>zeroshot/src/</code> unless a longer path is
+given.</p>
+<ul>
+<li><strong>Model and store:</strong>
+<code>active_memory/model.rs</code>,
+<code>active_memory/store.rs</code>,
+<code>active_memory/backend.rs</code>.</li>
+<li><strong>Retrieval:</strong> <code>active_memory/retrieval.rs</code>,
+<code>active_memory/runtime.rs</code>.</li>
+<li><strong>Delivery:</strong> <code>active_memory/hooks.rs</code>,
+<code>hooks/broker.rs</code>, <code>hooks/native.rs</code>,
+<code>harnesses/adapters/core/{claude,codex,pi}/memory.rs</code>,
+<code>harnesses/adapters/core/copilot/rpc.rs</code>,
+<code>harnesses/adapters/contributed/opencode/memory.rs</code>,
+<code>harnesses/adapters/contributed/hermes/native_memory.py</code>.</li>
+<li><strong>Postmortem:</strong>
+<code>active_memory/postmortem.rs</code>,
+<code>postmortem/plan.rs</code>, <code>postmortem/execution.rs</code>,
+<code>postmortem/evidence.rs</code>, <code>postmortem/impact.rs</code>,
+<code>postmortem/proposals.rs</code>,
+<code>postmortem/context_budget.rs</code>,
+<code>postmortem/definition.rs</code>,
+<code>postmortem/source_file.rs</code>,
+<code>active_memory/source_guard.rs</code>,
+<code>native_v2_supervisor/postmortem.rs</code>.</li>
+<li><strong>Backfill:</strong> <code>postmortem/initialize.rs</code>,
+<code>postmortem/initialize/</code>,
+<code>native_v2_cli/memory.rs</code>,
+<code>npm/zeroshot/skills/zeroshot-memory-init/SKILL.md</code>.</li>
+<li><strong>Configuration and hosting:</strong>
+<code>crates/openengine-cluster-protocol/src/native_v2_run/active_memory.rs</code>,
+<code>native_v2_hosting.rs</code>, <code>native_v2_local.rs</code>,
+<code>native_v2_target/serve.rs</code>,
+<code>plugins/zeroshot-claude/.mcp.json</code>.</li>
+<li><strong>Tests:</strong> <code>active_memory/tests.rs</code>,
+<code>active_memory/runtime/tests.rs</code>,
+<code>active_memory/hooks/tests.rs</code>,
+<code>active_memory/source_guard/tests.rs</code>,
+<code>active_memory/postmortem/tests.rs</code>,
+<code>active_memory/postmortem/tests/</code>.</li>
+<li><strong>Documentation:</strong>
+<code>docs/guides/active-memory.md</code>,
+<code>docs/reference/active-memory.md</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git grep</code> from the root of a checkout
+at <code class="commit-id" title="7353598ff2025de12acd60f1be15223317fa918b">7353598f…</code>.</p>
+<ul>
+<li><code>git grep -n -i 'DELETE FROM' -- zeroshot/src/active_memory</code>
+— one statement, over <code>active_memory_initializations</code> at
+<code>store.rs:115</code>; none over <code>active_memory_records</code>,
+so no tombstone is ever removed.</li>
+<li><code>git grep -n -E 'CREATE TABLE|CREATE INDEX' -- zeroshot/src/active_memory</code>
+— three tables and one index, all in <code>store.rs:223-238</code>; no
+history, event or audit table.</li>
+<li><code>git grep -n -i -E 'created_at|updated_at|valid_from|valid_to|valid_until|expires|timestamp' -- zeroshot/src/active_memory/model.rs zeroshot/src/active_memory/store.rs</code>
+— <code>model.rs:128</code> only,
+<code>ToolObservation.timestamp_ms</code>; no time field on a
+lesson.</li>
+<li><code>git grep -n -i -E 'status|candidate|verified|pending|confidence|trust' -- zeroshot/src/active_memory/model.rs zeroshot/src/active_memory/store.rs</code>
+— <code>store.rs:45</code> (<code>PRAGMA trusted_schema</code>) and
+<code>store.rs:564</code> (a comment on the UID boundary); no state or
+score field.</li>
+<li><code>git grep -n -i -E 'approve|approval|human|confirm\(|reviewer_id' -- zeroshot/src/active_memory ':!zeroshot/src/active_memory/postmortem/tests*' ':!zeroshot/src/active_memory/tests.rs'</code>
+— no match. Control:
+<code>git grep -c -i 'human' -- npm/zeroshot/skills/zeroshot/SKILL.md</code>
+returns 1.</li>
+<li><code>git grep -n -i -E 'is_terminal|isatty|IsTerminal' -- zeroshot/src/active_memory zeroshot/src/native_v2_cli/memory.rs</code>
+— no match. Control:
+<code>git grep -l -E 'is_terminal|IsTerminal' -- zeroshot/src</code>
+lists <code>zeroshot/src/main.rs</code> among five files.</li>
+<li><code>git grep -n -E 'MemoryCommand' -- zeroshot/src</code> with
+<code>zeroshot/src/native_v2_cli/memory.rs:10-31</code> — the enum has
+one variant, <code>Init</code>; no list, show, edit or delete verb.</li>
+<li><code>git grep -n -E '\.permits\(|\.stamp\(|source_bound\(|revalidat' -- zeroshot/src docs</code>,
+test files excluded — <code>stamp</code> is called at
+<code>proposals.rs:546</code> and <code>:689</code> only;
+<code>revalidat</code> matches
+<code>docs/reference/active-memory.md:38</code> and an unrelated comment
+at <code>native_v2_local.rs:187</code>.</li>
+<li><code>git grep -n -E 'impl ActiveMemoryBackend|dyn ActiveMemoryBackend|memory_backend' -- .</code>,
+test files excluded — one <code>impl</code>, for
+<code>SqliteMemoryBackend</code> at <code>backend.rs:73</code>;
+<code>memory_backend: None</code> at
+<code>native_v2_hosting.rs:460</code>.</li>
+<li><code>git ls-files | grep -i mcp</code> —
+<code>planning/plans/shared-skills-plugins-mcp.md</code> and the two
+plugins' <code>.mcp.json</code>; no MCP server source.</li>
+<li><code>git grep -l -i -E 'lesson' -- ui sdks plugins</code> — no
+match; no UI, SDK or plugin surface names a lesson. Control: the same
+pattern matches throughout <code>zeroshot/src/active_memory</code>.</li>
+<li><code>git grep -n -i -E 'embedding|cosine|fts5|bm25|vector_search' -- zeroshot/src/active_memory</code>
+— no match. Control:
+<code>git grep -c -i 'BTreeMap' -- zeroshot/src/active_memory/retrieval.rs</code>
+returns 22.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|CITATION|doi\.org' -- README.md docs '*.cff'</code>
+— two hits, both the word "citation" in
+<code>docs/reference/active-memory.md</code>; no paper.</li>
+<li><code>git grep -n -E '#\[ignore' -- zeroshot/src/active_memory zeroshot/src/harnesses/live_tests/active_memory_tests.rs</code>
+— one, at <code>active_memory_tests.rs:116</code>.</li>
+<li><code>git grep -n 'filter=' -- .gitattributes</code> — no
+match.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-14</strong> — <a
+href="https://github.com/the-open-engine/zeroshot/commit/7353598ff2025de12acd60f1be15223317fa918b"><code class="commit-id" title="7353598ff2025de12acd60f1be15223317fa918b">7353598f…</code></a>
+— first reading, at the head of <code>main</code>, dated 13 November
+2026. Marks: <code>tombstone</code> on the content-derived id kept at
+retirement, <code>scope_enforced</code> on the snapshot query,
+<code>negative_eval</code> on the scope and frozen-snapshot tests. The
+root LICENSE and the three copies under <code>plugins/</code> and
+<code>sdks/python/</code> were read in full: MIT, identical, agreeing
+with the manifests, no rider. Screened before reading: three auto-run
+surfaces (a plugin marketplace, a plugin manifest and an HTTP MCP server
+entry pointing at a hosted endpoint), four dependency surfaces inside
+the seven-day cooldown, five build-time execution points, three unpinned
+manifests. Nothing was installed or run. The hosted service behind
+<code>api.app.zeroshot.sh</code> was not contacted.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

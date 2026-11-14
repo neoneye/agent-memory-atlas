@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 800 reports.**
+**This page covers all 801 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7334,3 +7334,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 4,857 commits in under 13 months by one maintainer, 8,094 lines of memory code with optimistic revisions, one mutation lock, byte caps on every store and an index treated as disposable. Commercial licence; the public checkout cannot build the product.
 - Study when: you want coding-agent memory that is kept true against a changing repository by the agents that use it.
 - Do not copy when: a lesson must be approved before it is believed, a deletion must remove it, or you need the code itself, which the licence does not grant.
+
+### [`zeroshot`](../systems/zeroshot/)
+
+- Best idea: the writer's citation is checked against records the host made. A lesson proposal must name a completion or tool receipt that the run ledger holds for the node it concerns, and a repository lesson a tracked file bearing its association; the host then derives the id and stamps the commit itself, refusing a model-written `source:` reference.
+- Biggest risk: correction has no exit. A lesson admitted while the checkout was dirty carries no source commit, and adapt and retire both require one, so it can only be kept or deferred; no person-facing verb lists, edits or deletes a lesson. A rediscovered retired id rolls back every other mutation in that postmortem's publication.
+- Most reusable component: the delivery manifest. Each run records which id-revisions a carrier acknowledged handing to an agent, any carrier failure voids it, and maintenance must return exactly one decision per supplied id or fail.
+- Maturity impression: 8,156 lines of memory code with 183 test cases beside it, three weeks old at the pin (first commit 23 October 2026) inside an eleven-month, 898-commit project. Bounded inputs, private-file checks, whole-snapshot compare-and-swap and cancellation handling throughout; MIT.
+- Study when: you are designing a write path where a model proposes memory and code must decide whether the proposal is grounded.
+- Do not copy when: a person must be able to see, approve or remove what agents are told, or you need the text a lesson had before it was changed.

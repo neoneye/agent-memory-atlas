@@ -338,6 +338,8 @@ pinning the intentional *non*-redaction of the question line as *"intended
 behavior, not a conceded leak"* — which is the sentence that stops a later
 contributor from finishing the job.
 
+[Zeroshot](../../systems/zeroshot/) checks a model's citations against records the model did not write. A postmortem specialist proposing a lesson must name the agent node it concerns and cite a reference the host's run ledger holds for that node — a completion cursor or a numbered tool receipt recorded by the hook broker — and a repository lesson must also cite a file that opens in the workspace and carries one of the lesson's file, folder or identifier associations. One failing proposal rejects the specialist's whole output, and the rejection logs the stage without the text. The host then adds the one reference the model may not write, the clean checkout's commit. What the gate establishes is that the cited things exist and belong to the node; whether the lesson follows from them is left to the specialist, and the lesson is believed at once.
+
 ## Implementation checklist
 
 - Store the event before starting asynchronous extraction.

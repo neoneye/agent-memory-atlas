@@ -126,8 +126,8 @@ belief.</p>
 <blockquote>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
-recurs across the corpus. 75 systems of
-800 carry the mark, and <a
+recurs across the corpus. 76 systems of
+801 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -291,8 +291,8 @@ near-miss, and the argument that the expensive half of the pattern is
 not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
-<p><strong>75 systems of
-800 in the atlas carry the mark.</strong> The
+<p><strong>76 systems of
+801 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -1813,6 +1813,21 @@ On the Compose gateway the duplicate check skips superseded entries, so
 the same text appends an active copy under the same id
 (<code>gateway/main.py:395-401</code>). <strong>One predicate on the
 dedup query decides whether a revocation is durable.</strong></p>
+<p><a href="../../systems/zeroshot/">Zeroshot</a> gets a value-keyed
+tombstone without a tombstone table. A discovered lesson's id is the
+SHA-256 of its canonical scope and its whitespace- and case-normalized
+recommendation, and retirement keeps the row with a null body at the
+next revision. A later postmortem that proposes the same advice derives
+the same id and arrives as an insert expecting no row, which the
+revision check refuses inside the transaction; a committed test
+recomputes the hash and asserts the store stays empty. Two limits come
+with the economy. The key is exact, so a reworded recommendation or a
+different file list is a new id, and an adapted lesson keeps its first
+id, so retiring it tombstones text it no longer carries. And the refusal
+is a transaction failure, not a filter: every other mutation in that
+publication is rolled back, the retry sees an unchanged snapshot, and
+the run publishes nothing. The tombstone holds no content, only id and
+revision.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,
