@@ -446,6 +446,8 @@ evidence-derived ladder this page argues for, without the field, so no
 
 [Bolt PCHIE](../../systems/bolt-pchie/) stores the state inside the hash and so cannot move it. Each row of its plan file carries `Unverified`, `SimVerified`, `HumanVerified` or `Refuted`, the reader returns nothing below a floor set by a flag, and a committed test stores all four kinds and asserts which keys miss. The state is part of the body each row's SHA-256 covers, so promotion in place would break the chain, and the lookup returns on the first row for a situation, so a `Refuted` row appended later never takes effect. The one writer outside test fixtures stamps `SimVerified` after a simulator walk reached the exit. A filter with a policy floor, and no transitions: the working correction is deleting the file.
 
+[Rakho](../../systems/rakho/) has two states and one transition, driven by deletion. After `forget` removes rows, every remaining row whose metadata `derived_from` names a deleted id is set to `orphaned`, and the recall query excludes orphaned rows (`src/rakho/storage.py:286-290`, `:437-456`). The state answers one question, whether a note's source is gone. Its trigger is a metadata key that no example or document names, the orphaned text stays readable through `audit`, and nothing returns a row to `trusted`.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

@@ -1078,6 +1078,8 @@ checked, on the stated ground that a member or agent naming the person again is
 a new act. A fact deleted through the app leaves `memory.delete` audit rows and
 a change event keyed on its id, and the same sentence can be written again.
 
+[Rakho](../../systems/rakho/) writes its tombstone from the write gate and not from the delete. A `keep` that the gate refuses stores a BLAKE2b fingerprint of the case-folded, whitespace-collapsed note under the actor, and every later `keep` looks the fingerprint up after the gate, so the text stays refused when the store is reopened with the gate off (`src/rakho/store.py:90-97`, `:108-113`). `forget` has no call to it: a note the user deleted can be kept again at once. The key is the `content` whichever field caused the refusal, so a secret in `metadata` blocks the clean note beside it for good, and the fingerprint of a refused secret is unsalted and survives every forget.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

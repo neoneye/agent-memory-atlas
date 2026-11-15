@@ -809,6 +809,16 @@ and the lookup returns on the first row for a situation, so a
 writer outside test fixtures stamps <code>SimVerified</code> after a
 simulator walk reached the exit. A filter with a policy floor, and no
 transitions: the working correction is deleting the file.</p>
+<p><a href="../../systems/rakho/">Rakho</a> has two states and one
+transition, driven by deletion. After <code>forget</code> removes rows,
+every remaining row whose metadata <code>derived_from</code> names a
+deleted id is set to <code>orphaned</code>, and the recall query
+excludes orphaned rows (<code>src/rakho/storage.py:286-290</code>,
+<code>:437-456</code>). The state answers one question, whether a note's
+source is gone. Its trigger is a metadata key that no example or
+document names, the orphaned text stays readable through
+<code>audit</code>, and nothing returns a row to
+<code>trusted</code>.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

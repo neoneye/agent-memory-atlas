@@ -7366,9 +7366,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`rakho`](../systems/rakho/)
 
-- Best idea: the gate runs before the embedder. A refused note is never embedded and a masked one is embedded without its secret, so with a remote embedder the secret also never leaves the machine; the refusal is recorded as a reason and labels with no content.
-- Biggest risk: the claims outrun the code. `forget` writes no record and deletes the actor's refusals, so an empty audit is the only proof; the gate inspects `content` and not `metadata` or the recall query; the injection check is ten literal phrases; and the keyword score is inverted, giving a sole match zero.
-- Most reusable component: the three-way gate decision — store, redact or skip — with a skip rule for notes where fewer than eight characters survive the masks.
-- Maturity impression: 1,797 lines of Python and 37 test functions, five commits over three days, version 0.2.0. No test asserts a ranking order or recalls after a forget, and no workflow runs the suite. MIT.
+- Best idea: the gate runs before the embedder, and the refusal outlives the gate. A refused note is never embedded, its record holds labels and no content, and a fingerprint of the text is checked on every later `keep`, so it stays refused when the gate is swapped or switched off.
+- Biggest risk: the tombstone has the wrong writer and the wrong key. `forget` writes none, so a forgotten note can be kept again; a secret in `metadata` fingerprints the clean `content` beside it and blocks it with no call to lift it; and refusals, mutation rows and unsalted fingerprints of refused secrets survive every forget.
+- Most reusable component: the three-way gate decision — store, redact or skip — followed by a value lookup that can only turn a decision into a skip.
+- Maturity impression: 2,123 lines of Python and 50 test functions, seven commits over a week, version 0.2.0. No workflow runs the suite. MIT.
 - Study when: the failure to prevent is a credential or an obvious identifier landing in an agent's notes, in a single application that owns its callers.
-- Do not copy when: deletion must be demonstrable afterwards, the agent holding the tools must not choose the actor, or keyword ranking matters.
+- Do not copy when: a deleted note must stay deleted, a full erasure must leave nothing behind, or the agent holding the tools must not choose the actor.

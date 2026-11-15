@@ -1049,15 +1049,15 @@ double-buffered headers, a TOC, a footer and a WAL ring, its
 checks surviving frames by content. Repo and project raise a result's
 score and never remove one.</p>
 <p><strong><a href="../systems/rakho/">Rakho</a> gates the write before
-the embedder and then deletes the gate's record on forget.</strong> An
-MIT Python library over one SQLite file: <code>keep</code> passes text
-to a regex gate that stores, masks or refuses it, a refusal is recorded
-with labels and no content, and every read carries the actor and scope.
-<code>forget</code> removes the rows, their full-text entries and that
-actor's refusals and writes nothing, so its proof of forgetting is an
-empty audit. The keyword half of ranking is normalised with the sign
-reversed, and <code>metadata</code> and the recall query never pass the
-gate.</p>
+the embedder and fingerprints what the gate refused.</strong> An MIT
+Python library over one SQLite file: <code>keep</code> passes text and
+metadata to a regex gate that stores, masks or refuses, a refusal is
+recorded with labels and no content, and its fingerprint blocks the same
+text under any later gate. Every read carries the actor, every write and
+delete appends a mutation row, and <code>forget</code> marks notes
+derived from a deleted one as orphaned. <code>forget</code> itself
+writes no fingerprint, so a forgotten note can be kept again, and a
+secret in metadata permanently blocks the clean note beside it.</p>
 <h2 id="hosted-and-service-memory">Hosted and service memory</h2>
 <p><a href="../systems/openlore/"><code>openlore</code></a>, <a
 href="../systems/honcho/"><code>honcho</code></a>, <a

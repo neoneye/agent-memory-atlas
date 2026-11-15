@@ -28131,37 +28131,44 @@ row with no event record</td>
 <tr>
 <td><a href="../systems/rakho/"><code>rakho</code></a></td>
 <td>An episode: one text note with an actor, a scope, optional source,
-session and tool names, a sensitivity of clean or redacted, a JSON
-metadata object and a float32 embedding</td>
+session and tool names, a sensitivity of clean or redacted, a trust of
+trusted or orphaned, a JSON metadata object, a float32 embedding and the
+embedder's name</td>
 <td>One SQLite file in WAL mode: a memories table, an FTS5 table over
-content, a refusals table and a verb table for command aliases</td>
-<td>Every row of the actor and scope is loaded and scored in Python: 0.5
-cosine, 0.3 keyword, 0.2 recency from creation time. The top k are
-packed into a token budget. No score floor</td>
-<td>The caller's keep. A gate inspects the text and returns store,
-redact or skip; a skip writes a refusal row holding a reason, labels and
-a masked preview and stores no memory</td>
-<td>No update. forget deletes memory rows, their FTS rows and, when
-called by actor, that actor's refusal rows. It needs an actor, a session
+content, a refusals table, a mutations table, a tombstones table and a
+verb table for command aliases</td>
+<td>Every non-orphaned row of the actor and scope is loaded and scored
+in Python: 0.5 cosine, 0.3 keyword, 0.2 recency from creation time. A
+row under 0.05 on both the vector and keyword legs is dropped. The top k
+are packed into a token budget</td>
+<td>The caller's keep. A gate inspects the text, source, tool name and
+metadata and returns store, redact or skip; a fingerprint lookup can
+turn any decision into a skip. A skip writes a refusal row, a tombstone
+and a mutation row and stores no memory</td>
+<td>No update. forget deletes memory rows and their FTS rows, marks rows
+derived from them orphaned, and appends a forget event. Refusals,
+tombstones and mutations are never deleted. It needs an actor, a session
 or an id</td>
 <td>actor_id is required on keep, recall and audit and is an equality
-filter on every read, with scope beside it. Both are caller-supplied
-strings</td>
+filter on every read, with scope beside it on recall. Tombstones are per
+actor across scopes. Both keys are caller-supplied strings</td>
 <td>A Python class, a CLI and an optional MCP server exposing keep,
 recall, forget and audit under English, Hindi and German names. Nothing
 is injected; the caller asks</td>
 <td>None</td>
-<td>A write-time sensitivity label and the refusal record. No state that
-changes after the write, no provenance beyond free-text source
-fields</td>
+<td>A two-value trust column that forget moves to orphaned for rows
+naming a deleted source, a write-time sensitivity label, and the refusal
+record. Provenance is free-text source fields and caller metadata</td>
 <td>The gate runs before the embedder, so a refused or redacted secret
-is never embedded or sent to a remote embedding API; refusals are
-recorded without the content; forget refuses an empty filter; no
-required dependencies</td>
-<td>The keyword score is inverted and zero for a sole match; forget
-leaves no record and removes the refusals; metadata and recall queries
-bypass the gate; the injection gate is a short phrase list; embeddings
-carry no model identity</td>
+is never embedded or sent to a remote embedding API; refused text is
+fingerprinted and stays refused under any later gate; every mutation
+appends an event that forget does not remove; no required
+dependencies</td>
+<td>forget writes no tombstone; a secret in metadata permanently blocks
+the clean note beside it; fingerprints of refused secrets are unsalted
+and survive forget; a Luhn-valid Aadhaar number is stored in the clear;
+the injection gate is a phrase list that also refuses ordinary
+sentences</td>
 </tr>
 <tr>
 <td><a href="../systems/rck/"><code>rck</code></a></td>
@@ -36133,7 +36140,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>77 of 804:</em> <a
+<p><em>78 of 804:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -36186,6 +36193,7 @@ href="../systems/pok-agent/"><code>pok-agent</code></a>, <a
 href="../systems/project-golem/"><code>project-golem</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
+href="../systems/rakho/"><code>rakho</code></a>, <a
 href="../systems/rck/"><code>rck</code></a>, <a
 href="../systems/re-call/"><code>re-call</code></a>, <a
 href="../systems/recallnest/"><code>recallnest</code></a>, <a
@@ -36214,7 +36222,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>207 of 804:</em> <a
+<p><em>208 of 804:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -36382,6 +36390,7 @@ href="../systems/potpie/"><code>potpie</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/qualitylayer/"><code>qualitylayer</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
+href="../systems/rakho/"><code>rakho</code></a>, <a
 href="../systems/re-call/"><code>re-call</code></a>, <a
 href="../systems/recall-substrate/"><code>recall-substrate</code></a>,
 <a href="../systems/recallweave/"><code>recallweave</code></a>, <a
@@ -36924,7 +36933,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>268 of 804:</em> <a
+<p><em>269 of 804:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -37144,6 +37153,7 @@ href="../systems/plur1bus/"><code>plur1bus</code></a>, <a
 href="../systems/potpie/"><code>potpie</code></a>, <a
 href="../systems/prime-agent/"><code>prime-agent</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
+href="../systems/rakho/"><code>rakho</code></a>, <a
 href="../systems/re-call/"><code>re-call</code></a>, <a
 href="../systems/recallnest/"><code>recallnest</code></a>, <a
 href="../systems/recallweave/"><code>recallweave</code></a>, <a
