@@ -17792,15 +17792,23 @@ Gaussian noise moves the documents-only variant by +0.04 and Memorilla
 by −5.93. The code is <a
 href="https://github.com/snap-stanford/memorilla"><code>snap-stanford/memorilla</code></a>,
 Apache-2.0, at <a
-href="https://github.com/snap-stanford/memorilla/commit/d8f18891a50bf33c18f04fe5167c22f51e58c9cd"><code class="commit-id" title="d8f18891a50bf33c18f04fe5167c22f51e58c9cd">d8f18891…</code></a>
-(6 November 2026): 21 commits by three contributors and 7,354 lines of
-Python. <strong>Inference keeps nothing.</strong>
+href="https://github.com/snap-stanford/memorilla/commit/d3e3f8f1b6dd2560971dfc989ffd017c40d5b825"><code class="commit-id" title="d3e3f8f1b6dd2560971dfc989ffd017c40d5b825">d3e3f8f1…</code></a>
+(13 November 2026): 26 commits and 8,783 lines of Python in 38 files.
+<strong>Inference keeps a tensor the caller holds.</strong>
 <code>MemoryVLLM.answer(question, documents)</code> embeds
-<code>[*documents, question]</code> on every call and returns a string
-(<code>memorilla/vllm.py:182-220</code>, <code>:208</code>). No function
-adds, changes or removes a document in a store. <strong>The persistent
-store the paper describes is, in this tree, a benchmark cache.</strong>
-It is <code>EmbeddingStore</code>
+<code>[*documents, question]</code> on every call
+(<code>memorilla/vllm.py:345</code>).
+<code>MemoryVLLM.write(documents)</code> embeds a list once and returns
+a <code>Collection</code> (<code>:28</code>, <code>:298-313</code>): the
+embeddings on the GPU or, with <code>memory_cache=True</code>, the keys
+and values of the two cross-attention layers computed once
+(<code>memorilla/memory.py:322-362</code>). The README times a question
+over one million documents at 8.1 ms with the cache against 74 ms
+without. The <code>Collection</code> is a return value. The library does
+not name it, keep it, save it or change it; no function adds, changes or
+removes a document, and <code>write</code> on a longer list embeds every
+document again. <strong>The persistent store the paper describes is, in
+this tree, a benchmark cache.</strong> It is <code>EmbeddingStore</code>
 (<code>memorilla/embeddings.py:72</code>), whose docstring reads
 <em>"Read-only, memory-mapped access to one split's document and
 question embeddings"</em>. <code>build_embeddings</code> writes a whole
@@ -17810,9 +17818,11 @@ recompute (<code>:561</code>). §2.1's <em>"only added or changed
 documents must be re-encoded"</em> has no code path. Neither does §7's
 claim that each user's store <em>"can be kept on device or deleted on
 request"</em>. It is a privacy claim with nothing behind it in the
-release except deleting a split directory. <strong>The agent's document
-store lives for one game.</strong> It is <code>TrajectoryMemory</code>
-in the authors' <a
+release except deleting a split directory, and the <a
+href="https://memory.stanford.edu/">project site</a> makes it under
+<em>Future directions</em> as something an assistant <em>"could"</em>
+do. <strong>The agent's document store lives for one game.</strong> It
+is <code>TrajectoryMemory</code> in the authors' <a
 href="https://github.com/Adibvafa/SkyRL-Memorilla">SkyRL fork</a> at <a
 href="https://github.com/Adibvafa/SkyRL-Memorilla/commit/0ce9767c76efd9ac3907065bbbd674411311a666"><code class="commit-id" title="0ce9767c76efd9ac3907065bbbd674411311a666">0ce9767c…</code></a>:
 a Python list capped at <code>max_documents</code>
@@ -17827,7 +17837,7 @@ attention state sits on, one level further: aimee's tensors derive from
 a governed store in its own tree, and Memorilla has no store. The screen
 found no auto-run surface. It flagged one build-time execution point
 (<code>tests/conftest.py</code>), one dependency surface inside the
-cooldown (<code>pyproject.toml</code>, changed a day before the pin) and
+cooldown (<code>pyproject.toml</code>, changed in the pinned commit) and
 no lockfile. Nothing was installed or run. Searches:
 <code>pdftotext</code> extracts 15,032 words from v3, in which
 <code>github</code> occurs zero times, since the repository is linked
@@ -17842,10 +17852,15 @@ store would be the report. The first things to read in it are whether
 removing a document leaves anything that still answers from it, since
 the soft tokens are rebuilt per query and only the store could keep a
 deleted document, and whether the personalization checkpoints were
-trained on the users they serve. <code>pv4</code> and <code>pmv2</code>
-are trained on synthetic users here; a deployment fine-tuned on real
-conversations moves deletion into the weights, which is the case that
-brings <a href="../systems/second-me/">Second Me</a> into scope.</li>
+trained on the users they serve. The cache settles part of the first by
+construction: it is refused unless the module has no document
+self-attention (<code>memorilla/memory.py:293-295</code>), so each
+document is one independent column of keys and values and removing it
+would be exact. No call removes one. <code>pv4</code> and
+<code>pmv2</code> are trained on synthetic users here; a deployment
+fine-tuned on real conversations moves deletion into the weights, which
+is the case that brings <a href="../systems/second-me/">Second Me</a>
+into scope.</li>
 <li><strong><code>enriqxxx/53on-harness</code> was examined and has no
 report: it is the desktop shell of a memory product whose engine is
 downloaded from 53on.com at run time, and no memory code is in the
