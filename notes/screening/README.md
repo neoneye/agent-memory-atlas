@@ -119,7 +119,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`ctx-open`](../../content/systems/ctx-open.md) | `.devcontainer/devcontainer.json` |
 | [`cua`](../../content/systems/cua.md) | `.vscode/settings.json` |
 | [`daem0n-mcp`](../../content/systems/daem0n-mcp.md) | `.claude-plugin/`, `.opencode/`, `hooks/`, `opencode.json` |
-| [`daimon`](../../content/systems/daimon.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
+| [`daimon`](../../content/systems/daimon.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `hooks/`, `hooks/hooks.json` |
 | [`deer-flow`](../../content/systems/deer-flow.md) | `.github/copilot-instructions.md` |
 | [`deja-vu`](../../content/systems/deja-vu.md) | `.claude-plugin/`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/hooks/`, `claude-plugin/hooks/hooks.json`, `mcp.json`, `server.json` |
 | [`demarkus`](../../content/systems/demarkus.md) | `.claude-plugin/`, `plugins/claude-code-knowledge/.claude-plugin/plugin.json`, `plugins/claude-code-knowledge/hooks/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/.mcp.json`, `plugins/claude-code/hooks/`, `plugins/cowork-memory/.claude-plugin/plugin.json`, `plugins/cowork-memory/.mcp.json` |
