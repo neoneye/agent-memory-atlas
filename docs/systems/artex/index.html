@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Go
+penetration-testing platform on PostgreSQL whose agents share an asset
+graph, inherit earlier tasks' findings, and can receive rule-built
+lessons.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ARTEX — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Go
+penetration-testing platform on PostgreSQL whose agents share an asset
+graph, inherit earlier tasks' findings, and can receive rule-built
+lessons.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ARTEX — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Go
+penetration-testing platform on PostgreSQL whose agents share an asset
+graph, inherit earlier tasks' findings, and can receive rule-built
+lessons.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ARTEX — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ARTEX",
+      "description": "A self-hosted Go penetration-testing platform on PostgreSQL whose agents share an asset graph, inherit earlier tasks' findings, and can receive rule-built lessons.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Lessons built by rule from triaged
+findings, ranked so the task's own sort last</p>
+          <h1>ARTEX</h1>
+          <p class="document-deck">A self-hosted Go penetration-testing
+platform on PostgreSQL whose agents share an asset graph, inherit
+earlier tasks' findings, and can receive rule-built lessons.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/BaaRai/ARTEX">
+              <span>Source</span>
+              <strong>BaaRai/ARTEX</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/BaaRai/ARTEX/commit/9f99b7172aab33512d319f082080cb2892253e91" title="9f99b7172aab33512d319f082080cb2892253e91">
+              <span>Analyzed revision</span>
+              <code>9f99b717…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/BaaRai--ARTEX" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>BaaRai--ARTEX</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0,
+with use restrictions the README adds as terms from the maintainers; the
+web UI template and one vendored script are MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>133,382
+lines of Go in 512 files, 56,301 of them tests; db/ is 37,933 lines,
+server/ 46,488, agent/ 17,724. The lessons subsystem is 395
+lines</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>897
+commits from 26 July to 16 November 2026. The original author's 381 end
+on 7 October 2026 and the fork's maintainer's 416 begin the next day;
+v0.6.0 plus 163 commits</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,191
+Go test functions in 287 files, run in CI against PostgreSQL 16; four
+cover lessons. I ran none; the lesson ordering and rendering were
+re-derived outside the tree</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ARTEX is a self-hosted penetration-testing platform in Go on
+PostgreSQL. A planner splits a goal into intents, workers run tools, and
+results are written into two graphs: a global asset graph and a per-task
+exploration graph. This report covers only what the system remembers
+across turns and tasks.</p>
+<p>It carries <code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>. None of them sits on the lessons subsystem,
+which is the part named for learning.</p>
+<p><strong>Licence and provenance.</strong> <code>LICENSE</code> is the
+unmodified AGPL-3.0 text. The README then adds permitted and prohibited
+uses, calls them additional terms from the maintainers, and says use of
+the project means agreement (<code>README.md:723-756</code>); code
+review and academic research are listed as permitted. <code>web/</code>
+is MIT, a third party's UI template. The repository is an English
+translation and continuation of a project whose original repository is
+no longer public (<code>README.md:698-700</code>), and its history holds
+the original author's commits to 7 October 2026. The Go module path and
+the agent SDK dependency still carry the original owner's name, and the
+SDK was not opened for this reading.</p>
+<p><strong>Cross-task memory has three forms, and the oldest is the
+soundest.</strong></p>
+<ul>
+<li><strong>Inheritance.</strong> A task may name up to eight source
+tasks. Its agents then read the sources' facts, findings and finished
+intents, tagged as inherited, through one hop of live relations
+(<code>db/exploration_sources.go:16-41</code>). Writes cannot cross:
+every mutation carries the receiving task's
+<code>exploration_id</code>.</li>
+<li><strong>The asset graph.</strong> One table for the installation. An
+agent inside a task sees only assets within the declared scope of that
+task and its sources
+(<code>db/task_assets_context.go:65-90</code>).</li>
+<li><strong>Lessons.</strong> When a task ends, a rule turns each
+triaged finding into one line of text for later tasks
+(<code>db/lessons.go:81-169</code>). No model writes it. Injection is
+off unless <code>ARTEX_RSI_LESSONS=inject</code>.</li>
+</ul>
+<p><strong>The lesson ranking is inverted.</strong> The selection sorts
+on <code>(l.company_id=$1) DESC, (l.category_id=$2) DESC</code>
+(<code>db/lessons.go:206</code>). For a lesson with no company or
+category that comparison is NULL, and PostgreSQL sorts NULLs first under
+<code>DESC</code>. Unscoped lessons therefore outrank the task's own,
+the comment above the function says the opposite
+(<code>:181-183</code>), and with <code>LIMIT 8</code> and no cursor a
+category's lessons are unreachable once eight unscoped ones exist.
+Re-derived on a scratch PostgreSQL with the lifted DDL and query: ten
+unscoped lessons and five matching ones returned eight unscoped.</p>
+<p><strong>Target-derived text reaches the system prompt.</strong> A
+lesson's cue and action are a finding's <code>vulnclass</code> and
+<code>summary</code>, which a worker wrote from what it read off the
+target. In inject mode they are appended to the planner's and the
+worker's system prompt in later tasks
+(<code>agent/planner.go:514</code>, <code>agent/worker.go:450</code>).
+The codebase has a nonce-framed envelope for exactly this class of text
+and uses it everywhere else; the lessons block gets a plain-text header,
+control-character stripping and a 320-byte cap.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A lesson is a triaged finding, restated by rule and never
+revisited.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a finding becomes a lesson only after a disposition; the lesson is built by string rules, ranked with unscoped rows first, and appended to later tasks' system prompts with no way to retire it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a finding becomes a lesson only after a disposition; the lesson is built by string rules, ranked with unscoped rows first, and appended to later tasks&#39; system prompts with no way to retire it
+flowchart TD
+    T[&quot;target response&lt;br/&gt;(untrusted)&quot;] --&gt; W[&quot;worker: report_finding&lt;br/&gt;(vulnclass, summary)&quot;]
+    W --&gt; F[(&quot;findings row&lt;br/&gt;status = pending&quot;)]
+    OP[&quot;operator: PATCH&lt;br/&gt;finding status (JWT)&quot;] --&gt; F
+    RT[&quot;retester agent verdict&lt;br/&gt;(session a person opens)&quot;] --&gt; F
+    F --&gt; X{&quot;task reaches&lt;br/&gt;done / failed / timeout&quot;}
+    X --&gt; EX[&quot;ExtractLessonsForTask&lt;br/&gt;string rules, no model&quot;]
+    EX -.-&gt;|&quot;pending:&lt;br/&gt;nothing&quot;| NONE[&quot;no lesson&quot;]
+    EX --&gt; LT[&quot;flatten, strip C0,&lt;br/&gt;cut 160 / 320 bytes&quot;]
+    LT --&gt; L[(&quot;rsi_lessons&lt;br/&gt;status always candidate&lt;br/&gt;company never set&quot;)]
+    L --&gt; SEL[&quot;next task: filter by&lt;br/&gt;category, ORDER BY, LIMIT 8&lt;br/&gt;unscoped rows sort first&quot;]
+    SEL --&gt; R[&quot;render: plain header,&lt;br/&gt;stop at 1,800 bytes&quot;]
+    R --&gt;|&quot;inject mode&quot;| SYS[&quot;planner and worker&lt;br/&gt;SYSTEM prompt&quot;]
+    L -.-&gt; DEAD[&quot;no edit, retire&lt;br/&gt;or delete path&quot;]
+    style SEL fill:#7f1d1d,color:#fff
+    style SYS fill:#7f1d1d,color:#fff
+    style DEAD fill:#7f1d1d,color:#fff</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Go server, a PostgreSQL schema in one idempotent file of 57 tables,
+an agent package (planner, worker, main agent, retester, compactor) on
+an external SDK, and a Next.js UI. There is one operator: a single JWT
+subject guards every API route but login and health
+(<code>server/auth.go:161-164</code>, <code>:217-235</code>). There is
+no user or tenant table.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Memory surface</th>
+<th>Scope</th>
+<th>Written by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Asset graph</td>
+<td>Installation</td>
+<td>Agent tools, scan ingest, HTTP</td>
+</tr>
+<tr>
+<td>Exploration graph</td>
+<td>Task, plus direct sources on read</td>
+<td>Planner and worker tools</td>
+</tr>
+<tr>
+<td>Coverage ledger and history</td>
+<td>Task</td>
+<td>Worker's <code>record_coverage</code></td>
+</tr>
+<tr>
+<td>Cold digests</td>
+<td>Task</td>
+<td>Background model pass</td>
+</tr>
+<tr>
+<td>Lessons</td>
+<td>Category, in effect</td>
+<td>Rule-based extraction at task end</td>
+</tr>
+<tr>
+<td>Task credentials</td>
+<td>Task</td>
+<td>Agent or operator</td>
+</tr>
+<tr>
+<td>Skills directory</td>
+<td>Installation</td>
+<td>The platform agent only</td>
+</tr>
+</tbody>
+</table></div>
+<p>Planner rounds are stateless: each is a fresh session rebuilt from a
+graph overview, the coverage line and the planner's own todo list
+(<code>agent/planner.go:48</code>, <code>:137-161</code>). The todo list
+lives in a Go map on the planner struct.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Docker Compose with PostgreSQL, or a single binary with the UI
+embedded. The lessons flag appears in <code>RSI.md</code> and
+<code>docs/rsi-lessons.md</code> and in no README, example environment
+file or UI.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lesson text normalisation</td>
+<td><code>db/lessons.go:40-52</code></td>
+</tr>
+<tr>
+<td>Lesson scope lookup</td>
+<td><code>db/lessons.go:61-76</code></td>
+</tr>
+<tr>
+<td>Extraction rules</td>
+<td><code>db/lessons.go:81-169</code></td>
+</tr>
+<tr>
+<td>Dedupe key and upsert</td>
+<td><code>db/lessons.go:54-59</code>, <code>:171-179</code></td>
+</tr>
+<tr>
+<td>Selection query</td>
+<td><code>db/lessons.go:192-209</code></td>
+</tr>
+<tr>
+<td>Rendering</td>
+<td><code>db/lessons.go:249-277</code></td>
+</tr>
+<tr>
+<td>Wiring into the agents</td>
+<td><code>server/lessons.go:41-70</code></td>
+</tr>
+<tr>
+<td>Lesson tables</td>
+<td><code>db/schema.sql:1538-1574</code></td>
+</tr>
+<tr>
+<td>Scoped asset read</td>
+<td><code>db/asset_dsl.go:559-637</code>,
+<code>db/task_assets_context.go:65-90</code></td>
+</tr>
+<tr>
+<td>Task inheritance</td>
+<td><code>db/exploration_sources.go:16-41</code>,
+<code>:74-81</code></td>
+</tr>
+<tr>
+<td>Fact write and labels</td>
+<td><code>agent/tools.go:1503-1575</code></td>
+</tr>
+<tr>
+<td>Goal proof refusals</td>
+<td><code>agent/tools.go:1326-1347</code></td>
+</tr>
+<tr>
+<td>Graph overview windows</td>
+<td><code>agent/tools.go:450-683</code></td>
+</tr>
+<tr>
+<td>Data envelope</td>
+<td><code>agent/data_envelope.go:10-57</code></td>
+</tr>
+<tr>
+<td>Coverage ledger and history</td>
+<td><code>db/coverage_ledger.go:149-187</code></td>
+</tr>
+<tr>
+<td>Cold digests</td>
+<td><code>agent/compaction.go:55-148</code>,
+<code>db/digest.go:122-221</code></td>
+</tr>
+<tr>
+<td>Finding disposition route</td>
+<td><code>server/server.go:2469-2511</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Asset.</strong> One row per domain, IP, subdomain, app,
+service or endpoint, unique on its value with no task or company in the
+key (<code>db/schema.sql:84-92</code>). It carries
+<code>task_ids</code>, a company, and three record times:
+<code>created_at</code>, <code>last_seen</code>,
+<code>updated_at</code>.</p>
+<p><strong>Exploration node.</strong> <code>kind</code> is one of
+<code>begin</code>, <code>goal</code>, <code>intent</code>,
+<code>fact</code>, <code>finding</code>, <code>hint</code>,
+<code>digest</code>, with a JSON payload, a <code>state</code> and an
+<code>origin</code> stamped by the server from the calling agent. Edges
+are <code>spawns</code>, <code>derived_from</code>, <code>yields</code>,
+<code>proves</code>, <code>covers</code>. An anchor row links a node to
+an asset.</p>
+<p><strong>Fact.</strong> A summary, a detail, a one-line evidence
+string, a <code>confidence</code> of <code>observed</code> or
+<code>inferred</code>, and a <code>source</code> from a fixed list that
+includes <code>target_response</code>, <code>tool_output</code> and
+<code>inference</code> (<code>agent/tools.go:1507-1529</code>). Both
+labels are declared by the agent that writes the fact.</p>
+<p><strong>Finding.</strong> A node plus a <code>findings</code> row
+whose <code>status</code> starts at <code>pending</code>
+(<code>db/schema.sql:1201</code>) and is the person's disposition:
+<code>confirmed</code>, <code>false_positive</code>,
+<code>duplicate</code>, <code>ignored</code>, <code>risk_accepted</code>
+and others. Evidence binds a finding to content-addressed snapshots of
+captured requests and responses.</p>
+<p><strong>Lesson.</strong> <code>kind</code> (<code>positive</code>,
+<code>negative</code>, <code>caution</code>), <code>cue</code>,
+<code>action</code>, optional category and company, a
+<code>status</code>, and a <code>dedupe_key</code> that is a hash of
+kind, scope, cue and action. Support is not stored; it is the count of
+evidence rows at read time. The status column accepts
+<code>candidate</code>, <code>adopted</code> and <code>retired</code>
+and has one writer, its default, so every row is
+<code>candidate</code>.</p>
+<p>No field records when something about a target was true, as distinct
+from when it was written. <code>bitemporal</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<h3 id="the-planners-view-of-its-own-task">The planner's view of its own
+task</h3>
+<p><code>graphOverviewData</code> is injected into every planner round
+as windows over the graph, each newest first: thirty open intents,
+twelve recent finished ones, ten findings, twenty facts not folded into
+a digest, fifteen digests (<code>agent/tools.go:450-683</code>). The
+rest stay reachable. <code>list_facts</code> pages by cursor,
+<code>list_findings</code> lists up to 500, and a folded region opens
+with <code>expand_digest</code>.</p>
+<h3 id="other-tasks">Other tasks</h3>
+<p><code>…WithSources</code> readers append the direct source tasks'
+nodes, tagged with the source task id. An inherited intent is visible
+only once it is terminal, so a running source task's in-flight work
+never enters another task's frontier
+(<code>db/exploration_sources.go:74-81</code>). The overview's share for
+related tasks is capped at 48,000 runes, 8,000 per source.</p>
+<h3 id="assets">Assets</h3>
+<p><code>list_assets</code> inside a task goes through
+<code>scopeTargetCTE</code>: the task and its direct sources, joined to
+their declared scope rows by company, root domain, subdomain, IP range
+or registration number, and the query adds
+<code>id IN (SELECT id FROM target)</code>
+(<code>db/asset_dsl.go:584</code>). Membership is by declared scope, not
+by which task produced the asset. With no task id, the platform and chat
+agents get the unscoped query (<code>:560-562</code>).</p>
+<p>No read filters on <code>last_seen</code>; it orders results
+only.</p>
+<h3 id="lessons">Lessons</h3>
+<p>One query, shown in section 1, with <code>LIMIT 8</code> for
+injection and 50 for the HTTP preview. Rendering stops at the first
+entry that would pass 1,800 bytes (<code>db/lessons.go:268-270</code>),
+so a long early entry hides shorter later ones. The block is fixed when
+the task's agents are built.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<h3 id="facts-findings-coverage">Facts, findings, coverage</h3>
+<p>Workers call <code>record_fact</code>, <code>report_finding</code>
+and <code>record_coverage</code>. A fact is created
+<code>confirmed</code> with its origin stamped by the server; no tool or
+route edits or deletes one. A coverage write that exceeds a field limit
+is refused instead of truncated
+(<code>db/coverage_ledger.go:41-52</code>).</p>
+<h3 id="assets-1">Assets</h3>
+<p>Eight upsert functions. On conflict the last non-null writer wins per
+scalar column and arrays are unioned
+(<code>db/assets.go:752-776</code>). When two tasks disagree about a
+status code or a page title, the later one replaces the earlier and
+nothing keeps the old value.</p>
+<h3 id="lessons-1">Lessons</h3>
+<p><code>ExtractLessonsForTask</code> reads each finding of the task
+with its newest retest and applies four rules
+(<code>db/lessons.go:145-166</code>):</p>
+<ul>
+<li><code>confirmed</code>, <code>resolved</code> or <code>fixed</code>
+gives a <strong>positive</strong> lesson, and a second one when the
+latest retest reproduced it.</li>
+<li><code>false_positive</code>, <code>duplicate</code>,
+<code>ignored</code> or <code>risk_accepted</code> gives a
+<strong>negative</strong> lesson that begins
+<code>Do not re-report without new mechanics</code>.</li>
+<li>A latest retest of <code>fixed</code> or <code>inconclusive</code>
+gives a <strong>caution</strong>, whatever the finding's status.</li>
+<li><code>pending</code> and <code>in_progress</code> give nothing.</li>
+</ul>
+<p>A finding's status has two writers in product code: the operator's
+authenticated <code>PATCH</code>, and a completed retest whose verdict
+is <code>fixed</code> (<code>db/finding_retests.go:267-283</code>). The
+retest verdict comes from the retester agent, in a session only a person
+can open. No planner or worker tool takes a finding status.</p>
+<p>Deduplication needs identical text. Positive and negative actions
+embed the finding's free-text summary, so two tasks merge into one
+lesson only when their summaries match; cautions hold only the cue and
+verdict and merge widely.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Lessons cost one query per task start and no model call. Digests cost
+one model call per folded block, with bodies reused when a block's
+member set and content version are unchanged.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The lessons block is appended to the system prompt of the planner and
+the worker and to no other agent. Every other derived field in a prompt,
+such as recent facts, findings, digests, related-task data and hints not
+written by the operator, goes in the user message between
+<code>[[ARTEX_DATA nonce=…]]</code> markers with a fresh random nonce
+per message, and the marker stem is rewritten inside the content
+(<code>agent/data_envelope.go:27-57</code>). The file's own comment
+prices it: the frame marks data and cannot stop a model from following
+it.</p>
+<p><strong><code>human_review</code> is withheld.</strong> A person's
+disposition is what admits most lessons, and the agent that wrote the
+finding holds no tool that sets it. Two things keep the mark off. A
+model's retest verdict also admits lessons: <code>fixed</code> sets the
+finding's status and yields a positive lesson, and <code>fixed</code> or
+<code>inconclusive</code> yields a caution on a finding nobody has
+triaged. And what is reviewed is the finding; the lesson's own status
+column is never written, and candidates are injected as they stand.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-company-scope-of-lessons-is-empty">The company scope of
+lessons is empty</h3>
+<p><code>taskLessonScope</code> reads <code>tasks.company_id</code>
+(<code>db/lessons.go:63-65</code>). Task creation inserts no value for
+that column and stores a task's companies as scope rows instead
+(<code>db/tasks.go:261-263</code>, <code>:296-306</code>). The only
+product statements that touch the column clear it or restore an archived
+value. Every lesson is therefore stored with no company, and is offered
+to any task in the same category, or to every task when the source task
+had none. A positive lesson's text is the finding summary, which names
+the source target's endpoints.</p>
+<h3 id="a-false-positive-disposition-never-reaches-the-agents">A
+false-positive disposition never reaches the agents</h3>
+<p>The disposition lives on the <code>findings</code> row. The planner
+and workers read finding nodes, whose state is <code>confirmed</code>
+from creation; <code>list_findings</code> and the overview return node
+state and never the row's status
+(<code>agent/tools.go:1024-1067</code>). A finding the operator marked
+<code>false_positive</code> stays under confirmed findings for its own
+task's later rounds and for every task that inherits it. The node state
+<code>dismissed</code> exists in the schema and has no writer outside
+one test.</p>
+<h3 id="a-reversed-disposition-leaves-both-lessons">A reversed
+disposition leaves both lessons</h3>
+<p>Extract with a finding <code>confirmed</code>, change it to
+<code>false_positive</code>, extract again: a negative lesson is
+inserted under a different key and the positive one stays. Both render,
+positive first, citing the same finding id.</p>
+<h3 id="extraction-fires-before-triage">Extraction fires before
+triage</h3>
+<p>Extraction runs when the task reaches a terminal status
+(<code>server/manager.go:1501</code>, <code>:1533-1535</code>). A
+finding nobody has triaged is <code>pending</code> and yields nothing. A
+disposition set afterwards produces a lesson only through
+<code>POST /api/tasks/{id}/lessons/extract</code>, which no UI or script
+in the tree calls. The committed test passes because it inserts the
+finding already confirmed
+(<code>server/lessons_test.go:140-142</code>).</p>
+<h3 id="no-lesson-can-be-removed">No lesson can be removed</h3>
+<p>Nothing outside tests updates or deletes a lesson row, and there is
+no expiry. Deleting the source task or finding leaves the lesson with an
+evidence string naming an id that is gone.
+<code>docs/rsi-lessons.md:80</code> states the absence as a choice.</p>
+<p>Deleting a category or company widens its lessons: both foreign keys
+are <code>ON DELETE SET NULL</code>
+(<code>db/schema.sql:1546-1547</code>) and NULL means visible to all.
+Re-derived on the scratch database.</p>
+<h3 id="byte-truncation-and-non-ascii-text">Byte truncation and
+non-ASCII text</h3>
+<p><code>lessonText</code> cuts with a byte slice
+(<code>db/lessons.go:48-50</code>). A cut inside a multi-byte character
+leaves invalid UTF-8, which PostgreSQL rejects; the extraction returns
+the error and skips every later finding of the task. In a separate
+script emulating the function, an all-CJK summary produced an invalid
+320-byte action in 20 of 30 alignments, and the scratch database
+rejected such a value. The Go driver was not run. The original project
+was Chinese-language, and the lesson tests use ASCII only.</p>
+<h3 id="the-usage-log-over-reports">The usage log over-reports</h3>
+<p><code>wireTaskLessons</code> logs every selected id, while rendering
+stops at 1,800 bytes. In the re-derivation, eight long positive lessons
+selected gave four rendered. <code>rsi_lesson_usage</code>, the table
+the docs propose for comparing tasks that saw lessons, records lessons
+that never reached a prompt, and nothing reads it.</p>
+<h3 id="why-four-marks-are-withheld">Why four marks are withheld</h3>
+<p><code>human_review</code> and <code>bitemporal</code> are covered
+above.</p>
+<p><strong><code>tombstone</code>.</strong> The negative lesson is the
+nearest thing. It is a line of prompt text, and the write path never
+consults it: a re-reported finding lands as a new <code>pending</code>
+row.</p>
+<p><strong><code>trust_state</code>.</strong> Four candidates. The
+lesson status has one value. The node state <code>dismissed</code> has
+no writer. The finding disposition gates extraction once and no agent
+read consults it. A fact's <code>confidence</code> and
+<code>source</code> come closest: <code>prove_goal</code> refuses a fact
+that is not <code>observed</code> or whose source is the target's own
+response (<code>agent/tools.go:1326-1347</code>). Those are labels the
+writing agent declares at write time, they never change, and no read
+path filters on them.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,191 <code>func Test</code> in 287 files. CI starts PostgreSQL 16
+and runs <code>go test -p 1 ./...</code> with <code>gofmt</code>,
+<code>go build</code> and <code>go vet</code>
+(<code>.github/workflows/ci.yml:9-51</code>). I ran none of it.</p>
+<p><strong>The boundary tests are the strong part.</strong>
+<code>TestExplorationDirectSourceReadView</code> asserts that a source
+of a source is invisible, that a live source intent is absent from the
+frontier, the inherited list and finding lineage, and that an inherited
+fact cannot be mutated through the receiving store
+(<code>db/exploration_sources_test.go:92-217</code>).
+<code>TestInheritedActivityReadsRequireTerminalIntent</code> asserts
+five read paths do not return a reopened intent (<code>:8-88</code>).
+<code>TestQueryDSLInScopeMembership</code> tags in-scope assets with a
+foreign producer task, to show membership is by scope, and asserts
+out-of-scope ids are absent
+(<code>db/assets_test.go:1148-1268</code>).</p>
+<p><strong>Lessons have four tests</strong> and none of them covers
+ordering, the limit, the scope predicate, a <code>pending</code> finding
+yielding nothing, injection into a prompt, or multi-byte text.
+<code>TestRenderLessonsDataNotInstructions</code> checks the header,
+flattening and that no NUL survives
+(<code>db/lessons_test.go:8-35</code>).</p>
+<p><code>RSI.md</code> cites six arXiv papers as the source of the
+design's ideas, and the identifiers resolve to the titles it names.
+ARTEX has no paper of its own. <code>scripts/benchmark/</code> holds a
+runner and one ground-truth file; results are written to an ignored
+directory and none is committed. Nothing in the tree measures whether
+lessons help.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Make cross-task inheritance explicit, one hop and
+live.</strong> A named relation, a cap, a query on every read so a
+deleted source disappears, and only finished work visible. Read-only
+falls out of scoping every write to the receiver.</p>
+<p><strong>Frame stored text when it re-enters a prompt.</strong> A
+per-message random nonce on both markers, and the marker stem
+neutralised inside the content.</p>
+<p><strong>Stamp the writer on the server.</strong> A fact's
+<code>origin</code> is never taken from the tool's input.</p>
+<p><strong>Let summaries hide and never delete.</strong> A digest covers
+its members while they stay cold, a revived member reappears, and a
+re-compression starts from the source nodes.</p>
+<p><strong>Refuse an over-long field.</strong> Truncating evidence
+silently changes what was recorded.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not sort on an equality that can be NULL.</strong>
+<code>(col = $1) DESC</code> puts NULLs first in PostgreSQL. Write
+<code>COALESCE(col = $1, false)</code> or
+<code>IS NOT DISTINCT FROM</code>, and test the order.</p>
+<p><strong>Do not exempt one prompt block from the defence the others
+get.</strong> The lessons block is the only stored, target-derived text
+in the system prompt.</p>
+<p><strong>Do not keep the disposition where the agents do not
+read.</strong> The person's verdict and the agent's view of a finding
+are two columns on two rows.</p>
+<p><strong>Do not ship a memory with no removal path.</strong> A wrong
+lesson stays until someone runs SQL.</p>
+<p><strong>Do not scope on a column nothing writes.</strong></p>
+<h3 id="fit">Fit</h3>
+<p>The inheritance model and the scoped asset read suit any multi-task
+agent platform with one operator. The lessons subsystem is a careful
+sketch: rule built, evidence linked, off by default, and not yet safe to
+turn on across unrelated targets.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Was <code>tasks.company_id</code> meant to be
+filled?</strong> A second reader, <code>db/task_outcome.go:60</code>,
+uses the same column.</li>
+<li><strong>Who retires a lesson?</strong> <code>RSI.md:53-55</code>
+calls status changes owner actions, and no owner action exists.</li>
+<li><strong>Does restoring an archived task renumber its
+findings?</strong> If it does, a second extraction adds evidence for the
+same underlying finding. Not traced.</li>
+<li><strong>What does the agent SDK persist?</strong> Session compaction
+and transcripts live in a dependency this reading did not open.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>db/lessons.go</code>, <code>server/lessons.go</code></td>
+<td>Lesson extraction, selection, rendering, wiring</td>
+</tr>
+<tr>
+<td><code>db/lessons_test.go</code>,
+<code>server/lessons_test.go</code></td>
+<td>The four lesson tests</td>
+</tr>
+<tr>
+<td><code>docs/rsi-lessons.md</code>, <code>RSI.md</code></td>
+<td>The project's description of the loop</td>
+</tr>
+<tr>
+<td><code>db/schema.sql</code></td>
+<td>All 57 tables</td>
+</tr>
+<tr>
+<td><code>db/asset_dsl.go</code>,
+<code>db/task_assets_context.go</code>, <code>db/assets.go</code></td>
+<td>Asset reads and upserts</td>
+</tr>
+<tr>
+<td><code>db/exploration.go</code>,
+<code>db/exploration_sources.go</code></td>
+<td>The per-task graph and inheritance</td>
+</tr>
+<tr>
+<td><code>db/coverage_ledger.go</code></td>
+<td>Coverage ledger and its history</td>
+</tr>
+<tr>
+<td><code>db/digest.go</code>, <code>agent/compaction.go</code>,
+<code>agent/coldgraph.go</code></td>
+<td>Cold digests</td>
+</tr>
+<tr>
+<td><code>agent/tools.go</code></td>
+<td>Graph overview, facts, findings, goal proof</td>
+</tr>
+<tr>
+<td><code>agent/data_envelope.go</code></td>
+<td>The nonce-framed envelope</td>
+</tr>
+<tr>
+<td><code>agent/planner.go</code>, <code>agent/worker.go</code></td>
+<td>Where the lessons block joins the system prompt</td>
+</tr>
+<tr>
+<td><code>db/findings.go</code>, <code>db/finding_retests.go</code></td>
+<td>Finding status writers</td>
+</tr>
+<tr>
+<td><code>db/exploration_sources_test.go</code>,
+<code>db/assets_test.go</code></td>
+<td>The boundary tests</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git</code> in a full clone at the pinned
+commit.</p>
+<ul>
+<li><code>git grep -c -E '^func Test' -- '*.go'</code>, summed —
+1,191.</li>
+<li><code>git grep -n -E 'UPDATE rsi_|DELETE FROM rsi_' -- .</code> —
+four lines in <code>server/lessons_test.go</code>; no product code.</li>
+<li><code>git grep -n -E "'retired'|'adopted'" -- .</code> — the read
+predicate at <code>db/lessons.go:203</code> and the CHECK at
+<code>db/schema.sql:1549</code>.</li>
+<li><code>git grep -n -E 'FROM rsi_lesson_usage|JOIN rsi_lesson_usage' -- .</code>
+— nothing.</li>
+<li><code>git grep -n -E 'tasks SET|INTO tasks' -- '*.go' '*.sql'</code>
+— of the product statements, only
+<code>db/task_archives_restore.go:121-124</code> and <code>:322</code>
+name <code>company_id</code>, to clear or restore it.</li>
+<li><code>git grep -n -E 'f\.status|findings\.status|FindingFalsePositive|FindingPending' -- 'agent/*.go'</code>
+— nothing.</li>
+<li><code>git grep -n -E 'SetNodeState\(' -- '*.go'</code> — one product
+call, with <code>met</code>, at <code>agent/tools.go:1350</code>;
+<code>dismissed</code> is passed only at
+<code>db/exploration_sources_test.go:212</code>.</li>
+<li><code>git grep -n -E '(UPDATE|DELETE FROM) coverage_ledger_history' -- .</code>
+— nothing.</li>
+<li><code>git grep -n -i -l lessons -- web extension scripts</code> —
+nothing.</li>
+<li><code>git grep -n -E 'last_seen' -- 'agent/*.go' 'server/*.go' ':!*_test.go'</code>
+— nothing.</li>
+<li><code>git grep -n -i -E 'CREATE TABLE IF NOT EXISTS (users|accounts|tenants|orgs)' -- '*.sql' '*.go'</code>
+— nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-16</strong> — <a
+href="https://github.com/BaaRai/ARTEX/commit/9f99b7172aab33512d319f082080cb2892253e91"><code class="commit-id" title="9f99b7172aab33512d319f082080cb2892253e91">9f99b717…</code></a>
+— first reading, of the memory surfaces only. Screened first: four
+manifests inside the seven-day cooldown, one build-time script, two
+unpinned surfaces. Nothing from the tree was built or run; the lesson
+ordering, scope widening and text truncation were re-derived with lifted
+SQL on a scratch PostgreSQL and in a separate script.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

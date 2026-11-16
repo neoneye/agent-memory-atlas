@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 807 reports.**
+**This page covers all 808 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7399,3 +7399,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 42,209 lines of Python and 228 unittest functions run in CI on three Python versions, 21 commits over five months by one author, version 0.1.8. The LICENSE file is Apache-2.0 while the README and package metadata say MIT.
 - Study when: several coding agents share one repository and the failure to prevent is work continuing on a plan that was replaced.
 - Do not copy when: records must be attributable to a verified actor, history must outlive eight revisions, or the only client is MCP and records are long.
+
+### [`artex`](../systems/artex/)
+
+- Best idea: explicit, one-hop, live task inheritance. A task names up to eight source tasks; its agents read their facts, findings and finished intents tagged as inherited, a deleted source disappears on the next read, and writes cannot cross because every mutation carries the receiver's exploration id.
+- Biggest risk: the lessons subsystem. Its ranking puts unscoped lessons ahead of the task's own because `(col = $1) DESC` sorts NULL first, its company scope reads a column nothing fills, its text derives from target output and joins the system prompt with a plain header, and a lesson has no edit, retire or delete path. Injection is off by default.
+- Most reusable component: `db/exploration_sources.go` with `db/exploration_sources_test.go`, and the nonce-framed data envelope in `agent/data_envelope.go`.
+- Maturity impression: 133,382 lines of Go, 1,191 test functions run in CI against PostgreSQL, 897 commits in under four months across an original author and a fork's maintainer. Lessons are 395 lines with four tests, none on ordering. AGPL-3.0 with use restrictions added in the README.
+- Study when: several agent tasks must share what earlier ones learned without one task being able to write into another.
+- Do not copy when: the lesson loop is what you want as it stands, or a person's rejection of a finding must change what the agents see.
