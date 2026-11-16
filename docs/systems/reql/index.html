@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Python code-graph compiler
+and shared work store for coding agents, keeping revisioned decisions,
+tasks and failures in a block file.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="REQL — Agent Memory Atlas">
+    <meta property="og:description" content="A local Python code-graph
+compiler and shared work store for coding agents, keeping revisioned
+decisions, tasks and failures in a block file.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="REQL — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Python code-graph
+compiler and shared work store for coding agents, keeping revisioned
+decisions, tasks and failures in a block file.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>REQL — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "REQL",
+      "description": "A local Python code-graph compiler and shared work store for coding agents, keeping revisioned decisions, tasks and failures in a block file.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A work record's id is a hash of its text,
+so a repeat is a no-op and a changed repeat is an error</p>
+          <h1>REQL</h1>
+          <p class="document-deck">A local Python code-graph compiler
+and shared work store for coding agents, keeping revisioned decisions,
+tasks and failures in a block file.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/sh1zen/reql">
+              <span>Source</span>
+              <strong>sh1zen/reql</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/sh1zen/reql/commit/90e1acd0fbf505982123715fdb5a8d8ad0989d28" title="90e1acd0fbf505982123715fdb5a8d8ad0989d28">
+              <span>Analyzed revision</span>
+              <code>90e1acd0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/sh1zen--reql" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>sh1zen--reql</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+by the LICENSE file, with its copyright line unfilled; the README and
+pyproject.toml both say MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>42,209
+lines of Python in 166 files under src/; the work store and agent
+workspace are 2,267 of them, the block store 4,120, the MCP server
+1,241</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>21
+commits from 11 June to 16 November 2026 by one author under two names;
+version 0.1.8 in pyproject.toml</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>228
+unittest functions in 25 files, 65 of them on the work store, run in CI
+on Python 3.10, 3.12 and 3.14. I ran none; several findings were
+re-derived in a separate script</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>REQL is a local Python tool for coding agents with two halves on one
+storage engine. The first compiles a repository into a property graph
+and answers bounded lexical-and-graph queries about code. The second,
+the Agent Workspace, is the memory: a shared file of revisioned work
+records, which are decisions, tasks, failures, constraints and
+checkpoints, plus a private store per agent. There are no model calls
+and no embeddings.</p>
+<p>It carries <code>trust_state</code> and <code>negative_eval</code>,
+both on the shared work store.</p>
+<p><strong>Licence.</strong> The tree disagrees with itself.
+<code>LICENSE</code> is the Apache License 2.0 text, ending in the
+unfilled appendix line
+<code>Copyright [yyyy] [name of copyright owner]</code>
+(<code>LICENSE:189</code>). <code>README.md:158-160</code> says MIT and
+points at that file, and <code>pyproject.toml:11-12</code> declares
+<code>license = "MIT"</code> with
+<code>license-files = ["LICENSE"]</code>. A built wheel would carry MIT
+metadata beside an Apache-2.0 file that names no copyright holder. There
+is no NOTICE file and no rider.</p>
+<p><strong>Identity is the dedup rule.</strong> Without an explicit id,
+a record's id is a hash of its kind, workstream, parent and its text
+with case folded and whitespace collapsed
+(<code>src/memory/services/coordination.py:140-141</code>). Recording
+the same text again lands on the same row: with every field equal it
+returns the stored row unchanged, and with a difference it raises
+<code>Record already exists … update with its revision</code>
+(<code>:200-209</code>). No similarity threshold is involved, and
+reconciliation is forced through <code>id + revision</code>.</p>
+<p><strong>Updates check the revision the caller read.</strong> An
+update by id carries <code>expected_revision</code>; a mismatch raises
+and writes nothing (<code>:158-159</code>). The check runs inside one
+writable open and one transaction, under a cross-process writer file
+(<code>:144</code>). Two processes racing one revision produce one
+update and one conflict, and a committed test asserts it.</p>
+<p><strong>An obsolete record is hidden and its id still
+resolves.</strong> A supersession marks the old row
+<code>superseded</code> and sets <code>replaced_by</code> in the same
+transaction (<code>:216-228</code>). Default context drops obsolete
+records (<code>:331-334</code>), and asking for the old id returns the
+current replacement (<code>:443-452</code>). Work that depended on the
+old record is not rewired; it reports <code>needs_review</code> and
+cannot be completed (<code>:192-199</code>, <code>:296-299</code>).</p>
+<p>The limits are at the edges. Through MCP every returned string is
+HTML-escaped and cut at 2,000 characters, while the write tool requires
+the content back. <code>agent search</code> returns obsolete records
+without their status and opens every agent's private store. And a
+checkpoint is not fsynced before the write-ahead log is deleted.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>One mutable row owns each outcome. The module docstring states the
+trade: it keeps bounded revisions <em>"without an append-only log"</em>
+(<code>coordination.py:3-4</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a work record's identity decides whether a write is a no-op, a refusal or a revision; default reads drop obsolete rows and one search path does not</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a work record&#39;s identity decides whether a write is a no-op, a refusal or a revision; default reads drop obsolete rows and one search path does not
+flowchart TD
+    A[&quot;agent: CLI or&lt;br/&gt;MCP reql_work_record&quot;] --&gt; D[&quot;identity: explicit id, or&lt;br/&gt;hash(kind, workstream,&lt;br/&gt;parent + normalised text)&quot;]
+    D --&gt; E{&quot;row exists?&quot;}
+    E --&gt;|&quot;no&quot;| K[&quot;validate: rationale rules,&lt;br/&gt;link targets, cycles&quot;]
+    E --&gt;|&quot;yes, no id given&quot;| F{&quot;all fields equal?&quot;}
+    E --&gt;|&quot;yes, id given&quot;| I{&quot;expected_revision&lt;br/&gt;matches?&quot;}
+    F --&gt;|&quot;yes&quot;| G[&quot;no-op: stored row&lt;br/&gt;returned unchanged&quot;]
+    F --&gt;|&quot;no&quot;| H[&quot;refused: record&lt;br/&gt;already exists&quot;]
+    I --&gt;|&quot;no&quot;| J[&quot;refused: revision&lt;br/&gt;changed&quot;]
+    I --&gt;|&quot;yes&quot;| K
+    K --&gt; L[&quot;write: revision + 1,&lt;br/&gt;push snapshot (keep 8)&quot;]
+    L --&gt; M[&quot;supersedes? mark target&lt;br/&gt;superseded, set replaced_by&quot;]
+    M --&gt; ST[(&quot;agent-dashboard.reql&lt;br/&gt;WAL, then checkpoint&quot;)]
+    ST --&gt; R[&quot;context: drop superseded,&lt;br/&gt;invalidated, abandoned&quot;]
+    R --&gt; S[&quot;4 seeds by text and&lt;br/&gt;file match, 2 hops&quot;]
+    S --&gt; U[&quot;8 records, 6,000 chars&quot;]
+    ST -.-&gt;|&quot;agent search:&lt;br/&gt;include_history, no status&quot;| W[&quot;obsolete rows&lt;br/&gt;unlabelled&quot;]
+    style G fill:#14532d,color:#fff
+    style J fill:#14532d,color:#fff
+    style W fill:#7f1d1d,color:#fff</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One engine, <code>BlockGraphStore</code>, backs three kinds of file
+under <code>.reql/</code>:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory.reql</code></td>
+<td>The compiled code graph</td>
+</tr>
+<tr>
+<td><code>agent-dashboard.reql</code></td>
+<td>Shared <code>work_record</code> nodes, the agent roster, public
+messages</td>
+</tr>
+<tr>
+<td><code>agent.reql</code>, <code>agents/&lt;id&gt;.reql</code></td>
+<td>One agent's sessions and private notes</td>
+</tr>
+</tbody>
+</table></div>
+<p>A store is a superblock followed by 64 KiB blocks of length-prefixed
+records. Each commit appends checksummed frames to
+<code>&lt;store&gt;.wal</code> and fsyncs
+(<code>src/memory/storage/adapters/block_store.py:1531-1545</code>). A
+checkpoint rewrites the whole file to <code>&lt;store&gt;.tmp</code>,
+replaces the store and unlinks the log (<code>:1939-1946</code>). A
+writable open takes <code>&lt;store&gt;.lock</code> and waits for reader
+slots to drain; a lock whose process is dead on the same host is
+removed.</p>
+<p>The code graph is outside this report's subject and has one property
+worth carrying. A source excerpt is returned only when the file on disk
+hashes to both the compiled artifact and the latest committed revision;
+otherwise the row comes back marked <code>stale</code> or
+<code>unavailable</code> with no text
+(<code>src/memory/services/retrieval/context/source.py:98-132</code>).</p>
+<p>Work records and the code graph share no stored link. A record names
+source only by repository-relative path strings, and
+<code>query_context</code> passes the file paths of its working set to
+the work store as anchors at read time
+(<code>src/memory/services/query_context.py:65-75</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install reql</code>, then
+<code>reql install &lt;host&gt;</code> writes instructions and, for
+Claude Code and Gemini, a pre-tool hook that prints a fixed instruction
+block when a store exists in the working directory
+(<code>src/agents/install.py:792-852</code>). The hook injects prose,
+not memory content.</p>
+<p>The distribution installs a top-level package named <code>mcp</code>
+(<code>pyproject.toml:85-95</code>), the import name the MCP Python SDK
+also uses.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kinds, statuses, obsolete set, caps</td>
+<td><code>src/memory/services/coordination.py:22-29</code></td>
+</tr>
+<tr>
+<td>Content-derived identity</td>
+<td><code>coordination.py:140-141</code></td>
+</tr>
+<tr>
+<td>Revision check</td>
+<td><code>coordination.py:158-159</code></td>
+</tr>
+<tr>
+<td>No-op and already-exists branches</td>
+<td><code>coordination.py:200-209</code></td>
+</tr>
+<tr>
+<td>History push and attribution</td>
+<td><code>coordination.py:210-215</code></td>
+</tr>
+<tr>
+<td>Atomic supersession</td>
+<td><code>coordination.py:216-228</code></td>
+</tr>
+<tr>
+<td>Derived execution state</td>
+<td><code>coordination.py:289-308</code></td>
+</tr>
+<tr>
+<td>Context retrieval</td>
+<td><code>coordination.py:310-440</code></td>
+</tr>
+<tr>
+<td>Forward resolution of obsolete ids</td>
+<td><code>coordination.py:443-452</code></td>
+</tr>
+<tr>
+<td>Pruning</td>
+<td><code>coordination.py:489-509</code></td>
+</tr>
+<tr>
+<td>Per-agent views</td>
+<td><code>src/memory/agent/workspace.py:486-488</code>,
+<code>:550</code>, <code>:578</code>, <code>:604</code></td>
+</tr>
+<tr>
+<td>Search across every agent's store</td>
+<td><code>workspace.py:714-738</code></td>
+</tr>
+<tr>
+<td>Session finish and checkpoint</td>
+<td><code>workspace.py:836-887</code></td>
+</tr>
+<tr>
+<td>MCP read-only tool set</td>
+<td><code>src/mcp/tools.py:84-101</code></td>
+</tr>
+<tr>
+<td>MCP output sanitising</td>
+<td><code>src/memory/security.py:26-35</code>,
+<code>src/mcp/tools.py:959-966</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A work record is a node of type <code>work_record</code> whose state
+is in its properties.</p>
+<ul>
+<li><strong><code>kind</code></strong>: one of nine, fixed at creation
+(<code>coordination.py:22</code>, <code>:156-157</code>).</li>
+<li><strong><code>content</code></strong>: 1 to 4,000 characters;
+<code>rationale</code> and <code>next_action</code> likewise.</li>
+<li><strong><code>status</code></strong>: <code>active</code>,
+<code>open</code>, <code>in_progress</code>, <code>blocked</code>,
+<code>done</code>, <code>resolved</code>, <code>superseded</code>,
+<code>invalidated</code>, <code>abandoned</code>
+(<code>:23</code>).</li>
+<li><strong><code>files</code></strong>: up to 64 paths relative to the
+repository root, validated as strings and never opened
+(<code>:37-51</code>).</li>
+<li><strong>Relations</strong>: <code>parent</code>,
+<code>depends_on</code>, <code>contradicts</code>,
+<code>supersedes</code>, <code>summarizes</code>, up to 32 ids each,
+cycle-checked (<code>:26</code>, <code>:235-259</code>).</li>
+<li><strong><code>revision</code></strong> and
+<strong><code>history</code></strong>: an integer and the last eight
+prior payloads (<code>:28</code>, <code>:210-213</code>).</li>
+<li><strong>Attribution</strong>: the latest writer's
+<code>agent_id</code> and <code>session_id</code>, and the first
+writer's <code>origin_agent_id</code> (<code>:213-215</code>).</li>
+</ul>
+<p>Three fields are computed on every read and never stored:
+<code>execution_state</code>, <code>waiting_on</code> and
+<code>conflicts</code> (<code>:289-308</code>). There is no second copy
+of a plan to drift.</p>
+<p>A rejected approach is kind <code>failure</code> with a required
+rationale. <code>agent reject</code> is a thin wrapper and the views
+relabel it (<code>workspace.py:291-300</code>, <code>:499-506</code>).
+Its status is <code>active</code>, like any other non-task record.</p>
+<p>There is one timestamp axis: <code>created_at</code>, and an
+<code>updated_at</code> that overwrites. <code>bitemporal</code> is
+withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>CoordinationStore.context</code> loads every work record and
+proceeds in four steps (<code>coordination.py:310-440</code>).</p>
+<ol type="1">
+<li><strong>Filter.</strong> Keep the anchor id if one was given, the
+workstream if one was given, and drop obsolete statuses unless
+<code>include_history</code>.</li>
+<li><strong>Score.</strong> IDF-weighted token overlap over content,
+rationale, next action, workstream and files; a path-prefix match
+against the query's files; small boosts for kind, importance,
+day-granularity recency and unfinished work.</li>
+<li><strong>Expand.</strong> The top four seeds expand two hops along
+the relations, with at most 40 records admitted in the first hop and 80
+overall. Each relation target passes through
+<code>_current_replacement</code>.</li>
+<li><strong>Return.</strong> The top eight by default, forty at most,
+with scores, reasons, counts of what was omitted and a hash over the
+selection.</li>
+</ol>
+<p>Text rendering is capped at 6,000 characters, 2,400 when attached to
+a code query. A truncated row is marked and points at the JSON form, and
+the renderer refuses to cut an identifier (<code>:645-660</code>).</p>
+<p>Work records carry no staleness signal. The code graph withholds an
+excerpt whose file changed; a decision about the same file is returned
+unchanged after the file is rewritten or deleted.</p>
+<p><strong><code>scope_enforced</code> is withheld.</strong> The project
+boundary is the directory, a separate file per project. Inside a
+project, <code>agent_id</code> is an equality filter on the per-agent
+task list, export and one search (<code>workspace.py:486-488</code>,
+<code>:550</code>, <code>:578</code>, <code>:604</code>). The context
+read that feeds the agent is shared across agents by design, the id is
+the latest writer and moves when a task is re-claimed, and through MCP
+it is an unverified string. No committed test asserts an agent
+boundary.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every writer ends in <code>CoordinationStore.put</code>
+(<code>coordination.py:87-232</code>): the CLI's
+<code>agent record</code>, <code>agent batch</code>,
+<code>agent task</code>, <code>agent reject</code> and
+<code>agent finish</code>, and the MCP tool
+<code>reql_work_record</code>.</p>
+<p>Validation is by rule. A decision, a failure and any new supersession
+need a rationale; so does a move to a blocked or obsolete status and the
+reopening of terminal work (<code>:172-177</code>). A task cannot be
+completed while its derived state is <code>blocked</code> or
+<code>needs_review</code> (<code>:192-199</code>). A supersession target
+that already has a replacement is refused (<code>:188-189</code>).</p>
+<p>A batch of up to 40 entries commits each entry in its own
+transaction. A failure part-way returns the committed ids and revisions
+with the failing index (<code>workspace.py:401-466</code>).</p>
+<p><code>reql-mcp --read-only</code> filters the tool list to nine read
+tools and the dispatcher refuses any other name
+(<code>src/mcp/tools.py:84-94</code>, <code>src/mcp/server.py:96</code>,
+<code>:240-241</code>).</p>
+<h3 id="forgetting">Forgetting</h3>
+<ul>
+<li><strong>History</strong> is capped at eight snapshots per
+record.</li>
+<li><strong>Pruning</strong> keeps every non-terminal record, every
+record another references, and the newest 200 unreferenced terminal
+records; the rest are removed and the file compacted
+(<code>coordination.py:489-509</code>). Its one product caller is
+session finish (<code>workspace.py:879</code>).</li>
+<li><strong>A supersession pair is never pruned</strong>: each side
+references the other.</li>
+<li><strong>Private stores</strong> are unlinked when the agent finishes
+or is terminated.</li>
+</ul>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model call and no service. Every context and overview read loads
+all work records, so cost grows with the store; referenced records
+accumulate without a bound.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Through the CLI the agent id comes from a flag, an environment
+variable, the host's thread id or the roster, and the session from the
+agent's private store (<code>workspace.py:1156-1174</code>). Through
+MCP, <code>agent_id</code> and <code>session_id</code> are required
+strings the caller supplies; no private store or session is created
+(<code>src/mcp/tools.py:130-139</code>).</p>
+<p><strong><code>human_review</code> is withheld.</strong> Create,
+supersede, invalidate, reopen and complete are all one call on the tool
+the producing agent holds. There is no pending state and no second
+actor. The MCP write tools' descriptions ask for client-side approval,
+which is a request to the host.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="mcp-returns-altered-text-and-the-write-tool-needs-it-back">MCP
+returns altered text and the write tool needs it back</h3>
+<p>Every string in an MCP result is HTML-escaped and cut at 2,000
+characters (<code>src/memory/security.py:26-35</code>,
+<code>src/mcp/tools.py:959-966</code>). A record's content may be 4,000,
+and <code>reql_work_record</code> lists <code>content</code> as required
+(<code>tools.py:610</code>); a supplied content replaces the stored
+text.</p>
+<p>A client that updates a record by id and sends back the content it
+read stores the escaped, truncated form. Re-derived in a separate script
+from the lifted function: <code>a &amp;&amp; b</code> reads back as
+<code>a &amp;amp;&amp;amp; b</code>, a second round trip escapes the
+ampersands again, and a 4,000-character content returns as 2,000.
+Because identity is derived from the text, a create-style retry with
+read-back text makes a second record instead of the no-op.</p>
+<h3
+id="search-bypasses-the-status-filter-and-the-private-boundary">Search
+bypasses the status filter and the private boundary</h3>
+<p><code>search_dashboards</code>, behind the CLI's
+<code>agent search</code>, calls <code>context</code> with
+<code>include_history=True</code> and emits each work row as timestamp,
+agent, content and rationale, with no status
+(<code>workspace.py:735-737</code>). A superseded decision and its
+replacement are indistinguishable there.</p>
+<p>The same function opens every registered agent's private store and
+returns matching notes and sessions (<code>:714-734</code>).
+<code>agent note --agent ID</code> writes into another agent's private
+store (<code>:306-318</code>), and <code>agent terminate ID</code>
+closes another agent's sessions and deletes its file
+(<code>:664-697</code>). Private means a separate path.</p>
+<p>Two agent ids can share one private file. The file stem replaces
+every character outside letters, digits, <code>-</code> and
+<code>_</code> with <code>_</code> (<code>:1195-1198</code>), so
+<code>agent:alias/worker</code> and <code>agent:alias_worker</code>
+collide. A committed test asserts the collision and that cleanup skips
+the store while either identity is active
+(<code>tests/test_agent_lifecycle.py:167-175</code>); the collision
+itself is not refused.</p>
+<h3 id="re-recording-a-rejected-text">Re-recording a rejected text</h3>
+<p><code>tombstone</code> is withheld, and the near-miss is real.
+Re-recording the identical text of a decision that was set to
+<code>invalidated</code> lands on the same row and returns it unchanged,
+status still <code>invalidated</code>; the same text with a new
+rationale raises. The caller's only signal in the first case is the
+status column of a success-shaped receipt.</p>
+<p>It fails the definition four ways. The row is pruned once 200 newer
+unreferenced terminal rows exist. The key is the exact normalised
+string, so a rewording creates a new active record. An explicit
+<code>--key</code>, a different kind or a different workstream changes
+the id. And nothing consults failure or obsolete records when another
+record is written.</p>
+<h3 id="read-only-queries-write-a-journal-nothing-reads">Read-only
+queries write a journal nothing reads</h3>
+<p><code>MemoryQuery.store_trace</code> defaults to true
+(<code>src/memory/domain/models.py:154</code>), so a retrieval appends
+the query text and ranked node ids to
+<code>&lt;store&gt;.usage.jsonl</code> without checking read-only mode
+(<code>src/memory/services/retrieval/engine.py:227-239</code>,
+<code>block_store.py:3254-3272</code>). The overlay loaded from that
+file is reachable only through <code>usage_for_node</code>, which has no
+caller. The journal is a growing record of every query string, pruned
+only by compile retention.</p>
+<h3 id="durability">Durability</h3>
+<p>The checkpoint file is written with plain writes and renamed over the
+store, and the log is then unlinked
+(<code>block_store.py:1939-1946</code>). The only <code>fsync</code>
+under <code>src/</code> is on log append (<code>:1545</code>). A power
+loss after the unlink can lose the checkpoint's contents and the log
+that would rebuild them. Pruning and lifecycle cleanup take this path on
+the shared work store.</p>
+<h3 id="a-session-checkpoint-drops-evidence-silently">A session
+checkpoint drops evidence silently</h3>
+<p>Session finish keeps the first 64 evidence paths in alphabetical
+order and the first 32 summarised records
+(<code>workspace.py:848-849</code>), and the receipt does not say how
+many were cut. <code>summarizes</code> is what protects a completed
+record from pruning, so a long session's 33rd terminal record is not
+protected by its checkpoint.</p>
+<h3 id="why-five-marks-are-withheld">Why five marks are withheld</h3>
+<p><code>tombstone</code>, <code>scope_enforced</code> and
+<code>human_review</code> are covered above. <code>bitemporal</code>:
+one overwriting timestamp. <code>audit_log</code>: the design declines
+one, history is eight snapshots on a mutable row that pruning deletes,
+the log is unlinked at every checkpoint, and
+<code>BlockGraphStore.log_operation</code> has no caller.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>228 <code>unittest</code> functions in 25 files, 6,341 lines, run by
+<code>.github/workflows/ci.yml</code> on push and pull request.
+Sixty-five are on the work store and the agent lifecycle. I ran none of
+them.</p>
+<p><strong>The suite asserts what a corrected value must not
+do.</strong>
+<code>test_C_plan_replacement_preserves_cause_and_flags_obsolete_work</code>
+records a decision, supersedes it, and asserts the old id is absent from
+default context, present with <code>include_history</code>, and that the
+dependent task reports <code>needs_review</code> and refuses completion
+(<code>tests/test_coordination_workflows.py:97-117</code>). Two cases in
+<code>tests/test_work_context_recovery.py:42-67</code> do the same for a
+two-step replacement chain, by task anchor and by obsolete id.
+<code>negative_eval</code> is earned on those.</p>
+<p>Other cases worth naming: the duplicate write compares the store's
+bytes before and after
+(<code>tests/test_coordination_workflows.py:188-208</code>), parallel
+writers (<code>:210-227</code>), and the history cap and pruning with
+the terminal limit patched to 2 (<code>:248-264</code>).</p>
+<p>Not covered: a record written <code>invalidated</code> or
+<code>abandoned</code>, an agent boundary on the per-agent views, the
+re-assertion no-op on an obsolete record, and an MCP round trip of text
+that contains anything escapable. The suite's own MCP update test echoes
+content with nothing to escape (<code>:309-312</code>).</p>
+<p>No paper, DOI or memory benchmark is cited.
+<code>tests/benchmark_performance.py</code> is a local timing
+harness.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Derive a record's id from its normalised text.</strong> An
+identical repeat becomes a no-op and a changed repeat an error naming
+the existing id. It needs no similarity threshold and no model.</p>
+<p><strong>Require the revision the caller read, inside the writer
+lock.</strong> One comparison turns a lost update into an explicit
+conflict.</p>
+<p><strong>Resolve an obsolete id forward and leave dependents
+unrewired.</strong> The old id answers with its replacement, and work
+built on the old assumption is flagged and blocked from completion until
+someone looks.</p>
+<p><strong>Project execution state on read.</strong> Blocked, ready and
+needs-review are computed from current links, so no stored copy can
+disagree.</p>
+<p><strong>Show an excerpt only while the file still hashes to what was
+compiled.</strong></p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not sanitise output that the same client must send
+back.</strong> Escape at render time in the host, or accept an update
+that omits unchanged text.</p>
+<p><strong>Do not let one read path skip the status filter without
+labelling its rows.</strong></p>
+<p><strong>Do not call a store private when a sibling command reads all
+of them.</strong></p>
+<p><strong>Do not delete a log before the file that replaces it is
+durable.</strong></p>
+<p><strong>Do not derive a file name from an id with a lossy
+map.</strong></p>
+<h3 id="fit">Fit</h3>
+<p>It fits several coding agents working one repository on one machine,
+where the problem is a plan that changes under work already started. It
+does not fit where records must be attributable to a verified actor,
+where history must outlive eight revisions, or where an MCP-only client
+edits long records.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Which licence is intended?</strong> The file says Apache-2.0
+and the metadata says MIT.</li>
+<li><strong>Is <code>invalidated</code> meant to be written by
+anything?</strong> The store accepts it and hides it; no command sets it
+without a caller's status string and no test writes it.</li>
+<li><strong>What was the usage journal for?</strong> Its reader has no
+caller, and the ranking code reads a different field.</li>
+<li><strong>Should <code>agent search</code> label status?</strong> The
+sibling <code>AgentWorkspace.search</code> keeps it in the payload
+(<code>workspace.py:549-551</code>).</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/memory/services/coordination.py</code></td>
+<td>The work store: identity, revisions, supersession, context,
+pruning</td>
+</tr>
+<tr>
+<td><code>src/memory/agent/workspace.py</code></td>
+<td>Agents, sessions, private stores, views, finish</td>
+</tr>
+<tr>
+<td><code>src/memory/storage/adapters/block_store.py</code></td>
+<td>The block engine, log, locks, usage journal</td>
+</tr>
+<tr>
+<td><code>src/mcp/tools.py</code>, <code>src/mcp/server.py</code></td>
+<td>MCP tools, read-only mode, output sanitising</td>
+</tr>
+<tr>
+<td><code>src/memory/security.py</code></td>
+<td>Path confinement and <code>sanitize_agent_text</code></td>
+</tr>
+<tr>
+<td><code>src/memory/services/query_context.py</code></td>
+<td>Code query that attaches work context by file path</td>
+</tr>
+<tr>
+<td><code>src/memory/services/retrieval/context/source.py</code></td>
+<td>Hash-verified source excerpts</td>
+</tr>
+<tr>
+<td><code>tests/test_coordination_workflows.py</code>,
+<code>tests/test_work_context_recovery.py</code></td>
+<td>The work-store cases</td>
+</tr>
+<tr>
+<td><code>tests/test_agent_lifecycle.py</code></td>
+<td>Private-store lifecycle and the alias case</td>
+</tr>
+<tr>
+<td><code>docs/COORDINATION.md</code>, <code>docs/STORAGE.md</code></td>
+<td>The project's own description</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git</code> in a full clone at the pinned
+commit.</p>
+<ul>
+<li><code>git ls-files -z 'src/*.py' | xargs -0 cat | wc -l</code> —
+42,209 lines in 166 files.</li>
+<li><code>git grep -c -E '^[[:space:]]*def test_' -- tests</code>,
+summed — 228 in 25 files.</li>
+<li><code>git grep -n fsync -- src</code> —
+<code>block_store.py:1545</code> only.</li>
+<li><code>git grep -n -E 'usage_for_node|log_operation' -- .</code> —
+two definitions and two protocol stubs; no caller.</li>
+<li><code>git grep -n -E 'invalidated|abandoned' -- src tests</code> —
+the three constants, three reads in <code>coordination.py</code>, one
+line of skill prose and one copied predicate in a test; no
+assignment.</li>
+<li><code>git grep -n -E '\.prune\(' -- src tests</code> —
+<code>workspace.py:879</code> and one test.</li>
+<li><code>git grep -n -i -E 'valid_from|valid_to|valid_at|valid_until|event_time|observed_at|as_of' -- src</code>
+— nothing.</li>
+<li><code>git grep -n -i -E 'arxiv|doi\.org|bibtex|CITATION' -- README.md docs CONTRIBUTING.md</code>
+— nothing.</li>
+<li><code>git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice)'</code>
+— <code>LICENSE</code> only.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-16</strong> — <a
+href="https://github.com/sh1zen/reql/commit/90e1acd0fbf505982123715fdb5a8d8ad0989d28"><code class="commit-id" title="90e1acd0fbf505982123715fdb5a8d8ad0989d28">90e1acd0…</code></a>
+— first reading. Screened first: <code>pyproject.toml</code> changed
+inside the seven-day cooldown and declares unpinned dependencies.
+Nothing installed or run; the identity, MCP round-trip and file-stem
+findings were re-derived in a separate script.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

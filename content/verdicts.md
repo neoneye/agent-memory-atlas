@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 806 reports.**
+**This page covers all 807 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7390,3 +7390,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: one commit, 567 lines, no tests and no CI. The installer is careful beyond its size: it recognises earlier releases by hash and refuses to overwrite an edited file. MIT.
 - Study when: an agent-maintained conventions file keeps growing until it is skimmed, and the fix wanted is structural.
 - Do not copy when: a rule's origin or retirement must be recorded, or more than one agent writes at once.
+
+### [`reql`](../systems/reql/)
+
+- Best idea: identity as the dedup rule. A work record's id is a hash of its kind, workstream, parent and normalised text, so recording it again is a no-op and recording it changed is an error naming the existing id; an update by id must carry the revision the caller read.
+- Biggest risk: the MCP boundary alters what it returns. Every string is HTML-escaped and cut at 2,000 characters while a record holds 4,000 and the write tool requires the content back, so a client that edits what it read stores the escaped, truncated form. `agent search` also returns superseded records with no status.
+- Most reusable component: `CoordinationStore.put` in `src/memory/services/coordination.py` — the identity, revision check, atomic supersession and forward resolution of obsolete ids, in 675 lines with no model call.
+- Maturity impression: 42,209 lines of Python and 228 unittest functions run in CI on three Python versions, 21 commits over five months by one author, version 0.1.8. The LICENSE file is Apache-2.0 while the README and package metadata say MIT.
+- Study when: several coding agents share one repository and the failure to prevent is work continuing on a plan that was replaced.
+- Do not copy when: records must be attributable to a verified actor, history must outlive eight revisions, or the only client is MCP and records are long.

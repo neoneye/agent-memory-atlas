@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 806 reports.</strong></p>
+<p><strong>This page covers all 807 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33411,6 +33411,33 @@ hash and refuses to overwrite an edited file. MIT.</li>
 it is skimmed, and the fix wanted is structural.</li>
 <li>Do not copy when: a rule's origin or retirement must be recorded, or
 more than one agent writes at once.</li>
+</ul>
+<h3 id="reql"><a href="../systems/reql/"><code>reql</code></a></h3>
+<ul>
+<li>Best idea: identity as the dedup rule. A work record's id is a hash
+of its kind, workstream, parent and normalised text, so recording it
+again is a no-op and recording it changed is an error naming the
+existing id; an update by id must carry the revision the caller
+read.</li>
+<li>Biggest risk: the MCP boundary alters what it returns. Every string
+is HTML-escaped and cut at 2,000 characters while a record holds 4,000
+and the write tool requires the content back, so a client that edits
+what it read stores the escaped, truncated form.
+<code>agent search</code> also returns superseded records with no
+status.</li>
+<li>Most reusable component: <code>CoordinationStore.put</code> in
+<code>src/memory/services/coordination.py</code> — the identity,
+revision check, atomic supersession and forward resolution of obsolete
+ids, in 675 lines with no model call.</li>
+<li>Maturity impression: 42,209 lines of Python and 228 unittest
+functions run in CI on three Python versions, 21 commits over five
+months by one author, version 0.1.8. The LICENSE file is Apache-2.0
+while the README and package metadata say MIT.</li>
+<li>Study when: several coding agents share one repository and the
+failure to prevent is work continuing on a plan that was replaced.</li>
+<li>Do not copy when: records must be attributable to a verified actor,
+history must outlive eight revisions, or the only client is MCP and
+records are long.</li>
 </ul>
         </article>
       </div>

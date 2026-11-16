@@ -507,6 +507,7 @@ page_kind: comparison
 - [`rakho`](../systems/rakho/)
 - [`ctxvault`](../systems/ctxvault/)
 - [`decision-keeper`](../systems/decision-keeper/)
+- [`reql`](../systems/reql/)
 
 ## Repos Inspected
 
@@ -1318,6 +1319,7 @@ page_kind: comparison
 - [krishyaid-coder/rakho-](https://github.com/krishyaid-coder/rakho-) at [`21c4acd2370a5d65426f5009b7e0c03b1890d0a0`](https://github.com/krishyaid-coder/rakho-/commit/21c4acd2370a5d65426f5009b7e0c03b1890d0a0) — read only, from a clone of five commits; the screen reported an unpinned `pyproject.toml` changed inside the cooldown and nothing that auto-runs; nothing was installed or run, and the optional `sluice-taint` package it adapts was not read.
 - [Filippo-Venturini/ctxvault](https://github.com/Filippo-Venturini/ctxvault) at [`d612d6e61b171307f31f05f3e00fc6a85442b3cc`](https://github.com/Filippo-Venturini/ctxvault/commit/d612d6e61b171307f31f05f3e00fc6a85442b3cc) — read only, from a full clone of 215 commits; the screen reported an MCP manifest that launches the package through `uvx`, a `pytest` collection hook, eight unpinned requirement files and a `pyproject.toml` changed inside the cooldown. Nothing was installed or run; Chroma and sentence-transformers, its two engines, were not opened. MIT
 - [mudassirzulfiqar/Decision-Keeper](https://github.com/mudassirzulfiqar/Decision-Keeper) at [`911ff6b88e7c5e65b64326f9a5719291e6608ab6`](https://github.com/mudassirzulfiqar/Decision-Keeper/commit/911ff6b88e7c5e65b64326f9a5719291e6608ab6) — read only, the whole tree of nine files and one commit; the screen reported nothing. Nothing was installed or run. MIT
+- [sh1zen/reql](https://github.com/sh1zen/reql) at [`90e1acd0fbf505982123715fdb5a8d8ad0989d28`](https://github.com/sh1zen/reql/commit/90e1acd0fbf505982123715fdb5a8d8ad0989d28) — read only, from a full clone of 21 commits; the screen reported a `pyproject.toml` changed inside the cooldown and unpinned dependencies. Nothing was installed or run; three findings were re-derived in a separate script. Apache-2.0 by its LICENSE file, MIT by its README and metadata
 
 ## What the licences actually say
 
