@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-804, generated from each report's frontmatter —
+805, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-804, generated from each report's frontmatter —
+805, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-804, generated from each report's frontmatter —
+805, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 804, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 805, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-804, generated from each report's frontmatter —
+805, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 804 systems by the seven mechanisms
+filters all 805 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -7656,6 +7656,59 @@ append-only ledger, a write-scope guard on consolidation, and a
 corruption regression corpus from the literature</td>
 <td>Correction is region folding; nothing records that a digested claim
 was wrong</td>
+</tr>
+<tr>
+<td><a href="../systems/ctxvault/"><code>ctxvault</code></a></td>
+<td>Three kinds, one per vault type. A document chunk with its file path
+and caller metadata; a skill, one markdown file with a name and a
+description; an episode, one statement with entities, a source, a
+confidence, a salience, a metadata object, a valid window and a recorded
+window</td>
+<td>One directory per vault, registered in a JSON file in the project or
+the home directory. A semantic vault holds the files and a Chroma
+collection; a skill vault holds markdown files and a JSON index; an
+episodic vault holds one SQLite file in WAL mode with episodes,
+entities, attestations and disputes</td>
+<td>Semantic: the query is embedded and Chroma returns the nearest
+chunks by cosine distance, five by default. Skill: list, then read by
+name. Episodic: SQL filters on entity, source, confidence and both time
+axes, at most 5,000 rows newest first, then scored in Python by
+similarity or word overlap, recency of valid_from, salience, or a sum of
+the three</td>
+<td>The caller's explicit call through the CLI, HTTP, MCP or Python. A
+document is written to disk and its chunks upserted; a skill is written
+as a file and added to the index; an episode is inserted with a new id.
+No extraction, no deduplication, no model on the write path except the
+local embedder</td>
+<td>Episodes are never deleted: invalidate closes one, supersede closes
+one and opens a linked successor, revise restates one without moving its
+valid window. Documents are overwritten in place and deleted with their
+chunks. The only removal of an episode is purging the whole vault
+directory</td>
+<td>The vault is the boundary: separate stores, a restricted flag and an
+agent allowlist checked by the HTTP routes, the MCP tools and the Python
+client. Identity is a request header over HTTP and a launch argument for
+MCP. Nothing scopes rows inside a vault</td>
+<td>A Typer CLI, a FastAPI app, a stdio MCP server with 17 tools, an
+in-process Python client and a read-only browser viewer with an HTML
+export. Nothing is injected into a prompt; the agent calls a tool</td>
+<td>None. No scheduler, no consolidation, no decay job; the recency
+score is computed at query time</td>
+<td>A confidence float with a minimum filter, a count of re-assertions
+kept as dated rows, and a dispute pair that flags both statements and
+withholds neither. The source field is free text and the MCP server
+fills it with the agent name when the model leaves it out</td>
+<td>Two time axes that move independently and are both queryable; a
+revision kept distinct from a supersession; closing an episode before
+its own start is refused; a newer schema version is refused instead of
+misread; the MCP agent identity is fixed at launch; the viewer is
+refused off loopback</td>
+<td>Timestamps are unparsed strings compared as text; a revision erases
+a dispute from past belief states and can duplicate it; overwriting a
+document leaves the old trailing chunks in the index; no single episode
+can be removed; the 5,000-row scan is newest first, so relevance never
+sees older rows; skills written by one agent are returned to another as
+instructions</td>
 </tr>
 <tr>
 <td><a href="../systems/cua/"><code>cua</code></a></td>
@@ -36140,7 +36193,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>78 of 804:</em> <a
+<p><em>78 of 805:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -36222,7 +36275,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>208 of 804:</em> <a
+<p><em>208 of 805:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -36437,7 +36490,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>134 of 804:</em> <a
+<p><em>135 of 805:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -36463,6 +36516,7 @@ href="../systems/core-redplanet/"><code>core-redplanet</code></a>, <a
 href="../systems/cortex-hub/"><code>cortex-hub</code></a>, <a
 href="../systems/cortexdb/"><code>cortexdb</code></a>, <a
 href="../systems/crystalline/"><code>crystalline</code></a>, <a
+href="../systems/ctxvault/"><code>ctxvault</code></a>, <a
 href="../systems/daem0n-mcp/"><code>daem0n-mcp</code></a>, <a
 href="../systems/dense-mem/"><code>dense-mem</code></a>, <a
 href="../systems/elastic-atlas/"><code>elastic-atlas</code></a>, <a
@@ -36579,7 +36633,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>338 of 804:</em> <a
+<p><em>339 of 805:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -36657,6 +36711,7 @@ href="../systems/cortexes/"><code>cortexes</code></a>, <a
 href="../systems/cowagent/"><code>cowagent</code></a>, <a
 href="../systems/crewai/"><code>crewai</code></a>, <a
 href="../systems/crystalline/"><code>crystalline</code></a>, <a
+href="../systems/ctxvault/"><code>ctxvault</code></a>, <a
 href="../systems/cyrene-agent/"><code>cyrene-agent</code></a>, <a
 href="../systems/deepcode/"><code>deepcode</code></a>, <a
 href="../systems/deepseek-harness/"><code>deepseek-harness</code></a>,
@@ -36933,7 +36988,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>269 of 804:</em> <a
+<p><em>269 of 805:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -37213,7 +37268,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>102 of 804:</em> <a
+<p><em>102 of 805:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -37319,7 +37374,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>514 of 804:</em> <a
+<p><em>515 of 805:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -37428,6 +37483,7 @@ href="../systems/create-context-graph/"><code>create-context-graph</code></a>,
 href="../systems/crystalline/"><code>crystalline</code></a>, <a
 href="../systems/csm/"><code>csm</code></a>, <a
 href="../systems/ctx-open/"><code>ctx-open</code></a>, <a
+href="../systems/ctxvault/"><code>ctxvault</code></a>, <a
 href="../systems/cyrene-agent/"><code>cyrene-agent</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/deepcode/"><code>deepcode</code></a>, <a
@@ -37870,8 +37926,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-514 repositories of
-804 assert that particular material must
+515 repositories of
+805 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -37944,7 +38000,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 804 is the real figure for the second kind, and
+of 805 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

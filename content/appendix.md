@@ -505,6 +505,7 @@ page_kind: comparison
 - [`willder`](../systems/willder/)
 - [`bolt-pchie`](../systems/bolt-pchie/)
 - [`rakho`](../systems/rakho/)
+- [`ctxvault`](../systems/ctxvault/)
 
 ## Repos Inspected
 
@@ -1314,6 +1315,7 @@ page_kind: comparison
 - [willderai/willder-core](https://github.com/willderai/willder-core) at [`48794d116e95a6843a9ea812b20c65b6c692299d`](https://github.com/willderai/willder-core/commit/48794d116e95a6843a9ea812b20c65b6c692299d) — read only, from a full clone of eight commits; no auto-run surface (`hooks/` holds React hooks), two build-time execution points (`memory-service/tests/conftest.py`, the `prisma generate` postinstall), four unpinned dependency surfaces. Nothing was installed or run; graphiti-core 0.30.2, a pinned dependency, was not opened. MIT
 - [wetwaferworks/bolt-pch-ie](https://github.com/wetwaferworks/bolt-pch-ie) at [`570840ea12db38bb66f285fbe98289daf9d861e7`](https://github.com/wetwaferworks/bolt-pch-ie/commit/570840ea12db38bb66f285fbe98289daf9d861e7) — read only, from a clone of 11 commits without a checkout; the screen recognises no C++ or CMake manifest and scanned nothing, so `CMakeLists.txt` was read by hand: it fetches nothing, and the tree has no hook or agent file. Nothing was built or run; the vendored `third_party/pch-public` snapshot was searched, not read. MIT
 - [krishyaid-coder/rakho-](https://github.com/krishyaid-coder/rakho-) at [`21c4acd2370a5d65426f5009b7e0c03b1890d0a0`](https://github.com/krishyaid-coder/rakho-/commit/21c4acd2370a5d65426f5009b7e0c03b1890d0a0) — read only, from a clone of five commits; the screen reported an unpinned `pyproject.toml` changed inside the cooldown and nothing that auto-runs; nothing was installed or run, and the optional `sluice-taint` package it adapts was not read.
+- [Filippo-Venturini/ctxvault](https://github.com/Filippo-Venturini/ctxvault) at [`d612d6e61b171307f31f05f3e00fc6a85442b3cc`](https://github.com/Filippo-Venturini/ctxvault/commit/d612d6e61b171307f31f05f3e00fc6a85442b3cc) — read only, from a full clone of 215 commits; the screen reported an MCP manifest that launches the package through `uvx`, a `pytest` collection hook, eight unpinned requirement files and a `pyproject.toml` changed inside the cooldown. Nothing was installed or run; Chroma and sentence-transformers, its two engines, were not opened. MIT
 
 ## What the licences actually say
 

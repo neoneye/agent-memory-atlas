@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 804 reports.**
+**This page covers all 805 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7372,3 +7372,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 2,123 lines of Python and 50 test functions, seven commits over a week, version 0.2.0. No workflow runs the suite. MIT.
 - Study when: the failure to prevent is a credential or an obvious identifier landing in an agent's notes, in a single application that owns its callers.
 - Do not copy when: a deleted note must stay deleted, a full erasure must leave nothing behind, or the agent holding the tools must not choose the actor.
+
+### [`ctxvault`](../systems/ctxvault/)
+
+- Best idea: an end is not a retraction. Invalidate and supersede close a statement in the world and record when the vault learned it, so a query at an earlier `known_at` still sees it open; only a revision retracts, and it leaves the valid window alone.
+- Biggest risk: the time axes rest on unvalidated text. Every timestamp is a caller-supplied string compared as a string, so a non-UTC offset hides or exposes a statement at the wrong hour with no error; and a revision moves the dispute rows to the new episode, so a belief state before the revision shows the pair undisputed.
+- Most reusable component: the `known_at` clause in `select_episodes` — recorded by then, not revised by then, and an end counted only if it was recorded by then.
+- Maturity impression: 5,681 lines of Python and 116 test functions run by a workflow, 215 commits over eleven months, version 0.9.1. The episodic tests run on real SQLite; the semantic tests run against a mocked index. MIT.
+- Study when: the failure to prevent is a corrected fact erasing the record of what was believed before, in a local store one process owns.
+- Do not copy when: callers cannot be trusted to send canonical UTC timestamps, a single stored statement must be erasable, or the HTTP API is reachable by anyone who can name another agent.

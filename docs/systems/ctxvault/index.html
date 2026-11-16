@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python library, CLI, HTTP API
+and MCP server keeping agent memory in per-vault directories: a Chroma
+index, markdown skills, or a bi-temporal SQLite store.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="CtxVault — Agent Memory Atlas">
+    <meta property="og:description" content="A Python library, CLI, HTTP
+API and MCP server keeping agent memory in per-vault directories: a
+Chroma index, markdown skills, or a bi-temporal SQLite store.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CtxVault — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python library, CLI,
+HTTP API and MCP server keeping agent memory in per-vault directories: a
+Chroma index, markdown skills, or a bi-temporal SQLite store.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>CtxVault — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "CtxVault",
+      "description": "A Python library, CLI, HTTP API and MCP server keeping agent memory in per-vault directories: a Chroma index, markdown skills, or a bi-temporal SQLite store.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Typed vaults as directories, and an
+episodic store with two time axes whose revise rewrites the dispute
+record and whose timestamps are compared as text</p>
+          <h1>CtxVault</h1>
+          <p class="document-deck">A Python library, CLI, HTTP API and
+MCP server keeping agent memory in per-vault directories: a Chroma
+index, markdown skills, or a bi-temporal SQLite store.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Filippo-Venturini/ctxvault">
+              <span>Source</span>
+              <strong>Filippo-Venturini/ctxvault</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Filippo-Venturini/ctxvault/commit/d612d6e61b171307f31f05f3e00fc6a85442b3cc" title="d612d6e61b171307f31f05f3e00fc6a85442b3cc">
+              <span>Analyzed revision</span>
+              <code>d612d6e6…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Filippo-Venturini--ctxvault" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Filippo-Venturini--ctxvault</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>5,681
+lines of Python in 38 files under src/ctxvault; the episodic store, its
+vault class and its models are 1,473 of them. The viewer's static
+directory adds 1,614 lines of JavaScript</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>215
+commits from 12 December 2025 to 10 November 2026, 193 by one author and
+39 since 1 October 2026. The episodic store was first committed on 8
+October 2026. Version 0.9.1 in pyproject.toml</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>116
+test functions in seven files, 2,379 lines with the fixtures, run with
+pytest by a GitHub workflow. Chroma and the embedder are replaced by
+mocks in every test; the episodic tests run against a real SQLite file.
+I ran none of them; the episodic findings were re-derived in my own
+script against the schema</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>CtxVault is a local memory layer in Python. Memory lives in
+<em>vaults</em>, each a directory with one type. A semantic vault
+indexes documents into Chroma. A skill vault holds markdown procedures.
+An episodic vault holds dated statements in one SQLite file. A CLI, an
+HTTP API, an MCP server and a Python client all call the same
+router.</p>
+<p>The episodic vault is the part worth reading. Four things in it are
+built with care.</p>
+<ul>
+<li><strong>Two time axes that move apart.</strong> Each statement has a
+window in the world (<code>valid_from</code>, <code>valid_to</code>) and
+a window in the store (<code>recorded_at</code>,
+<code>invalidated_at</code>). A query takes <code>valid_at</code>,
+<code>known_at</code> or both.</li>
+<li><strong>An end is not a retraction.</strong> Learning today that
+something ended in February leaves it open for any <code>known_at</code>
+before today. Only a <em>revision</em> retracts.</li>
+<li><strong>Revise and supersede are different verbs.</strong> A
+supersession says the world changed. A revision says the wording
+improved, keeps the valid window and copies the re-assertions.</li>
+<li><strong>Impossible windows are refused.</strong> An episode cannot
+be closed, superseded or confirmed at an instant before its own
+start.</li>
+</ul>
+<p>Five things do not hold up.</p>
+<ul>
+<li><strong>Timestamps are text.</strong> No write parses one.
+<code>2026-11-16T12:00:00+02:00</code> sorts after <code>10:30</code>
+UTC and the statement is hidden for two hours.</li>
+<li><strong>A revision rewrites the dispute record.</strong> The dispute
+rows are moved to the new episode, so a past belief state shows the old
+pair undisputed.</li>
+<li><strong>Overwriting a document leaves old chunks.</strong>
+<code>write_doc</code> upserts by chunk index and deletes nothing. A
+shorter rewrite keeps the old tail searchable.</li>
+<li><strong>One episode cannot be removed.</strong> No statement deletes
+a row. The only removal is the whole vault.</li>
+<li><strong>The HTTP identity is a header.</strong> Any caller can name
+any agent.</li>
+</ul>
+<p>Marks held: <code>bitemporal</code>, <code>scope_enforced</code>,
+<code>negative_eval</code>. The licence is MIT, in <code>LICENSE</code>
+and in <code>pyproject.toml</code>. No paper accompanies the project;
+the README's citation block names the repository itself.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A vault is a folder plus one entry in a registry file. The entry
+holds the type, the path, a <code>restricted</code> flag and a list of
+agent names. The type decides which class opens the folder and which
+operations it accepts; an episodic vault refuses file indexing and a
+semantic vault refuses episodes.</p>
+<p>The three types share nothing below the router. They have separate
+stores, separate write verbs and separate read verbs. The project's
+README frames them after the semantic, procedural and episodic modules
+of <a href="https://arxiv.org/abs/2309.02427">CoALA</a>.</p>
+<p>An <em>episode</em> is one sentence the caller chose to record. The
+store never merges two episodes and never compares their text. All
+structure comes from the caller: which entities the sentence is about,
+when it started holding, which earlier episode it replaces. The store's
+job is to keep the two timelines consistent and to answer <em>what held
+at instant X, as far as the vault knew at instant Y</em>.</p>
+<p>Nothing runs between calls. There is no extraction pass, no
+consolidation and no decay job.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Four doors reach one router. An agent-facing door checks the vault's allowlist first. The episodic store answers a query from two time axes and never deletes a row.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Four doors reach one router. An agent-facing door checks the vault&#39;s allowlist first. The episodic store answers a query from two time axes and never deletes a row.
+flowchart TD
+    A[&quot;MCP tool&lt;br/&gt;agent = launch flag&quot;] --&gt; C{&quot;is_authorized&lt;br/&gt;restricted? agent in list?&quot;}
+    H[&quot;HTTP route&lt;br/&gt;agent = request header&quot;] --&gt; C
+    P[&quot;Python Client(agent)&quot;] --&gt; C
+    O[&quot;CLI and viewer&lt;br/&gt;owner, no check&quot;] --&gt; R
+    C --&gt;|allowed| R[&quot;vault_router.open_vault&lt;br/&gt;class chosen by type&quot;]
+    C --&gt;|refused| X[&quot;403 or PermissionError&quot;]
+    R --&gt; SV[(&quot;semantic vault&lt;br/&gt;files + Chroma collection&quot;)]
+    R --&gt; KV[(&quot;skill vault&lt;br/&gt;markdown + skills-index.json&quot;)]
+    R --&gt; EV[(&quot;episodic vault&lt;br/&gt;episodes.db&quot;)]
+    EV --&gt; W[&quot;write_episode: INSERT, new id&lt;br/&gt;invalidate: valid_to = world end, invalidated_at = now&lt;br/&gt;supersede: close old, open linked successor&lt;br/&gt;revise: same valid_from, copy attestations, move dispute rows&quot;]
+    EV --&gt; Q[&quot;query_episodes&quot;]
+    Q --&gt; F[&quot;SQL: entity, source, confidence&lt;br/&gt;valid_at window, known_at window&lt;br/&gt;ORDER BY valid_from DESC LIMIT 5000&quot;]
+    F --&gt; K[&quot;Python: similarity or word overlap&lt;br/&gt;recency, salience, or their sum&quot;]
+    K --&gt; T[&quot;top limit, flagged with disputed_with&quot;]</code></pre></details></figure>
+<p>The code is small and layered. <code>core/vault_router.py</code> maps
+a vault name to a class. <code>core/vaults/</code> holds the three
+classes. <code>storage/sqlite_store.py</code> is the whole episodic
+engine in 978 lines, and <code>storage/chroma_store.py</code> is an
+84-line wrapper over a Chroma collection.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Install is <code>pip install ctxvault</code>, or
+<code>uvx ctxvault mcp</code> from the committed MCP registry manifest.
+The dependencies include <code>chromadb</code>,
+<code>sentence-transformers</code> and <code>transformers</code>, so a
+first run downloads an embedding model. The MCP server warms the model
+in the background and refuses semantic calls until it is ready
+(<code>src/ctxvault/mcp/server.py:47-72</code>).</p>
+<p>An episodic vault needs none of that at query time unless it was
+created with an embedding model. Without one, text relevance is word
+overlap.</p>
+<p>The HTTP API is started with
+<code>uvicorn ctxvault.api.app:app</code>. The viewer runs with
+<code>ctxvault ui</code> on loopback and can write the whole memory to
+one HTML file.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Episodic schema and migrations:</strong>
+<code>src/ctxvault/storage/sqlite_store.py:39-114</code>, applied at
+<code>:141-171</code>.</li>
+<li><strong>Episode writers:</strong> <code>write_episode</code>
+<code>:326-366</code>, <code>invalidate_episode</code>
+<code>:388-422</code>, <code>supersede_episode</code>
+<code>:424-492</code>, <code>revise_episode</code>
+<code>:494-571</code>, <code>confirm_episode</code>
+<code>:598-634</code>, <code>dispute_episodes</code>
+<code>:636-671</code>.</li>
+<li><strong>Episode readers:</strong> <code>select_episodes</code>
+<code>:708-805</code>, <code>history</code> <code>:673-706</code>,
+<code>list_entities</code> <code>:807-861</code>,
+<code>count_episodes</code> <code>:903-930</code>.</li>
+<li><strong>Ranking:</strong>
+<code>src/ctxvault/core/vaults/episodic.py:42-75</code> and
+<code>:321-397</code>.</li>
+<li><strong>Access check:</strong>
+<code>src/ctxvault/utils/config.py:175-185</code>, called from
+<code>src/ctxvault/api/routes.py:11-14</code>,
+<code>src/ctxvault/mcp/server.py:82-84</code> and
+<code>src/ctxvault/client.py:92-99</code>.</li>
+<li><strong>Document path:</strong>
+<code>src/ctxvault/core/vaults/semantic.py:33-42</code>,
+<code>:198-202</code> and
+<code>src/ctxvault/core/indexer.py:1-46</code>.</li>
+<li><strong>Skill path:</strong>
+<code>src/ctxvault/core/vaults/skill.py:63-98</code>.</li>
+<li><strong>Viewer gate:</strong>
+<code>src/ctxvault/ui/server.py:60-78</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Episodes.</strong> One row per statement
+(<code>src/ctxvault/storage/sqlite_store.py:45-62</code>): an id,
+<code>content</code>, a free-text <code>source</code>, a
+<code>confidence</code> and a <code>salience</code> float,
+<code>occurred_at</code>, the four window columns,
+<code>superseded_by</code>, <code>revised_by</code>, a recall counter, a
+JSON <code>metadata</code> object and an optional float32
+<code>embedding</code>.</p>
+<p>Entities live in a side table keyed on the episode and the
+case-folded name (<code>:69-74</code>). They are labels the caller
+passes. Nothing extracts them.</p>
+<p><strong>Attestations.</strong> <code>confirm_episode</code> inserts
+one row per re-assertion with a time and a source (<code>:81-85</code>,
+<code>:629-632</code>). The count on an episode is derived from those
+rows, and with <code>known_at</code> only rows up to that instant are
+counted (<code>:212-227</code>). This is the one table in the store that
+only ever receives inserts, apart from the copy a revision makes.</p>
+<p><strong>Disputes.</strong> A dispute is a row naming two open
+episodes (<code>:92-98</code>). It has no status. The
+<code>disputed_with</code> field on an episode is computed on each read
+from the other side's state (<code>:229-254</code>), so closing either
+side ends the dispute without touching the row.</p>
+<p><strong>Documents.</strong> A semantic vault stores the file and one
+Chroma record per chunk. The document id is the SHA-256 of the path
+string (<code>src/ctxvault/core/identifiers.py:3-4</code>), and each
+chunk id is that id plus a hash of the chunk index. Caller metadata is
+merged into every chunk's metadata
+(<code>src/ctxvault/utils/metadata_builder.py:9-33</code>).</p>
+<p><strong>Skills.</strong> One markdown file with <code>name</code> and
+<code>description</code> frontmatter, and a
+<code>skills-index.json</code> mapping the lower-cased name to the file
+(<code>src/ctxvault/core/vaults/skill.py:84-98</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<h3 id="episodic">Episodic</h3>
+<p><code>select_episodes</code> builds a SQL filter and the vault class
+ranks the result.</p>
+<p>The default filter is <em>holds now</em>: started, not ended, and not
+restated by a revision
+(<code>src/ctxvault/storage/sqlite_store.py:747-754</code>).
+<code>valid_at</code> moves the instant. <code>known_at</code> adds the
+transaction axis (<code>:739-745</code>, <code>:758-764</code>):</p>
+<ul>
+<li>a row must have been recorded by <code>known_at</code>;</li>
+<li>an end counts only if it was recorded by <code>known_at</code>, so a
+statement whose end the vault learned later is still open in that belief
+state;</li>
+<li>a revised original is excluded only if the revision was recorded by
+then.</li>
+</ul>
+<p>Entity, source and minimum-confidence filters are SQL. Metadata
+equality and the <code>disputed</code> filter run in Python afterwards
+(<code>:796-803</code>).</p>
+<p>The SQL reads at most 5,000 rows, ordered by <code>valid_from</code>
+descending (<code>:783-788</code>). Ranking happens after that cut. With
+<code>order_by="relevance"</code>, a row older than the newest 5,000
+matching rows is never scored, however similar. The filters narrow the
+set first, so the limit bites on an unfiltered text query over a large
+vault.</p>
+<p>Each surviving row costs three more queries, for attestations,
+disputes and entities (<code>:256-282</code>). Similarity is a Python
+cosine over every candidate
+(<code>src/ctxvault/core/vaults/episodic.py:42-53</code>,
+<code>:363-369</code>).</p>
+<p>Scores (<code>:371-384</code>):</p>
+<ul>
+<li><strong>relevance</strong> — cosine against the stored vector, or
+the share of query words longer than two characters that appear in the
+content;</li>
+<li><strong>recency</strong> — <code>0.5 ** (age / half_life)</code>, 30
+days by default, measured from <code>valid_from</code> and not from when
+the vault recorded it;</li>
+<li><strong>salience</strong> — the stored float;</li>
+<li><strong>composite</strong> — the weighted sum of the three, weights
+1.0 each.</li>
+</ul>
+<p>The store has a recall counter. <code>mark_recalled</code> increments
+it and stamps <code>last_recalled_at</code> when a query passes
+<code>reinforce</code> (<code>:394-395</code>,
+<code>sqlite_store.py:573-585</code>). No ranking expression reads
+either column; the CLI prints the count. The HTTP request model and the
+Python call carry <code>reinforce</code>; the MCP tool does not.</p>
+<h3 id="semantic">Semantic</h3>
+<p>The query is embedded with the vault's model and Chroma returns the
+nearest chunks (<code>src/ctxvault/core/querying.py:55-59</code>,
+<code>src/ctxvault/storage/chroma_store.py:59-66</code>). New
+collections use cosine distance. The HTTP route passes a caller
+<code>filters</code> object straight to Chroma's <code>where</code>; the
+MCP tool takes only a vault name and a query and returns five
+chunks.</p>
+<h3 id="skill">Skill</h3>
+<p><code>list_skills</code> returns names and descriptions from the
+index, and <code>read_skill</code> returns the file body. There is no
+search. The MCP description of <code>read_skill</code> tells the agent
+to follow the instructions it returns
+(<code>src/ctxvault/mcp/server.py:174</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>write_episode</strong> inserts a row with a new UUID.
+<code>valid_from</code> falls back to <code>occurred_at</code> and then
+to the recording time
+(<code>src/ctxvault/storage/sqlite_store.py:359</code>). The MCP tool
+exposes <code>valid_from</code> and <code>occurred_at</code> to the
+model and the CLI and HTTP route expose <code>valid_to</code> as well,
+so the valid axis is a caller's statement about the world and not a
+default.</p>
+<p><strong>invalidate_episode</strong> sets <code>valid_to</code> to the
+supplied world end or to now, sets <code>invalidated_at</code> to now,
+and writes the reason into the row's metadata (<code>:410-420</code>).
+An already closed episode is refused.</p>
+<p><strong>supersede_episode</strong> inserts the successor and closes
+the predecessor in one transaction. The old <code>valid_to</code> equals
+the new <code>valid_from</code> (<code>:466-490</code>), so one of the
+two holds at every instant. Entities and salience carry over unless
+given.</p>
+<p><strong>revise_episode</strong> inserts a restatement with the
+original's <code>valid_from</code>, copies its attestations, repoints
+its dispute rows, and closes the original in transaction time only,
+leaving <code>valid_to</code> empty (<code>:537-569</code>).</p>
+<p><strong>Documents.</strong> <code>write_doc</code> writes the file
+and calls <code>index_file</code>
+(<code>src/ctxvault/core/vaults/semantic.py:198-202</code>).
+<code>index_file</code> chunks, embeds and upserts
+(<code>src/ctxvault/core/indexer.py:1-24</code>). It does not delete the
+document's existing chunks. <code>reindex_file</code> does
+(<code>:33-46</code>), and so does <code>sync_index</code> for a file
+whose modification time is newer than its index time.</p>
+<p>So an overwrite through <code>write_doc</code>, or
+<code>ctxvault index</code> on an edited file, replaces chunks 0 to n-1
+and leaves any chunk past the new length in the collection. A
+three-chunk note rewritten as one chunk keeps its old second and third
+chunks, which a query can still return and which
+<code>get_document_content</code> appends to the rebuilt text. I read
+this from the code and did not run it; the suite replaces Chroma with a
+mock, so no test can observe it.</p>
+<p><strong>Skills.</strong> <code>write_skill</code> derives the file
+name from the skill name, writes the file through a path check that
+refuses anything resolving outside the vault
+(<code>src/ctxvault/core/vaults/base.py:101-119</code>), and updates the
+index. Over MCP the default is no overwrite.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model call is made on any path except the local
+sentence-transformers embedder. An episodic vault without an embedding
+model makes none. Query cost in an episodic vault grows with the
+candidate set: up to 5,000 rows, three extra queries each, and a Python
+cosine each when vectors exist.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers 17 tools
+(<code>src/ctxvault/mcp/server.py:74-344</code>): one status check,
+vault and document listing, semantic query and write, three skill tools,
+and nine episodic tools covering write, query, invalidate, supersede,
+revise, confirm, dispute, history and entity listing.</p>
+<p>The agent identity is the <code>--agent</code> argument of the server
+process (<code>:15-17</code>, <code>:31</code>). Every tool that takes a
+vault name calls <code>check_access</code> with it. The model cannot
+pass a different one. <code>source</code> on an episode defaults to that
+identity and the model may override it with any string.</p>
+<p>Nothing is injected into a prompt and nothing is captured
+automatically. The tool descriptions carry the guidance: confirm instead
+of writing twice, supersede when information contradicts, dispute when
+unsure which side is wrong.</p>
+<p>The Python <code>Client</code> takes the agent name in its
+constructor and applies the same check when a vault is opened
+(<code>src/ctxvault/client.py:92-99</code>). Its docstring states that
+the vault is built for one writing process.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="timestamps-are-compared-as-text">Timestamps are compared as
+text</h3>
+<p>Every time comparison is a string comparison in SQL or Python. The
+module header says so and asks callers to use UTC
+(<code>src/ctxvault/storage/sqlite_store.py:15-17</code>). Nothing
+enforces it. The only <code>fromisoformat</code> calls in the package
+are on read paths: the recency score, the document sync check and the
+viewer.</p>
+<p>I re-derived three cases with the store's own schema and filter,
+written at 10:30 UTC:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th><code>valid_from</code> written</th>
+<th>Instant it denotes</th>
+<th>Returned by a default query at 10:30 UTC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>2026-11-16T12:00:00+02:00</code></td>
+<td>10:00 UTC</td>
+<td>No, until 12:00 UTC</td>
+</tr>
+<tr>
+<td><code>2026-11-16T10:30:00Z</code></td>
+<td>10:30 UTC</td>
+<td>No, until the next second</td>
+</tr>
+<tr>
+<td><code>Q3 2026</code></td>
+<td>none</td>
+<td>Never</td>
+</tr>
+</tbody>
+</table></div>
+<p>No error is raised in any of them. A negative offset fails the other
+way: the statement appears early, and <code>_check_boundary</code>
+(<code>:375-386</code>) can refuse a legitimate close. The MCP tool
+descriptions do not tell the model which format to use.</p>
+<h3 id="a-revision-rewrites-the-dispute-record">A revision rewrites the
+dispute record</h3>
+<p><code>revise_episode</code> repoints dispute rows with two
+<code>UPDATE</code> statements (<code>:561-562</code>). The attestations
+are copied; the disputes are moved.</p>
+<ul>
+<li><strong>Past belief states lose the dispute.</strong> With a dispute
+noticed in February and one side revised in April, a query at
+<code>known_at</code> March returned both original statements with
+<code>disputed_with</code> empty. Before the revision the same query
+flagged both. The episode axis is reconstructable at that instant and
+the dispute axis is not.</li>
+<li><strong>The pair can be stored twice.</strong> A dispute is inserted
+with its two ids sorted so that the primary key deduplicates it
+(<code>:659-669</code>). The repoint keeps column positions and breaks
+the ordering when the new id sorts on the other side of its counterpart.
+Recording the pair again then inserts a second row; the statistics
+counted two disputes and <code>disputed_with</code> lists the
+counterpart twice.</li>
+</ul>
+<p>The committed test for this path asserts the present-time result only
+(<code>tests/test_episodic.py:867-876</code>).</p>
+<h3 id="entity-counts-include-revised-originals">Entity counts include
+revised originals</h3>
+<p><code>list_entities</code> filters on the valid window alone
+(<code>src/ctxvault/storage/sqlite_store.py:836-842</code>). A revised
+original keeps an empty <code>valid_to</code>, so it is still counted.
+After one revision of a statement about Anna, with one other open
+statement, a default query returned two episodes and the entity listing
+reported three. The neighbouring <code>_HOLDS_AT</code> condition
+(<code>:866</code>) carries the <code>revised_by IS NULL</code> clause
+that this query lacks.</p>
+<h3 id="nothing-removes-one-episode">Nothing removes one episode</h3>
+<p>No <code>DELETE</code> statement exists in the package. The schema
+declares <code>ON DELETE CASCADE</code> on three tables and nothing
+triggers it. A statement recorded by mistake, or one a person asks to
+have erased, can be closed and hidden from default queries; its text
+stays readable through <code>include_closed</code>, <code>history</code>
+and the viewer. The only removal is <code>purge_vault</code>, which
+deletes the vault directory
+(<code>src/ctxvault/utils/config.py:246-267</code>).</p>
+<p>Closing is keyed on the row. Writing the same sentence again after an
+invalidation inserts a new open episode, and nothing compares it with
+the closed one.</p>
+<h3 id="access-control">Access control</h3>
+<p><code>is_authorized</code> returns true for a public vault and
+otherwise requires the agent name to be on the list
+(<code>:175-185</code>). A restricted vault with no agent name
+raises.</p>
+<ul>
+<li><strong>MCP:</strong> the name is a process argument. This is the
+strong door.</li>
+<li><strong>HTTP:</strong> the name is the <code>X-CtxVault-Agent</code>
+header (<code>src/ctxvault/api/routes.py:11-14</code>). There is no
+credential. A client that knows an attached agent's name reads that
+agent's vault, and <code>GET /ctxvault/vaults</code> returns every vault
+with its <code>allowed_agents</code> (<code>:104-107</code>).</li>
+<li><strong><code>PUT /ctxvault/index</code></strong> calls no check
+(<code>:21-29</code>).</li>
+<li><strong>CLI and viewer</strong> are owner surfaces and read
+restricted vaults whole. The viewer's router refuses a request from
+another host unless the server was started with an explicit
+<code>--host</code> (<code>src/ctxvault/ui/server.py:60-78</code>).</li>
+</ul>
+<p>Attaching, detaching and publishing are CLI and Python calls with no
+gate; no MCP tool or HTTP route changes the allowlist.</p>
+<h3 id="skills-cross-agents-as-instructions">Skills cross agents as
+instructions</h3>
+<p>An agent with access to a shared skill vault can write a skill, and
+another agent attached to the same vault is told to follow it. No state
+separates a person's skill from an agent's, and no step sits between the
+write and the next read. The file is plain markdown on disk, so a person
+can inspect it after the fact.</p>
+<h3 id="concurrency-and-recovery">Concurrency and recovery</h3>
+<p>One SQLite connection per file is cached in the process, with a
+process lock around multi-statement writes
+(<code>sqlite_store.py:32-37</code>, <code>:173-203</code>). Supersede
+and revise are single transactions. A file written by a newer schema is
+refused (<code>:157-161</code>). A vault whose directory is missing is
+reported as missing instead of being recreated empty
+(<code>src/ctxvault/core/vault_router.py:37-44</code>).</p>
+<p>The registry is a JSON file rewritten whole with no lock
+(<code>src/ctxvault/utils/config.py:59-60</code>).</p>
+<h3 id="why-four-marks-are-withheld">Why four marks are withheld</h3>
+<ul>
+<li><strong><code>tombstone</code>:</strong> a closed episode is a
+record keyed on a row. The same value written again is accepted.</li>
+<li><strong><code>trust_state</code>:</strong> <code>confidence</code>
+is a float used as an optional filter. <code>disputed_with</code> is
+derived on read and withholds nothing; both sides of a dispute are
+returned by default.</li>
+<li><strong><code>audit_log</code>:</strong> the history is carried by
+the window columns on the episode rows, which five statements update in
+place. A close records no actor. There is no separate event table of
+mutations, and a revision edits the dispute rows.</li>
+<li><strong><code>human_review</code>:</strong> no write waits on
+anyone. The viewer displays.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 116 test functions.
+<code>.github/workflows/test.yml</code> runs <code>pytest</code>. I ran
+none of it.</p>
+<p><strong>What the episodic tests cover.</strong>
+<code>tests/test_episodic.py</code> holds 943 lines against a real
+SQLite file. It asserts the valid axis and the transaction axis
+separately (<code>:201-256</code>), the refusal of impossible windows
+(<code>:104-127</code>), inheritance on supersede, attestation counts as
+of a past <code>known_at</code> (<code>:492-508</code>), a v1 file
+migrating on open (<code>:748-796</code>) and a newer file being refused
+(<code>:798-809</code>). The test at <code>:217-234</code> is the
+careful one: it shows an end recorded later is not yet known in March
+and is not a retraction in January.</p>
+<p><strong>What they do not cover.</strong> No test passes a timestamp
+with a non-UTC offset. No test queries a dispute at a
+<code>known_at</code> before a revision. No test counts entities after a
+revision.</p>
+<p><strong>The semantic tests cannot fail on retrieval.</strong>
+<code>tests/conftest.py:15-84</code> replaces the embedder with a
+constant vector and Chroma with a mock whose <code>query</code> returns
+one fixed chunk. The tests check wiring, error mapping and chunking. The
+stale-chunk behaviour in section 7 is outside what they can see.</p>
+<p><strong>Access.</strong> The refusal is asserted through the Python
+client (<code>tests/test_client.py:36-61</code>). No test sends
+<code>X-CtxVault-Agent</code> to a restricted vault and none calls the
+MCP <code>check_access</code>.</p>
+<p><strong>Benchmarks.</strong> <code>benchmarks/README.md</code>
+reports BEIR and CoIR retrieval figures for the semantic pipeline
+against raw Chroma and a LangChain retriever with the same embedding
+model, and concludes that the vault adds no retrieval overhead. The
+three rows are within a fraction of a point of each other, as they
+should be for the same index and model. Nothing in the directory
+measures the episodic store, isolation or correction, and the README
+lists those as planned. I did not run the scripts.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Separate "it ended" from "we were wrong".</strong> Supersede
+moves the valid window; revise moves only the transaction window. Two
+verbs keep an audit of the wrong wording without pretending the world
+changed.</li>
+<li><strong>An end recorded later is unknown earlier.</strong> The
+<code>known_at</code> clause tests
+<code>invalidated_at &gt; known_at</code> beside <code>valid_to</code>
+(<code>src/ctxvault/storage/sqlite_store.py:739-745</code>). It is one
+extra disjunct and it is what makes a past belief state correct.</li>
+<li><strong>Re-assertion as dated rows, not a counter.</strong> A count
+can then be read as of any past instant.</li>
+<li><strong>Refuse impossible windows at the writer.</strong> A close
+before the start would make a row invisible to every query without an
+error.</li>
+<li><strong>Bind agent identity at process launch.</strong> The MCP
+server's name comes from its command line, so the model has no argument
+to forge.</li>
+<li><strong>Refuse a newer schema version.</strong> An additive
+migration still bumps the version so an older build stops instead of
+ignoring tables.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Storing timestamps as unvalidated text.</strong> Parse at
+the door and store one canonical form. The comparison is only as good as
+the least careful caller.</li>
+<li><strong>Moving history rows to a successor.</strong> Copy them, as
+this store does for attestations, or key them on the chain. An
+<code>UPDATE</code> on a relation table breaks reconstruction on that
+relation.</li>
+<li><strong>Upsert without a delete on overwrite.</strong> When chunk
+ids are positional, a shorter document leaves the old tail.</li>
+<li><strong>A row cap ordered by time in front of a relevance
+sort.</strong> Either rank in the store or state the cap in the
+result.</li>
+<li><strong>A counter no ranking reads.</strong>
+<code>recall_count</code> costs a write on each reinforced query and
+changes nothing.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>CtxVault fits a single developer or a small set of local agents that
+need dated facts with correction history, and that can pass well-formed
+UTC timestamps. The semantic and skill vaults are thin and conventional.
+It does not fit a deployment where the HTTP API is reachable by an
+untrusted caller, or one that must erase a single stored statement.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does any published client of the HTTP API authenticate the caller in
+front of the header, or is the header the intended boundary for a local
+port?</li>
+<li>Is the 5,000-row cap meant as a safety limit or as the working set?
+The docstring calls it the rows read before ranking.</li>
+<li>Is <code>recall_count</code> meant to feed the recency score? The
+docstring of <code>mark_recalled</code> says decay can favour recalled
+episodes, and no decay reads it.</li>
+<li>Should a past <code>known_at</code> show a dispute that a later
+revision inherited? The docstring of <code>revise_episode</code> says
+the original stays reconstructable at any <code>known_at</code> before
+the revision.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Router and registry:</strong>
+<code>src/ctxvault/core/vault_router.py</code>,
+<code>src/ctxvault/utils/config.py</code>,
+<code>src/ctxvault/models/vaults.py</code>.</li>
+<li><strong>Episodic:</strong>
+<code>src/ctxvault/storage/sqlite_store.py</code>,
+<code>src/ctxvault/core/vaults/episodic.py</code>,
+<code>src/ctxvault/models/episodes.py</code>.</li>
+<li><strong>Semantic:</strong>
+<code>src/ctxvault/core/vaults/semantic.py</code>,
+<code>src/ctxvault/core/indexer.py</code>,
+<code>src/ctxvault/core/querying.py</code>,
+<code>src/ctxvault/storage/chroma_store.py</code>,
+<code>src/ctxvault/core/embedding.py</code>,
+<code>src/ctxvault/utils/chuncking.py</code>,
+<code>src/ctxvault/utils/metadata_builder.py</code>.</li>
+<li><strong>Skill:</strong>
+<code>src/ctxvault/core/vaults/skill.py</code>,
+<code>src/ctxvault/core/vaults/base.py</code>.</li>
+<li><strong>Surfaces:</strong> <code>src/ctxvault/mcp/server.py</code>,
+<code>src/ctxvault/api/routes.py</code>,
+<code>src/ctxvault/api/schemas.py</code>,
+<code>src/ctxvault/cli/app.py</code>,
+<code>src/ctxvault/client.py</code>,
+<code>src/ctxvault/ui/server.py</code>.</li>
+<li><strong>Tests:</strong> <code>tests/test_episodic.py</code>,
+<code>tests/test_core.py</code>, <code>tests/test_api.py</code>,
+<code>tests/test_cli.py</code>, <code>tests/test_client.py</code>,
+<code>tests/test_mcp.py</code>, <code>tests/test_ui.py</code>,
+<code>tests/conftest.py</code>.</li>
+<li><strong>Benchmarks:</strong> <code>benchmarks/README.md</code>,
+<code>benchmarks/retrieval/</code>,
+<code>benchmarks/internal/</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git grep</code> over the tree at
+<code class="commit-id" title="d612d6e61b171307f31f05f3e00fc6a85442b3cc">d612d6e6…</code>.</p>
+<ul>
+<li><code>git grep -n -i 'DELETE FROM' -- src</code> — no match.</li>
+<li><code>git grep -n -i -E 'rmtree|\.unlink\(|delete_collection|collection\.delete' -- src</code>
+— four lines: the file unlink in <code>base.py:82</code>, the two Chroma
+deletes in <code>chroma_store.py:44</code> and <code>:70</code>, and the
+vault directory removal in <code>config.py:264</code>. None touches an
+episode row.</li>
+<li><code>git grep -n -E 'UPDATE episodes|UPDATE episode_' -- src</code>
+— seven lines, all in <code>sqlite_store.py</code>: <code>:418</code>,
+<code>:488</code>, <code>:561</code>, <code>:562</code>,
+<code>:567</code>, <code>:583</code>, <code>:977</code>.</li>
+<li><code>git grep -n 'fromisoformat' -- src</code> — three lines:
+<code>episodic.py:37</code>, <code>semantic.py:19</code>,
+<code>ui/server.py:91</code>. None is on a write path.</li>
+<li><code>git grep -n 'revised_by IS NULL' -- src</code> — two lines,
+<code>sqlite_store.py:754</code> and <code>:866</code>. The entity
+listing at <code>:836-842</code> has neither.</li>
+<li><code>git grep -n -E 'recall_count|last_recalled_at' -- src ':!src/ctxvault/ui/static'</code>
+— nine lines: the model fields, the columns, the row mapping, the update
+at <code>sqlite_store.py:583</code> and the CLI print at
+<code>cli/app.py:375-376</code>. No comparison or sort.</li>
+<li><code>git grep -n -E 'delete_document\(|delete_file\(' -- src</code>
+— the callers are <code>indexer.py:45</code> (reindex),
+<code>semantic.py:138</code> (sync of a missing file) and
+<code>semantic.py:146</code> (delete). <code>index_file</code> and
+<code>write_doc</code> are not among them.</li>
+<li><code>git grep -n -i -E 'WHERE content|content = \?|hashlib|fingerprint' -- src/ctxvault/storage src/ctxvault/core/vaults/episodic.py</code>
+— no match.</li>
+<li><code>git grep -n -E 'X-CtxVault-Agent|check_access|check_vault_access' -- tests</code>
+— no match.</li>
+<li><code>git grep -n -i -E 'approv|pending|quarantin|review' -- src ':!src/ctxvault/ui/static'</code>
+— four lines, all the word <code>preview</code> in
+<code>cli/app.py:89-92</code>.</li>
+<li><code>git grep -n -i -E 'audit|event_log|changelog' -- src ':!src/ctxvault/ui/static'</code>
+— no match.</li>
+<li><code>git grep -n 'reinforce' -- src/ctxvault/cli src/ctxvault/mcp docs</code>
+— no match.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|doi\.org|CITATION'</code> over
+the text files — the CoALA link in the README and the docs, and the
+README's <code>@software</code> block for the repository.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-16</strong> — <a
+href="https://github.com/Filippo-Venturini/ctxvault/commit/d612d6e61b171307f31f05f3e00fc6a85442b3cc"><code class="commit-id" title="d612d6e61b171307f31f05f3e00fc6a85442b3cc">d612d6e6…</code></a>
+— first reading, at the head of <code>main</code>, dated 10 November
+2026. Marks: <code>bitemporal</code> on the <a href="#episodic">two
+window pairs and the two query arguments</a>,
+<code>scope_enforced</code> on the <a href="#access-control">vault
+allowlist checked at each agent-facing door</a>,
+<code>negative_eval</code> on the <a
+href="#10-tests-evals-and-benchmarks">episodic absence assertions</a>.
+<code>tombstone</code>, <code>trust_state</code>, <code>audit_log</code>
+and <code>human_review</code> <a
+href="#why-four-marks-are-withheld">withheld</a>. Nothing from the tree
+was installed or run. The timestamp ordering, the dispute rewrite and
+the entity count were re-derived in a separate script that lifts the
+schema as text. The stale-chunk finding is from reading. The screen
+reported an MCP manifest that launches a package through
+<code>uvx</code>, a <code>pytest</code> collection hook, eight unpinned
+requirement files, and <code>pyproject.toml</code> changed inside the
+seven-day cooldown.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

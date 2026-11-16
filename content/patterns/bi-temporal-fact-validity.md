@@ -262,9 +262,7 @@ only; `withoutOccurredAt` strips it before the graph write so that a stated
 date *"never decides which of two contradicting edges the graph retires"*
 (`lib/inngest/memory-ingest.ts:509-518`).
 
-Not proposed for any *Read these first* list; the integrator may judge
-`append-only-memory-audit` (three-row split plus trigger) and
-`scope-as-a-first-class-key` (derived-write rule) against the current entries.
+[CtxVault](../../systems/ctxvault/) separates two ways a statement stops: `invalidate` and `supersede` close the valid window, `revise` closes only the transaction window, and `known_at` counts an end only if recorded by then (`src/ctxvault/storage/sqlite_store.py:739-764`). Timestamps are caller strings compared as text, and `revise` moves the dispute rows (`:561-562`), so an earlier belief state loses the dispute.
 
 ## A third clock
 

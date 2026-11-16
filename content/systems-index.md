@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **804 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **805 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -198,6 +198,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/csm/"><span class="az-id">CSM</span><span class="az-what">Deterministic continuity runtime</span><code class="az-repo">NovasPlace/CSM</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/ctx/"><span class="az-id">ctx</span><span class="az-what">Guarded consolidation</span><code class="az-repo">ActiveMemory/ctx</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/ctx-open/"><span class="az-id">CTX Cognitive Version Control</span><span class="az-what">Version control for an agent&#x27;s reasoning</span><code class="az-repo">diegoxtr/ctx-open</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/ctxvault/"><span class="az-id">CtxVault</span><span class="az-what">Typed vaults as directories, and an episodic store with two time axes whose revise rewrites the dispute record and whose timestamps are compared as text</span><code class="az-repo">Filippo-Venturini/ctxvault</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/cua/"><span class="az-id">Cua</span><span class="az-what">A recorded demonstration, captioned into a skill</span><code class="az-repo">trycua/cua</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/cyrene-agent/"><span class="az-id">Cyrene Agent</span><span class="az-what">Layered companion memory inside a Live2D desktop agent</span><code class="az-repo">Playa-Cyrene/Cyrene-Agent</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>
