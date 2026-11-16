@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **805 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **806 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -208,6 +208,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <ul class="az">
 <li><a class="az-row" href="../systems/daem0n-mcp/"><span class="az-id">Daem0nMCP</span><span class="az-what">You may not write until you prove you asked</span><code class="az-repo">9thLevelSoftware/Daem0n-MCP</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/daimon/"><span class="az-id">Daimon</span><span class="az-what">Session-boundary checkpoint memory</span><code class="az-repo">Daily-Nerd/daimon</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/decision-keeper/"><span class="az-id">Decision Keeper</span><span class="az-what">One bullet per decision, ten to a file, and a checker the model is asked to run</span><code class="az-repo">mudassirzulfiqar/Decision-Keeper</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/deepcode/"><span class="az-id">DeepCode</span><span class="az-what">Consolidation with no oracle</span><code class="az-repo">HKUDS/DeepCode</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/deepseek-harness/"><span class="az-id">DeepSeek Harness</span><span class="az-what">The search it ships turned off</span><code class="az-repo">deepseek-ai/deepseek-harness</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/deer-flow/"><span class="az-id">DeerFlow</span><span class="az-what">The best-specified memory contract here</span><code class="az-repo">bytedance/deer-flow</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>

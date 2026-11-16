@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 805 reports.</strong></p>
+<p><strong>This page covers all 806 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33389,6 +33389,28 @@ owns.</li>
 <li>Do not copy when: callers cannot be trusted to send canonical UTC
 timestamps, a single stored statement must be erasable, or the HTTP API
 is reachable by anyone who can name another agent.</li>
+</ul>
+<h3 id="decision-keeper"><a
+href="../systems/decision-keeper/"><code>decision-keeper</code></a></h3>
+<ul>
+<li>Best idea: a fan-out cap on the file the agent always reads. No file
+holds more than ten decisions; past ten, a cluster moves to a child
+topic linked from the parent, so the entry point stays cheap to read
+whole.</li>
+<li>Biggest risk: every step rests on the agent following prose. It
+decides what is a lasting rule, it performs supersession by overwriting
+the line, and it is the only thing that runs the checker. A dropped rule
+is deleted and leaves no record.</li>
+<li>Most reusable component: <code>scripts/check_tree.py</code>, 94
+lines of standard library that verify links, one parent per file, no
+orphans, no duplicate lines and the cap.</li>
+<li>Maturity impression: one commit, 567 lines, no tests and no CI. The
+installer is careful beyond its size: it recognises earlier releases by
+hash and refuses to overwrite an edited file. MIT.</li>
+<li>Study when: an agent-maintained conventions file keeps growing until
+it is skimmed, and the fix wanted is structural.</li>
+<li>Do not copy when: a rule's origin or retirement must be recorded, or
+more than one agent writes at once.</li>
 </ul>
         </article>
       </div>

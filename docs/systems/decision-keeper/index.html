@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A skill and installer for Codex
+and Claude Code that has the agent keep a project's lasting decisions as
+bullets in linked markdown files.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Decision
+Keeper — Agent Memory Atlas">
+    <meta property="og:description" content="A skill and installer for
+Codex and Claude Code that has the agent keep a project's lasting
+decisions as bullets in linked markdown files.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Decision
+Keeper — Agent Memory Atlas">
+    <meta name="twitter:description" content="A skill and installer for
+Codex and Claude Code that has the agent keep a project's lasting
+decisions as bullets in linked markdown files.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Decision Keeper — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Decision Keeper",
+      "description": "A skill and installer for Codex and Claude Code that has the agent keep a project's lasting decisions as bullets in linked markdown files.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One bullet per decision, ten to a file, and
+a checker the model is asked to run</p>
+          <h1>Decision Keeper</h1>
+          <p class="document-deck">A skill and installer for Codex and
+Claude Code that has the agent keep a project's lasting decisions as
+bullets in linked markdown files.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mudassirzulfiqar/Decision-Keeper">
+              <span>Source</span>
+              <strong>mudassirzulfiqar/Decision-Keeper</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mudassirzulfiqar/Decision-Keeper/commit/911ff6b88e7c5e65b64326f9a5719291e6608ab6" title="911ff6b88e7c5e65b64326f9a5719291e6608ab6">
+              <span>Analyzed revision</span>
+              <code>911ff6b8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mudassirzulfiqar--Decision-Keeper" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mudassirzulfiqar--Decision-Keeper</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>567
+lines in nine tracked files: 406 of Python in an installer and a tree
+checker, 38 of skill prose in two documents, one of them committed
+twice</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>One
+commit, on 16 November 2026, by one author. The installer carries hashes
+of earlier releases under two other names, Record Me and Teach
+Me</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>None
+committed and no CI workflow. I ran nothing; every finding here was
+read</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Decision Keeper is a skill for Codex and Claude Code, with an
+installer, that has the coding agent write down a project's lasting
+decisions. A decision is one markdown bullet. The bullets live in a tree
+of files under <code>docs/decision/</code>, and an instruction block in
+the project's <code>AGENTS.md</code> or <code>CLAUDE.md</code> tells the
+agent to read the tree before every change.</p>
+<p>It carries no capability mark. There is no store, no index and no
+retrieval: the memory is the files, and the mechanism is 38 lines of
+skill prose plus two Python scripts. One script installs and upgrades
+the skill. The other checks the tree's shape after a write.</p>
+<p><strong>Licence.</strong> MIT, with no rider. The copyright line
+names <em>Decision Keeper contributors</em>.</p>
+<p>The part worth reading is the shape rule. No file may hold more than
+ten decisions; past ten, the organizer moves related rules into a child
+topic and links it from the parent, recursively
+(<code>.agents/skills/decision-keeper/references/organizer.md:7</code>).
+The index therefore stays short enough to read whole on every change,
+which is the only retrieval the design has.</p>
+<p>The limit is what holds the rule up. <code>check_tree.py</code>
+verifies links, duplicate bullets, orphan files and the ten-bullet cap,
+and exits non-zero on any failure. Nothing runs it but the agent, on an
+instruction in the organizer procedure (<code>organizer.md:9</code>). No
+hook, no CI job and no git check calls it.</p>
+<p>Supersession is replacement. The organizer keeps <em>only active
+policy</em> (<code>organizer.md:6</code>), so a changed rule overwrites
+the old line and a dropped rule is deleted. The tree cannot say what a
+rule used to be or that one was removed; the project's own git history
+is the only record, where the project commits the directory.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A project has one decision tree and one writer at a time.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the agent recognises a lasting rule, an organizer rewrites the tree as active policy only, and a checker it is asked to run verifies the shape</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the agent recognises a lasting rule, an organizer rewrites the tree as active policy only, and a checker it is asked to run verifies the shape
+flowchart TD
+    U[&quot;user message&quot;] --&gt; R{&quot;lasting rule,&lt;br/&gt;or /keep prefix?&quot;}
+    R --&gt;|&quot;one-off, tentative,&lt;br/&gt;quoted&quot;| SKIP[&quot;apply now,&lt;br/&gt;store nothing&quot;]
+    R --&gt;|&quot;yes&quot;| ORG[&quot;organizer&lt;br/&gt;(Codex subagent, or&lt;br/&gt;the same session)&quot;]
+    ORG --&gt; W[&quot;route to the most&lt;br/&gt;specific topic file&quot;]
+    W --&gt; SUP{&quot;supersedes&lt;br/&gt;an old rule?&quot;}
+    SUP --&gt;|&quot;yes&quot;| REP[&quot;replace the line&quot;]
+    SUP --&gt;|&quot;no&quot;| ADD[&quot;add one bullet&quot;]
+    REP --&gt; CAP{&quot;file over ten&lt;br/&gt;decisions?&quot;}
+    ADD --&gt; CAP
+    CAP --&gt;|&quot;yes&quot;| SPLIT[&quot;move a cluster to a&lt;br/&gt;child topic, link it&quot;]
+    CAP --&gt;|&quot;no&quot;| CHK[&quot;check_tree.py&lt;br/&gt;links, duplicates,&lt;br/&gt;orphans, cap&quot;]
+    SPLIT --&gt; CHK
+    CHK --&gt; T[(&quot;docs/decision/&lt;br/&gt;index + topic files&quot;)]
+    T --&gt;|&quot;read in full before&lt;br/&gt;every change&quot;| NEXT[&quot;next change request&quot;]
+    style REP fill:#7f1d1d,color:#fff
+    style CHK fill:#14532d,color:#fff</code></pre></details></figure>
+<p>Red is where history is lost. Green is the one deterministic step,
+and the agent decides whether it runs.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nine tracked files. <code>SKILL.md</code> at the root and
+<code>.agents/skills/decision-keeper/SKILL.md</code> are
+byte-identical.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Lines</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SKILL.md</code></td>
+<td>27</td>
+<td>When to record, how to apply, the <code>/keep</code> commands</td>
+</tr>
+<tr>
+<td><code>references/organizer.md</code></td>
+<td>11</td>
+<td>The write procedure: routing, supersession, splitting, layout,
+verification</td>
+</tr>
+<tr>
+<td><code>scripts/check_tree.py</code></td>
+<td>94</td>
+<td>Shape checker for the tree</td>
+</tr>
+<tr>
+<td><code>install.py</code></td>
+<td>312</td>
+<td>Installer, upgrader and legacy migration</td>
+</tr>
+<tr>
+<td><code>.codex/agents/decision_keeper_organizer.toml</code></td>
+<td>5</td>
+<td>The Codex subagent that owns a write</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>python3 install.py --client codex &lt;project&gt;</code> copies
+the skill into the project and appends a block between
+<code>&lt;!-- decision-keeper:begin --&gt;</code> and
+<code>&lt;!-- decision-keeper:end --&gt;</code> to the instruction file.
+It needs Python 3.9 and an instruction file that already exists
+(<code>install.py:212-213</code>).</p>
+<p>The installer is the most careful code in the tree:</p>
+<ul>
+<li>It refuses the filesystem root, the home directory, and any
+directory that is not the top level of its git repository
+(<code>install.py:175-183</code>).</li>
+<li>It rejects a symlink anywhere on the path of a file it would write
+(<code>:122-127</code>).</li>
+<li>It overwrites an installed skill file only when the file's SHA-256
+matches a release it knows; a customised file stops the install
+(<code>:253-273</code>).</li>
+<li>It refuses when a non-empty <code>AGENTS.override.md</code> would
+take precedence over the file it edits (<code>:208-209</code>), and when
+the edit would push <code>AGENTS.md</code> past 32 KiB
+(<code>:286-287</code>).</li>
+<li>It creates migrated files with mode <code>xb</code>, so an existing
+file is never replaced (<code>:294</code>).</li>
+</ul>
+<p>The writes are sequential with no rollback (<code>:289-299</code>):
+skill files, migrated decision files, the instruction file, then the
+deletions. An error part-way leaves the earlier steps in place.</p>
+<p>One argument does nothing. The positional <code>evidence</code> path
+is checked for existence, location and size (<code>:236-249</code>) and
+is not read or stored afterwards; the README does not mention it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The standing instruction to read the tree</td>
+<td><code>install.py:20</code></td>
+</tr>
+<tr>
+<td>What counts as a decision, and what does not</td>
+<td><code>SKILL.md:10</code></td>
+</tr>
+<tr>
+<td>Apply at the narrowest scope; the current instruction wins</td>
+<td><code>SKILL.md:11</code></td>
+</tr>
+<tr>
+<td>Single writer and the Codex handoff</td>
+<td><code>SKILL.md:12</code></td>
+</tr>
+<tr>
+<td>Active policy only; one bullet per line</td>
+<td><code>references/organizer.md:6</code></td>
+</tr>
+<tr>
+<td>The ten-decision cap and recursive split</td>
+<td><code>references/organizer.md:7</code></td>
+</tr>
+<tr>
+<td>File and folder layout, link format</td>
+<td><code>references/organizer.md:8</code></td>
+</tr>
+<tr>
+<td>Before-and-after comparison of rules</td>
+<td><code>references/organizer.md:9</code></td>
+</tr>
+<tr>
+<td>Decision versus link, duplicate detection</td>
+<td><code>scripts/check_tree.py:44-57</code></td>
+</tr>
+<tr>
+<td>Link target and layout validation</td>
+<td><code>scripts/check_tree.py:59-77</code></td>
+</tr>
+<tr>
+<td>Orphan detection</td>
+<td><code>scripts/check_tree.py:82-84</code></td>
+</tr>
+<tr>
+<td>Legacy tree migration</td>
+<td><code>install.py:130-170</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is a line of text:</p>
+<pre class="text"><code>- Use a solid fill for primary buttons.
+- [Dates](decision-dates.md) — How the app presents dates and times.</code></pre>
+<p>The first is a decision. The second is a topic link, told apart by
+the <code>- [</code> prefix (<code>check_tree.py:48</code>). A decision
+carries no id, date, author, source turn or status. Its identity is its
+exact text: the checker's duplicate test is a dictionary keyed on the
+stripped line (<code>:50-56</code>), so two wordings of one rule are two
+rules.</p>
+<p>Manual entries add one marker. Text recorded with <code>/keep</code>
+that does not state a lasting rule is prefixed <code>Note: </code>
+<em>"so it can be read as a record"</em> (<code>organizer.md:11</code>).
+Nothing in either script reads the prefix; it is a convention for the
+agent.</p>
+<p>The tree has a fixed layout. Top-level topics sit beside the index. A
+deeper parent <code>decision-delivery.md</code> keeps its children in a
+sibling folder <code>delivery/</code>, at every depth
+(<code>organizer.md:8</code>). The checker enforces it: a link must
+resolve to a <code>decision-*.md</code> file in exactly the expected
+child directory (<code>check_tree.py:71-74</code>), and a file linked
+twice is an error (<code>:69-70</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no query. The instruction block reads, in part: read
+<code>docs/decision/decision-keeper.md</code> in full, follow relevant
+links recursively, and read the files fresh for each change request
+(<code>install.py:20</code>).</p>
+<p>So recall is the agent reading an index of at most ten decisions and
+some topic links, then choosing which links to open by their one-line
+descriptions. The cap bounds what one read costs. It does not bound the
+tree: a project with many decisions has a deep tree, and whether a
+relevant rule three levels down is opened depends on the descriptions
+along the path.</p>
+<p>Precedence is stated in prose. The user's current instruction beats a
+recorded default, and a one-off exception is applied without changing
+the rules (<code>SKILL.md:11</code>, <code>:19</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The agent decides what to record. The skill asks for a clear, lasting
+rule the user confirms, or a reusable correction, and names what to
+skip: ordinary task requirements, tentative ideas, vague feedback,
+quoted examples and explicit one-off exceptions. Secrets, personal data
+and transcripts are to be left out (<code>SKILL.md:10</code>).</p>
+<p>Two prefixes bypass the judgement. <code>/keep &lt;text&gt;</code>
+records the text and replies with the location;
+<code>/keep and go &lt;text&gt;</code> records it and then handles it as
+a request (<code>SKILL.md:24-27</code>).</p>
+<p>The organizer then does five things
+(<code>organizer.md:5-9</code>):</p>
+<ol type="1">
+<li>Route each decision to the most specific existing topic, or keep a
+new standalone one in the index.</li>
+<li>Replace superseded rules and keep conditions and exceptions that
+still apply. An ambiguous new policy is reported and the old one left
+intact.</li>
+<li>Split any file over ten decisions into child topics,
+recursively.</li>
+<li>Place files by the layout rule, children before parent links.</li>
+<li>Run the checker and compare the rules before and after: moved
+decisions still reachable, new ones present once, unrelated ones
+preserved.</li>
+</ol>
+<p>Step 5's comparison is the agent's own; the checker knows nothing
+about the previous state of the tree.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model call beyond the session's own, no service and no dependency
+past the standard library. On Codex a write hands off to a subagent,
+which is a second context reading the same files.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Two hosts. For Codex the skill lands in
+<code>.agents/skills/decision-keeper/</code> with a subagent definition
+in <code>.codex/agents/</code>; for Claude Code it lands in
+<code>.claude/skills/decision-keeper/</code> and the organizer runs in
+the session (<code>SKILL.md:12</code>). Both hosts share one
+<code>docs/decision/</code> tree when both are installed.</p>
+<p>The instruction block is what makes the skill fire. It tells the
+agent to follow the skill <em>"even if the client did not select it
+automatically"</em> (<code>install.py:21</code>), which covers a host
+whose skill matcher does not trigger.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-checker-sees-only-one-bullet-form">The checker sees only one
+bullet form</h3>
+<p><code>check_tree.py</code> considers a line only when it starts with
+<code>- </code> at column zero (<code>:45</code>). An indented bullet, a
+<code>* </code> bullet and a numbered item are invisible to it. They do
+not count toward the cap, are not checked as duplicates, and a link
+written in one of those forms is not followed, so its target is reported
+as an orphan instead.</p>
+<p>A decision whose text begins with <code>[</code> is read as a
+malformed link and fails the check (<code>:59-62</code>). The organizer
+procedure covers this by asking the agent to escape the bracket
+(<code>organizer.md:11</code>).</p>
+<h3 id="nothing-records-a-removal">Nothing records a removal</h3>
+<p>A dropped rule is deleted and a changed rule overwritten. A later
+session that meets the old behaviour in the code has no line telling it
+the behaviour was decided against. The same request phrased again is
+recorded again.</p>
+<h3 id="rules-are-instructions-with-no-provenance">Rules are
+instructions with no provenance</h3>
+<p>Every bullet is read as policy by every later session. The file says
+nothing about who set a rule, when, or in which conversation. Anyone who
+can commit to <code>docs/decision/</code> sets policy for the agent,
+with the same weight as the user's own confirmed decisions.</p>
+<h3 id="concurrency">Concurrency</h3>
+<p>The procedure asks for one writer and for a reload before continuing
+after a failed handoff (<code>SKILL.md:12</code>), and for a check for
+concurrent changes before editing (<code>organizer.md:8</code>). Neither
+script takes a lock.</p>
+<h3 id="marks">Marks</h3>
+<p>None of the seven is present.</p>
+<ul>
+<li><code>tombstone</code>: a removed rule leaves no record.</li>
+<li><code>trust_state</code>: a bullet has no status;
+<code>Note: </code> is a text prefix no code reads.</li>
+<li><code>bitemporal</code>: no dates at all.</li>
+<li><code>scope_enforced</code>: one tree per project, and no read path
+to filter.</li>
+<li><code>audit_log</code>: the tree holds current state only; git
+history is the host's.</li>
+<li><code>human_review</code>: confirmation by the user is a condition
+in the skill prose, judged by the agent that writes.</li>
+<li><code>negative_eval</code>: no tests.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>No test file, no CI workflow and no evaluation is committed; the
+searches are under Recorded searches. Neither the README nor the skill
+cites a paper or a benchmark.</p>
+<p>I ran nothing. The two scripts are short enough that every statement
+about them above comes from reading the lines cited.</p>
+<p>The installer's hash tables are the nearest thing to a regression
+record: twenty-three SHA-256 values of earlier skill files under the
+names Record Me, Teach Me and Decision Keeper
+(<code>install.py:41-85</code>). The files they describe are not in the
+repository.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Cap the fan-out of an always-read file.</strong> Ten
+decisions per file with a recursive split keeps the entry point cheap to
+read whole, whatever the total. It is the cheapest answer to an
+instruction file that grows until it is skimmed.</p>
+<p><strong>Check the shape with code, not with the model.</strong> Links
+that resolve, one parent per file, no orphans, no duplicate lines: 94
+lines of standard library.</p>
+<p><strong>Recognise your own releases by hash before
+overwriting.</strong> The installer upgrades a file only when it matches
+a known release and stops on anything a person edited.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not leave the checker for the agent to remember.</strong>
+A pre-commit hook or a CI step would make the cap and the link rules
+hold. As committed, they hold when the agent runs the script.</p>
+<p><strong>Do not make deletion the only form of retraction.</strong> A
+project that drops a rule usually wants later sessions to know it was
+dropped.</p>
+<p><strong>Do not key identity on exact text.</strong> A rule reworded
+during a split is a new rule to the duplicate check.</p>
+<h3 id="fit">Fit</h3>
+<p>It fits a single developer or a small team that wants project
+conventions written down by the agent as they are stated, in files that
+are reviewed like any other change. It does not fit where a rule's
+origin matters, where rules must be retired with a reason, or where more
+than one agent writes at once.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What is the <code>evidence</code> argument for?</strong> It
+is validated and then unused, and its error messages speak of a
+pre-existing project knowledge file.</li>
+<li><strong>How deep does a real tree get?</strong> No example tree is
+committed; the repository's own <code>docs/</code> is in
+<code>.gitignore</code>.</li>
+<li><strong>Does the Codex subagent see the conversation?</strong> The
+skill passes it the confirmed decisions and any explicit supersession,
+so a supersession the parent did not notice is not one the organizer can
+apply.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SKILL.md</code>,
+<code>.agents/skills/decision-keeper/SKILL.md</code></td>
+<td>The skill, twice</td>
+</tr>
+<tr>
+<td><code>.agents/skills/decision-keeper/references/organizer.md</code></td>
+<td>The write procedure</td>
+</tr>
+<tr>
+<td><code>.agents/skills/decision-keeper/scripts/check_tree.py</code></td>
+<td>The tree checker</td>
+</tr>
+<tr>
+<td><code>.codex/agents/decision_keeper_organizer.toml</code></td>
+<td>Codex subagent definition</td>
+</tr>
+<tr>
+<td><code>install.py</code></td>
+<td>Installer and migration</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td>Usage and the trigger phrases</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git</code> in a full clone at the pinned
+commit.</p>
+<ul>
+<li><code>git ls-files | xargs wc -l</code> — nine files, 567
+lines.</li>
+<li><code>git grep -n -i -E 'def test_|unittest|pytest'</code> —
+nothing.</li>
+<li><code>git ls-files | grep -c '^\.github'</code> — 0.</li>
+<li><code>git grep -n -i -E 'evidence' -- README.md SKILL.md</code> —
+nothing.</li>
+<li><code>git grep -n -E 'knowledge|evidence' -- install.py</code> — the
+signature, the validation at <code>:236-249</code>, the argument parser
+and the call; no later use.</li>
+<li><code>git grep -n -i -E 'arxiv|doi\.org|bibtex|benchmark'</code> —
+nothing.</li>
+<li><code>diff SKILL.md .agents/skills/decision-keeper/SKILL.md</code> —
+identical.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-16</strong> — <a
+href="https://github.com/mudassirzulfiqar/Decision-Keeper/commit/911ff6b88e7c5e65b64326f9a5719291e6608ab6"><code class="commit-id" title="911ff6b88e7c5e65b64326f9a5719291e6608ab6">911ff6b8…</code></a>
+— first reading. Screened first: no findings. Nothing installed or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

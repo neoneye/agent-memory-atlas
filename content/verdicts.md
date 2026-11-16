@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 805 reports.**
+**This page covers all 806 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7381,3 +7381,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 5,681 lines of Python and 116 test functions run by a workflow, 215 commits over eleven months, version 0.9.1. The episodic tests run on real SQLite; the semantic tests run against a mocked index. MIT.
 - Study when: the failure to prevent is a corrected fact erasing the record of what was believed before, in a local store one process owns.
 - Do not copy when: callers cannot be trusted to send canonical UTC timestamps, a single stored statement must be erasable, or the HTTP API is reachable by anyone who can name another agent.
+
+### [`decision-keeper`](../systems/decision-keeper/)
+
+- Best idea: a fan-out cap on the file the agent always reads. No file holds more than ten decisions; past ten, a cluster moves to a child topic linked from the parent, so the entry point stays cheap to read whole.
+- Biggest risk: every step rests on the agent following prose. It decides what is a lasting rule, it performs supersession by overwriting the line, and it is the only thing that runs the checker. A dropped rule is deleted and leaves no record.
+- Most reusable component: `scripts/check_tree.py`, 94 lines of standard library that verify links, one parent per file, no orphans, no duplicate lines and the cap.
+- Maturity impression: one commit, 567 lines, no tests and no CI. The installer is careful beyond its size: it recognises earlier releases by hash and refuses to overwrite an edited file. MIT.
+- Study when: an agent-maintained conventions file keeps growing until it is skimmed, and the fix wanted is structural.
+- Do not copy when: a rule's origin or retirement must be recorded, or more than one agent writes at once.

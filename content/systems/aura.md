@@ -622,6 +622,23 @@ README's account it reports a preregistered 24-line battery run on saved copies
 of the system, the work of the `core/subject/` harness, and makes no claim
 about subjective experience.
 
+**One outside audit exists, and the tree answers it.** *Real Computation or
+Merely Naming?* ([arXiv:2610.41604](https://arxiv.org/abs/2610.41604), Chen,
+Zhang, Xu and Zhang, 30 October 2026) checks one Aura mechanism in depth, the
+IIT φ core, by running the project's own pre-committed criteria on CPU. It
+reports the null test sound when run alone and never attached on the live
+path: the hook knew two of four estimators, so memoryless noise scored φ of
+0.42 to 0.46 and was called a complex. Two of its five criteria were falsified.
+The paper names no commit, and it gave the other 40 consciousness modules
+keyword-level checks only. None of it concerns memory.
+
+Commit `864179c50`, on 11 November 2026, cites the paper and closes the gap.
+`_NULL_INPUTS` lists all four estimators
+(`core/consciousness/phi_core.py:1779-1788`), `is_complex` stays false until a
+null is measured (`:442-452`), and
+`tests/test_phi_null_reaches_every_winner.py` adds four cases. I read the fix
+and ran none of it.
+
 The claims apparatus deserves separate credit and a separate caution.
 `CLAIMS_MATRIX.md` pairs each claim with a reproduce command and a falsifier,
 which is the structure this atlas asks benchmark authors for and rarely gets.
@@ -631,7 +648,7 @@ column while reporting a *declining* capability curve from its own ledger. A
 project that publishes the number that undercuts its most marketable claim is
 doing something the field mostly does not.
 
-The caution is that every one of those runs is local and self-administered.
+The caution is that every one of the matrix's runs is local and self-administered.
 Entry 6 of `CLAIMS_NOT_SUPPORTED.md` says so — external validation is
 `not proven` — and row 12 of the matrix is blocked on it. So the matrix is a well-structured record of what the author has
 checked, not evidence that has survived anyone else checking it. Read it as the
@@ -751,8 +768,8 @@ ideas, write your own.
   input from trust state.
 - **Metaphorical module names outrun their implementations** in several places
   — `memory_court.py` is 42 lines, `source_provenance.py` is 20.
-- **All claims are self-administered**, which the project states in entry 6 of
-  its unsupported-claims ledger.
+- **The claims matrix is self-administered**, which the project states in entry
+  6 of its unsupported-claims ledger; the one outside audit covers the φ core.
 
 ## 13. Build-vs-Borrow Takeaways
 
@@ -840,7 +857,7 @@ a line opening `def test_` or `async def test_` in a tracked `.py` file under
 
 ## History
 
-**2026-11-16** — [`19cf16e8450f30396013e3ccaefdf9fdbad03b77`](https://github.com/youngbryan97/aura/commit/19cf16e8450f30396013e3ccaefdf9fdbad03b77) — re-read 3,673 commits on; `negative_eval` added, on tests committed since 22 July 2026. Four statements were wrong at every earlier pin. The persisted `contested` key has a reader, the latent-cortex ingress, and [section 10](#10-tests-evals-and-benchmarks) cites its must-not-admit cases. Repetition has not promoted a belief to `trusted` since 2 August. `reconcile` has a caller. And the operator's memory panel exists, dispatching to methods the registered service lacks ([section 1](#1-executive-summary)). The licence gained a research-use grant on 9 November and the project published a preprint. Screened first, two manifests inside the cooldown; nothing installed or run.
+**2026-11-16** — [`19cf16e8450f30396013e3ccaefdf9fdbad03b77`](https://github.com/youngbryan97/aura/commit/19cf16e8450f30396013e3ccaefdf9fdbad03b77) — re-read 3,673 commits on; `negative_eval` added, on tests committed since 22 July 2026. Four statements were wrong at every earlier pin. The persisted `contested` key has a reader, the latent-cortex ingress, and [section 10](#10-tests-evals-and-benchmarks) cites its must-not-admit cases. Repetition has not promoted a belief to `trusted` since 2 August. `reconcile` has a caller. And the operator's memory panel exists, dispatching to methods the registered service lacks ([section 1](#1-executive-summary)). The licence gained a research-use grant on 9 November and the project published a preprint. Screened first, two manifests inside the cooldown; nothing installed or run. [Section 10](#10-tests-evals-and-benchmarks) also records an outside audit of the φ core, [arXiv:2610.41604](https://arxiv.org/abs/2610.41604), and the upstream fix that cites it.
 
 **2026-10-01** — [`cf84a733c4bcf174646bc2a955d996ed170b990e`](https://github.com/youngbryan97/aura/commit/cf84a733c4bcf174646bc2a955d996ed170b990e) — read again at the same commit; no mark moved. Sections 1 and 10 said *"I ran it"* without naming the commit: the 16 audit-chain tests ran at the first pin, `e8866f4`, and later readings ran nothing. The test file is byte-identical here, while `core/runtime/audit_chain.py` grew from 611 to 692 lines, so the run predates the module. The page called this the only hash-chained audit in the atlas; [aimee](../aimee/) and [Midas](../midas/) carry chains too, and the claim is now scoped to Aura. Section 1 and section 10 gave two different test censuses, neither from this pin; both now give 46,060 functions in 4,077 files, by the method under Recorded searches.
 
