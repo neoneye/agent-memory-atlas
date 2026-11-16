@@ -18202,6 +18202,52 @@ through the API. The piece worth knowing is beside memory: a member's
 vault values are redacted from every event before it reaches the
 transcript (<code>runner.mjs:156-157</code>, <code>:222</code>), so the
 one store that is replayed is filtered at the write.</li>
+<li><strong><code>huggingface/pybot</code> was examined and has no
+report: its memory store is the state of one conversation in a Python
+dict, and nothing in it is written to disk.</strong> Apache-2.0, read at
+<a
+href="https://github.com/huggingface/pybot/commit/7d63c7fbebb44c7e466e5c8b5c1f341ab767929e"><code class="commit-id" title="7d63c7fbebb44c7e466e5c8b5c1f341ab767929e">7d63c7fb…</code></a>,
+the head of <code>main</code> on 16 November 2026, 21 commits from 12 to
+16 November 2026: 636,409 lines of Python in 528 files under
+<code>bot/</code>, of which <code>bot/memory/</code> is 109,319 lines in
+117 files, and a 197-line command line with one test file; the screen
+found a <code>pyproject.toml</code> with no lockfile, changed inside the
+cooldown, and nothing that auto-runs, and nothing was installed or run.
+PyBot is a rule-based chatbot with no model: regular expressions,
+branches and lookup tables, which its README says a swarm of more than
+1,000 agents wrote across over 5,000 evaluated versions. Each turn calls
+<code>turn(text, memory)</code> (<code>bot/runtime.py:82-116</code>).
+The command line creates <code>memory = {}</code> when a chat starts and
+replaces it on <code>/reset</code> (<code>pybot.py:125</code>,
+<code>:140-141</code>), and the dict ends with the process. So the
+README's <em>Memory store</em> row describes dialogue state:
+<code>observe</code> hooks pull a name, a job, a city, pets and plans
+out of each line into <code>memory["user"]</code> with an ordered log of
+when each was said (<code>bot/memory/__init__.py:307-340</code>), and
+the store module answers questions about the conversation itself
+(<code>bot/modules/memory_store.py:2-11</code>). It is still a careful
+piece of in-conversation state. <code>forget</code> takes a value back
+out when the person retracts it and leaves the log entry, because <em>"a
+fact that was true ten turns ago is still part of the conversation"</em>
+(<code>bot/memory/__init__.py:533-539</code>). And the runtime gives
+every responding module its own deep copy of the dict and adopts only
+the chosen module's copy, so <em>"a reply that is not chosen leaves no
+trace"</em> (<code>bot/runtime.py:6-11</code>, <code>:56-61</code>,
+<code>:89-104</code>): a write made while drafting a reply is committed
+only if that reply is the one sent, which is a cheap answer to
+speculative writes that the persistent stores in this atlas rarely give.
+That is all inside one session, on the <a
+href="../families/#not-in-scope-conversation-window-management">conversation-window
+side of the line</a>. Search:
+<code>git grep -n -I -E '(^|[^_a-z.])open\(|write_text|json\.dump|import (os|pickle|sqlite3|shelve|json|pathlib|tempfile|socket|urllib)|from (os|pathlib|urllib)' -- bot</code>
+returns four lines: three are the word <code>open</code> inside regular
+expressions about valves and messages, and the fourth is an unused
+<code>import os, sys</code> inside a function at
+<code>bot/knowledge/lookup.py:3220</code>. No file under
+<code>bot/</code> opens, writes or loads anything. The README's 550,000
+lines of agent-written tests are not in the repository, and its
+SmolTalkBench win rate of 26% is the project's own figure; neither was
+checked here.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
