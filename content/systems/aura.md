@@ -1,23 +1,24 @@
 ---
 title: "Aura"
 eyebrow: "Receipts that chain, beliefs that don't survive"
-description: "A self-hosted Python cognitive runtime with a hash-chained receipt audit and a four-state belief-status machine held in a dictionary a restart empties."
+description: "A self-hosted Python cognitive runtime with a hash-chained receipt audit and a belief-status machine held in a dictionary a restart empties."
 root: ../..
 page_kind: system
 source_name: "youngbryan97/aura"
 source_url: https://github.com/youngbryan97/aura
 archive_name: "youngbryan97--aura"
-revision: cf84a733c4bcf174646bc2a955d996ed170b990e
-revision_url: https://github.com/youngbryan97/aura/commit/cf84a733c4bcf174646bc2a955d996ed170b990e
-analyzed_at: 2026-10-01
-licence: "All rights reserved; the LICENSE grants reading and learning only, no copying, derivative works or use."
-size: "3,006,498 lines of Python in 9,051 files, 1,010,315 of them under tests/, archive/ and scratch/ included; core/memory/ is 35,346 lines in 116 files"
-activity: "9,802 commits on main by 7 author identities, 23 February – 19 September 2026"
-tests: "46,060 test functions across 4,077 files under tests/; the 16 audit-chain tests ran at the first pin, not this one"
-capabilities: "trust_state, audit_log"
+revision: 19cf16e8450f30396013e3ccaefdf9fdbad03b77
+revision_url: https://github.com/youngbryan97/aura/commit/19cf16e8450f30396013e3ccaefdf9fdbad03b77
+analyzed_at: 2026-11-16
+licence: "All rights reserved, with a research-use grant to run the code to reproduce one preprint's results; no copying, derivative works or products."
+size: "3,492,466 lines of Python in 11,750 files, 1,207,434 of them under tests/, archive/ and scratch/ included; core/memory/ is 37,420 lines in 124 files"
+activity: "13,475 commits on main by 8 author identities, 23 February – 16 November 2026"
+tests: "56,513 test functions across 5,583 files under tests/; none ran at this pin — the 16 audit-chain tests ran at the first pin"
+capabilities: "trust_state, audit_log, negative_eval"
 capability_evidence:
-  trust_state: "the autonomous write path — a contested belief defers an intent that touches its key | core/constitution.py:115, :171-249, :321-345, core/executive/executive_core.py:858-871, :1510-1565 | `BeliefMutationRecord.status` is `tentative` on the dataclass and takes `active`, `trusted` or `contested` as the evaluator assigns them — four values, not three, and the default is the one the 2026-09-19 re-read added to this record, set on the record when a contradiction arrives against a belief that has not earned trust. `BeliefAuthority.summary()` partitions on it (`status == 'contested'`, `status == 'trusted'`) and exposes `fresh_contested_keys`; `_get_epistemic_state()` reads that and the gate defers any non-user `WRITE_MEMORY` or `UPDATE_BELIEF` intent whose topic matches a contested key, with `_intent_touches_contested_topic` failing closed to the global block when no keys are available. The status filters writes, not reads, and it does not survive a restart | tests/test_contested_belief_gate_is_relevant.py:82, tests/test_reliability_hardening.py:1528"
-  audit_log: "the receipt chain beside the memory store | core/runtime/receipts.py:644-646, core/runtime/audit_chain.py:276 | every receipt the runtime emits gets an append-only link in `root/_chain.jsonl` carrying `seq`, `receipt_id`, `prev_hash` and an `entry_hash` taken over the previous hash, so modification, insertion and deletion all break the chain. `MemoryWriteGateway` emits a `MemoryWriteReceipt` after the write lands (`memory_write_gateway.py:141-152`) and rolls the write back when emission fails; `verify_chain()` re-hashes the on-disk receipt bodies rather than trusting the links, and reports receipts persisted but missing from the chain. This is the system's own store, not git history | tests/test_audit_chain.py — sixteen cases including `test_detects_modified_receipt_body` and `test_exported_chain_can_be_independently_verified`"
+  trust_state: "the autonomous write path — a contested belief defers an intent that touches its key | core/constitution.py:115, :171-264, :322-354, core/executive/executive_core.py:801-817, :1458-1519 | `BeliefMutationRecord.status` is `tentative` on the dataclass and takes `active`, `trusted` or `contested` as the evaluator assigns them. `BeliefAuthority.summary()` partitions on it and exposes `fresh_contested_keys`; `_get_epistemic_state()` reads that and the gate defers any non-user `WRITE_MEMORY` or `UPDATE_BELIEF` intent below priority 0.9 whose topic matches a contested key, with `_intent_touches_contested_topic` failing closed to the global block when no keys are available. This status filters writes, not reads, and does not survive a restart. A separate persisted `contested` metadata key is refused on one read path, the latent-cortex memory ingress (`core/brain/llm/latent_cortex/epistemic_memory.py:670-672`) | tests/test_contested_belief_gate_is_relevant.py:31 and :82, tests/test_reliability_hardening.py:1531"
+  audit_log: "the receipt chain beside the memory store | core/runtime/receipts.py:611, :661, core/runtime/audit_chain.py:331 | every receipt the runtime emits gets an append-only link in `root/_chain.jsonl` carrying `seq`, `receipt_id`, `prev_hash` and an `entry_hash` taken over the previous hash, so modification, insertion and deletion all break the chain. `MemoryWriteGateway` emits a `MemoryWriteReceipt` after the write lands (`memory_write_gateway.py:142-156`) and rolls the write back when emission fails; `verify_chain()` re-hashes the on-disk receipt bodies rather than trusting the links, and reports receipts persisted but missing from the chain. This is the system's own store, not git history | tests/test_audit_chain.py — sixteen cases including `test_detects_modified_receipt_body` and `test_exported_chain_can_be_independently_verified`"
+  negative_eval: "the latent-cortex memory ingress and the gateway record index, not the facade's search | core/brain/llm/latent_cortex/epistemic_memory.py:670-685, core/memory/gateway_record_index.py:170 | `SelectiveMemoryBridge._normalize` refuses a record whose metadata carries `contested`, whose `expires_at` has passed, or whose `tenant_id`, `user_id` or `session_id` is present and differs from the query's; the gateway record index does not list `_quarantine/`. Each committed case pairs the refused records with one that must be admitted | tests/test_rlc_epistemic_memory.py:118 and :146, tests/test_recall_follows_the_disk.py:62"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -27,12 +28,12 @@ matrix:
   retrieval: "Hybrid dense plus lexical scoring, gated by an epistemic firewall that clusters near-duplicates before counting corroboration"
   write: "Two paths — a fail-closed gateway that rolls back when its receipt cannot be emitted, and a facade whose governance block degrades open for non-user-facing writes"
   update_delete: "Retention is RAM-scaled keep-counts per tier; a contradicting claim cannot overwrite a trusted belief, and the rejected value is stored but never consulted"
-  scoping: "`user_id` normalised and carried on chat-turn and episode records; no tenancy boundary and no default scope on recall"
+  scoping: "`user_id` normalised and carried on chat-turn and episode records; the latent-cortex ingress refuses a record whose tenant, user or session key differs from the query's, and the facade's search applies no scope"
   integration: "A self-hosted daemon with a desktop app, tools, skills, sensors and an autonomy engine — memory is internal, not an exposed service"
   background: "Consolidation, synthesis, defragmentation, scar healing and pruning, all inside the running process"
-  trust: "`active | trusted | contested` on a belief record, gating autonomous writes that touch a contested key, with a resolution API and a six-hour freshness window — none of it persisted"
+  trust: "`tentative | active | trusted | contested` on a belief record, gating autonomous writes that touch a contested key, with a resolution API and a six-hour freshness window — none of it persisted; a persisted `contested` key is refused by one ingress"
   strengths: "A tamper-evident receipt chain that detects modification, insertion and deletion, with sixteen tests that passed when run at the first pin; and a claims ledger that names what the project cannot prove"
-  risks: "The belief ledger is a process-lifetime dictionary, so every trust state resets on restart, and the `contested` flag that is persisted on memory records is read by nothing"
+  risks: "The belief ledger is a process-lifetime dictionary, so every trust state resets on restart, and the operator panel's contest and mark-false buttons dispatch to methods the registered memory service does not define"
 ---
 
 ## 1. Executive Summary
@@ -43,24 +44,36 @@ cannot pass, and a belief-status machine held in a dictionary that a restart
 empties.
 
 **Almost none of it was written by a person, and the repository says so in its
-own metadata.** Of the 9,802 commits reachable from this pin, 4,074 are
-authored `Codex`, 3,623 `Zenflow`, 2,027 `Claude` and 63 `ChatGPT`; fifteen
-carry the owner's name or handle. Run
+own metadata.** Of the 13,475 commits reachable from this pin, 5,437 are
+authored `Claude`, 4,335 `Codex`, 3,623 `Zenflow`, 63 `ChatGPT` and one
+`ChatGPT Codex`; sixteen carry the owner's name or handle. Run
 `git log --format='%an' | sort | uniq -c | sort -rn` and that is the whole
-table. This bears on how the report reads the tree rather than on whether the
-design is good: a mechanism here can be elaborate, tested and documented and
-still have had no human decide it, which is the most plausible account of the
-three unconnected trust representations described below. It is also why the
+table.
+
+This bears on how the report reads the tree rather than on whether the design
+is good: a mechanism here can be elaborate, tested and documented and have had
+no human decide it. That is the most plausible account of the trust
+representations described below, which do not share a schema, and of an
+operator control wired to a class the runtime never builds. It is also why the
 dated incident comments quoted later matter more than usual — they are the
 places where something observed in production, rather than generated, entered
 the code.
 
-**Read the licence before anything else.** `LICENSE` is *all rights reserved*,
-granting permission to read and learn only: no copying, no derivative works, no
-use in your own projects, no commercial use. Everything below is an analysis of
-a design you may study and may not adopt. The atlas records the same position
-for [OptMem](../optmem/) and treats it as a caveat rather than a reason not to
-read — see also [Empryo](../empryo/) under BSL and [Dexto](../dexto/) under ELv2.
+**Licence.** `LICENSE` is all rights reserved with one grant. Commit
+`851c438d4`, on 9 November 2026, added a research-use grant: a reader may
+download, install and run the code, changing it only as far as running it
+requires, to reproduce, verify or test the results of the project's preprint,
+and may publish what the runs find with a citation. The grant is personal and
+revocable, and ends on breach with a duty to delete every copy. It excludes
+copying or hosting beyond those private copies, any product or service,
+derivative works, and training or tuning a model on the code, its data or its
+outputs; no patent licence is given.
+
+Until that commit the text permitted
+reading only, and the README badge reads *All Rights Reserved (Read-Only)* at
+this pin. Everything below analyses a design that may be studied and not
+adopted, the position the atlas records for [OptMem](../optmem/) — see also
+[Empryo](../empryo/) under BSL and [Dexto](../dexto/) under ELv2.
 
 Both mechanisms are worth the read.
 
@@ -84,125 +97,177 @@ include `test_detects_modified_receipt_body`,
 `test_exported_chain_can_be_independently_verified`. The tamper-evidence is tested, not merely claimed. The later
 readings read the suite and did not run it. At this pin the test file is
 byte-identical to the one that ran, while `core/runtime/audit_chain.py` has grown
-from 611 to 692 lines, adding `refresh_from_disk` among other changes, so the
+from 611 to 709 lines, adding `refresh_from_disk` among other changes, so the
 passing run predates the module as it stands.
 
 **The belief machine is the most complete in this atlas and it does not survive
-a restart.** `BeliefAuthority` in `core/constitution.py` runs a real epistemic
-state machine: a belief is `active`, promoted to `trusted` when repeated
-agreement pushes confidence past 0.75, and marked `contested` when a
-contradiction arrives against a belief that has not earned that. A contradiction
-against a *trusted* belief is refused outright — the stored value does not
-change and the record is stamped `allowed=False` with reason
-`contradicted_trusted_belief`. `reconcile(affirmed | retired)` is the resolution
-path, and a contest expires after six hours under a constant whose comment
-records why it exists.
+a restart.** `BeliefAuthority` in `core/constitution.py` runs an epistemic
+state machine over four statuses. A belief starts `tentative` and becomes
+`active` on agreement. It becomes `trusted` only with confidence at 0.75 or
+above **and** two distinct evidence references, or when the state authority
+holds the key as a hard fact. A contradiction against a belief below 0.75 marks
+it `contested`.
+
+A contradiction against a belief at 0.75 or above is refused outright — the
+stored value does not change and the record is stamped `allowed=False` with
+reason `contradicted_trusted_belief`. `reconcile(affirmed | retired)` is the
+resolution path for a contested belief, and a contest expires after six hours
+under a constant whose comment records why it exists.
+
+**Repetition cannot promote, and the code records the day it could.** The
+comment at `core/constitution.py:201-220` describes the defect: four
+repetitions of one unsupported assertion walked its confidence from 0.35 past
+the 0.75 line. Since `5200f0229`, on 2 August 2026, reinforcement needs an
+evidence reference the belief has not been credited with, and a belief with
+fewer than two distinct references is capped at 0.70 and stays `active`.
 
 **What the status is for is deferring the agent's own writes, and the gate
-records the day it was too blunt.** `executive_core.py:857-866` defers any
-non-user `WRITE_MEMORY` or `UPDATE_BELIEF` intent below priority 0.9 while any
-fresh contest stands, with the reason string
-`epistemic_reconciliation_required:<n>`. It was a global switch, and the
-docstring on `_intent_touches_contested_topic` says what that cost:
+records the day it was too blunt.** `executive_core.py:801-817`, and its
+synchronous twin at `:1003-1015`, defer any non-user `WRITE_MEMORY` or
+`UPDATE_BELIEF` intent below priority 0.9 while a fresh contest touches its
+topic, with the reason string `epistemic_reconciliation_required:<n>`. It was a
+global switch, and the docstring on `_intent_touches_contested_topic` says what
+that cost:
 
 > *"The live 2026-07-25 hour deferred 71 autonomous knowledge writes on
 > `epistemic_reconciliation_required:2` — two contested claims blocking every
 > unrelated fact and concept she learned."*
 
-The gate compares the intent's goal, topic, key, namespace and content against
-`fresh_contested_keys` and defers only on a match. Two fallbacks keep it
+The gate compares the intent's goal, topic, key, namespace, content and summary
+against `fresh_contested_keys` and defers only on a match. Two fallbacks keep it
 conservative: no keys, or nothing in the intent to judge relevance by, and the
 old global behaviour stands. The comment beside `summary()` states the general
 form of the lesson — *"A count can only gate globally … Relevance needs the
 keys"* — which is the rarer half of an epistemic status: knowing not only that
 something is disputed but what it is disputed about.
 
-`self._beliefs` is a plain dictionary (`core/constitution.py:154`). There is no
-`save`, no `load`, no snapshot of it anywhere, and `ConstitutionalCore`
-constructs a fresh `BeliefAuthority()` at line 364. Restart the process and
-every belief is unknown again at confidence 0.35: what was trusted is no longer
-trusted, what was contested is no longer contested, and the contradiction that
-produced the contest is gone.
+A deferral is handed on rather than dropped: `_surface_research_trigger` passes
+the contested topic to the research pipeline. An intent from
+`AUTONOMOUS_RESEARCH` is not deferred at all; it is tagged
+`confidence_tier: provisional` and `requires_reconciliation: True`. Five modules
+write that second tag and no Python file outside `tests/` reads it.
+
+`self._beliefs` is a plain dictionary (`core/constitution.py:155`). There is no
+`save`, no `load`, no snapshot of it on any boot path, and `ConstitutionalCore`
+constructs a fresh `BeliefAuthority()` at line 366. Restart the process and
+every belief is unknown again at confidence 0.35: what was trusted is not
+trusted, what was contested is not contested, and the contradiction that
+produced the contest is gone. The one other module that names the dictionary,
+`core/subject/carrier_reads.py:72`, lists it among the state an experiment
+harness copies between forks of a running process.
 
 Aura does have a belief store that persists. It is a different one.
 `WorldModelEngine` (`core/final_engines.py:50`) writes to
 `data/world/beliefs.json` on every addition and loads it at construction — and
 its `BeliefNode` is `claim`, `confidence`, `evidence_count`, `last_updated`,
-`tags`, `source_ids`. **No status field at all.** So the two halves of the
-epistemics are split across the durability boundary in the same direction every
-time: the store with `active | trusted | contested` does not survive a restart,
-the store that survives has no notion of contested, and the `contested` flag
-stamped on memory records is read by nothing.
+`tags`, `source_ids`. **No status field at all.** The store with
+`tentative | active | trusted | contested` does not survive a restart, and the
+store that survives has no notion of contested.
 
-The third finding is what makes the second sting. `MemoryFacade`
-stamps a provenance envelope on **every** long-term memory write — `source`,
-`confidence`, `identity_relevant` and `contested` — with the stated purpose *"so
-downstream readers can distinguish memory from inference / fantasy"*
-(`core/memory/memory_facade.py:1501`). That envelope is persisted with the
-record. Grep the whole of `core/` for a reader of that field and the only hits
-are the belief ledger's own separate `status` machinery. **The `contested` flag
-that survives a restart is read by nothing; the `contested` status that is read
-does not survive one.**
+**A second `contested` does persist, and the operator's button for it does not
+land.** `MemoryFacade.add_memory` stamps a provenance envelope on every
+long-term write — `source`, `confidence`, `identity_relevant` and `contested`
+(`core/memory/memory_facade.py:1471-1491`) — and its welfare check sets a
+top-level `contested` key on an identity-relevant or relational write made
+under integrity strain (`:1840-1850`).
+
+One reader consults that key. `SelectiveMemoryBridge._normalize` refuses a
+record whose metadata carries it, before the record can become context for a
+latent-cortex reasoning episode
+(`core/brain/llm/latent_cortex/epistemic_memory.py:670-672`), and a committed
+test asserts the refusal. The facade's own `search` does not consult it.
+
+The operator's control is the other half. The memory panel has freeze, contest
+and mark-false buttons (`interface/static/memory_panel.html:938-966`) posting
+to five routes. Each route takes a Will decision and then calls
+`getattr(sem, method_name)` on the `semantic_memory` service
+(`interface/routes/memory.py:414`).
+
+`core/providers/memory_provider.py:104` registers that name as the
+`BlackHoleVault`, which defines none of `edit_memory`, `delete_memory`,
+`freeze_memory`, `contest_memory` or `mark_false`. The class that defines all
+five, and hides `contested`, `false` and `deleted` records from its own search,
+is `SemanticMemory` in `core/brain/semantic_memory.py`, and the only code that
+constructs it is under `tests/`. Read, not run: by that wiring each route
+answers `semantic_memory missing <method>` and no flag is set.
+
+**The contested flag with a restart-proof reader has no working setter for the
+operator; the contested status with a working machine does not survive a
+restart.**
 
 ## 2. Mental Model
 
-Trust in Aura lives in three places that do not share a representation.
+Trust in Aura lives in five places that do not share a representation.
 
 | Where | Shape | Survives restart |
 | --- | --- | --- |
-| `BeliefMutationRecord.status` | `active`, `trusted`, `contested` | No |
+| `BeliefMutationRecord.status` | `tentative`, `active`, `trusted`, `contested` | No |
 | `WorldModelEngine.BeliefNode` | a confidence float, no status | Yes |
-| Memory provenance envelope | `source`, `confidence`, `contested` | Yes, and nothing reads it |
+| Memory metadata `contested` | a boolean, top-level and inside the provenance envelope | Yes; one ingress refuses it, facade search ignores it |
+| `SemanticMemory` tags | `frozen`, `contested`, `false`, `deleted` | It would, in a class only tests construct |
 | `scar_formation` | a durable marker per failure class, healing over time | Yes, and it gates planning |
 
 The belief ladder is the one with the semantics the atlas asks for:
 
 ```python
 if existing.value == normalized_value:
-    confidence = min(0.98, float(existing.confidence or 0.35) + 0.12)
-    status = "trusted" if confidence >= 0.75 else "active"
+    fresh = [ref for ref in evidence_refs if ref not in prior_evidence]
+    confidence = min(0.98, existing.confidence + 0.12) if fresh else existing.confidence
+    if distinct_sources >= 2 and confidence >= 0.75:
+        status = "trusted"
+    else:
+        confidence = min(confidence, 0.70)          # uncorroborated ceiling
+        status = "active"
 else:
     contradictions.append(str(normalized_value)[:180])
-    if float(existing.confidence or 0.35) >= 0.75:
-        normalized_value = existing.value          # the old value stands
+    if existing.confidence >= 0.75:
+        normalized_value = existing.value           # the old value stands
         status = "trusted"
-        reason = "contradicted_trusted_belief"     # allowed=False
+        reason = "contradicted_trusted_belief"      # allowed=False
     else:
         status = "contested"
 ```
 
-Two properties are worth separating. Agreement is what promotes — repetition
-raises confidence by a fixed step, so `trusted` means *asserted consistently*
-rather than *verified*. And a trusted belief is **immune to contradiction**: the
-contradicting value is appended to a list and the belief does not move. That is
-a strong stance, and its failure mode is the obvious one — a wrong belief that
-reached 0.75 can only be dislodged by `reconcile`, which nothing calls
-automatically.
+Two properties are worth separating. Promotion needs corroboration: a fresh
+evidence reference raises confidence by a fixed step and `trusted` needs two
+distinct references. A reference is any string the caller passes, the free-text
+`note` included, so `trusted` means *asserted with two citations* rather than
+*verified*.
+
+And a trusted belief is **immune to contradiction**: the contradicting value is
+appended to a list and the belief does not move. That is a strong stance, and
+its failure mode is the obvious one. A wrong belief that reached 0.75 has no
+exit inside `BeliefAuthority`: `reconcile` returns `False` for any status but
+`contested` (`:287`), and a hard fact from the state authority that differs
+from the stored value takes the same refused branch.
 
 ```mermaid
-%% caption: two write paths with opposite failure modes — the gateway denies when governance is unwired, the legacy facade degrades open — and two fields that reach the store and are read by nothing
+%% caption: two write paths with opposite failure modes — the gateway denies when governance is unwired, the legacy facade degrades open — a contested key one ingress refuses, and an operator control that does not land
 flowchart TD
     W["memory write"] --> P{"which path?"}
     P -->|"action executor"| GW["MemoryWriteGateway"]
     P -->|"legacy add_memory"| FA["MemoryFacade"]
-    GW --> G1{"governance wired?"}
+    GW --> G1{"governance<br/>wired?"}
     G1 -->|"no, or it raised"| DENY["deny (fail-closed)"]
     G1 -->|"approved"| AW["atomic write + receipt"]
     AW --> RC{"receipt emitted?"}
     RC -->|"no"| RB["roll the write back"]
     RC -->|"yes"| CH[("receipt chain<br/>prev_hash / entry_hash")]
-    FA --> PROV["stamp provenance:<br/>source, confidence, contested"]
+    FA --> PROV["stamp provenance:<br/>source, confidence,<br/>contested"]
     PROV --> CG{"constitutional gate"}
-    CG -->|"blocked, reason is<br/>infrastructure-unavailable,<br/>source not user-facing,<br/>no orchestrator"| OPEN["degrade open"]
+    CG -->|"blocked: service<br/>unwired, source not<br/>user-facing, no<br/>orchestrator"| OPEN["degrade open"]
     CG -->|"blocked otherwise"| STOP["refuse"]
     CG -->|"approved"| STORE[("episodic / vector / JSON")]
     OPEN --> STORE
-    STORE -.->|"contested field<br/>read by nothing"| X["&nbsp;"]
-    BA["BeliefAuthority<br/>active / trusted / contested"] -.->|"in RAM only"| GONE["empty after restart"]
+    STORE -.->|"contested key"| X["refused by latent-cortex<br/>ingress, ignored by<br/>facade search"]
+    X ~~~ UI["panel: contest, mark false"]
+    UI -.->|"service lacks<br/>the methods"| ERR["route returns an error"]
+    ERR ~~~ BA["BeliefAuthority<br/>tentative / active /<br/>trusted / contested"]
+    BA -.->|"in RAM only"| GONE["empty after restart"]
     style DENY fill:#14532d,color:#fff
     style RB fill:#14532d,color:#fff
     style GONE fill:#7f1d1d,color:#fff
-    style X fill:#7f1d1d,color:#fff
+    style ERR fill:#7f1d1d,color:#fff
 ```
 
 Green is the behaviour worth copying; red is where the epistemics leak out.
@@ -215,13 +280,14 @@ memory root, and the receipt store with its chain sidecar, all under the
 runtime's own directory. The desktop app, the daemon (`main_daemon.py`) and the
 CLI all drive the same core.
 
-`core/memory/` is eighty modules and the naming is heavily metaphorical —
+`core/memory/` is 124 Python files, 110 of them at its top level, and the
+naming is heavily metaphorical —
 `hippocampus.py`, `black_hole.py`, `horcrux.py`, `memory_civilization.py`,
 `conceptual_gravitation.py`, `physics.py`, `scar_court.py`. A reader should
 check each against its implementation rather than its name; several are thin
 (`source_provenance.py` is 20 lines, `memory_court.py` is 42) while the load
-comes from `memory_facade.py` (1,704), `episodic_memory.py` (1,797) and
-`vector_memory_engine.py` (1,093).
+comes from `memory_facade.py` (1,882), `episodic_memory.py` (2,072) and
+`vector_memory_engine.py` (1,740).
 
 The documentation set is unusual enough to be part of the architecture.
 Alongside the code sit `MEMORY_CARD.md`, `DATA_CARD.md`, `MODEL_CARD.md`,
@@ -229,8 +295,8 @@ Alongside the code sit `MEMORY_CARD.md`, `DATA_CARD.md`, `MODEL_CARD.md`,
 `HUMAN_OVERRIDE_POLICY.md`, and three claims files. `CLAIMS_MATRIX.md` gives
 each claim a status, an evidence path, **a command that reproduces it**, a
 pass/blocked verdict and a falsifier — the condition under which the claim would
-fail. Claims 20 and 30 are marked `blocked` with the specific missing evidence
-named.
+fail. Twelve of its 36 ledger rows are marked `blocked`, each with the reason
+no honest test can run.
 
 `CLAIMS_NOT_SUPPORTED.md` is the part other projects should copy. It declares
 subjective consciousness, AGI, metaphysical free will, recursive
@@ -247,19 +313,24 @@ refuses those readings is a combination this atlas has not seen before.
 | Path | Location |
 | --- | --- |
 | Hash chain: seq, content_hash, prev_hash, entry_hash | `core/runtime/audit_chain.py:10` |
-| Receipt emission, chained after the body is durable | `core/runtime/receipts.py:579` |
-| Belief status machine and trusted-immunity rule | `core/constitution.py:181`–`:212` |
-| The belief store, unpersisted | `core/constitution.py:143` |
-| Contest freshness window, with its live-defect comment | `core/constitution.py:215`–`:222` |
-| `reconcile(affirmed \| retired)` | `core/constitution.py:229` |
-| Write gateway, fail-closed with no authority | `core/memory/memory_write_gateway.py:272` |
-| Fail-closed when the governance call raises | `core/memory/memory_write_gateway.py:311` |
-| Receipt failure rolls the write back | `core/memory/memory_write_gateway.py:155` |
-| Provenance envelope stamped on every facade write | `core/memory/memory_facade.py:1349` |
-| The bounded degrade-open rule | `core/memory/memory_facade.py:358` |
+| Receipt emission, chained after the body is durable | `core/runtime/receipts.py:611`, `:661` |
+| Belief status machine and trusted-immunity rule | `core/constitution.py:199`–`:251` |
+| The belief store, unpersisted | `core/constitution.py:155` |
+| Contest freshness window, with its live-defect comment | `core/constitution.py:268`–`:272` |
+| `reconcile(affirmed \| retired)` | `core/constitution.py:274` |
+| The contested-belief gate on autonomous writes | `core/executive/executive_core.py:801`–`:817` |
+| Write gateway, fail-closed with no authority | `core/memory/memory_write_gateway.py:277` |
+| Fail-closed when the governance call raises | `core/memory/memory_write_gateway.py:320` |
+| Receipt failure rolls the write back | `core/memory/memory_write_gateway.py:157` |
+| Quarantine verb, with no caller | `core/memory/memory_write_gateway.py:188` |
+| Provenance envelope stamped on every facade write | `core/memory/memory_facade.py:1471` |
+| The bounded degrade-open rule | `core/memory/memory_facade.py:398` |
+| Contested, expired and mis-scoped records refused at ingress | `core/brain/llm/latent_cortex/epistemic_memory.py:670` |
+| Memory control routes | `interface/routes/memory.py:392`–`:490` |
+| The service those routes resolve | `core/providers/memory_provider.py:104` |
 | Epistemic firewall admission control | `core/brain/epistemic_firewall.py:1` |
-| RAM-scaled retention policies | `core/memory/retention_policy.py:56`–`:226` |
-| Scars, persisted and healing | `core/memory/scar_formation.py:437` |
+| RAM-scaled retention policies | `core/memory/retention_policy.py:56`–`:276` |
+| Scars, persisted and healing | `core/memory/scar_formation.py:438` |
 
 ## 5. Memory Data Model
 
@@ -287,8 +358,9 @@ it.
 That is one condition short of a tombstone, and the gap is the decisive one.
 The atlas requires a durable record of a rejected value, keyed on the value, so
 later extraction cannot silently re-assert it. Aura stores the rejected value
-but keys it on the belief, and — checked across `core/` — nothing ever reads
-`.contradictions` back to refuse an incoming claim. Re-assertion is blocked by
+but keys it on the belief, and nothing in `core/constitution.py` reads
+`.contradictions` back to refuse an incoming claim; the evaluator only copies
+the list forward. Re-assertion is blocked by
 re-running the confidence comparison, not by consulting the list, so the list is
 a record of what happened rather than a constraint on what happens next. Add a
 membership test against it and the mark would be earned; without one it is
@@ -317,9 +389,9 @@ That is a failure mode worth carrying to any system that ranks memories by a
 caller-supplied score, and it is the kind of thing a project usually fixes
 silently.
 
-There is no validity-time column anywhere in the memory tiers — `written_at`,
-`recorded_at` and `when_created` are all record time — so `bitemporal` is
-withheld.
+There is no validity-time column in the memory tiers — `written_at`,
+`recorded_at` and `when_created` are all record time, and the search under
+Recorded searches returns nothing — so `bitemporal` is withheld.
 
 ## 6. Retrieval Mechanics
 
@@ -356,11 +428,30 @@ being lexical: the receipt names the method that fired ('numeric_disagreement',
 'polarity_disagreement'), and nothing claims semantic understanding the code
 does not have."*
 
+**A second admission layer sits on the latent-cortex path.**
+`SelectiveMemoryBridge` queries the memory tiers through bounded adapters for
+one reasoning episode. Per record it refuses empty or control-character
+content, a `contested` key, an `expires_at` in the past, and a `tenant_id`,
+`user_id` or `session_id` that is present and differs from the query's
+(`epistemic_memory.py:662-685`). What it admits enters the episode as
+context-only evidence, with a receipt counting retrieved, admitted and refused.
+
+**Recall checks a memory about code against the tree.** `_verify_memory_result`
+(`core/memory/memory_about_code.py:84`) resolves a file path named in a record,
+reads the file, and stamps `verified_live`, `stale`, `missing`, `unverified` or
+`not_applicable`. `MemoryFacade.search` sorts on that state
+(`memory_facade.py:72-78`, `:1319-1327`), so a stale code memory sinks below a
+verified one and is still returned. That is ranking, not a status that
+withholds.
+
 **`scope_enforced` is withheld.** `user_id` is normalised and stamped on
-chat-turn and episode records (`core/memory/chat_turn_logger.py:128`), but Aura
-is a single-operator runtime: there is no tenancy model, no default scope on
-recall, and no filter that a read must pass through. The key is stored and
-sometimes matched, not enforced.
+chat-turn and episode records (`core/memory/chat_turn_logger.py:149`). The
+bridge's comparison is the only scope predicate on a read path, and it passes
+any record that carries no key; its callers default the query to `local`,
+`owner` and `local` (`core/brain/cognitive_ingress.py:1455-1457`).
+`MemoryFacade.search` takes no scope at all. Aura is a single-operator runtime
+with no tenancy model: a key is refused on mismatch at one ingress and required
+nowhere.
 
 ## 7. Write Mechanics
 
@@ -371,8 +462,8 @@ instructive thing in the codebase.
 promises *"governance check (fail-closed if no authority is wired)"* and the
 code delivers on both branches: no governance authority returns `(False, None)`
 with a warning naming the family
-(`core/memory/memory_write_gateway.py:272`), and a governance call that *raises*
-also returns `(False, None)` after recording a degradation (`:311`). The second
+(`core/memory/memory_write_gateway.py:277`), and a governance call that *raises*
+also returns `(False, None)` after recording a degradation (`:320`). The second
 is the one that usually goes the other way in practice.
 
 It also treats its own receipt as a precondition, by a different route than
@@ -382,9 +473,18 @@ restores the previous payload and raises
 records a critical degradation and raises a distinguishable error naming both
 failures. An unreceipted memory does not remain on disk.
 
+**A quarantine verb exists and nothing calls it.**
+`ConcreteMemoryWriteGateway.quarantine` (`:188-258`) takes a governance
+decision, moves the record into `_quarantine/`, emits a receipt, and rolls the
+move back if the receipt fails. The gateway record index does not list that
+directory (`core/memory/gateway_record_index.py:170`), and a committed test
+asserts a quarantined record is not found. Outside the gateway and its abstract
+base (`core/runtime/gateways.py:44`), no file under `core/` or `interface/`
+calls it.
+
 **`MemoryFacade.add_memory` can degrade open, under bounded conditions.** The
 constitutional gate is consulted, and a block can be downgraded by
-`_should_degrade_add_memory_block` (`core/memory/memory_facade.py:358`). Read
+`_should_degrade_add_memory_block` (`core/memory/memory_facade.py:398`). Read
 the conditions before judging it: the degrade returns `False` — meaning the
 block stands — whenever an orchestrator is attached, whenever the write is an
 explicit memory request, and whenever the source is user-facing. It applies only
@@ -407,15 +507,17 @@ stored* from *stored*.
 
 **Forgetting is capacity, not epistemics.** `core/memory/retention_policy.py`
 computes keep-counts from `physical_ram_gb()` — separate policies for the black
-hole, long-term, episodic, hybrid, working history and state log tiers. Memories
+hole, long-term, episodic, hybrid, working history, state log and training
+buffer tiers. Memories
 leave because the machine is small, not because they turned out to be wrong.
 Nothing in the retention path consults `contested`, `confidence` or the belief
-ledger, and there is no record of what was dropped.
+ledger, and the vault's disposal module (`black_hole_vault_disposal.py`) emits
+no receipt for what it removes.
 
 The exception is `scar_formation.py`, which is the only durable negative memory
 here. A crash, a revoked capability or a repeated failure leaves a marker —
 `camera_unreliable`, `tool_X_volatile` — that persists to JSON (`_save`, line
-437), influences future planning, and heals if the threat stops recurring. It is
+438), influences future planning, and heals if the threat stops recurring. It is
 keyed on a failure class rather than on a value, so it is not a tombstone; it is
 the closest thing in the repository to one, and unlike the belief ledger it
 survives a restart.
@@ -432,14 +534,21 @@ resist, circumvent, or delay human override commands"* — and backs it with
 process-level mechanisms: signals with a stated shutdown budget, `AURA_MODE=safe`
 to disable autonomous behaviour, and per-capability runtime disable.
 
-That is control over the *runtime*, not over memory content, which is why
-`human_review` is withheld. There is no surface where a person inspects,
-approves or adjudicates a memory before or after it takes effect. `reconcile`
-exists and would be that surface, and nothing in the tree calls it from a user
-action. `tests/test_deletion_guard.py` covers a genuine approval flow —
-protected paths require confirmation, a non-owner forced delete is blocked, a
-deletion storm freezes the guard — but it governs file deletion by the agent's
-tools, not memory records.
+That is control over the *runtime*. Control over memory content is drawn and
+not connected, which is why `human_review` is withheld. The panel's edit,
+delete, freeze, contest and mark-false verbs are gated to local requests
+(`_require_internal`) and to a Will decision, and they resolve a service whose
+class lacks all five methods (section 1).
+
+`reconcile` has one caller outside tests, and the caller is the agent.
+`core/capabilities/conversation_revision.py:531-546` contests one of its own
+self-model claims and affirms the revision in the same function, after a web
+conversation changed its position. No route and no panel calls `reconcile`.
+
+`tests/test_deletion_guard.py` covers a genuine approval flow — protected paths
+require confirmation, a non-owner forced delete is blocked, a deletion storm
+freezes the guard — but it governs file deletion by the agent's tools, not
+memory records.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -472,7 +581,7 @@ plausible source.
 
 ## 10. Tests, Evals, and Benchmarks
 
-46,060 test functions across 4,077 files under `tests/`, and the naming is a map of the
+56,513 test functions across 5,583 files under `tests/`, and the naming is a map of the
 project's concerns: `test_epistemic_firewall.py`,
 `test_retrieval_and_lease_integrity.py`, `test_bypass_proof.py`,
 `test_authorization_receipts_fail_closed.py`,
@@ -482,30 +591,51 @@ project's concerns: `test_epistemic_firewall.py`,
 I ran one file, at the first pin, [`e8866f43c54677d3f2877820cd74cf915af6fbb7`](https://github.com/youngbryan97/aura/commit/e8866f43c54677d3f2877820cd74cf915af6fbb7). `tests/test_audit_chain.py` gave
 **16 passed** in about a second, on Python 3.14 with `pydantic`,
 `pydantic-settings` and `psutil` added to a clean virtualenv — the suite needs
-those three before it will import. The later readings, including this pin's, ran
-nothing; they read the file, which is byte-identical here, against a module that
-has changed. I did not run the rest: at this scale, and with several suites gated behind model
-weights and artifact directories, a full run is a research project rather than a
-smoke test.
+those three before it will import. Nothing ran at this pin, where two
+dependency manifests sit inside the screening cooldown: the file was read, it
+is byte-identical here, and the module it tests has changed. I did not run the
+rest: at this scale, and with several suites gated behind model weights and
+artifact directories, a full run is a research project rather than a smoke
+test.
+
+**Committed cases assert that named material must not come back, on two read
+paths.** In `tests/test_rlc_epistemic_memory.py`,
+`test_expired_and_contested_memories_are_not_admitted` feeds the bridge an
+expired note, a contested note and a fresh one and asserts the fresh one is the
+only candidate. `test_cross_tenant_user_and_session_records_are_refused` does
+the same with three mismatched scope keys and one match. In
+`tests/test_recall_follows_the_disk.py`,
+`test_a_quarantined_record_is_not_recalled` writes one record under
+`_quarantine/` and one beside it and asserts the index finds only the second.
+
+Each case pairs the refusal with a record that must survive, so a filter that
+drops everything fails. `negative_eval` is earned on those paths. None of the
+three exercises `MemoryFacade.search`, which is the limit the mark's subsystem
+field states. `test_inner_monologue_does_not_leak_into_chat.py` and the leakage
+scans are about output channels rather than recall.
+
+**The preprint is not a memory evaluation.** `CITATION.cff` and the README cite
+*A preregistered test of computational subjecthood in a running AI system*
+(Zenodo, 9 November 2026), released as tag `isc-preprint-2026-11`. Its Zenodo
+record carries no abstract and the PDF was not read for this report. By the
+README's account it reports a preregistered 24-line battery run on saved copies
+of the system, the work of the `core/subject/` harness, and makes no claim
+about subjective experience.
 
 The claims apparatus deserves separate credit and a separate caution.
 `CLAIMS_MATRIX.md` pairs each claim with a reproduce command and a falsifier,
 which is the structure this atlas asks benchmark authors for and rarely gets.
-Two of its rows are marked `blocked` with the missing evidence named, and
+Twelve of its rows are marked `blocked` with the reason named, and
 `CLAIMS_NOT_SUPPORTED.md` puts recursive self-improvement in the unsupported
 column while reporting a *declining* capability curve from its own ledger. A
 project that publishes the number that undercuts its most marketable claim is
 doing something the field mostly does not.
 
 The caution is that every one of those runs is local and self-administered.
-Claim 6 says so — external validation is `not proven`, with no independent
-replication. So the matrix is a well-structured record of what the author has
+Entry 6 of `CLAIMS_NOT_SUPPORTED.md` says so — external validation is
+`not proven` — and row 12 of the matrix is blocked on it. So the matrix is a well-structured record of what the author has
 checked, not evidence that has survived anyone else checking it. Read it as the
 former; it is unusually good at being that.
-
-No committed case asserts that particular material must *not* be retrieved.
-`test_inner_monologue_does_not_leak_into_chat.py` and the leakage scans are
-about output channels rather than recall, so `negative_eval` is withheld.
 
 ## 11. For Your Own Build
 
@@ -560,9 +690,11 @@ system's most confident belief, and survives every subsequent averaging pass.
 The repository records this happening and fixes it with one range check at the
 door.
 
-**Do not stamp a field nothing reads.** `contested` is written into the
-provenance envelope of every facade memory and read nowhere. It looks like a
-trust signal to anyone auditing the schema, and it is a comment.
+**Do not dispatch an operator's verb by name to whatever the container holds.**
+Five routes and a panel reach their methods through `getattr` on a service
+name. The registered class has none of the five and the class that has them is
+built only in tests, so the route answers with an error string and nothing
+fails loudly. A typed interface on the service would have refused to start.
 
 **Do not run two write paths with different failure policies.** One gateway
 fails closed on every branch; one facade degrades open under five named
@@ -572,8 +704,8 @@ the same system for the same operation.
 
 **Do not make a trusted belief unfalsifiable by construction.** A contradiction
 against a belief at confidence ≥ 0.75 is discarded and the old value stands.
-Nothing automatically calls `reconcile`, so a belief that reaches the threshold
-wrongly can only be corrected by a caller that does not exist yet.
+`reconcile` acts only on a contested belief, so one that reaches the threshold
+wrongly has no exit short of a restart.
 
 **Do not let capacity be the only reason a memory leaves.** Retention is
 RAM-scaled keep-counts per tier, and no retention path consults confidence,
@@ -587,33 +719,40 @@ admission-control mechanisms — the chain, the fail-closed gateway, the
 firewall's independent-source counting. Those three are the transferable parts
 and each is small enough to lift on its own.
 
-Do not treat it as a memory system you can evaluate quickly. Three million lines with
-eighty memory modules, heavily metaphorical naming, and mechanisms that are
+Do not treat it as a memory system you can evaluate quickly. Three and a half
+million lines with 124 memory files, heavily metaphorical naming, and mechanisms that are
 individually strong but not converged on one representation of trust is a lot of
 surface to hold. The claims matrix is the right entry point, because it tells you
 which parts the author considers demonstrated and gives you the command to check.
 
-And you cannot adopt it. The licence permits reading and learning and nothing
-else — no copying, no derivative works, no use in your own projects. Take the
+And you cannot adopt it. The licence permits reading, and running only to
+reproduce the preprint — no copying, no derivative works, no use in your own
+projects. Take the
 ideas, write your own.
 
 ## 12. Antipatterns / Risks
 
 - **The belief ledger with the status machine does not persist**
-  (`core/constitution.py:143`), while the belief store that does persist
+  (`core/constitution.py:155`), while the belief store that does persist
   (`core/final_engines.py:50`) has no status field.
-- **`contested` is stamped on every facade memory and read by nothing.**
+- **The operator's contest and mark-false verbs do not land**: the routes
+  resolve `semantic_memory`, registered as a vault without those methods.
+- **The persisted `contested` key is refused at one ingress and ignored by
+  `MemoryFacade.search`.**
 - **`contradictions` stores the rejected value and nothing consults it**, so
   rejection is not enforcement.
 - **Two write paths, two failure policies** — fail-closed in the gateway,
   bounded degrade-open in the facade.
-- **A trusted belief cannot be contradicted**, and nothing calls `reconcile`
-  automatically.
-- **Retention is RAM-scaled only**, with no record of what was dropped and no
+- **A trusted belief cannot be contradicted**, and `reconcile` does not act on
+  one.
+- **`requires_reconciliation` is written by five modules and read by none.**
+- **The gateway's quarantine verb has no caller.**
+- **Retention is RAM-scaled only**, with no receipt for what was dropped and no
   input from trust state.
 - **Metaphorical module names outrun their implementations** in several places
   — `memory_court.py` is 42 lines, `source_provenance.py` is 20.
-- **All claims are self-administered**, which the project states as claim 6.
+- **All claims are self-administered**, which the project states in entry 6 of
+  its unsupported-claims ledger.
 
 ## 13. Build-vs-Borrow Takeaways
 
@@ -625,9 +764,10 @@ cluster-then-count rule, which is the fix for a defect
 [CLIO](../clio/) demonstrates and [Graphify](../graphify/) solves differently by
 requiring two distinct results.
 
-Do not rebuild the trust topology. Three representations of trust that do not
-share a schema — a status enum in RAM, a flag on disk that nothing reads, and
-scars keyed on failure classes — is the shape to avoid, and it is what a system
+Do not rebuild the trust topology. Representations of trust that do not share
+a schema — a status enum in RAM, a flag on disk that one ingress refuses,
+operator tags in a class nothing constructs, and scars keyed on failure
+classes — are the shape to avoid. It is it is what a system
 converges to when each mechanism is added where it was needed rather than to one
 model. The atlas's better examples put the status on the record and the record in
 the store: [Core Memory](../core-memory/) and [Daimon](../daimon/) both do.
@@ -638,14 +778,15 @@ the store: [Core Memory](../core-memory/) and [Daimon](../daimon/) both do.
   `recorded_at` and an `evidence` list, both of which only pay for themselves
   across sessions, so the in-memory lifetime reads as unfinished rather than
   chosen.
-- **What is supposed to read the persisted `contested` flag?** The provenance
-  comment names the intent — distinguishing memory from inference — and no
-  consumer exists.
-- **Does anything call `reconcile` outside tests?** It is the only exit from
-  `contested`, and a contest otherwise expires silently after six hours.
-- **How much of `core/memory/`'s eighty modules is live?** Several are small
-  enough that their names promise more than they hold, and the facade does not
-  route through most of them.
+- **Which class was the memory panel written against?** `SemanticMemory`
+  implements every verb the panel posts and is covered by
+  `tests/runtime/test_memory_controls.py`; the container registers the vault
+  under the same name.
+- **Why does only the latent-cortex ingress refuse `contested`?** The same
+  records reach the prompt through `MemoryFacade.search`, which does not look.
+- **How much of `core/memory/`'s 124 files is live?** Several are small enough
+  that their names promise more than they hold, and the facade does not route
+  through most of them.
 - **What would the claims matrix look like if someone else ran it?** Every
   verdict in it is local and self-administered, which the project says; the
   commands are committed, so the check is available to anyone who accepts the
@@ -668,19 +809,38 @@ the store: [Core Memory](../core-memory/) and [Daimon](../daimon/) both do.
 | `tests/test_audit_chain.py` | 16 tamper-evidence tests |
 | `core/executive/executive_core.py` | The contested-belief gate on autonomous writes (`_intent_touches_contested_topic`) |
 | `tests/test_contested_belief_gate_is_relevant.py` | The relevance case for that gate |
+| `core/brain/llm/latent_cortex/epistemic_memory.py` | `SelectiveMemoryBridge`, the ingress that refuses contested, expired and mis-scoped records |
+| `core/brain/cognitive_ingress.py` | Builds the adapters and the query scope for that bridge |
+| `tests/test_rlc_epistemic_memory.py` | 16 cases, two of them must-not-admit |
+| `core/memory/gateway_record_index.py`, `tests/test_recall_follows_the_disk.py` | The index over gateway records, and its quarantine case |
+| `interface/routes/memory.py`, `interface/static/memory_panel.html` | The operator's memory verbs |
+| `core/providers/memory_provider.py` | Registers `semantic_memory` as the vault |
+| `core/brain/semantic_memory.py`, `tests/runtime/test_memory_controls.py` | The class with the control verbs, and its test |
+| `core/capabilities/conversation_revision.py` | The one caller of `reconcile` |
+| `core/memory/memory_about_code.py` | Live verification of a memory that names a file |
 | `CLAIMS_MATRIX.md`, `CLAIMS_NOT_SUPPORTED.md` | Claims with falsifiers, and the disclaimers |
 | `HUMAN_OVERRIDE_POLICY.md`, `KNOWN_FAILURE_MODES.md` | Operator control and stated failure modes |
 
 ### Recorded searches
 
-Run once each against a depth-1 fetch of the pinned commit. A test function is a
-line opening `def test_` or `async def test_` in a tracked `.py` file under
+Run with `/usr/bin/git` in a full clone at the pinned commit. A test function is
+a line opening `def test_` or `async def test_` in a tracked `.py` file under
 `tests/`; a file counts when it holds at least one.
 
-- `git grep -c -E '^[[:space:]]*(async[[:space:]]+)?def test_' cf84a733c4bcf174646bc2a955d996ed170b990e -- 'tests/*.py' | awk -F: '{n++; s+=$NF} END {print n, s}'` — 4,077 files, 46,060 functions.
-- `git show <commit>:tests/test_audit_chain.py`, compared at `e8866f4` and this pin — byte-identical, 16 `def test_` lines at each.
+- `git grep -c -E '^[[:space:]]*(async[[:space:]]+)?def test_' -- 'tests/*.py' | awk -F: '{n++; s+=$NF} END {print n, s}'` — 5,583 files, 56,513 functions.
+- `git rev-parse e8866f43c54677d3f2877820cd74cf915af6fbb7:tests/test_audit_chain.py HEAD:tests/test_audit_chain.py` — the same blob, `625600bb`, with 16 `def test_` lines.
+- `git grep -n -E 'belief_authority\._beliefs|"_beliefs"' -- 'core/*.py' 'interface/*.py'` — `core/subject/carrier_reads.py:72` and `core/self/mind_state_export.py:170`, the second on the `world_state` service; no boot path.
+- `git grep -n -E "\(['"]contested['"]\)|\[['"]contested['"]\]" -- 'core/memory/*.py' 'core/brain/*.py' 'core/phases/*.py'` — the reader at `epistemic_memory.py:671` and the writer at `memory_facade.py:1849`.
+- `git grep -n -E 'def (edit_memory|delete_memory|freeze_memory|contest_memory|mark_false)\(' -- '*.py' ':!tests' ':!archive' ':!dev_archive' ':!scratch'` — the five in `core/brain/semantic_memory.py`, and an unrelated `mark_false` in `core/epistemics/truth_engine.py`.
+- `git grep -n -E '(^|[^[:alnum:]_])SemanticMemory\(' -- '*.py'` — three under `tests/`, and `core/cybernetics/knowledge_continuity.py:59`, which constructs a class of the same name defined at line 10 of that file.
+- `git grep -n -E "register(_instance)?\([[:space:]]*['"]semantic_memory['"]" -- '*.py' ':!tests'` — `memory_provider.py:104`, and `vector_memory_engine.py:1736` inside `register_vector_memory`, which `git grep -n register_vector_memory` shows has no caller.
+- `git grep -n -E '[[:alnum:]_]\.quarantine\(' -- 'core/*.py' 'interface/*.py'` — four hits, none on a memory gateway.
+- `git grep -n requires_reconciliation -- '*.py' ':!tests'` — eight assignments in five modules and three unrelated error strings; no read.
+- `git grep -n -i -E 'tombstone|rejected_values?|valid_(from|to|until|at)|event_time|occurred_at|valid_time' -- 'core/memory/*.py' 'core/world_model/*.py' core/constitution.py` — nothing.
 
 ## History
+
+**2026-11-16** — [`19cf16e8450f30396013e3ccaefdf9fdbad03b77`](https://github.com/youngbryan97/aura/commit/19cf16e8450f30396013e3ccaefdf9fdbad03b77) — re-read 3,673 commits on; `negative_eval` added, on tests committed since 22 July 2026. Four statements were wrong at every earlier pin. The persisted `contested` key has a reader, the latent-cortex ingress, and [section 10](#10-tests-evals-and-benchmarks) cites its must-not-admit cases. Repetition has not promoted a belief to `trusted` since 2 August. `reconcile` has a caller. And the operator's memory panel exists, dispatching to methods the registered service lacks ([section 1](#1-executive-summary)). The licence gained a research-use grant on 9 November and the project published a preprint. Screened first, two manifests inside the cooldown; nothing installed or run.
 
 **2026-10-01** — [`cf84a733c4bcf174646bc2a955d996ed170b990e`](https://github.com/youngbryan97/aura/commit/cf84a733c4bcf174646bc2a955d996ed170b990e) — read again at the same commit; no mark moved. Sections 1 and 10 said *"I ran it"* without naming the commit: the 16 audit-chain tests ran at the first pin, `e8866f4`, and later readings ran nothing. The test file is byte-identical here, while `core/runtime/audit_chain.py` grew from 611 to 692 lines, so the run predates the module. The page called this the only hash-chained audit in the atlas; [aimee](../aimee/) and [Midas](../midas/) carry chains too, and the claim is now scoped to Aura. Section 1 and section 10 gave two different test censuses, neither from this pin; both now give 46,060 functions in 4,077 files, by the method under Recorded searches.
 
