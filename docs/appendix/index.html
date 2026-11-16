@@ -18148,6 +18148,60 @@ five figures, and cites <code>GAIR-NLP/SII-CLI</code>, which is a README
 and three images with no source; a GitHub repository search for the
 title found one other same-named repository, also a README and figures.
 The hosted product the README links was not examined.</li>
+<li><strong><code>DigitalDreams-Lab/OpenVorld</code> was examined and
+has no report: it is a workspace that runs a crew of agents over a
+project folder, and the only thing a member carries between turns is the
+chat it is in.</strong> MIT, read at <a
+href="https://github.com/DigitalDreams-Lab/OpenVorld/commit/881c48b0002b5b3b84b0601874cc2bfe9799227d"><code class="commit-id" title="881c48b0002b5b3b84b0601874cc2bfe9799227d">881c48b0…</code></a>,
+the head of <code>main</code> on 16 November 2026, 49 commits by one
+author from 15 to 16 November 2026, version 0.11.0: 3,660 lines of
+JavaScript under <code>engine/server</code>, a React and Phaser client,
+and 41 test files of 3,211 lines; the screen found a committed
+pre-commit hook that is inert until <code>core.hooksPath</code> names it
+and a <code>package.json</code> and lockfile changed inside the
+cooldown, and nothing was installed or run. OpenVorld gives each agent a
+name, a role, a workbench folder and a model driver (Claude Code, Codex,
+Antigravity, opencode or an OpenAI-compatible API), and lets the person
+grant access one <em>writ</em> at a time. Each conversation is a thread:
+an index entry and an append-only JSONL event file
+(<code>engine/server/threads.mjs:49-54</code>). A turn sees that thread
+and nothing else. An API driver is handed the thread's last 30 founder
+and agent messages (<code>threads.mjs:61-64</code>,
+<code>engine/server/agents/runner.mjs:208-213</code>). A CLI driver
+resumes its own session by id, and when that session is gone it is given
+the same messages as text, newest kept, cut at 12,000 characters
+(<code>runner.mjs:103-119</code>, <code>:194-198</code>,
+<code>:217-220</code>). A party room replays the latest 40 room
+messages, each cut at 2,500 characters
+(<code>engine/server/parties.mjs:82</code>, <code>:102-112</code>); the
+project's architecture note says of it <em>"the transcript is the
+memory"</em> (<code>docs/ARCHITECTURE.md:56</code>). That is a window
+over a transcript, on the <a
+href="../families/#not-in-scope-conversation-window-management">context-engineering
+side of the line</a>: the rows record what was said, nothing derives a
+claim from them, and nothing carries from one thread to another. Three
+other things reach a prompt and none is written by an agent: the
+member's prompt template, the person's own name and about-me text from
+<code>profile.json</code>
+(<code>engine/server/profile.mjs:32-38</code>), and the list of writs
+the member holds (<code>runner.mjs:57-60</code>). The ten engine tools
+are file, command, fetch, world-info and game-command tools
+(<code>engine/server/agents/tools.mjs:67-85</code>), beside five browser
+tools and <code>secret_ask</code>; none stores or recalls a note. The
+durable records an agent does cause are about access and not belief:
+<code>grants.yaml</code>, and an <code>audit.log</code> line per tool
+call and per grant decision (<code>engine/server/gate.mjs:21</code>,
+<code>tools.mjs:45</code>). Searches over the tree:
+<code>git grep -n -i -E 'memor' -- . ':!package-lock.json'</code>
+returns seven lines, the architecture sentence above, four comments
+about process memory and a test's <code>Map</code>;
+<code>git grep -n -i -E 'embedding|vector|sqlite|recall|knowledge' -- engine packs docs ':!engine/client/demo'</code>
+returns nothing; and no route under <code>/api/vorlds/:id/threads</code>
+is a <code>DELETE</code>, so a thread can be neither removed nor edited
+through the API. The piece worth knowing is beside memory: a member's
+vault values are redacted from every event before it reaches the
+transcript (<code>runner.mjs:156-157</code>, <code>:222</code>), so the
+one store that is replayed is filtered at the write.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
