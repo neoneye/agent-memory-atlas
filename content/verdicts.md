@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 808 reports.**
+**This page covers all 809 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7408,3 +7408,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 133,382 lines of Go, 1,191 test functions run in CI against PostgreSQL, 897 commits in under four months across an original author and a fork's maintainer. Lessons are 395 lines with four tests, none on ordering. AGPL-3.0 with use restrictions added in the README.
 - Study when: several agent tasks must share what earlier ones learned without one task being able to write into another.
 - Do not copy when: the lesson loop is what you want as it stands, or a person's rejection of a finding must change what the agents see.
+
+### [`llm-memory-morditux`](../systems/llm-memory-morditux/)
+
+- Best idea: the tool surface cannot destroy. The model's eight MCP tools archive, patch and supersede; every one of those writes a full snapshot with its actor to `memory_history` inside the same transaction; and un-archiving and hard delete exist only at the CLI and the web UI.
+- Biggest risk: who can write, and how far a write travels. The web UI's twelve mutating routes check no token and no origin, and one memory written with importance 3 in the `global` namespace is placed after the handoff in every project's session briefing, which the hooks inject without the model asking.
+- Most reusable component: `internal/store/memories.go` with `filterSQL` in `internal/store/search.go` — the history writer, the single-handoff rule, atomic supersession, and one archive-and-expiry predicate shared by every read arm.
+- Maturity impression: 8,485 lines of Go outside tests and 114 test functions run in CI on three operating systems, written in 20 commits over two days with eight tags. Three marks. No test holds two processes on the file at once. MIT.
+- Study when: one person moves between several assistants on one machine and wants explicit, inspectable memory with a history and no model call on the write path.
+- Do not copy when: more than one person or an untrusted writer can reach the store, a memory must wait for approval, or a rejected statement must stay rejected.

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 808 reports.</strong></p>
+<p><strong>This page covers all 809 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33464,6 +33464,34 @@ README.</li>
 without one task being able to write into another.</li>
 <li>Do not copy when: the lesson loop is what you want as it stands, or
 a person's rejection of a finding must change what the agents see.</li>
+</ul>
+<h3 id="llm-memory-morditux"><a
+href="../systems/llm-memory-morditux/"><code>llm-memory-morditux</code></a></h3>
+<ul>
+<li>Best idea: the tool surface cannot destroy. The model's eight MCP
+tools archive, patch and supersede; every one of those writes a full
+snapshot with its actor to <code>memory_history</code> inside the same
+transaction; and un-archiving and hard delete exist only at the CLI and
+the web UI.</li>
+<li>Biggest risk: who can write, and how far a write travels. The web
+UI's twelve mutating routes check no token and no origin, and one memory
+written with importance 3 in the <code>global</code> namespace is placed
+after the handoff in every project's session briefing, which the hooks
+inject without the model asking.</li>
+<li>Most reusable component: <code>internal/store/memories.go</code>
+with <code>filterSQL</code> in <code>internal/store/search.go</code> —
+the history writer, the single-handoff rule, atomic supersession, and
+one archive-and-expiry predicate shared by every read arm.</li>
+<li>Maturity impression: 8,485 lines of Go outside tests and 114 test
+functions run in CI on three operating systems, written in 20 commits
+over two days with eight tags. Three marks. No test holds two processes
+on the file at once. MIT.</li>
+<li>Study when: one person moves between several assistants on one
+machine and wants explicit, inspectable memory with a history and no
+model call on the write path.</li>
+<li>Do not copy when: more than one person or an untrusted writer can
+reach the store, a memory must wait for approval, or a rejected
+statement must stay rejected.</li>
 </ul>
         </article>
       </div>

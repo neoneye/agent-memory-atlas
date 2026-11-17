@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Go MCP server that stores
+a memory shared by several LLM clients in one SQLite file, with a
+session briefing and handoffs.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="llm-memory
+(Morditux) — Agent Memory Atlas">
+    <meta property="og:description" content="A local Go MCP server that
+stores a memory shared by several LLM clients in one SQLite file, with a
+session briefing and handoffs.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="llm-memory
+(Morditux) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Go MCP server that
+stores a memory shared by several LLM clients in one SQLite file, with a
+session briefing and handoffs.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>llm-memory (Morditux) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "llm-memory (Morditux)",
+      "description": "A local Go MCP server that stores a memory shared by several LLM clients in one SQLite file, with a session briefing and handoffs.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A shared memory the model can archive but
+not delete, with one handoff slot per project</p>
+          <h1>llm-memory (Morditux)</h1>
+          <p class="document-deck">A local Go MCP server that stores a
+memory shared by several LLM clients in one SQLite file, with a session
+briefing and handoffs.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Morditux/llm-memory">
+              <span>Source</span>
+              <strong>Morditux/llm-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Morditux/llm-memory/commit/93974b5e9caaae71b9b61c1c1eec3cc4ed73abed" title="93974b5e9caaae71b9b61c1c1eec3cc4ed73abed">
+              <span>Analyzed revision</span>
+              <code>93974b5e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Morditux--llm-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Morditux--llm-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>8,485
+lines of Go in 22 files outside tests: the store 2,630, the CLI 3,045,
+the MCP server 1,117, the web UI handler 541, the semantic engine 453,
+the briefing 400; four SQL migrations</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>20
+commits on 15 and 16 November 2026 under two committer names; eight
+tags, v1.0.0 to v1.3.2</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>114
+Go test functions in 15 files and 13 golden files, run in CI on Linux,
+macOS and Windows, with the race detector on the first two. I ran
+none</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>llm-memory is a single Go binary that several LLM clients launch as
+an MCP server against one SQLite file. A client writes typed memories
+with explicit tool calls, and the next client reads a briefing assembled
+from them: the latest handoff, essential items, open tasks, preferences,
+recent decisions and facts. What is notable is how little the model is
+allowed to destroy. Its tools archive and patch, every mutation leaves a
+snapshot in a history table, and restore and hard delete exist only at
+the CLI and the web UI. What is weak is the edge of that boundary: the
+web UI has no authentication, and a namespace merge moves rows without a
+history entry.</p>
+<p>It carries <code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>.</p>
+<p><strong>Licence.</strong> <code>LICENSE</code> is the MIT text with
+the line <code>Copyright (c) 2026 mordicus</code>.
+<code>README.md:338-340</code> names the same licence.
+<code>go.mod</code> carries no licence field and the tree has no NOTICE
+file and no rider.</p>
+<p><strong>The tool surface has no delete.</strong> The MCP server
+registers eight tools: <code>get_context</code>, <code>recall</code>,
+<code>get_memory</code>, <code>list_namespaces</code>,
+<code>remember</code>, <code>update_memory</code>, <code>forget</code>
+and <code>handoff</code>
+(<code>internal/server/server.go:175-241</code>). <code>forget</code>
+sets <code>archived_at</code>. <code>Store.Purge</code>, the one
+statement that deletes a memory, is called from the CLI's
+<code>purge</code> verb and nowhere else
+(<code>internal/store/maintenance.go:40-52</code>,
+<code>cmd/llm-memory/admin.go:438</code>). <code>Store.Restore</code> is
+called from the CLI and the web UI. One row type is deletable by the
+model: <code>update_memory</code> takes <code>remove_links</code>, which
+deletes a link row (<code>internal/server/tools.go:393-397</code>).</p>
+<p><strong>Every mutation writes history in its own
+transaction.</strong> Create, update, archive and restore each end in
+<code>writeHistory</code>, which re-reads the row inside the transaction
+and stores the action, the actor and a JSON snapshot of the whole memory
+(<code>internal/store/memories.go:84-99</code>).</p>
+<p><strong>One archive predicate serves every read.</strong> Full-text
+search, the recent list, the vector arm and the duplicate check all take
+their filter from <code>filterSQL</code>
+(<code>internal/store/search.go:128-156</code>), and the briefing reads
+through <code>List</code>, whose default adds the same two conditions
+(<code>internal/store/memories.go:487-489</code>). An archived or
+expired row is absent from all of them.</p>
+<p><strong>The handoff is one slot per namespace.</strong> Writing a
+handoff archives the previous one in the same transaction and links the
+new row to it (<code>memories.go:211-218</code>, <code>:390-407</code>).
+Nothing records whether a handoff was read, so a second client that
+writes one replaces the first whether or not anyone saw it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is believed from the moment it is written and until someone
+archives it. There is no candidate state and no confidence. Correction
+has three forms, all explicit: patch the row, archive it, or write a
+replacement that names what it supersedes.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every write appends a history snapshot in the same transaction and every read arm drops archived and expired rows; restore and hard delete have no MCP verb</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every write appends a history snapshot in the same transaction and every read arm drops archived and expired rows; restore and hard delete have no MCP verb
+flowchart TD
+    A[&quot;client LLM over MCP:&lt;br/&gt;remember, handoff,&lt;br/&gt;update_memory, forget&quot;] --&gt; B[&quot;one transaction,&lt;br/&gt;BEGIN IMMEDIATE&quot;]
+    B --&gt; C[&quot;memories row: insert,&lt;br/&gt;patch, or set archived_at&quot;]
+    C --&gt; D[&quot;memory_history: action,&lt;br/&gt;actor, full snapshot&quot;]
+    C --&gt; E{&quot;new handoff, or&lt;br/&gt;supersedes ids?&quot;}
+    E --&gt;|&quot;yes&quot;| F[&quot;old rows archived,&lt;br/&gt;supersedes link added&quot;]
+    E --&gt;|&quot;no&quot;| G[(&quot;one SQLite file, WAL&quot;)]
+    F --&gt; G
+    D --&gt; G
+    G --&gt; H[&quot;read filter: namespace,&lt;br/&gt;archived_at IS NULL,&lt;br/&gt;not expired&quot;]
+    H --&gt; I[&quot;briefing: handoff,&lt;br/&gt;importance 3, tasks,&lt;br/&gt;prefs, decisions, facts&quot;]
+    H --&gt; J[&quot;recall: FTS5 bm25,&lt;br/&gt;optional cosine arm,&lt;br/&gt;rank fusion&quot;]
+    G -.-&gt;|&quot;person: CLI or UI&quot;| K[&quot;restore, gc,&lt;br/&gt;namespace merge&quot;]
+    G -.-&gt;|&quot;person: CLI only&quot;| L[&quot;purge: row, history,&lt;br/&gt;links, vectors deleted&quot;]
+    style L fill:#7f1d1d,color:#fff
+    style D fill:#14532d,color:#fff</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Six packages, with SQL confined to one of them.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/store</code></td>
+<td>Schema, migrations, every query; no MCP dependency</td>
+</tr>
+<tr>
+<td><code>internal/briefing</code></td>
+<td>Renders the text of <code>get_context</code>; <code>render</code>
+does no I/O</td>
+</tr>
+<tr>
+<td><code>internal/semantic</code></td>
+<td>Embeddings client and the hybrid search; optional</td>
+</tr>
+<tr>
+<td><code>internal/server</code></td>
+<td>MCP tools, resources and prompts; no SQL</td>
+</tr>
+<tr>
+<td><code>internal/ui</code></td>
+<td>A JSON API and one static page</td>
+</tr>
+<tr>
+<td><code>cmd/llm-memory</code></td>
+<td>The binary: <code>serve</code>, the admin CLI, client setup,
+hooks</td>
+</tr>
+</tbody>
+</table></div>
+<p>Each client launches its own process over stdio, and all of them open
+the same file, by default <code>~/.llm-memory/memory.db</code>, created
+with a 0700 directory and a 0600 file
+(<code>internal/store/db.go:45</code>, <code>:66</code>).
+<code>serve --listen</code> serves the same tools over Streamable HTTP,
+and <code>--read-only</code> registers the four read tools only
+(<code>cmd/llm-memory/main.go:246-307</code>,
+<code>server.go:209</code>).</p>
+<p>The connection string sets WAL, a five-second busy timeout, foreign
+keys and <code>_txlock=immediate</code>, and each process holds one
+connection (<code>db.go:55-57</code>, <code>:84-90</code>). Migrations
+are embedded SQL files applied in a transaction each, with the version
+in <code>PRAGMA user_version</code>; a file written by a newer binary is
+refused (<code>db.go:154-186</code>).</p>
+<p>The SQLite driver is <code>modernc.org/sqlite</code>, pure Go, so the
+binary has no C dependency. The memory data model is in this tree; the
+MCP SDK and the driver were not opened.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>setup</code> prints or writes the MCP entry for six clients,
+and <code>setup --hooks</code> installs lifecycle hooks for three of
+them (<code>cmd/llm-memory/admin.go:1675-1840</code>,
+<code>hooks.go:29-32</code>). The README states that an instruction
+block must also be pasted into each client, because without it the model
+does not call the memory reliably
+(<code>examples/instructions_client.md</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Schema: memories, history, FTS5 and its triggers</td>
+<td><code>internal/store/migrations/0001_initial.sql:9-51</code></td>
+</tr>
+<tr>
+<td>Embeddings table and the invalidation trigger</td>
+<td><code>migrations/0002_embeddings.sql:3-15</code></td>
+</tr>
+<tr>
+<td>Connection pragmas and transaction mode</td>
+<td><code>internal/store/db.go:77-92</code></td>
+</tr>
+<tr>
+<td>History writer</td>
+<td><code>internal/store/memories.go:84-99</code></td>
+</tr>
+<tr>
+<td>Create, with supersedes and the handoff slot</td>
+<td><code>memories.go:127-225</code></td>
+</tr>
+<tr>
+<td>Update and the archived-row refusal</td>
+<td><code>memories.go:251-347</code></td>
+</tr>
+<tr>
+<td>Archive, restore, the single-handoff rule</td>
+<td><code>memories.go:351-435</code></td>
+</tr>
+<tr>
+<td>Shared read filter</td>
+<td><code>internal/store/search.go:128-156</code></td>
+</tr>
+<tr>
+<td>Full-text search and duplicate detection</td>
+<td><code>search.go:100-124</code>, <code>:247-290</code></td>
+</tr>
+<tr>
+<td>Vector load, missing-embedding scan</td>
+<td><code>internal/store/embeddings.go:47-78</code>,
+<code>:135-167</code></td>
+</tr>
+<tr>
+<td>Hybrid search and fusion</td>
+<td><code>internal/semantic/engine.go:127-164</code>,
+<code>:214-256</code></td>
+</tr>
+<tr>
+<td>Briefing assembly and budget</td>
+<td><code>internal/briefing/briefing.go:42-98</code>,
+<code>:111-217</code></td>
+</tr>
+<tr>
+<td>Hard delete</td>
+<td><code>internal/store/maintenance.go:40-52</code></td>
+</tr>
+<tr>
+<td>Namespace rename, merge, archive</td>
+<td><code>internal/store/namespaces.go:132-252</code></td>
+</tr>
+<tr>
+<td>Export and import</td>
+<td><code>internal/store/transfer.go:53-268</code></td>
+</tr>
+<tr>
+<td>Tool registration and author</td>
+<td><code>internal/server/server.go:131-269</code></td>
+</tr>
+<tr>
+<td>Web UI routes</td>
+<td><code>internal/ui/ui.go:33-397</code></td>
+</tr>
+<tr>
+<td>Hook entry point</td>
+<td><code>cmd/llm-memory/hooks.go:143-298</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One table holds every memory (<code>0001_initial.sql:9-22</code>,
+<code>0003_expires_at.sql:2</code>).</p>
+<ul>
+<li><strong><code>kind</code></strong>: <code>preference</code>,
+<code>fact</code>, <code>decision</code>, <code>task_state</code>,
+<code>handoff</code>, <code>note</code>, under a <code>CHECK</code>. The
+<code>remember</code> schema omits <code>handoff</code>, so a handoff is
+written only by its own tool (<code>tools.go:619-627</code>).</li>
+<li><strong><code>content</code></strong>: 1 to 8,000 characters.
+<strong><code>title</code></strong>: one line, up to 200.</li>
+<li><strong><code>tags</code></strong>: a space-joined string of
+lowercased words.</li>
+<li><strong><code>importance</code></strong>: 1, 2 or 3, chosen by the
+writer. 3 means the row is always in the briefing.</li>
+<li><strong><code>source</code></strong> and
+<strong><code>updated_by</code></strong>: the first and the latest
+author.</li>
+<li><strong><code>created_at</code></strong>,
+<strong><code>updated_at</code></strong>: record time;
+<code>updated_at</code> overwrites.</li>
+<li><strong><code>archived_at</code></strong>: null while active. This
+is the only lifecycle column.</li>
+<li><strong><code>expires_at</code></strong>: an optional deadline set
+from <code>expires_in</code> or <code>expires_at</code>.</li>
+</ul>
+<p><code>memory_history</code> holds <code>memory_id</code>, an
+<code>action</code> under a four-value <code>CHECK</code>
+(<code>create</code>, <code>update</code>, <code>archive</code>,
+<code>restore</code>), <code>snapshot</code>, <code>changed_by</code>
+and <code>changed_at</code>. The snapshot is the whole row after the
+action, with a <code>reason</code> key on an archive
+(<code>memories.go:76-81</code>).</p>
+<p><code>memory_links</code> holds directed <code>supersedes</code>,
+<code>relates_to</code> and <code>depends_on</code> edges with a
+composite primary key (<code>0004_links.sql:2-9</code>). They are
+returned by <code>get_memory</code>, the CLI's <code>show</code> and the
+UI, each with the target's archived flag. No retrieval path follows
+them.</p>
+<p><code>memory_embeddings</code> is keyed on memory and model, one
+float32 blob each (<code>0002_embeddings.sql:3-10</code>).</p>
+<p><strong><code>trust_state</code> is withheld.</strong> Active and
+archived are one bit, and the same bit carries a wrong memory, an
+expired one, a replaced handoff and a whole archived namespace. The
+reason is a free-text key inside the history snapshot that no read
+consults. <a href="../lerim/">Lerim</a> is withheld the mark on the same
+shape.</p>
+<p><strong><code>bitemporal</code> is withheld.</strong>
+<code>created_at</code>, <code>updated_at</code> and
+<code>archived_at</code> are all record time, and
+<code>expires_at</code> is a deadline the writer sets for retention. No
+column says when a fact was true.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<h3 id="the-briefing">The briefing</h3>
+<p><code>briefing.Build</code> runs up to five reads and renders them
+(<code>briefing.go:42-98</code>): the namespace's active memories, its
+row with the latest write for the header's date and author, an optional
+focus search, the active memories of <code>global</code>, and the
+namespace list. The reads are separate statements, not one snapshot.</p>
+<p><code>render</code> writes sections in a fixed order inside a
+character budget, 6,000 by default and 400 at least
+(<code>briefing.go:111-217</code>):</p>
+<ol type="1">
+<li>The latest active handoff, in full, with its headings demoted two
+levels.</li>
+<li>Every importance-3 memory, from the namespace and then from
+<code>global</code>.</li>
+<li>Focus results, when a focus was given.</li>
+<li>Task states, then project preferences, then global preferences.</li>
+<li>The ten most recent decisions and the ten most recent facts.</li>
+<li>A count of notes, a count of what the budget cut, the other
+namespaces.</li>
+</ol>
+<p>A decision or an importance-3 line is cut at 1,000 characters and any
+other line at 240, each cut ending in <code>(get_memory #id)</code>. A
+section that does not fit ends in a line counting what was left out and
+naming the <code>recall</code> filter that reaches it
+(<code>briefing.go:302-330</code>). The header is written outside the
+budget and the handoff is truncated to what remains.</p>
+<h3 id="search">Search</h3>
+<p><code>Store.Search</code> splits the query into letter and digit
+runs, so no input reaches FTS5 as syntax, and quotes each term as a
+prefix (<code>search.go:47-84</code>). It tries all terms with AND and,
+with no result, with OR. Ranking is bm25 with the title weighted double,
+multiplied by 1.25 for importance 3 and 0.85 for importance 1; bm25 is
+negative, so the larger factor ranks higher
+(<code>search.go:163-169</code>). An empty query returns the most recent
+rows.</p>
+<p>With an embeddings endpoint configured, <code>Engine.Search</code>
+loads every stored vector that passes the same filter, ranks by cosine
+above a 0.3 floor in Go, and fuses the two lists by reciprocal rank with
+k = 60 (<code>engine.go:127-164</code>, <code>:214-256</code>). If the
+endpoint fails, the full-text result is returned and a warning is
+logged.</p>
+<h3 id="scope">Scope</h3>
+<p><strong><code>scope_enforced</code> rests on the namespace</strong>,
+applied as an equality predicate by the briefing, by both search arms
+and by the duplicate check. The session-start hook resolves it from the
+client's working directory: a <code>.llm-memory</code> marker file, or
+the name of the directory holding <code>.git</code>
+(<code>internal/config/config.go:133-143</code>,
+<code>:216-241</code>).</p>
+<p>Its limits are these. <code>recall</code> with no namespace searches
+every namespace, and the tool description says so
+(<code>tools.go:181</code>, <code>:208-210</code>).
+<code>get_memory</code> reads any id. <code>global</code> is included in
+every briefing by design. And over MCP the namespace is an argument the
+model chooses; there is one user and no principal.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write is one tool call and one transaction, synchronous to the
+caller. The row is in the FTS index when the transaction commits,
+through three triggers (<code>0001_initial.sql:42-51</code>), so the
+next read sees it. No model is called and no background pass rewrites
+anything.</p>
+<p><strong>Create.</strong> <code>CreateDetailed</code> validates,
+refuses text that matches a secret pattern, inserts, writes history,
+archives each id in <code>supersedes</code> with the reason
+<code>superseded by #N</code> and a link, and, for a handoff, archives
+the namespace's other active handoffs
+(<code>memories.go:127-225</code>).</p>
+<p><strong>Duplicates are reported, not blocked.</strong>
+<code>remember</code> searches active rows of the namespace with an OR
+query over the new text's significant words and keeps those sharing at
+least half of the smaller word set (<code>search.go:232</code>,
+<code>:247-290</code>). The memory is created regardless, and the result
+carries <code>possible_duplicates</code> and a hint to forget the new
+row or fix the old one (<code>tools.go:153-171</code>).</p>
+<p><strong>Update.</strong> A patch changes only the fields supplied. An
+archived row is refused with a message naming <code>restore</code>
+(<code>memories.go:316-318</code>). There is no revision check: two
+clients patching the same field leave the later value in the row and
+both versions in history.</p>
+<p><strong>Attribution.</strong> The author is the server's
+<code>--source</code> flag, or the name the client sent in the MCP
+handshake, or <code>unknown</code>. No tool takes it as an argument
+(<code>server.go:257-269</code>).</p>
+<p><strong>Secrets.</strong> Eleven patterns and a URL-credentials rule
+run over content and title on create and update
+(<code>internal/store/secrets.go:14-28</code>, <code>:49-70</code>).
+Tags, namespace descriptions and imported rows are not checked.</p>
+<h3 id="forgetting">Forgetting</h3>
+<ul>
+<li><strong><code>forget</code></strong> archives with an optional
+reason kept in the history snapshot.</li>
+<li><strong>Expiry</strong> is a read-time filter. <code>gc</code> turns
+expired rows into archived ones with the reason
+<code>expired (TTL)</code>; it runs when a person calls it from the CLI
+or the UI (<code>memories.go:544-567</code>).</li>
+<li><strong><code>purge --archived-before DATE</code></strong> deletes
+archived rows. The foreign keys cascade to history, links and
+embeddings, and the delete trigger removes the FTS entry
+(<code>maintenance.go:40-52</code>). It asks for confirmation unless
+<code>--yes</code> is passed. The file is not vacuumed, and earlier
+<code>backup</code> and <code>export</code> outputs are untouched.</li>
+</ul>
+<p><strong><code>tombstone</code> is withheld.</strong> Archiving is
+keyed on the row. The duplicate check reads active rows only, and a
+committed test asserts that an archived memory is not reported as a
+duplicate (<code>internal/store/search_test.go:281-285</code>), so a
+forgotten statement can be remembered again with no signal. The one
+place an archived row blocks a repeat is <code>import</code>, which
+skips a row whose namespace, kind and content equal an existing one,
+archived or not (<code>transfer.go:208-217</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing but the file. The vector arm loads and scores every matching
+vector in process on each search, which the README bounds at a few
+thousand memories.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The server's instructions tell the model to call
+<code>get_context</code> first, to <code>recall</code> before asking the
+user, and to <code>handoff</code> when the user stops
+(<code>server.go:24-30</code>). Two resources and two prompts expose the
+same briefing
+(<code>internal/server/resources_prompts.go:20-60</code>).</p>
+<p>Hooks make the read automatic. On session start the client runs
+<code>llm-memory hook &lt;client&gt; --namespace auto</code>, which
+prints the briefing in the client's hook format:
+<code>additionalContext</code> for Claude Code and Codex, a
+<code>systemMessage</code> step for Antigravity
+(<code>hooks.go:217-298</code>). The text is prefixed with one sentence
+saying it came from the shared memory. Stored content is otherwise
+inserted as written, with no delimiter around it. The pre-compaction and
+stop hooks print a fixed reminder and up to five open task states.</p>
+<p><strong><code>human_review</code> is withheld.</strong> Nothing
+waits. A <code>remember</code> is live in the next briefing, and the
+model can archive, patch and supersede on its own. The direction that
+needs a person is the reverse one: un-archiving and hard delete have no
+MCP verb. That keeps a model from undoing a person's removal; it does
+not put a person in front of a write.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3
+id="the-web-ui-accepts-writes-from-anything-that-can-reach-its-port">The
+web UI accepts writes from anything that can reach its port</h3>
+<p><code>llm-memory ui</code> listens on <code>127.0.0.1:8765</code> by
+default and serves 19 routes; twelve mutate (<code>ui.go:33-397</code>).
+The handler checks no token and no <code>Origin</code> or
+<code>Host</code> header, and <code>decodeJSON</code> reads the body
+without looking at <code>Content-Type</code>
+(<code>ui.go:408-415</code>). A cross-origin <code>POST</code> with a
+plain-text body needs no preflight, so a page open in the same browser
+can address <code>POST /api/memories</code> and the archive, restore,
+supersede, merge and gc routes. Whether the request is delivered depends
+on the browser's local-network policy. The <code>PUT</code> routes are
+preflighted.</p>
+<p>The UI's create route accepts any kind and any importance and records
+the author as <code>ui</code> (<code>ui.go:204-250</code>).
+<code>serve --listen</code> likewise adds no authentication in this tree
+(<code>server.go:103-119</code>).</p>
+<h3 id="an-importance-3-row-in-global-reaches-every-project">An
+importance-3 row in <code>global</code> reaches every project</h3>
+<p>The briefing places every importance-3 memory of the namespace and of
+<code>global</code> directly after the handoff, at up to 1,000
+characters a line and with no count cap
+(<code>briefing.go:151-163</code>). Importance is a field the writer
+sets. One <code>remember</code> with <code>namespace: global</code> and
+<code>importance: 3</code>, from any client or from the UI, is in the
+opening context of every later session in every project until someone
+archives it. With hooks installed it arrives without the model
+asking.</p>
+<h3 id="what-the-history-does-not-record">What the history does not
+record</h3>
+<ul>
+<li><strong>A namespace merge.</strong> <code>MergeNamespace</code> runs
+<code>UPDATE memories SET namespace = ?</code> over the source namespace
+and writes no history row; the last snapshot of each moved memory still
+names the old namespace (<code>namespaces.go:194</code>). A rename
+cascades the same way.</li>
+<li><strong>Links.</strong> <code>AddLink</code> and
+<code>RemoveLink</code> write no history, and the model can remove a
+<code>supersedes</code> link. The archive reason in the superseded row's
+snapshot still names its replacement.</li>
+<li><strong>A purge.</strong> History goes with the row and nothing
+records that it happened. <a href="../membrane/">Membrane</a> has the
+same cascade under its revision table.</li>
+<li><strong>Import provenance.</strong> An import inserts the dump's
+history rows with their actors and timestamps after checking only that
+the action is known and the snapshot is valid JSON
+(<code>transfer.go:252-266</code>).</li>
+</ul>
+<h3 id="several-processes-on-one-file">Several processes on one
+file</h3>
+<p>Every write path is a single transaction that takes the write lock at
+<code>BEGIN</code> and re-reads the row inside it, so a
+read-modify-write cannot interleave (<code>db.go:88-90</code>,
+<code>memories.go:311-343</code>). A writer that waits longer than five
+seconds fails, and the tool returns an internal error asking the model
+to retry once (<code>tools.go:580-582</code>).</p>
+<p>Two things sit outside a transaction. The duplicate search in
+<code>remember</code> runs before the insert. And
+<code>update_memory</code> applies the field patch, then each link
+change, as separate transactions: a link that fails leaves the patch
+committed and the call reporting an error
+(<code>tools.go:373-397</code>).</p>
+<p>No committed test holds two stores open on one file at once; the
+two-client test closes the first before opening the second
+(<code>internal/server/server_test.go:275-278</code>).</p>
+<h3 id="what-the-embeddings-path-sends">What the embeddings path
+sends</h3>
+<p>With an endpoint configured, the request body is a model name and a
+list of texts (<code>internal/semantic/client.go:101-115</code>). The
+texts are:</p>
+<ul>
+<li><strong>Every memory in the file</strong>, title, content and tags,
+64 per search until none is missing. The scan has no namespace filter
+and orders active rows before archived ones, so archived memories are
+sent too (<code>embeddings.go:47-53</code>,
+<code>engine.go:144-150</code>).</li>
+<li><strong>Each search query</strong>, including a briefing's focus
+string.</li>
+<li><strong>The text of each new memory.</strong> <code>remember</code>
+calls the engine's <code>FindSimilar</code> when semantic search is on
+(<code>tools.go:131-137</code>, <code>engine.go:273-285</code>).
+<code>README.md:296</code> says duplicate detection stays full-text and
+that writing never depends on the API; the second half holds, since a
+failure is logged and ignored.</li>
+</ul>
+<p>A trigger deletes a memory's vectors when its title, content or tags
+change (<code>0002_embeddings.sql:13-15</code>), and archiving leaves
+them in place behind the read filter. One window remains:
+<code>Index</code> reads the text, calls the endpoint, then stores the
+vector if the row still exists (<code>engine.go:80-110</code>,
+<code>embeddings.go:101-104</code>). An edit committed by another
+process during the call fires the trigger before the vector exists, and
+the vector of the old text is then stored and kept until the next edit
+or a <code>reindex --all</code>.</p>
+<h3 id="two-smaller-reads">Two smaller reads</h3>
+<p><code>recall</code> with <code>include_archived</code> drops the
+expiry condition together with the archive one. An expired row not yet
+collected by <code>gc</code> comes back with <code>archived</code>
+false, and the result view has no expiry field
+(<code>search.go:146-148</code>, <code>tools.go:189-199</code>).</p>
+<p><code>list_namespaces</code> and the briefing footer count rows with
+<code>archived_at</code> null, so an expired row is counted as active
+while every listing omits it (<code>namespaces.go:92</code>).</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>114 test functions in 15 files, 5,102 lines, with 13 golden files.
+<code>.github/workflows/ci.yml</code> runs <code>go vet</code>, the
+suite and a lint job on push and pull request; the race detector is on
+for Linux and macOS. I ran none of them.</p>
+<p><strong>The suite asserts absence against populated results.</strong>
+<code>TestContentOrderAndDedup</code> builds a namespace of twenty
+active memories with one archived handoff and asserts that
+<code>Old handoff</code> is not in the briefing while the active
+handoff's last line is
+(<code>internal/briefing/briefing_test.go:186-189</code>).
+<code>TestHandoffBetweenClients</code> writes two handoffs from one
+client, opens a second, and asserts that the first handoff's text is
+absent from a briefing that must contain five other strings
+(<code>internal/server/server_test.go:281-288</code>).
+<code>TestSearchFiltersAndLimits</code> searches a term present in two
+namespaces and requires exactly the row from the named one
+(<code>internal/store/search_test.go:193-196</code>).
+<code>negative_eval</code> rests on these.</p>
+<p>Two further cases assert an empty result after an archive, each
+paired with an include-archived read that must return the row
+(<code>search_test.go:209-218</code>,
+<code>internal/semantic/engine_test.go:126-134</code>).</p>
+<p>Other cases: one history row per write with actor and content
+(<code>internal/store/memories_test.go:106-158</code>); the
+single-handoff rule through create, restore, a kind change and a
+namespace move (<code>:342-398</code>); no orphan history or FTS rows
+after a purge (<code>internal/store/transfer_test.go:207-218</code>);
+the tool list and the read-only tool list
+(<code>server_test.go:121-170</code>, <code>:523-552</code>); and
+<code>remember</code> refusing the kind <code>handoff</code>
+(<code>:337</code>).</p>
+<p>The golden files pin text: six briefings at different budgets and the
+output of seven CLI invocations, with dates masked.
+<code>loaded_demo.golden</code> shows the full section order.</p>
+<p>Not covered: two processes writing at once, the history of a merged
+or renamed namespace, any header check on the UI, the embedding-store
+window, and an expired row under <code>include_archived</code>.</p>
+<p>No paper, DOI or benchmark is cited in the tree, and no retrieval
+quality measure is committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Write the history row in the mutating transaction, as a
+snapshot.</strong> A snapshot of the row after each action makes a
+history readable without replaying diffs, and re-reading inside the
+transaction means it records what was committed.</p>
+<p><strong>Build the archive and expiry conditions once.</strong> One
+function that returns the filter fragment for every search arm is why
+the vector arm, the recent list and the duplicate check cannot disagree
+about what is hidden.</p>
+<p><strong>Keep restore and hard delete off the tool surface.</strong>
+The model can retire a memory and cannot bring one back or erase
+one.</p>
+<p><strong>Take the author from the transport.</strong> The handshake's
+client name, with a server-side override, is harder to forge than a tool
+argument and costs nothing.</p>
+<p><strong>Invalidate embeddings with a trigger on the text
+columns.</strong> The store does not depend on every writer
+remembering.</p>
+<p><strong>Make the session briefing a deterministic render with a
+budget and explicit omission lines.</strong> Each cut names how many
+items were left out and the query that reaches them.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not serve a write API on localhost without an origin check
+or a token.</strong></p>
+<p><strong>Do not let a writer-chosen number decide what enters every
+project's opening context.</strong> Importance 3 in a shared namespace
+is a broadcast.</p>
+<p><strong>Do not move rows between scopes outside the mutation
+log.</strong></p>
+<p><strong>Do not scan the whole store for an embeddings backfill when
+the search was scoped.</strong> Archived rows and other projects' rows
+leave the machine on a query that named neither.</p>
+<p><strong>Do not keep one handoff slot without a read marker</strong>
+where two clients can be open at once.</p>
+<h3 id="fit">Fit</h3>
+<p>It fits one person moving between several assistants on one machine,
+with a few hundred to a few thousand deliberately written memories and
+no wish to run a service. It asks for discipline from the model and a
+pasted instruction block per client, and it gives back a store a person
+can read, export and repair with a CLI. It does not fit a team, a
+network deployment, or any setting where the writing model is not
+trusted to choose importance and namespace. A reader who needs a memory
+to wait for approval, or a rejected statement to stay rejected, is not
+served by it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is the UI meant to be reachable only by its own
+page?</strong> Nothing in the handler says so.</li>
+<li><strong>Should a merge or a rename write history?</strong> The
+archive of displaced handoffs inside the same merge does.</li>
+<li><strong>Is the semantic duplicate check in <code>remember</code>
+intended?</strong> The README describes the opposite.</li>
+<li><strong>Should the embedding backfill follow the search's namespace
+and archive filter?</strong></li>
+<li><strong>What should happen to an unread handoff when a second client
+writes one?</strong></li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/store/migrations/0001_initial.sql</code> to
+<code>0004_links.sql</code></td>
+<td>Schema, FTS triggers, embeddings trigger</td>
+</tr>
+<tr>
+<td><code>internal/store/memories.go</code></td>
+<td>Create, update, archive, restore, list, history writer</td>
+</tr>
+<tr>
+<td><code>internal/store/search.go</code></td>
+<td>FTS5 search, shared filter, duplicate detection</td>
+</tr>
+<tr>
+<td><code>internal/store/embeddings.go</code></td>
+<td>Vector storage, missing scan, filtered vector load</td>
+</tr>
+<tr>
+<td><code>internal/store/namespaces.go</code></td>
+<td>Namespace list, rename, merge, archive</td>
+</tr>
+<tr>
+<td><code>internal/store/maintenance.go</code></td>
+<td>Purge, stats, integrity check, backup</td>
+</tr>
+<tr>
+<td><code>internal/store/transfer.go</code></td>
+<td>JSON export and import</td>
+</tr>
+<tr>
+<td><code>internal/store/secrets.go</code></td>
+<td>Secret patterns</td>
+</tr>
+<tr>
+<td><code>internal/semantic/engine.go</code>,
+<code>client.go</code></td>
+<td>Hybrid search, fusion, embeddings client</td>
+</tr>
+<tr>
+<td><code>internal/briefing/briefing.go</code></td>
+<td>Briefing assembly and budgeted writer</td>
+</tr>
+<tr>
+<td><code>internal/server/server.go</code>, <code>tools.go</code>,
+<code>resources_prompts.go</code></td>
+<td>MCP surface</td>
+</tr>
+<tr>
+<td><code>internal/ui/ui.go</code></td>
+<td>Web UI routes</td>
+</tr>
+<tr>
+<td><code>cmd/llm-memory/main.go</code>, <code>admin.go</code>,
+<code>hooks.go</code></td>
+<td>Binary, CLI verbs, hooks</td>
+</tr>
+<tr>
+<td><code>internal/store/memories_test.go</code>,
+<code>search_test.go</code></td>
+<td>History, handoff slot, filters</td>
+</tr>
+<tr>
+<td><code>internal/briefing/briefing_test.go</code>,
+<code>internal/server/server_test.go</code></td>
+<td>Briefing and end-to-end tool cases</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git</code> in a full clone at the pinned
+commit.</p>
+<ul>
+<li><code>git ls-files '*.go' | grep -v _test.go | xargs cat | wc -l</code>
+— 8,485 lines in 22 files;
+<code>git ls-files '*_test.go' | xargs cat | wc -l</code> — 5,102 in
+15.</li>
+<li><code>git grep -c -E '^func Test' -- '*_test.go'</code>, summed —
+114.</li>
+<li><code>git grep -n -E 'DELETE FROM|DROP TABLE' -- '*.go' '*.sql' ':!*_test.go'</code>
+— five: the embeddings reset, the link removal, the purge, the
+embeddings trigger and the merged namespace's own row. None names
+<code>memory_history</code>.</li>
+<li><code>git grep -n -E 'memory_history' -- '*.go' '*.sql' ':!*_test.go'</code>
+— the table, its index, one read, two comments and two inserts
+(<code>memories.go:94</code>, <code>transfer.go:262</code>).</li>
+<li><code>git grep -n -E 'UPDATE memories|UPDATE namespaces SET name' -- '*.go' ':!*_test.go'</code>
+— the patch, the archive, the restore, the rename and the merge at
+<code>namespaces.go:194</code>.</li>
+<li><code>git grep -n -E 'ArchiveExpired|\.Purge\(|\.Restore\(|MergeNamespace\(|RenameNamespace\(' -- ':!*_test.go'</code>
+— callers in <code>cmd/llm-memory/admin.go</code> and
+<code>internal/ui/ui.go</code> only; <code>Purge</code> at
+<code>admin.go:438</code> only.</li>
+<li><code>git grep -n -E 'restore|purge' -- internal/server</code> —
+message strings and a schema description; no tool.</li>
+<li><code>git grep -n -i -E 'Origin|Sec-Fetch|csrf|r\.Host|Authorization|token' -- internal/ui internal/server/server.go</code>
+— one line of instruction prose in <code>server.go</code>; nothing in
+<code>internal/ui</code>. Control:
+<code>git grep -n 'Authorization' -- internal/semantic</code> matches
+<code>client.go:114</code>.</li>
+<li><code>git grep -n -i -E 'secure_delete|VACUUM|wal_checkpoint' -- '*.go' '*.sql'</code>
+— <code>VACUUM INTO</code> in the backup only.</li>
+<li><code>git grep -n -E 'WaitGroup|go func|t\.Parallel|errgroup' -- '*_test.go'</code>
+— one goroutine driving <code>serve</code> through pipes; no
+concurrent-writer test.</li>
+<li><code>git grep -n -i -E 'valid_from|valid_to|valid_at|valid_until|event_time|observed_at|as_of' -- .</code>
+— nothing.</li>
+<li><code>git grep -n -i -E 'pending|approve|review|confidence|trust|verified|status' -- '*.sql' internal/store/models.go</code>
+— nothing. Control:
+<code>git grep -c -i 'archived_at' -- internal/store/models.go</code>
+matches.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- . ':!go.sum'</code>
+— nothing.</li>
+<li><code>git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|contributing|third.party)'</code>
+— <code>LICENSE</code> only.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-17</strong> — <a
+href="https://github.com/Morditux/llm-memory/commit/93974b5e9caaae71b9b61c1c1eec3cc4ed73abed"><code class="commit-id" title="93974b5e9caaae71b9b61c1c1eec3cc4ed73abed">93974b5e…</code></a>
+— first reading, of the whole tree. Screened before reading: no auto-run
+surface; a <code>Makefile</code>, and <code>go.mod</code> and
+<code>go.sum</code> changed inside the seven-day cooldown; nothing was
+installed, built or run. No test was executed and no finding was
+re-derived outside the tree; the MCP SDK and the SQLite driver were not
+opened. Three marks: <code>scope_enforced</code>, <code>audit_log</code>
+and <code>negative_eval</code>. <code>trust_state</code> is withheld
+because active and archived are one bit shared by every reason for
+removal, <code>tombstone</code> because archiving is keyed on the row
+and the duplicate check reads active rows only, <code>bitemporal</code>
+because every timestamp is record time, and <code>human_review</code>
+because no write waits for anyone.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
