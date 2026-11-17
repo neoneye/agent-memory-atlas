@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Go memory broker for
+AI agents: tenant-keyed records in Redis, BM25 and Qdrant vectors fused
+by RRF, with revisions, forgetting and activation decay.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="HeurChain — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Go memory
+broker for AI agents: tenant-keyed records in Redis, BM25 and Qdrant
+vectors fused by RRF, with revisions, forgetting and activation decay.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="HeurChain — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Go memory
+broker for AI agents: tenant-keyed records in Redis, BM25 and Qdrant
+vectors fused by RRF, with revisions, forgetting and activation decay.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>HeurChain — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "HeurChain",
+      "description": "A self-hosted Go memory broker for AI agents: tenant-keyed records in Redis, BM25 and Qdrant vectors fused by RRF, with revisions, forgetting and activation decay.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Forget writes an id tombstone every read
+path checks; the tool named promote archives</p>
+          <h1>HeurChain</h1>
+          <p class="document-deck">A self-hosted Go memory broker for AI
+agents: tenant-keyed records in Redis, BM25 and Qdrant vectors fused by
+RRF, with revisions, forgetting and activation decay.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/peterjohannmedina/heurchain">
+              <span>Source</span>
+              <strong>peterjohannmedina/heurchain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/peterjohannmedina/heurchain/commit/a2feeb414f491cf57afab01854078278cc50167e" title="a2feeb414f491cf57afab01854078278cc50167e">
+              <span>Analyzed revision</span>
+              <code>a2feeb41…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/peterjohannmedina--heurchain" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>peterjohannmedina--heurchain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE and an identical npm/LICENSE, agreeing with npm/package.json;
+copyright is assigned to HeurChain contributors</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>12,564
+lines of Go in 41 non-test files under broker/, which is the whole
+product; vault.go is 1,578 of them and bm25.go 1,108. The npm package
+holds two agent-facing documents and no code</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>45
+commits from 1 May to 10 November 2026 under two author names; the Go
+broker arrived whole in one commit on 9 November 2026, replacing a 1.x
+Node service, and has six commits. Broker version 0.6.1-oss.1, declared
+frozen</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>176
+Go test functions in 37 files, 6,617 lines, on miniredis, in-memory
+SQLite and httptest stand-ins for Qdrant and the embedder. No workflow
+runs them; CI is a Docker Compose smoke test. I ran none; two findings
+were re-derived in separate scripts</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>HeurChain is a self-hosted memory broker: one Go binary that agents
+reach over MCP or HTTP to store short texts and recall them by hybrid
+search. Records live in Redis under a tenant id; a BM25 index in Redis
+and a Qdrant collection are projections of them, fused by reciprocal
+rank fusion. What is notable is the lifecycle around a record:
+corrections carry the revision the caller read, forgetting leaves a
+tombstone that each read path checks for itself, and an outbox repairs
+the vector index. What is weak is the text addressed to agents, which
+describes three operations as something other than what the code does,
+and an audit table the tenant's own key can delete from.</p>
+<p>It carries <code>bitemporal</code>, <code>scope_enforced</code> and
+<code>negative_eval</code>.</p>
+<p><strong>Licence.</strong> MIT, and the tree agrees with itself:
+<code>LICENSE</code> and <code>npm/LICENSE</code> are byte-identical,
+<code>npm/package.json:26</code> declares <code>MIT</code>, and the
+copyright line names <em>HeurChain contributors</em>. No rider, no
+NOTICE file, no contributor agreement. The grant covers this edition
+only. <code>CHANGELOG.md:14-15</code> says the release <em>omits
+features that are incompatible with the self-hosted version</em> without
+naming them; the tree shows their outline as two config sections
+accepted and ignored (<code>broker/config.go:115-128</code>) and seven
+empty schema migrations (<code>broker/migrate.go:59-70</code>).</p>
+<p><strong>A forgotten id is refused on write and hidden on read,
+separately.</strong> Forget runs one Lua script that deletes the active
+hash, the vault copy, the version list and the BM25 entries, and sets a
+tombstone key with no expiry
+(<code>broker/memory_forget.go:13-59</code>). The store script refuses a
+tombstoned id (<code>broker/memory_records.go:83</code>). Search
+hydration, the cosine scan, the manifest, the per-agent listing, session
+context, export and stats each test the tombstone themselves, so content
+restored from an older backup stays hidden.</p>
+<p><strong>Corrections are revision-checked and keep history.</strong>
+An update names the revision it read; the same script compares it,
+pushes the previous fields onto a version list and writes the new hash
+(<code>broker/memory_records.go:82-126</code>). Two racing corrections
+produce one success and one conflict.</p>
+<p><strong>The agent-facing text disagrees with the code in three
+places.</strong> The tool <code>heurchain_promote</code> is described as
+raising a memory's retrieval weight after a human confirms it; its
+handler moves the record to the vault, out of search, when its
+activation is below the threshold. The documented session shutdown
+deletes the list the replay tool reads. The guide says there is no
+background retry queue; there is one.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A record is one mutable Redis hash per id per tenant. It is
+<em>active</em> while its id is in the tenant's active set,
+<em>archived</em> once moved to the vault key, and <em>forgotten</em>
+once a tombstone exists. Only active records are searched. Nothing in
+the model says whether a record is believed.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one Lua script admits a write and keeps the old version; forget leaves an id tombstone every read checks; the promote tool and the sweep both end in the vault, outside search</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one Lua script admits a write and keeps the old version; forget leaves an id tombstone every read checks; the promote tool and the sweep both end in the vault, outside search
+flowchart TD
+    A[&quot;agent: /store,&lt;br/&gt;/memory/update or&lt;br/&gt;MCP heurchain_store&quot;] --&gt; B{&quot;tombstone&lt;br/&gt;for this id?&quot;}
+    B --&gt;|&quot;yes&quot;| R1[&quot;410 Gone&quot;]
+    B --&gt;|&quot;no&quot;| C{&quot;expected_revision&lt;br/&gt;matches?&quot;}
+    C --&gt;|&quot;no&quot;| R2[&quot;409 conflict&quot;]
+    C --&gt;|&quot;yes or absent&quot;| D[&quot;push old fields to&lt;br/&gt;versions list, write&lt;br/&gt;hash, revision + 1&quot;]
+    D --&gt; E[&quot;BM25 postings in Redis,&lt;br/&gt;outbox entry,&lt;br/&gt;Qdrant point&quot;]
+    E --&gt; ACT[(&quot;active set&lt;br/&gt;tenant:T:vecs&quot;)]
+    ACT --&gt; S[&quot;/search: BM25 and dense,&lt;br/&gt;each checked against&lt;br/&gt;the active set, RRF&quot;]
+    S --&gt; T{&quot;hydrate: tombstone,&lt;br/&gt;filters, as_of&quot;}
+    T --&gt; OUT[&quot;results&quot;]
+    ACT --&gt;|&quot;hourly sweep,&lt;br/&gt;dry run as shipped&quot;| V[(&quot;vault key:&lt;br/&gt;kept, not searched&quot;)]
+    ACT --&gt;|&quot;heurchain_promote,&lt;br/&gt;not gated&quot;| V
+    V --&gt;|&quot;admin rehydrate&quot;| ACT
+    ACT --&gt;|&quot;forget + confirm&quot;| F[&quot;delete hash, vault,&lt;br/&gt;versions, postings;&lt;br/&gt;set tombstone&quot;]
+    F ~~~ AUD[(&quot;audit_log&lt;br/&gt;in SQLite&quot;)]
+    AUD -.-&gt;|&quot;DELETE /agents&lt;br/&gt;with the tenant key&quot;| X[&quot;rows removed&quot;]
+    style R1 fill:#14532d,color:#fff
+    style R2 fill:#14532d,color:#fff
+    style X fill:#7f1d1d,color:#fff</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Four services, all on the operator's machine
+(<code>deploy/compose.yaml</code>):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Redis 7.4, AOF on</td>
+<td>Records, vault copies, version lists, tombstones, sessions, a small
+key-value cache, the BM25 index, the index outbox, the auth cache and
+rate counters</td>
+</tr>
+<tr>
+<td>Qdrant 1.12.4</td>
+<td>One collection per tenant, one point per active record</td>
+</tr>
+<tr>
+<td>SQLite, inside the broker</td>
+<td><code>tenants</code>, <code>api_keys</code> (bcrypt),
+<code>usage_events</code>, <code>audit_log</code></td>
+</tr>
+<tr>
+<td>Ollama 0.5.7 or an OpenAI-compatible endpoint</td>
+<td>Embeddings; a store without one returns 503</td>
+</tr>
+</tbody>
+</table></div>
+<p>Redis is the source of truth. A Qdrant point carries a hash of the
+source fields it was built from, and a dense hit whose hash no longer
+matches the Redis record is dropped
+(<code>broker/qdrant.go:444-457</code>). The reconciler re-queues a
+record whose stored acknowledgement no longer matches its fields
+(<code>broker/semantic_index.go:229-231</code>); it does not look for a
+point missing from Qdrant.</p>
+<p>The broker is one process with two Redis pools, a single SQLite
+connection and a 256-way in-process lock keyed by tenant hash that
+serialises a tenant's writes (<code>broker/recall.go:17-25</code>). The
+lock is per process; nothing coordinates two brokers on one Redis beyond
+the Lua scripts and a per-document index lease.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>docker compose up</code>, pull the embedding model, create a
+tenant with admin basic auth, and paste two headers into the agent's MCP
+configuration. Every port is published on loopback. The config loader is
+strict: an unknown key stops startup and names it
+(<code>broker/config.go:166-167</code>).</p>
+<p>Two things an operator is told do not match the tree. The
+documentation lists a vault <em>directory</em> to back up
+(<code>docs/install.md:105</code>) and the config sets
+<code>vault.path</code>, which is given a default and read by nothing
+(<code>broker/config.go:201-202</code>); the vault is Redis keys. And
+source comments point at
+<code>docs/architecture/archive-vs-working-set.md</code> and
+<code>docs/memory-lifecycle.md</code>, neither of which is in the
+repository.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Key validated against the named tenant</td>
+<td><code>broker/auth.go:59-120</code></td>
+</tr>
+<tr>
+<td>Store handler</td>
+<td><code>broker/handlers.go:172-351</code></td>
+</tr>
+<tr>
+<td>Admission script: tombstone, revision, history</td>
+<td><code>broker/memory_records.go:65-144</code></td>
+</tr>
+<tr>
+<td>Atomic read of active or archived record</td>
+<td><code>broker/memory_records.go:183-207</code></td>
+</tr>
+<tr>
+<td>Get, list, update and their audit row</td>
+<td><code>broker/memory_api.go:55-291</code></td>
+</tr>
+<tr>
+<td>Forget script and handler</td>
+<td><code>broker/memory_forget.go:13-92</code></td>
+</tr>
+<tr>
+<td>Hybrid search</td>
+<td><code>broker/recall.go:196-397</code>,
+<code>broker/qdrant.go:306-442</code></td>
+</tr>
+<tr>
+<td>Dense hit resolution against the active set</td>
+<td><code>broker/recall.go:150-194</code></td>
+</tr>
+<tr>
+<td>BM25 candidate filter</td>
+<td><code>broker/bm25.go:723-818</code></td>
+</tr>
+<tr>
+<td>Validity and kind checks</td>
+<td><code>broker/recall_options.go:65-125</code></td>
+</tr>
+<tr>
+<td>Cosine scan behind /query</td>
+<td><code>broker/vectors.go:208-313</code></td>
+</tr>
+<tr>
+<td>Index outbox and reconciler</td>
+<td><code>broker/semantic_index.go:78-348</code></td>
+</tr>
+<tr>
+<td>Activation, sweep and the promote handler</td>
+<td><code>broker/consolidation.go:123-464</code></td>
+</tr>
+<tr>
+<td>Rank-cut selector and vault move</td>
+<td><code>broker/demote.go:224-323</code>,
+<code>broker/bm25.go:403-431</code></td>
+</tr>
+<tr>
+<td>Sessions</td>
+<td><code>broker/sessions.go:49-159</code></td>
+</tr>
+<tr>
+<td>Export, import, rehydrate</td>
+<td><code>broker/vault.go:170-333</code>, <code>:856-1136</code></td>
+</tr>
+<tr>
+<td>Audit row deletion</td>
+<td><code>broker/vault.go:1464-1556</code></td>
+</tr>
+<tr>
+<td>MCP dispatch and tool text</td>
+<td><code>broker/mcp.go:330-675</code>,
+<code>broker/mcp_memory_tools.go:9-43</code></td>
+</tr>
+<tr>
+<td>Agent guide served at the root path</td>
+<td><code>broker/discovery.go:22-387</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A record is the hash
+<code>tenant:&lt;tenant&gt;:vec:&lt;id&gt;</code>
+(<code>broker/vectors.go:75-77</code>).</p>
+<ul>
+<li><strong><code>id</code></strong>: caller-supplied, up to 128
+characters from letters, digits, <code>-</code>, <code>_</code> and
+<code>.</code>, or a generated UUID (<code>broker/handlers.go:47</code>,
+<code>:219-224</code>).</li>
+<li><strong><code>text</code></strong>,
+<strong><code>tags</code></strong> (up to 16, lower case),
+<strong><code>agent_id</code></strong>,
+<strong><code>metadata</code></strong> (a JSON object the caller
+owns).</li>
+<li><strong><code>namespace</code></strong>: <code>ops</code>,
+<code>notes</code> or <code>self</code>, the decay tier. An unknown
+value is refused (<code>broker/handlers.go:85-93</code>).</li>
+<li><strong><code>embedding</code></strong> and
+<strong><code>embedding_model</code></strong>.</li>
+<li><strong><code>revision</code></strong>,
+<strong><code>created_at</code></strong>,
+<strong><code>updated_at</code></strong>,
+<strong><code>change_reason</code></strong>.</li>
+<li><strong><code>access_count</code></strong>: seeded at 1 and
+incremented for each returned result.</li>
+<li><strong><code>record_kind</code></strong>: empty, or
+<code>checkpoint</code> for an immutable handoff snapshot.</li>
+</ul>
+<p>Beside it:
+<code>tenant:&lt;tenant&gt;:memory:versions:&lt;id&gt;</code>, a list of
+prior field sets without embeddings;
+<code>tenant:&lt;tenant&gt;:vault:&lt;id&gt;</code>, the archived copy;
+and <code>tenant:&lt;tenant&gt;:memory:forgotten:&lt;id&gt;</code>, a
+tombstone holding the id, the revision and a timestamp and none of the
+content.</p>
+<p>Three metadata keys are read by the broker. <code>valid_from</code>
+and <code>valid_until</code> are RFC 3339 instants checked at write
+(<code>broker/recall_options.go:65-93</code>). <code>memory_kind</code>
+is <code>factual</code> or <code>creative</code>. All three are copied
+into the Qdrant payload so filters can be pushed down
+(<code>broker/recall_options.go:131-141</code>).</p>
+<p><strong><code>bitemporal</code> is earned on those two keys.</strong>
+They are the caller's statement of when a fact holds, stored apart from
+<code>created_at</code> and <code>updated_at</code>, and
+<code>as_of</code> on a search excludes a record whose interval does not
+contain the instant. The limits are plain: the OpenAPI document
+describes <code>as_of</code> (<code>broker/openapi.go:188</code>) and no
+document tells an agent to set the two keys; <code>/query</code> has no
+<code>as_of</code>; and a search without <code>as_of</code> returns a
+record whose <code>valid_until</code> has passed.</p>
+<p><strong><code>trust_state</code> is withheld.</strong>
+<code>active</code>, <code>archived</code> and <code>forgotten</code>
+are lifecycle positions, set by decay and by deletion. A prior version
+is labelled <code>superseded</code> when read back
+(<code>broker/memory_api.go:89</code>), which is a label on history, not
+a state a record waits in. <code>memory_kind</code> is a genre fixed by
+the writer.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>POST /search</code> is the main path
+(<code>broker/recall.go:196-397</code>).</p>
+<ol type="1">
+<li><strong>Eligibility.</strong> Read the tenant's active set. If an
+agent, tag, structured filter, <code>as_of</code> or kind was given,
+read six filter fields per active record and keep the eligible ids.</li>
+<li><strong>Two arms in parallel.</strong> BM25 walks term postings;
+each candidate page is checked for active-set membership, an existing
+hash and the filters before scoring
+(<code>broker/bm25.go:723-818</code>). The dense arm queries the
+tenant's Qdrant collection with agent, tag, kind, validity and
+embedding-model filters pushed down.</li>
+<li><strong>Resolve.</strong> A dense hit is kept only if its id is in
+the active set and the eligible set, and if its point's source hash
+matches the Redis record.</li>
+<li><strong>Fuse.</strong> Reciprocal rank fusion, <code>k</code> 60 and
+unit weights unless the request overrides them.</li>
+<li><strong>Hydrate.</strong> In rank order, read each hash and its
+tombstone, apply every filter again, cap results per source document if
+asked, and stop at the limit, 10 by default and 50 at most.</li>
+</ol>
+<p>The response carries a <code>retrieval</code> block reporting each
+arm's status and counts. One arm failing degrades to the other; both
+failing is a 503.</p>
+<p><code>POST /query</code> is older and different: it loads every
+active record's hash, embedding included, and scores cosine in the
+broker (<code>broker/vectors.go:208-313</code>). Its tag filter matches
+any listed tag; the guide says all must match
+(<code>broker/discovery.go:139</code>).</p>
+<p>Returning a result increments its <code>access_count</code> on both
+paths, so retrieval feeds the decay model.</p>
+<p><strong><code>scope_enforced</code> is earned on the tenant.</strong>
+The tenant id comes from a header, and <code>validateAPIKey</code> looks
+the key up only among the rows stored for that tenant
+(<code>broker/auth.go:76-78</code>), so a key cannot name another
+tenant. Every read composes its Redis keys from that id, the dense arm
+addresses the collection named by it, and candidates on both arms are
+tested for membership in that tenant's active set. This is a key
+namespace over one Redis, in the code's own words
+(<code>broker/main.go:87-89</code>), with a membership check on the two
+search arms; there is no tenant column to forget in a query. In <a
+href="../redis-agent-memory-server/">Redis Agent Memory Server</a> the
+equivalent keys are optional filters the caller supplies and the
+authenticated user never constrains a query.</p>
+<p>Inside a tenant, <code>agent_id</code> is an optional exact-match
+filter and nothing more. The per-agent isolation feature is covered in
+section 9.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is the agent's explicit call. Nothing extracts memories
+from conversation and no model is called except the embedder.</p>
+<p><code>POST /store</code> validates, embeds the text unless a vector
+was supplied, and runs the admission script
+(<code>broker/memory_records.go:82-126</code>):</p>
+<ul>
+<li>A tombstone for the id returns 410.</li>
+<li>A supplied <code>expected_revision</code> that differs returns 409,
+and <code>0</code> means create-only.</li>
+<li>A checkpoint record refuses any change of text or author.</li>
+<li>Identical content is a no-op that returns the current revision.</li>
+<li>Otherwise the previous fields are pushed onto the version list and
+the new hash is written with <code>revision + 1</code>.</li>
+</ul>
+<p>A store without <code>expected_revision</code> on an existing id is
+an unconditional overwrite that still keeps the old version. The store
+then updates BM25 and Qdrant synchronously. If either fails the answer
+is 202 with <code>indexed: false</code>.</p>
+<p><strong>Writes block the agent</strong> for one embedding call, the
+script and two index writes. A record is retrievable when the call
+returns. An index failure is retried by the worker: the admission script
+itself adds the record to <code>broker:semantic-index:pending</code>,
+and a one-second loop drains sixteen entries per tick and re-queues
+failures a minute later (<code>broker/semantic_index.go:249-306</code>).
+The guide tells the agent the opposite and asks it to retry
+(<code>broker/discovery.go:178</code>).</p>
+<p><code>POST /memory/update</code> requires the id, the revision read,
+and a reason; it re-embeds only if the text changed. Updating an
+archived record writes it back into the active set, because the script
+reads the vault copy as the previous version and deletes it.</p>
+<h3 id="forgetting">Forgetting</h3>
+<ul>
+<li><strong>Explicit forget.</strong> Requires the current revision and
+<code>confirm: true</code>. Deletes active hash, vault copy, versions,
+BM25 entries and the Qdrant point, and reports
+<code>cleanup_complete</code>. If Qdrant is down the answer is 202 and
+the outbox deletes the point later.</li>
+<li><strong>Decay.</strong> Activation is
+<code>ln(access_count) - d * ln(age_seconds + 1)</code> with
+<code>d</code> 3.0, 1.0 and 0.1 for the three namespaces
+(<code>broker/consolidation.go:123-133</code>). An hourly sweep moves
+records below a threshold to the vault, or the lowest fraction if
+<code>demote_fraction</code> is set. As shipped it logs and moves
+nothing (<code>deploy/broker.yaml:41-45</code>).</li>
+<li><strong>Version cap.</strong> 100 versions and 1 MiB per record,
+oldest dropped.</li>
+<li><strong>Sessions.</strong> A session is a list holding at most 50
+record ids with a sliding expiry.</li>
+</ul>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model call beyond embeddings. <code>/search</code> reads the whole
+active set of ids per request and, when filtered, six fields per active
+record. <code>/query</code> reads every embedding. The sweep and the
+reconciler page through all records.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers 24 tools and dispatches each to the same
+HTTP handler through an in-process request carrying the session's key
+and tenant (<code>broker/mcp.go:330-494</code>). <code>GET /</code>
+serves a 365-line onboarding document without authentication, and
+<code>npm/AGENT_ONBOARDING.md</code> and
+<code>npm/AGENT_CONFIG.json</code> repeat it for agents to read at
+setup.</p>
+<p>That text instructs the agent to write memory: read the manifest
+first, open a session, store decisions, user-stated facts and a session
+summary, tag them from a seven-word taxonomy, and never store secret
+values (<code>broker/discovery.go:295-326</code>). It is prose; the
+broker enforces the tag syntax and nothing about content.</p>
+<p>Checkpoints are the handoff primitive.
+<code>heurchain_checkpoint</code> stores a structured summary as an
+immutable record in the <code>self</code> namespace, and
+<code>heurchain_resume</code> reads it by id from the active set or the
+vault and attaches an instruction to treat it as saved context
+(<code>broker/memory_checkpoint.go:30-130</code>).</p>
+<p><strong><code>human_review</code> is withheld.</strong> Store, update
+and forget are tools the writing agent holds. Forget's
+<code>confirm: true</code> is a boolean in the call
+(<code>broker/memory_forget.go:71</code>), and the tool text asking for
+an explicit user instruction is a request to the model. Rehydrating from
+the vault and importing an archive need admin basic auth, which
+separates operator from agent on those two verbs, but neither decides
+whether a memory is admitted.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-promote-tool-archives">The promote tool archives</h3>
+<p><code>heurchain_promote</code> reads: <em>"Increment a memory item's
+retrieval weight. Call after a human confirms a stored fact is
+correct."</em> (<code>broker/mcp.go:552</code>, and
+<code>broker/discovery.go:374</code> in the guide). The handler computes
+the record's activation and, if it is below the threshold, moves the
+record to the vault (<code>broker/consolidation.go:352-398</code>). The
+handler increments nothing. A comment states that this endpoint is
+deliberately not gated on the dry-run flag (<code>:386-390</code>).</p>
+<p>With the shipped threshold, -20, an <code>ops</code> record that was
+never retrieved crosses it about thirteen minutes after it was stored,
+so confirming it removes it from search. A <code>notes</code> record
+does not cross it for years. With the code's default, -2, which applies
+when the config omits the key, a <code>notes</code> record crosses it
+after about six seconds. Those figures come from the formula, recomputed
+in a separate script. No committed test calls the handler.</p>
+<p><code>heurchain_vault_flush</code> has the same shape. Its
+description says it persists accumulated memories into a durable vault
+(<code>broker/mcp.go:636</code>), and the guide says it deletes items
+tagged <code>conversation</code> (<code>broker/discovery.go:276</code>).
+The handler runs one consolidation pass, which under the shipped dry run
+moves nothing and answers <code>flushed: true</code>.</p>
+<h3 id="the-audit-table-can-be-deleted-from-with-the-tenant-key">The
+audit table can be deleted from with the tenant key</h3>
+<p><code>audit_log</code> receives a row for each store, update, forget,
+export, import, flush and rehydrate, and also for each search and query.
+<code>DELETE /agents</code> removes every <code>audit_log</code> and
+<code>usage_events</code> row for one agent id in a tenant
+(<code>broker/vault.go:1516-1529</code>). It authenticates with the
+tenant's API key or admin auth, and writes no row of its own.</p>
+<p>The update and forget rows are inserted without an agent id
+(<code>broker/memory_api.go:288</code>), as are the vault rows
+(<code>broker/http_helpers.go:84</code>). The handler maps the value
+<code>unspecified</code> to <code>agent_id IS NULL</code>. One request
+with that value therefore deletes every correction, deletion and export
+record the tenant has. Re-derived on the lifted statements: four rows
+in, three deleted, the store row left.</p>
+<p><strong><code>audit_log</code> is withheld</strong> on that. The
+producers are real and <code>heurchain_memory_history</code> reads them
+back per record; the table is not append-only for the party it
+describes. Two gaps sit beside it: a record moved to the vault by the
+sweep or by the promote handler writes no row, and a store row carries
+no revision.</p>
+<h3 id="ending-a-session-erases-what-its-replay-reads">Ending a session
+erases what its replay reads</h3>
+<p>The shutdown sequence in <code>npm/AGENT_CONFIG.json:65-74</code> is:
+end the session, then store a summary. <code>endSession</code> deletes
+the session's metadata and its context list and removes it from the
+agent's session set (<code>broker/sessions.go:83-102</code>). The tools
+for the next conversation are described as listing an agent's session
+ids <em>"to discover prior sessions"</em> and as replaying a prior
+session. A session ended as instructed is in neither. A committed test
+asserts the erasure as intended
+(<code>broker/session_memory_context_test.go:62-95</code>).</p>
+<p>The summary stored after the end is not linked either: the append is
+a no-op when the session's metadata is gone
+(<code>broker/sessions.go:114-124</code>). The records themselves
+survive and are findable by search or by a
+<code>metadata.session_id</code> filter. A session started without a TTL
+lasts one hour (<code>broker/sessions.go:50-52</code>) where the tool
+text says 24 (<code>broker/mcp.go:571</code>).</p>
+<p>A session also stores the id of the key that created it, under a
+comment that sessions are usable only by that key
+(<code>broker/sessions.go:43-47</code>, <code>:64</code>). No read
+compares it.</p>
+<h3 id="the-isolation-flag-removes-the-filter-it-is-meant-to-add">The
+isolation flag removes the filter it is meant to add</h3>
+<p>With <code>features.cross_agent_visibility</code> on,
+<code>/query</code> replaces the exact agent match with
+<code>visibleToRequester</code>, which takes the author from a
+<code>created_by</code> field (<code>broker/vectors.go:255-258</code>,
+<code>broker/agent_settings.go:149-154</code>). No write path sets
+<code>created_by</code>, <code>visibility</code> or
+<code>visibility_agents</code>. Every record therefore reads as legacy
+and visible to all, so with the flag on an agent filter on
+<code>/query</code> returns every agent's records, and marking an agent
+isolated through <code>PUT /agent-settings</code> is stored and changes
+no read. The flag is off by default and the startup log calls the
+feature an organisation control, not a security boundary.</p>
+<h3 id="tombstones-are-keyed-on-the-id">Tombstones are keyed on the
+id</h3>
+<p><strong><code>tombstone</code> is withheld.</strong> The forget
+tombstone blocks the <em>id</em>: a store, an import or a rehydrate of
+that id is refused and every read hides residue under it. It holds no
+content and no hash of it, by design
+(<code>broker/memory_forget.go:94-95</code>). The same text stored under
+a new id, which is what a store without an id produces, is accepted.
+Import skips ids already active and fails on tombstoned ones, so a
+re-imported archive cannot restore a forgotten record under its old
+id.</p>
+<h3 id="what-holds-up">What holds up</h3>
+<ul>
+<li>The auth cache is keyed by a hash of the key and stamped with a
+per-tenant epoch, bumped on revocation
+(<code>broker/auth.go:27-54</code>).</li>
+<li>The rate limiter authenticates before counting, so a tenant id alone
+cannot exhaust a tenant's budget
+(<code>broker/admin.go:236-255</code>).</li>
+<li>Export checks the tombstone per entry and fails closed on a Redis
+error.</li>
+<li>Index writes compare a fingerprint of the source fields before
+acknowledging, and retry three times if the record changed underneath
+(<code>broker/vault.go:825-853</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>176 test functions in 37 files. They run against miniredis, in-memory
+SQLite and <code>httptest</code> servers standing in for Qdrant and the
+embedder, so they need no services and do not skip. One case skips on a
+host file (<code>broker/buildinfo_test.go:27</code>). No workflow runs
+<code>go test</code>; the one workflow that touches the broker builds
+the Compose stack and exercises store, search, sessions, MCP and a
+restart with <code>curl</code>
+(<code>.github/workflows/selfhost-smoke.yml</code>). I ran none of
+it.</p>
+<p><strong><code>negative_eval</code> is earned on the
+tombstone.</strong> <code>TestReadsHideResurrectedForgottenMemory</code>
+stores two records sharing a phrase, writes a tombstone for one while
+leaving its hash, set membership, postings and vector in place, and
+asserts that residue is present. It then requires every read surface to
+return exactly the other record: three search modes, both MCP search
+tools, the cosine scan, the manifest, the per-agent listing, the export
+and the stats
+(<code>broker/memory_read_tombstone_test.go:35-181</code>). The
+surviving record is the positive control on each.</p>
+<p>Others worth naming: a correction must leave one search result
+carrying the new text
+(<code>broker/memory_lifecycle_test.go:61-63</code>); session context
+must follow a correction and drop a forgotten record
+(<code>broker/session_memory_context_test.go:9-49</code>). A record
+under another tenant must be absent from a populated listing
+(<code>broker/memory_lifecycle_test.go:179</code>,
+<code>:198-203</code>), and a forget racing the index worker must not
+leave a point
+(<code>broker/retrieval_integration_test.go:143-226</code>).</p>
+<p>Not covered: the promote handler, <code>DELETE /agents</code>, a
+populated cross-tenant search, an <code>as_of</code> after a
+<code>valid_until</code> through the HTTP path, and the isolation flag
+end to end. The isolation tests call <code>visibleToRequester</code>
+with an author no stored record can have
+(<code>broker/agent_settings_test.go:77-89</code>).</p>
+<p>No paper, DOI or benchmark result is cited or committed.
+<code>broker/combined_baseline_test.go</code> writes a local comparison
+file when an environment variable is set.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Check the tombstone on every read, not only on
+write.</strong> The read-side checks exist because a rollback to an
+older binary put deleted content back beside its tombstone. Each path
+tests the key itself and fails closed on a storage error.</p>
+<p><strong>Put admission in one script.</strong> Tombstone, revision
+comparison, history push and the new write are one atomic step, so there
+is no window between the check and the write.</p>
+<p><strong>Make the index a projection with a fingerprint.</strong> The
+vector point carries a hash of the source fields; a hit whose hash
+differs from the record is dropped, and an acknowledgement is refused if
+the record changed during the write.</p>
+<p><strong>Queue index work in the same script as the record
+write.</strong> The outbox entry cannot be lost between the store and
+the index call.</p>
+<p><strong>Refuse an unknown decay tier.</strong> A typo returns 400
+instead of silently choosing a rate.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not name an archiving verb promote and describe it as a
+reward.</strong> The agent acts on the description.</p>
+<p><strong>Do not give the audited party a delete on the audit
+table.</strong> If per-agent cleanup is needed, scope it to usage
+counters.</p>
+<p><strong>Do not write audit rows for mutations without the actor field
+the cleanup keys on.</strong></p>
+<p><strong>Do not tell an agent to end a session if ending erases what
+the next session is told to read.</strong></p>
+<p><strong>Do not ship a filter that reads a field no writer
+sets.</strong> With the flag on it is weaker than the filter it
+replaced.</p>
+<p><strong>Do not keep a config key and a backup instruction for a
+directory nothing writes.</strong></p>
+<h3 id="fit">Fit</h3>
+<p>It fits one operator running several cooperative agents on a private
+network who wants explicit, agent-written notes with correction and
+deletion that reach both indexes. The cost is four services and an
+embedding call per write.</p>
+<p>It does not fit where agents under one tenant must be kept apart,
+where the audit trail must survive the tenant's own credential, or where
+memory should be extracted without the agent deciding to store. The
+edition is declared frozen, so the three description mismatches are for
+the adopter to patch.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Was promote meant to reinforce?</strong> The description,
+the name and the handler disagree, and no test covers the handler.</li>
+<li><strong>Is <code>DELETE /agents</code> meant to reach
+<code>audit_log</code>?</strong> Its comment says so; the effect on
+correction and deletion rows through <code>unspecified</code> may be
+unintended.</li>
+<li><strong>What writes <code>created_by</code> in the mainline
+broker?</strong> The reader is here and the writer is not.</li>
+<li><strong>Which features were omitted?</strong> The changelog does not
+name them; the config sections <code>ontology</code> and
+<code>graph</code> and migrations 4 to 10 are the only trace.</li>
+<li><strong>Is the git tag for this release published?</strong> The
+changelog names <code>v0.6.1-oss.1</code>; the clone holds
+<code>v0.6.1</code> and <code>npm-v2.0.2</code>.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>broker/memory_records.go</code></td>
+<td>Admission script, tombstone helpers, atomic read</td>
+</tr>
+<tr>
+<td><code>broker/memory_api.go</code>,
+<code>broker/memory_forget.go</code>,
+<code>broker/memory_checkpoint.go</code></td>
+<td>Get, list, update, forget, checkpoint, resume</td>
+</tr>
+<tr>
+<td><code>broker/recall.go</code>,
+<code>broker/recall_options.go</code>, <code>broker/rrf.go</code></td>
+<td>Hybrid search, validity and kind, fusion</td>
+</tr>
+<tr>
+<td><code>broker/bm25.go</code></td>
+<td>Lexical index, candidate filter, vault move script</td>
+</tr>
+<tr>
+<td><code>broker/qdrant.go</code>,
+<code>broker/semantic_index.go</code></td>
+<td>Vector client, search handler, outbox and reconciler</td>
+</tr>
+<tr>
+<td><code>broker/vectors.go</code></td>
+<td>Record write, key names, cosine scan</td>
+</tr>
+<tr>
+<td><code>broker/consolidation.go</code>,
+<code>broker/demote.go</code></td>
+<td>Activation, sweep, promote handler, rank cut</td>
+</tr>
+<tr>
+<td><code>broker/sessions.go</code></td>
+<td>Sessions and context list</td>
+</tr>
+<tr>
+<td><code>broker/vault.go</code></td>
+<td>Export, import, rehydrate, stats, agent listing and deletion</td>
+</tr>
+<tr>
+<td><code>broker/auth.go</code>, <code>broker/admin.go</code></td>
+<td>Key validation, tenants, rate limit</td>
+</tr>
+<tr>
+<td><code>broker/agent_settings.go</code></td>
+<td>Isolation settings and the visibility predicate</td>
+</tr>
+<tr>
+<td><code>broker/mcp.go</code>, <code>broker/mcp_memory_tools.go</code>,
+<code>broker/discovery.go</code></td>
+<td>MCP tools and the agent guide</td>
+</tr>
+<tr>
+<td><code>broker/schema.sql</code>, <code>broker/migrate.go</code></td>
+<td>SQLite schema and migrations</td>
+</tr>
+<tr>
+<td><code>npm/AGENT_CONFIG.json</code>,
+<code>npm/AGENT_ONBOARDING.md</code></td>
+<td>The published agent configuration</td>
+</tr>
+<tr>
+<td><code>deploy/compose.yaml</code>,
+<code>deploy/broker.yaml</code></td>
+<td>The stack and its shipped settings</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git</code> in a full clone at the pinned
+commit.</p>
+<ul>
+<li><code>git ls-files 'broker/*.go' | grep -v _test.go | xargs wc -l</code>
+— 12,564 lines in 41 files.</li>
+<li><code>git grep -c -E '^func Test' -- broker</code>, summed — 176 in
+37 files.</li>
+<li><code>git grep -n -E 'created_by|visibility_agents|"visibility"' -- .</code>
+— two readers in <code>broker/agent_settings.go</code> and
+<code>broker/vectors.go</code>, comments and test lines; no assignment.
+Control: <code>git grep -n -E 'fields\["agent_id"\]' -- broker</code>
+finds the writers at <code>memory_records.go:68</code> and
+<code>vectors.go:109</code>.</li>
+<li><code>git grep -n -E 'key_id|KeyID' -- 'broker/*.go' ':!broker/*_test.go'</code>
+— outside <code>auth.go</code> and <code>admin.go</code>, the struct,
+one write at <code>sessions.go:64</code> and its construction at
+<code>:278</code>; no read.</li>
+<li><code>git grep -n -E 'Vault\.Path|cfg\.Vault|config\.Vault' -- broker</code>
+— the default at <code>config.go:201-202</code> only.</li>
+<li><code>git grep -n -E 'DELETE FROM|INSERT INTO|UPDATE [a-z_]+ SET' -- 'broker/*.go' ':!broker/*_test.go'</code>
+— the four deletes are all in <code>vault.go:1516-1529</code>.</li>
+<li><code>git grep -n -E 'auditAction\(|auditMemoryChange\(' -- 'broker/*.go' ':!broker/*_test.go'</code>
+— update, forget, flush, export, rehydrate, import; none in
+<code>consolidation.go</code> or <code>demote.go</code>.</li>
+<li><code>git grep -n -E 'heurchain_promote|/promote' -- 'broker/*_test.go'</code>
+— nothing. Control:
+<code>git grep -n -E 'handlePromote' -- broker</code> finds the handler
+and two callers.</li>
+<li><code>git grep -n -E 'handleDeleteAgent|MethodDelete' -- 'broker/*_test.go'</code>
+— nothing.</li>
+<li><code>git grep -n -E 'as_of|valid_from|valid_until' -- npm docs README.md broker/discovery.go broker/mcp.go broker/mcp_memory_tools.go</code>
+— nothing. Control: the same pattern over <code>broker/openapi.go</code>
+finds line 188.</li>
+<li><code>git grep -n -E 'go test' -- .github deploy docs README.md</code>
+— <code>README.md:172</code> only.</li>
+<li><code>git grep -n -E 'docs/[a-z/-]+\.md' -- broker</code> with
+<code>git ls-files docs</code> — two documents named, neither
+tracked.</li>
+<li><code>git grep -n -E 't\.Skip' -- 'broker/*_test.go'</code> —
+<code>buildinfo_test.go:27</code> only.</li>
+<li><code>git grep -n -i -E 'arxiv|doi\.org|bibtex|@article|@misc|CITATION|LoCoMo|LongMemEval' -- .</code>
+— nothing. Control:
+<code>git grep -n -i -c 'license' -- README.md</code> matches.</li>
+<li><code>git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|contributing|third.party)'</code>
+— <code>LICENSE</code> and <code>npm/LICENSE</code>; <code>cmp</code>
+reports them identical.</li>
+<li><code>git tag</code> — <code>npm-v2.0.2</code> and
+<code>v0.6.1</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-17</strong> — <a
+href="https://github.com/peterjohannmedina/heurchain/commit/a2feeb414f491cf57afab01854078278cc50167e"><code class="commit-id" title="a2feeb414f491cf57afab01854078278cc50167e">a2feeb41…</code></a>
+— first reading, from a full clone holding 45 commits. Screened before
+reading: no auto-run or build-time surface; <code>broker/go.mod</code>,
+<code>broker/go.sum</code> and <code>npm/package.json</code> changed
+inside the seven-day cooldown; nothing was installed, built or run. The
+audit-row deletion was re-derived on lifted SQL in a scratch SQLite
+database, and the activation thresholds were recomputed from the formula
+in a separate script. Marks: <code>bitemporal</code>,
+<code>scope_enforced</code> and <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

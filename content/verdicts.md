@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 809 reports.**
+**This page covers all 810 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7417,3 +7417,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 8,485 lines of Go outside tests and 114 test functions run in CI on three operating systems, written in 20 commits over two days with eight tags. Three marks. No test holds two processes on the file at once. MIT.
 - Study when: one person moves between several assistants on one machine and wants explicit, inspectable memory with a history and no model call on the write path.
 - Do not copy when: more than one person or an untrusted writer can reach the store, a memory must wait for approval, or a rejected statement must stay rejected.
+
+### [`heurchain`](../systems/heurchain/)
+
+- Best idea: the forget tombstone is enforced twice and independently. The admission script refuses a tombstoned id, and search hydration, the cosine scan, the manifest, the per-agent listing, session context, export and stats each test the tombstone key themselves and fail closed, so content restored by an older binary or a backup stays hidden.
+- Biggest risk: the text agents act on is wrong about three operations. `heurchain_promote` is described as raising retrieval weight after a human confirms a fact and its handler moves a low-activation record to the vault, outside search, ungated by the dry-run flag; the documented session shutdown deletes the context the replay tool reads; and `DELETE /agents` with the tenant key removes audit rows, every correction and deletion row at once through the value `unspecified`.
+- Most reusable component: the admission script in `broker/memory_records.go` (tombstone, revision check, history push and write in one Lua call) with `broker/memory_read_tombstone_test.go`, which asserts absence from populated results on ten surfaces.
+- Maturity impression: 12,564 lines of Go and 176 test functions that need no services and that no workflow runs; CI is a Compose smoke test. The broker arrived whole in one commit on 9 November 2026 and is declared frozen at 0.6.1-oss.1, with unnamed features omitted from this edition. MIT.
+- Study when: deletion must reach a primary store and two derived indexes and stay deleted after a restore, or a correction must be refused when it was made from a stale read.
+- Do not copy when: agents under one tenant must be kept apart, the audit trail must outlive the tenant's credential, or an agent will follow tool descriptions without the handler having been read.

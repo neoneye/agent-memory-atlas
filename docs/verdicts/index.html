@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 809 reports.</strong></p>
+<p><strong>This page covers all 810 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33492,6 +33492,39 @@ model call on the write path.</li>
 <li>Do not copy when: more than one person or an untrusted writer can
 reach the store, a memory must wait for approval, or a rejected
 statement must stay rejected.</li>
+</ul>
+<h3 id="heurchain"><a
+href="../systems/heurchain/"><code>heurchain</code></a></h3>
+<ul>
+<li>Best idea: the forget tombstone is enforced twice and independently.
+The admission script refuses a tombstoned id, and search hydration, the
+cosine scan, the manifest, the per-agent listing, session context,
+export and stats each test the tombstone key themselves and fail closed,
+so content restored by an older binary or a backup stays hidden.</li>
+<li>Biggest risk: the text agents act on is wrong about three
+operations. <code>heurchain_promote</code> is described as raising
+retrieval weight after a human confirms a fact and its handler moves a
+low-activation record to the vault, outside search, ungated by the
+dry-run flag; the documented session shutdown deletes the context the
+replay tool reads; and <code>DELETE /agents</code> with the tenant key
+removes audit rows, every correction and deletion row at once through
+the value <code>unspecified</code>.</li>
+<li>Most reusable component: the admission script in
+<code>broker/memory_records.go</code> (tombstone, revision check,
+history push and write in one Lua call) with
+<code>broker/memory_read_tombstone_test.go</code>, which asserts absence
+from populated results on ten surfaces.</li>
+<li>Maturity impression: 12,564 lines of Go and 176 test functions that
+need no services and that no workflow runs; CI is a Compose smoke test.
+The broker arrived whole in one commit on 9 November 2026 and is
+declared frozen at 0.6.1-oss.1, with unnamed features omitted from this
+edition. MIT.</li>
+<li>Study when: deletion must reach a primary store and two derived
+indexes and stay deleted after a restore, or a correction must be
+refused when it was made from a stale read.</li>
+<li>Do not copy when: agents under one tenant must be kept apart, the
+audit trail must outlive the tenant's credential, or an agent will
+follow tool descriptions without the handler having been read.</li>
 </ul>
         </article>
       </div>

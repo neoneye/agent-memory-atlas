@@ -510,6 +510,7 @@ page_kind: comparison
 - [`reql`](../systems/reql/)
 - [`artex`](../systems/artex/)
 - [`llm-memory-morditux`](../systems/llm-memory-morditux/)
+- [`heurchain`](../systems/heurchain/)
 
 ## Repos Inspected
 
@@ -1324,6 +1325,7 @@ page_kind: comparison
 - [sh1zen/reql](https://github.com/sh1zen/reql) at [`90e1acd0fbf505982123715fdb5a8d8ad0989d28`](https://github.com/sh1zen/reql/commit/90e1acd0fbf505982123715fdb5a8d8ad0989d28) — read only, from a full clone of 21 commits; the screen reported a `pyproject.toml` changed inside the cooldown and unpinned dependencies. Nothing was installed or run; three findings were re-derived in a separate script. Apache-2.0 by its LICENSE file, MIT by its README and metadata
 - [BaaRai/ARTEX](https://github.com/BaaRai/ARTEX) at [`9f99b7172aab33512d319f082080cb2892253e91`](https://github.com/BaaRai/ARTEX/commit/9f99b7172aab33512d319f082080cb2892253e91) — read only, memory surfaces only, from a full clone of 897 commits; the screen reported four manifests inside the cooldown, a build-time script and two unpinned surfaces. Nothing was built or run; three findings were re-derived with lifted SQL on a scratch PostgreSQL. The agent SDK dependency was not opened. AGPL-3.0
 - [Morditux/llm-memory](https://github.com/Morditux/llm-memory) at [`93974b5e9caaae71b9b61c1c1eec3cc4ed73abed`](https://github.com/Morditux/llm-memory/commit/93974b5e9caaae71b9b61c1c1eec3cc4ed73abed) — read only, the whole tree, from a full clone of 20 commits; the screen reported no auto-run surface, a `Makefile`, and `go.mod` and `go.sum` changed inside the cooldown. Nothing was installed, built or run; the MCP SDK and the SQLite driver were not opened. MIT
+- [peterjohannmedina/heurchain](https://github.com/peterjohannmedina/heurchain) at [`a2feeb414f491cf57afab01854078278cc50167e`](https://github.com/peterjohannmedina/heurchain/commit/a2feeb414f491cf57afab01854078278cc50167e) — read only, the Go broker under `broker/` and the agent-facing documents under `npm/`, from a full clone holding 45 commits; the screen reported no auto-run or build-time surface and three manifests changed inside the cooldown. Nothing was installed, built or run; the audit-row deletion was re-derived with lifted SQL on a scratch SQLite database and the activation thresholds recomputed in a separate script. The self-hosted edition, frozen at broker 0.6.1-oss.1; the mainline broker it is cut from is not in the repository. MIT
 
 ## What the licences actually say
 
