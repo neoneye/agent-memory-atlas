@@ -8305,6 +8305,75 @@ href="../patterns/evidence-before-belief/">evidence before belief</a>
 asks of a memory write. Screened before reading: no auto-run, build-time
 or unpinned surface; <code>AGENTS.md</code> and <code>CLAUDE.md</code>
 were treated as data; nothing was installed, built or run.</li>
+<li><strong><code>fabro-sh/fabro</code> was examined and has no report:
+it is a workflow orchestrator whose durable state is a record of runs,
+and the only text it hands an agent as memory is the repository's own
+<code>AGENTS.md</code> and its relatives, loaded read-only.</strong> MIT
+(<code>LICENSE.md</code>, Lithos Computer Co. and Qlty Software Inc.),
+about 221,000 lines of Rust outside test directories and 5,655 commits
+on <code>main</code>, read from a depth-one clone at <a
+href="https://github.com/fabro-sh/fabro/commit/81bbe204aad0c872e476a4ee2aba4a3d291031d8"><code class="commit-id" title="81bbe204aad0c872e476a4ee2aba4a3d291031d8">81bbe204…</code></a>
+with the commit count from the GitHub API. A run executes a Graphviz DOT
+graph of agent, command and human-gate stages on the workflow engine
+<code>petri</code>, a git dependency locked at <a
+href="https://github.com/lithoscomputer/petri/commit/f30a12df140fb60f55a7c6cff3d7f45673c7a7c5"><code class="commit-id" title="f30a12df140fb60f55a7c6cff3d7f45673c7a7c5">f30a12df…</code></a>,
+whose context is run-scoped: completed node instances and a run-scoped
+<code>kv</code> that only the engine's <code>apply</code> writes
+(<code>crates/core/engine/src/context.rs:1-14</code> there), and which
+"starts empty at the beginning of a run"
+(<code>docs/public/execution/context.mdx:10</code>). What persists is an
+event-sourced run store of events, checkpoints, stage outputs and a
+conclusion per run, with artifacts in a content-addressed blob store. It
+is read back by <code>fabro inspect</code>, the DuckDB insights page,
+resume of the same run, and eight MCP tools
+(<code>lib/apps/fabro-mcp-server/src/server.rs</code>), of which
+<code>fabro_run_search</code> and <code>fabro_run_get</code>
+(<code>:134</code>, <code>:156</code>) let an outer agent, or an in-run
+agent whose worker token carries the run-tools scope
+(<code>lib/apps/fabro-cli/src/commands/run/runner.rs:135-153</code>,
+<code>lib/components/fabro-workflow/src/run_tools.rs:13-18</code>), find
+and read earlier runs. Those are records of what a run did, which can be
+archived and cannot turn out to be false, so they are records of runs
+rather than of beliefs, like the per-image transcripts in the
+<code>openclaw-visual-memory</code> entry above. The agent loop is the
+external <code>pebble-coding-agent</code> crate, locked at <a
+href="https://github.com/lithoscomputer/pebble/commit/0f3614480b9c2bdf0a8e817b9cf1b9389f52380c"><code class="commit-id" title="0f3614480b9c2bdf0a8e817b9cf1b9389f52380c">0f361448…</code></a>;
+its <code>ProjectMemory</code> reads the files an application names into
+the system prompt within a 32,768-byte budget
+(<code>crates/pebble-coding-agent/src/memory.rs:1-18</code>,
+<code>:139</code> there), and Fabro's <code>project_memory</code> node
+attribute switches that on for <code>AGENTS.md</code>,
+<code>CLAUDE.md</code> and their relatives
+(<code>docs/public/reference/dot-language.mdx:223</code>). The loader
+only reads. Variables shared across runs are written through the
+server's REST handler
+(<code>lib/apps/fabro-server/src/server/handler/variables.rs:11-16</code>),
+not by an agent tool. The product's own account of why it exists sets
+memory aside: <em>"memory files make no guarantees"</em>
+(<code>docs/public/getting-started/why-fabro.mdx:16</code>). Searches
+run at this pin with <code>/usr/bin/git grep</code>:
+<code>-n -i -E 'remember|forget|recall|lesson|learning' -- 'lib/**/*.rs' ':!*test*'</code>
+(printer state, a checkpoint-commit cache and a worker-acknowledgement
+map; no memory verb);
+<code>-c -E 'name = "fabro_' -- lib/apps/fabro-mcp-server/src/server.rs</code>
+(8); <code>-n -E 'AGENTS\.md|CLAUDE\.md|project_memory' -- '*.rs'</code>
+(three DOT strings in
+<code>lib/components/fabro-petri/tests/stall.rs</code>, each setting
+<code>project_memory=false</code>);
+<code>-n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- . ':!Cargo.lock' ':!bun.lock' ':!THIRD_PARTY_NOTICES.txt'</code>
+(three prose uses of <em>citations</em> in
+<code>docs/public/examples/clone-substack.mdx</code>). In the two
+dependencies, the GitHub trees API at their locked revisions lists one
+memory-named source file each: pebble's loader and petri's
+<code>crates/core/store/src/memory.rs</code>, an in-memory run store for
+tests and hosts that keep no run of record. Screened before reading: one
+auto-run surface, <code>.claude/settings.json</code>, a
+<code>PostToolUse</code> hook running <code>cargo +nightly fmt</code> on
+edited <code>.rs</code> files; six <code>build.rs</code> execution
+points; four floating surfaces; FRESH findings on every manifest,
+inflated by the shallow clone dating each file to the tip;
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> treated as data.
+Nothing was installed, built or run.</li>
 <li><strong>The virtual-context report awarded
 <code>scope_enforced</code> on every relational read path, called its
 audience receipt a read-side guard, said nothing measured a mechanism on
