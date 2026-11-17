@@ -269,6 +269,8 @@ new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
 
 [Noosphere Lite MCP](../../systems/noosphere-lite-mcp/) re-derives the evidence at every read instead of trusting the stored copy. A claim keeps a JSON pointer, the value it found and the source's SHA-256, and the evidence query re-hashes the source, re-reads the pointer, checks every `derived_from` ancestor's status and runs a live Git check on each anchor before returning it, with a discard count per reason (`noosphere_lite/evidence.py:140-256`). Two values for one key are both withheld. The limit is that the claim lane is opt-in: ordinary notes reach search and context labelled unreviewed, and the same value written as a note passes no gate.
 
+[LCM-X](../../systems/lcm-x/) moves the check into the database. An assertion insert aborts unless its quoted span equals the source message's substring at the stated offsets, and an update or deletion of the message marks every receipt derived from it `source_updated` or `source_deleted` by trigger, so default reads drop the claim whichever code path changed the source (`db_bootstrap.py:2208-2292`). The retained evidence is the raw row, and a model-proposed `supersedes` must quote an explicit update word from it. The gap is the other direction: invalidation hides the derived row and keeps its verbatim quote, so deleting the evidence does not delete what was derived from it.
+
 ### Related: admission gates rather than evidence
 
 These decide what may become a belief — a shared derivation, a confirmation turn,

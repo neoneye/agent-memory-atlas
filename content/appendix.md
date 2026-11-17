@@ -514,6 +514,7 @@ page_kind: comparison
 - [`cairn`](../systems/cairn/)
 - [`backboard-desktop`](../systems/backboard-desktop/)
 - [`pentagi`](../systems/pentagi/)
+- [`lcm-x`](../systems/lcm-x/)
 
 ## Repos Inspected
 
@@ -1332,6 +1333,7 @@ page_kind: comparison
 - [oritera/Cairn](https://github.com/oritera/Cairn) at [`8e7e0ea67552383851dfcabfba0c4e9c8d007878`](https://github.com/oritera/Cairn/commit/8e7e0ea67552383851dfcabfba0c4e9c8d007878) — read only, the server, dispatcher, prompts, tests and design documents, from a full clone of 70 commits on `main`; the screen reported a `cairn/tests/conftest.py` that executes on pytest collection and a `uv.lock` unchanged for 170 days, and nothing that auto-runs. Nothing was installed or run; the reopen effect was re-derived with lifted SQL on a scratch SQLite database. The vendored web UI libraries and the unmerged `dev-0.3.0` branch were not read. AGPL-3.0
 - [Backboard-io/Backboard-Desktop](https://github.com/Backboard-io/Backboard-Desktop) at [`af5489c6cb81d23ed6675756a9dadbe370434678`](https://github.com/Backboard-io/Backboard-Desktop/commit/af5489c6cb81d23ed6675756a9dadbe370434678) — read only, the Backboard-owned memory paths in `backboard/cli-ts`, `backboard/extensions/backboard` and the desktop's `cliTs` agent host, from a shallow clone with counts from the GitHub API; the screen reported a `.vscode/tasks.json`, npm lifecycle scripts across the VS Code tree and `backboard/cli-ts`, and five `build.rs` files under `backboard/cua-driver`, none of which runs on clone. Nothing was installed or run; three findings were re-derived on lifted snippets in a separate script. Upstream VS Code, the Copilot extension and the Claude Agent SDK were not read, and the hosted Backboard memory is not in the tree. MIT
 - [vxcontrol/pentagi](https://github.com/vxcontrol/pentagi) at [`cffed9485aa1cca70762cd08a57ac62a80406258`](https://github.com/vxcontrol/pentagi/commit/cffed9485aa1cca70762cd08a57ac62a80406258) — read only, memory surfaces only, from a shallow clone with commit and contributor counts from the GitHub API; the screen reported a `.vscode/settings.json`, 101 floating ranges in `frontend/package.json` resolved by a lockfile, and a `CLAUDE.md` treated as data. Nothing was installed, built or run; one file of the pinned langchaingo fork was read for its metadata filter, and the Graphiti service image was not opened. MIT, with an EULA
+- [electricsheephq/lcm-x](https://github.com/electricsheephq/lcm-x) at [`9f7f0bd3c666479c983b294a147525bfc46270dd`](https://github.com/electricsheephq/lcm-x/commit/9f7f0bd3c666479c983b294a147525bfc46270dd) — read only, the product modules, the Claude Code adapter, the assertion and entity layers and the committed benchmark results, from a shallow clone with history counts from the GitHub API; the screen reported a Claude Code plugin manifest, an MCP server and hook registrations, six `conftest.py` files, and `requirements-semantic.txt` inside the cooldown with a floating `fastembed` range. Nothing was installed, built or run; the benchmark placements were recomputed from the committed JSON in a separate script. MIT
 
 ## What the licences actually say
 

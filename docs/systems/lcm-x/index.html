@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Hermes Agent context engine that
+keeps every message in SQLite, compacts old turns into a summary DAG,
+and recalls across all sessions.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LCM-X — Agent Memory Atlas">
+    <meta property="og:description" content="A Hermes Agent context
+engine that keeps every message in SQLite, compacts old turns into a
+summary DAG, and recalls across all sessions.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LCM-X — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Hermes Agent context
+engine that keeps every message in SQLite, compacts old turns into a
+summary DAG, and recalls across all sessions.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LCM-X — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "LCM-X",
+      "description": "A Hermes Agent context engine that keeps every message in SQLite, compacts old turns into a summary DAG, and recalls across all sessions.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Every turn kept and recallable across
+sessions; correction lives in an opt-in layer</p>
+          <h1>LCM-X</h1>
+          <p class="document-deck">A Hermes Agent context engine that
+keeps every message in SQLite, compacts old turns into a summary DAG,
+and recalls across all sessions.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/electricsheephq/lcm-x">
+              <span>Source</span>
+              <strong>electricsheephq/lcm-x</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/electricsheephq/lcm-x/commit/9f7f0bd3c666479c983b294a147525bfc46270dd" title="9f7f0bd3c666479c983b294a147525bfc46270dd">
+              <span>Analyzed revision</span>
+              <code>9f7f0bd3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/electricsheephq--lcm-x" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>electricsheephq--lcm-x</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE, agreeing with both adapter plugin manifests; judge prompts
+copied into bench/fmp carry their own MIT and Apache-2.0
+texts</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>120,259
+lines of Python in 150 files outside tests, scripts and benchmarks;
+engine.py is 13,160 of them, tools.py 6,666 and command.py 6,063.
+Another 11,141 lines in scripts/ and 88,883 in the three benchmark
+directories</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>8,145
+commits from 7 April to 17 November 2026, by the GitHub API; one
+anonymous author identity accounts for 5,825 of them and the API lists
+56 contributor entries. Plugin version 0.30.0 on main; the latest stable
+release is v0.29.2</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>11,345
+pytest functions in 849 files under tests/, 361,536 lines, run in four
+shards on every push and pull request, beside nightly invariant and
+reliability workflows. I ran none; the benchmark placements were
+recomputed from a committed snapshot</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>LCM-X replaces Hermes Agent's built-in context compressor. Its engine
+writes every message to a local SQLite store, compacts older turns into
+a hierarchy of summaries that point back at their sources, and gives the
+agent tools to search and page through everything it has kept, across
+sessions. What is notable is the discipline around derived data:
+summaries list their sources, and an opt-in assertion layer checks every
+quoted span against the source row in SQL and keeps conflicting values
+visible. What is weak is correction: nothing on any surface forgets a
+fact or a message, and two large subsystems built for isolation and for
+entity memory have no producer.</p>
+<p>It carries <code>bitemporal</code> and
+<code>negative_eval</code>.</p>
+<p><strong>Licence.</strong> MIT. <code>LICENSE</code> names Stephen
+Schoettler as the copyright holder; <code>plugin.yaml:4</code> names the
+author as <em>Voltropy / Hermes Community</em>, and the two adapter
+manifests
+(<code>adapters/claude-code/.claude-plugin/plugin.json:8</code>,
+<code>.grok-plugin/plugin.json:10</code>) declare <code>MIT</code>.
+Judge prompts copied into <code>bench/fmp</code> are attributed, and
+<code>bench/fmp/licenses/</code> carries the Mem0, OmniMemEval and
+LongMemEval licence texts. No rider, no contributor agreement.</p>
+<p><strong>It is memory, not only context management.</strong> A raw row
+keeps its <code>store_id</code> after the session ends,
+<code>lcm_recall</code> searches every session in the profile by
+default, and <code>lcm_load_session</code> pages any session's
+transcript by id. What the store can be asked to correct is narrower:
+raw rows are what was said, and the claims extracted from them live in
+an assertion sidecar that is off by default.</p>
+<p><strong>Two subsystems are built and not connected.</strong> The
+entity memory layer has six tables, an append-only event log enforced by
+triggers, 740 lines of operations and 169 test functions, and no caller
+on any product path. The Teams per-principal policy is described in its
+own header as a draft, and nothing in the engine sets the flag that
+would select it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The unit is the message. Ingest writes each one verbatim to
+<code>messages</code>, and it is never edited except to swap an
+oversized tool output for a reference to a file. When the prompt crosses
+the threshold, the oldest rows outside a protected tail become a depth-0
+summary whose <code>source_ids</code> name them; summaries at one depth
+condense into the next, up to depth 3 by default. The active context is
+the system prompt, the deepest summaries, and the fresh tail. Summaries
+are treated as cues: the bundled recall policy tells the agent to verify
+against the source rows.</p>
+<p>Belief appears only in the assertion sidecar. With two flags set,
+each user or assistant row about to be compacted is sent to a model that
+returns subject–predicate–object claims with exact character offsets,
+and relations to up to 20 earlier claims. State is computed at read: a
+claim targeted by <code>supersedes</code>, <code>reverses</code>,
+<code>cancels</code> or <code>fulfills</code> is inactive, and two
+active values for one subject, predicate, scope and kind are both
+flagged as an unresolved conflict.</p>
+<p>A row dies only through an operator's cleanup of a pattern-matched
+session.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every turn becomes a kept row; compaction and the opt-in extractor derive from it; the one delete removes rows and leaves derived text behind</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every turn becomes a kept row; compaction and the opt-in extractor derive from it; the one delete removes rows and leaves derived text behind
+flowchart TD
+    A[&quot;turn in Hermes, or a&lt;br/&gt;Claude Code transcript&lt;br/&gt;line&quot;] --&gt; B[(&quot;messages row&lt;br/&gt;store_id, session_id,&lt;br/&gt;kept verbatim&quot;)]
+    B --&gt; R[&quot;lcm_recall: FTS5,&lt;br/&gt;summary and chunk&lt;br/&gt;vectors, all sessions&quot;]
+    B --&gt; C{&quot;prompt over&lt;br/&gt;threshold?&quot;}
+    C --&gt;|&quot;yes&quot;| D[&quot;depth-0 summary&lt;br/&gt;source_ids = rows&quot;]
+    D --&gt; E[&quot;condensed summaries&lt;br/&gt;depth 1 to 3&quot;]
+    E --&gt; F[&quot;active context:&lt;br/&gt;deepest summaries&lt;br/&gt;+ fresh tail&quot;]
+    D -.-&gt;|&quot;opt-in&quot;| G[&quot;extractor thread,&lt;br/&gt;model call: assertion&lt;br/&gt;with exact span,&lt;br/&gt;valid_from, valid_to&quot;]
+    G --&gt; H{&quot;at read: explicit&lt;br/&gt;relation or two&lt;br/&gt;active values?&quot;}
+    H --&gt;|&quot;supersedes&quot;| I[&quot;returned with&lt;br/&gt;active = false&quot;]
+    H --&gt;|&quot;conflict&quot;| J[&quot;both flagged;&lt;br/&gt;lcm_compute refuses&quot;]
+    I ~~~ K[&quot;doctor clean apply on&lt;br/&gt;messages rows of a&lt;br/&gt;pattern-matched session:&lt;br/&gt;rows deleted, assertions&lt;br/&gt;invalidated and kept&quot;]
+    K -.-&gt;|&quot;misses&quot;| L[&quot;summary a rollover&lt;br/&gt;moved to the next&lt;br/&gt;session&quot;]
+    style J fill:#14532d,color:#fff
+    style K fill:#7f1d1d,color:#fff
+    style L fill:#7f1d1d,color:#fff</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>LCM-X is a Python package loaded into the Hermes process as a plugin
+with two names: the manifest <code>hermes-lcm-x</code>
+(<code>plugin.yaml:1</code>) and the context engine <code>lcm-x</code>.
+<code>LCMEngine</code> in <code>engine.py</code> owns ingest,
+compaction, assembly and storage handles; <code>tools.py</code> and
+<code>evidence_tools.py</code> hold the tool handlers;
+<code>command.py</code> holds the <code>/lcm</code> operator
+command.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HERMES_HOME/lcm.db</code></td>
+<td><code>messages</code>, <code>summary_nodes</code>, provenance, FTS5
+tables, lifecycle state, rollups, embedding and chunk-vector tables,
+ingest ledger; opt-in assertion, entity and query-view tables</td>
+</tr>
+<tr>
+<td><code>lcm-large-outputs/</code></td>
+<td>Externalized tool outputs, each replaced in its row by a reference
+(<code>externalize.py:30</code>)</td>
+</tr>
+<tr>
+<td><code>~/.hermes/lcm-extractions/</code></td>
+<td>Opt-in daily decision files, appended and read by nothing
+(<code>extraction.py:350</code>)</td>
+</tr>
+<tr>
+<td><code>~/.lcm-x/claude-code/lcm.db</code></td>
+<td>The Claude Code adapter's store: every session of every project
+(<code>docs/claude-code-adapter.md:217-219</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Summarisation uses the host's auxiliary model. Embeddings default to
+local FastEmbed (<code>BAAI/bge-small-en-v1.5</code>) installed through
+a companion plugin; Voyage, OpenAI-compatible and Ollama providers are
+opt-in. A privacy pass redacts sensitive patterns from the copy sent to
+a cloud provider while the stored row stays raw.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Two Hermes commands install and select it; no API key is needed for
+the local path. Python 3.11, no required third-party dependency
+(<code>tiktoken</code>, <code>regex</code> and <code>fastembed</code>
+are optional). Everything is one SQLite file and one payload directory,
+readable with any SQLite client; <code>/lcm backup</code> snapshots the
+database. On hosts with two or fewer CPUs, recall stays full-text while
+vector catch-up runs in the background. The Claude Code adapter needs
+Python 3.11 in a venv and starts capture from hooks. Its MCP launcher
+executes a command named in <code>reader-override.json</code> after
+checking that every folder on the path is writable only by the user
+(<code>adapters/claude-code/bin/lcmx_mcp.py:188-281</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Message schema</td>
+<td><code>store.py:870-888</code></td>
+</tr>
+<tr>
+<td>Ingest transaction</td>
+<td><code>engine.py:2867</code>, <code>:8879</code></td>
+</tr>
+<tr>
+<td>Compaction entry and leaf loop</td>
+<td><code>compaction.py:733</code>, <code>:3036-3061</code></td>
+</tr>
+<tr>
+<td>Condensation</td>
+<td><code>engine.py:10702</code>, <code>compaction.py:2353</code>,
+<code>:2845</code></td>
+</tr>
+<tr>
+<td>Context assembly</td>
+<td><code>engine.py:11287-11330</code></td>
+</tr>
+<tr>
+<td>Summary schema and provenance</td>
+<td><code>dag.py:208-236</code></td>
+</tr>
+<tr>
+<td>Rollover carry-over of summaries</td>
+<td><code>engine.py:4495-4509</code>, <code>dag.py:459-471</code></td>
+</tr>
+<tr>
+<td><code>lcm_recall</code></td>
+<td><code>tools.py:4885</code>, fusion
+<code>retrieval_core.py:721-830</code></td>
+</tr>
+<tr>
+<td>Session exclusion whitelist</td>
+<td><code>tools.py:378-492</code></td>
+</tr>
+<tr>
+<td><code>lcm_grep</code> session scope</td>
+<td><code>tools.py:1409-1471</code></td>
+</tr>
+<tr>
+<td>Assertion schema and triggers</td>
+<td><code>db_bootstrap.py:2107-2310</code></td>
+</tr>
+<tr>
+<td>Assertion extraction prompt and validation</td>
+<td><code>assertion_extraction.py:184-270</code>,
+<code>:680-730</code></td>
+</tr>
+<tr>
+<td>Extraction scheduling</td>
+<td><code>engine.py:10096-10230</code></td>
+</tr>
+<tr>
+<td>Assertion read and state</td>
+<td><code>assertion_store.py:780-1036</code>,
+<code>assertion_state.py:88-209</code></td>
+</tr>
+<tr>
+<td><code>lcm_query_state</code></td>
+<td><code>evidence_tools.py:81-200</code></td>
+</tr>
+<tr>
+<td><code>lcm_compute</code> latest-fact refusal</td>
+<td><code>reasoning.py:740-800</code>, <code>:1495-1520</code></td>
+</tr>
+<tr>
+<td>Doctor clean scan, apply, delete</td>
+<td><code>command.py:539-584</code>, <code>:1546-1612</code>,
+<code>:1396-1490</code></td>
+</tr>
+<tr>
+<td>Session purge registry</td>
+<td><code>store.py:454-466</code>,
+<code>claude_code_store.py:100-111</code></td>
+</tr>
+<tr>
+<td>Entity layer (unwired)</td>
+<td><code>db_bootstrap.py:3853-3895</code>,
+<code>entity_store.py</code>, <code>entity_ops.py</code></td>
+</tr>
+<tr>
+<td>Teams policy seam (unwired)</td>
+<td><code>access_policy/resolution.py:36-90</code>,
+<code>scope_storage.py:148-157</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong><code>messages</code></strong>
+(<code>store.py:870-888</code>): <code>store_id</code>,
+<code>session_id</code>, <code>conversation_id</code>,
+<code>source</code>, <code>role</code>, <code>content</code>, tool
+fields, <code>timestamp</code>, <code>pinned</code>,
+<code>ingested_at</code>, <code>observed_at</code> with its source, and
+a sender id. Delegated subagent sessions are linked through
+<code>session_lineage</code>.</p>
+<p><strong><code>summary_nodes</code></strong>
+(<code>dag.py:208-221</code>): <code>session_id</code>,
+<code>depth</code>, <code>summary</code>, token counts,
+<code>source_ids</code> (a JSON array of store ids or child node ids),
+<code>source_type</code>, <code>earliest_at</code>,
+<code>latest_at</code> and an expand hint. A sidecar,
+<code>summary_node_provenance</code>, records the escalation level and
+model.</p>
+<p><strong><code>lcm_assertions</code></strong>
+(<code>db_bootstrap.py:2134-2165</code>): a 64-character id,
+<code>subject_key</code>, <code>predicate_key</code>,
+<code>object_json</code>, <code>value_text</code>, one of eight kinds,
+polarity, strength, <code>scope_key</code>, <code>speaker_role</code>,
+<code>observed_at</code>, <code>event_at</code>,
+<code>valid_from</code>, <code>valid_to</code>, the source span and its
+quote, and a confidence. <code>lcm_assertion_relations</code> holds nine
+relation types between two assertion ids, each with its own quoted span.
+<code>lcm_assertion_sources</code> is a per-row receipt with
+<code>invalidated_at</code> and a reason.</p>
+<p>Three triggers make the provenance hold in SQL. An assertion insert
+aborts unless the quoted span equals the stored message's substring at
+those offsets (<code>db_bootstrap.py:2208-2228</code>). An update of a
+message's content or a deletion of the message marks its receipts
+invalidated, with reason <code>source_updated</code> or
+<code>source_deleted</code> (<code>:2273-2292</code>).</p>
+<p><strong><code>bitemporal</code> is earned on the assertion
+sidecar.</strong> <code>valid_from</code> and <code>valid_to</code> are
+what the extractor model read in the source, with the prompt telling it
+to use null rather than substitute <code>observed_at</code>
+(<code>assertion_extraction.py:260</code>). They are stored apart from
+<code>observed_at</code>, when the source was said, and
+<code>created_at</code>, when the row was written. An <code>as_of</code>
+on <code>lcm_query_state</code> keeps only assertions observed by then
+whose validity contains the instant
+(<code>assertion_store.py:832-839</code>). The producer is reachable
+only with two default-off flags; with them off, no row exists.</p>
+<p><strong><code>trust_state</code> is withheld.</strong> The lifecycle
+that <code>assertion_state.py</code> reports — active, superseded,
+cancelled, reversed, fulfilled, conflicting — is computed per read from
+relation rows and attached to each returned row; no column holds it.
+<code>lcm_compute</code> does refuse a latest-fact answer when an
+operand group carries an unresolved active conflict or omits an active
+candidate (<code>reasoning.py:1503-1515</code>). That is the filtering
+use the mark asks for, on a derived state.</p>
+<p>The entity tables (<code>lcm_entities</code> with
+<code>active</code>, <code>merged</code> and <code>forgotten</code>;
+<code>lcm_memory_notes</code> with seven note kinds including
+<code>retraction</code>; and the append-only
+<code>lcm_memory_events</code>) are created when
+<code>LCM_ENTITIES_ENABLED</code> is set. <code>EntityOps</code>, which
+writes them, is called from tests alone, and the <code>lcm_memory</code>
+tool reads assertions and messages, not these tables
+(<code>memory_tools.py:52-74</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong><code>lcm_recall</code></strong> (<code>tools.py:4885</code>)
+is the cross-session tool. Three arms run over the whole profile: FTS5
+over raw messages, KNN over summary embeddings, and KNN over chunk
+embeddings of raw messages. Reciprocal rank fusion with <code>k</code>
+60 merges them (<code>retrieval_core.py:721</code>), then a soft prior
+boosts the current conversation (<code>scope_bias</code> 0.5 by default)
+and recent hits, and an optional Voyage cross-encoder reranks. The
+default limit is 8 and the cap 25. With embeddings unavailable or still
+warming, the FTS arm answers alone and the response says so with
+<code>degraded</code> and a reason.</p>
+<p>Exclusions are the one hard filter. <code>exclude_session_ids</code>
+and <code>exclude_current_session</code> are turned into a whitelist of
+every other session, enumerated by a skip-scan over both tables, and the
+vector arms take it before their candidate caps. A deadline that lapses
+during enumeration drops the vector arms rather than the filter
+(<code>tools.py:423-492</code>).</p>
+<p><strong><code>lcm_grep</code></strong> defaults to the current
+session, its rotation predecessors and its delegated descendants;
+<code>session_scope='all'</code> or <code>'session'</code> widens it to
+raw rows across the archive (<code>tools.py:1409-1471</code>).</p>
+<p>Other reads: <code>lcm_load_session</code> pages one session by
+<code>store_id</code> cursor; <code>lcm_expand</code> pages a node's
+sources or an externalized payload; <code>lcm_recent</code> reads day,
+week and month rollups. <code>lcm_evidence_pack</code>,
+<code>lcm_compile_evidence</code> and <code>lcm_compute</code> validate
+exact <code>store_id</code> and span references and compute dates,
+counts, sums and latest values over them without a model.</p>
+<p><strong><code>scope_enforced</code> is withheld.</strong> The
+boundary is physical: one database per Hermes profile, and for Claude
+Code one per harness holding every project. Inside a store, session is a
+default on <code>lcm_grep</code> that the caller widens with one
+argument, and <code>lcm_recall</code> spans every conversation by
+design. The assertion <code>scope_key</code> is a model-written string
+and an optional filter. The predicate that would bind reads to a
+principal is in <code>access_policy/</code>, and section 9 covers why it
+never runs.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every message is written at ingest, synchronously, before the turn
+continues; it is searchable by FTS on the next call and by vector after
+background embedding. There is no extraction on the default path and no
+write tool: the agent cannot store, edit or delete anything.</p>
+<p>Compaction is the second write. When the prompt passes the threshold
+(75% of the window by default), a bounded sweep summarises the oldest
+rows outside a fresh tail (24 messages by default) with the auxiliary
+model, then condenses. It runs on the turn thread, so the user waits; an
+opt-in background preparation of leaves exists and is off by default. A
+summary that comes back too long is escalated from detailed to bullets
+to deterministic truncation.</p>
+<p>Assertion extraction (<code>engine.py:10164-10230</code>) is
+scheduled from the leaf loop (<code>compaction.py:3054-3061</code>) for
+at most eight source rows per pass, on a daemon thread with a
+process-wide slot. Each row's prompt carries its exact content and the
+20 most recent assertions in the profile, unfiltered by scope
+(<code>assertion_extraction.py:184-199</code>). Validation rejects any
+offset whose substring differs from the quote, any state-changing
+relation whose quoted span lacks a cue word from an English regex
+(<code>:66-83</code>), and any whose source precedes its target.</p>
+<h3 id="forgetting">Forgetting</h3>
+<ul>
+<li><strong>No forget verb.</strong> <code>VISION.md:27</code> lists
+forgetting a memory on request as not yet shipped.</li>
+<li><strong>Doctor clean apply.</strong> Requires
+<code>LCM_ENABLE_SLASH_COMMAND</code> and
+<code>LCM_DOCTOR_CLEAN_APPLY_ENABLED</code>, and selects only sessions
+whose id matches an ignore or stateless pattern
+(<code>command.py:539-584</code>). It backs up the whole database, then
+deletes messages, ledger rows, chunks, the session's summary nodes and
+their embeddings in one transaction.</li>
+<li><strong>Redaction.</strong>
+<code>LCM_SENSITIVE_PATTERNS_ENABLED</code> rewrites sensitive patterns
+before storage; off by default.</li>
+</ul>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write path is one SQLite transaction per turn. Compaction costs
+one model call per leaf and per condensation, inside the turn.
+Extraction adds one model call per source row in the background. No pass
+rewrites the whole store. Injection is the assembled context itself,
+bounded by the threshold, and the README states that LCM is not fully
+cache-aware.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>In Hermes, LCM-X is the context engine rather than a memory provider:
+it decides what the model sees on every turn. It registers five hooks
+(<code>pre_llm_call</code>, <code>pre_api_request</code>,
+<code>post_llm_call</code>, <code>subagent_start</code>,
+<code>subagent_stop</code>) and 13 tools by default. Three flags add
+<code>lcm_query_state</code>, <code>lcm_retrieve</code> and
+<code>lcm_memory</code>. Every tool is a read or a computation.</p>
+<p>The recall policy ships as a bundled skill rather than injected text,
+because Hermes persists hook output in the user's turn and replays it as
+user-authored history (<code>README.md</code>, <em>Recall skill and
+policy</em>).</p>
+<p>The Claude Code plugin registers capture hooks on nine events. Each
+records which transcript changed and starts a worker that projects user
+and assistant entries into the store, keeping every raw line in
+<code>capture_events</code>. Its MCP server serves five read tools. A
+separate read-only server, <code>scripts/lcm_x_mcp.py</code>, lets
+Claude Code read a Hermes profile's store. <a
+href="../claude-self-reflect/">Claude Self-Reflect</a> also indexes
+Claude Code's transcripts; this adapter differs in keeping the summary
+DAG and exact row references beside them.</p>
+<p><strong><code>human_review</code> is withheld.</strong> No write
+waits for anyone: messages and summaries are written by the engine,
+assertions by the extractor model, and no state column exists for a
+person to resolve.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="deletion-leaves-derived-text-behind">Deletion leaves derived
+text behind</h3>
+<p>Doctor clean apply selects summary nodes by their current
+<code>session_id</code> (<code>dag.py:385-392</code>). At a compression
+rollover, the engine moves the predecessor session's nodes to the new
+session while raw rows stay where they were
+(<code>engine.py:4495-4501</code>). A deleted session's summaries that
+were carried forward therefore stay, and stay recallable.</p>
+<p>Its extracted assertions stay too. The delete trigger marks their
+receipts <code>source_deleted</code>, default reads exclude them, and
+the rows keep <code>source_quote</code> verbatim; a committed test
+asserts they remain readable with <code>include_invalidated</code>
+(<code>tests/test_assertion_store.py:642-645</code>). The backup taken
+before every apply holds everything deleted.</p>
+<p>The Claude Code store writes
+<code>capture:forgotten:&lt;session&gt;</code> into
+<code>metadata</code> when a session is purged, so the capture worker
+never re-reads that transcript
+(<code>claude_code_store.py:100-108</code>).</p>
+<p><strong><code>tombstone</code> is withheld.</strong> That marker is
+keyed on the session id and blocks re-capture of one transcript; the
+same text in another session is captured. No record keyed on a rejected
+value exists.</p>
+<h3 id="two-built-subsystems-with-no-producer">Two built subsystems with
+no producer</h3>
+<p><strong>Teams.</strong> <code>access_policy/</code>,
+<code>access_context/</code>, <code>teams/</code> and
+<code>scope_storage.py</code> hold 5,083 lines: a fail-closed policy
+resolver and a catalog with tenants, principals and an audit table,
+covered by 21 test modules. <code>policy_for_engine</code> returns the
+permissive policy unless the engine carries
+<code>lcm_teams_enabled</code>
+(<code>access_policy/resolution.py:51-58</code>). Its only setter,
+<code>mark_teams_enabled</code> (<code>scope_storage.py:154-157</code>),
+and <code>setup_teams_scope</code> have no caller outside tests.
+<code>ROADMAP.md:207</code> lists teams as parked.</p>
+<p><strong>Entity memory.</strong> <code>lcm_memory_events</code>
+refuses <code>UPDATE</code> and <code>DELETE</code> by trigger and
+records actor and operation for every entity mutation
+(<code>db_bootstrap.py:3879-3895</code>). Its writers are
+<code>EntityOps</code> methods, which nothing outside
+<code>tests/</code> calls.</p>
+<p><strong><code>audit_log</code> is withheld</strong> on that. The
+table is append-only and has no producer on any path a user, operator or
+agent can reach. Doctor clean apply, the one delete that runs, writes a
+backup file and a text report, not an event.</p>
+<h3 id="what-holds-up">What holds up</h3>
+<ul>
+<li>Assertion provenance is enforced in SQL, not only in Python, and a
+source edit invalidates every derived assertion in the same
+transaction.</li>
+<li>Supersession must quote an explicit update word and point forward in
+time; silence and recency never supersede
+(<code>assertion_extraction.py:260-265</code>).</li>
+<li>Two active values are flagged, not resolved by recency, and the
+computation tool refuses rather than picks.</li>
+<li>Session exclusions are applied before candidate caps and fail closed
+on a timeout.</li>
+<li>Assistant output that looks degenerate is quarantined to a
+placeholder in replay and in summary input
+(<code>ingest_protection.py:923-963</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>11,345 test functions in 849 files, run in four shards on every push
+and pull request (<code>.github/workflows/ci.yml:68-206</code>). I ran
+none of them.</p>
+<p><strong><code>negative_eval</code> is earned on recall exclusions and
+on assertion invalidation.</strong>
+<code>test_recall_excludes_sessions_from_lexical_summary_and_chunk_candidates</code>
+seeds identical text, a summary vector and a chunk vector in three
+sessions, excludes two, and asserts that the hits are non-empty, all
+from the third, and drawn from all three arms
+(<code>tests/test_lcm_recall.py:1046-1079</code>). Two more show fifty
+crowding candidates from an excluded session leaving the one eligible
+hit in place on each vector arm (<code>:1107-1167</code>). The assertion
+tests assert absence by <code>as_of</code> with the present case as
+control (<code>tests/test_assertion_store.py:587-610</code>), and
+absence after source deletion following a read that returned the row
+(<code>:613-645</code>).</p>
+<p>The Teams suites probe isolation against a policy no product path
+selects, and the entity suites run property-based sequences against
+operations no product path calls. Both test what the code would do if
+wired.</p>
+<p><strong>A paper exists.</strong> <em>LCM: Lossless Context
+Management</em> (Ehrlich and Blackman, Voltropy PBC, <a
+href="https://arxiv.org/abs/2605.04050">arXiv:2605.04050</a>, submitted
+14 February 2026) describes two mechanisms: a hierarchical summary DAG
+with lossless pointers, and engine-managed parallel primitives such as
+LLM-Map. Its OOLONG results are for the authors' agent Volt. This tree
+implements the DAG half; a search for <code>llm_map</code> or
+<code>OOLONG</code> finds nothing.</p>
+<p><strong>The public placements recompute from the committed
+snapshot.</strong> <code>benchmarks/results/public-results.json</code>
+copies the OmniMemEval summary table at upstream commit
+<code>8d1ff33</code>, and its LCM-X row matches the upstream file at
+that commit. Ranking each column gives the README's placements: first
+among 12 scored backends on BEAM 100K (71.84) and BEAM 10M (63.32),
+second among 13 on LongMemEval (87.00), fifth among 15 on LoCoMo
+(78.83). Each is one contributor-run; BEAM 10M is reported with a
+per-question standard deviation, 40.02. No per-question output is
+committed.</p>
+<p><code>benchmarks/results/longmemeval-v3-500q-fastembed-metrics.json</code>
+records <code>rerank.mode</code> as <code>placeholder-cosine</code> with
+<code>real_count</code> 0 for all 470 scored questions. Its
+<code>hybrid_rerank</code> arm equals the summary arm field for field,
+so the table rows and the v2 note that rerank shows no lift
+(<code>longmemeval-v2-500q-fastembed.md:28</code>) measured no reranker.
+The <code>bench/results/reach-hermes-*</code> studies, built on
+Continual-ARC run records (<a
+href="https://arxiv.org/abs/2611.14505">arXiv:2611.14505</a>), publish
+summaries only; their trial rows are kept private and cited by
+digest.</p>
+<p><a href="../severian/">Severian</a>'s benchmark write-up compares its
+own context size per LoCoMo question with LCM-X's published figure.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Check provenance in the database.</strong> A trigger that
+refuses a derived row whose quoted span differs from the source
+substring, and another that invalidates derived rows when the source
+changes, hold whichever code path writes.</p>
+<p><strong>Require an explicit cue for supersession.</strong> A
+model-proposed <code>supersedes</code> is accepted only if its own
+quoted span contains an update word and its source is not older than its
+target. Recency alone never retires a claim.</p>
+<p><strong>Keep conflicts visible and refuse to compute over
+them.</strong> Two active values are both flagged; the calculator falls
+back instead of choosing the newest.</p>
+<p><strong>Apply exclusions before truncation.</strong> An exclusion
+applied after a top-k cut returns too few results; one applied before
+returns the right ones.</p>
+<p><strong>Mark a deleted capture source as forgotten.</strong> A
+re-ingesting capture pipeline needs a key that stops it from reading the
+source again.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not select derived rows for deletion by a key another path
+rewrites.</strong> Rollover moves summary nodes to the next session;
+deletion by session then misses them.</p>
+<p><strong>Do not keep verbatim quotes in a derived table after their
+source is deleted.</strong> Invalidating the receipt hides the row; it
+does not remove the text.</p>
+<p><strong>Do not let a cue list decide what can be corrected.</strong>
+An English regex gates every supersession, so a correction in another
+language stays a conflict.</p>
+<p><strong>Do not ship an isolation seam whose enabling flag has no
+setter.</strong> The policy is permissive until the flag is set, and
+nothing sets it.</p>
+<p><strong>Do not label a placeholder arm with the mechanism it stands
+in for.</strong></p>
+<h3 id="fit">Fit</h3>
+<p>It fits a single Hermes user who wants every turn kept, wants to stop
+losing detail at compaction, and accepts that memory means transcripts
+plus summaries the agent searches. The cost is a model call per
+compaction on the turn path, and a store that grows without bound by
+design.</p>
+<p>It does not fit a deployment that must honour "forget this", that
+serves more than one person from one store, or that needs facts it can
+correct by default. Correction lives in the assertion layer, which is
+opt-in, model-driven and per message. Adopting it also means following a
+120,000-line dependency that took 8,145 commits in seven months; a fork
+that diverges will not be maintainable by a small team.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should a deleted session's carried-forward summaries go with
+it?</strong> The rollover and the cleanup each behave as their comments
+say; no test covers them together.</li>
+<li><strong>Is <code>include_invalidated</code> meant to stay
+reachable?</strong> No product caller passes it; a test asserts deleted
+quotes come back through it.</li>
+<li><strong>When does the entity layer get a writer?</strong> The
+README's <code>lcm_memory</code> row says there is no registry until a
+stage it calls E2; the event log is ready for it.</li>
+<li><strong>Will Teams be enabled through a host path or the
+connector?</strong> <code>teams/connector.py</code> describes an
+external control plane that drives membership; no host binding exists in
+the tree.</li>
+<li><strong>What does the reranker add?</strong> The committed metrics
+measured a placeholder.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>engine.py</code></td>
+<td>Engine: ingest, compaction scheduling, assembly, rollover,
+storage</td>
+</tr>
+<tr>
+<td><code>compaction.py</code>, <code>dag.py</code></td>
+<td>Leaf and condensation sweep; summary schema and node deletion</td>
+</tr>
+<tr>
+<td><code>store.py</code>, <code>db_bootstrap.py</code></td>
+<td>Message store, purge registry; schemas, assertion and entity DDL and
+triggers</td>
+</tr>
+<tr>
+<td><code>tools.py</code>, <code>retrieval_core.py</code></td>
+<td><code>lcm_grep</code>, <code>lcm_recall</code>, expansion, paging;
+fusion</td>
+</tr>
+<tr>
+<td><code>assertion_extraction.py</code>,
+<code>assertion_store.py</code>, <code>assertion_state.py</code></td>
+<td>Extractor prompt and validation; storage and reads; derived
+state</td>
+</tr>
+<tr>
+<td><code>evidence_tools.py</code>, <code>reasoning.py</code>,
+<code>memory_tools.py</code></td>
+<td><code>lcm_query_state</code>, <code>lcm_compute</code>,
+<code>lcm_memory</code></td>
+</tr>
+<tr>
+<td><code>command.py</code>, <code>command_router.py</code></td>
+<td><code>/lcm</code> doctor, clean, backup, assertions rebuild</td>
+</tr>
+<tr>
+<td><code>entity_store.py</code>, <code>entity_ops.py</code></td>
+<td>Entity layer, unwired</td>
+</tr>
+<tr>
+<td><code>access_policy/</code>, <code>access_context/</code>,
+<code>teams/</code>, <code>scope_storage.py</code></td>
+<td>Teams policy seam, unwired</td>
+</tr>
+<tr>
+<td><code>claude_code_store.py</code>,
+<code>claude_code_capture.py</code>,
+<code>adapters/claude-code/</code></td>
+<td>Claude Code capture, forgotten marker, hooks, MCP launcher</td>
+</tr>
+<tr>
+<td><code>tests/test_lcm_recall.py</code>,
+<code>tests/test_assertion_store.py</code></td>
+<td>The cases behind <code>negative_eval</code> and
+<code>bitemporal</code></td>
+</tr>
+<tr>
+<td><code>benchmarks/results/</code></td>
+<td>Public placements snapshot; LongMemEval arm metrics</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git</code> in a shallow clone at the pinned
+commit.</p>
+<ul>
+<li><code>git ls-files '*.py' | grep -v / | xargs cat | wc -l</code> —
+115,450 in 130 root files; with <code>access_context</code>,
+<code>access_policy</code>, <code>teams</code>, <code>companions</code>
+and <code>adapters</code>, 120,259 in 150.</li>
+<li><code>git grep -E '^[[:space:]]*(async )?def test_' -- 'tests/*.py' | wc -l</code>
+— 11,345 in 849 files.</li>
+<li><code>git grep -n -E 'EntityOps|entity_ops' -- ':!tests' ':!bench'</code>
+— the class, one internal use at <code>entity_ops.py:703</code>, a
+maintainability list and a history document; no caller in the engine,
+tools or commands. Control: <code>git grep -l EntityOps -- tests</code>
+lists nine files.</li>
+<li><code>git grep -n -E 'lcm_memory_events|lcm_memory_notes' -- '*.py' ':!tests' ':!bench'</code>
+— the DDL, <code>entity_store.py</code>, <code>entity_ops.py</code>,
+<code>cloud_view.py</code> and a schema-family list.</li>
+<li><code>git grep -n -E 'lcm_teams_enabled' -- . ':!tests'</code> — the
+constant and a comment.
+<code>git grep -n -E 'mark_teams_enabled\(|setup_teams_scope|resolve_startup_teams_state' -- '*.py' ':!tests' ':!bench'</code>
+— definitions and comments only.</li>
+<li><code>git grep -n -E 'delete_session_messages|_delete_clean_candidates_atomically|doctor_clean_apply' -- ':!tests' ':!docs' ':!*.md'</code>
+— the doctor clean apply route is the one reachable caller of a session
+delete.</li>
+<li><code>git grep -n -i -E 'def .*(forget|purge|erase|redact)' -- '*.py' ':!tests' ':!bench' ':!benchmarking'</code>
+— no forget tool or command.</li>
+<li><code>git grep -n 'include_invalidated=True' -- '*.py' ':!tests'</code>
+— nothing. Control: the same pattern over <code>tests</code>
+matches.</li>
+<li><code>git grep -n 'invalidate_source' -- ':!tests' ':!scripts/maintainability'</code>
+— the definition only; triggers do the invalidation.</li>
+<li><code>git grep -n -E 'UPDATE summary_nodes SET session_id' -- '*.py' ':!tests'</code>
+— <code>dag.py:467</code>, called from the rollover.</li>
+<li><code>git grep -n -E 'lcm-extractions|extraction_output_path' -- '*.py' ':!tests' ':!bench'</code>
+— config and the engine's writer; no reader.</li>
+<li><code>git grep -n -i -E 'llm.?map|OOLONG' -- '*.py' '*.md' ':!tests'</code>
+— nothing. Control:
+<code>git grep -c -i 'summary dag' -- README.md</code> matches.</li>
+<li><code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- ':!tests' ':!bench/fmp/licenses'</code>
+— benchmark papers cited under <code>bench/</code> and in
+<code>benchmarks/README.md</code>, none of them the LCM paper; the root
+README links the paper's publisher URL, and the arXiv API returns
+2605.04050 for its title.</li>
+<li><code>git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|contributing|third.party)'</code>
+— <code>LICENSE</code>, <code>CONTRIBUTING.md</code> and three files
+under <code>bench/fmp/licenses/</code>.</li>
+<li><code>python3 -I recompute_placements.py benchmarks/results/public-results.json</code>
+(a separate script over the JSON) — placements as stated; the upstream
+<code>docs/user_memory/results.md</code> at <code>8d1ff33</code> carries
+the same LCM-X row.</li>
+<li><code>gh api 'repos/electricsheephq/lcm-x/commits?per_page=1&amp;sha=&lt;pin&gt;' -i</code>
+— 8,145 pages; the last is dated 7 April 2026.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-17</strong> — <a
+href="https://github.com/electricsheephq/lcm-x/commit/9f7f0bd3c666479c983b294a147525bfc46270dd"><code class="commit-id" title="9f7f0bd3c666479c983b294a147525bfc46270dd">9f7f0bd3…</code></a>
+— first reading, of the product modules, the Claude Code adapter, the
+assertion and entity layers and the committed benchmark results, from a
+shallow clone with history counts from the GitHub API. The screen found
+a Claude Code adapter (<code>adapters/claude-code/</code>) with a plugin
+manifest, an <code>.mcp.json</code> server and hook registrations
+(SessionStart, UserPromptSubmit, Stop), six pytest
+<code>conftest.py</code> files, and
+<code>requirements-semantic.txt</code> changed inside the seven-day
+cooldown with a floating <code>fastembed</code> range;
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> were treated as data,
+and nothing was installed or run. The benchmark placements were
+recomputed from the committed JSON in a separate script. Marks:
+<code>bitemporal</code> and <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

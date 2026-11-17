@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 813 reports.</strong></p>
+<p><strong>This page covers all 814 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33616,6 +33616,38 @@ procedure across runs.</li>
 <li>Do not copy when: several users or clients share one installation, a
 stored document must be traceable to who wrote it and when, or a deleted
 user's contributions must leave with them.</li>
+</ul>
+<h3 id="lcm-x"><a href="../systems/lcm-x/"><code>lcm-x</code></a></h3>
+<ul>
+<li>Best idea: provenance enforced in the database. An assertion insert
+aborts unless its quoted span equals the source message's substring at
+those offsets, an edit or deletion of the source invalidates every
+assertion derived from it by trigger, and a model-proposed supersession
+is accepted only if its own quoted span contains an explicit update word
+and its source is not older than its target.</li>
+<li>Biggest risk: nothing can be forgotten on request, and the one
+delete is incomplete. Doctor clean apply removes a pattern-matched
+session's rows but not the summaries a rollover moved into the next
+session, and keeps its extracted assertions with their verbatim quotes.
+The Teams isolation policy and the entity event log are built, tested
+and unreachable.</li>
+<li>Most reusable component: the assertion DDL and triggers in
+<code>db_bootstrap.py:2107-2310</code> with
+<code>assertion_state.py</code>, and the session-exclusion whitelist in
+<code>tools.py:378-492</code>, which filters before candidate caps and
+fails closed on a timeout.</li>
+<li>Maturity impression: 120,259 lines of Python and 11,345 test
+functions run in four CI shards, from 8,145 commits in seven months,
+most under one anonymous author identity. Two marks. The public
+benchmark placements recompute from a committed snapshot of the upstream
+table; a committed LongMemEval rerank arm measured a placeholder.
+MIT.</li>
+<li>Study when: an agent loses detail at compaction and every turn must
+stay recoverable by id, with summaries that point back at their
+sources.</li>
+<li>Do not copy when: users must be able to make the system forget, more
+than one person shares a store, or facts must be correctable without a
+model call per message.</li>
 </ul>
         </article>
       </div>

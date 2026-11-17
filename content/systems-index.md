@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **813 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **814 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -421,6 +421,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/langchain/"><span class="az-id">LangChain</span><span class="az-what">The memory it deprecated</span><code class="az-repo">langchain-ai/langchain</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/langgraph/"><span class="az-id">LangGraph</span><span class="az-what">A conformance suite for the other half</span><code class="az-repo">langchain-ai/langgraph</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/langmem/"><span class="az-id">LangMem</span><span class="az-what">Library primitives</span><code class="az-repo">langchain-ai/langmem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
+<li><a class="az-row" href="../systems/lcm-x/"><span class="az-id">LCM-X</span><span class="az-what">Every turn kept and recallable across sessions; correction lives in an opt-in layer</span><code class="az-repo">electricsheephq/lcm-x</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/leankg/"><span class="az-id">LeanKG</span><span class="az-what">A typo must not quietly retarget a session&#x27;s memories</span><code class="az-repo">FreePeak/LeanKG</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/lemmalog/"><span class="az-id">Lemmalog</span><span class="az-what">The transaction clock that is set to the valid clock</span><code class="az-repo">JordyZomer/lemmalog</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/lerim/"><span class="az-id">Lerim</span><span class="az-what">An empty scope returns nothing, and the test says so</span><code class="az-repo">kargarisaac/lerim</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 813 reports.**
+**This page covers all 814 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7453,3 +7453,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: a large product, 246,468 lines of Go and 1,391 test functions run in CI, whose memory is 3,842 lines tested on fakes; the live Postgres tests need a build tag CI never sets. The table has no timestamps, history, status or audit trail. One mark. MIT, with an EULA that yields to it for the source.
 - Study when: an agent runtime writes tool output to memory without being asked and must keep it inside one run while sharing reusable procedure across runs.
 - Do not copy when: several users or clients share one installation, a stored document must be traceable to who wrote it and when, or a deleted user's contributions must leave with them.
+
+### [`lcm-x`](../systems/lcm-x/)
+
+- Best idea: provenance enforced in the database. An assertion insert aborts unless its quoted span equals the source message's substring at those offsets, an edit or deletion of the source invalidates every assertion derived from it by trigger, and a model-proposed supersession is accepted only if its own quoted span contains an explicit update word and its source is not older than its target.
+- Biggest risk: nothing can be forgotten on request, and the one delete is incomplete. Doctor clean apply removes a pattern-matched session's rows but not the summaries a rollover moved into the next session, and keeps its extracted assertions with their verbatim quotes. The Teams isolation policy and the entity event log are built, tested and unreachable.
+- Most reusable component: the assertion DDL and triggers in `db_bootstrap.py:2107-2310` with `assertion_state.py`, and the session-exclusion whitelist in `tools.py:378-492`, which filters before candidate caps and fails closed on a timeout.
+- Maturity impression: 120,259 lines of Python and 11,345 test functions run in four CI shards, from 8,145 commits in seven months, most under one anonymous author identity. Two marks. The public benchmark placements recompute from a committed snapshot of the upstream table; a committed LongMemEval rerank arm measured a placeholder. MIT.
+- Study when: an agent loses detail at compaction and every turn must stay recoverable by id, with summaries that point back at their sources.
+- Do not copy when: users must be able to make the system forget, more than one person shares a store, or facts must be correctable without a model call per message.

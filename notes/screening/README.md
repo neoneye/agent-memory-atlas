@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 813 of 813 screened at the report's current pin.**
+**Progress: 814 of 814 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 385 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 366 |
-| Repositories with build-time execution (`EXEC`) | 589 |
+| Repositories with an auto-run surface (`RUNS`) | 386 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 367 |
+| Repositories with build-time execution (`EXEC`) | 590 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -195,6 +195,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`knowl`](../../content/systems/knowl.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`kyb`](../../content/systems/kyb.md) | `server.json` |
 | [`langchain`](../../content/systems/langchain.md) | `.devcontainer/devcontainer.json`, `.mcp.json`, `.vscode/settings.json` |
+| [`lcm-x`](../../content/systems/lcm-x.md) | `adapters/claude-code/.claude-plugin/plugin.json`, `adapters/claude-code/.mcp.json`, `adapters/claude-code/hooks/`, `adapters/claude-code/hooks/hooks.json` |
 | [`leankg`](../../content/systems/leankg.md) | `.claude-plugin/` |
 | [`leteo`](../../content/systems/leteo.md) | `.claude-plugin/`, `plugin/claude-code/.claude-plugin/plugin.json`, `plugin/claude-code/.mcp.json`, `plugin/claude-code/hooks/`, `plugin/claude-code/hooks/hooks.json`, `plugin/zcode/.mcp.json`, `plugin/zcode/hooks/`, `plugin/zcode/hooks/hooks.json` |
 | [`light-mem`](../../content/systems/light-mem.md) | `.claude-plugin/`, `.claude/settings.json`, `.github/copilot-instructions.md` |
