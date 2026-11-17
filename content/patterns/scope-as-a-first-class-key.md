@@ -980,6 +980,8 @@ any partition, and graph writes from a few routes that bypass the guarded
 store. A nine-case real-Postgres table tests the predicate, including a sibling
 that matches only through `LIKE`'s `_` wildcard.
 
+[PentAGI](../../systems/pentagi/) writes the owner on every row and applies it to people only. Each pgvector row's metadata carries `user_id` and `flow_id`; the knowledge UI and REST API put `cmetadata ->> 'user_id'` in every SQL read for a non-admin, and the memory search filters on `flow_id`, keeping it when a task filter finds nothing and the search widens. The guide, answer and code searches that four agent types use send `doc_type` and a subtype and nothing else, so one user's agents, and any user with the default role through the knowledge UI, write into every other user's prompts, and the reader cannot list or delete what arrived. Three committed tests compare those filters with `maps.Equal`, so adding the owner key would fail them (`backend/pkg/tools/guide_test.go:81`). The pinned store library's filter code carries the comment that a caller's filter may be the only thing keeping one tenant's documents out of another's results.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

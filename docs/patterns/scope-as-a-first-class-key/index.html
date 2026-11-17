@@ -1674,6 +1674,22 @@ memory-service key that reads any partition, and graph writes from a few
 routes that bypass the guarded store. A nine-case real-Postgres table
 tests the predicate, including a sibling that matches only through
 <code>LIKE</code>'s <code>_</code> wildcard.</p>
+<p><a href="../../systems/pentagi/">PentAGI</a> writes the owner on
+every row and applies it to people only. Each pgvector row's metadata
+carries <code>user_id</code> and <code>flow_id</code>; the knowledge UI
+and REST API put <code>cmetadata -&gt;&gt; 'user_id'</code> in every SQL
+read for a non-admin, and the memory search filters on
+<code>flow_id</code>, keeping it when a task filter finds nothing and
+the search widens. The guide, answer and code searches that four agent
+types use send <code>doc_type</code> and a subtype and nothing else, so
+one user's agents, and any user with the default role through the
+knowledge UI, write into every other user's prompts, and the reader
+cannot list or delete what arrived. Three committed tests compare those
+filters with <code>maps.Equal</code>, so adding the owner key would fail
+them (<code>backend/pkg/tools/guide_test.go:81</code>). The pinned store
+library's filter code carries the comment that a caller's filter may be
+the only thing keeping one tenant's documents out of another's
+results.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

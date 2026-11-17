@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 812 reports.</strong></p>
+<p><strong>This page covers all 813 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33584,6 +33584,38 @@ under several processes.</li>
 <li>Do not copy when: a memory must be correctable or removable one
 entry at a time, must stay inside one project, or must be kept out of
 the system prompt.</li>
+</ul>
+<h3 id="pentagi"><a
+href="../systems/pentagi/"><code>pentagi</code></a></h3>
+<ul>
+<li>Best idea: recalled tool output is pinned to its flow, and the
+widening fallback keeps the pin. <code>search_in_memory</code> always
+filters on <code>flow_id</code> and <code>doc_type</code>, adds the task
+and subtask when given, and when that finds nothing retries without the
+task keys only; both flow-deletion paths purge the flow's memory
+rows.</li>
+<li>Biggest risk: guides, answers and code cross users silently. Every
+row records its owner and the human API filters on it, while
+<code>search_guide</code>, <code>search_answer</code> and
+<code>search_code</code> filter on type alone, so a document any user
+with the default role creates, or any user's agent stores, enters every
+flow's prompt, and the reader can neither list nor delete it. Three
+tests assert the unscoped filter with <code>maps.Equal</code>.</li>
+<li>Most reusable component: <code>backend/pkg/tools/memory.go</code>
+with <code>getGlobalFilters</code>, and the pinned langchaingo
+<code>filterPredicates</code>, which binds every value and refuses a
+malformed key rather than dropping it.</li>
+<li>Maturity impression: a large product, 246,468 lines of Go and 1,391
+test functions run in CI, whose memory is 3,842 lines tested on fakes;
+the live Postgres tests need a build tag CI never sets. The table has no
+timestamps, history, status or audit trail. One mark. MIT, with an EULA
+that yields to it for the source.</li>
+<li>Study when: an agent runtime writes tool output to memory without
+being asked and must keep it inside one run while sharing reusable
+procedure across runs.</li>
+<li>Do not copy when: several users or clients share one installation, a
+stored document must be traceable to who wrote it and when, or a deleted
+user's contributions must leave with them.</li>
 </ul>
         </article>
       </div>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 812 reports.**
+**This page covers all 813 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7444,3 +7444,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: a Code - OSS fork of 18,464 tracked files whose agent runtime has 2,022 test cases, two of them on memory, and CI runs one runtime test file. 24 commits from 13 to 27 October 2026 by three authors, the first importing the whole tree. The memory Backboard advertises on its default route is hosted and not in the tree. MIT.
 - Study when: you want the smallest cross-chat memory — the last few exchanges, encrypted, with no extraction — and the write must be safe under several processes.
 - Do not copy when: a memory must be correctable or removable one entry at a time, must stay inside one project, or must be kept out of the system prompt.
+
+### [`pentagi`](../systems/pentagi/)
+
+- Best idea: recalled tool output is pinned to its flow, and the widening fallback keeps the pin. `search_in_memory` always filters on `flow_id` and `doc_type`, adds the task and subtask when given, and when that finds nothing retries without the task keys only; both flow-deletion paths purge the flow's memory rows.
+- Biggest risk: guides, answers and code cross users silently. Every row records its owner and the human API filters on it, while `search_guide`, `search_answer` and `search_code` filter on type alone, so a document any user with the default role creates, or any user's agent stores, enters every flow's prompt, and the reader can neither list nor delete it. Three tests assert the unscoped filter with `maps.Equal`.
+- Most reusable component: `backend/pkg/tools/memory.go` with `getGlobalFilters`, and the pinned langchaingo `filterPredicates`, which binds every value and refuses a malformed key rather than dropping it.
+- Maturity impression: a large product, 246,468 lines of Go and 1,391 test functions run in CI, whose memory is 3,842 lines tested on fakes; the live Postgres tests need a build tag CI never sets. The table has no timestamps, history, status or audit trail. One mark. MIT, with an EULA that yields to it for the source.
+- Study when: an agent runtime writes tool output to memory without being asked and must keep it inside one run while sharing reusable procedure across runs.
+- Do not copy when: several users or clients share one installation, a stored document must be traceable to who wrote it and when, or a deleted user's contributions must leave with them.

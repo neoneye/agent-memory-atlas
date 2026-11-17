@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-812, generated from each report's frontmatter —
+813, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-812, generated from each report's frontmatter —
+813, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-812, generated from each report's frontmatter —
+813, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 812, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 813, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-812, generated from each report's frontmatter —
+813, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 812 systems by the seven mechanisms
+filters all 813 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -27032,6 +27032,53 @@ moment; and four dependency manifests changed inside the seven-day
 cooldown</td>
 </tr>
 <tr>
+<td><a href="../systems/pentagi/"><code>pentagi</code></a></td>
+<td>A pgvector row: a text chunk, its embedding and a JSON metadata
+object holding doc_type (memory, guide, answer or code), user, flow,
+task and subtask ids, a subtype, a question and a manual flag;
+optionally a Graphiti episode per agent response and tool call</td>
+<td>PostgreSQL with pgvector: one langchaingo collection named langchain
+in langchain_pg_embedding, with no timestamp column; Neo4j behind a
+Graphiti service when GRAPHITI_ENABLED is set, off by default</td>
+<td>Exact cosine search with metadata equality predicates, threshold
+0.2, up to five questions per call, merged by content hash to the best
+three; Graphiti searches of seven kinds pinned to the flow's group
+id</td>
+<td>Automatic: the executor stores the arguments and result of terminal,
+file, search and delegation calls as 2,000-character memory chunks. By
+tool: installer and pentester store guides, the searcher answers, the
+coder code. By hand: a user creates a document in the knowledge UI or
+API</td>
+<td>A person edits, renames or deletes documents in place with no
+history; deleting a flow deletes its memory rows and keeps its guides,
+answers and code; deleting a user deletes no row of the table; nothing
+deletes from the graph</td>
+<td>Memory search filters on flow_id with a task or subtask first; the
+human API filters on user_id unless the caller holds knowledge.admin;
+guide, answer and code searches filter on document type and subtype
+only, across all users of an instance. TENANT_ID gives each instance its
+own Postgres schema and group-id prefix</td>
+<td>Built into the product: tools registered per agent type (memorist,
+enricher, assistant, pentester, coder, installer, searcher), a knowledge
+page in the React UI, GraphQL queries, mutations and subscriptions, and
+REST routes</td>
+<td>None for memory. Graphiti's own ingestion runs in its service,
+outside this tree; an operator CLI can flush or re-embed the whole
+table</td>
+<td>None. A retrieved row is presented as a memory fact with its match
+score; the manual flag is read only by an optional filter in the human
+API</td>
+<td>A flow key on every recalled tool output with a widening fallback
+that keeps it, parameterised metadata predicates with a key gate in the
+store library, owner predicates in SQL on every human read, and a flow
+purge on both delete paths</td>
+<td>Guides, answers and code from any user's agents, or typed by any
+user with the default role, enter every flow's prompts while no user can
+see or delete another's; a test asserts the unscoped filter exactly;
+rows outlive their flow and their owner; graph writes skip the
+anonymizer</td>
+</tr>
+<tr>
 <td><a
 href="../systems/people-context/"><code>people-context</code></a></td>
 <td>A person, with facts (a predicate, a value, a validity period, a
@@ -36473,7 +36520,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>78 of 812:</em> <a
+<p><em>78 of 813:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -36555,7 +36602,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>209 of 812:</em> <a
+<p><em>209 of 813:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -36771,7 +36818,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>136 of 812:</em> <a
+<p><em>136 of 813:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -36915,7 +36962,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>343 of 812:</em> <a
+<p><em>343 of 813:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -37274,7 +37321,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>271 of 812:</em> <a
+<p><em>271 of 813:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -37556,7 +37603,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>102 of 812:</em> <a
+<p><em>102 of 813:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -37662,7 +37709,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>520 of 812:</em> <a
+<p><em>521 of 813:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -38062,6 +38109,7 @@ href="../systems/ouroboros-agent-os/"><code>ouroboros-agent-os</code></a>,
 href="../systems/papez/"><code>papez</code></a>, <a
 href="../systems/particles/"><code>particles</code></a>, <a
 href="../systems/pensyve/"><code>pensyve</code></a>, <a
+href="../systems/pentagi/"><code>pentagi</code></a>, <a
 href="../systems/people-context/"><code>people-context</code></a>, <a
 href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
 href="../systems/pi-jarvis/"><code>pi-jarvis</code></a>, <a
@@ -38219,8 +38267,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-520 repositories of
-812 assert that particular material must
+521 repositories of
+813 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -38293,7 +38341,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 812 is the real figure for the second kind, and
+of 813 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

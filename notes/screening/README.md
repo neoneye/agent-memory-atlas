@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 812 of 812 screened at the report's current pin.**
+**Progress: 813 of 813 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 0 report(s) have no record at all.
@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 384 |
+| Repositories with an auto-run surface (`RUNS`) | 385 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 366 |
 | Repositories with build-time execution (`EXEC`) | 589 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
@@ -318,6 +318,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`papez`](../../content/systems/papez.md) | `server.json` |
 | [`particles`](../../content/systems/particles.md) | `hooks/`, `server.json` |
 | [`pensyve`](../../content/systems/pensyve.md) | `.claude-plugin/`, `integrations/claude-code/.claude-plugin/plugin.json`, `integrations/claude-code/hooks/`, `integrations/claude-code/hooks/hooks.json`, `server.json`, `smithery.yaml` |
+| [`pentagi`](../../content/systems/pentagi.md) | `.vscode/settings.json` |
 | [`people-context`](../../content/systems/people-context.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.mcp.json`, `server.json` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
 | [`plur`](../../content/systems/plur.md) | `.claude-plugin/`, `.githooks/`, `server.json` |
