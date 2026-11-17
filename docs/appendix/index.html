@@ -18403,6 +18403,126 @@ files run at build time, <code>Cargo.toml</code>,
 changed inside the seven-day cooldown, and <code>AGENTS.md</code> and
 <code>CLAUDE.md</code> were treated as data; nothing was installed,
 built or run.</li>
+<li><strong>MemoryLake (<code>memorylake-ai</code>) was examined and has
+no report: the CLI and the agent harness are open, and storage,
+extraction, ranking and forgetting all run on the hosted service behind
+them.</strong> Both repositories are MIT, with identical
+<code>LICENSE</code> files and matching manifests. <a
+href="https://github.com/memorylake-ai/memorylake-cli"><code>memorylake-ai/memorylake-cli</code></a>,
+read at <a
+href="https://github.com/memorylake-ai/memorylake-cli/commit/7c5f815550ecfa48e5b3f755ce535cfbbc84856c"><code class="commit-id" title="7c5f815550ecfa48e5b3f755ce535cfbbc84856c">7c5f8155…</code></a>
+(80 commits since 20 July 2026, four authors, 65,785 lines of Rust with
+1,338 <code>#[test]</code> functions), is a typed HTTP client whose
+default base is
+<code>https://app.memorylake.ai/openapi/memorylake</code>
+(<code>crates/core/src/config.rs:14</code>). Its core crate depends on
+<code>reqwest</code>, <code>serde</code>, <code>ring</code> and
+<code>toml</code> and on no storage, index or embedding crate
+(<code>crates/core/Cargo.toml</code>). Search is one
+<code>POST …/memories/search</code>
+(<code>crates/core/src/api/search/memories.rs:12-17</code>,
+<code>:66-72</code>), fact creation one <code>POST</code> to a
+scope-rooted <code>facts</code> path
+(<code>crates/core/src/api/facts/add.rs:36-43</code>), and forgetting
+one <code>POST …/facts/{id}/forget</code>
+(<code>crates/core/src/api/facts/forget.rs:32-46</code>). <a
+href="https://github.com/memorylake-ai/memorylake-harness"><code>memorylake-ai/memorylake-harness</code></a>,
+read at <a
+href="https://github.com/memorylake-ai/memorylake-harness/commit/f184d5dd06a164d3bbdbc950e23ef5d32f491f8b"><code class="commit-id" title="f184d5dd06a164d3bbdbc950e23ef5d32f491f8b">f184d5dd…</code></a>
+(53 commits since 7 August 2026, two authors, 14,972 lines of shell,
+Python and TypeScript with 195 test cases), holds plugins for Claude
+Code, Codex, DeepSeek Harness, opencode, QwenPaw, QwenWork and
+WorkBuddy, and every one of them shells out to that CLI. What the
+harness keeps under <code>~/.memorylake/harness/</code>
+(<code>claude-plugin/scripts/lib/common.sh:401-403</code>) is
+bookkeeping: config, a content hash and remote id per synced file
+(<code>claude-plugin/scripts/sync-on-write.sh:146-159</code>), a
+project-id list cached for 600 seconds (<code>common.sh:184-222</code>),
+per-turn gate markers, and QwenPaw's outbox of turns not yet appended
+(<code>qwenpaw-plugin/memorylake_backend/sync.py:304-365</code>). No
+reader turns any of it into recalled content: every recall path is
+<code>memorylake search</code>
+(<code>claude-plugin/bin/ml-recall:89-97</code>,
+<code>qwenpaw-plugin/memorylake_backend/manager.py:435-452</code>), and
+extraction is a server stage the CLI calls <em>cook</em>
+(<code>crates/core/src/api/conversations/cook_status.rs:1-22</code>).
+None of the organisation's other own repositories holds the server.
+<code>memorylake-hermes</code> at <a
+href="https://github.com/memorylake-ai/memorylake-hermes/commit/2d0b8e2c6031dad4ee45dabebad66494eb6775d4"><code class="commit-id" title="2d0b8e2c6031dad4ee45dabebad66494eb6775d4">2d0b8e2c…</code></a>
+is a Python client of the <code>v1</code> and <code>v2</code> endpoints
+(<code>src/memorylake_hermes/client.py:55-65</code>).
+<code>memorylake-locomo-benchmark</code> at <a
+href="https://github.com/memorylake-ai/memorylake-locomo-benchmark/commit/4ede2a6a37eebc6897c585a7a7bb1cffa287b8b6"><code class="commit-id" title="4ede2a6a37eebc6897c585a7a7bb1cffa287b8b6">4ede2a6a…</code></a>
+holds ten result files, five charts and a plotting script, without the
+harness behind its 94.03 % overall F1, which was not checked here. The
+rest are skills, a model-provider plugin, evaluation scripts, demos and
+a benchmark agent, and the docs offer hosted and bring-your-own-key
+modes but no self-hosting, so the bar's "closed-source behind an open
+wrapper" exclusion applies. <strong>Recorded for what a reader can
+take.</strong> Comments in both clients date server behaviour measured
+against the live API. Batch forget is not atomic — it stops at the first
+unknown id and names only that one — so the CLI forgets per id and
+reports each outcome (<code>forget.rs:16-27</code>, loop in
+<code>crates/cli/src/commands/fact.rs:216-231</code>). Facts are stored
+verbatim and not deduplicated (<code>add.rs:33-35</code>). Omitting
+<code>project_ids</code> searches no documents rather than all of them
+(<code>memories.rs:21-25</code>). An overwritten library file keeps its
+id and is never re-indexed, so an update is delete plus re-import
+(<code>sync-on-write.sh:20-28</code>). The trace contract is a
+provenance shape worth copying: <code>ADD</code>, <code>UPDATE</code>
+and <code>FORGET</code> events, each with <code>source_kind</code>
+<code>COOK</code> or <code>MANUAL</code> and, when extracted, the
+conversation and message ids, and a forgotten fact still answers its
+trace as expired
+(<code>crates/core/src/api/facts/trace.rs:12-77</code>). Conflicts carry
+category-specific strategies the server enforces
+(<code>crates/core/src/api/facts/conflicts/resolve.rs:22-51</code>), <a
+href="../patterns/resolve-not-just-detect/">resolve, not just detect</a>
+as a published contract. <code>ml-recall</code> makes a failed search
+print <em>UNAVAILABLE</em> and exit 1 so it cannot read as an empty one,
+and uses scores for ordering only
+(<code>claude-plugin/bin/ml-recall:17-21</code>, <code>:42-49</code>).
+WorkBuddy's recall gate denies the first non-search tool call of a turn
+exactly once, through an atomic <code>mkdir</code> marker
+(<code>workbuddy-plugin/scripts/recall-gate.sh:50-91</code>).
+<strong>Three things sit against it.</strong> In the Claude Code plugin
+a <code>user</code> or <code>feedback</code> memory whose description
+changes is stored as a new fact and the previous <code>fact_id</code> is
+overwritten in local state without being forgotten
+(<code>sync-on-write.sh:181-195</code>); the superseded preference stays
+in the cloud unless the server's conflict detection catches it, and no
+harness path calls the conflict API. The Claude Code and Codex hooks
+fire on <code>Write|Edit</code> only
+(<code>claude-plugin/hooks/hooks.json:29</code>) and neither plugin
+calls <code>fact delete</code>, so a memory deleted locally stays
+recallable from every other device, as the README says: <em>"memories
+already uploaded stay until deleted server-side"</em>. And recall passes
+every visible project id (<code>ml-recall:92-94</code>), so scope is the
+workspace, by design. Searches, each with a positive control:
+<code>git grep -n -i -E 'sqlite|lancedb|chroma|faiss|embedding|vector|bm25|cosine'</code>
+over the harness (no match; <code>search</code> under the same flags
+hits); the same terms over both <code>Cargo.toml</code> files;
+<code>git grep -n -E 'fact (delete|remove|update)|forget|memory_forget'</code>
+(hits <code>dsh-plugin</code>, <code>opencode-plugin</code>,
+<code>qwenpaw-plugin</code> and connector skills, none in
+<code>claude-plugin</code> or <code>codex-plugin</code>);
+<code>git grep -n -i conflict</code> without <code>--on-conflict</code>
+(prose only); <code>arxiv|bibtex|@article|@misc|doi.org|CITATION</code>
+in both trees (no match, so no paper). The organisation was listed with
+<code>gh api orgs/memorylake-ai/repos</code> and each non-fork tree read
+through <code>git/trees/HEAD?recursive=1</code>; only the CLI and the
+harness were cloned. Screened before reading, from full clones: in
+<code>memorylake-cli</code> the screen found Cursor rules addressed to
+an agent, two <code>build.rs</code> files, and <code>Cargo.toml</code>
+and <code>Cargo.lock</code> changed inside the seven-day cooldown; in
+<code>memorylake-harness</code>, a Claude Code marketplace manifest and
+plugin hook registrations (SessionStart, PreToolUse, PostToolUse, Stop),
+committed git hooks, two npm <code>prepare</code> scripts, a pytest
+<code>conftest.py</code>, and a <code>pyproject.toml</code> with no
+lockfile; nothing was installed or run. If the engine were published,
+the first thing to read would be whether a <code>FORGET</code> event
+stops a later cook of the same conversation from writing the fact
+back.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
