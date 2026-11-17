@@ -33469,22 +33469,25 @@ a person's rejection of a finding must change what the agents see.</li>
 href="../systems/llm-memory-morditux/"><code>llm-memory-morditux</code></a></h3>
 <ul>
 <li>Best idea: the tool surface cannot destroy. The model's eight MCP
-tools archive, patch and supersede; every one of those writes a full
-snapshot with its actor to <code>memory_history</code> inside the same
-transaction; and un-archiving and hard delete exist only at the CLI and
-the web UI.</li>
-<li>Biggest risk: who can write, and how far a write travels. The web
-UI's twelve mutating routes check no token and no origin, and one memory
-written with importance 3 in the <code>global</code> namespace is placed
-after the handoff in every project's session briefing, which the hooks
-inject without the model asking.</li>
+tools archive, patch and supersede; every one of those, and every
+namespace move and link change, writes a full snapshot with its actor to
+<code>memory_history</code> inside the same transaction; and
+un-archiving, hard delete and removal of a <code>supersedes</code> link
+exist on no MCP verb.</li>
+<li>Biggest risk: how far one write travels. A memory written with
+importance 3 in the <code>global</code> namespace is placed after the
+handoff in every project's session briefing, which the hooks inject
+without the model asking; and a rename, merge or link change re-stamps
+the <code>updated_at</code> the briefing ranks recent decisions and
+facts by.</li>
 <li>Most reusable component: <code>internal/store/memories.go</code>
 with <code>filterSQL</code> in <code>internal/store/search.go</code> —
 the history writer, the single-handoff rule, atomic supersession, and
 one archive-and-expiry predicate shared by every read arm.</li>
-<li>Maturity impression: 8,485 lines of Go outside tests and 114 test
-functions run in CI on three operating systems, written in 20 commits
-over two days with eight tags. Three marks. No test holds two processes
+<li>Maturity impression: 8,730 lines of Go outside tests and 120 test
+functions run in CI on three operating systems, written in 24 commits
+over three days with nine tags; four filed issues were closed with code
+and tests within three hours. Three marks. No test holds two processes
 on the file at once. MIT.</li>
 <li>Study when: one person moves between several assistants on one
 machine and wants explicit, inspectable memory with a history and no

@@ -7411,10 +7411,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`llm-memory-morditux`](../systems/llm-memory-morditux/)
 
-- Best idea: the tool surface cannot destroy. The model's eight MCP tools archive, patch and supersede; every one of those writes a full snapshot with its actor to `memory_history` inside the same transaction; and un-archiving and hard delete exist only at the CLI and the web UI.
-- Biggest risk: who can write, and how far a write travels. The web UI's twelve mutating routes check no token and no origin, and one memory written with importance 3 in the `global` namespace is placed after the handoff in every project's session briefing, which the hooks inject without the model asking.
+- Best idea: the tool surface cannot destroy. The model's eight MCP tools archive, patch and supersede; every one of those, and every namespace move and link change, writes a full snapshot with its actor to `memory_history` inside the same transaction; and un-archiving, hard delete and removal of a `supersedes` link exist on no MCP verb.
+- Biggest risk: how far one write travels. A memory written with importance 3 in the `global` namespace is placed after the handoff in every project's session briefing, which the hooks inject without the model asking; and a rename, merge or link change re-stamps the `updated_at` the briefing ranks recent decisions and facts by.
 - Most reusable component: `internal/store/memories.go` with `filterSQL` in `internal/store/search.go` — the history writer, the single-handoff rule, atomic supersession, and one archive-and-expiry predicate shared by every read arm.
-- Maturity impression: 8,485 lines of Go outside tests and 114 test functions run in CI on three operating systems, written in 20 commits over two days with eight tags. Three marks. No test holds two processes on the file at once. MIT.
+- Maturity impression: 8,730 lines of Go outside tests and 120 test functions run in CI on three operating systems, written in 24 commits over three days with nine tags; four filed issues were closed with code and tests within three hours. Three marks. No test holds two processes on the file at once. MIT.
 - Study when: one person moves between several assistants on one machine and wants explicit, inspectable memory with a history and no model call on the write path.
 - Do not copy when: more than one person or an untrusted writer can reach the store, a memory must wait for approval, or a rejected statement must stay rejected.
 

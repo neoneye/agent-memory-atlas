@@ -7,18 +7,18 @@ page_kind: system
 source_name: "Morditux/llm-memory"
 source_url: https://github.com/Morditux/llm-memory
 archive_name: "Morditux--llm-memory"
-revision: 93974b5e9caaae71b9b61c1c1eec3cc4ed73abed
-revision_url: https://github.com/Morditux/llm-memory/commit/93974b5e9caaae71b9b61c1c1eec3cc4ed73abed
+revision: 38d157868f67e01f32cca3fc082606b2da37bbfb
+revision_url: https://github.com/Morditux/llm-memory/commit/38d157868f67e01f32cca3fc082606b2da37bbfb
 analyzed_at: 2026-11-17
 licence: "MIT"
-size: "8,485 lines of Go in 22 files outside tests: the store 2,630, the CLI 3,045, the MCP server 1,117, the web UI handler 541, the semantic engine 453, the briefing 400; four SQL migrations"
-activity: "20 commits on 15 and 16 November 2026 under two committer names; eight tags, v1.0.0 to v1.3.2"
-tests: "114 Go test functions in 15 files and 13 golden files, run in CI on Linux, macOS and Windows, with the race detector on the first two. I ran none"
+size: "8,730 lines of Go in 22 files outside tests; four SQL migrations"
+activity: "24 commits from 15 to 17 November 2026 under two author names; nine tags, v1.0.0 to v1.3.3"
+tests: "120 Go test functions in 16 files and 13 golden files, run in CI on Linux, macOS and Windows, with the race detector on the first two. I ran none"
 capabilities: "scope_enforced, audit_log, negative_eval"
 capability_evidence:
-  scope_enforced: "namespace on every read arm: the briefing lists, full-text search, the vector arm and the duplicate check | internal/store/search.go:128-156, internal/store/memories.go:458-503, internal/store/embeddings.go:135-146, internal/briefing/briefing.go:42-98, cmd/llm-memory/hooks.go:201-205 | `filterSQL` adds `m.namespace = ?` to the FTS5 match, the recent list and the vector load; `List` adds it for the briefing; the session-start hook derives the namespace from the client's working directory, not from a model argument. Limits: `recall` passes its namespace through unchanged and an omitted one compiles to no predicate, `get_memory` reads any id, the `global` namespace is added to every briefing by design, and over MCP the namespace is a string the model supplies | internal/store/search_test.go:193-196 (a query matching rows in two namespaces returns the one row of the named namespace), internal/semantic/engine_test.go:113-118 (zero rows for the wrong namespace, one for the right one)"
-  audit_log: "memory_history, one row per create, update, archive and restore | internal/store/migrations/0001_initial.sql:26-34, internal/store/memories.go:84-99, :189, :340, :385, :431 | `writeHistory` re-reads the row inside the writing transaction and inserts the action, the actor and a JSON snapshot of the whole memory, with the reason on an archive. The only other statement naming the table is the import's insert; nothing updates a history row. Limits: `memory_id` is `ON DELETE CASCADE`, so the CLI's `purge` deletes the history with the memory and leaves no receipt; a namespace merge or rename changes `namespace` with no history row; link additions and removals are not recorded; an import inserts history rows as the dump supplies them | internal/store/memories_test.go:106-158 (four writes, four rows, each with its action, actor and content)"
-  negative_eval: "archived rows on the briefing and on search, and the namespace boundary on search | internal/store/memories.go:487-489, internal/store/search.go:146-148, :131-133 | committed cases assert that an archived handoff's text is absent from a briefing that holds twenty active memories and the active handoff, that a replaced handoff is absent from the next client's briefing beside five strings that must be present, and that a search matching rows in two namespaces returns only the named one. Two further cases assert an empty result after an archive, with the include-archived read as the control | internal/briefing/briefing_test.go:186-189, internal/server/server_test.go:281-288, internal/store/search_test.go:193-196, :209-218"
+  scope_enforced: "namespace on every read arm: the briefing lists, full-text search, the vector arm and the duplicate check | internal/store/search.go:128-156, internal/store/memories.go:458-503, internal/store/embeddings.go:173-186, internal/briefing/briefing.go:42-98, cmd/llm-memory/hooks.go:201-205 | `filterSQL` adds `m.namespace = ?` to the FTS5 match, the recent list and the vector load; `List` adds it for the briefing; the session-start hook derives the namespace from the client's working directory, not from a model argument. Limits: `recall` passes its namespace through unchanged and an omitted one compiles to no predicate, `get_memory` reads any id, the `global` namespace is added to every briefing by design, and over MCP the namespace is a string the model supplies | internal/store/search_test.go:193-196 (a query matching rows in two namespaces returns the one row of the named namespace), internal/semantic/engine_test.go:113-118 (zero rows for the wrong namespace, one for the right one)"
+  audit_log: "memory_history, one row per create, update, archive and restore, per namespace move and per link change | internal/store/migrations/0001_initial.sql:26-34, internal/store/memories.go:84-99, :189, :340, :385, :431 | `writeHistory` re-reads the row inside the writing transaction and inserts the action, the actor and a JSON snapshot of the whole memory, with the reason on an archive. The only other statement naming the table is the import's insert; nothing updates a history row. A namespace rename or merge writes an update row per moved memory, and a link added or removed writes one on the source memory with the kind and target in the reason (`internal/store/namespaces.go:130-138`, `internal/store/links.go:50-59`). Limits: `memory_id` is `ON DELETE CASCADE`, so the CLI's `purge` deletes the history with the memory and leaves no receipt; an import inserts history rows as the dump supplies them | internal/store/memories_test.go:106-158 (four writes, four rows, each with its action, actor and content), internal/store/namespaces_test.go and internal/store/links_test.go (a rename, a merge and a link change each add one row with its actor and reason)"
+  negative_eval: "archived rows on the briefing and on search, and the namespace boundary on search | internal/store/memories.go:487-489, internal/store/search.go:146-148, :131-133 | committed cases assert that an archived handoff's text is absent from a briefing that holds twenty active memories and the active handoff, that a replaced handoff is absent from the next client's briefing beside five strings that must be present, that a search matching rows in two namespaces returns only the named one, that a scoped search's embedding backfill indexes the active row of its namespace and neither an archived row nor another namespace's, and that six rejected UI requests leave the store with zero memories. Two further cases assert an empty result after an archive, with the include-archived read as the control | internal/briefing/briefing_test.go:186-189, internal/server/server_test.go:281-288, internal/store/search_test.go:193-196, :209-218, internal/semantic/engine_test.go:331-366, internal/ui/ui_test.go:250-326"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -32,8 +32,8 @@ matrix:
   integration: "An MCP server over stdio or Streamable HTTP with eight tools, two resources and two prompts; session-start, pre-compaction and stop hooks for three clients; a CLI and a local web UI"
   background: "None. Embeddings are caught up 64 at a time inside a search; expired rows are filtered at read time and archived only when a person runs gc"
   trust: "None as a state. A row is active or archived, the reason for archiving lives in the history snapshot, and importance is a number the writer picks"
-  strengths: "History written in the same transaction as every mutation, an archive predicate shared by every read arm, hard delete and restore kept off the tool surface, the author taken from the MCP handshake, and embeddings invalidated by a trigger on the text columns"
-  risks: "The web UI accepts writes with no authentication or origin check; an importance-3 row in the global namespace enters every project's briefing; a namespace merge leaves no history; with embeddings on, every memory in the file, archived included, is sent to the configured endpoint"
+  strengths: "History written in the same transaction as every mutation, namespace moves and link edits included; an archive predicate shared by every read arm; hard delete, restore and removal of a supersedes link kept off the tool surface; the author taken from the MCP handshake; and a vector stored only if the row still holds the text it was computed from"
+  risks: "An importance-3 row in the global namespace enters every project's briefing; a rename, merge or link edit re-stamps updated_at and updated_by, which the briefing ranks by and prints as the handoff's author; a purge deletes the history with the row; with embeddings on, a recall with no namespace sends every namespace's active memories and reindex sends archived ones"
 ---
 
 ## 1. Executive Summary
@@ -45,8 +45,10 @@ latest handoff, essential items, open tasks, preferences, recent decisions and
 facts. What is notable is how little the model is allowed to destroy. Its
 tools archive and patch, every mutation leaves a snapshot in a history table,
 and restore and hard delete exist only at the CLI and the web UI. What is weak
-is the edge of that boundary: the web UI has no authentication, and a
-namespace merge moves rows without a history entry.
+is what a single write reaches: one importance-3 row in the shared `global`
+namespace opens every project's briefing, and the history that records a
+namespace move or a link edit also re-stamps the recency the briefing ranks
+by.
 
 It carries `scope_enforced`, `audit_log` and `negative_eval`.
 
@@ -63,13 +65,17 @@ rider.
 CLI's `purge` verb and nowhere else (`internal/store/maintenance.go:40-52`,
 `cmd/llm-memory/admin.go:438`). `Store.Restore` is called from the CLI and the
 web UI. One row type is deletable by the model: `update_memory` takes
-`remove_links`, which deletes a link row
-(`internal/server/tools.go:393-397`).
+`remove_links`, which deletes a `relates_to` or `depends_on` link and writes a
+history row. A `supersedes` link is refused at the store, so no surface can
+remove one (`internal/store/links.go:76-100`).
 
 **Every mutation writes history in its own transaction.** Create, update,
 archive and restore each end in `writeHistory`, which re-reads the row inside
 the transaction and stores the action, the actor and a JSON snapshot of the
-whole memory (`internal/store/memories.go:84-99`).
+whole memory (`internal/store/memories.go:84-99`). A namespace rename or merge
+writes an update row for every memory it moves, and a link change writes one
+on the source memory (`internal/store/namespaces.go:130-138`,
+`internal/store/links.go:50-59`).
 
 **One archive predicate serves every read.** Full-text search, the recent
 list, the vector arm and the duplicate check all take their filter from
@@ -128,7 +134,7 @@ Each client launches its own process over stdio, and all of them open the same
 file, by default `~/.llm-memory/memory.db`, created with a 0700 directory and
 a 0600 file (`internal/store/db.go:45`, `:66`). `serve --listen` serves the
 same tools over Streamable HTTP, and `--read-only` registers the four read
-tools only (`cmd/llm-memory/main.go:246-307`, `server.go:209`).
+tools only (`cmd/llm-memory/main.go:246-310`, `server.go:209`).
 
 The connection string sets WAL, a five-second busy timeout, foreign keys and
 `_txlock=immediate`, and each process holds one connection
@@ -137,14 +143,15 @@ transaction each, with the version in `PRAGMA user_version`; a file written
 by a newer binary is refused (`db.go:154-186`).
 
 The SQLite driver is `modernc.org/sqlite`, pure Go, so the binary has no C
-dependency. The memory data model is in this tree; the MCP SDK and the driver
-were not opened.
+dependency. The memory data model is in this tree. Of the MCP SDK, only the
+Streamable HTTP handler's request checks at the version `go.mod` names,
+v1.8.0, were read; the driver was not opened.
 
 ### Deployment and ergonomics
 
 `setup` prints or writes the MCP entry for six clients, and `setup --hooks`
 installs lifecycle hooks for three of them
-(`cmd/llm-memory/admin.go:1675-1840`, `hooks.go:29-32`). The README states
+(`cmd/llm-memory/admin.go:1681-1846`, `hooks.go:29-32`). The README states
 that an instruction block must also be pasted into each client, because
 without it the model does not call the memory reliably
 (`examples/instructions_client.md`).
@@ -162,14 +169,15 @@ without it the model does not call the memory reliably
 | Archive, restore, the single-handoff rule | `memories.go:351-435` |
 | Shared read filter | `internal/store/search.go:128-156` |
 | Full-text search and duplicate detection | `search.go:100-124`, `:247-290` |
-| Vector load, missing-embedding scan | `internal/store/embeddings.go:47-78`, `:135-167` |
-| Hybrid search and fusion | `internal/semantic/engine.go:127-164`, `:214-256` |
+| Missing-embedding scan, guarded vector store, vector load | `internal/store/embeddings.go:50-107`, `:121-148`, `:173-205` |
+| Hybrid search and fusion | `internal/semantic/engine.go:131-177`, `:222-264` |
 | Briefing assembly and budget | `internal/briefing/briefing.go:42-98`, `:111-217` |
 | Hard delete | `internal/store/maintenance.go:40-52` |
-| Namespace rename, merge, archive | `internal/store/namespaces.go:132-252` |
+| Namespace rename, merge, archive | `internal/store/namespaces.go:130-287` |
+| Links and their history | `internal/store/links.go:21-100` |
 | Export and import | `internal/store/transfer.go:53-268` |
 | Tool registration and author | `internal/server/server.go:131-269` |
-| Web UI routes | `internal/ui/ui.go:33-397` |
+| Web UI routes and request checks | `internal/ui/ui.go:51-509` |
 | Hook entry point | `cmd/llm-memory/hooks.go:143-298` |
 
 ## 5. Memory Data Model
@@ -198,7 +206,9 @@ key on an archive (`memories.go:76-81`).
 `memory_links` holds directed `supersedes`, `relates_to` and `depends_on`
 edges with a composite primary key (`0004_links.sql:2-9`). They are returned
 by `get_memory`, the CLI's `show` and the UI, each with the target's archived
-flag. No retrieval path follows them.
+flag. No retrieval path follows them. Adding or removing one writes an update
+row on the source memory whose reason names the kind and the target; the
+snapshot itself carries no links.
 
 `memory_embeddings` is keyed on memory and model, one float32 blob each
 (`0002_embeddings.sql:3-10`).
@@ -252,7 +262,7 @@ recent rows.
 With an embeddings endpoint configured, `Engine.Search` loads every stored
 vector that passes the same filter, ranks by cosine above a 0.3 floor in Go,
 and fuses the two lists by reciprocal rank with k = 60
-(`engine.go:127-164`, `:214-256`). If the endpoint fails, the full-text
+(`engine.go:131-177`, `:222-264`). If the endpoint fails, the full-text
 result is returned and a warning is logged.
 
 ### Scope
@@ -350,20 +360,32 @@ not put a person in front of a write.
 
 ## 9. Reliability, Safety, and Trust
 
-### The web UI accepts writes from anything that can reach its port
+### The web UI keeps browsers out, not other clients
 
 `llm-memory ui` listens on `127.0.0.1:8765` by default and serves 19 routes;
-twelve mutate (`ui.go:33-397`). The handler checks no token and no `Origin`
-or `Host` header, and `decodeJSON` reads the body without looking at
-`Content-Type` (`ui.go:408-415`). A cross-origin `POST` with a plain-text
-body needs no preflight, so a page open in the same browser can address
-`POST /api/memories` and the archive, restore, supersede, merge and gc
-routes. Whether the request is delivered depends on the browser's
-local-network policy. The `PUT` routes are preflighted.
+twelve mutate (`ui.go:51-428`). Every request passes one middleware
+(`ui.go:431-458`): a `Host` that is not loopback is refused, an `Origin` that
+differs from `Host` is refused, a `Sec-Fetch-Site` other than `same-origin`
+or `none` is refused on the API, and a mutating request must carry an
+`X-CSRF-Token` equal to 32 random bytes generated at start-up and embedded in
+the page. `decodeJSON` refuses any `Content-Type` but `application/json`
+(`ui.go:497-509`). A page in another origin cannot read the token, and a
+rebinding name fails the `Host` check.
+
+The token is a browser defence and nothing else. Any process that can reach
+the port can `GET /` and read it. Binding `--addr` to a non-loopback address
+turns the `Host` check off and logs a warning
+(`cmd/llm-memory/admin.go:1875-1878`); a committed case then accepts a
+matching non-loopback `Host` and `Origin` with the token
+(`internal/ui/ui_test.go:327-337`), which is also what a rebinding page
+presents.
 
 The UI's create route accepts any kind and any importance and records the
-author as `ui` (`ui.go:204-250`). `serve --listen` likewise adds no
-authentication in this tree (`server.go:103-119`).
+author as `ui` (`ui.go:236-282`). `serve --listen` adds no authentication of
+its own and warns on a non-loopback bind (`main.go:289-291`). The SDK it
+uses refuses a non-loopback `Host` on a loopback listener and a `POST` whose
+`Content-Type` is not `application/json`; no origin check is configured
+(`server.go:103-119`; go-sdk v1.8.0 `mcp/streamable.go:317-333`, `:388`).
 
 ### An importance-3 row in `global` reaches every project
 
@@ -375,15 +397,24 @@ client or from the UI, is in the opening context of every later session in
 every project until someone archives it. With hooks installed it arrives
 without the model asking.
 
+### Recording a move re-stamps the recency the briefing ranks by
+
+A rename sets `updated_at` and `updated_by` on every memory in the namespace,
+a merge does the same to every memory it moves, and a new or removed link does
+it to the source memory (`namespaces.go:177-181`, `:224-226`,
+`links.go:50-55`). The briefing lists a namespace's memories by
+`updated_at` descending and takes the ten most recent decisions and facts from
+that order (`memories.go:497`, `briefing.go:191-197`). SQLite evaluates `now`
+once per statement, so after a rename every row carries the same instant and
+the order falls back to id: the ten newest-created, not the ten
+newest-edited. After a merge, the moved rows outrank every row the
+destination held. The handoff's heading and the header's last activity print
+`updated_by`, so a merged handoff is attributed to `ui` or the CLI actor
+(`briefing.go:125`, `:334`). A committed test asserts the new `updated_by`
+on a renamed row; none renders a briefing after a move.
+
 ### What the history does not record
 
-- **A namespace merge.** `MergeNamespace` runs
-  `UPDATE memories SET namespace = ?` over the source namespace and writes no
-  history row; the last snapshot of each moved memory still names the old
-  namespace (`namespaces.go:194`). A rename cascades the same way.
-- **Links.** `AddLink` and `RemoveLink` write no history, and the model can
-  remove a `supersedes` link. The archive reason in the superseded row's
-  snapshot still names its replacement.
 - **A purge.** History goes with the row and nothing records that it
   happened. [Membrane](../membrane/) has the same cascade under its revision
   table.
@@ -397,12 +428,12 @@ Every write path is a single transaction that takes the write lock at
 `BEGIN` and re-reads the row inside it, so a read-modify-write cannot
 interleave (`db.go:88-90`, `memories.go:311-343`). A writer that waits longer
 than five seconds fails, and the tool returns an internal error asking the
-model to retry once (`tools.go:580-582`).
+model to retry once (`tools.go:593-595`).
 
 Two things sit outside a transaction. The duplicate search in `remember`
 runs before the insert. And `update_memory` applies the field patch, then
 each link change, as separate transactions: a link that fails leaves the
-patch committed and the call reporting an error (`tools.go:373-397`).
+patch committed and the call reporting an error (`tools.go:379-412`).
 
 No committed test holds two stores open on one file at once; the two-client
 test closes the first before opening the second
@@ -413,24 +444,29 @@ test closes the first before opening the second
 With an endpoint configured, the request body is a model name and a list of
 texts (`internal/semantic/client.go:101-115`). The texts are:
 
-- **Every memory in the file**, title, content and tags, 64 per search until
-  none is missing. The scan has no namespace filter and orders active rows
-  before archived ones, so archived memories are sent too
-  (`embeddings.go:47-53`, `engine.go:144-150`).
+- **Memories missing a vector, in the search's scope**, title, content and
+  tags, 64 per search. The backfill takes the search's namespace and archive
+  filter (`engine.go:148-157`, `embeddings.go:70-107`), so a scoped `recall`
+  sends only its namespace's active rows, and one with `include_archived`
+  sends that namespace's archived rows too. A `recall` with no namespace
+  sends the active rows of every namespace.
+- **Every memory in the file, archived included**, on `llm-memory reindex`
+  (`engine.go:80-82`). `README.md:293-307` states both scopes.
 - **Each search query**, including a briefing's focus string.
-- **The text of each new memory.** `remember` calls the engine's
-  `FindSimilar` when semantic search is on (`tools.go:131-137`,
-  `engine.go:273-285`). `README.md:296` says duplicate detection stays
-  full-text and that writing never depends on the API; the second half holds,
-  since a failure is logged and ignored.
+- **The text of each new memory**, when the target namespace already holds a
+  vector. `remember` calls the engine's `FindSimilar`, which embeds the text
+  only after finding vectors in that namespace and ignores an endpoint
+  failure (`tools.go:131-137`, `engine.go:281-321`).
 
 A trigger deletes a memory's vectors when its title, content or tags change
 (`0002_embeddings.sql:13-15`), and archiving leaves them in place behind the
-read filter. One window remains: `Index` reads the text, calls the endpoint,
-then stores the vector if the row still exists (`engine.go:80-110`,
-`embeddings.go:101-104`). An edit committed by another process during the
-call fires the trigger before the vector exists, and the vector of the old
-text is then stored and kept until the next edit or a `reindex --all`.
+read filter. A vector is stored only if the row still holds the title,
+content and tags it was computed from, checked inside the storing
+transaction (`embeddings.go:121-148`), so an edit committed by another
+process during the endpoint call leaves the row without a vector until the
+next backfill. Committed cases cover the store-level check and the
+interleaving through `Index` (`internal/store/embeddings_test.go:169`,
+`internal/semantic/engine_test.go:425`).
 
 ### Two smaller reads
 
@@ -445,7 +481,7 @@ so an expired row is counted as active while every listing omits it
 
 ## 10. Tests, Evals, and Benchmarks
 
-114 test functions in 15 files, 5,102 lines, with 13 golden files.
+120 test functions in 16 files, 5,522 lines, with 13 golden files.
 `.github/workflows/ci.yml` runs `go vet`, the suite and a lint job on push and
 pull request; the race detector is on for Linux and macOS. I ran none of
 them.
@@ -465,10 +501,21 @@ requires exactly the row from the named one
 Two further cases assert an empty result after an archive, each paired with
 an include-archived read that must return the row
 (`search_test.go:209-218`, `internal/semantic/engine_test.go:126-134`).
+`TestSearchCatchUpScoped` runs a scoped search over three namespaces' rows
+and asserts that only the active row of the searched namespace was embedded,
+then that `include_archived` adds the archived one and still not the other
+namespace's (`engine_test.go:331-366`). `TestUISecurityGuards` sends six
+refused requests, cross-origin, bad token, wrong content type, `Origin: null`,
+cross-site and a rebinding `Host`, and asserts the store still holds zero
+memories (`internal/ui/ui_test.go:250-326`).
 
-Other cases: one history row per write with actor and content
-(`internal/store/memories_test.go:106-158`); the single-handoff rule through
-create, restore, a kind change and a namespace move (`:342-398`); no orphan
+History cases: one row per write with actor and content
+(`internal/store/memories_test.go:106-158`), and one per rename, merge and
+link change with its reason (`namespaces_test.go`, `links_test.go`). A vector
+is refused when the row's text changed during the endpoint call
+(`internal/store/embeddings_test.go:169`, `engine_test.go:425`). Other cases:
+the single-handoff rule through create, restore, a kind change and a
+namespace move (`memories_test.go:342-398`); no orphan
 history or FTS rows after a purge (`internal/store/transfer_test.go:207-218`);
 the tool list and the read-only tool list
 (`server_test.go:121-170`, `:523-552`); and `remember` refusing the kind
@@ -478,9 +525,8 @@ The golden files pin text: six briefings at different budgets and the output
 of seven CLI invocations, with dates masked. `loaded_demo.golden` shows the full
 section order.
 
-Not covered: two processes writing at once, the history of a merged or
-renamed namespace, any header check on the UI, the embedding-store window, and
-an expired row under `include_archived`.
+Not covered: two processes writing at once, a briefing rendered after a
+rename, merge or link change, and an expired row under `include_archived`.
 
 No paper, DOI or benchmark is cited in the tree, and no retrieval quality
 measure is committed.
@@ -505,8 +551,13 @@ memory and cannot bring one back or erase one.
 server-side override, is harder to forge than a tool argument and costs
 nothing.
 
-**Invalidate embeddings with a trigger on the text columns.** The store does
-not depend on every writer remembering.
+**Invalidate embeddings with a trigger on the text columns, and store a
+vector only against the text it was computed from.** The trigger covers every
+writer; the guarded insert covers the edit that lands while the endpoint is
+answering.
+
+**Refuse to remove a provenance link in the store, not in the UI.** Every
+surface then inherits the refusal.
 
 **Make the session briefing a deterministic render with a budget and explicit
 omission lines.** Each cut names how many items were left out and the query
@@ -514,16 +565,12 @@ that reaches them.
 
 ### Avoid
 
-**Do not serve a write API on localhost without an origin check or a token.**
-
 **Do not let a writer-chosen number decide what enters every project's
 opening context.** Importance 3 in a shared namespace is a broadcast.
 
-**Do not move rows between scopes outside the mutation log.**
-
-**Do not scan the whole store for an embeddings backfill when the search was
-scoped.** Archived rows and other projects' rows leave the machine on a query
-that named neither.
+**Do not let the audit stamp double as the ranking key.** Recording who moved
+a row is right; doing it by rewriting the column the briefing sorts by makes
+a bookkeeping operation reorder what the next session reads first.
 
 **Do not keep one handoff slot without a read marker** where two clients can
 be open at once.
@@ -541,16 +588,12 @@ statement to stay rejected, is not served by it.
 
 ## 12. Open Questions
 
-- **Is the UI meant to be reachable only by its own page?** Nothing in the
-  handler says so.
-- **Should a merge or a rename write history?** The archive of displaced
-  handoffs inside the same merge does.
-- **Is the semantic duplicate check in `remember` intended?** The README
-  describes the opposite.
-- **Should the embedding backfill follow the search's namespace and archive
-  filter?**
+- **Should a namespace move or a link edit change a memory's place in the
+  briefing?** The history row is the record of the move; `updated_at` is
+  also the recency key.
 - **What should happen to an unread handoff when a second client writes
   one?**
+- **Should a purge leave a receipt?** Every other removal does.
 
 ## Appendix: File Index
 
@@ -560,30 +603,35 @@ statement to stay rejected, is not served by it.
 | `internal/store/memories.go` | Create, update, archive, restore, list, history writer |
 | `internal/store/search.go` | FTS5 search, shared filter, duplicate detection |
 | `internal/store/embeddings.go` | Vector storage, missing scan, filtered vector load |
-| `internal/store/namespaces.go` | Namespace list, rename, merge, archive |
+| `internal/store/namespaces.go` | Namespace list, rename, merge, archive, move history |
+| `internal/store/links.go` | Links, link history, the supersedes refusal |
 | `internal/store/maintenance.go` | Purge, stats, integrity check, backup |
 | `internal/store/transfer.go` | JSON export and import |
 | `internal/store/secrets.go` | Secret patterns |
 | `internal/semantic/engine.go`, `client.go` | Hybrid search, fusion, embeddings client |
 | `internal/briefing/briefing.go` | Briefing assembly and budgeted writer |
 | `internal/server/server.go`, `tools.go`, `resources_prompts.go` | MCP surface |
-| `internal/ui/ui.go` | Web UI routes |
+| `internal/ui/ui.go` | Web UI routes, CSRF token, request checks |
 | `cmd/llm-memory/main.go`, `admin.go`, `hooks.go` | Binary, CLI verbs, hooks |
 | `internal/store/memories_test.go`, `search_test.go` | History, handoff slot, filters |
 | `internal/briefing/briefing_test.go`, `internal/server/server_test.go` | Briefing and end-to-end tool cases |
+| `internal/store/embeddings_test.go`, `internal/semantic/engine_test.go`, `internal/ui/ui_test.go` | Backfill scope, stale-vector guard, UI refusals |
 
 ### Recorded searches
 
 Run with `/usr/bin/git` in a full clone at the pinned commit.
 
-- `git ls-files '*.go' | grep -v _test.go | xargs cat | wc -l` — 8,485 lines in 22 files; `git ls-files '*_test.go' | xargs cat | wc -l` — 5,102 in 15.
-- `git grep -c -E '^func Test' -- '*_test.go'`, summed — 114.
+- `git ls-files '*.go' | grep -v _test.go | xargs cat | wc -l` — 8,730 lines in 22 files; `git ls-files '*_test.go' | xargs cat | wc -l` — 5,522 in 16.
+- `git grep -c -E '^func Test' -- '*_test.go'`, summed — 120.
 - `git grep -n -E 'DELETE FROM|DROP TABLE' -- '*.go' '*.sql' ':!*_test.go'` — five: the embeddings reset, the link removal, the purge, the embeddings trigger and the merged namespace's own row. None names `memory_history`.
-- `git grep -n -E 'memory_history' -- '*.go' '*.sql' ':!*_test.go'` — the table, its index, one read, two comments and two inserts (`memories.go:94`, `transfer.go:262`).
-- `git grep -n -E 'UPDATE memories|UPDATE namespaces SET name' -- '*.go' ':!*_test.go'` — the patch, the archive, the restore, the rename and the merge at `namespaces.go:194`.
+- `git grep -n -E 'memory_history' -- '*.go' '*.sql' ':!*_test.go'` — the table, its index, one read, three comments and two inserts (`memories.go:94`, `transfer.go:262`).
+- `git grep -n -i -E 'read_at|acknowledg|seen_at|consumed' -- '*.go' '*.sql' ':!*_test.go'` — nothing: no column or field records that a handoff was read.
+- `git grep -n -E 'UPDATE memories|UPDATE namespaces SET name' -- '*.go' ':!*_test.go'` — the patch, the archive, the restore, the link touch at `links.go:52`, the rename at `namespaces.go:174` and its re-stamp at `:179`, and the merge at `:225`. Every one is followed in its transaction by `writeHistory` or `recordNamespaceHistory`.
 - `git grep -n -E 'ArchiveExpired|\.Purge\(|\.Restore\(|MergeNamespace\(|RenameNamespace\(' -- ':!*_test.go'` — callers in `cmd/llm-memory/admin.go` and `internal/ui/ui.go` only; `Purge` at `admin.go:438` only.
 - `git grep -n -E 'restore|purge' -- internal/server` — message strings and a schema description; no tool.
-- `git grep -n -i -E 'Origin|Sec-Fetch|csrf|r\.Host|Authorization|token' -- internal/ui internal/server/server.go` — one line of instruction prose in `server.go`; nothing in `internal/ui`. Control: `git grep -n 'Authorization' -- internal/semantic` matches `client.go:114`.
+- `git grep -n -i -E 'Authorization|Bearer|BasicAuth' -- internal/ui internal/server cmd` — nothing: the UI's checks are the CSRF token and header tests in `ui.go:431-486`, and neither HTTP surface authenticates a user. Control: `git grep -n 'Authorization' -- internal/semantic` matches `client.go:114`.
+- `git grep -n -E 'updated_at DESC' -- internal/store` — the index at `0001_initial.sql:24`, `List` at `memories.go:497`, the recent search at `search.go:207` and the merge's handoff pick at `namespaces.go:237`.
+- `git grep -n -E 'MergeNamespace|RenameNamespace|AddLink|RemoveLink' -- internal/briefing` — nothing: no briefing case follows a move or a link change.
 - `git grep -n -i -E 'secure_delete|VACUUM|wal_checkpoint' -- '*.go' '*.sql'` — `VACUUM INTO` in the backup only.
 - `git grep -n -E 'WaitGroup|go func|t\.Parallel|errgroup' -- '*_test.go'` — one goroutine driving `serve` through pipes; no concurrent-writer test.
 - `git grep -n -i -E 'valid_from|valid_to|valid_at|valid_until|event_time|observed_at|as_of' -- .` — nothing.
@@ -592,5 +640,7 @@ Run with `/usr/bin/git` in a full clone at the pinned commit.
 - `git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|contributing|third.party)'` — `LICENSE` only.
 
 ## History
+
+**2026-11-17** — [`38d157868f67e01f32cca3fc082606b2da37bbfb`](https://github.com/Morditux/llm-memory/commit/38d157868f67e01f32cca3fc082606b2da37bbfb) — v1.3.3, four commits closing upstream issues #1 to #4, each filed against the previous pin. The web UI gained a start-up CSRF token, `Host`, `Origin`, `Sec-Fetch-Site` and `Content-Type` checks; a namespace rename, a merge and a link change write history, and a `supersedes` link cannot be removed; the embedding backfill follows the search's scope; a vector is stored only against unchanged text. Four criticisms were removed. The history fix re-stamps `updated_at` and `updated_by`, which the briefing ranks by and prints ([§9](#9-reliability-safety-and-trust)). The recorded `memory_history` search counted two comments where there are three at both pins. Marks unchanged. Screened: no auto-run surface, `go.mod` and `go.sum` inside the cooldown; nothing run. The go-sdk v1.8.0 HTTP handler's request checks were read.
 
 **2026-11-17** — [`93974b5e9caaae71b9b61c1c1eec3cc4ed73abed`](https://github.com/Morditux/llm-memory/commit/93974b5e9caaae71b9b61c1c1eec3cc4ed73abed) — first reading, of the whole tree. Screened before reading: no auto-run surface; a `Makefile`, and `go.mod` and `go.sum` changed inside the seven-day cooldown; nothing was installed, built or run. No test was executed and no finding was re-derived outside the tree; the MCP SDK and the SQLite driver were not opened. Three marks: `scope_enforced`, `audit_log` and `negative_eval`. `trust_state` is withheld because active and archived are one bit shared by every reason for removal, `tombstone` because archiving is keyed on the row and the duplicate check reads active rows only, `bitemporal` because every timestamp is record time, and `human_review` because no write waits for anyone.
