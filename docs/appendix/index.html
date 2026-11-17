@@ -18295,6 +18295,89 @@ expressions about valves and messages, and the fourth is an unused
 lines of agent-written tests are not in the repository, and its
 SmolTalkBench win rate of 26% is the project's own figure; neither was
 checked here.</li>
+<li><strong><code>ewiger/hql</code> was examined and has no report: it
+is a typed query language whose "knowledge vault" is a directory of
+Markdown a person writes, read into an in-process snapshot on every
+invocation; no verb writes a card, and the tree holds no agent, model or
+tool surface.</strong> MIT (<code>LICENSE</code>, HQL Contributors;
+<code>Cargo.toml</code> agrees), 75,808 lines of Rust under
+<code>src/</code> and 3,722 lines of HQL under <code>lib/</code>, 917
+<code>#[test]</code> functions across <code>src/</code> and
+<code>tests/</code>, 423 commits by one author between 15 September and
+16 November 2026, read at <a
+href="https://github.com/ewiger/hql/commit/8137545fbe4dedd6927329d1eb8c8e77941966e9"><code class="commit-id" title="8137545fbe4dedd6927329d1eb8c8e77941966e9">8137545f…</code></a>.
+A vault is the nearest directory holding <code>.hmd/</code>
+(<code>src/vault.rs:112-120</code>); <code>assemble</code> reads every
+Markdown file under it, resolves <code>[[links]]</code> through the
+<code>hypermarkdown</code> crate, and builds <code>Card</code> values
+and link and relation edges in memory
+(<code>src/vault.rs:138-226</code>,
+<code>src/knowledge.rs:14-114</code>). Nothing is persisted from that
+pass. The two search arms rank that snapshot: <code>lexical</code> is a
+256-dimension hashed bag of words compared by cosine
+(<code>src/extensions/lexical.rs:21-26</code>, <code>:108</code>), and
+<code>semantic</code> opens an SQLite index with
+<code>SQLITE_OPEN_READ_ONLY</code>
+(<code>src/extensions/semantic.rs:348</code>) that a separate tool,
+<code>hmd-semantics build</code>, produced; the binary carries no
+embedding model, so a query whose vector is not already in the index's
+<code>query</code> table is refused with the command that would add it
+(<code>src/extensions/semantic.rs:455-475</code>). The write verbs are
+data-integration ones. <code>insert</code>, <code>update … set</code>
+and <code>delete</code> each compile to one statement against a
+configured SQLite, PostgreSQL or Spark table
+(<code>src/mutation.rs:136-270</code>), transactions wrap those tables
+(<code>src/transaction.rs:35-48</code>), and
+<code>target</code>/<code>sink</code> write files, channels and queues
+(<code>src/io.rs:2019-2023</code>, <code>:2072-2078</code>); their
+invoker is whoever wrote the <code>.hql</code> program, the vault is not
+an endpoint kind, and all of them are refused while a document is
+rendered (<code>src/mutation.rs:146-151</code>,
+<code>src/extensions/io.rs:2208-2212</code>). The README's "AI-native"
+lines (<code>README.md:40</code>, <code>:49</code>, <code>:615</code>)
+describe what a program could express, and a warning at
+<code>README.md:617-620</code> marks agents, prompts and runs as values
+as <em>"Design only"</em>, absent from the release and specified in the
+project's book; <code>src/context.rs</code> is the execution context of
+an invocation — project, vault and configuration discovery — and no code
+under <code>src/</code> or <code>lib/</code> calls a model, registers a
+tool or serves a protocol. That is the document-index case. The part
+that transfers is how retrieval refuses to be silently wrong. Every
+<code>Hit</code> carries a <code>Retrieval</code> naming the query,
+index, model, model revision, metric and whether the search was
+approximate (<code>src/search.rs:14-44</code>); a card whose text digest
+differs from the one stored at index time still ranks and raises a
+<code>StaleIndex</code> warning instead of vanishing, a card absent from
+the index is left out and counted in a warning instead of scored zero
+(<code>src/extensions/semantic.rs:121-157</code>), and <code>rank</code>
+drops zero-score values (<code>src/search.rs:82-105</code>), with a
+committed test for the stale case (<code>tests/semantics.rs:209</code>).
+A graph built by retrieving and then expanding labels each node
+<code>Member</code>, <code>Retrieved(score)</code> or
+<code>Expanded { seed, depth }</code> (<code>src/graph.rs:41-63</code>),
+so an expanded neighbour is never presented as a match. Searches run at
+this pin with <code>git grep</code>:
+<code>-nEi "mcp|model context protocol" -- src lib tests Cargo.toml</code>
+(nothing);
+<code>-nEi "remember|forget|recall|tombstone|supersed|retract" -- src lib</code>
+(five hits: a REPL <code>:reset</code> help line, a Kafka null-value
+comment, <code>std::mem::forget</code>, a type-lattice reset comment and
+a README table row); <code>-nEiw "agent|agents" -- src lib</code> (six
+hits, all <code>ureq::Agent</code>);
+<code>-nEi "openai|anthropic|ollama|llm|chat_completion|prompt" -- src lib Cargo.toml</code>
+(two hits, a config fixture in a <code>semantic.rs</code> test);
+<code>-nE "target\(.*\.(hmd|md)" -- examples doc/public lib tests</code>
+(nothing);
+<code>-nEi "arxiv|bibtex|@article|@misc|doi\.org|CITATION"</code> (no
+paper; the hits are prose about doc-string citations); control:
+<code>-nE "OpenFlags"</code> returns
+<code>src/extensions/semantic.rs:25</code> and <code>:348</code>.
+Screened before reading: no auto-run surface; two <code>build.rs</code>
+files run at build time, <code>Cargo.toml</code>,
+<code>Cargo.lock</code> and <code>tests/packages/hello/Cargo.toml</code>
+changed inside the seven-day cooldown, and <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> were treated as data; nothing was installed,
+built or run.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
