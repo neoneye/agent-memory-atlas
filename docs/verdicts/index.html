@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 810 reports.</strong></p>
+<p><strong>This page covers all 811 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33525,6 +33525,35 @@ refused when it was made from a stale read.</li>
 <li>Do not copy when: agents under one tenant must be kept apart, the
 audit trail must outlive the tenant's credential, or an agent will
 follow tool descriptions without the handler having been read.</li>
+</ul>
+<h3 id="cairn"><a href="../systems/cairn/"><code>cairn</code></a></h3>
+<ul>
+<li>Best idea: memory as the coordination medium. Every agent session is
+a fresh headless CLI, and the only thing it inherits is a per-project
+graph in which facts are never edited, each fact is tied to the intent
+that produced it, and claims are heartbeat leases the server
+expires.</li>
+<li>Biggest risk: correction and exposure. No route withdraws a fact or
+a hint; reopen deletes the rejected completion and keeps the facts it
+cited in the valid list; a timeout summary is stored like a finished
+result; and fact text derived from the target reaches every later
+session, which runs with approvals bypassed, through an API with no
+authentication.</li>
+<li>Most reusable component: the intent lifecycle in
+<code>cairn/src/cairn/server/routers/intents.py</code> with lease expiry
+in <code>cairn/src/cairn/server/services.py</code> — declare, claim by
+heartbeat, conclude into exactly one fact, refused while another worker
+holds the intent.</li>
+<li>Maturity impression: 6,430 lines of Python and 96 pytest functions
+on a mock driver that no workflow runs; 70 commits from 19 April to 7
+September 2026 under two author names. One mark. AGPL-3.0, narrowed in
+the README to personal and educational use.</li>
+<li>Study when: several stateless agent sessions must share progress on
+one bounded problem, and a person wants to watch the graph and steer
+with hints.</li>
+<li>Do not copy when: a wrong finding must be retractable, facts must
+outlive the problem, the graph will outgrow one reading, or anyone
+untrusted can reach the API.</li>
 </ul>
         </article>
       </div>

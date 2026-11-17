@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 810 reports.**
+**This page covers all 811 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7426,3 +7426,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 12,564 lines of Go and 176 test functions that need no services and that no workflow runs; CI is a Compose smoke test. The broker arrived whole in one commit on 9 November 2026 and is declared frozen at 0.6.1-oss.1, with unnamed features omitted from this edition. MIT.
 - Study when: deletion must reach a primary store and two derived indexes and stay deleted after a restore, or a correction must be refused when it was made from a stale read.
 - Do not copy when: agents under one tenant must be kept apart, the audit trail must outlive the tenant's credential, or an agent will follow tool descriptions without the handler having been read.
+
+### [`cairn`](../systems/cairn/)
+
+- Best idea: memory as the coordination medium. Every agent session is a fresh headless CLI, and the only thing it inherits is a per-project graph in which facts are never edited, each fact is tied to the intent that produced it, and claims are heartbeat leases the server expires.
+- Biggest risk: correction and exposure. No route withdraws a fact or a hint; reopen deletes the rejected completion and keeps the facts it cited in the valid list; a timeout summary is stored like a finished result; and fact text derived from the target reaches every later session, which runs with approvals bypassed, through an API with no authentication.
+- Most reusable component: the intent lifecycle in `cairn/src/cairn/server/routers/intents.py` with lease expiry in `cairn/src/cairn/server/services.py` — declare, claim by heartbeat, conclude into exactly one fact, refused while another worker holds the intent.
+- Maturity impression: 6,430 lines of Python and 96 pytest functions on a mock driver that no workflow runs; 70 commits from 19 April to 7 September 2026 under two author names. One mark. AGPL-3.0, narrowed in the README to personal and educational use.
+- Study when: several stateless agent sessions must share progress on one bounded problem, and a person wants to watch the graph and steer with hints.
+- Do not copy when: a wrong finding must be retractable, facts must outlive the problem, the graph will outgrow one reading, or anyone untrusted can reach the API.
