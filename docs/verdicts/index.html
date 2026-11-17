@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 814 reports.</strong></p>
+<p><strong>This page covers all 815 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33648,6 +33648,38 @@ sources.</li>
 <li>Do not copy when: users must be able to make the system forget, more
 than one person shares a store, or facts must be correctable without a
 model call per message.</li>
+</ul>
+<h3 id="vaultite"><a
+href="../systems/vaultite/"><code>vaultite</code></a></h3>
+<ul>
+<li>Best idea: an agent's write cannot silently lose the user's text.
+<code>write_file</code> refuses text ending in a paged read's note,
+takes the text the agent read as <code>base</code> and merges three ways
+or returns 409 on a same-line clash; <code>edit_file</code> replaces
+exact text found once; and File history keeps the file before and after
+every agent op as versions of their own.</li>
+<li>Biggest risk: the provenance the user is shown is advisory.
+<code>provenance.set</code> refuses an agent the <code>reviewed</code>
+or <code>human</code> label while <code>write_file</code> stores
+whatever <code>origin</code> the agent types — a committed test asserts
+an MCP client's <code>origin: human</code> stays — and no search, link
+or context read filters on the label. A deleted note's authorship
+sidecar, holding the agent's lines verbatim, outlives the trash.</li>
+<li>Most reusable component: <code>core/contracts/save.ts</code> with
+the write and edit ops in <code>core/coreops/files.ts</code>, and the
+agent-op snapshot hook at the end of
+<code>plugins/core/history/plugin.ts</code>.</li>
+<li>Maturity impression: 217,984 lines of TypeScript, 138 vault test
+files with 4,411 checks run in CI on three operating systems, 2,289
+commits between 8 October and 16 November 2026 by one author; the pinned
+commit removes the Review plugin. One mark. Apache-2.0, with a CPAL
+component whose required attribution display was not found.</li>
+<li>Study when: an agent and a person edit the same Markdown files and
+the agent must never overwrite or truncate what the person wrote
+meanwhile.</li>
+<li>Do not copy when: agent-written content must wait for a person's
+approval, deletion must be complete, or retrieval has to find the right
+note without the right words.</li>
 </ul>
         </article>
       </div>

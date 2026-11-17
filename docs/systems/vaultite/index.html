@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Markdown knowledge-base
+app whose vault agents read and write through one operation set served
+as a CLI, MCP tools and HTTP.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Vaultite — Agent Memory Atlas">
+    <meta property="og:description" content="A local Markdown
+knowledge-base app whose vault agents read and write through one
+operation set served as a CLI, MCP tools and HTTP.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Vaultite — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Markdown
+knowledge-base app whose vault agents read and write through one
+operation set served as a CLI, MCP tools and HTTP.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Vaultite — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Vaultite",
+      "description": "A local Markdown knowledge-base app whose vault agents read and write through one operation set served as a CLI, MCP tools and HTTP.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The label op refuses an agent the reviewed
+label; the write tool lets it type one</p>
+          <h1>Vaultite</h1>
+          <p class="document-deck">A local Markdown knowledge-base app
+whose vault agents read and write through one operation set served as a
+CLI, MCP tools and HTTP.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Vaultite/vaultite">
+              <span>Source</span>
+              <strong>Vaultite/vaultite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Vaultite/vaultite/commit/55768189f71c42b878e75a599dd6427367cdb077" title="55768189f71c42b878e75a599dd6427367cdb077">
+              <span>Analyzed revision</span>
+              <code>55768189…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Vaultite--vaultite" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Vaultite--vaultite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE, agreeing with package.json, with a NOTICE naming each
+vendored component; the bundled citeproc-js is taken under CPAL 1.0,
+whose Exhibit B asks for an attribution display in a larger
+work</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>217,984
+lines of TypeScript in 1,613 files across core/ (the server), plugins/
+(81 app plugins), web/src and electron/, vendored builds excluded. The
+memory path is mostly core/vault.ts (1,722 lines), core/files.ts (869)
+and the history, provenance and people plugins</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>2,289
+commits from 8 October to 16 November 2026 by one author under two
+names; tagged releases up to v0.14.0 (14 November 2026). The pinned
+commit removes the Review plugin in favour of version
+history</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>138
+vault test files, 26,221 lines and 4,411 check() calls, run with 34
+other tools/test_*.ts suites on Linux, macOS and Windows in CI; 375
+browser QA scripts besides. I ran none</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Vaultite is a desktop and server app over a folder of Markdown files,
+which agents — Claude Code or Codex in its terminals, or any MCP client
+— read and write through one registry of operations served as the
+<code>vau</code> CLI, HTTP and MCP tools. What is notable is the write
+contract: exact-text edits, whole-file writes merged three ways against
+the text the caller read or refused, a version kept before and after
+every agent operation, and the lines an agent wrote recorded beside the
+note. What is weak is what follows the write. The <code>origin</code>
+label that marks an agent's note as unreviewed is refused to an agent by
+the labelling op and accepted from it through <code>write_file</code>,
+and no read consults it; search ranks text matches by modification time
+alone; and a deleted note leaves its agent-written lines in a sidecar
+nothing removes.</p>
+<p>It carries <code>negative_eval</code>.</p>
+<p><strong>Licence.</strong> The bundled citeproc-js is taken under CPAL
+1.0 (<code>plugins/core/references/citeproc/PROVENANCE.md</code>), whose
+Exhibit B reads <em>Display of Attribution Information is required in
+Larger Works</em>, and §14 places that display <em>each time … a Larger
+Work is launched or initially run</em>. The attribution phrase and URL
+appear nowhere outside that folder, the CSL styles and
+<code>NOTICE</code>, and nothing in the build or the interface reads
+<code>NOTICE</code>. §15 adds that an External Deployment of
+<code>citeproc.mjs</code> counts as distribution. The References plugin
+that loads it is off by default. Everything else is Apache-2.0 in
+<code>LICENSE</code> and <code>package.json:4</code>, and the vendored
+SheetJS, kdbxweb, libghostty-vt, lint-rule and skill files carry
+permissive licences that <code>NOTICE</code> lists.</p>
+<p><strong>The write path refuses the two common ways an agent loses
+text.</strong> <code>write_file</code> refuses text ending in the note a
+paged <code>read</code> appends, and over MCP refuses to replace a file
+longer than one read unless a <code>base</code> is sent
+(<code>core/coreops/files.ts:160-167</code>). With a base, lines changed
+on disk meanwhile are merged and a clash in the same lines is a 409
+telling the agent to read again
+(<code>core/contracts/save.ts:31-51</code>). <code>edit_file</code>
+requires its <code>old</code> text to occur once unless <code>all</code>
+is set (<code>core/coreops/files.ts:197-213</code>). Before and after
+each agent op, File history keeps the file as a version
+(<code>plugins/core/history/plugin.ts:500-516</code>).</p>
+<p><strong>The review label is advisory twice over.</strong> An agent's
+new note gets <code>origin: ai</code>, and <code>provenance.set</code>
+refuses an agent any other value with a 403
+(<code>plugins/core/provenance/plugin.ts:277-279</code>). The create
+hook only adds a key the text does not already carry
+(<code>core/vault.ts:1043</code>), no save hook guards the key, and a
+committed test has an MCP client create a note declaring
+<code>origin: human</code> and asserts the label stays
+(<code>tools/test/vault/provenance.ts:30-33</code>). No search, link,
+list or context read filters on the value.</p>
+<p><strong>Deletion is a move, and copies stay behind.</strong> A delete
+renames the file into <code>.trash/</code> inside the vault for 30 days.
+The server keeps its last text for the 7 days File history keeps
+versions. Its authorship sidecar, which holds the agent-written lines
+verbatim, moves under <code>authorship/.trash/</code> and is never
+removed.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a file a person could open in another Markdown editor.
+Its kind is its <code>type:</code> key, and plugins define kinds with
+their own formats: a person under <code>People/</code>, a log, a note,
+the user's own <code>ME.md</code>. Nothing is extracted from
+conversation; every memory is a file an agent or the user chose to
+write. The op the system names for memory, <code>people.remember</code>,
+appends one sentence under <code>## About me</code> or
+<code>## How to work with me</code> in <code>ME.md</code>, or into a
+person's file ending with
+<code>(from &lt;source&gt;, &lt;date&gt;)</code>, and skips it if the
+exact line is already there
+(<code>plugins/core/people/ops.ts:95-148</code>).</p>
+<p>A file is <em>live</em> while it is in the vault outside a dot folder
+and indexed. Archiving moves it into an <code>.archive/</code> folder
+beside it and sets <code>archived: true</code>
+(<code>plugins/core/archive/AGENTS.md</code>); it is then left out of
+lists, blocks, the graph and database views, and sorts last in search.
+Deleting moves it into <code>.trash/</code>, out of the index, and a
+daily job removes trash older than 30 days
+(<code>core/files.ts:340-371</code>, <code>core/app.ts:91</code>).
+Separately, the server keeps earlier versions of every text file for 7
+days.</p>
+<p>Nothing in the model says whether a file is believed. The
+<code>origin</code> label and the per-line authorship say who wrote it;
+both are displayed and neither gates a read. Agent and user hold the
+same note verbs, except that a plugin acting on its own needs a grant to
+write outside <code>.vaultite/</code>
+(<code>core/writegate.ts:67-84</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an agent's write lands at once with a version kept on the server; the origin label it may type itself is read by no filter; delete moves the note to .trash while its history and its agent-line sidecar stay behind</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an agent&#39;s write lands at once with a version kept on the server; the origin label it may type itself is read by no filter; delete moves the note to .trash while its history and its agent-line sidecar stay behind
+flowchart TD
+    A[&quot;agent: write_file,&lt;br/&gt;edit_file, write_note,&lt;br/&gt;remember&quot;] --&gt; B{&quot;base sent and&lt;br/&gt;same lines changed&lt;br/&gt;on disk?&quot;}
+    B --&gt;|&quot;yes&quot;| R1[&quot;409: read again&quot;]
+    B --&gt;|&quot;no&quot;| C[&quot;text before and after&lt;br/&gt;kept as versions&lt;br/&gt;on the server, 7 days&quot;]
+    C --&gt; D[&quot;note written;&lt;br/&gt;origin: ai added&lt;br/&gt;only if no key given&quot;]
+    D --&gt; E[&quot;authorship sidecar:&lt;br/&gt;agent&#39;s lines, model&quot;]
+    D --&gt; IX[(&quot;in-memory index,&lt;br/&gt;re-read in the request&quot;)]
+    E ~~~ LB[&quot;origin: reviewed&lt;br/&gt;provenance.set refuses&lt;br/&gt;an agent; write_file&lt;br/&gt;accepts any value&quot;]
+    IX --&gt; S[&quot;search: scan per query,&lt;br/&gt;name hits score,&lt;br/&gt;archived sorted last&quot;]
+    IX --&gt; L[&quot;links: graph walk,&lt;br/&gt;archived left out&quot;]
+    LB ~~~ X[&quot;item.delete or&lt;br/&gt;DELETE /api/file&quot;]
+    X --&gt; T[&quot;note moved into .trash&lt;br/&gt;in the vault, 30 days&quot;]
+    T --&gt; H[&quot;last text kept&lt;br/&gt;in history, 7 days&quot;]
+    T --&gt; O[&quot;sidecar moved under&lt;br/&gt;authorship/.trash,&lt;br/&gt;never removed&quot;]
+    style R1 fill:#14532d,color:#fff
+    style LB fill:#7f1d1d,color:#fff
+    style O fill:#7f1d1d,color:#fff</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Node server (<code>server.ts</code>, <code>core/</code>) serves a
+vault on <code>127.0.0.1:8793</code>; the Electron desktop app, the web
+app and an iPhone app in development are clients of it. Every feature,
+the file tree included, is a plugin under <code>plugins/core/</code>,
+loaded and hot-reloaded by the core, which never imports one.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Place</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The vault folder</td>
+<td>Notes and other files; <code>.trash/</code>; <code>.archive/</code>
+folders; <code>.vaultite/</code> settings, the agents' rules file and
+the provenance sidecars</td>
+</tr>
+<tr>
+<td>The server machine's local directory</td>
+<td>File history per vault, Activity's day logs, the trust store, kept
+state shared with other machines, the device-sync store</td>
+</tr>
+<tr>
+<td>Server memory</td>
+<td>The <code>Vault</code> index of every parsed Markdown file
+(<code>core/vault.ts:653</code>), and up to 256 MB of other files' text
+for search (<code>core/files.ts:383-476</code>)</td>
+</tr>
+<tr>
+<td><code>~/Backups/vault.git</code> on the sync hub</td>
+<td>An hourly git snapshot of the vault while device sync runs
+(<code>plugins/core/sync/plugin.ts:32</code>,
+<code>:299-311</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<p>There is no database, no embedding and no model call on the memory
+path; the SQLite module in <code>core/agents.ts</code> opens other
+programs' files read-only. A public MCP listener can be reached through
+Vaultite Cloud's relay, a hosted service whose code is not in the
+tree.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A DMG, a Windows installer or a Linux package, or
+<code>npm ci &amp;&amp; npm run build</code> and
+<code>vau service install</code> from source. Nothing needs an account
+or an API key. The main server takes no credentials from loopback or the
+tailnet; it is meant for those networks, and only the owner, by loopback
+or a Tailscale login, reaches the shell and the screen
+(<code>core/owner.ts:1-2</code>). The store is a folder of Markdown the
+user can grep, edit in Obsidian or keep in git, and repair by hand.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Read, search, write, edit, move, list ops and their MCP names</td>
+<td><code>core/coreops/files.ts:46-296</code></td>
+</tr>
+<tr>
+<td>File routes: read, write, delete, move, restore</td>
+<td><code>core/files.ts:713-869</code></td>
+</tr>
+<tr>
+<td>Save plan: base check and three-way merge</td>
+<td><code>core/contracts/save.ts:31-51</code></td>
+</tr>
+<tr>
+<td>Search scan, scoring, sort, archived last</td>
+<td><code>core/files.ts:512-607</code></td>
+</tr>
+<tr>
+<td>Search query parser, Obsidian syntax</td>
+<td><code>core/searchquery.ts</code></td>
+</tr>
+<tr>
+<td>Vault index, create and save hooks, trash</td>
+<td><code>core/vault.ts:653</code>, <code>:1040-1090</code>,
+<code>:1585-1608</code></td>
+</tr>
+<tr>
+<td>Trash expiry job</td>
+<td><code>core/files.ts:340-371</code>, <code>core/app.ts:91</code></td>
+</tr>
+<tr>
+<td>Item ops, delete to trash</td>
+<td><code>core/coreops/items.ts:64-77</code></td>
+</tr>
+<tr>
+<td><code>remember</code> and timelines</td>
+<td><code>plugins/core/people/ops.ts:51-148</code></td>
+</tr>
+<tr>
+<td>Note upsert by id</td>
+<td><code>plugins/core/notes/plugin.ts:128-175</code></td>
+</tr>
+<tr>
+<td>Version history, agent-op snapshots, restore</td>
+<td><code>plugins/core/history/plugin.ts:178-252</code>,
+<code>:436-516</code></td>
+</tr>
+<tr>
+<td>Origin label, authorship sidecars</td>
+<td><code>plugins/core/provenance/plugin.ts:54-64</code>,
+<code>:94-107</code>, <code>:258-345</code></td>
+</tr>
+<tr>
+<td>Link graph op</td>
+<td><code>plugins/core/graph/plugin.ts:180-212</code></td>
+</tr>
+<tr>
+<td>Archive ops</td>
+<td><code>plugins/core/archive/plugin.ts:58-110</code></td>
+</tr>
+<tr>
+<td>Activity log and its delete route</td>
+<td><code>plugins/core/activity/events.ts:32-127</code></td>
+</tr>
+<tr>
+<td>Imported memories review list</td>
+<td><code>plugins/core/ai-import/plugin.ts:235-271</code></td>
+</tr>
+<tr>
+<td>MCP server and instructions</td>
+<td><code>plugins/core/mcp/plugin.ts:36-90</code>,
+<code>plugins/core/mcp/protocol.ts:120-127</code></td>
+</tr>
+<tr>
+<td>Agents' briefs</td>
+<td><code>core/plugins.ts:1069-1080</code>,
+<code>plugins/core/terminal/backends.ts:198-203</code></td>
+</tr>
+<tr>
+<td>Plugin write gate</td>
+<td><code>core/writegate.ts:50-84</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A note is frontmatter and a Markdown body. Keys the system reads:</p>
+<ul>
+<li><strong><code>type</code></strong>: the kind. A kind owned by a
+plugin parses and renders the file its own way and may require
+fields.</li>
+<li><strong><code>id</code></strong>,
+<strong><code>created</code></strong>,
+<strong><code>updated</code></strong> for notes; <code>write_note</code>
+upserts on the id and replaces the body
+(<code>plugins/core/notes/plugin.ts:133-136</code>).</li>
+<li><strong><code>tags</code></strong>,
+<strong><code>aliases</code></strong>, wiki links, which the link index
+resolves.</li>
+<li><strong><code>archived</code></strong>: <code>true</code> or
+<code>yes</code> only (<code>core/fileprops.ts:21-23</code>), or any
+path inside an <code>.archive/</code> folder.</li>
+<li><strong><code>origin</code></strong>: <code>human</code>,
+<code>reviewed</code>, <code>mixed</code> or <code>ai</code> by default,
+values a vault may redefine
+(<code>plugins/core/provenance/plugin.ts:12-17</code>).</li>
+</ul>
+<p>Beside a note,
+<code>.vaultite/plugins/provenance/authorship/&lt;note&gt;.json</code>
+holds up to 400 spans, each the author, agent, model, effort, time,
+first line and the lines' text
+(<code>plugins/core/provenance/authorship.ts:1-5</code>). On the server,
+history keeps <code>head</code>, <code>&lt;t&gt;.snap</code> and
+<code>meta.json</code> per file under a hash of its path. Activity keeps
+day logs of events with an actor, an action and the paths.</p>
+<p><code>ME.md</code> has two sections, <code>## About me</code> and
+<code>## How to work with me</code>. A person file holds facts before
+its first heading and a <code>## Timeline</code> of dated lines, each
+with a kind such as call or note.</p>
+<p><strong><code>trust_state</code> is withheld.</strong>
+<code>origin</code> is a discrete status with a value that means not
+reviewed, and nothing reads it to exclude a file: its own guide calls it
+<em>"A label, not a lock"</em>
+(<code>plugins/core/provenance/AGENTS.md:4</code>). A user's database
+view can filter on it like any key. <code>archived</code> is a lifecycle
+position.</p>
+<p><strong><code>bitemporal</code> is withheld.</strong> A timeline line
+carries the date the contact happened, and <code>created</code> and
+<code>updated</code> are record time. No field states when a fact stops
+holding, and no read takes an as-of instant.</p>
+<p><strong><code>tombstone</code> is withheld.</strong> Trash is a move
+keyed on the path. <code>core/kept.ts:23</code> keeps 30-day tombstones
+for deleted runtime-state keys across machines, which are delete-sync
+markers. When device sync merges a delete with a concurrent edit, the
+edit is kept and the delete is recorded as a conflict
+(<code>core/syncengine.ts:300-305</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is pulled by the agent. An agent started in the app gets
+the terminal brief and one line from each plugin that is on in its
+system prompt, with lines its <code>CLAUDE.md</code> files already hold
+left out (<code>plugins/core/claude-code/plugin.ts:484-492</code>,
+<code>plugins/core/claude-code/memory.ts:14-38</code>); an MCP client
+gets the same lines as the server's instructions. The Me plugin's line
+names <code>ME.md</code> and tells the agent to read it before writing.
+No note's content is injected.</p>
+<p><strong>Search</strong> (<code>core/files.ts:531-607</code>) parses
+the query in Obsidian's syntax: words, phrases, <code>-word</code>,
+<code>OR</code>, regular expressions, <code>file:</code>,
+<code>path:</code>, <code>tag:</code>, <code>line:</code>,
+<code>section:</code>, <code>task:</code>, properties. It then scans
+every parsed note and the cached text of every other text file; images,
+PDFs, media and JSON data are not searched.</p>
+<ol type="1">
+<li>A file is skipped if it is outside the asked folder, or matches the
+vault's ignore filters unless the asked folder is itself ignored
+(<code>:542</code>, <code>:579</code>).</li>
+<li>A match's score is three per match in the file <em>name</em>, plus
+five if the name contains the whole query (<code>:546</code>). Matches
+in the text add nothing.</li>
+<li><code>relevance</code> sorts by score, then by newest modification
+(<code>:513</code>).</li>
+<li>Archived files are moved after the rest, then the page is cut
+(<code>:604</code>).</li>
+</ol>
+<p>The MCP tool defaults to 20 files and 3 lines per file, and a
+<code>read</code> answer over MCP stops at 100,000 characters with the
+offset to continue (<code>core/coreops/files.ts:10</code>,
+<code>:89-91</code>). Its text gives the path and the lines and drops
+the <code>archived</code> flag the route returns, so a file archived by
+its key without being moved reads as current
+(<code>core/coreops/files.ts:106-115</code>).</p>
+<p><strong>Links</strong>
+(<code>plugins/core/graph/plugin.ts:180-212</code>) returns a file's
+backlinks and outgoing links and, with <code>depth</code> up to 5, the
+files further out. Archived files are left out unless asked for.</p>
+<p><strong>Query</strong> runs the property engine database views use,
+with <code>where</code>, <code>sort</code> and <code>columns</code>.</p>
+<p>The failure modes follow from the scoring. A query whose words appear
+only in note bodies returns them newest first, so an older note that
+answers the question ranks below any recent one that mentions the word.
+There is no stemming and no semantic arm.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is an explicit call or a direct file edit. Agents use
+<code>write_file</code>, <code>edit_file</code>,
+<code>write_note</code>, <code>write_log</code>,
+<code>add_timeline</code>, <code>remember</code>, <code>clip</code>,
+<code>inbox_add</code>, the generic item ops through <code>call</code>,
+or a shell in the vault folder. A write through the server re-reads the
+file into the index before answering (<code>core/files.ts:791</code>),
+so it is searchable at once. A shell edit reaches the index through the
+file watcher.</p>
+<p><strong>Writes block the agent</strong> for one file write, one
+re-read and, for an agent op, two version copies. No model is called.
+The authorship record runs after the answer in a per-file queue
+(<code>plugins/core/provenance/plugin.ts:325-345</code>).</p>
+<p>Two writes replace rather than merge. <code>write_note</code> with an
+existing title replaces the body
+(<code>plugins/core/notes/plugin.ts:133-136</code>), and
+<code>write_file</code> without a base replaces the file. History keeps
+the previous text in both cases.</p>
+<p><code>remember</code> is append-only with an exact-line check. A
+restated fact in other words is a second line, and a contradiction is
+left to the prose instruction <em>"If you're not sure who it's about, or
+it contradicts the vault, don't write it: ask."</em>
+(<code>plugins/core/people/ops.ts:103</code>).</p>
+<h3 id="forgetting">Forgetting</h3>
+<ul>
+<li><strong>Delete.</strong> <code>item.delete</code> and
+<code>DELETE /api/file</code> move the file into
+<code>.trash/&lt;path&gt; &lt;local stamp&gt;</code> and drop it from
+the index (<code>core/vault.ts:1593-1608</code>,
+<code>core/files.ts:733-748</code>). No MCP tool is named for it;
+<code>call</code> reaches <code>item.delete</code>. Restore puts it
+back.</li>
+<li><strong>Trash expiry.</strong> Daily, files trashed more than 30
+days ago are removed (<code>core/files.ts:340-371</code>).</li>
+<li><strong>History.</strong> A deleted file's last text stays a
+version, marked gone, until it is 7 days old, and
+<code>restore_version</code> brings the file back
+(<code>plugins/core/history/plugin.ts:146-151</code>,
+<code>:235-252</code>, <code>:471-498</code>).</li>
+<li><strong>Archive.</strong> A move into <code>.archive/</code>,
+reversible, with links rewritten.</li>
+</ul>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Search reads every note in memory per query and up to 256 MB of other
+files' text, and reads anything larger from disk. History copies each
+changed text file. Nothing rewrites the store in the background except
+the recap Activity writes, when it is on.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Each op is declared once with its parameters, its help and an
+optional MCP name; the same declaration is a <code>vau</code> command,
+<code>POST /api/ops/&lt;id&gt;</code> and an MCP tool
+(<code>core/ops.ts:61-104</code>). The MCP server adds <code>ops</code>
+to list or explain any op and <code>call</code> to run one by id. Tool
+annotations carry the op's kind as <code>readOnlyHint</code> and
+<code>destructiveHint</code>
+(<code>plugins/core/mcp/catalog.ts:15</code>).</p>
+<p>Three routes reach it. <code>vau mcp</code> over stdio.
+<code>POST /api/mcp</code> for the owner, like the terminal. A public
+listener for AI apps on the internet, signed in with a code the owner
+types, where a connection can be made read-only and anything that can
+run code on the machine, <code>.vaultite/</code> writes included, waits
+for the owner's approval on their phone
+(<code>plugins/core/mcp/public.ts:813</code>). Writing a note does not
+wait.</p>
+<p>Agents started in the app's terminals run in the vault folder with a
+shell. The app passes them a system-prompt addition and Claude Code
+hooks that report each edit and command back to Activity
+(<code>plugins/core/claude-code/plugin.ts:448-467</code>).
+<code>.vaultite/AGENTS.md</code>, written by the Agent files plugin,
+holds the app's rules for agents, one line per plugin that is on, and a
+section for the user's own.</p>
+<p><strong><code>human_review</code> is withheld.</strong> No write
+waits for anyone. The <code>origin</code> label fails twice: the
+producer can write it, as section 9 shows, and nothing gates on it.
+Imported ChatGPT and Claude memories go to a review list as unticked
+tasks, and <code>ai-import.apply</code> adds the ticked ones through
+<code>remember</code>
+(<code>plugins/core/ai-import/plugin.ts:235-271</code>); an agent holds
+<code>edit_file</code> to tick them and <code>call</code> to run the
+apply, and the op checks no actor. The pinned commit removes the Review
+plugin, which listed agents' changes for the user to keep or revert with
+ops that refused agents; those changes were already live while they
+waited.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-reviewed-label-is-one-the-agent-can-type">The reviewed label
+is one the agent can type</h3>
+<p>The design gives the agent one value. A note an agent creates through
+the server gets <code>origin: ai</code> from a create hook
+(<code>plugins/core/provenance/plugin.ts:54-64</code>), and
+<code>provenance.set</code> returns 403 for an agent asking for any
+other value or for no label (<code>:277-279</code>), with a test
+asserting the refusal
+(<code>tools/test/vault/provenance.ts:172</code>).</p>
+<p>The write path does not apply the rule. The create hook adds
+<code>origin</code> only when the text has no such key
+(<code>core/vault.ts:1043</code>), and the one save hook registered in
+the tree bumps a note's dates
+(<code>plugins/core/note-dates/plugin.ts:35</code>). An agent that
+writes <code>origin: human</code> into a new note's frontmatter, or
+replaces <code>origin: ai</code> with <code>origin: reviewed</code>
+through <code>edit_file</code>, is stored as written. The first case is
+a committed test: an MCP client creates <code>Prov/Mine.md</code> with
+<code>origin: human</code>, and the check asserts the label stays
+(<code>tools/test/vault/provenance.ts:30-33</code>). An agent with a
+shell can do the same to the file directly, where the server cannot see
+it.</p>
+<h3 id="a-deleted-notes-agent-lines-outlive-the-trash">A deleted note's
+agent lines outlive the trash</h3>
+<p>When a note moves into <code>.trash</code>, its authorship sidecar
+moves to the matching path under
+<code>.vaultite/plugins/provenance/authorship/.trash/</code>
+(<code>plugins/core/provenance/plugin.ts:94-107</code>). The daily trash
+job removes the note and fires no hook, and Provenance's own cleanup
+removes only entries in its attachment list (<code>:181-188</code>). The
+sidecar, which stores each agent-written line's text, stays in
+<code>.vaultite/</code> and syncs with the vault.</p>
+<h3 id="deletion-leaves-copies-the-delete-does-not-name">Deletion leaves
+copies the delete does not name</h3>
+<p>Beyond the sidecar: the last text sits in File history on each server
+machine for 7 days. With Activity on, the day's recap in
+<code>Recaps/&lt;date&gt;.md</code> quotes the text changed and is
+<em>"kept in the vault for good"</em>
+(<code>plugins/core/activity/AGENTS.md</code>). With device sync
+running, the hub commits the vault to <code>~/Backups/vault.git</code>
+every hour, and nothing in the sync plugin prunes it
+(<code>plugins/core/sync/plugin.ts:299-311</code>,
+<code>plugins/core/sync/hub.ts:14-32</code>).</p>
+<h3
+id="who-wrote-a-version-depends-on-a-plugin-that-is-off-by-default">Who
+wrote a version depends on a plugin that is off by default</h3>
+<p>History names a version's writer from Activity's change events
+(<code>plugins/core/history/plugin.ts:401-413</code>), and the header
+line saying an agent changed a file reads the same events. Activity is
+off by default (<code>plugins/core/activity/manifest.json:5</code>).
+With it off, versions are kept without a writer and the header line
+never appears; the authorship sidecar is kept either way.</p>
+<p>Activity is not an audit trail when it is on. It merges a repeated
+event within 90 seconds by rewriting the earlier one
+(<code>plugins/core/activity/events.ts:32-55</code>), keeps 14 days, and
+<code>DELETE /api/activity</code> empties every day's file
+(<code>:121-127</code>). The main server takes no credentials from
+loopback, where an agent in the app's terminal runs.
+<strong><code>audit_log</code> is withheld</strong> on that, and
+History's versions, pruned at 7 days, do not replace it.</p>
+<h3 id="what-holds-up">What holds up</h3>
+<ul>
+<li>The write contract: refusal on a paged read, a base for long files
+over MCP, three-way merge or 409, exact-once edits.</li>
+<li>Authorship comes from the request's writer, which the server
+resolves from the connection, and not from the agent's word; spans are
+found again by text as the note changes, and a line the user later edits
+shows as mixed.</li>
+<li>A plugin acting on its own needs a grant to write outside
+<code>.vaultite/</code>, checked on every write, move and delete
+(<code>core/writegate.ts:67-84</code>).</li>
+<li>A shared folder's guest is held to that folder on read, search and
+write, and a guest's text cannot add images, HTML, code blocks other
+apps run or links to commands
+(<code>core/guests.ts:130-153</code>).</li>
+</ul>
+<p><strong><code>scope_enforced</code> is withheld.</strong> There is
+one vault per server and one user, and every agent reads all of it. The
+ignore filter is lifted by the agent's own <code>folder</code> argument,
+and the guest allow-list is a directory boundary for people who are not
+agents.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>tools/test_vault.ts</code> runs 138 test files against a real
+server on a scratch vault, 26,221 lines with 4,411 <code>check()</code>
+calls; CI runs it with 34 other <code>tools/test_*.ts</code> suites on
+Ubuntu, macOS and Windows on every push
+(<code>.github/workflows/ci.yml:27-93</code>). <code>check</code>
+records a failure for a false value and <code>skip</code> is a separate
+status (<code>tools/test/lib.ts:123-136</code>). Browser QA lives in
+<code>web/qa/</code>. I ran none of it.</p>
+<p><strong><code>negative_eval</code> is earned on search.</strong>
+<code>tools/test/vault/ops.ts:226-240</code> writes three notes
+containing <em>zebracorn</em>, places two under ignore filters, and
+requires search to return exactly the third; the same block asserts the
+graph leaves them out and that naming their folder finds them. The
+surviving note is the positive control.
+<code>tools/test/vault/share.ts:133-135</code> asserts a guest's search
+for a word that exists only outside the shared folder returns no file,
+while a word inside returns that folder's note. Both assert absence from
+a populated retrieval; neither is about a corrected or deleted
+value.</p>
+<p>Also covered: <code>remember</code> writes under the right heading
+once and refuses an unknown person
+(<code>tools/test/vault/ops.ts:66-82</code>,
+<code>tools/test/vault/mcp.ts:320-327</code>); history keeps a deleted
+file's last content and prunes it after <code>keep_days</code>
+(<code>tools/test/vault/history.ts:91-99</code>); an archived file sorts
+last in search and is marked in the route's answer
+(<code>tools/test/vault/graph.ts:241</code>).</p>
+<p>Not covered: an agent changing <code>origin</code> through
+<code>write_file</code> or <code>edit_file</code> being refused, which
+the one test on the subject asserts the opposite of; a trashed note's
+authorship sidecar; a trashed note's absence from search; the MCP search
+text for an archived file.</p>
+<p>No paper describes the system and no memory benchmark is committed.
+The arXiv, BibTeX and DOI matches in the tree belong to the References
+plugin's parsers.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Make the write tool refuse the truncating write.</strong> A
+paged read ends with a recognisable note, and a write whose text ends in
+it is refused with the two safe alternatives named.</p>
+<p><strong>Take a base on whole-file writes and merge three
+ways.</strong> A clash in the same lines returns the current text and a
+409; anything else merges. An agent that read a stale copy cannot erase
+the user's edit.</p>
+<p><strong>Snapshot the file before and after every agent op.</strong>
+Each agent change becomes a version of its own, so restoring one agent's
+edit does not need a diff of the user's.</p>
+<p><strong>Record authorship on the server, beside the file.</strong>
+The writer comes from the request; the agent is told not to stamp its
+own text, and the note stays clean.</p>
+<p><strong>Give each op one declaration and derive the CLI, HTTP and MCP
+surfaces from it.</strong> The help an agent reads is the help a person
+reads.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not enforce a label on one verb and accept it in the text
+on another.</strong> If a value is the user's to give, the save path has
+to refuse it from an agent, or the refusal on the labelling verb is
+decoration.</p>
+<p><strong>Do not move sidecars with a file into the trash and forget
+them there.</strong> A cleanup keyed on the trash has to cover every
+place a move hook put something.</p>
+<p><strong>Do not score text search by title matches alone.</strong>
+Body-only matches ordered by recency bury the older note that answers
+the question.</p>
+<p><strong>Do not make writer attribution depend on an optional
+plugin.</strong> The history the user is pointed at should not lose its
+names when a logging feature is off.</p>
+<h3 id="fit">Fit</h3>
+<p>It fits one person who wants agents to write into the same Markdown
+folder they read and edit, on their own machines and tailnet, and who
+values being able to open the files anywhere over any automatic recall.
+The cost is a large application with an Electron shell and dozens of
+plugins to adopt for what is, on the memory side, files plus a scan.</p>
+<p>It does not fit where agent-written content must be held back until a
+person approves it, where deletion has to be complete, or where several
+agents or people need separate scopes over one vault. Retrieval is as
+good as the agent's query words.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is an agent meant to be able to set <code>origin</code> in
+the text?</strong> The labelling op refuses it and a test asserts the
+text path keeps it; one of the two is presumably not the intent.</li>
+<li><strong>What replaces Review for a user who wants to see agents'
+changes?</strong> The version history's header depends on Activity,
+which is off by default.</li>
+<li><strong>Does the device-sync hub's git snapshot run on a
+single-machine install?</strong> The interval starts with sync; whether
+a lone machine counts as its own hub was not traced.</li>
+<li><strong>How is the CPAL attribution meant to be met?</strong> The
+References plugin is off by default, and no display was found.</li>
+<li><strong>What does Vaultite Cloud's relay keep?</strong> Its code is
+not in the tree.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>core/vault.ts</code></td>
+<td>The index, kinds, create and save hooks, trash</td>
+</tr>
+<tr>
+<td><code>core/files.ts</code></td>
+<td>File routes, search scan and scoring, trash expiry</td>
+</tr>
+<tr>
+<td><code>core/contracts/save.ts</code></td>
+<td>Save plan and merge</td>
+</tr>
+<tr>
+<td><code>core/coreops/files.ts</code>,
+<code>core/coreops/items.ts</code></td>
+<td>Read, search, write, edit, list and item ops</td>
+</tr>
+<tr>
+<td><code>core/ops.ts</code>, <code>core/plugins.ts</code></td>
+<td>Op declaration, agents' briefs</td>
+</tr>
+<tr>
+<td><code>core/writegate.ts</code>, <code>core/owner.ts</code>,
+<code>core/guests.ts</code></td>
+<td>Plugin write grants, owner check, guest write rules</td>
+</tr>
+<tr>
+<td><code>core/searchquery.ts</code></td>
+<td>Search syntax</td>
+</tr>
+<tr>
+<td><code>plugins/core/history/plugin.ts</code></td>
+<td>Versions, agent-op snapshots, restore, prune</td>
+</tr>
+<tr>
+<td><code>plugins/core/provenance/plugin.ts</code>,
+<code>authorship.ts</code>, <code>AGENTS.md</code></td>
+<td>Origin label, authorship sidecars</td>
+</tr>
+<tr>
+<td><code>plugins/core/people/ops.ts</code>,
+<code>plugins/core/me/</code></td>
+<td><code>remember</code>, timelines, <code>ME.md</code></td>
+</tr>
+<tr>
+<td><code>plugins/core/notes/plugin.ts</code>,
+<code>plugins/core/archive/plugin.ts</code></td>
+<td>Note upsert, archive</td>
+</tr>
+<tr>
+<td><code>plugins/core/graph/plugin.ts</code>,
+<code>plugins/core/query/plugin.ts</code></td>
+<td>Links and property queries</td>
+</tr>
+<tr>
+<td><code>plugins/core/activity/events.ts</code>, <code>store.ts</code>,
+<code>AGENTS.md</code></td>
+<td>Activity log, recaps</td>
+</tr>
+<tr>
+<td><code>plugins/core/ai-import/plugin.ts</code></td>
+<td>Imported memories review list</td>
+</tr>
+<tr>
+<td><code>plugins/core/mcp/plugin.ts</code>, <code>protocol.ts</code>,
+<code>catalog.ts</code>, <code>public.ts</code></td>
+<td>MCP server and public listener</td>
+</tr>
+<tr>
+<td><code>plugins/core/claude-code/plugin.ts</code>,
+<code>memory.ts</code>,
+<code>plugins/core/terminal/backends.ts</code></td>
+<td>Agent launch and briefs</td>
+</tr>
+<tr>
+<td><code>plugins/core/sync/plugin.ts</code>, <code>hub.ts</code>,
+<code>core/syncengine.ts</code></td>
+<td>Device sync and the hub's git snapshot</td>
+</tr>
+<tr>
+<td><code>tools/test/vault/ops.ts</code>, <code>share.ts</code>,
+<code>provenance.ts</code>, <code>history.ts</code>,
+<code>search.ts</code></td>
+<td>The tests cited</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git</code> in a full clone at the pinned
+commit.</p>
+<ul>
+<li><code>git ls-files core plugins web/src electron | grep -E '\.(ts|tsx)$' | grep -v -E '/qa/|citeproc|xlsx' | xargs cat | wc -l</code>
+— 217,984 lines in 1,613 files.</li>
+<li><code>git grep -c -E '(^|[^[:alnum:]_.])check\(' -- 'tools/test/vault/*.ts'</code>,
+summed — 4,411.</li>
+<li><code>git grep -n -E 'origin *(==|!=|=) *"?ai|origin: ?ai|!origin' -- bundles examples plugins skills core</code>,
+setting aside the provenance plugin's own guide and server —
+<code>examples/vault/Notes/How this vault works.md:8</code> and
+<code>plugins/core/provenance/index.tsx:97</code>, neither a filter. The
+pattern matches, so it can.</li>
+<li><code>git grep -n -w reviewed -- '*.ts' '*.tsx'</code> — the
+provenance plugin's values and menu, and an unrelated
+<code>reviewed</code> field in the companion's jobs; no read of the
+label.</li>
+<li><code>git grep -n -E 'onSave\(' -- plugins core</code> —
+<code>plugins/core/note-dates/plugin.ts:35</code> is the one plugin
+saver.</li>
+<li><code>git grep -n -E 'AUTHORSHIP' -- plugins core</code> —
+<code>plugins/core/provenance/plugin.ts:102</code>, <code>:292</code>,
+<code>:293</code>; no removal outside the move hook.</li>
+<li><code>git grep -n 'emptyTrash' -- core plugins server.ts</code> —
+the definition and <code>core/app.ts:91</code>.</li>
+<li><code>git grep -n 'archived' -- core/coreops/files.ts</code> — lines
+252, 287 and 292, the actions and list ops; none in the search op's
+text.</li>
+<li><code>git grep -n -E 'gc|prune' -- plugins/core/sync/hub.ts</code> —
+nothing. Control:
+<code>git grep -c git -- plugins/core/sync/hub.ts</code> — 13.</li>
+<li><code>git grep -n -E 'route\("DELETE"' -- plugins/core/activity</code>
+— <code>events.ts:121</code>.</li>
+<li><code>git grep -n -i -E 'folder|scope|withhold' -- plugins/core/mcp/public.ts</code>
+— the <code>withhold</code> and <code>tools</code> settings, the OAuth
+scope <code>vault</code> and the approval text; no folder limit on a
+connection.</li>
+<li><code>git grep -n -i -E 'contradict|supersed|valid_from|valid_until|tombstone' -- core plugins</code>
+— <code>core/kept.ts:23</code> and <code>:54</code>, the updater's CI
+check, the prose at <code>plugins/core/people/ops.ts:103</code> and
+licence text.</li>
+<li><code>git grep -n -i -E 'citationstyles\.org|Frank Bennett|implements the Citation Style Language' -- . ':!plugins/core/references/citeproc' ':!plugins/core/references/styles'</code>
+— <code>NOTICE:22</code> and <code>:25</code> only. Control: the same
+URL is in <code>plugins/core/references/citeproc/CPAL</code>.</li>
+<li><code>git grep -n -E '"NOTICE"|NOTICE' -- electron web/src core package.json '*.yml' '*.json' ':!package-lock.json'</code>,
+setting aside notice words — nothing.</li>
+<li><code>git grep -n -i -l -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION\.cff|LoCoMo|LongMemEval' -- .</code>
+— the References plugin, its styles,
+<code>core/docs/from-other-apps.md</code>, a research bundle guide, the
+changelog and a kdbx file; no paper on the system.</li>
+<li><code>git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|contributing|third.party)'</code>
+— <code>LICENSE</code>, <code>NOTICE</code>,
+<code>CONTRIBUTING.md</code> and the vendored licence files;
+<code>plugins/core/references/citeproc/CPAL</code> and
+<code>AGPLv3</code> sit beside them under other names.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-17</strong> — <a
+href="https://github.com/Vaultite/vaultite/commit/55768189f71c42b878e75a599dd6427367cdb077"><code class="commit-id" title="55768189f71c42b878e75a599dd6427367cdb077">55768189…</code></a>
+— first reading, from a full clone holding 2,289 commits. Screened
+before reading: the screen found a Claude Code marketplace manifest, a
+<code>.claude/settings.json</code> SessionStart hook and a nested plugin
+(<code>plugins/core/terminal/claude-pictures</code>) with its own hook
+registrations, committed git hooks that a <code>prepare</code> script
+points <code>core.hooksPath</code> at, and a <code>package.json</code>
+and lockfile changed inside the seven-day cooldown;
+<code>CLAUDE.md</code> was treated as data, and nothing was installed or
+run. No finding was re-derived outside the tree, and the device-sync
+engine and Vaultite Cloud's relay were not traced. One mark:
+<code>negative_eval</code>, on search. <code>trust_state</code> and
+<code>human_review</code> are withheld on the <code>origin</code> label,
+which gates no read and which an agent can type.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

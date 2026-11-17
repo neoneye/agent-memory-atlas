@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 814 reports.**
+**This page covers all 815 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7462,3 +7462,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 120,259 lines of Python and 11,345 test functions run in four CI shards, from 8,145 commits in seven months, most under one anonymous author identity. Two marks. The public benchmark placements recompute from a committed snapshot of the upstream table; a committed LongMemEval rerank arm measured a placeholder. MIT.
 - Study when: an agent loses detail at compaction and every turn must stay recoverable by id, with summaries that point back at their sources.
 - Do not copy when: users must be able to make the system forget, more than one person shares a store, or facts must be correctable without a model call per message.
+
+### [`vaultite`](../systems/vaultite/)
+
+- Best idea: an agent's write cannot silently lose the user's text. `write_file` refuses text ending in a paged read's note, takes the text the agent read as `base` and merges three ways or returns 409 on a same-line clash; `edit_file` replaces exact text found once; and File history keeps the file before and after every agent op as versions of their own.
+- Biggest risk: the provenance the user is shown is advisory. `provenance.set` refuses an agent the `reviewed` or `human` label while `write_file` stores whatever `origin` the agent types — a committed test asserts an MCP client's `origin: human` stays — and no search, link or context read filters on the label. A deleted note's authorship sidecar, holding the agent's lines verbatim, outlives the trash.
+- Most reusable component: `core/contracts/save.ts` with the write and edit ops in `core/coreops/files.ts`, and the agent-op snapshot hook at the end of `plugins/core/history/plugin.ts`.
+- Maturity impression: 217,984 lines of TypeScript, 138 vault test files with 4,411 checks run in CI on three operating systems, 2,289 commits between 8 October and 16 November 2026 by one author; the pinned commit removes the Review plugin. One mark. Apache-2.0, with a CPAL component whose required attribution display was not found.
+- Study when: an agent and a person edit the same Markdown files and the agent must never overwrite or truncate what the person wrote meanwhile.
+- Do not copy when: agent-written content must wait for a person's approval, deletion must be complete, or retrieval has to find the right note without the right words.
