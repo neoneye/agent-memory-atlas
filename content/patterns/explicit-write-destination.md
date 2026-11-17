@@ -147,6 +147,8 @@ town"*, and a rule the mayor records never reaches a polecat. Against any `bd`
 from v1.1.0, which `gt` installs as latest, the write is rejected and no row
 lands at all.
 
+[Backboard Desktop](../../systems/backboard-desktop/) fails the same way through an environment variable. Its memory store takes no destination; it is built on whatever directory the runtime was handed for session logs. The desktop sets that to one directory under the home directory, to keep logs out of the workspace, and the memory followed: every project's subscription chats read and write one file, under a prompt block that calls it *"workspace-local memory"*. Run from a repository, the CLI writes to that repository's root, so the same code has two scopes depending on which process launched it.
+
 ## Implementation checklist
 
 - Make the destination a required argument of every write and mutate call, and

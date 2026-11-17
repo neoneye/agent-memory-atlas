@@ -512,6 +512,7 @@ page_kind: comparison
 - [`llm-memory-morditux`](../systems/llm-memory-morditux/)
 - [`heurchain`](../systems/heurchain/)
 - [`cairn`](../systems/cairn/)
+- [`backboard-desktop`](../systems/backboard-desktop/)
 
 ## Repos Inspected
 
@@ -1328,6 +1329,7 @@ page_kind: comparison
 - [Morditux/llm-memory](https://github.com/Morditux/llm-memory) at [`93974b5e9caaae71b9b61c1c1eec3cc4ed73abed`](https://github.com/Morditux/llm-memory/commit/93974b5e9caaae71b9b61c1c1eec3cc4ed73abed) — read only, the whole tree, from a full clone of 20 commits; the screen reported no auto-run surface, a `Makefile`, and `go.mod` and `go.sum` changed inside the cooldown. Nothing was installed, built or run; the MCP SDK and the SQLite driver were not opened. MIT
 - [peterjohannmedina/heurchain](https://github.com/peterjohannmedina/heurchain) at [`a2feeb414f491cf57afab01854078278cc50167e`](https://github.com/peterjohannmedina/heurchain/commit/a2feeb414f491cf57afab01854078278cc50167e) — read only, the Go broker under `broker/` and the agent-facing documents under `npm/`, from a full clone holding 45 commits; the screen reported no auto-run or build-time surface and three manifests changed inside the cooldown. Nothing was installed, built or run; the audit-row deletion was re-derived with lifted SQL on a scratch SQLite database and the activation thresholds recomputed in a separate script. The self-hosted edition, frozen at broker 0.6.1-oss.1; the mainline broker it is cut from is not in the repository. MIT
 - [oritera/Cairn](https://github.com/oritera/Cairn) at [`8e7e0ea67552383851dfcabfba0c4e9c8d007878`](https://github.com/oritera/Cairn/commit/8e7e0ea67552383851dfcabfba0c4e9c8d007878) — read only, the server, dispatcher, prompts, tests and design documents, from a full clone of 70 commits on `main`; the screen reported a `cairn/tests/conftest.py` that executes on pytest collection and a `uv.lock` unchanged for 170 days, and nothing that auto-runs. Nothing was installed or run; the reopen effect was re-derived with lifted SQL on a scratch SQLite database. The vendored web UI libraries and the unmerged `dev-0.3.0` branch were not read. AGPL-3.0
+- [Backboard-io/Backboard-Desktop](https://github.com/Backboard-io/Backboard-Desktop) at [`af5489c6cb81d23ed6675756a9dadbe370434678`](https://github.com/Backboard-io/Backboard-Desktop/commit/af5489c6cb81d23ed6675756a9dadbe370434678) — read only, the Backboard-owned memory paths in `backboard/cli-ts`, `backboard/extensions/backboard` and the desktop's `cliTs` agent host, from a shallow clone with counts from the GitHub API; the screen reported a `.vscode/tasks.json`, npm lifecycle scripts across the VS Code tree and `backboard/cli-ts`, and five `build.rs` files under `backboard/cua-driver`, none of which runs on clone. Nothing was installed or run; three findings were re-derived on lifted snippets in a separate script. Upstream VS Code, the Copilot extension and the Claude Agent SDK were not read, and the hosted Backboard memory is not in the tree. MIT
 
 ## What the licences actually say
 

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 811 reports.**
+**This page covers all 812 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7435,3 +7435,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 6,430 lines of Python and 96 pytest functions on a mock driver that no workflow runs; 70 commits from 19 April to 7 September 2026 under two author names. One mark. AGPL-3.0, narrowed in the README to personal and educational use.
 - Study when: several stateless agent sessions must share progress on one bounded problem, and a person wants to watch the graph and steer with hints.
 - Do not copy when: a wrong finding must be retractable, facts must outlive the problem, the graph will outgrow one reading, or anyone untrusted can reach the API.
+
+### [`backboard-desktop`](../systems/backboard-desktop/)
+
+- Best idea: the write is decided when the user message arrives and applied when the turn commits. A pending entry carries the mode and the notification check, and `remember` re-reads, appends and re-encrypts under a file lease before an atomic rename, so concurrent processes cannot lose entries.
+- Biggest risk: where the file is. The desktop roots it in `~/.backboard_ide/cli-ts-sessions`, a directory chosen to keep logs out of the workspace, so one memory serves every project while the prompt calls it workspace-local; and a file that cannot be decrypted fails every new subscription chat until someone deletes it.
+- Most reusable component: `backboard/cli-ts/src/providers/subscription/SubscriptionMemoryStore.ts` with `core/keys/KeyCipher.ts` — a lease-guarded, authenticated, atomically replaced transcript file in under 200 lines.
+- Maturity impression: a Code - OSS fork of 18,464 tracked files whose agent runtime has 2,022 test cases, two of them on memory, and CI runs one runtime test file. 24 commits from 13 to 27 October 2026 by three authors, the first importing the whole tree. The memory Backboard advertises on its default route is hosted and not in the tree. MIT.
+- Study when: you want the smallest cross-chat memory — the last few exchanges, encrypted, with no extraction — and the write must be safe under several processes.
+- Do not copy when: a memory must be correctable or removable one entry at a time, must stay inside one project, or must be kept out of the system prompt.
