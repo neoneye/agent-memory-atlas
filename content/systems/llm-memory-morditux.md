@@ -33,7 +33,7 @@ matrix:
   background: "None. Embeddings are caught up 64 at a time inside a search; expired rows are filtered at read time and archived only when a person runs gc"
   trust: "None as a state. A row is active or archived, the reason for archiving lives in the history snapshot, and importance is a number the writer picks"
   strengths: "History written in the same transaction as every mutation, namespace moves and link edits included; an archive predicate shared by every read arm; hard delete, restore and removal of a supersedes link kept off the tool surface; the author taken from the MCP handshake; and a vector stored only if the row still holds the text it was computed from"
-  risks: "An importance-3 row in the global namespace enters every project's briefing; a rename, merge or link edit re-stamps updated_at and updated_by, which the briefing ranks by and prints as the handoff's author; a purge deletes the history with the row; with embeddings on, a recall with no namespace sends every namespace's active memories and reindex sends archived ones"
+  risks: "An importance-3 row in the global namespace enters every project's briefing; a rename, merge or link edit re-stamps updated_at and updated_by, which the briefing ranks by and prints as the handoff's author, and a merge then keeps the source's handoff however old; a purge deletes the history with the row; with embeddings on, a recall with no namespace sends every namespace's active memories and reindex sends archived ones"
 ---
 
 ## 1. Executive Summary
@@ -413,6 +413,13 @@ destination held. The handoff's heading and the header's last activity print
 (`briefing.go:125`, `:334`). A committed test asserts the new `updated_by`
 on a renamed row; none renders a briefing after a move.
 
+The merge's own choice of which handoff to keep, the latest by `updated_at`,
+runs after the stamp (`namespaces.go:236-238`), so the source's handoff
+always survives, even when the destination's was written later. The
+committed merge case creates the destination's handoff second, keeps the
+source's, and asserts only that one remains (`namespaces_test.go:108-112`,
+`:155-158`).
+
 ### What the history does not record
 
 - **A purge.** History goes with the row and nothing records that it
@@ -641,6 +648,6 @@ Run with `/usr/bin/git` in a full clone at the pinned commit.
 
 ## History
 
-**2026-11-17** — [`38d157868f67e01f32cca3fc082606b2da37bbfb`](https://github.com/Morditux/llm-memory/commit/38d157868f67e01f32cca3fc082606b2da37bbfb) — v1.3.3, four commits closing upstream issues #1 to #4, each filed against the previous pin. The web UI gained a start-up CSRF token, `Host`, `Origin`, `Sec-Fetch-Site` and `Content-Type` checks; a namespace rename, a merge and a link change write history, and a `supersedes` link cannot be removed; the embedding backfill follows the search's scope; a vector is stored only against unchanged text. Four criticisms were removed. The history fix re-stamps `updated_at` and `updated_by`, which the briefing ranks by and prints ([§9](#9-reliability-safety-and-trust)). The recorded `memory_history` search counted two comments where there are three at both pins. Marks unchanged. Screened: no auto-run surface, `go.mod` and `go.sum` inside the cooldown; nothing run. The go-sdk v1.8.0 HTTP handler's request checks were read.
+**2026-11-17** — [`38d157868f67e01f32cca3fc082606b2da37bbfb`](https://github.com/Morditux/llm-memory/commit/38d157868f67e01f32cca3fc082606b2da37bbfb) — v1.3.3, four commits closing upstream issues #1 to #4, each filed against the previous pin. The web UI gained a start-up CSRF token, `Host`, `Origin`, `Sec-Fetch-Site` and `Content-Type` checks; a namespace rename, a merge and a link change write history, and a `supersedes` link cannot be removed; the embedding backfill follows the search's scope; a vector is stored only against unchanged text. Four criticisms were removed. The history fix re-stamps `updated_at` and `updated_by`, which the briefing ranks by and prints, and a merge then keeps the source's handoff ([§9](#9-reliability-safety-and-trust)); filed as [issue #5](https://github.com/Morditux/llm-memory/issues/5). The recorded `memory_history` search counted two comments where there are three at both pins. Marks unchanged. Screened: no auto-run surface, `go.mod` and `go.sum` inside the cooldown; nothing run. The go-sdk v1.8.0 HTTP handler's request checks were read.
 
 **2026-11-17** — [`93974b5e9caaae71b9b61c1c1eec3cc4ed73abed`](https://github.com/Morditux/llm-memory/commit/93974b5e9caaae71b9b61c1c1eec3cc4ed73abed) — first reading, of the whole tree. Screened before reading: no auto-run surface; a `Makefile`, and `go.mod` and `go.sum` changed inside the seven-day cooldown; nothing was installed, built or run. No test was executed and no finding was re-derived outside the tree; the MCP SDK and the SQLite driver were not opened. Three marks: `scope_enforced`, `audit_log` and `negative_eval`. `trust_state` is withheld because active and archived are one bit shared by every reason for removal, `tombstone` because archiving is keyed on the row and the duplicate check reads active rows only, `bitemporal` because every timestamp is record time, and `human_review` because no write waits for anyone.

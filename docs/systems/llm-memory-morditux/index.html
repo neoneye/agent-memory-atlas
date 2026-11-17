@@ -644,6 +644,13 @@ print <code>updated_by</code>, so a merged handoff is attributed to
 <code>:334</code>). A committed test asserts the new
 <code>updated_by</code> on a renamed row; none renders a briefing after
 a move.</p>
+<p>The merge's own choice of which handoff to keep, the latest by
+<code>updated_at</code>, runs after the stamp
+(<code>namespaces.go:236-238</code>), so the source's handoff always
+survives, even when the destination's was written later. The committed
+merge case creates the destination's handoff second, keeps the source's,
+and asserts only that one remains
+(<code>namespaces_test.go:108-112</code>, <code>:155-158</code>).</p>
 <h3 id="what-the-history-does-not-record">What the history does not
 record</h3>
 <ul>
@@ -984,12 +991,15 @@ change write history, and a <code>supersedes</code> link cannot be
 removed; the embedding backfill follows the search's scope; a vector is
 stored only against unchanged text. Four criticisms were removed. The
 history fix re-stamps <code>updated_at</code> and
-<code>updated_by</code>, which the briefing ranks by and prints (<a
-href="#9-reliability-safety-and-trust">§9</a>). The recorded
-<code>memory_history</code> search counted two comments where there are
-three at both pins. Marks unchanged. Screened: no auto-run surface,
-<code>go.mod</code> and <code>go.sum</code> inside the cooldown; nothing
-run. The go-sdk v1.8.0 HTTP handler's request checks were read.</p>
+<code>updated_by</code>, which the briefing ranks by and prints, and a
+merge then keeps the source's handoff (<a
+href="#9-reliability-safety-and-trust">§9</a>); filed as <a
+href="https://github.com/Morditux/llm-memory/issues/5">issue #5</a>. The
+recorded <code>memory_history</code> search counted two comments where
+there are three at both pins. Marks unchanged. Screened: no auto-run
+surface, <code>go.mod</code> and <code>go.sum</code> inside the
+cooldown; nothing run. The go-sdk v1.8.0 HTTP handler's request checks
+were read.</p>
 <p><strong>2026-11-17</strong> — <a
 href="https://github.com/Morditux/llm-memory/commit/93974b5e9caaae71b9b61c1c1eec3cc4ed73abed"><code class="commit-id" title="93974b5e9caaae71b9b61c1c1eec3cc4ed73abed">93974b5e…</code></a>
 — first reading, of the whole tree. Screened before reading: no auto-run
