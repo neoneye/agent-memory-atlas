@@ -9,7 +9,7 @@ source_url: https://github.com/mudassirzulfiqar/Decision-Keeper
 archive_name: "mudassirzulfiqar--Decision-Keeper"
 revision: 911ff6b88e7c5e65b64326f9a5719291e6608ab6
 revision_url: https://github.com/mudassirzulfiqar/Decision-Keeper/commit/911ff6b88e7c5e65b64326f9a5719291e6608ab6
-analyzed_at: 2026-11-16
+analyzed_at: 2026-11-18
 licence: "MIT"
 size: "567 lines in nine tracked files: 406 of Python in an installer and a tree checker, 38 of skill prose in two documents, one of them committed twice"
 activity: "One commit, on 16 November 2026, by one author. The installer carries hashes of earlier releases under two other names, Record Me and Teach Me"
@@ -24,7 +24,7 @@ matrix:
   retrieval: "None. An instruction block in AGENTS.md or CLAUDE.md tells the agent to read the index in full before every change and follow the topic links that look relevant"
   write: "The agent, when it judges that the user confirmed a lasting rule, or when a message starts with /keep. On Codex a named subagent is the single writer"
   update_delete: "A superseded rule is replaced in place and a dropped rule is deleted; only active policy is kept, so the tree holds no history and no record of what was removed"
-  scoping: "One tree per project root. The installer refuses a subdirectory of a git repository, the filesystem root and the home directory. Nothing scopes a rule inside the tree"
+  scoping: "One tree per project root. The installer refuses the filesystem root, the home directory and, when git is on the PATH, a subdirectory of a git repository. Nothing scopes a rule inside the tree"
   integration: "A skill directory copied into .agents/skills or .claude/skills, a marked block appended to the host instruction file, and on Codex a subagent definition"
   background: "None. Reorganising the tree is a step of the write, or a request the user makes"
   trust: "None in the data. The skill asks the agent to store only rules the user confirmed and to prefix other manual entries with Note:"
@@ -116,8 +116,9 @@ an instruction file that already exists (`install.py:212-213`).
 
 The installer is the most careful code in the tree:
 
-- It refuses the filesystem root, the home directory, and any directory that is
-  not the top level of its git repository (`install.py:175-183`).
+- It refuses the filesystem root and the home directory, and, when `git` is on
+  the PATH, any directory that is not the top level of its git repository
+  (`install.py:175-183`). Without `git` the repository check is skipped.
 - It rejects a symlink anywhere on the path of a file it would write
   (`:122-127`).
 - It overwrites an installed skill file only when the file's SHA-256 matches a
@@ -295,9 +296,11 @@ I ran nothing. The two scripts are short enough that every statement about
 them above comes from reading the lines cited.
 
 The installer's hash tables are the nearest thing to a regression record:
-twenty-three SHA-256 values of earlier skill files under the names Record Me,
-Teach Me and Decision Keeper (`install.py:41-85`). The files they describe are
-not in the repository.
+twenty-three SHA-256 values under the names Record Me, Teach Me and Decision
+Keeper (`install.py:41-85`). Eighteen are of earlier skill files, three of
+earlier Codex subagent definitions, and two of an earlier Teach Me instruction
+block. None matches a file at the pin, and the files they describe are not in
+the repository.
 
 ## 11. For Your Own Build
 
@@ -366,7 +369,12 @@ Run with `/usr/bin/git` in a full clone at the pinned commit.
 - `git grep -n -E 'knowledge|evidence' -- install.py` — the signature, the validation at `:236-249`, the argument parser and the call; no later use.
 - `git grep -n -i -E 'arxiv|doi\.org|bibtex|benchmark'` — nothing.
 - `diff SKILL.md .agents/skills/decision-keeper/SKILL.md` — identical.
+- `git grep -n -E 'check_tree'` — the organizer's instruction at `organizer.md:9`, the script itself, and the installer's file list and hash tables; no hook, workflow or other caller.
+- `sed -n 41,85p install.py | grep -o -E '[0-9a-f]{64}' | sort -u | wc -l` — 23.
+- `shasum -a 256` over the two `SKILL.md` copies, `organizer.md`, `check_tree.py` and the subagent `.toml`, then `cut -c1-64 | grep -F -f - install.py` — nothing.
 
 ## History
+
+**2026-11-18** — [`911ff6b88e7c5e65b64326f9a5719291e6608ab6`](https://github.com/mudassirzulfiqar/Decision-Keeper/commit/911ff6b88e7c5e65b64326f9a5719291e6608ab6) — the pin is upstream `main` and the only commit on any branch; there are no tags. Screened again: `NOTHING SCANNED`, since the tree holds no surface the screen parses, so all nine files were read by hand. Every line citation, quotation, count, absence claim and recorded search holds at the pin, and all seven marks stay withheld. Two statements were overstated and are corrected in [§3](#deployment-and-ergonomics) and [§10](#10-tests-evals-and-benchmarks): the installer refuses a subdirectory of a git repository only when `git` is on the PATH, and of the twenty-three recorded hashes, three are of Codex subagent definitions and two of an instruction block rather than all of skill files. Nothing installed or run.
 
 **2026-11-16** — [`911ff6b88e7c5e65b64326f9a5719291e6608ab6`](https://github.com/mudassirzulfiqar/Decision-Keeper/commit/911ff6b88e7c5e65b64326f9a5719291e6608ab6) — first reading. Screened first: no findings. Nothing installed or run.
