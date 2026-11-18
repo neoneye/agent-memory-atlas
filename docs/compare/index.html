@@ -16509,42 +16509,49 @@ href="../systems/llm-memory-morditux/"><code>llm-memory-morditux</code></a></td>
 <td>A memory row: one of six kinds (preference, fact, decision,
 task_state, handoff, note) with a title, up to 8,000 characters of
 content, tags, an importance from 1 to 3, an author, an archive
-timestamp, an optional expiry, and typed links to other rows</td>
+timestamp, an optional expiry, a uuid shared across databases, and typed
+links to other rows</td>
 <td>One SQLite file in WAL mode: memories, an external-content FTS5
 index kept by triggers, a history table of full snapshots, a links
-table, and an optional table of float32 embeddings per model</td>
+table, an optional table of float32 embeddings per model, and a meta
+table holding the database's instance id</td>
 <td>A session briefing assembled by kind and importance inside a
 character budget, and a search that runs FTS5 bm25 with prefix terms,
 AND then OR, optionally fused by reciprocal rank with a brute-force
 cosine scan</td>
-<td>The model's explicit tool call, or a person at the CLI or web UI. No
-extraction and no model call; a write is one synchronous transaction and
-is readable by the next query</td>
+<td>The model's explicit tool call, or a person at the CLI or web UI, or
+a CLI merge of another machine's export. No extraction and no model
+call; a write is one synchronous transaction and is readable by the next
+query</td>
 <td>An update patches the row and appends a snapshot; forget sets an
 archive timestamp; supersedes archives the old rows and links them in
-the same transaction; hard delete is one CLI verb that removes rows
-archived before a date</td>
+the same transaction; a merge replaces a row whole with the version
+carrying the later updated_at; hard delete is one CLI verb that removes
+rows archived before a date</td>
 <td>A namespace per project plus a shared global one, applied as an
 equality filter when supplied and always by the briefing; one user, no
 principals</td>
 <td>An MCP server over stdio or Streamable HTTP with eight tools, two
 resources and two prompts; session-start, pre-compaction and stop hooks
-for three clients; a CLI and a local web UI</td>
+for three clients; a CLI with export, import and merge, and a local web
+UI</td>
 <td>None. Embeddings are caught up 64 at a time inside a search; expired
 rows are filtered at read time and archived only when a person runs
 gc</td>
 <td>None as a state. A row is active or archived, the reason for
 archiving lives in the history snapshot, and importance is a number the
 writer picks</td>
-<td>History written in the same transaction as every mutation, namespace
-moves and link edits included; an archive predicate shared by every read
+<td>History written in the same transaction as every tool, CLI and UI
+mutation, namespace moves and link edits included, without touching the
+recency the briefing ranks by; an archive predicate shared by every read
 arm; hard delete, restore and removal of a supersedes link kept off the
 tool surface; the author taken from the MCP handshake; and a vector
 stored only if the row still holds the text it was computed from</td>
 <td>An importance-3 row in the global namespace enters every project's
-briefing; a rename, merge or link edit re-stamps updated_at and
-updated_by, which the briefing ranks by and prints as the handoff's
-author, and a merge then keeps the source's handoff however old; a purge
+briefing; a merge between machines is whole-row last-writer-wins on
+wall-clock updated_at, so a namespace move reaches the other machine
+only when the new name sorts after the old, a later edit on the other
+machine un-archives a forgotten row, and a purge comes back; a purge
 deletes the history with the row; with embeddings on, a recall with no
 namespace sends every namespace's active memories and reindex sends
 archived ones</td>

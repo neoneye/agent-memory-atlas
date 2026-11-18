@@ -7,33 +7,33 @@ page_kind: system
 source_name: "Morditux/llm-memory"
 source_url: https://github.com/Morditux/llm-memory
 archive_name: "Morditux--llm-memory"
-revision: 38d157868f67e01f32cca3fc082606b2da37bbfb
-revision_url: https://github.com/Morditux/llm-memory/commit/38d157868f67e01f32cca3fc082606b2da37bbfb
-analyzed_at: 2026-11-17
+revision: 3e9efef63a3b3ad436ad827c5217db626b875ff4
+revision_url: https://github.com/Morditux/llm-memory/commit/3e9efef63a3b3ad436ad827c5217db626b875ff4
+analyzed_at: 2026-11-18
 licence: "MIT"
-size: "8,730 lines of Go in 22 files outside tests; four SQL migrations"
-activity: "24 commits from 15 to 17 November 2026 under two author names; nine tags, v1.0.0 to v1.3.3"
-tests: "120 Go test functions in 16 files and 13 golden files, run in CI on Linux, macOS and Windows, with the race detector on the first two. I ran none"
+size: "9,348 lines of Go in 24 files outside tests; five SQL migrations"
+activity: "30 commits from 15 to 18 November 2026 under two author names; nine tags, v1.0.0 to v1.3.3, the last six commits untagged"
+tests: "143 Go test functions in 18 files and 13 golden files, run in CI on Linux, macOS and Windows, with the race detector on the first two. I ran none"
 capabilities: "scope_enforced, audit_log, negative_eval"
 capability_evidence:
-  scope_enforced: "namespace on every read arm: the briefing lists, full-text search, the vector arm and the duplicate check | internal/store/search.go:128-156, internal/store/memories.go:458-503, internal/store/embeddings.go:173-186, internal/briefing/briefing.go:42-98, cmd/llm-memory/hooks.go:201-205 | `filterSQL` adds `m.namespace = ?` to the FTS5 match, the recent list and the vector load; `List` adds it for the briefing; the session-start hook derives the namespace from the client's working directory, not from a model argument. Limits: `recall` passes its namespace through unchanged and an omitted one compiles to no predicate, `get_memory` reads any id, the `global` namespace is added to every briefing by design, and over MCP the namespace is a string the model supplies | internal/store/search_test.go:193-196 (a query matching rows in two namespaces returns the one row of the named namespace), internal/semantic/engine_test.go:113-118 (zero rows for the wrong namespace, one for the right one)"
-  audit_log: "memory_history, one row per create, update, archive and restore, per namespace move and per link change | internal/store/migrations/0001_initial.sql:26-34, internal/store/memories.go:84-99, :189, :340, :385, :431 | `writeHistory` re-reads the row inside the writing transaction and inserts the action, the actor and a JSON snapshot of the whole memory, with the reason on an archive. The only other statement naming the table is the import's insert; nothing updates a history row. A namespace rename or merge writes an update row per moved memory, and a link added or removed writes one on the source memory with the kind and target in the reason (`internal/store/namespaces.go:130-138`, `internal/store/links.go:50-59`). Limits: `memory_id` is `ON DELETE CASCADE`, so the CLI's `purge` deletes the history with the memory and leaves no receipt; an import inserts history rows as the dump supplies them | internal/store/memories_test.go:106-158 (four writes, four rows, each with its action, actor and content), internal/store/namespaces_test.go and internal/store/links_test.go (a rename, a merge and a link change each add one row with its actor and reason)"
-  negative_eval: "archived rows on the briefing and on search, and the namespace boundary on search | internal/store/memories.go:487-489, internal/store/search.go:146-148, :131-133 | committed cases assert that an archived handoff's text is absent from a briefing that holds twenty active memories and the active handoff, that a replaced handoff is absent from the next client's briefing beside five strings that must be present, that a search matching rows in two namespaces returns only the named one, that a scoped search's embedding backfill indexes the active row of its namespace and neither an archived row nor another namespace's, and that six rejected UI requests leave the store with zero memories. Two further cases assert an empty result after an archive, with the include-archived read as the control | internal/briefing/briefing_test.go:186-189, internal/server/server_test.go:281-288, internal/store/search_test.go:193-196, :209-218, internal/semantic/engine_test.go:331-366, internal/ui/ui_test.go:250-326"
+  scope_enforced: "namespace on every read arm: the briefing lists, full-text search, the vector arm and the duplicate check | internal/store/search.go:128-156, internal/store/memories.go:464-509, internal/store/embeddings.go:173-186, internal/briefing/briefing.go:42-98, cmd/llm-memory/hooks.go:201-205 | `filterSQL` adds `m.namespace = ?` to the FTS5 match, the recent list and the vector load; `List` adds it for the briefing; the session-start hook derives the namespace from the client's working directory, not from a model argument. Limits: `recall` passes its namespace through unchanged and an omitted one compiles to no predicate, `get_memory` reads any id, the `global` namespace is added to every briefing by design, and over MCP the namespace is a string the model supplies | internal/store/search_test.go:193-196 (a query matching rows in two namespaces returns the one row of the named namespace), internal/semantic/engine_test.go:113-118 (zero rows for the wrong namespace, one for the right one)"
+  audit_log: "memory_history, one row per create, update, archive and restore, per namespace move, per link change and per merged-in version | internal/store/migrations/0001_initial.sql:26-34, internal/store/memories.go:86-101, :194, :346, :391, :437 | `writeHistory` re-reads the row inside the writing transaction and inserts the action, the actor and a JSON snapshot of the whole memory, with the reason on an archive. The only other statement inserting into the table is the dump-history insert shared by import and merge; nothing updates or deletes a history row. A namespace rename or merge writes an update row per moved memory, a link added or removed writes one on the source memory with the kind and target in the reason, and an incoming version that wins a merge writes one naming the exporting database (`internal/store/namespaces.go:130-138`, `internal/store/links.go:50-53`, `internal/store/merge.go:153`). Limits: `memory_id` is `ON DELETE CASCADE`, so the CLI's `purge` deletes the history with the memory and leaves no receipt; import and merge insert history rows as the dump supplies them; a merge's uuid adoption, its earlier `created_at` and the links it adds write no row | internal/store/memories_test.go:106-158 (four writes, four rows, each with its action, actor and content), internal/store/namespaces_test.go and internal/store/links_test.go (a rename, a merge and a link change each add one row with its actor and reason), internal/store/merge_test.go (a replaced local version and the merge line are both in the history)"
+  negative_eval: "archived rows on the briefing and on search, and the namespace boundary on search | internal/store/memories.go:493-495, internal/store/search.go:146-148, :131-133 | committed cases assert that an archived handoff's text is absent from a briefing that holds twenty active memories and the active handoff, that a replaced handoff is absent from the next client's briefing beside five strings that must be present, that a search matching rows in two namespaces returns only the named one, that a scoped search's embedding backfill indexes the active row of its namespace and neither an archived row nor another namespace's, and that six rejected UI requests leave the store with zero memories. Two further cases assert an empty result after an archive, with the include-archived read as the control | internal/briefing/briefing_test.go:186-189, internal/server/server_test.go:281-288, internal/store/search_test.go:193-196, :209-218, internal/semantic/engine_test.go:331-366, internal/ui/ui_test.go:250-326"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
 matrix:
-  memory_unit: "A memory row: one of six kinds (preference, fact, decision, task_state, handoff, note) with a title, up to 8,000 characters of content, tags, an importance from 1 to 3, an author, an archive timestamp, an optional expiry, and typed links to other rows"
-  storage: "One SQLite file in WAL mode: memories, an external-content FTS5 index kept by triggers, a history table of full snapshots, a links table, and an optional table of float32 embeddings per model"
+  memory_unit: "A memory row: one of six kinds (preference, fact, decision, task_state, handoff, note) with a title, up to 8,000 characters of content, tags, an importance from 1 to 3, an author, an archive timestamp, an optional expiry, a uuid shared across databases, and typed links to other rows"
+  storage: "One SQLite file in WAL mode: memories, an external-content FTS5 index kept by triggers, a history table of full snapshots, a links table, an optional table of float32 embeddings per model, and a meta table holding the database's instance id"
   retrieval: "A session briefing assembled by kind and importance inside a character budget, and a search that runs FTS5 bm25 with prefix terms, AND then OR, optionally fused by reciprocal rank with a brute-force cosine scan"
-  write: "The model's explicit tool call, or a person at the CLI or web UI. No extraction and no model call; a write is one synchronous transaction and is readable by the next query"
-  update_delete: "An update patches the row and appends a snapshot; forget sets an archive timestamp; supersedes archives the old rows and links them in the same transaction; hard delete is one CLI verb that removes rows archived before a date"
+  write: "The model's explicit tool call, or a person at the CLI or web UI, or a CLI merge of another machine's export. No extraction and no model call; a write is one synchronous transaction and is readable by the next query"
+  update_delete: "An update patches the row and appends a snapshot; forget sets an archive timestamp; supersedes archives the old rows and links them in the same transaction; a merge replaces a row whole with the version carrying the later updated_at; hard delete is one CLI verb that removes rows archived before a date"
   scoping: "A namespace per project plus a shared global one, applied as an equality filter when supplied and always by the briefing; one user, no principals"
-  integration: "An MCP server over stdio or Streamable HTTP with eight tools, two resources and two prompts; session-start, pre-compaction and stop hooks for three clients; a CLI and a local web UI"
+  integration: "An MCP server over stdio or Streamable HTTP with eight tools, two resources and two prompts; session-start, pre-compaction and stop hooks for three clients; a CLI with export, import and merge, and a local web UI"
   background: "None. Embeddings are caught up 64 at a time inside a search; expired rows are filtered at read time and archived only when a person runs gc"
   trust: "None as a state. A row is active or archived, the reason for archiving lives in the history snapshot, and importance is a number the writer picks"
-  strengths: "History written in the same transaction as every mutation, namespace moves and link edits included; an archive predicate shared by every read arm; hard delete, restore and removal of a supersedes link kept off the tool surface; the author taken from the MCP handshake; and a vector stored only if the row still holds the text it was computed from"
-  risks: "An importance-3 row in the global namespace enters every project's briefing; a rename, merge or link edit re-stamps updated_at and updated_by, which the briefing ranks by and prints as the handoff's author, and a merge then keeps the source's handoff however old; a purge deletes the history with the row; with embeddings on, a recall with no namespace sends every namespace's active memories and reindex sends archived ones"
+  strengths: "History written in the same transaction as every tool, CLI and UI mutation, namespace moves and link edits included, without touching the recency the briefing ranks by; an archive predicate shared by every read arm; hard delete, restore and removal of a supersedes link kept off the tool surface; the author taken from the MCP handshake; and a vector stored only if the row still holds the text it was computed from"
+  risks: "An importance-3 row in the global namespace enters every project's briefing; a merge between machines is whole-row last-writer-wins on wall-clock updated_at, so a namespace move reaches the other machine only when the new name sorts after the old, a later edit on the other machine un-archives a forgotten row, and a purge comes back; a purge deletes the history with the row; with embeddings on, a recall with no namespace sends every namespace's active memories and reindex sends archived ones"
 ---
 
 ## 1. Executive Summary
@@ -46,14 +46,15 @@ facts. What is notable is how little the model is allowed to destroy. Its
 tools archive and patch, every mutation leaves a snapshot in a history table,
 and restore and hard delete exist only at the CLI and the web UI. What is weak
 is what a single write reaches: one importance-3 row in the shared `global`
-namespace opens every project's briefing, and the history that records a
-namespace move or a link edit also re-stamps the recency the briefing ranks
-by.
+namespace opens every project's briefing. A CLI merge joins two machines'
+files by uuid, whole row against whole row on wall-clock `updated_at`; a
+rename leaves that timestamp alone, so the merge decides it by which
+namespace name sorts later.
 
 It carries `scope_enforced`, `audit_log` and `negative_eval`.
 
 **Licence.** `LICENSE` is the MIT text with the line
-`Copyright (c) 2026 mordicus`. `README.md:338-340` names the same licence.
+`Copyright (c) 2026 mordicus`. `README.md:376-378` names the same licence.
 `go.mod` carries no licence field and the tree has no NOTICE file and no
 rider.
 
@@ -64,31 +65,42 @@ rider.
 `Store.Purge`, the one statement that deletes a memory, is called from the
 CLI's `purge` verb and nowhere else (`internal/store/maintenance.go:40-52`,
 `cmd/llm-memory/admin.go:438`). `Store.Restore` is called from the CLI and the
-web UI. One row type is deletable by the model: `update_memory` takes
-`remove_links`, which deletes a `relates_to` or `depends_on` link and writes a
-history row. A `supersedes` link is refused at the store, so no surface can
-remove one (`internal/store/links.go:76-100`).
+web UI, and `Store.Merge` from the CLI's `import --merge` only
+(`admin.go:538`). One row type is deletable by the model: `update_memory`
+takes `remove_links`, which deletes a `relates_to` or `depends_on` link and
+writes a history row. A `supersedes` link is refused at the store, so no
+surface can remove one (`internal/store/links.go:71-95`).
 
 **Every mutation writes history in its own transaction.** Create, update,
 archive and restore each end in `writeHistory`, which re-reads the row inside
 the transaction and stores the action, the actor and a JSON snapshot of the
-whole memory (`internal/store/memories.go:84-99`). A namespace rename or merge
+whole memory (`internal/store/memories.go:86-101`). A namespace rename or merge
 writes an update row for every memory it moves, and a link change writes one
 on the source memory (`internal/store/namespaces.go:130-138`,
-`internal/store/links.go:50-59`).
+`internal/store/links.go:50-53`). Neither touches `updated_at` or
+`updated_by`, so a move or a link edit leaves a row's place in the briefing
+and its printed author as they were.
 
 **One archive predicate serves every read.** Full-text search, the recent
 list, the vector arm and the duplicate check all take their filter from
 `filterSQL` (`internal/store/search.go:128-156`), and the briefing reads
 through `List`, whose default adds the same two conditions
-(`internal/store/memories.go:487-489`). An archived or expired row is absent
+(`internal/store/memories.go:493-495`). An archived or expired row is absent
 from all of them.
 
 **The handoff is one slot per namespace.** Writing a handoff archives the
 previous one in the same transaction and links the new row to it
-(`memories.go:211-218`, `:390-407`). Nothing records whether a handoff was
+(`memories.go:217-224`, `:396-413`). Nothing records whether a handoff was
 read, so a second client that writes one replaces the first whether or not
 anyone saw it.
+
+**Two machines meet through a file.** Every memory carries a random uuid
+beside its local integer id, and each database an instance id
+(`internal/store/migrations/0005_uuid.sql`). `export` writes the uuids, the
+links between exported rows and the origin; `import --merge` matches rows by
+uuid and keeps, whole, the version with the later `updated_at`
+(`internal/store/merge.go:64-205`). [§9](#9-reliability-safety-and-trust)
+carries what that rule does to a rename, a forget and a purge.
 
 ## 2. Mental Model
 
@@ -112,7 +124,13 @@ flowchart TD
     H --> I["briefing: handoff,<br/>importance 3, tasks,<br/>prefs, decisions, facts"]
     H --> J["recall: FTS5 bm25,<br/>optional cosine arm,<br/>rank fusion"]
     G -.->|"person: CLI or UI"| K["restore, gc,<br/>namespace merge"]
-    G -.->|"person: CLI only"| L["purge: row, history,<br/>links, vectors deleted"]
+    subgraph P["person: CLI only"]
+        direction TB
+        L["purge: row, history,<br/>links, vectors deleted"]
+        M["import --merge: by uuid,<br/>later updated_at wins<br/>the whole row"]
+        L ~~~ M
+    end
+    G -.-> P
     style L fill:#7f1d1d,color:#fff
     style D fill:#14532d,color:#fff
 ```
@@ -140,7 +158,13 @@ The connection string sets WAL, a five-second busy timeout, foreign keys and
 `_txlock=immediate`, and each process holds one connection
 (`db.go:55-57`, `:84-90`). Migrations are embedded SQL files applied in a
 transaction each, with the version in `PRAGMA user_version`; a file written
-by a newer binary is refused (`db.go:154-186`).
+by a newer binary is refused (`db.go:154-186`). The fifth migration backfills
+a uuid on every existing row in SQL and adds a trigger that fills one on any
+insert that omits it.
+
+Several machines are joined by hand: export on one, `import --merge` on the
+other, then the reverse. There is no sync service and no transport but the
+file.
 
 The SQLite driver is `modernc.org/sqlite`, pure Go, so the binary has no C
 dependency. The memory data model is in this tree. Of the MCP SDK, only the
@@ -151,7 +175,7 @@ v1.8.0, were read; the driver was not opened.
 
 `setup` prints or writes the MCP entry for six clients, and `setup --hooks`
 installs lifecycle hooks for three of them
-(`cmd/llm-memory/admin.go:1681-1846`, `hooks.go:29-32`). The README states
+(`cmd/llm-memory/admin.go:1707-1872`, `hooks.go:29-32`). The README states
 that an instruction block must also be pasted into each client, because
 without it the model does not call the memory reliably
 (`examples/instructions_client.md`).
@@ -163,19 +187,21 @@ without it the model does not call the memory reliably
 | Schema: memories, history, FTS5 and its triggers | `internal/store/migrations/0001_initial.sql:9-51` |
 | Embeddings table and the invalidation trigger | `migrations/0002_embeddings.sql:3-15` |
 | Connection pragmas and transaction mode | `internal/store/db.go:77-92` |
-| History writer | `internal/store/memories.go:84-99` |
-| Create, with supersedes and the handoff slot | `memories.go:127-225` |
-| Update and the archived-row refusal | `memories.go:251-347` |
-| Archive, restore, the single-handoff rule | `memories.go:351-435` |
+| History writer | `internal/store/memories.go:86-101` |
+| Create, with supersedes and the handoff slot | `memories.go:129-231` |
+| Update and the archived-row refusal | `memories.go:257-353` |
+| Archive, restore, the single-handoff rule | `memories.go:357-441` |
 | Shared read filter | `internal/store/search.go:128-156` |
 | Full-text search and duplicate detection | `search.go:100-124`, `:247-290` |
 | Missing-embedding scan, guarded vector store, vector load | `internal/store/embeddings.go:50-107`, `:121-148`, `:173-205` |
 | Hybrid search and fusion | `internal/semantic/engine.go:131-177`, `:222-264` |
 | Briefing assembly and budget | `internal/briefing/briefing.go:42-98`, `:111-217` |
 | Hard delete | `internal/store/maintenance.go:40-52` |
-| Namespace rename, merge, archive | `internal/store/namespaces.go:130-287` |
-| Links and their history | `internal/store/links.go:21-100` |
-| Export and import | `internal/store/transfer.go:53-268` |
+| Namespace rename, merge, archive | `internal/store/namespaces.go:130-282` |
+| Links and their history | `internal/store/links.go:21-95` |
+| uuid column, trigger and instance id | `internal/store/migrations/0005_uuid.sql:6-35` |
+| Export and import | `internal/store/transfer.go:77-285`, `:385-421` |
+| Merge by uuid, tie-break, history union | `internal/store/merge.go:64-340` |
 | Tool registration and author | `internal/server/server.go:131-269` |
 | Web UI routes and request checks | `internal/ui/ui.go:51-509` |
 | Hook entry point | `cmd/llm-memory/hooks.go:143-298` |
@@ -197,11 +223,21 @@ One table holds every memory (`0001_initial.sql:9-22`,
 - **`archived_at`**: null while active. This is the only lifecycle column.
 - **`expires_at`**: an optional deadline set from `expires_in` or
   `expires_at`.
+- **`uuid`**: a random version-4 identifier, unique-indexed, generated in Go
+  on create and by a trigger on any insert without one. It is the identity a
+  merge matches on; the integer id stays the key of links, history, vectors
+  and the FTS row.
+
+`meta` holds one row, `instance_id`, which an export writes as its `origin`.
+A file copied with `backup` carries the same instance id, which the README
+warns against.
 
 `memory_history` holds `memory_id`, an `action` under a four-value `CHECK`
 (`create`, `update`, `archive`, `restore`), `snapshot`, `changed_by` and
-`changed_at`. The snapshot is the whole row after the action, with a `reason`
-key on an archive (`memories.go:76-81`).
+`changed_at`. The snapshot is the whole row after the action, uuid included,
+with a `reason` key on an archive (`memories.go:78-83`). `History` reads it
+in `(changed_at, id)` order, so lines a merge inserts sort by the timestamp
+the dump gives them (`internal/store/history.go:26`).
 
 `memory_links` holds directed `supersedes`, `relates_to` and `depends_on`
 edges with a composite primary key (`0004_links.sql:2-9`). They are returned
@@ -221,7 +257,9 @@ shape.
 
 **`bitemporal` is withheld.** `created_at`, `updated_at` and `archived_at`
 are all record time, and `expires_at` is a deadline the writer sets for
-retention. No column says when a fact was true.
+retention. A merge carries the exporting machine's record times across and
+settles `created_at` on the earlier of the two; both are record time. No
+column says when a fact was true.
 
 ## 6. Retrieval Mechanics
 
@@ -289,7 +327,7 @@ no background pass rewrites anything.
 **Create.** `CreateDetailed` validates, refuses text that matches a secret
 pattern, inserts, writes history, archives each id in `supersedes` with the
 reason `superseded by #N` and a link, and, for a handoff, archives the
-namespace's other active handoffs (`memories.go:127-225`).
+namespace's other active handoffs (`memories.go:129-231`).
 
 **Duplicates are reported, not blocked.** `remember` searches active rows of
 the namespace with an OR query over the new text's significant words and
@@ -299,7 +337,7 @@ result carries `possible_duplicates` and a hint to forget the new row or fix
 the old one (`tools.go:153-171`).
 
 **Update.** A patch changes only the fields supplied. An archived row is
-refused with a message naming `restore` (`memories.go:316-318`). There is no
+refused with a message naming `restore` (`memories.go:322-324`). There is no
 revision check: two clients patching the same field leave the later value in
 the row and both versions in history.
 
@@ -309,27 +347,53 @@ argument (`server.go:257-269`).
 
 **Secrets.** Eleven patterns and a URL-credentials rule run over content and
 title on create and update (`internal/store/secrets.go:14-28`, `:49-70`).
-Tags, namespace descriptions and imported rows are not checked.
+Tags, namespace descriptions and imported or merged rows are not checked.
+
+**Merge.** `Store.Merge` takes a format 2 dump and, in one transaction,
+creates its namespaces, then for each memory finds the local row by uuid
+(`internal/store/merge.go:64-205`). An unknown uuid is inserted with its
+timestamps and authors. A known one is compared as a canonical string that
+starts with `updated_at` and continues through namespace, kind, title,
+content, tags, importance, authors, archive and expiry; the larger replaces
+the other whole, archive state included, and writes an update row reading
+`merged: newer version from <origin>` (`merge.go:138-161`, `:268-287`).
+History lines of the dump are added when no line with the same action,
+actor, time and snapshot exists, and links are added as a union with no
+history row (`merge.go:167-195`, `:305-340`). Nothing on this path bumps
+`updated_at`, so a repeated merge is a no-op.
+
+Before inserting a memory unknown by uuid, the merge pairs it with a local
+row of the same namespace, kind and content that the dump does not describe,
+archived or not, and both machines settle on the smaller uuid
+(`merge.go:209-241`). The uuid adoption and the earlier `created_at` write
+no history row of their own (`merge.go:128`, `:134`); when the two versions
+otherwise agree, nothing records them.
 
 ### Forgetting
 
 - **`forget`** archives with an optional reason kept in the history snapshot.
 - **Expiry** is a read-time filter. `gc` turns expired rows into archived ones
   with the reason `expired (TTL)`; it runs when a person calls it from the CLI
-  or the UI (`memories.go:544-567`).
+  or the UI (`memories.go:550-573`).
 - **`purge --archived-before DATE`** deletes archived rows. The foreign keys
   cascade to history, links and embeddings, and the delete trigger removes the
   FTS entry (`maintenance.go:40-52`). It asks for confirmation unless `--yes`
-  is passed. The file is not vacuumed, and earlier `backup` and `export`
-  outputs are untouched.
+  is passed. The file is not vacuumed, earlier `backup` and `export` outputs
+  are untouched, and a merge from a machine that still holds the row inserts
+  it again, which the README states.
 
 **`tombstone` is withheld.** Archiving is keyed on the row. The duplicate
 check reads active rows only, and a committed test asserts that an archived
 memory is not reported as a duplicate
 (`internal/store/search_test.go:281-285`), so a forgotten statement can be
-remembered again with no signal. The one place an archived row blocks a
-repeat is `import`, which skips a row whose namespace, kind and content equal
-an existing one, archived or not (`transfer.go:208-217`).
+remembered again with no signal. The places an archived row blocks a repeat
+are on the CLI's import path. A plain `import` skips a row whose namespace,
+kind and content equal an existing one, archived or not
+(`transfer.go:390-396`). A merge pairs such a row as a twin, and a twin whose
+local archive is the later write stays archived and carries its archive to
+the other machine. Both are keyed on content equality at import, not on a
+rejected value that `remember` consults, and the design note lists
+tombstones as later work (`docs/design/multi-machine.md:206`).
 
 ### Operational cost
 
@@ -375,7 +439,7 @@ rebinding name fails the `Host` check.
 The token is a browser defence and nothing else. Any process that can reach
 the port can `GET /` and read it. Binding `--addr` to a non-loopback address
 turns the `Host` check off and logs a warning
-(`cmd/llm-memory/admin.go:1875-1878`); a committed case then accepts a
+(`cmd/llm-memory/admin.go:1901-1904`); a committed case then accepts a
 matching non-loopback `Host` and `Origin` with the token
 (`internal/ui/ui_test.go:327-337`), which is also what a rebinding page
 presents.
@@ -397,45 +461,93 @@ client or from the UI, is in the opening context of every later session in
 every project until someone archives it. With hooks installed it arrives
 without the model asking.
 
-### Recording a move re-stamps the recency the briefing ranks by
+### A namespace move keeps each row's recency and author
 
-A rename sets `updated_at` and `updated_by` on every memory in the namespace,
-a merge does the same to every memory it moves, and a new or removed link does
-it to the source memory (`namespaces.go:177-181`, `:224-226`,
-`links.go:50-55`). The briefing lists a namespace's memories by
-`updated_at` descending and takes the ten most recent decisions and facts from
-that order (`memories.go:497`, `briefing.go:191-197`). SQLite evaluates `now`
-once per statement, so after a rename every row carries the same instant and
-the order falls back to id: the ten newest-created, not the ten
-newest-edited. After a merge, the moved rows outrank every row the
-destination held. The handoff's heading and the header's last activity print
-`updated_by`, so a merged handoff is attributed to `ui` or the CLI actor
-(`briefing.go:125`, `:334`). A committed test asserts the new `updated_by`
-on a renamed row; none renders a briefing after a move.
+A rename moves rows through the foreign key's `ON UPDATE CASCADE`, and a
+namespace merge sets only `namespace` on the rows it moves
+(`namespaces.go:174`, `:219-221`); a link added or removed writes history
+and nothing else (`links.go:50-53`). The briefing ranks a namespace's
+memories by `updated_at` descending and prints `updated_by` as the handoff's
+author and the header's last activity (`memories.go:503`,
+`briefing.go:125`, `:334`), so neither moves under a bookkeeping operation.
+The namespace merge then keeps the destination's active handoff with the
+latest `updated_at` and archives the rest (`namespaces.go:231-233`).
 
-The merge's own choice of which handoff to keep, the latest by `updated_at`,
-runs after the stamp (`namespaces.go:236-238`), so the source's handoff
-always survives, even when the destination's was written later. The
-committed merge case creates the destination's handoff second, keeps the
-source's, and asserts only that one remains (`namespaces_test.go:108-112`,
-`:155-158`).
+Two committed cases assert the outcome in both directions. One writes the
+destination's handoff after the source's and requires that it stays active
+with its own author and the source's is archived; the other writes the
+source's handoff last and requires the reverse, and checks the fact order
+after the rename and after the merge (`namespaces_test.go:164`, `:213`,
+`:240`, `:249`). The link case asserts `updated_at` and `updated_by`
+unchanged after an add and a remove (`links_test.go:71`, `:87`). No
+briefing is rendered after a move; the cases assert the `List` order the
+briefing reads.
+
+### Merging two machines' files
+
+The merge is last-writer-wins per row on wall-clock `updated_at`, and every
+consequence below follows from that rule and from a namespace move leaving
+`updated_at` alone.
+
+- **A namespace move reaches the other machine only when the new name sorts
+  after the old.** A rename leaves `updated_at` equal on both sides, so the
+  canonical string decides on the namespace field next. Renaming `zeta` to
+  `alpha` loses on the other machine, and the reverse merge then moves the
+  rows back to `zeta` on the machine that renamed them, recreating the
+  namespace and writing a line that calls the old name the newer version
+  (`merge.go:142-157`, `:268-287`). A namespace merge into a
+  destination whose name sorts first is undone the same way. The design note
+  names the tie-break fallback and not the reversal
+  (`docs/design/multi-machine.md:184-186`). I re-derived the comparison in a
+  separate script; no test renames before a merge.
+- **A later edit on one machine un-archives a row forgotten on the other**,
+  because the edited version carries the later `updated_at` and replaces the
+  row whole, `archived_at` included. A row archived by `supersedes` returns
+  to the briefing beside its replacement, with the `supersedes` link kept by
+  the union. The convergence test archives on one side and edits a different
+  row on the other.
+- **A machine whose clock runs ahead wins every merge** for the rows it
+  wrote, and those rows rank above every later local write in the briefing
+  until local time passes them. A dump's `updated_at` is accepted as given;
+  only a zero one is replaced (`transfer.go:318-324`). The design note
+  leaves clock skew as an open question.
+- **A purge and a removed `relates_to` or `depends_on` link come back** from
+  a machine that still has them. The README states both.
+- **Two active handoffs can share a namespace** when each machine wrote one,
+  since the merge applies no single-handoff rule. The briefing shows the one
+  with the later `updated_at`; the other stays active in `recall` until the
+  next handoff archives both.
+
+A merge is reachable only from the CLI, by a person naming a file. Its
+convergence test diverges two databases by an edit, an archive, two creates
+and two links, merges three times and compares namespaces, memories and
+links; history is compared by line count on two memories in the idempotence
+case (`internal/store/merge_test.go:66-74`, `:91-112`, `:125-168`).
 
 ### What the history does not record
 
 - **A purge.** History goes with the row and nothing records that it
   happened. [Membrane](../membrane/) has the same cascade under its revision
   table.
-- **Import provenance.** An import inserts the dump's history rows with their
-  actors and timestamps after checking only that the action is known and the
-  snapshot is valid JSON (`transfer.go:252-266`).
+- **Import provenance.** Import and merge insert the dump's history rows with
+  their actors and timestamps after checking only that the action is known
+  and the snapshot is valid JSON (`transfer.go:361-380`). A memory that
+  arrives with history gets no local line saying it arrived, and since
+  `History` sorts by `changed_at`, a dump line can sort before the local
+  create.
+- **A merge's quieter writes.** The uuid a twin adopts, the earlier
+  `created_at` a merge settles on, and the links it adds write no history
+  row. A plain import that adds a link to an existing memory does write one
+  (`transfer.go:270-274`).
 
 ### Several processes on one file
 
 Every write path is a single transaction that takes the write lock at
 `BEGIN` and re-reads the row inside it, so a read-modify-write cannot
-interleave (`db.go:88-90`, `memories.go:311-343`). A writer that waits longer
+interleave (`db.go:88-90`, `memories.go:317-349`). A writer that waits longer
 than five seconds fails, and the tool returns an internal error asking the
-model to retry once (`tools.go:593-595`).
+model to retry once (`tools.go:593-595`). A merge is one transaction too,
+dry run included, which rolls back after computing the report.
 
 Two things sit outside a transaction. The duplicate search in `remember`
 runs before the insert. And `update_memory` applies the field patch, then
@@ -488,7 +600,7 @@ so an expired row is counted as active while every listing omits it
 
 ## 10. Tests, Evals, and Benchmarks
 
-120 test functions in 16 files, 5,522 lines, with 13 golden files.
+143 test functions in 18 files, 6,382 lines, with 13 golden files.
 `.github/workflows/ci.yml` runs `go vet`, the suite and a lint job on push and
 pull request; the race detector is on for Linux and macOS. I ran none of
 them.
@@ -518,22 +630,44 @@ memories (`internal/ui/ui_test.go:250-326`).
 
 History cases: one row per write with actor and content
 (`internal/store/memories_test.go:106-158`), and one per rename, merge and
-link change with its reason (`namespaces_test.go`, `links_test.go`). A vector
+link change with its reason, with `updated_at` and `updated_by` asserted
+unchanged and the kept handoff asserted by id in both directions
+(`namespaces_test.go`, `links_test.go`). A vector
 is refused when the row's text changed during the endpoint call
 (`internal/store/embeddings_test.go:169`, `engine_test.go:425`). Other cases:
 the single-handoff rule through create, restore, a kind change and a
 namespace move (`memories_test.go:342-398`); no orphan
-history or FTS rows after a purge (`internal/store/transfer_test.go:207-218`);
+history or FTS rows after a purge (`internal/store/transfer_test.go:216-227`);
 the tool list and the read-only tool list
 (`server_test.go:121-170`, `:523-552`); and `remember` refusing the kind
 `handoff` (`:337`).
+
+Merge cases (`internal/store/merge_test.go`):
+
+- a merge into an empty file reproduces the source, and a second merge
+  reports every row unchanged;
+- a merge leaves `updated_at`, `updated_by` and the uuid as the source had
+  them, and two diverged files converge after three merges;
+- the later of two conflicting edits wins, its history holds the replaced
+  version and the merge line, and an older incoming version leaves the local
+  one in place;
+- the tie-break gives the same row in both directions, and content twins
+  settle on the smaller uuid unless `--no-content-match`;
+- a dry run and a failed merge leave the file empty, and a repeated history
+  union adds nothing.
+
+The uuid cases
+cover the v4 backfill of a schema-4 file, distinct uuids, and the trigger on
+a raw insert (`internal/store/uuid_test.go`).
 
 The golden files pin text: six briefings at different budgets and the output
 of seven CLI invocations, with dates masked. `loaded_demo.golden` shows the full
 section order.
 
 Not covered: two processes writing at once, a briefing rendered after a
-rename, merge or link change, and an expired row under `include_archived`.
+rename, merge or link change, an expired row under `include_archived`, and,
+on the merge path, a rename, a forget against a later edit, a purge, or two
+handoffs in one namespace.
 
 No paper, DOI or benchmark is cited in the tree, and no retrieval quality
 measure is committed.
@@ -575,9 +709,11 @@ that reaches them.
 **Do not let a writer-chosen number decide what enters every project's
 opening context.** Importance 3 in a shared namespace is a broadcast.
 
-**Do not let the audit stamp double as the ranking key.** Recording who moved
-a row is right; doing it by rewriting the column the briefing sorts by makes
-a bookkeeping operation reorder what the next session reads first.
+**Do not let a whole-row last-writer-wins merge stand in for deletion and
+renaming.** A forget, a purge and a namespace move are intents, and a rule
+that compares timestamps sees only rows: the purge comes back, the forget is
+undone by an edit on the other machine, and a rename with no timestamp falls through to
+string order.
 
 **Do not keep one handoff slot without a read marker** where two clients can
 be open at once.
@@ -588,16 +724,18 @@ It fits one person moving between several assistants on one machine, with a
 few hundred to a few thousand deliberately written memories and no wish to run
 a service. It asks for discipline from the model and a pasted instruction
 block per client, and it gives back a store a person can read, export and
-repair with a CLI. It does not fit a team, a network deployment, or any
+repair with a CLI. A second machine works if that person merges by hand,
+keeps the clocks honest, and treats a purge or a rename as local. It does not
+fit a team, a network deployment, or any
 setting where the writing model is not trusted to choose importance and
 namespace. A reader who needs a memory to wait for approval, or a rejected
 statement to stay rejected, is not served by it.
 
 ## 12. Open Questions
 
-- **Should a namespace move or a link edit change a memory's place in the
-  briefing?** The history row is the record of the move; `updated_at` is
-  also the recency key.
+- **Should a namespace move carry its own timestamp for the merge to
+  compare?** Leaving `updated_at` alone keeps the briefing's order; it also
+  leaves the merge nothing but the namespace's spelling to decide by.
 - **What should happen to an unread handoff when a second client writes
   one?**
 - **Should a purge leave a receipt?** Every other removal does.
@@ -606,14 +744,16 @@ statement to stay rejected, is not served by it.
 
 | File | Role |
 | --- | --- |
-| `internal/store/migrations/0001_initial.sql` to `0004_links.sql` | Schema, FTS triggers, embeddings trigger |
+| `internal/store/migrations/0001_initial.sql` to `0005_uuid.sql` | Schema, FTS triggers, embeddings trigger, uuid and instance id |
 | `internal/store/memories.go` | Create, update, archive, restore, list, history writer |
 | `internal/store/search.go` | FTS5 search, shared filter, duplicate detection |
 | `internal/store/embeddings.go` | Vector storage, missing scan, filtered vector load |
 | `internal/store/namespaces.go` | Namespace list, rename, merge, archive, move history |
 | `internal/store/links.go` | Links, link history, the supersedes refusal |
 | `internal/store/maintenance.go` | Purge, stats, integrity check, backup |
-| `internal/store/transfer.go` | JSON export and import |
+| `internal/store/transfer.go` | JSON export (formats 1 and 2) and import |
+| `internal/store/merge.go`, `uuid.go` | Merge by uuid, tie-break, history union; uuid generation |
+| `docs/design/multi-machine.md` | Design note for identity and merge, with the `updated_at` audit |
 | `internal/store/secrets.go` | Secret patterns |
 | `internal/semantic/engine.go`, `client.go` | Hybrid search, fusion, embeddings client |
 | `internal/briefing/briefing.go` | Briefing assembly and budgeted writer |
@@ -628,17 +768,22 @@ statement to stay rejected, is not served by it.
 
 Run with `/usr/bin/git` in a full clone at the pinned commit.
 
-- `git ls-files '*.go' | grep -v _test.go | xargs cat | wc -l` — 8,730 lines in 22 files; `git ls-files '*_test.go' | xargs cat | wc -l` — 5,522 in 16.
-- `git grep -c -E '^func Test' -- '*_test.go'`, summed — 120.
+- `git ls-files '*.go' | grep -v _test.go | xargs cat | wc -l` — 9,348 lines in 24 files; `git ls-files '*_test.go' | xargs cat | wc -l` — 6,382 in 18. The same commands give 8,730 in 22 and 5,522 in 16 at `38d1578`.
+- `git grep -c -E '^func Test' -- '*_test.go'`, summed — 143 (120 at `38d1578`).
 - `git grep -n -E 'DELETE FROM|DROP TABLE' -- '*.go' '*.sql' ':!*_test.go'` — five: the embeddings reset, the link removal, the purge, the embeddings trigger and the merged namespace's own row. None names `memory_history`.
-- `git grep -n -E 'memory_history' -- '*.go' '*.sql' ':!*_test.go'` — the table, its index, one read, three comments and two inserts (`memories.go:94`, `transfer.go:262`).
+- `git grep -n -E 'memory_history' -- '*.go' '*.sql' ':!*_test.go'` — the table, its index, two reads (`history.go:26`, the merge's dedup read at `merge.go:313`), three comments and two inserts (`memories.go:96`, `transfer.go:375`); no `UPDATE` or `DELETE` names it.
 - `git grep -n -i -E 'read_at|acknowledg|seen_at|consumed' -- '*.go' '*.sql' ':!*_test.go'` — nothing: no column or field records that a handoff was read.
-- `git grep -n -E 'UPDATE memories|UPDATE namespaces SET name' -- '*.go' ':!*_test.go'` — the patch, the archive, the restore, the link touch at `links.go:52`, the rename at `namespaces.go:174` and its re-stamp at `:179`, and the merge at `:225`. Every one is followed in its transaction by `writeHistory` or `recordNamespaceHistory`.
-- `git grep -n -E 'ArchiveExpired|\.Purge\(|\.Restore\(|MergeNamespace\(|RenameNamespace\(' -- ':!*_test.go'` — callers in `cmd/llm-memory/admin.go` and `internal/ui/ui.go` only; `Purge` at `admin.go:438` only.
+- `git grep -n -E 'UPDATE memories|UPDATE namespaces SET name' -- '*.go' ':!*_test.go'` — the patch, the archive, the restore, the rename at `namespaces.go:174`, the namespace merge at `:220`, and three in `merge.go`: the uuid adoption at `:128`, the earlier `created_at` at `:134` and the whole-row replacement at `:147`. Every one but `merge.go:128` and `:134` is followed in its transaction by `writeHistory` or `recordNamespaceHistory`; none outside `merge.go` sets `updated_at` other than the patch, the archive and the restore.
+- `git grep -n -E 'ArchiveExpired|\.Purge\(|\.Restore\(|MergeNamespace\(|RenameNamespace\(|\.Merge\(' -- ':!*_test.go'` — callers in `cmd/llm-memory/admin.go` and `internal/ui/ui.go` only; `Purge` at `admin.go:438` and `Merge` at `admin.go:538` only.
+- `git grep -n -E 'Merge\(|Import\(|Export\(' -- internal/server internal/ui` — nothing: no MCP tool or UI route imports or merges.
 - `git grep -n -E 'restore|purge' -- internal/server` — message strings and a schema description; no tool.
 - `git grep -n -i -E 'Authorization|Bearer|BasicAuth' -- internal/ui internal/server cmd` — nothing: the UI's checks are the CSRF token and header tests in `ui.go:431-486`, and neither HTTP surface authenticates a user. Control: `git grep -n 'Authorization' -- internal/semantic` matches `client.go:114`.
-- `git grep -n -E 'updated_at DESC' -- internal/store` — the index at `0001_initial.sql:24`, `List` at `memories.go:497`, the recent search at `search.go:207` and the merge's handoff pick at `namespaces.go:237`.
+- `git grep -n -E 'updated_at DESC' -- internal/store` — the index at `0001_initial.sql:24`, `List` at `memories.go:503`, the recent search at `search.go:207` and the namespace merge's handoff pick at `namespaces.go:232`.
 - `git grep -n -E 'MergeNamespace|RenameNamespace|AddLink|RemoveLink' -- internal/briefing` — nothing: no briefing case follows a move or a link change.
+- `git grep -n -E 'Rename|Purge|KindHandoff|RemoveLink' -- internal/store/merge_test.go` — nothing: no merge case renames, purges, removes a link or holds a handoff. Control: `git grep -c -E 'Rename|Purge|KindHandoff|RemoveLink' -- internal/store/namespaces_test.go` — 14.
+- `git grep -n -i 'handoff' -- internal/store/merge.go internal/store/transfer.go` — nothing: neither import path applies the single-handoff rule. Control: `git grep -c -i 'handoff' -- internal/store/namespaces.go` — 4.
+- `git grep -n -E 'After\(|Before\(|Since\(|time\.Now' -- internal/store/transfer.go internal/store/merge.go` — the export's own time, the zero-`created_at` default at `transfer.go:320` and the `created_at` comparison at `merge.go:133`: nothing bounds a dump's `updated_at`.
+- `git grep -n -i 'tombstone' -- '*.go' '*.sql'` — nothing. Control: the same search over `docs` matches `multi-machine.md:128` and `:156`.
 - `git grep -n -i -E 'secure_delete|VACUUM|wal_checkpoint' -- '*.go' '*.sql'` — `VACUUM INTO` in the backup only.
 - `git grep -n -E 'WaitGroup|go func|t\.Parallel|errgroup' -- '*_test.go'` — one goroutine driving `serve` through pipes; no concurrent-writer test.
 - `git grep -n -i -E 'valid_from|valid_to|valid_at|valid_until|event_time|observed_at|as_of' -- .` — nothing.
@@ -647,6 +792,8 @@ Run with `/usr/bin/git` in a full clone at the pinned commit.
 - `git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|contributing|third.party)'` — `LICENSE` only.
 
 ## History
+
+**2026-11-18** — [`3e9efef63a3b3ad436ad827c5217db626b875ff4`](https://github.com/Morditux/llm-memory/commit/3e9efef63a3b3ad436ad827c5217db626b875ff4) — six untagged commits past v1.3.3. `3e9efef` closes [issue #5](https://github.com/Morditux/llm-memory/issues/5): a rename, a namespace merge and a link change no longer set `updated_at` or `updated_by`, and committed cases assert the kept handoff by id in both directions and the `List` order after each move. The re-stamp criticisms were removed. Also new: a uuid per memory, export format 2 and `import --merge`, read in full ([§9](#9-reliability-safety-and-trust)). Since moves leave `updated_at` alone, a merged rename reaches the other machine only when the new name sorts later; a forget is undone by a later edit on the other machine. The audit evidence and the recorded `UPDATE memories` search now cover the merge's two writes without history. The licence anchor was wrong at `38d1578`: 347-349, not 338-340. Marks unchanged. Screened: no auto-run surface, `go.mod` and `go.sum` inside the cooldown; nothing run; one tie-break re-derived in a script.
 
 **2026-11-17** — [`38d157868f67e01f32cca3fc082606b2da37bbfb`](https://github.com/Morditux/llm-memory/commit/38d157868f67e01f32cca3fc082606b2da37bbfb) — v1.3.3, four commits closing upstream issues #1 to #4, each filed against the previous pin. The web UI gained a start-up CSRF token, `Host`, `Origin`, `Sec-Fetch-Site` and `Content-Type` checks; a namespace rename, a merge and a link change write history, and a `supersedes` link cannot be removed; the embedding backfill follows the search's scope; a vector is stored only against unchanged text. Four criticisms were removed. The history fix re-stamps `updated_at` and `updated_by`, which the briefing ranks by and prints, and a merge then keeps the source's handoff ([§9](#9-reliability-safety-and-trust)); filed as [issue #5](https://github.com/Morditux/llm-memory/issues/5). The recorded `memory_history` search counted two comments where there are three at both pins. Marks unchanged. Screened: no auto-run surface, `go.mod` and `go.sum` inside the cooldown; nothing run. The go-sdk v1.8.0 HTTP handler's request checks were read.
 

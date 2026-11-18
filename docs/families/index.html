@@ -10425,13 +10425,16 @@ per namespace that each new handoff replaces. Every create, update,
 archive and restore writes a full snapshot to a history table in the
 same transaction, and one filter drops archived and expired rows from
 the briefing, the FTS5 arm, the optional vector arm and the duplicate
-check. Namespace moves and link changes write history too, and the web
-UI refuses cross-origin and rebinding requests and mutations without a
-start-up token. An importance-3 row in the shared <code>global</code>
-namespace enters every project's briefing, a rename, merge or link
-change re-stamps the <code>updated_at</code> the briefing ranks by, and
-a purge deletes the history with the row. It carries
-<code>scope_enforced</code>, <code>audit_log</code> and
+check. Namespace moves and link changes write history without touching
+the <code>updated_at</code> the briefing ranks by, and the web UI
+refuses cross-origin and rebinding requests and mutations without a
+start-up token. A CLI merge joins two machines' files by uuid, whole row
+on wall-clock <code>updated_at</code>, so a rename reaches the other
+machine only when the new name sorts later, a later edit on the other
+machine un-archives a forgotten row, and a purge comes back. An
+importance-3 row in the shared <code>global</code> namespace enters
+every project's briefing, and a purge deletes the history with the row.
+It carries <code>scope_enforced</code>, <code>audit_log</code> and
 <code>negative_eval</code>.</p>
 <p><strong><a href="../systems/backboard-desktop/">Backboard Desktop</a>
 keeps its own memory only on the routes it does not host, and the
