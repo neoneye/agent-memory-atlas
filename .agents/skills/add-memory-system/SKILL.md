@@ -457,6 +457,14 @@ Every report gets a copy of its source in `agent-memory-atlas-archive`, named `<
 GITHUB_TOKEN=$(gh auth token) python3 scripts/archive_mirror.py --only <owner>/<repo>
 ```
 
+**A contributor without write access to the archive organisation does not create the copy.** The command needs a token with admin on `agent-memory-atlas-archive`, which only a maintainer holds, so the copy is made at review time from the pull request, not before it. The contributor:
+
+- sets `archive_name` to the value `check_archive_names.py` derives from `source_url` (`<owner>--<repo>`, the casing the report uses), even though that repository returns 404. The check is offline and passes;
+- says in the pull request that the archive copy does not exist yet, and names the pinned `revision`;
+- does not add a screening-ledger record if they cannot run `screen_corpus.py`. An absent record never fails the build; the screen's outcome goes in the report's History entry either way.
+
+The maintainer checks out the pull request in its own worktree and runs the command above from that checkout. `archive_mirror.py` reads the pins from the reports beside it (`content/systems/`, relative to the script), so the report's `revision` is pinned as `refs/tags/atlas-pin-<sha>` even when it exists only on an upstream branch. The maintainer merges after the script exits 0, which it does only when no repository ends `failed`, `refused` or `upstream-unreadable` and every pin reads back from the copy. A pull request is never merged with an `archive_name` that points at nothing.
+
 Do not fork a new repository. A fork shares its parent's network, so GitHub resolves a short `#969` in the fork's commit messages to the upstream's issue, and every time the fork's branch moves, each commit naming an issue or a squash-merged pull request adds "neoneye added a commit to agent-memory-atlas-archive/… that referenced this issue" to that upstream thread. Seventeen sync runs did that across the archive before the Wenlan maintainer asked about it on wenlan-app/wenlan#969. A copy outside the network has no such link.
 
 What the script does, and what to check in its output:

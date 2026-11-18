@@ -49,6 +49,13 @@ python3 .agents/skills/add-memory-system/scripts/scaffold_report.py \
 Scope bar: memory that outlives a session. Novelty is not required, and a
 restrictive licence is a caveat rather than an exclusion.
 
+**The archive copy is the maintainer's step.** Set `archive_name` to
+`<owner>--<repo>` from your `source_url` even though that archive repository
+does not exist yet, and say so in the pull request with the pinned `revision`.
+A maintainer creates the copy from your branch and reads the pin back before
+merging. The procedure is under
+[*Archive the source*](.agents/skills/add-memory-system/SKILL.md#archive-the-source).
+
 ## Before you open the PR
 
 ```sh
