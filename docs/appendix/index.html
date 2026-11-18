@@ -8392,6 +8392,66 @@ points; four floating surfaces; FRESH findings on every manifest,
 inflated by the shallow clone dating each file to the tip;
 <code>AGENTS.md</code> and <code>CLAUDE.md</code> treated as data.
 Nothing was installed, built or run.</li>
+<li><strong><code>krishyaid-coder/Miss-Me</code> was examined and has no
+report: it measures whether a Claude Code session's context window still
+holds facts the user pinned, and what it stores is the answer key, which
+by design never reaches the agent.</strong> MIT, 1,705 lines of
+TypeScript under <code>src/</code> and 38 test cases in two files, nine
+commits between 13 October and 5 November 2026, read at <a
+href="https://github.com/krishyaid-coder/Miss-Me/commit/1e30c786e96b3ed60d078c14adda97374e0ea2b7"><code class="commit-id" title="1e30c786e96b3ed60d078c14adda97374e0ea2b7">1e30c786…</code></a>;
+by the author of <a href="../systems/rakho/">Rakho</a>. A pin writes one
+of at most five facts (<code>src/core/types.ts:87</code>) to
+<code>.miss-me/state.json</code> in the project, where it outlives the
+session until <code>miss_me_unpin</code> removes it. The only reader of
+a stored fact is the scorer (<code>src/core/score.ts:100</code>): every
+eighth prompt, before compaction, and on a compact or resume
+<code>SessionStart</code>, a hook hands the model the anchors' ids and
+labels and tells it to call <code>miss_me_check</code> with what it
+remembers (<code>src/cli/hook.ts</code>,
+<code>src/core/nudge.ts:32-35</code>). The memory under test is the
+window, and what persists is an oracle for testing it rather than
+anything the agent recalls, so this sits with <a
+href="../families/#not-in-scope-conversation-window-management">conversation-window
+management</a>. The other half, guards, appends a line to
+<code>.miss-me/access.jsonl</code> for each file-touching tool call that
+reaches a guarded path, tiered as a named read, a search sweep or a
+shell mention, and blocks nothing; it is a record of tool calls, not of
+beliefs. Three defects at this pin bear on what it measures. The scorer
+counts as remembered any recollection whose normalised text is a
+substring of the fact (<code>src/core/score.ts:52</code>): against the
+README's example pin <em>The API is FastAPI with Postgres</em>, a
+re-derivation of <code>recallHit</code> in a separate script scores
+<code>e</code> and <code>is</code> as remembered, and the 0.55
+token-coverage threshold (<code>:72</code>) passes <em>The API is
+FastAPI with MySQL</em>; the committed wrong-restatement case
+(<code>src/core/score.test.ts:21</code>) shares no token with its fact.
+The answer key and every earlier guess sit in a plain file inside the
+project, which the agent's own Read tool reaches, and nothing guards
+<code>.miss-me/</code> unless the user adds it. And
+<code>miss_me_trail</code> filters to <code>sessionId()</code>
+(<code>src/mcp/server.ts:147</code>), which is
+<code>CLAUDE_SESSION_ID</code> or <code>"default"</code>
+(<code>src/core/cwd.ts:9</code>), while the hook records the id Claude
+Code passes it (<code>src/cli/hook.ts:48</code>); <code>init</code>
+registers the server with no environment
+(<code>src/cli/init.ts:66</code>, <code>:95</code>), so unless the host
+exports that variable to MCP servers, the tool's default per-session
+count misses every event the hook recorded. <code>recordCheck</code>
+copies each check into the busiest hook session to bridge the same split
+for health (<code>src/core/store.ts:134-145</code>), and the
+<code>Stop</code> hook's own trail report uses the hook's id, so only
+the tool is affected. Searches run at this pin with
+<code>/usr/bin/git grep</code>:
+<code>-n -E '\.fact([^a-zA-Z]|$)' -- src</code> (one reader, the
+scorer);
+<code>-n -E 'miss-me/|state\.json' -- src/core/guard.ts src/core/match.ts src/cli/hook.ts</code>
+(none; the same pattern counts two lines in
+<code>src/core/store.ts</code>);
+<code>-n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- . ':!package-lock.json'</code>
+(none). Screened before reading: no auto-run or build-time surface, four
+floating ranges in <code>package.json</code> behind a
+<code>package-lock.json</code> unchanged for 35 days; nothing from the
+tree was installed, built or run.</li>
 <li><strong>The virtual-context report awarded
 <code>scope_enforced</code> on every relational read path, called its
 audience receipt a read-side guard, said nothing measured a mechanism on
