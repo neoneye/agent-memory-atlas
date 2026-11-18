@@ -11942,6 +11942,36 @@ reversibility work is genuinely relevant to memory systems with
 restartable background passes — the read-generation fence question
 recorded under <code>Cohexa-ai/agent-coherence</code> is the same shape
 — but a reader looking for agent memory here will not find it.</li>
+<li><strong><code>agent-substrate/substrate</code> was examined and has
+no report: it persists an agent's process, not its memory.</strong>
+Apache-2.0 (the stock text, no rider), Go, 1,743 commits since 13 May
+2026, at <a
+href="https://github.com/agent-substrate/substrate/commit/4b57dfcb43636895be7d8526740bd694bb4fb0dd"><code class="commit-id" title="4b57dfcb43636895be7d8526740bd694bb4fb0dd">4b57dfcb…</code></a>.
+It is a Kubernetes runtime that multiplexes sandboxed "actors" onto a
+small pool of gVisor or Cloud Hypervisor workers, suspending an idle
+actor to a snapshot in GCS or S3 and restoring it on the next request.
+What survives is a gVisor checkpoint of the process tree or a microVM
+memory image, plus <code>DurableDir</code> volume and rootfs bundles
+(<code>docs/concepts/architecture.md</code>,
+<code>api/ateapi/v1/ateapi.pb.go:3949</code>). That is the boundary
+drawn for <code>shepherd</code> above: opaque bytes under a snapshot id,
+which can be stale and cannot be wrong, and nothing in the tree reads
+them as a claim, retrieves them by content or corrects them. Agent
+memory appears once, in a load profile:
+<code>internal/benchmarking/boomer/agentsession/scripts/personal-assistant.yaml</code>
+models a "remember that" request as a 2 MiB <code>write_disk</code> and
+a recall question as a disk read, which is all the runtime sees of a
+memory system running inside an actor. A store inside a hosted agent
+survives hibernation intact, so the project bears on deploying the
+systems reported here and not on their mechanisms. Searched at the pin:
+<code>git grep -l -i -E 'embedding|recall|remember|vector store|knowledge base|long-term memory|agent memory|memory store' -- . ':(exclude)vendor' ':(exclude)_LICENSES'</code>
+matches 22 files, every hit an infrastructure comment, a fake node
+registry in a benchmark, an in-memory test store, an operator doc or one
+of the two load profiles. Screened before reading, from a shallow clone:
+no auto-run surface, 27 build-time execution points of which 26 are
+vendored Makefiles, six unpinned dependency surfaces under
+<code>benchmarking/</code> and <code>site/</code>; nothing was
+installed, built or run.</li>
 <li><strong><code>avarshvir/oxygen</code> was examined and has no
 report: it stores nothing at all.</strong> Apache-2.0, 486 lines of
 Python, 39 commits since 24 August 2026, at <a
