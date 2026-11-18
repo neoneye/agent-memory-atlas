@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 816 reports.**
+**This page covers all 817 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7480,3 +7480,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 208,146 lines of TypeScript from 2,608 commits by 15 contributors since December 2025; the memory service arrived on 10 November 2026 as one commit imported from a private repository, with hosted-only code laid over at deploy time. 96 memory cases on real Durable Object evictions, run in CI. Two marks. Apache-2.0, with both SDK manifests declaring MIT and no MIT file.
 - Study when: several sessions of a hosted agent share a few small documents a person can also edit, and a write must never land on text the model did not see.
 - Do not copy when: memory needs search, history of what a value used to be, or deletion that leaves running sessions able to continue.
+
+### [`clickhouse-loom`](../systems/clickhouse-loom/)
+
+- Best idea: **judge the write before the insert.** `memory.set` reads the closest active peers and answers merge, duplicate, refines or conflict with no model call, every change is a new version in `memory_versions`, and every retirement the background LLM resolver makes carries an audit row and an Undo.
+- Second idea: memories link to files and symbols by fingerprint and leave search when the code is removed; the filter columns ride on the vector row, so no leg joins back and loses a predicate.
+- Biggest risk: **the restore paths write back what the blacklist refuses.** `memory.restore`, a WRITER op on the agent's reach, revives a sweep's tombstone within 14 days, and rollback, snapshot restore and consolidate skip the check; no forget writes a pattern.
+- Second risk: the chunk leg serves conversation text behind a rejected or superseded fact by default, `memory.proposal_decide` lets an agent accept a proposal, and audit rows are best-effort, skip non-embedded writes and age out under a namespace's retention.
+- Most reusable component: the peer verdict in `server/memory/app/conflicts.py` with `server/memory/app/set_commit.py`, and the resolver's Undo in `server/memory/app/restore.py`.
+- Maturity impression: Apache-2.0 from ClickHouse, Inc.; 513,695 lines of Python under `server/`, 158,862 in `server/memory/`; 753 commits from 8 October to 18 November 2026; 27,617 pytest functions with the integration suite on ClickHouse in CI, not run here; LongMemEval-S and LoCoMo headlines recompute from committed CSVs. Seven marks: `tombstone`, `trust_state`, `bitemporal`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval`.
+- Study when: you are building one memory service for a team of agents and people and need scope, history, audit and erasure to be real rather than declared.
+- Do not copy when: one developer needs memory on a laptop, or a forgotten value must stay forgotten without someone writing a pattern for it.

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 816 reports.</strong></p>
+<p><strong>This page covers all 817 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33716,6 +33716,47 @@ documents a person can also edit, and a write must never land on text
 the model did not see.</li>
 <li>Do not copy when: memory needs search, history of what a value used
 to be, or deletion that leaves running sessions able to continue.</li>
+</ul>
+<h3 id="clickhouse-loom"><a
+href="../systems/clickhouse-loom/"><code>clickhouse-loom</code></a></h3>
+<ul>
+<li>Best idea: <strong>judge the write before the insert.</strong>
+<code>memory.set</code> reads the closest active peers and answers
+merge, duplicate, refines or conflict with no model call, every change
+is a new version in <code>memory_versions</code>, and every retirement
+the background LLM resolver makes carries an audit row and an Undo.</li>
+<li>Second idea: memories link to files and symbols by fingerprint and
+leave search when the code is removed; the filter columns ride on the
+vector row, so no leg joins back and loses a predicate.</li>
+<li>Biggest risk: <strong>the restore paths write back what the
+blacklist refuses.</strong> <code>memory.restore</code>, a WRITER op on
+the agent's reach, revives a sweep's tombstone within 14 days, and
+rollback, snapshot restore and consolidate skip the check; no forget
+writes a pattern.</li>
+<li>Second risk: the chunk leg serves conversation text behind a
+rejected or superseded fact by default,
+<code>memory.proposal_decide</code> lets an agent accept a proposal, and
+audit rows are best-effort, skip non-embedded writes and age out under a
+namespace's retention.</li>
+<li>Most reusable component: the peer verdict in
+<code>server/memory/app/conflicts.py</code> with
+<code>server/memory/app/set_commit.py</code>, and the resolver's Undo in
+<code>server/memory/app/restore.py</code>.</li>
+<li>Maturity impression: Apache-2.0 from ClickHouse, Inc.; 513,695 lines
+of Python under <code>server/</code>, 158,862 in
+<code>server/memory/</code>; 753 commits from 8 October to 18 November
+2026; 27,617 pytest functions with the integration suite on ClickHouse
+in CI, not run here; LongMemEval-S and LoCoMo headlines recompute from
+committed CSVs. Seven marks: <code>tombstone</code>,
+<code>trust_state</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>human_review</code> and <code>negative_eval</code>.</li>
+<li>Study when: you are building one memory service for a team of agents
+and people and need scope, history, audit and erasure to be real rather
+than declared.</li>
+<li>Do not copy when: one developer needs memory on a laptop, or a
+forgotten value must stay forgotten without someone writing a pattern
+for it.</li>
 </ul>
         </article>
       </div>

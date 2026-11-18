@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted MCP and HTTP memory
+server on ClickHouse whose facts link to code, are judged against their
+peers on write, and keep every version.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Loom
+(ClickHouse) — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted MCP and HTTP
+memory server on ClickHouse whose facts link to code, are judged against
+their peers on write, and keep every version.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Loom
+(ClickHouse) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted MCP and HTTP
+memory server on ClickHouse whose facts link to code, are judged against
+their peers on write, and keep every version.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Loom (ClickHouse) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Loom (ClickHouse)",
+      "description": "A self-hosted MCP and HTTP memory server on ClickHouse whose facts link to code, are judged against their peers on write, and keep every version.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A team memory server that judges each write
+against its peers and keeps every version</p>
+          <h1>Loom (ClickHouse)</h1>
+          <p class="document-deck">A self-hosted MCP and HTTP memory
+server on ClickHouse whose facts link to code, are judged against their
+peers on write, and keep every version.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ClickHouse/loom">
+              <span>Source</span>
+              <strong>ClickHouse/loom</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ClickHouse/loom/commit/39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc" title="39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc">
+              <span>Analyzed revision</span>
+              <code>39243b17…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-18</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ClickHouse--loom" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ClickHouse--loom</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0,
+in LICENSE with a NOTICE naming ClickHouse, Inc. and a
+THIRD_PARTY_NOTICES file for bundled components under MIT, BSD, ISC,
+MPL-2.0, OFL and CC BY-SA 4.0; agrees with pyproject and the plugin
+manifests</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>513,695
+lines of Python under server/ in 1,740 files, 158,862 of them in
+server/memory/ (542 files); 99,726 lines of dashboard TypeScript, 62,975
+in the Python and TypeScript SDKs, 23,231 in agent integrations, 69,572
+in bench/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>753
+commits on main from 8 October to 18 November 2026, 700 of them by the
+leading author of fifteen contributors; release v1.2.0 on 12 November
+2026. Counted through the GitHub API; the reading used a depth-one
+clone</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>27,617
+pytest functions in tests/ (25,444 unit in 2,267 files, 2,157
+integration in 323 files), 736,455 lines; CI runs unit tests in random
+order with a 40% coverage floor and the integration suite against a real
+ClickHouse with a fake embedder and model. I ran none</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Loom is a self-hosted memory server for teams of agents, from
+ClickHouse, Inc. It stores keyed facts, documents and a code index in
+ClickHouse and serves them over a streamable-HTTP MCP endpoint, an HTTP
+API and two SDKs. Plugins wire it into Claude Code, Codex, Cline and
+Cursor, and a dashboard shows memories, reviews, the audit log and code
+links.</p>
+<p>What is notable is how much of the correctness work happens at write
+time. Each <code>memory.set</code> is judged against its nearest peers
+before the insert, and the verdict is one of merge, duplicate, conflict
+or refines. Every change is a new version, and every retirement the
+background LLM resolver makes can be undone. A memory can point at files
+and symbols, and it leaves search when that code is removed. All seven
+marks rest on mechanisms with a producer on a reachable path, each with
+limits stated in section 9.</p>
+<p>What is weak sits at the seams between those mechanisms. The
+blacklist refuses a matching value on every intake path and none of the
+restore paths. The chunk leg serves conversation text behind a fact that
+was rejected or superseded. The verb that accepts a proposed fact is an
+agent's to call.</p>
+<p><strong>Licence.</strong> Apache-2.0, with a NOTICE and a
+THIRD_PARTY_NOTICES file that agree with the manifests. No clause
+restricts use or analysis.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row identified by its key under an identity tuple: org,
+namespace, agent, user and session
+(<code>schemas/schema.sql:2421-2501</code>). The table is a
+<code>ReplacingMergeTree</code> on a nanosecond <code>version</code>,
+and a materialized view copies every insert into
+<code>memory_versions</code>, so the current row is the newest version
+and the old ones stay readable through <code>memory.history</code>
+(<code>schemas/schema.sql:3135-3206</code>,
+<code>server/memory/store/history.py:127</code>).</p>
+<p>A value becomes a belief through a judgement. <code>memory.set</code>
+fetches the live row, refuses a blacklisted value, embeds, and reads the
+closest active peers of the same type
+(<code>docs/architecture/memory-architecture.md</code>
+§<code>memory.set</code>). A canonical match merges, a close peer with
+the same content words is a duplicate, a templated substitution under
+<code>newest_wins</code> refines and retires the peer, and any other
+close peer marks both rows <code>conflicted</code>. No verdict on the
+write calls a model. A write marked <code>proposed</code> lands outside
+the served set until a writer accepts it
+(<code>server/memory/domain/temporal_sql.py:38-47</code>).</p>
+<p>A belief stops being served in five ways: a same-key or resolver
+supersession, a writer's <code>reject</code>, a <code>delete</code>
+tombstone, an expiry, or an erasure. Each writes a new version row,
+never an in-place edit, except <code>memory.clear</code> and the
+redaction, which update rows in place
+(<code>server/memory/store/lifecycle.py:929-947</code>,
+<code>server/memory/store/redaction.py:89-92</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write is checked against the blacklist and its peers before the insert, every version is kept, and the restore paths write back what the blacklist refused</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write is checked against the blacklist and its peers before the insert, every version is kept, and the restore paths write back what the blacklist refused
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    SET[&quot;memory.set, update&lt;br/&gt;the agent over MCP&quot;]
+    EXT[&quot;set_from_messages&lt;br/&gt;LLM extraction&quot;]
+    IMP[&quot;bulk_set, import,&lt;br/&gt;observe, profiles&quot;]
+    SET ~~~ EXT ~~~ IMP
+  end
+  writers --&gt; BL{&quot;value matches a&lt;br/&gt;blacklist pattern?&quot;}
+  BL --&gt;|&quot;yes&quot;| REF[&quot;422 BLACKLISTED&lt;br/&gt;nothing written&quot;]
+  BL --&gt;|&quot;no&quot;| PEER{&quot;peer verdict:&lt;br/&gt;merge, duplicate,&lt;br/&gt;refines, conflict&quot;}
+  PEER --&gt; ROW[&quot;new version row,&lt;br/&gt;active or proposed&quot;]
+  ROW --&gt; VER[&quot;memory_versions keeps it;&lt;br/&gt;hash-only audit row&quot;]
+  VER --&gt; RES[&quot;LLM conflict resolver&lt;br/&gt;retires at 0.98,&lt;br/&gt;Undo restores&quot;]
+  ROW --&gt; DEL[&quot;memory.delete:&lt;br/&gt;tombstone version&quot;]
+  DEL --&gt; RST[&quot;memory.restore within&lt;br/&gt;14 days: no blacklist&lt;br/&gt;check&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Loom runs as three containers in the shipped Compose file:
+ClickHouse, the server and a document extractor
+(<code>compose.yaml:14-150</code>). The server is one Python process
+with workers elected to a leader. The default storage authority is
+ClickHouse (<code>server/settings/catalog.py:5441</code>). The
+<code>postgres</code> authority moves current heads, revisions, locks
+and idempotency to Postgres and publishes ClickHouse rows as
+projections; vectors and every search leg stay in ClickHouse
+(<code>docs/architecture/storage-authority.md:20-34</code>).</p>
+<p>There is no vector index. The fact leg sorts by exact
+<code>cosineDistance</code> over <code>loom.memory_embeddings</code>,
+optionally a quantized shortlist rescored at full precision
+(<code>server/memory/app/retrieval/fact_sql.py:87</code>,
+<code>:138-153</code>). The embedding mirror carries the columns search
+filters on, so no leg joins back to <code>loom.memory</code>. An
+embedding server and a chat model are external; the conflict resolver
+defaults to a strong model, one call per row with its peers.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>install.sh</code> or <code>loom up</code> starts the stack and
+mints a writer token for the agent
+(<code>server/cli/up.py:397-410</code>). A Codespaces definition starts
+the released stack for a try-out. Single-user mode runs with auth off,
+which the authorizer treats as allow-all
+(<code>server/auth/authz.py:205-206</code>). An operator stands up
+ClickHouse, an embedder and a model, and about 3 GB of images.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>The write.</strong> <code>_handle_memory_set</code> runs
+named phases over one request state
+(<code>server/memory/app/write.py</code>,
+<code>server/memory/app/set_commit.py</code>): resolve type, fetch the
+live row, guard lock and pin, expiry, prepare and blacklist
+(<code>write.py:402-412</code>), proposal and precondition checks, build
+the version row, embed, conflict verdict, dual write, then supersession
+and the audit row.</li>
+<li><strong>Extraction.</strong> <code>set_from_messages</code> runs the
+model over a transcript and hands the facts to <code>bulk_set</code>
+(<code>server/memory/app/pipeline.py</code>). The Claude Code and Codex
+SessionEnd hooks send <code>defer=true</code>, which queues the run on
+the <code>extraction_queue</code> worker
+(<code>integrations/claude-code-plugin/lib/session-memory.mjs:7</code>,
+<code>:220</code>).</li>
+<li><strong>Search.</strong> <code>vector_search</code> runs the fact
+leg with BM25 in the same SQL, then chunk, record, graph, summary,
+anchor, key-match and definition legs
+(<code>server/memory/app/retrieval/search.py:374-418</code>). RRF scores
+<code>1/(60+sem_rank) + w_lex/(60+lex_rank)</code>
+(<code>server/memory/app/retrieval/fusion.py:47-72</code>).</li>
+<li><strong>Ask.</strong> <code>memory.ask</code> runs the same
+retrieval and an LLM answers with cited keys, dropping superseded rows
+and masking chunk sentences that restate them
+(<code>server/memory/app/ask/synthesis.py:601</code>,
+<code>server/memory/app/ask/supersession.py:249-266</code>).</li>
+<li><strong>Delete.</strong> <code>memory.delete</code> writes a
+tombstone version and <code>_retire_derived</code> retires embeddings,
+chunks, procedure runs, decision records and consolidated summaries
+(<code>server/memory/app/handlers.py:605-664</code>,
+<code>:1108-1200</code>).</li>
+<li><strong>The resolver.</strong>
+<code>memory/workers/conflict_resolver.py</code> judges flagged rows on
+the leader, re-reads each row under its key lock, and writes a
+<code>memory.auto_supersede</code> audit row for every retirement
+(<code>server/memory/app/auto_resolution.py:31</code>,
+<code>:154-188</code>).</li>
+<li><strong>Erasure.</strong> A saga of about thirty steps per scope
+reaches memory, embeddings, chunks, shared copies, summaries, graph
+links, evidence, code links, caches and the webhook outbox
+(<code>server/erasure/app/saga_steps.py:265-400</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>loom.memory</code> carries <code>status</code> with seven
+values: active, conflicted, tombstoned, duplicate, superseded, rejected
+and proposed (<code>schemas/schema.sql:2444</code>). The served set is
+active and conflicted
+(<code>server/memory/domain/temporal_sql.py:38</code>). Provenance is
+server-stamped: <code>actor</code> from the token and
+<code>source_class</code> from the server, which a caller may only
+downgrade (<code>server/memory/app/write.py:547-552</code>,
+<code>:569-570</code>). <code>verified_by</code> and
+<code>verified_sha256</code> hold an attestation, and
+<code>memory.verify</code> takes its actor from the token
+(<code>server/memory/app/verify.py:52-55</code>).</p>
+<p>Time has two axes, which the project's own table states
+(<code>docs/concepts/memory.md</code> §Time). <code>valid_at</code>,
+<code>valid_to</code> and <code>temporal_anchor</code> are world time.
+<code>memory.set</code> takes them from the caller and stores NULL when
+none is given (<code>write.py:576-577</code>). Extraction takes the date
+the model read from the text, then the fact's anchor, then the
+observation date, which defaults to the request's day
+(<code>server/memory/app/pipeline.py:926-937</code>).
+<code>created_at</code>, <code>version</code>,
+<code>tombstoned_at</code> and <code>expires_at</code> are record time,
+and <code>memory_versions</code> keeps each version's record time.
+<code>invalid_at</code> is documented as record time, and intra-batch
+supersession writes the newer row's <code>valid_at</code> into it
+(<code>server/memory/domain/conflicts.py:325-329</code>).</p>
+<p>Sensitivity is a tier. A <code>high</code> row gets no embedding row,
+so no search leg sees it, and a key read of it is audited as
+<code>memory.sensitive_read</code>
+(<code>server/memory/domain/memory_types.py:72-79</code>,
+<code>server/memory/app/handlers.py:459-472</code>).</p>
+<p><code>loom.blacklist</code> holds patterns, substring or RE2, scoped
+to a namespace, an org or the whole server, matched against the stored
+value text (<code>schemas/schema.sql:332-348</code>,
+<code>server/memory/app/blacklist_guard.py:378-390</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The fact leg filters <code>tombstoned_at IS NULL</code>, expiry,
+<code>valid_to</code> and the served statuses, and leaves episodic,
+profile and reflection types out unless named
+(<code>server/memory/domain/search_sql.py:50-163</code>). It
+over-fetches <code>max(4*top_k, 60)</code> and ranks by the mode: RRF,
+or a hybrid of BM25 and cosine at alpha 0.5
+(<code>server/memory/app/retrieval/fact_rank.py:425-434</code>). A
+correctness tail follows: demoted tags, a conflict penalty, a 0.1
+sensitivity demotion, a capped reinforcement term and trust
+(<code>fact_rank.py:185-239</code>, <code>:524-570</code>). The wire
+default is <code>rrf</code>; an unpinned call is filled from the
+deployment default, <code>semantic</code>
+(<code>server/settings/catalog.py:3633-3638</code>).</p>
+<p>Search explains itself. <code>_finalize_abstain</code> returns
+<code>no_match</code>, <code>below_threshold</code> or
+<code>low_calibrated_confidence</code>, and calibration reports a
+retrieval risk (<code>server/memory/app/search/verdict.py:81-142</code>,
+<code>server/memory/domain/retrieval_calibration.py:46-51</code>).</p>
+<p>The chunk leg checks only the chunk's own tombstone. Parent status,
+tags and <code>as_of</code> apply only when the request names hard tags
+or replays a time:
+<code>if not hard_tags and not replaying: return ""</code>
+(<code>server/memory/app/retrieval/chunks.py:91</code>). The ask module
+says so in its own comment, and masks restatements at synthesis; search
+does not (<code>server/memory/app/ask/supersession.py:17-21</code>).</p>
+<p>Memories linked to code surface through <code>memory.for_file</code>,
+which reads <code>loom.memory FINAL</code> by path, basename or code
+link with tombstone, expiry, sensitivity and status filters, and no
+<code>valid_to</code> predicate
+(<code>server/memory/app/for_file.py:67-91</code>). Under the default
+<code>retire_removed</code> policy, a memory whose links are all missing
+leaves search, ask and the pack.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A tool write blocks the agent for one embedding call, a peer read and
+the insert. An embed failure fails the call and writes nothing; writers
+that can wait write a zero-vector stub the <code>embedding_worker</code>
+fills (<code>docs/architecture/memory-architecture.md</code>
+§<code>memory.set</code>). A point write is readable on the next call,
+search included. Deferred extraction lags until the
+<code>extraction_queue</code> worker reaches the session. The resolver
+judges after the write, on the leader, at one model call per flagged
+row. No pass rewrites the whole store.</p>
+<p>The write guards stack. A byte-identical value is a restatement that
+raises <code>reinforcement_count</code>. A lock answers 423, a pin 409,
+an <code>if_match_sha256</code> mismatch 409, a value over the char
+limit 422, a blacklisted value 422, and a proposal over an established
+fact 409 <code>KEY_HOLDS_FACT</code> (<code>write.py:92-135</code>,
+<code>:389-412</code>, <code>:464-507</code>,
+<code>:808-821</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Every version is a row in <code>memory_versions</code>, with no TTL
+on that table, so storage grows with every restatement
+(<code>server/storage/retention_overrides.py:50-98</code>). ClickHouse
+merges <code>ReplacingMergeTree</code> parts in the background, and
+every read of current state uses <code>FINAL</code>. The resolver's cost
+is one strong-model call per flagged row; a row is judged once per
+version.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server exposes toolsets. <code>core</code> carries
+<code>memory.set</code>, <code>pin</code>, <code>update</code>,
+<code>delete</code>, <code>get</code>, <code>history</code>,
+<code>apply</code>, <code>lock</code>, <code>blacklist.add</code> and
+<code>context.pack</code>, and <code>memory.search</code> is reached
+through a synthetic <code>loom_search</code> tool
+(<code>server/operations/toolsets.py:98</code>, <code>:140-162</code>).
+<code>coding</code> adds working memory and code-intelligence ops
+(<code>:178-197</code>). Any write op that is not hidden is callable by
+name through <code>loom_op</code>
+(<code>server/transport/mcp_op.py:93</code>).</p>
+<p>The Claude Code plugin's hooks run the loop
+(<code>integrations/claude-code-plugin/hooks/hooks.json</code>):</p>
+<ul>
+<li><strong>SessionStart</strong> packs context;
+<strong>UserPromptSubmit</strong> recalls on the first prompt only when
+memory is not abstaining and confidence is at least 0.5, capped at 1,200
+characters (<code>hooks/loom-prompt-recall.mjs:35</code>,
+<code>:72-76</code>).</li>
+<li><strong>PreToolUse on Edit and Write</strong> calls
+<code>memory.for_file</code> over the person's namespace and the
+repository's team-rules namespace
+(<code>lib/file-context.mjs:160-183</code>).</li>
+<li><strong>PostToolUse</strong> records each call with
+<code>observe.record</code>; <strong>SessionEnd</strong> sends the
+transcript to deferred extraction.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-blacklist-holds-at-intake-and-not-at-restore">The blacklist
+holds at intake and not at restore</h3>
+<p>A pattern refuses a matching value on <code>memory.set</code>,
+<code>update</code>, <code>bulk_set</code> and so on every extraction
+and import, on observe, decisions, evidence import and
+<code>copy_to</code>
+(<code>server/memory/app/bulk_rows.py:252-276</code>). The agent can add
+one mid-conversation, and only an admin can lift one. The restore paths
+write without the check. <code>memory.restore</code> is a WRITER op an
+agent reaches, and within 14 days it revives a tombstone the blacklist's
+own sweep wrote (<code>server/memory/app/restore.py:632-677</code>). A
+committed test records the history: <em>"An older build's memory.restore
+copied the sweep's marker onto the live row it brought back"</em>
+(<code>tests/unit/test_namespace_rollback_unembedded.py:332-334</code>).
+<code>namespace.rollback</code>, <code>namespace.restore</code> with a
+caller-supplied snapshot, and <code>memory.consolidate</code>'s
+model-written merge skip it too. Delete, forget and erasure never add a
+pattern, so a deleted value can be extracted again.</p>
+<h3 id="what-a-proposal-and-a-conflict-wait-for">What a proposal and a
+conflict wait for</h3>
+<p><code>proposed</code> keeps a fact out of every default read.
+<code>memory.proposal_decide</code> accepts it, a WRITER op with no
+actor check whose docstring says <em>"a person or an agent decides"</em>
+(<code>server/memory/api/ops_proposals.py:28-37</code>). A conflicted
+row is served, and <code>memory.update</code>, on the core toolset,
+resets it to active when the new value checks clear
+(<code>server/memory/app/update.py:549-552</code>). The LLM resolver
+retires at 0.98, flags at 0.95 and clears at 0.90 with no person
+(<code>server/memory/domain/conflict_resolution.py:37-38</code>,
+<code>:288-321</code>).</p>
+<h3 id="what-the-reads-leave-out">What the reads leave out</h3>
+<ul>
+<li><strong>The chunk leg</strong> serves conversation text behind a
+rejected or superseded fact unless the request names hard tags or
+<code>as_of</code> (section 6).</li>
+<li><strong>The entity-graph leg</strong> reads edges and triples by
+namespace only, and its names and keys boost rows the fact leg already
+scoped (<code>server/memory/app/retrieval/graph.py:43-84</code>,
+<code>:290-293</code>). Another user's facts can shape a caller's
+ranking without being served.</li>
+<li><strong><code>memory.list</code></strong> excludes proposed rows and
+not rejected ones
+(<code>server/memory/store/reads.py:1117-1125</code>).</li>
+</ul>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code></strong> — awarded on
+<code>loom.blacklist</code>: keyed on the value text, consulted by every
+intake writer, extraction included. Its limits are the restore paths and
+that no forget writes one.</li>
+<li><strong><code>trust_state</code></strong> — awarded on
+<code>proposed</code> and <code>rejected</code>, excluded by every
+default read. <code>memory.list</code> and the chunk leg are the
+gaps.</li>
+<li><strong><code>bitemporal</code></strong> — awarded on world-time
+validity beside record time and the kept versions. The project calls it
+<em>"valid time plus a retirement stamp, not a bi-temporal model"</em>,
+meaning supersession, not date, decides which row is current; the rubric
+asks only that the axes be tracked apart.</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on org,
+namespace and user predicates on every served leg, with the graph leg as
+the weak arm.</li>
+<li><strong><code>audit_log</code></strong> — awarded on
+<code>loom.audit_log</code>. Rows are hash-only and best-effort. A set
+of a non-embedded type or a <code>high</code> row on the ClickHouse
+authority skips the audit phase
+(<code>server/memory/app/set_commit.py:481-553</code>), and a
+per-namespace <code>retention_days</code> applies to the audit table
+like every managed table
+(<code>server/storage/retention_overrides.py:15</code>,
+<code>:50-56</code>).</li>
+<li><strong><code>human_review</code></strong> — awarded on the
+learnings queue: drafted definitions and assistant rules no read serves
+until <code>learnings.review</code>, ADMIN and hidden from MCP, promotes
+them. With default settings only an admin's draft request fills it.
+Proposals and conflicts are not on it.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>The memory.clear tombstone</strong> is an in-place
+<code>ALTER UPDATE</code> that the materialized view does not copy, so
+<code>memory_versions</code> does not record it
+(<code>server/memory/store/lifecycle.py:929-947</code>).</li>
+<li><strong>Erasure without purge</strong> keeps the value in the
+tombstoned row, and <code>memory.restore</code> can revive it within 14
+days; a running saga re-tombstones it
+(<code>server/erasure/store/mutations.py:414-435</code>).
+<code>loom.blacklist</code> survives erasure, and a pattern can itself
+hold the person's data
+(<code>server/erasure/store/census.py:755</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>tests/</code> holds 27,617 pytest functions. CI runs the unit
+suite in random order with a 40% coverage floor,
+<code>pytest bench</code>, and the integration suite in four parts
+against a real ClickHouse with a fake embedder and model, plus auth-on
+isolation gates (<code>.github/workflows/ci.yml:602-830</code>). Locally
+the integration suite skips without <code>LOOM_BASE_URL</code> or
+<code>LOOM_CH_HOST</code>
+(<code>tests/integration/conftest.py:83-97</code>). I ran none of
+it.</p>
+<p><code>negative_eval</code> rests on populated cases:</p>
+<ul>
+<li><code>tests/integration/test_graded_runs_proposals.py:70-76</code>:
+the proposal is served under <code>include_proposed</code>, then absent
+from the default read of the same query.</li>
+<li><code>tests/integration/test_read_scope_isolation.py:1278-1317</code>:
+a token pinned to user U must return U's rows and none of V's nonce or
+ids, beside a namespace-wide control. The op walk at
+<code>:373-423</code> re-runs each body with a namespace token; that set
+leaves out <code>memory.search</code> and <code>memory.ask</code>.</li>
+<li><code>tests/integration/test_memory_code_links.py:1117-1136</code>:
+top-1 is the linked memory, and after its code is removed the result is
+exactly the sibling, not an abstention.</li>
+<li><code>tests/integration/test_knowledge_delete.py:66-93</code>: a
+deleted document is absent while an identical-text document is
+served.</li>
+</ul>
+<p>No case asserts that a deleted or forgotten value re-extracted in a
+later session is refused, or that restore, rollback or consolidate
+refuse a blacklisted value. The superseded-row exclusion of the memory
+plane is tested at the predicate level only
+(<code>tests/unit/test_superseded_served.py</code>).
+<code>bench/fama_forgetting.py</code> is a paired forgetting check run
+outside CI with no committed result.</p>
+<p>Benchmarks are committed with per-question CSVs under
+<code>bench/results/</code>. I recomputed the headlines from them:
+LongMemEval-S at 96.6%, 483 questions right across the 500-question set,
+through <code>memory.ask</code> and 92.0% with an external reader over
+the top 200, and LoCoMo categories 1–4 at 89.6% through
+<code>memory.ask</code> and 79.7% with an external reader. The judges
+are models. The Recall@30 of 98.6% comes from
+<code>longmemeval_s_ingest.csv</code>; the <code>recalled</code> column
+of <code>longmemeval_s.csv</code> is all zero. No paper is associated
+with the project; <code>CITATION.cff</code> cites the software.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Judge a write against its peers before the insert.</strong>
+A cheap cosine read with canonical, duplicate and refines rules catches
+most of what a background resolver would otherwise have to undo, and it
+calls no model.</li>
+<li><strong>Make every automatic retirement undoable, and audit the Undo
+strictly.</strong> Loom's resolver writes a record per retirement, and
+the Undo fails if its own audit row cannot be written.</li>
+<li><strong>Link memories to code and retire them when the code
+goes.</strong> A fact about a function that no longer exists is the
+stalest kind; a fingerprinted link with moved, changed and missing
+states turns that into a filter.</li>
+<li><strong>Carry the filter columns on the vector row.</strong> Search
+never joins back, so a status or scope predicate cannot be forgotten in
+a join.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A refusal list that the restore path does not read.</strong>
+Every path that can put a value back, restore and rollback included, has
+to pass the same check as the paths that take values in.</li>
+<li><strong>A side leg that skips the parent's status.</strong> Chunks
+and summaries of a retired fact restate it; the predicate belongs on
+every leg, not only on the one that holds the fact.</li>
+<li><strong>A review verb on the reviewed party's surface.</strong>
+<code>proposal_decide</code> as a WRITER op makes a proposal a request
+the agent can grant.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that wants one memory service for several agents
+and people, with real scope, version history and audit, and has the
+operations budget for ClickHouse, an embedder and a strong model for the
+resolver. The engineering is deep where a shared service fails: identity
+predicates on every leg, a peer check on every write, a strict Undo, an
+erasure saga with a census. Walk away if the deployment is one developer
+on a laptop; the stack is three services and 3 GB of images for a store
+a SQLite file would hold. Walk away too if a forgotten value must stay
+forgotten without an administrator writing a pattern for it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>memory.restore</code> is meant to bypass the
+blacklist, given that the sweep's own tombstones are what it
+revives.</li>
+<li>How often the chunk leg returns text behind a superseded fact in
+practice; the predicate is read, not measured.</li>
+<li>Whether <code>proposal_decide</code> is meant to be callable by the
+agent that proposed.</li>
+<li>What the agent sign-up flow mints; <code>loom up</code> mints a
+writer, and the security document says sign-up tokens are
+writer-only.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Write: <code>server/memory/app/write.py</code>,
+<code>server/memory/app/set_commit.py</code>,
+<code>server/memory/app/bulk_set.py</code>,
+<code>server/memory/app/bulk_rows.py</code>,
+<code>server/memory/app/pipeline.py</code>,
+<code>server/memory/app/update.py</code></li>
+<li>Schema: <code>schemas/schema.sql</code>,
+<code>server/memory/store/rows.py</code>,
+<code>server/memory/store/inserts.py</code></li>
+<li>Lifecycle: <code>server/memory/app/handlers.py</code>,
+<code>server/memory/store/lifecycle.py</code>,
+<code>server/memory/app/restore.py</code>,
+<code>server/memory/app/key_supersession.py</code>,
+<code>server/memory/app/auto_resolution.py</code>,
+<code>server/memory/domain/conflict_resolution.py</code></li>
+<li>Blacklist: <code>server/memory/app/blacklist.py</code>,
+<code>server/memory/app/blacklist_guard.py</code>,
+<code>server/memory/app/blacklist_sweep.py</code></li>
+<li>Retrieval: <code>server/memory/app/retrieval/</code>,
+<code>server/memory/domain/search_sql.py</code>,
+<code>server/memory/domain/temporal_sql.py</code>,
+<code>server/memory/app/search/verdict.py</code>,
+<code>server/memory/app/ask/</code>,
+<code>server/memory/app/for_file.py</code>,
+<code>server/memory/app/context_pack.py</code></li>
+<li>Scope and review: <code>server/auth/authz.py</code>,
+<code>server/identity/domain/read_scope.py</code>,
+<code>server/transport/gates.py</code>,
+<code>server/operations/toolsets.py</code>,
+<code>server/memory/api/ops_learnings.py</code>,
+<code>server/memory/api/ops_proposals.py</code></li>
+<li>Audit and retention: <code>server/observability/audit.py</code>,
+<code>server/transport/post_rows.py</code>,
+<code>server/storage/retention_overrides.py</code></li>
+<li>Erasure: <code>server/erasure/</code></li>
+<li>Integration: <code>integrations/claude-code-plugin/hooks/</code>,
+<code>integrations/claude-code-plugin/lib/</code></li>
+<li>Tests: <code>tests/integration/test_graded_runs_proposals.py</code>,
+<code>tests/integration/test_read_scope_isolation.py</code>,
+<code>tests/integration/test_memory_code_links.py</code>,
+<code>tests/integration/test_knowledge_delete.py</code>,
+<code>tests/integration/test_blacklist.py</code>,
+<code>tests/unit/test_namespace_rollback_unembedded.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>The restore and consolidate writers do not consult the
+blacklist.</strong>
+<code>git grep -n -E 'blacklist|find_match|enforce_on_insert' -- server/memory/app/restore.py server/memory/app/consolidate.py</code>
+returns nothing;
+<code>git grep -c -E 'find_match|enforce_on_insert' -- server/memory/app/write.py</code>
+counts 2.</li>
+<li><strong>Nothing outside the guard reads the blacklist on a read
+path.</strong>
+<code>git grep -n -E 'loom\.blacklist' -- server/memory/app/retrieval server/memory/app/search server/memory/domain/search_sql.py</code>
+returns nothing; the same pattern over <code>server/memory/store</code>
+matches the blacklist store.</li>
+<li><strong>No server statement deletes or alters the audit
+table.</strong>
+<code>git grep -n -i -E '(DELETE FROM|ALTER TABLE)[[:space:]]+loom\.audit_log' -- server</code>
+returns nothing;
+<code>git grep -n 'loom.audit_log' -- server/storage/retention_overrides.py</code>
+matches line 53, the retention target.</li>
+<li><strong>The chunk leg returns no status predicate by
+default.</strong>
+<code>git grep -n 'if not hard_tags and not replaying' -- server/memory/app/retrieval/chunks.py</code>
+matches line 91.</li>
+<li><strong>The review verbs' roles.</strong>
+<code>git grep -n -E 'required_role' -- server/memory/api/ops_learnings.py server/memory/api/ops_proposals.py</code>
+gives ADMIN for <code>learnings.review</code> and WRITER for
+<code>memory.proposal_decide</code>;
+<code>git grep -n -E '"learnings\.review"|"blacklist\.remove"|"blacklist\.add"' -- server/operations/toolsets.py</code>
+matches lines 65 and 82 in the hidden set and 152 in the core
+toolset.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|doi\.org' -- CITATION.cff README.md docs</code>
+returns nothing; the only <code>arxiv</code> in the tree is a test
+forbidding paper citations in public copy,
+<code>tests/unit/test_public_copy.py:144</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-18</strong> — <a
+href="https://github.com/ClickHouse/loom/commit/39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc"><code class="commit-id" title="39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc">39243b17…</code></a>
+— first reading, from a depth-one clone of <code>main</code> with
+history from the GitHub API, scoped to <code>server/memory/</code>, the
+identity, auth, erasure and transport paths it relies on, the Claude
+Code plugin and the tests. Screened first: ten auto-run surfaces, each
+read (harness permissions, a reviewer subagent's read-only command hook,
+a Codespaces try-out, a localhost MCP manifest, the plugin's hooks);
+eleven build-time execution points, among them two Makefiles, two
+<code>conftest.py</code> files and an npm <code>prepublishOnly</code>;
+FRESH findings on every manifest, inflated by the shallow clone.
+Apache-2.0, no rider. Nothing installed, built or run; benchmark
+headlines recomputed from the committed CSVs. Seven marks, each with its
+limits in <a href="#9-reliability-safety-and-trust">section 9</a>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
