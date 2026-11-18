@@ -17,7 +17,7 @@ tests: "256 pytest functions and 360 node:test cases, run in CI on push; I ran n
 capabilities: "bitemporal, audit_log, negative_eval"
 capability_evidence:
   bitemporal: "the facts table — valid_from and valid_to (world time) beside recorded_at and superseded_at (record time), with CHECK constraints on both intervals and triggers that allow only an insert or a single close | server/spookling_memory/core/facts.py:15-32, :116-124, :147-151 | Facts.at and Facts.in_force read rows by valid time among those current in record time; recall() reads facts in force on the date date_in() resolves from the question. A month-exact date carries from_precision and is shown as a range | server/tests/test_spookling_adapter.py:232-240"
-  audit_log: "judgements.jsonl — every triage, slow-path ruling, event decision, compaction and reset, appended with its source turn's hash before it applies | server/spookling_memory/core/sleep.py:183-185, :316, :322, server/spookling_memory/store.py:189-193, :362-375, server/spookling_memory/reset.py:93-130 | Store._flush appends new decisions with fsync after the log; facts are rebuilt by fold() from these records alone, so the record is the store's history. The in-memory decisions table refuses UPDATE and DELETE by trigger; the file on disk is append-only in code only, and load() hash-checks log turns but not decisions | server/tests/test_store.py, server/tests/test_spookling_adapter.py:210-221"
+  audit_log: "judgements.jsonl — every triage, slow-path ruling, event decision, compaction and reset, recorded with its source turn's hash in the decision table before it applies and appended to the file with fsync when the pass ends | server/spookling_memory/core/sleep.py:183-185, :316, :322, server/spookling_memory/store.py:189-193, :362-375, server/spookling_memory/reset.py:93-130 | Store._flush appends new decisions with fsync after the log; facts are rebuilt by fold() from these records alone, so the record is the store's history. The in-memory decisions table refuses UPDATE and DELETE by trigger; the file on disk is append-only in code only, and load() hash-checks log turns but not decisions | server/tests/test_store.py, server/tests/test_spookling_adapter.py:210-221"
   negative_eval: "a dated question must not receive later versions of a fact, beside a positive assertion on the version in force | server/tests/test_spookling_adapter.py:232-237, :693-700 | test_recall_shows_the_version_in_force_on_the_date asserts the Pixel 8 row is present and iPhone 16 and Fairphone absent; the rerank test asserts the best unit present and the second absent under rerank_mode top. No test asserts silence for an unrelated prompt on the hook path | .github/workflows/ci.yml:24-27"
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -27,13 +27,13 @@ matrix:
   storage: "Two append-only files in a project's .memory/ folder, log.jsonl and judgements.jsonl, replayed at start into in-memory SQLite views; an optional vectors.sqlite cache"
   retrieval: "BM25 over turn units expanded with fact-key cue words, plus exact-cosine embeddings, BM25 over events and a Personalized PageRank walk, fused by RRF; an optional cross-encoder reorders; fact rows in force on the question's date are added by code"
   write: "The Stop hook logs the turns at once; a tagger model then points at facts and events in the user's words, code drops any quote not in the turn, and each tag is routed fast, slow, skip or rejected and recorded before it applies"
-  update_delete: "A fact is closed, never edited, by a later value or a retraction; a reset is a ruling that closes every open fact at a time and can be undone. Nothing deletes a turn, and no forget or purge exists"
+  update_delete: "A fact is closed, never edited, by a later value or a retraction; a reset is a ruling that closes every open fact at a time and can be undone. Nothing deletes a local turn and no local forget or purge exists; memory_delete removes uploaded sessions from the cloud only"
   scoping: "One .memory folder per project, or one for every project with --scope user. No scope key on a record or a query"
   integration: "Claude Code hooks (UserPromptSubmit, Stop, PreCompact), a Codex hook script, an MCP server, a local HTTP API on 127.0.0.1:7447 and an optional cloud upload for team sharing"
   background: "Tagging runs after the Stop hook replies; a full rebuild of facts, events and the BM25 index runs before the next question whenever anything new arrived"
   trust: "Quotes are checked letter for letter against the turn; flagged tags go to a second model call whose ruling can be marked disputed, which labels a fact without filtering it"
   strengths: "Verbatim log as the only truth, every model decision written before it acts and replayed deterministically, SQLite triggers that refuse edits to fact rows, and dates computed by code"
-  risks: "The prompt hook injects whenever any keyword matches, with no relevance bar; the asking session's own turns can come back; a default install is keyword-only; and nothing can be forgotten"
+  risks: "The prompt hook injects whenever any keyword matches, with no relevance bar; the asking session's own turns can come back; a default install is keyword-only; and nothing in the local store can be forgotten"
 ---
 
 ## 1. Executive Summary
@@ -121,7 +121,7 @@ Optional cloud: after `spookling login`, the Stop hook uploads cleaned, secret-m
 
 **Correction.** A user's correction or retraction goes through the slow path and closes a row. `memory_reset` and `POST /v1/reset` append a reset ruling; `reset/undo` appends its reverse.
 
-**Integration.** `server/spookling_memory/mcp.py` exposes `memory_retrieve`, `memory_ingest`, `memory_compact`, `memory_reset`, `memory_export`, `memory_import`, `memory_stats`, the team tools and the share tools.
+**Integration.** `server/spookling_memory/mcp.py` exposes `memory_retrieve`, `memory_ingest`, `memory_compact`, `memory_reset`, `memory_export`, `memory_import`, `memory_stats`, the team tools, the share tools and `memory_delete`, which removes uploaded sessions from the cloud behind an elicitation dialog and leaves `.memory/` untouched (`mcp.py:373-399`, `cli/src/delete.js:1-3`).
 
 **Tests.** `server/tests/test_spookling_adapter.py` (1,295 lines) covers routing, the verbatim check, folding, recall and dates; `test_reset.py`, `test_portability.py`, `test_timeline.py` and `test_mcp_safety.py` cover their names.
 
@@ -147,6 +147,8 @@ The cross-encoder, when installed, scores the first 60 candidates against the or
 
 `recall()` returns `"Nothing on record about this."` only when there are no fact lines and no hits (`core/recall.py:753-754`). Any BM25 term overlap is a hit. On the hook path that means a prompt sharing one stemmed content word with any past turn gets a `<recalled-data>` block, in addition to the `<invariant>` block that rides on every prompt. No score threshold sits between search and injection: `git grep -n -E 'threshold|min_score|relevance' -- server/spookling_memory/hooks.py server/spookling_memory/core/recall.py` matches nothing.
 
+The bar exists and the hook does not read it. `recall()` sets `strong` when a fact line was shown or a hit holds at least half the question's idf-weighted terms (`STRONG = 0.5`, `core/recall.py:29`, `:753`), `retrieve()` returns it beside the context for *"the runner's re-ask"* (`core/__init__.py:257-260`), and a test asserts it is false for an unrelated question (`server/tests/test_spookling_adapter.py:1273-1280`). The prompt hook takes `["context"]` and injects whatever it holds (`hooks.py:298`); `strong` reaches only `memory_retrieve` and `POST /v1/retrieve` callers.
+
 The search also does not know which session is asking. `Store.retrieve` takes no session (`store.py:337`), so a prompt can be given turns from its own conversation, which are already in the context window.
 
 ## 7. Write Mechanics
@@ -159,7 +161,7 @@ Only user turns are tagged (`core/sleep.py:171`). An assistant's statement never
 
 Deduplication is by identity: a repeated turn is one log entry, a decision is idempotent by id, and a keeper sentence already kept is skipped. Conflict handling is the routing above: a value that contradicts the open row without a change word goes to the slow path as a `surprise`.
 
-Nothing is forgotten. A reset hides without deleting, and the README lists a purge command as planned.
+Nothing local is forgotten. A reset hides without deleting, the README lists a purge command as planned, and `memory_delete` and `spookling delete` act on the cloud copy only.
 
 ### Operational cost
 
@@ -194,7 +196,7 @@ Adapting to another agent means writing a hook that POSTs its transcript to `/v1
 
 **Uncertainty** is represented in time, not in belief: `from_precision` carries a month-exact date as a range, and the time block reports a range of days rather than a guessed day. Belief has one state.
 
-**Capability marks.** `bitemporal` is earned by the two intervals and by `Facts.in_force` and `Facts.at`, which read valid time against current transaction time (`core/facts.py:116-124`). `audit_log` is earned by `judgements.jsonl`, which every model decision and every reset reaches before it applies (`core/sleep.py:183-185`, `store.py:189-193`). `negative_eval` is earned below.
+**Capability marks.** `bitemporal` is earned by the two intervals and by `Facts.in_force` and `Facts.at`, which read valid time against current transaction time (`core/facts.py:116-124`). Record time is the turn's log timestamp, `tx_of(e.ts, …)` (`core/sleep.py:20-23`): the hooks stamp it on arrival, and `memory_ingest` takes it from the caller, so an imported history records each fact at the time it was said (`store.py:320`, `mcp.py:61-63`). The time the server judged a tag is the decision's `created` field (`core/sleep.py:103`), which no fact query reads. `audit_log` is earned by `judgements.jsonl`. Every model decision and every reset enters the decision table before it applies (`core/sleep.py:183-185`), and `Store._flush` appends the new ones to the file with `fsync` when the pass ends, including after a failed model call (`store.py:189-193`, `:326-333`). `negative_eval` is earned below.
 
 Withheld: `trust_state`, because `disputed` is shown and never filtered (`core/facts.py:1`). `tombstone`, because a rejected tag records a failed extraction, not a value the user rejected, and nothing consults it when the same value is proposed again; a retraction closes a row and a later assertion opens a new one. `scope_enforced`, because the boundary is a folder, with no key on a record and no predicate on a query. `human_review`, because reset and the integrity stop act on everything at once and no surface shows a person a memory to accept or reject.
 
@@ -205,6 +207,8 @@ The Python suite has 256 test functions and the Node suite 360 cases; CI runs bo
 `test_recall_shows_the_version_in_force_on_the_date` stores three phone values over time, asks about December 2024, and asserts both that the Pixel 8 line is present and that `"iPhone 16"` and `"Fairphone"` are absent (`server/tests/test_spookling_adapter.py:232-237`). The positive assertion in the same test means the negative one cannot pass on an empty result, which is what `negative_eval` asks. A second case asserts that with `rerank_k=1` in top mode the lower-ranked unit is absent while the best is present (`:700`).
 
 The verbatim check, the routing table, the fold and the integrity check each have direct tests. The relevance of what the hook injects to a coding prompt has none: no test feeds an unrelated prompt and asserts that nothing is injected.
+
+One assertion cannot fail. `test_v2_dense_rrf_finds_a_unit_bm25_cannot` checks the keyword-only store with an expression that ends `or True` (`server/tests/test_spookling_adapter.py:687`), so the half of the name saying BM25 cannot find the unit is never asserted; the dense half is. The embedder and reranker never run in CI, which sets `SPOOKLING_LOCAL_MODELS: "0"` (`.github/workflows/ci.yml:16`). The vector and rerank tests run against monkeypatched stand-ins that count words.
 
 The README publishes four results. On a generated suite of 106 changing-fact questions it reports 103 right against 37 for keyword search. It reports LoCoMo 82.0% against 77.8% on 239 sampled questions, LongMemEval 81.5% against 82.6% at a third of the tokens, and 42 right on 44 rule questions after compaction. It says the harness, the pass marks and the result files are in a private repository, and names the build (6.0, re-scored with decision rule v2.1). No harness, dataset or result file is in this tree: `git grep -l -i -E 'longmemeval|locomo' -- ':!README.md'` finds only two code comments. No paper is cited for the system itself; the README cites papers it builds on by name, without identifiers for most.
 
@@ -222,7 +226,7 @@ The README publishes four results. On a generated suite of 106 changing-fact que
 
 ### Avoid
 
-**Do not inject on keyword overlap alone.** A BM25 hit says a word is shared, not that the memory bears on the request. A hook that injects whenever search returns anything puts something in front of almost every prompt and teaches the reader to ignore it. Put a calibrated bar, or a cross-encoder with an absolute threshold, between search and injection, and test the silent case.
+**Do not inject on keyword overlap alone.** A BM25 hit says a word is shared, not that the memory bears on the request. A hook that injects whenever search returns anything puts something in front of almost every prompt and teaches the reader to ignore it. Put a calibrated bar, or a cross-encoder with an absolute threshold, between search and injection, and test the silent case. This tree already computes one, `strong`, and the hook does not read it.
 
 **Do not search the asking session's own turns.** Pass the session to retrieval and exclude what the context window already holds.
 
@@ -264,6 +268,9 @@ It fits a single user who wants an assistant to keep dated personal facts straig
 Run with `git grep` in a full clone at the pinned commit.
 
 - `git grep -n -i -E 'forget|purge|tombstone' -- server cli/src hooks` — credential and feed helpers in the CLI, one comment in `cli/src/team.js:214` and one test sentence; nothing that removes or tombstones a memory. Control: `git grep -c -i 'retract' -- server/spookling_memory` matches in `core/facts.py` and `core/jev.py`.
+- `git grep -n -E 'def memory_delete|^// Delete' -- server/spookling_memory cli/src` — `mcp.py:374` and `cli/src/delete.js:1`, both on uploaded sessions; the file header says local memory *"is never touched"*.
+- `git grep -n -w 'strong' -- server/spookling_memory/api.py server/spookling_memory/hooks.py server/spookling_memory/store.py server/spookling_memory/mcp.py hooks cli/src` — only the `memory_retrieve` docstring at `mcp.py:56`. Control: the same search on `server/spookling_memory/core/__init__.py` matches `:257` and `:260`.
+- `git grep -n -E ' or True' -- server/tests cli/test` — one match, `server/tests/test_spookling_adapter.py:687`.
 - `git grep -n -E 'threshold|min_score|relevance' -- server/spookling_memory/hooks.py server/spookling_memory/core/recall.py` — nothing. Control: `git grep -n 'tau' -- server/spookling_memory/core/sleep.py` matches the routing gate.
 - `git grep -n -E 'project|repo|cwd' -- server/spookling_memory/core/recall.py` — nothing.
 - `git grep -n -- '--extra' -- cli/src` — nothing; the installer does not install the `vectors` extra.
@@ -273,4 +280,4 @@ Run with `git grep` in a full clone at the pinned commit.
 
 ## History
 
-**2026-11-18** — [`d362ec0a3f1dd68f87b912800d662e61d5ba063e`](https://github.com/Spookling/spookling-memory/commit/d362ec0a3f1dd68f87b912800d662e61d5ba063e) — first reading, at the 0.2.2 release merge. Screened first: the hook scripts and `server/tests/conftest.py` are the execution surfaces, and `uv.lock` was unchanged for eight days. Contributed from the Spookling team; see the pull request. Nothing installed or run.
+**2026-11-18** — [`d362ec0a3f1dd68f87b912800d662e61d5ba063e`](https://github.com/Spookling/spookling-memory/commit/d362ec0a3f1dd68f87b912800d662e61d5ba063e) — first reading, at the 0.2.2 release merge, written by the Spookling team about its own system. Screened first: the hook scripts and `server/tests/conftest.py` are the execution surfaces, and `uv.lock` was unchanged for eight days. Nothing installed or run.

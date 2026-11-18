@@ -87,6 +87,15 @@ Most personal preferences do not need as-of queries.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [Graphiti](../../systems/graphiti/) — both clocks on graph edges, a fact ended by closing its interval, and the engine several other entries wrap.
+- [Gini](../../systems/gini-agent/) — the smallest version that works: three columns on an SQLite row and a recall channel that joins only when the query names a time.
+- [CtxVault](../../systems/ctxvault/) — separates the two ways a statement stops, closing the valid window for an invalidation and the transaction window for a revision.
+- [Remembra](../../systems/remembra/) — the instructive failure: its memory rows carry the mark's columns and the as-of recall is a record-time query under a valid-time name.
+
+### Every instance
+
 The `bitemporal` mark asks only that validity time be tracked separately from
 record time; this pattern also asks that a read path query it, so a carrier of
 the mark is not necessarily an instance of the pattern.
@@ -263,6 +272,8 @@ date *"never decides which of two contradicting edges the graph retires"*
 (`lib/inngest/memory-ingest.ts:509-518`).
 
 [CtxVault](../../systems/ctxvault/) separates two ways a statement stops: `invalidate` and `supersede` close the valid window, `revise` closes only the transaction window, and `known_at` counts an end only if recorded by then (`src/ctxvault/storage/sqlite_store.py:739-764`). Timestamps are caller strings compared as text, and `revise` moves the dispute rows (`:561-562`), so an earlier belief state loses the dispute.
+
+[Spookling Memory](../../systems/spookling-memory/) puts the interval rules in the schema and rebuilds the table from a log. `CHECK` constraints hold both intervals, a partial unique index allows one open value per key, and triggers refuse every update but a single close of `superseded_at` (`server/spookling_memory/core/facts.py:15-32`). `Facts.at` and `Facts.in_force` read valid time among rows current in record time, and recall shows the rows in force on the date it resolves from the question (`:116-124`). Record time is the turn's log timestamp, stamped on arrival by the hooks and taken from the caller by `memory_ingest`; the time the server judged the tag is kept on the decision and read by no fact query. The table is a fold of the judgement log, so a rebuild reproduces both axes.
 
 ## A third clock
 

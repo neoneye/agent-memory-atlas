@@ -378,7 +378,11 @@ through the slow path and closes a row. <code>memory_reset</code> and
 <code>memory_retrieve</code>, <code>memory_ingest</code>,
 <code>memory_compact</code>, <code>memory_reset</code>,
 <code>memory_export</code>, <code>memory_import</code>,
-<code>memory_stats</code>, the team tools and the share tools.</p>
+<code>memory_stats</code>, the team tools, the share tools and
+<code>memory_delete</code>, which removes uploaded sessions from the
+cloud behind an elicitation dialog and leaves <code>.memory/</code>
+untouched (<code>mcp.py:373-399</code>,
+<code>cli/src/delete.js:1-3</code>).</p>
 <p><strong>Tests.</strong>
 <code>server/tests/test_spookling_adapter.py</code> (1,295 lines) covers
 routing, the verbatim check, folding, recall and dates;
@@ -462,6 +466,18 @@ stemmed content word with any past turn gets a
 score threshold sits between search and injection:
 <code>git grep -n -E 'threshold|min_score|relevance' -- server/spookling_memory/hooks.py server/spookling_memory/core/recall.py</code>
 matches nothing.</p>
+<p>The bar exists and the hook does not read it. <code>recall()</code>
+sets <code>strong</code> when a fact line was shown or a hit holds at
+least half the question's idf-weighted terms (<code>STRONG = 0.5</code>,
+<code>core/recall.py:29</code>, <code>:753</code>),
+<code>retrieve()</code> returns it beside the context for <em>"the
+runner's re-ask"</em> (<code>core/__init__.py:257-260</code>), and a
+test asserts it is false for an unrelated question
+(<code>server/tests/test_spookling_adapter.py:1273-1280</code>). The
+prompt hook takes <code>["context"]</code> and injects whatever it holds
+(<code>hooks.py:298</code>); <code>strong</code> reaches only
+<code>memory_retrieve</code> and <code>POST /v1/retrieve</code>
+callers.</p>
 <p>The search also does not know which session is asking.
 <code>Store.retrieve</code> takes no session
 (<code>store.py:337</code>), so a prompt can be given turns from its own
@@ -489,8 +505,9 @@ decision is idempotent by id, and a keeper sentence already kept is
 skipped. Conflict handling is the routing above: a value that
 contradicts the open row without a change word goes to the slow path as
 a <code>surprise</code>.</p>
-<p>Nothing is forgotten. A reset hides without deleting, and the README
-lists a purge command as planned.</p>
+<p>Nothing local is forgotten. A reset hides without deleting, the
+README lists a purge command as planned, and <code>memory_delete</code>
+and <code>spookling delete</code> act on the cloud copy only.</p>
 <h3 id="operational-cost">Operational cost</h3>
 <ul>
 <li><strong>Blocking.</strong> The Stop path does not block the agent.
@@ -579,10 +596,20 @@ has one state.</p>
 <p><strong>Capability marks.</strong> <code>bitemporal</code> is earned
 by the two intervals and by <code>Facts.in_force</code> and
 <code>Facts.at</code>, which read valid time against current transaction
-time (<code>core/facts.py:116-124</code>). <code>audit_log</code> is
-earned by <code>judgements.jsonl</code>, which every model decision and
-every reset reaches before it applies
-(<code>core/sleep.py:183-185</code>, <code>store.py:189-193</code>).
+time (<code>core/facts.py:116-124</code>). Record time is the turn's log
+timestamp, <code>tx_of(e.ts, …)</code>
+(<code>core/sleep.py:20-23</code>): the hooks stamp it on arrival, and
+<code>memory_ingest</code> takes it from the caller, so an imported
+history records each fact at the time it was said
+(<code>store.py:320</code>, <code>mcp.py:61-63</code>). The time the
+server judged a tag is the decision's <code>created</code> field
+(<code>core/sleep.py:103</code>), which no fact query reads.
+<code>audit_log</code> is earned by <code>judgements.jsonl</code>. Every
+model decision and every reset enters the decision table before it
+applies (<code>core/sleep.py:183-185</code>), and
+<code>Store._flush</code> appends the new ones to the file with
+<code>fsync</code> when the pass ends, including after a failed model
+call (<code>store.py:189-193</code>, <code>:326-333</code>).
 <code>negative_eval</code> is earned below.</p>
 <p>Withheld: <code>trust_state</code>, because <code>disputed</code> is
 shown and never filtered (<code>core/facts.py:1</code>).
@@ -613,6 +640,15 @@ lower-ranked unit is absent while the best is present
 check each have direct tests. The relevance of what the hook injects to
 a coding prompt has none: no test feeds an unrelated prompt and asserts
 that nothing is injected.</p>
+<p>One assertion cannot fail.
+<code>test_v2_dense_rrf_finds_a_unit_bm25_cannot</code> checks the
+keyword-only store with an expression that ends <code>or True</code>
+(<code>server/tests/test_spookling_adapter.py:687</code>), so the half
+of the name saying BM25 cannot find the unit is never asserted; the
+dense half is. The embedder and reranker never run in CI, which sets
+<code>SPOOKLING_LOCAL_MODELS: "0"</code>
+(<code>.github/workflows/ci.yml:16</code>). The vector and rerank tests
+run against monkeypatched stand-ins that count words.</p>
 <p>The README publishes four results. On a generated suite of 106
 changing-fact questions it reports 103 right against 37 for keyword
 search. It reports LoCoMo 82.0% against 77.8% on 239 sampled questions,
@@ -649,7 +685,8 @@ says a word is shared, not that the memory bears on the request. A hook
 that injects whenever search returns anything puts something in front of
 almost every prompt and teaches the reader to ignore it. Put a
 calibrated bar, or a cross-encoder with an absolute threshold, between
-search and injection, and test the silent case.</p>
+search and injection, and test the silent case. This tree already
+computes one, <code>strong</code>, and the hook does not read it.</p>
 <p><strong>Do not search the asking session's own turns.</strong> Pass
 the session to retrieval and exclude what the context window already
 holds.</p>
@@ -757,6 +794,17 @@ commit.</p>
 removes or tombstones a memory. Control:
 <code>git grep -c -i 'retract' -- server/spookling_memory</code> matches
 in <code>core/facts.py</code> and <code>core/jev.py</code>.</li>
+<li><code>git grep -n -E 'def memory_delete|^// Delete' -- server/spookling_memory cli/src</code>
+— <code>mcp.py:374</code> and <code>cli/src/delete.js:1</code>, both on
+uploaded sessions; the file header says local memory <em>"is never
+touched"</em>.</li>
+<li><code>git grep -n -w 'strong' -- server/spookling_memory/api.py server/spookling_memory/hooks.py server/spookling_memory/store.py server/spookling_memory/mcp.py hooks cli/src</code>
+— only the <code>memory_retrieve</code> docstring at
+<code>mcp.py:56</code>. Control: the same search on
+<code>server/spookling_memory/core/__init__.py</code> matches
+<code>:257</code> and <code>:260</code>.</li>
+<li><code>git grep -n -E ' or True' -- server/tests cli/test</code> —
+one match, <code>server/tests/test_spookling_adapter.py:687</code>.</li>
 <li><code>git grep -n -E 'threshold|min_score|relevance' -- server/spookling_memory/hooks.py server/spookling_memory/core/recall.py</code>
 — nothing. Control:
 <code>git grep -n 'tau' -- server/spookling_memory/core/sleep.py</code>
@@ -778,11 +826,11 @@ total; <code>git grep -c -E '^test\(|^  test\(' -- cli/test</code> —
 <h2 id="history">History</h2>
 <p><strong>2026-11-18</strong> — <a
 href="https://github.com/Spookling/spookling-memory/commit/d362ec0a3f1dd68f87b912800d662e61d5ba063e"><code class="commit-id" title="d362ec0a3f1dd68f87b912800d662e61d5ba063e">d362ec0a…</code></a>
-— first reading, at the 0.2.2 release merge. Screened first: the hook
-scripts and <code>server/tests/conftest.py</code> are the execution
-surfaces, and <code>uv.lock</code> was unchanged for eight days.
-Contributed from the Spookling team; see the pull request. Nothing
-installed or run.</p>
+— first reading, at the 0.2.2 release merge, written by the Spookling
+team about its own system. Screened first: the hook scripts and
+<code>server/tests/conftest.py</code> are the execution surfaces, and
+<code>uv.lock</code> was unchanged for eight days. Nothing installed or
+run.</p>
         </article>
       </div>
     </main>

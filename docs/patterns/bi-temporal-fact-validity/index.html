@@ -197,6 +197,22 @@ itself.</p>
 anyone will ask about. Most personal preferences do not need as-of
 queries.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<h3 id="read-these-first">Read these first</h3>
+<ul>
+<li><a href="../../systems/graphiti/">Graphiti</a> — both clocks on
+graph edges, a fact ended by closing its interval, and the engine
+several other entries wrap.</li>
+<li><a href="../../systems/gini-agent/">Gini</a> — the smallest version
+that works: three columns on an SQLite row and a recall channel that
+joins only when the query names a time.</li>
+<li><a href="../../systems/ctxvault/">CtxVault</a> — separates the two
+ways a statement stops, closing the valid window for an invalidation and
+the transaction window for a revision.</li>
+<li><a href="../../systems/remembra/">Remembra</a> — the instructive
+failure: its memory rows carry the mark's columns and the as-of recall
+is a record-time query under a valid-time name.</li>
+</ul>
+<h3 id="every-instance">Every instance</h3>
 <p>The <code>bitemporal</code> mark asks only that validity time be
 tracked separately from record time; this pattern also asks that a read
 path query it, so a carrier of the mark is not necessarily an instance
@@ -555,6 +571,20 @@ window, and <code>known_at</code> counts an end only if recorded by then
 are caller strings compared as text, and <code>revise</code> moves the
 dispute rows (<code>:561-562</code>), so an earlier belief state loses
 the dispute.</p>
+<p><a href="../../systems/spookling-memory/">Spookling Memory</a> puts
+the interval rules in the schema and rebuilds the table from a log.
+<code>CHECK</code> constraints hold both intervals, a partial unique
+index allows one open value per key, and triggers refuse every update
+but a single close of <code>superseded_at</code>
+(<code>server/spookling_memory/core/facts.py:15-32</code>).
+<code>Facts.at</code> and <code>Facts.in_force</code> read valid time
+among rows current in record time, and recall shows the rows in force on
+the date it resolves from the question (<code>:116-124</code>). Record
+time is the turn's log timestamp, stamped on arrival by the hooks and
+taken from the caller by <code>memory_ingest</code>; the time the server
+judged the tag is kept on the decision and read by no fact query. The
+table is a fold of the judgement log, so a rebuild reproduces both
+axes.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

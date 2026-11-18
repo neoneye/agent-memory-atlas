@@ -1021,6 +1021,21 @@ has committed, the forget event names no ids, and a forget by id or
 session with no actor is logged under the actor <code>unknown</code>,
 which no actor's audit returns
 (<code>src/rakho/store.py:194</code>).</p>
+<p><a href="../../systems/spookling-memory/">Spookling Memory</a> makes
+the audit the store's only history. Every triage, slow-path ruling,
+event decision, compaction and reset enters the decision table before it
+applies and is appended to <code>judgements.jsonl</code> with
+<code>fsync</code> when the pass ends, and the fact table is rebuilt
+from those records alone
+(<code>server/spookling_memory/core/sleep.py:183-185</code>,
+<code>:287-299</code>,
+<code>server/spookling_memory/store.py:189-193</code>). A record carries
+the source turn's hash, the raw tag, the verbatim spans, the route, the
+writer and the facts the tagger was shown. Two limits: the file is
+append-only by file handle, and <code>load()</code> hash-checks each
+turn but not each decision, so a hand-edited ruling replays as written;
+and there is no purge, so a secret in a shape the masker misses stays in
+the turn log.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

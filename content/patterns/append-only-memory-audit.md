@@ -580,6 +580,8 @@ outlives a person erasure in a table the erasure cannot change.
 
 [Rakho](../../systems/rakho/) appends one `mutations` row per keep, redact, skip, forget and orphan, and nothing in the tree updates or deletes one (`src/rakho/storage.py:69-78`, `:458-499`). `forget` deletes the memories and leaves the refusal rows and the log, then adds a `forget` event holding counts and the filter, so a forgotten actor and one that never wrote are distinguishable. Three limits: the row is inserted after the data change has committed, the forget event names no ids, and a forget by id or session with no actor is logged under the actor `unknown`, which no actor's audit returns (`src/rakho/store.py:194`).
 
+[Spookling Memory](../../systems/spookling-memory/) makes the audit the store's only history. Every triage, slow-path ruling, event decision, compaction and reset enters the decision table before it applies and is appended to `judgements.jsonl` with `fsync` when the pass ends, and the fact table is rebuilt from those records alone (`server/spookling_memory/core/sleep.py:183-185`, `:287-299`, `server/spookling_memory/store.py:189-193`). A record carries the source turn's hash, the raw tag, the verbatim spans, the route, the writer and the facts the tagger was shown. Two limits: the file is append-only by file handle, and `load()` hash-checks each turn but not each decision, so a hand-edited ruling replays as written; and there is no purge, so a secret in a shape the masker misses stays in the turn log.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.
