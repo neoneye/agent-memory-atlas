@@ -2,8 +2,10 @@
 
 ## Reporting a vulnerability
 
-Email **Simon Strandgaard** at **neoneye@gmail.com**. Please do not open a
-public issue for a vulnerability.
+Email **Simon Strandgaard** at **neoneye@gmail.com**, or use GitHub's
+[private vulnerability reporting](https://github.com/neoneye/agent-memory-atlas/security/advisories/new)
+(the repository's **Security** tab, then **Report a vulnerability**). Please do
+not open a public issue for a vulnerability.
 
 Include what you found, where (a file, a page URL or a commit), and how to
 reproduce it. If you would like to be credited when it is fixed, say how.
