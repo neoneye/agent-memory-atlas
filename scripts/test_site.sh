@@ -81,6 +81,18 @@ if ! python3 "$project_dir/scripts/check_inspected_pins.py" "$project_dir"; then
   exit 1
 fi
 
+# A conflicted cherry-pick published merge markers in appendix.md on 2026-11-18
+# with every check below green: a marker line is a valid paragraph, and both
+# sides of the conflict were well-formed entries. Run before anything that
+# reads the content, so the failure names the cause.
+if ! python3 "$project_dir/scripts/check_conflict_markers.py" --self-test; then
+  echo "check_conflict_markers.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_conflict_markers.py" "$project_dir"; then
+  exit 1
+fi
+
 # Re-review narration used to be written into whatever paragraph it contradicted
 # and into two unrelated lists in overview.md. It now goes in one place per
 # report. This asserts the newest History entry is the reading the report is
