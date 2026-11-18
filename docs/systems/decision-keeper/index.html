@@ -117,7 +117,7 @@ bullets in linked markdown files.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-11-16</strong>
+              <strong>2026-11-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mudassirzulfiqar--Decision-Keeper" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -255,9 +255,10 @@ It needs Python 3.9 and an instruction file that already exists
 (<code>install.py:212-213</code>).</p>
 <p>The installer is the most careful code in the tree:</p>
 <ul>
-<li>It refuses the filesystem root, the home directory, and any
-directory that is not the top level of its git repository
-(<code>install.py:175-183</code>).</li>
+<li>It refuses the filesystem root and the home directory, and, when
+<code>git</code> is on the PATH, any directory that is not the top level
+of its git repository (<code>install.py:175-183</code>). Without
+<code>git</code> the repository check is skipped.</li>
 <li>It rejects a symlink anywhere on the path of a file it would write
 (<code>:122-127</code>).</li>
 <li>It overwrites an installed skill file only when the file's SHA-256
@@ -467,10 +468,11 @@ cites a paper or a benchmark.</p>
 <p>I ran nothing. The two scripts are short enough that every statement
 about them above comes from reading the lines cited.</p>
 <p>The installer's hash tables are the nearest thing to a regression
-record: twenty-three SHA-256 values of earlier skill files under the
-names Record Me, Teach Me and Decision Keeper
-(<code>install.py:41-85</code>). The files they describe are not in the
-repository.</p>
+record: twenty-three SHA-256 values under the names Record Me, Teach Me
+and Decision Keeper (<code>install.py:41-85</code>). Eighteen are of
+earlier skill files, three of earlier Codex subagent definitions, and
+two of an earlier Teach Me instruction block. None matches a file at the
+pin, and the files they describe are not in the repository.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <p><strong>Cap the fan-out of an always-read file.</strong> Ten
@@ -565,8 +567,32 @@ and the call; no later use.</li>
 nothing.</li>
 <li><code>diff SKILL.md .agents/skills/decision-keeper/SKILL.md</code> —
 identical.</li>
+<li><code>git grep -n -E 'check_tree'</code> — the organizer's
+instruction at <code>organizer.md:9</code>, the script itself, and the
+installer's file list and hash tables; no hook, workflow or other
+caller.</li>
+<li><code>sed -n 41,85p install.py | grep -o -E '[0-9a-f]{64}' | sort -u | wc -l</code>
+— 23.</li>
+<li><code>shasum -a 256</code> over the two <code>SKILL.md</code>
+copies, <code>organizer.md</code>, <code>check_tree.py</code> and the
+subagent <code>.toml</code>, then
+<code>cut -c1-64 | grep -F -f - install.py</code> — nothing.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-18</strong> — <a
+href="https://github.com/mudassirzulfiqar/Decision-Keeper/commit/911ff6b88e7c5e65b64326f9a5719291e6608ab6"><code class="commit-id" title="911ff6b88e7c5e65b64326f9a5719291e6608ab6">911ff6b8…</code></a>
+— the pin is upstream <code>main</code> and the only commit on any
+branch; there are no tags. Screened again: <code>NOTHING SCANNED</code>,
+since the tree holds no surface the screen parses, so all nine files
+were read by hand. Every line citation, quotation, count, absence claim
+and recorded search holds at the pin, and all seven marks stay withheld.
+Two statements were overstated and are corrected in <a
+href="#deployment-and-ergonomics">§3</a> and <a
+href="#10-tests-evals-and-benchmarks">§10</a>: the installer refuses a
+subdirectory of a git repository only when <code>git</code> is on the
+PATH, and of the twenty-three recorded hashes, three are of Codex
+subagent definitions and two of an instruction block rather than all of
+skill files. Nothing installed or run.</p>
 <p><strong>2026-11-16</strong> — <a
 href="https://github.com/mudassirzulfiqar/Decision-Keeper/commit/911ff6b88e7c5e65b64326f9a5719291e6608ab6"><code class="commit-id" title="911ff6b88e7c5e65b64326f9a5719291e6608ab6">911ff6b8…</code></a>
 — first reading. Screened first: no findings. Nothing installed or
