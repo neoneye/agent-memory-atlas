@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 817 reports.**
+**This page covers all 818 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7491,3 +7491,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 from ClickHouse, Inc.; 513,695 lines of Python under `server/`, 158,862 in `server/memory/`; 753 commits from 8 October to 18 November 2026; 27,617 pytest functions with the integration suite on ClickHouse in CI, not run here; LongMemEval-S and LoCoMo headlines recompute from committed CSVs. Seven marks: `tombstone`, `trust_state`, `bitemporal`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval`.
 - Study when: you are building one memory service for a team of agents and people and need scope, history, audit and erasure to be real rather than declared.
 - Do not copy when: one developer needs memory on a laptop, or a forgotten value must stay forgotten without someone writing a pattern for it.
+
+### [`spookling-memory`](../systems/spookling-memory/)
+
+- Best idea: the model's output is a decision record, never the store. Each tag and ruling is appended with its source turn before it applies, fact rows are a pure fold of those records, and a tagger may only point at spans that occur letter for letter in the user's turn.
+- Biggest risk: the prompt hook has no relevance bar. Any shared keyword yields a recalled block on top of a 40-line invariant block on every prompt, the asking session's own turns can come back, and the default install is keyword-only.
+- Most reusable component: the bitemporal `facts` schema in `server/spookling_memory/core/facts.py`, whose checks, partial unique index and triggers allow only an insert or a single close, with `fold()` in `core/sleep.py` rebuilding it from the judgement log.
+- Maturity impression: all rights reserved, read-and-run only. 8,010 lines of Python and 7,069 of JavaScript, 256 pytest functions and 360 node tests in CI, 156 commits in three weeks from three authors. Benchmark harness and results are private.
+- Study when: you need an assistant to keep dated facts straight across months and to reproduce why it believes each one.
+- Do not copy when: you need memory scoped to a repository, a forget that removes data, or injection that stays silent on unrelated prompts.

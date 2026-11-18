@@ -518,6 +518,7 @@ page_kind: comparison
 - [`vaultite`](../systems/vaultite/)
 - [`opencomputer`](../systems/opencomputer/)
 - [`clickhouse-loom`](../systems/clickhouse-loom/)
+- [`spookling-memory`](../systems/spookling-memory/)
 
 ## Repos Inspected
 
@@ -1340,12 +1341,13 @@ page_kind: comparison
 - [Vaultite/vaultite](https://github.com/Vaultite/vaultite) at [`55768189f71c42b878e75a599dd6427367cdb077`](https://github.com/Vaultite/vaultite/commit/55768189f71c42b878e75a599dd6427367cdb077) — read only, the write, search, history, provenance, people, archive, MCP and agent-launch paths and their tests, from a full clone of 2,289 commits; the screen reported a Claude Code marketplace manifest, a `.claude/settings.json` SessionStart hook, a nested plugin with its own hook registrations, committed git hooks a `prepare` script enables, and a `package.json` and lockfile inside the cooldown. Nothing was installed, built or run; the device-sync engine and Vaultite Cloud's relay were not traced. Apache-2.0, with citeproc-js taken under CPAL 1.0
 - [diggerhq/opencomputer](https://github.com/diggerhq/opencomputer) at [`4129fb169152e6ff072bd013c625b79577134cce`](https://github.com/diggerhq/opencomputer/commit/4129fb169152e6ff072bd013c625b79577134cce) — read only, the Serverless Agents memory store, its admission and closure protocol, both runtimes' recall and save paths, the owner routes and their tests, from a depth-1 clone with history counts from the GitHub API; the screen reported no auto-running hook, a `Makefile` and a `prepublishOnly` script, and 28 dependency manifests inside the cooldown, which the shallow clone overstates. Nothing was installed, built or run; the Slack gateway in `computer/` was searched for memory and not otherwise traced, and the private code production lays over `services/managed-agents` was not available. Apache-2.0, with both SDK manifests declaring MIT and no MIT licence file in the tree
 - [ClickHouse/loom](https://github.com/ClickHouse/loom) at [`39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc`](https://github.com/ClickHouse/loom/commit/39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc) — read only, from a depth-one clone of `main` on 18 November 2026, with the commit count and contributors from the GitHub API; scoped to `server/memory/`, the identity, auth, erasure, transport and storage paths it calls, the Claude Code plugin and the tests, with the code index, knowledge plane and dashboard read only where they touch memory. Ten auto-run surfaces, each read and none opened; FRESH findings on every manifest, inflated by the shallow clone. Nothing was installed, built or run, and none of the 27,617 tests were run; the benchmark headlines were recomputed from the CSVs under `bench/results/`. Apache-2.0
+- [Spookling/spookling-memory](https://github.com/Spookling/spookling-memory) at [`d362ec0a3f1dd68f87b912800d662e61d5ba063e`](https://github.com/Spookling/spookling-memory/commit/d362ec0a3f1dd68f87b912800d662e61d5ba063e) — read only, the log, judgement, fold, fact, routing, recall, hook, compaction, reset and MCP paths and their tests; nothing installed or run
 
 ## What the licences actually say
 
 A licence is an operational caveat, not a memory mechanism, so it lives in the
 appendix — but a reader deciding whether they can *use* something needs it.
-"Publicly readable source" is not "open source": **twenty-two carry a licence
+"Publicly readable source" is not "open source": **twenty-three carry a licence
 that is not open source**, each named in its own report and collected here.
 
 | Licence | Systems |
@@ -1357,14 +1359,15 @@ that is not open source**, each named in its own report and collected here.
 | Conditional BSD — branding may not be altered above fifty users | [Open WebUI](../systems/open-webui/) (the "Open WebUI License": BSD-3 plus a fourth clause making removal of the branding "a material breach" in any deployment reaching fifty end users in a rolling thirty days, absent a written permission or an enterprise licence) |
 | Commercial source-available — read, evaluate and fork to contribute; a subscription to run; no redistribution or reuse | [QualityLayer](../systems/qualitylayer/) (its own licence, under German law; the public tree is a deliberate projection and most of it is encrypted) |
 | All rights reserved with a research-use grant — run to reproduce one preprint, and nothing else | [Aura](../systems/aura/) (the grant was added on 9 November 2026; no copying, products, derivative works or model training) |
+| All rights reserved with a run-as-distributed grant — read the source and run the plugin as shipped, nothing else | [Spookling Memory](../systems/spookling-memory/) (no copying, modification or redistribution without written permission; `package.json` says UNLICENSED) |
 | All rights reserved — publicly readable, no grant at all | [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) (whose README asserts MIT with no licence file under it), [SESA](../systems/sesa/) (no licence file, which defaults to this), [Master Agent System](../systems/master-agent-system/) (no licence file at the root, beside vendored packages that carry their own), [Sol0mon](../systems/sol0mon/) (no licence file, and a README saying none has been selected) and [Vanilla RAG Memory](../systems/vanilla-rag-memory/) (no licence file, and no licence statement in the README or `pyproject.toml`) |
 
 Two things this table is not. It is **not a complete licence taxonomy of the
 corpus**: it collects what the reports happened to record, and a report is
 written about mechanisms, so a permissive licence usually goes unmentioned. The
-rest have not each been checked — the honest claim is that twenty-two are known
+rest have not each been checked — the honest claim is that twenty-three are known
 non-open-source and the others are unrecorded, not that the others are MIT. And
-it is **not a reason to skip those twenty-two**: every mechanism in this atlas is
+it is **not a reason to skip those twenty-three**: every mechanism in this atlas is
 described so it can be re-implemented rather than copied, which is the only way a
 restrictively licensed system can be read usefully. What changes is what you may
 do with the code afterwards, and that is worth knowing before you open the file
