@@ -2064,21 +2064,24 @@ both of which the README lists. Marks: <code>tombstone</code>,
 <code>bitemporal</code>, <code>scope_enforced</code>,
 <code>audit_log</code>, <code>negative_eval</code>.</p>
 <p><strong><a href="../systems/heurchain/">HeurChain</a> checks its
-forget tombstone on every read path separately, and describes its
-archiving tool to agents as a reward.</strong> An MIT, self-hosted Go
-broker: agent-written records in Redis under a tenant id the API key is
-validated against, a BM25 index and a Qdrant collection as projections
-fused by reciprocal rank fusion, revision-checked corrections with
-retained versions, and an activation sweep that ships as a dry run. A
-committed test restores a forgotten record beside its tombstone and
-requires search, scan, manifest, listing and export each to return only
-the surviving one. The tool <code>heurchain_promote</code> is described
-as raising retrieval weight after a human confirms a fact and moves the
-record out of search; the tenant's own key can delete audit rows,
-corrections and deletions included; the documented session shutdown
-erases what the replay tool reads; and the per-agent isolation flag
-reads a field nothing writes. It carries <code>bitemporal</code>,
-<code>scope_enforced</code> and <code>negative_eval</code>.</p>
+forget tombstone on every read path separately, and names its archiving
+tool promote.</strong> An MIT, self-hosted Go broker: agent-written
+records in Redis under a tenant id the API key is validated against, a
+BM25 index and a Qdrant collection as projections fused by reciprocal
+rank fusion, revision-checked corrections with retained versions, and an
+activation sweep that ships as a dry run. A committed test restores a
+forgotten record beside its tombstone and requires search, scan,
+manifest, listing and export each to return only the surviving one.
+Store, correction and forget each insert an audit row that no statement
+deletes, and the deletion of an agent's usage counters writes its own
+row in the same transaction; the memory rows are written after the
+change and dropped on failure, and the two moves out of search, the
+sweep and <code>heurchain_promote</code>, write none. The promote tool
+archives a low-activation record without the dry-run gate, and says so.
+Inside a tenant, agents share everything and the opt-in isolation keys
+on the agent id the requester declares. It carries
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code>.</p>
 <h2 id="agent-runtime-memory">Agent-runtime memory</h2>
 <p><a href="../systems/humans/"><code>humans</code></a>, <a
 href="../systems/letta/"><code>letta</code></a>, <a

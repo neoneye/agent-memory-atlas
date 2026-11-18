@@ -349,22 +349,21 @@ by every session on the account, so a lesson nobody approved reaches the
 widest scope the system has, while the per-project tier it came from
 still withholds it.</p>
 <p><a href="../../systems/heurchain/">HeurChain</a> is the tier move
-with its sign reversed in the documentation. Records leave the searched
-set for a vault when <code>ln(access_count) - d * ln(age + 1)</code>
-falls below a threshold, with <code>d</code> set per namespace, and the
-hourly sweep that applies it ships as a dry run that only logs. The
-single-record endpoint is named <code>/promote</code>, is not gated by
-the dry-run flag, and is described to agents as <em>"Increment a memory
-item's retrieval weight. Call after a human confirms a stored fact is
-correct"</em>; its handler computes the same activation and moves the
-record to the vault when it is below the threshold. Under the shipped
+with its sign reversed in the name. Records leave the searched set for a
+vault when <code>ln(access_count) - d * ln(age + 1)</code> falls below a
+threshold, with <code>d</code> set per namespace, and the hourly sweep
+that applies it ships as a dry run that only logs. The single-record
+endpoint is named <code>/promote</code>, is not gated by the dry-run
+flag, and writes no audit row; its handler computes the same activation
+and moves the record to the vault when it is below the threshold, which
+its description states and a committed test asserts. Under the shipped
 settings a never-retrieved record in the fastest tier qualifies about
-thirteen minutes after it was stored, so the confirmation an agent is
-asked to record is what removes the fact from search. No committed test
-calls the handler. The source comments also record why a fixed threshold
-was abandoned for a rank cut: the activation is unbounded downward, so
-every threshold eventually archives every record that is never
-re-read.</p>
+thirteen minutes after it was stored, so one call to the verb named
+promote removes the fact from search. The way back is an admin endpoint,
+or an MCP restore tool the operator has to switch on. The source
+comments also record why a fixed threshold was abandoned for a rank cut:
+the activation is unbounded downward, so every threshold eventually
+archives every record that is never re-read.</p>
 <h3 id="separate-inputs-a-ceiling-a-recorded-decision--argued">Separate
 inputs, a ceiling, a recorded decision — argued</h3>
 <p>No system cited here has all three on a storage-tier move; each has
