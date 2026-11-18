@@ -17094,50 +17094,58 @@ coordination, receipts — is the part the benchmark does not score</td>
 <td><a
 href="../systems/luna-local-agent/"><code>luna-local-agent</code></a></td>
 <td>A one-sentence fact about the user with an optional one-word
-subject, in a JSON list or a SQLite row with created_at and
-superseded_at; beside it episode notes, lessons, recipes, projects,
-subject pages, game feelings and per-person fact files</td>
-<td>agent/memory.json capped at max_facts, or agent/facts.db with an
-FTS5 index; agent/notebook.db for episodes, lessons, pages, play
-sessions and offer state; one JSON file per enrolled person;
+subject, a trust state and an optional real date, in a SQLite row with
+record time beside it; around it episode notes, lessons, recipes,
+projects, subject pages, profiles, game feelings and per-person fact
+files</td>
+<td>agent/facts.db with an FTS5 index and a table of forgotten-fact
+fingerprints; agent/notebook.db for episodes, lessons, pages, profiles,
+play sessions and offer state; one JSON file per enrolled person;
 history/conversation.json and transcript.jsonl; an embeddings.db vector
-cache</td>
+cache; an old memory.json list read in once</td>
 <td>Every fact while under context_facts, else embedding similarity
 above 0.35 with an optional reranker, FTS5 bm25 or word overlap, always
 plus the newest third; lessons, episodes and pages by embedding or
-shared words; search_history and recall_episodes as tools</td>
-<td>The model calls remember_fact, update_fact and forget_fact mid-turn;
-a background extractor answering NONE, NEW or REPLACE runs only when the
-model has no tool calling; idle passes write episode notes, lessons,
-pages and game feelings</td>
-<td>update_fact rewrites in place with no history; REPLACE and the tidy
-pass retire a row with a timestamp; forget_fact deletes the row and
-nothing derived from the conversation; the memory page edits, retires,
-restores and deletes by id</td>
+shared words; a profile of the speaker; search_history, recall_episodes
+and recall_facts with past as tools</td>
+<td>The model calls remember_fact, update_fact, confirm_fact and
+forget_fact mid-turn; a background extractor answering NONE, NEW,
+REPLACE or CONFIRM runs when the model has no tool calling, or when the
+user asked to remember and no remember_fact ran; idle passes write
+episode notes, lessons, pages, profiles and game feelings</td>
+<td>update_fact retires the old row with an optional real end date
+unless the model sets mistake; forget deletes the row, buries a
+fingerprint and sweeps the sentences carrying it from every derived
+store; the memory page edits, confirms, retires, restores, deletes and
+lifts every fingerprint</td>
 <td>One file per enrolled person and per-session guest facts in memory,
-chosen by the turn's speaker; history, episodes, lessons, projects,
-recipes and knowledge passages reach every turn that is not stream chat,
-a stranger's included</td>
+chosen by the turn's speaker; the owner's summary, episodes, projects,
+recipes, knowledge passages and profile stay out of anyone else's
+prompt; an enrolled housemate's tools read the shared transcript,
+episodes and documents</td>
 <td>In-process: a terminal and voice agent on LM Studio or llama.cpp
-with 52 registered tools (files, shell, mail, web, network, desktop,
+with 53 registered tools (files, shell, mail, web, network, desktop,
 reminders, scheduled jobs, self-introspection) plus MCP servers, a
 localhost memory page, slash commands, relay stations and a Discord
 plugin</td>
 <td>An idle loop every two minutes writes episode notes after 30 quiet
 minutes; a dream pass every 20 hours writes lessons, tidies fact pairs
-and rewrites pages; a worker folds old turns into the running
-summary</td>
-<td>No status on a fact; agent-noted lessons and recipes wait for an
-on-screen yes; dream-pass lessons, facts and episodes land unreviewed;
-the dream and episode prompts mark their inputs as records</td>
-<td>A split between correcting a fact and recording a change; offers
-with persisted per-item cooldowns and a mute that survives restarts;
-lesson and recipe writes behind an approval the agent cannot answer; an
-editor over the rows the model reads</td>
-<td>Forget deletes the fact and leaves episode notes, the summary and
-the transcript serving it; a stranger's or a housemate's turn receives
-the owner's episodes, projects, summary and knowledge passages; a forget
-on the JSON backend returns when the backend flips back</td>
+and rewrites pages and profiles; a worker folds old turns into the
+running summary; a forget's sweep runs on its own thread</td>
+<td>Owner facts are confirmed or unconfirmed, and pages, profiles and
+the tidy pass read only confirmed ones; agent-noted lessons and recipes
+wait for an on-screen yes; dream-pass lessons and episodes land
+unreviewed; background prompts mark their inputs as records</td>
+<td>A forget that buries a value fingerprint, sweeps the summary,
+transcript, notes, pages, profiles, thought log and vectors, and cleans
+everything she writes afterwards while keeping the user's own words; two
+clocks per fact; offers with persisted cooldowns and a mute; lesson and
+recipe writes behind an approval the agent cannot answer</td>
+<td>remember_fact's again flag lets the model lift a tombstone it was
+just refused by; the fingerprint reverses by dictionary to the forgotten
+words; a housemate's forget pops a list entry with no fingerprint and no
+sweep; the unconfirmed state is produced only on models without tool
+calling</td>
 </tr>
 <tr>
 <td><a href="../systems/m-flow/"><code>m-flow</code></a></td>
@@ -36662,7 +36670,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>78 of 816:</em> <a
+<p><em>79 of 816:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -36682,7 +36690,8 @@ href="../systems/hive-mind/"><code>hive-mind</code></a>, <a
 href="../systems/inspeximus/"><code>inspeximus</code></a>, <a
 href="../systems/kibisis/"><code>kibisis</code></a>, <a
 href="../systems/loreai/"><code>loreai</code></a>, <a
-href="../systems/marm-memory/"><code>marm-memory</code></a>, <a
+href="../systems/luna-local-agent/"><code>luna-local-agent</code></a>,
+<a href="../systems/marm-memory/"><code>marm-memory</code></a>, <a
 href="../systems/memesh/"><code>memesh</code></a>, <a
 href="../systems/memmy-agent/"><code>memmy-agent</code></a>, <a
 href="../systems/memo-local/"><code>memo-local</code></a>, <a
@@ -36744,7 +36753,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>209 of 816:</em> <a
+<p><em>210 of 816:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -36842,7 +36851,8 @@ href="../systems/knowl/"><code>knowl</code></a>, <a
 href="../systems/knowledge-worker/"><code>knowledge-worker</code></a>,
 <a href="../systems/llm-wiki-cli/"><code>llm-wiki-cli</code></a>, <a
 href="../systems/loreai/"><code>loreai</code></a>, <a
-href="../systems/magic-context/"><code>magic-context</code></a>, <a
+href="../systems/luna-local-agent/"><code>luna-local-agent</code></a>,
+<a href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/mama/"><code>mama</code></a>, <a
 href="../systems/master-agent-system/"><code>master-agent-system</code></a>,
 <a
@@ -36960,7 +36970,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>137 of 816:</em> <a
+<p><em>138 of 816:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -37021,7 +37031,8 @@ href="../systems/llm-wiki-cli/"><code>llm-wiki-cli</code></a>, <a
 href="../systems/lobu/"><code>lobu</code></a>, <a
 href="../systems/local-memory-mcp/"><code>local-memory-mcp</code></a>,
 <a href="../systems/loreweave/"><code>loreweave</code></a>, <a
-href="../systems/m3-memory/"><code>m3-memory</code></a>, <a
+href="../systems/luna-local-agent/"><code>luna-local-agent</code></a>,
+<a href="../systems/m3-memory/"><code>m3-memory</code></a>, <a
 href="../systems/magicore/"><code>magicore</code></a>, <a
 href="../systems/mama/"><code>mama</code></a>, <a
 href="../systems/mastra-observational-memory/"><code>mastra-observational-memory</code></a>,

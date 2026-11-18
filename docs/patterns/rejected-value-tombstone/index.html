@@ -126,7 +126,7 @@ belief.</p>
 <blockquote>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
-recurs across the corpus. 78 systems of
+recurs across the corpus. 79 systems of
 816 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
@@ -291,7 +291,7 @@ near-miss, and the argument that the expensive half of the pattern is
 not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
-<p><strong>78 systems of
+<p><strong>79 systems of
 816 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -897,6 +897,26 @@ restates a fact gets it back. But the agent's <code>remember_fact</code>
 tool writes with explicit-user provenance on every call, so the
 tombstone stops the curation pass and not the model naming the
 value.</p>
+<p><strong><a href="../../systems/luna-local-agent/">Luna</a>
+fingerprints a forgotten fact's meaning words, sweeps every store built
+from the conversation, and hands the lift to its model.</strong>
+<code>forget_fact</code> and the memory page's delete bury the set of
+hashes of the fact's stemmed words, with stopwords and names removed.
+<code>add</code>, <code>replace</code>, <code>update</code> and the
+one-time import refuse a fact whose set equals it, contains it with at
+most two more words, or overlaps a long one by 0.8
+(<code>mind/factstore.py:541-553</code>,
+<code>mind/forgetting.py:104-114</code>). The same sets drive a sweep of
+the summary, history, transcript, episodes, lessons, pages, profiles,
+thought log and vector cache, and a guard on everything Luna writes
+afterwards; the user's own words stay as said
+(<code>mind/forgetting.py:255-421</code>). The extractor lifts a
+fingerprint only on a turn whose user words ask to remember.
+<code>remember_fact</code> takes an <code>again</code> flag that lifts
+it with no such check, and the refusal text names the flag
+(<code>tools/memory.py:34-43</code>,
+<code>mind/longterm.py:460-462</code>). A housemate's forget writes no
+fingerprint.</p>
 <h3 id="sorted-by-what-actually-stops-the-value">Sorted by what actually
 stops the value</h3>
 <p>The mark covers four different mechanisms. The table sorts the
@@ -925,6 +945,7 @@ href="../../systems/verel/">Verel</a>, <a
 href="../../systems/noosphere/">Noosphere</a>, <a
 href="../../systems/noosphere-lite-mcp/">Noosphere Lite MCP</a>, <a
 href="../../systems/pok-agent/">POK-Agent</a>, <a
+href="../../systems/luna-local-agent/">Luna</a>, <a
 href="../../systems/breadcrumbs/">breadcrumbs</a>, <a
 href="../../systems/memory-compiler/">Memory Compiler</a>, <a
 href="../../systems/agent-memory-doctrine/">Agent Memory Doctrine</a>,
@@ -1406,6 +1427,15 @@ refuses the next event carrying <code>user_id = alice</code>, which is
 stored and served as though no erasure had happened. That is the price
 of retaining nothing about the subject, and it is why the mark is
 withheld.</p>
+<p><a href="../../systems/luna-local-agent/">Luna</a> claims the
+digest's property without the digest's strength. Its design comment says
+the fingerprint keeps <em>"Never the words"</em>, and each hash covers
+one stemmed dictionary word under a salt that is a constant in the
+source (<code>mind/forgetting.py:9-11</code>, <code>:95-96</code>).
+Hashing a system word list recovers the stored set for <em>"Ryan works
+at the bakery"</em> as <code>work</code> and <code>bakery</code>. A
+word-level key is what lets the match survive rewording, and it is also
+what makes the record readable.</p>
 <h3 id="the-refusal-that-reaches-the-inference">The refusal that reaches
 the inference</h3>
 <p><a href="../../systems/rck/">RCK</a> is the instance that closes the

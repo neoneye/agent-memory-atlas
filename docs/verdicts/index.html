@@ -32750,44 +32750,43 @@ audit trail of what was forgotten.</li>
 <h3 id="luna-local-agent"><a
 href="../systems/luna-local-agent/"><code>luna-local-agent</code></a></h3>
 <ul>
-<li>Best idea: <strong>a proactive mention that remembers being
-declined.</strong> Each offer Luna raises unprompted keeps when it was
-raised and how often in <code>notebook.db</code>, so its cooldown
-survives a restart; a date comes up at most twice, and
-<code>stop_offering</code> mutes the item for good, every year for a
-date.</li>
-<li>Second idea: a correction and a change in the world are different
-writes, <code>update</code> rewriting in place and <code>replace</code>
-retiring the old row with a pointer to the new; and a lesson the agent
-proposes is refused on a turn that read outside content, then waits for
-an on-screen yes.</li>
-<li>Biggest risk: <strong>forget stops at the fact.</strong>
-<code>forget_fact</code> deletes the row and nothing else, so the
-episode note, the running summary, the transcript and, until the next
-dream pass, the subject page built from the same conversation keep
-serving it, and nothing records that it was forgotten.</li>
-<li>Second risk: speaker scoping covers facts, preferences and pages
-only, and a stranger's or a housemate's turn receives the owner's
-episode notes, projects, recipes, history summary and knowledge-folder
-passages; <code>update_fact</code>, described to the model for changes
-in the world, keeps no history; a forget on the default JSON backend
-returns when the backend flips to SQLite.</li>
-<li>Most reusable component: <code>life/offers.py:184-306</code>, the
-per-item asked counts, cooldowns and mute, with <code>replace</code> and
-<code>update</code> in <code>mind/factstore.py:323-377</code>.</li>
-<li>Maturity impression: MIT; 19,084 lines of Python in the memory code
-and the turn runtime, 62,393 outside tests; 308 commits from two
-authors, 30 July – 5 November 2026; 800 unittest methods run offline in
-CI, not run here. Two marks: <code>human_review</code> on agent-noted
-lessons and recipes, <code>negative_eval</code> on the per-person
-partition.</li>
-<li>Study when: you are building a long-running assistant that raises
-things unprompted and must not nag, and want offer hysteresis and an
-approval gate on self-written instructions in one readable
-codebase.</li>
-<li>Do not copy when: "forget that" must hold across every store,
-several people share the device and must not see each other's notes, or
-you need the old value after a change the model recorded.</li>
+<li>Best idea: <strong>a forget that sweeps and then guards.</strong>
+<code>forget_fact</code> deletes the fact and its retired copies, buries
+a fingerprint of its meaning words that every fact writer consults,
+strips the sentences carrying it from the summary, history, transcript,
+episodes, lessons, pages, profiles, thought log and vector cache, and
+cleans everything Luna writes afterwards while keeping the user's own
+words.</li>
+<li>Second idea: two clocks per fact, with the real date taken only from
+what the user said and written as the old fact's end on a change; a
+guess the extractor makes lands unconfirmed and stays out of pages,
+profiles and the tidy pass's retirements; offers she raises unprompted
+keep persisted cooldowns and a mute.</li>
+<li>Biggest risk: <strong>the model holds the key to its own
+tombstone.</strong> <code>remember_fact</code> takes an
+<code>again</code> flag that lifts a fingerprint with no check on what
+the user said, and the refusal text names it.</li>
+<li>Second risk: the fingerprint hashes one dictionary word per entry
+under a constant salt and reverses to the forgotten words; a housemate's
+forget pops a list entry with no fingerprint and no sweep; the
+unconfirmed state has a producer only when the model has no tool
+calling.</li>
+<li>Most reusable component: <code>mind/forgetting.py</code>, the
+fingerprint, sweep and write guard, with
+<code>life/offers.py:184-306</code> for offer hysteresis.</li>
+<li>Maturity impression: MIT; 21,191 lines of Python in the memory code
+and the turn runtime, 66,214 outside tests; 336 commits from two
+authors, 30 July – 18 November 2026; 1,014 unittest methods run offline
+in CI, not run here. Five marks: <code>tombstone</code>,
+<code>trust_state</code>, <code>bitemporal</code>,
+<code>human_review</code> on agent-noted lessons and recipes, and
+<code>negative_eval</code>.</li>
+<li>Study when: you are building a long-running single-user assistant
+where "forget that" must reach the notes and summaries built from the
+conversation, not only the fact row.</li>
+<li>Do not copy when: the forgotten words must not be recoverable from
+disk, several people share the device and each needs their own forget to
+hold, or the model must not be able to undo a forget on its own.</li>
 </ul>
 <h3 id="mnemos-mcp"><a
 href="../systems/mnemos-mcp/"><code>mnemos-mcp</code></a></h3>
