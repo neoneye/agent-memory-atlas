@@ -7421,11 +7421,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`heurchain`](../systems/heurchain/)
 
 - Best idea: the forget tombstone is enforced twice and independently. The admission script refuses a tombstoned id, and search hydration, the cosine scan, the manifest, the per-agent listing, session context, export and stats each test the tombstone key themselves and fail closed, so content restored by an older binary or a backup stays hidden.
-- Biggest risk: the text agents act on is wrong about three operations. `heurchain_promote` is described as raising retrieval weight after a human confirms a fact and its handler moves a low-activation record to the vault, outside search, ungated by the dry-run flag; the documented session shutdown deletes the context the replay tool reads; and `DELETE /agents` with the tenant key removes audit rows, every correction and deletion row at once through the value `unspecified`.
+- Biggest risk: everything inside a tenant. Agents share one store, and the opt-in per-agent isolation applies only to `/query` and keys on the agent id the requester declares. The audit table is insert-only, but its memory rows are written after the Redis change and dropped on failure, and the two moves out of search, the hourly sweep and `heurchain_promote`, write no row; the promote tool archives without the dry-run gate.
 - Most reusable component: the admission script in `broker/memory_records.go` (tombstone, revision check, history push and write in one Lua call) with `broker/memory_read_tombstone_test.go`, which asserts absence from populated results on ten surfaces.
-- Maturity impression: 12,564 lines of Go and 176 test functions that need no services and that no workflow runs; CI is a Compose smoke test. The broker arrived whole in one commit on 9 November 2026 and is declared frozen at 0.6.1-oss.1, with unnamed features omitted from this edition. MIT.
+- Maturity impression: 12,662 lines of Go and 182 test functions that need no services and that no workflow runs; CI is a Compose smoke test. The broker arrived whole in one commit on 9 November 2026 and is declared frozen at 0.6.1-oss.1, with unnamed features omitted from this edition. Four marks. MIT.
 - Study when: deletion must reach a primary store and two derived indexes and stay deleted after a restore, or a correction must be refused when it was made from a stale read.
-- Do not copy when: agents under one tenant must be kept apart, the audit trail must outlive the tenant's credential, or an agent will follow tool descriptions without the handler having been read.
+- Do not copy when: agents under one tenant must be kept apart, every mutation must be on the audit record, or memory should be extracted without the agent deciding to store.
 
 ### [`cairn`](../systems/cairn/)
 

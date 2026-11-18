@@ -7,18 +7,19 @@ page_kind: system
 source_name: "peterjohannmedina/heurchain"
 source_url: https://github.com/peterjohannmedina/heurchain
 archive_name: "peterjohannmedina--heurchain"
-revision: a2feeb414f491cf57afab01854078278cc50167e
-revision_url: https://github.com/peterjohannmedina/heurchain/commit/a2feeb414f491cf57afab01854078278cc50167e
-analyzed_at: 2026-11-17
+revision: 82fa9f6cd2e6c10c46597dd6dd3988ccab5702df
+revision_url: https://github.com/peterjohannmedina/heurchain/commit/82fa9f6cd2e6c10c46597dd6dd3988ccab5702df
+analyzed_at: 2026-11-18
 licence: "MIT, in LICENSE and an identical npm/LICENSE, agreeing with npm/package.json; copyright is assigned to HeurChain contributors"
-size: "12,564 lines of Go in 41 non-test files under broker/, which is the whole product; vault.go is 1,578 of them and bm25.go 1,108. The npm package holds two agent-facing documents and no code"
-activity: "45 commits from 1 May to 10 November 2026 under two author names; the Go broker arrived whole in one commit on 9 November 2026, replacing a 1.x Node service, and has six commits. Broker version 0.6.1-oss.1, declared frozen"
-tests: "176 Go test functions in 37 files, 6,617 lines, on miniredis, in-memory SQLite and httptest stand-ins for Qdrant and the embedder. No workflow runs them; CI is a Docker Compose smoke test. I ran none; two findings were re-derived in separate scripts"
-capabilities: "bitemporal, scope_enforced, negative_eval"
+size: "12,662 lines of Go in 42 non-test files under broker/, which is the whole product; vault.go is 1,576 of them and bm25.go 1,108. The npm package holds two agent-facing documents and no code"
+activity: "49 commits from 1 May to 17 November 2026 under three author names; the Go broker arrived whole in one commit on 9 November 2026, replacing a 1.x Node service, and has ten commits. Broker version 0.6.1-oss.1, declared frozen, with an Unreleased changelog section above it"
+tests: "182 Go test functions in 39 files, 6,949 lines, on miniredis, in-memory SQLite and httptest stand-ins for Qdrant and the embedder. No workflow runs them; CI is a Docker Compose smoke test. I ran none; the activation thresholds were re-derived in a separate script"
+capabilities: "bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   bitemporal: "recall on /search — a caller-supplied validity interval in record metadata, separate from created_at and updated_at | broker/recall_options.go:65-93, :95-125, broker/recall.go:94-99, :139, :333, broker/bm25.go:788 | `recallMetadataValid` checks `valid_from` and `valid_until` on every store and update; `as_of` on /search drops a record whose interval does not contain the instant, as a Qdrant `must_not` range pair, in `eligibleRecallIDs`, in `filterBM25ActiveDocs` and again at hydration. /query takes no `as_of`, a search without it returns expired records, and no agent-facing document names the two keys | broker/recall_controls_test.go:13-38 (one accepted and four refused metadata shapes; the pushed-down filter has two clauses), broker/recall_field_reads_test.go:148 (three stored records, the one whose validity starts later is the one absent), broker/combined_interaction_test.go:14-39"
   scope_enforced: "every memory read — the tenant id from the request header, bound to the API key | broker/auth.go:76-78, broker/vectors.go:75-81, broker/recall.go:213, :150-194, broker/bm25.go:753, broker/qdrant.go:459-487, broker/memory_records.go:183-207 | `validateAPIKey` accepts a key only among the rows stored for the named tenant; that tenant id is a segment of every Redis key the read composes and the name of the Qdrant collection; BM25 candidates and dense hits are each checked for membership in the tenant's active set before fusion, and `resolveRecallHits` drops a dense hit that is not in it. The arms are BM25, dense, the /query scan, session context, get, list and export. A key namespace and a collection per tenant, not a column predicate | broker/memory_lifecycle_test.go:179 with :198-203 (a record stored under tenant `other` is absent from six listed records and its get returns 404), broker/combined_interaction_test.go:83-103 (a key presented with another tenant header gets 401 on get, session context and export), broker/recall_test.go:226-232"
-  negative_eval: "forget and correction on the recall paths | broker/recall.go:319, broker/vectors.go:242, broker/qdrant.go:481, broker/vault.go:228, broker/sessions.go:145 | a record restored beside its tombstone must be absent from /search in three modes, MCP search and query, the /query scan, the manifest, the per-agent listing, the export and the stats; a corrected record must return its new text only; a forgotten or corrected record must be absent or current in session context | broker/memory_read_tombstone_test.go:35-181 (fixture stores `keep` and `gone-residue` under one phrase; every surface must return exactly `keep`, and the fixture first asserts the residue is in the active set, the postings and the vector index), broker/memory_lifecycle_test.go:61-63, broker/session_memory_context_test.go:9-49"
+  audit_log: "the SQLite audit_log table, written by store, update, forget, import and rehydrate | broker/schema.sql:63-77, broker/handlers.go:332-336, broker/memory_api.go:286-293, broker/memory_forget.go:23, :93, broker/http_helpers.go:75-91, broker/vault.go:1520-1541 | store, update, forget, export, import, flush and rehydrate each insert a row naming the key, the record id and, for update and forget, the revision and the record's author; searches and queries add rows of their own. No statement in the broker deletes or updates a row; `DELETE /agents` removes usage counters and inserts its own `agent.usage_delete` row in the same transaction. `heurchain_memory_history` reads the rows back per record. Limits: memory rows are written after the Redis change, in another store, and a failed insert is logged and dropped; a vault move by the sweep or by the promote handler writes no row; a store row carries no revision | broker/agents_delete_test.go:10-78 (a store, an update and a forget leave three rows that survive deletion for that agent and for `unspecified`, each deletion writes its own row, and a refused audit insert leaves the usage row in place)"
+  negative_eval: "forget and correction on the recall paths | broker/recall.go:319, broker/vectors.go:242, broker/qdrant.go:481, broker/vault.go:227, broker/sessions.go:140 | a record restored beside its tombstone must be absent from /search in three modes, MCP search and query, the /query scan, the manifest, the per-agent listing, the export and the stats; a corrected record must return its new text only; a forgotten or corrected record must be absent or current in session context | broker/memory_read_tombstone_test.go:35-181 (fixture stores `keep` and `gone-residue` under one phrase; every surface must return exactly `keep`, and the fixture first asserts the residue is in the active set, the postings and the vector index), broker/memory_lifecycle_test.go:61-63, broker/session_memory_context_test.go:10-50"
 stack_storage: "redis, qdrant, sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -28,12 +29,12 @@ matrix:
   retrieval: "BM25 over Redis postings and Qdrant nearest neighbours, each filtered against the tenant's active set, fused by reciprocal rank fusion with k 60, then hydrated from Redis with every filter applied again; a second endpoint scans all stored embeddings by cosine"
   write: "The agent's explicit store call over HTTP or MCP; the broker embeds the text, runs one Lua script that checks tombstone and revision and writes the hash, then updates BM25 and Qdrant before answering"
   update_delete: "A store on an existing id or an update with the revision last read keeps up to 100 prior versions within 1 MiB; forget deletes the record, vault copy, versions and index entries and leaves an id tombstone with no expiry"
-  scoping: "A tenant id in every Redis key and as the Qdrant collection name, taken from a header the API key is validated against; an optional exact-match agent filter; per-agent isolation is declared and reads a field nothing writes"
-  integration: "HTTP and JSON, an MCP server with 24 tools over Streamable HTTP or SSE, an unauthenticated onboarding document served at the root path, an OpenAPI document, and an npm package carrying the same guidance"
+  scoping: "A tenant id in every Redis key and as the Qdrant collection name, taken from a header the API key is validated against; an optional exact-match agent filter; an opt-in per-agent isolation on /query keyed on the agent id the requester declares"
+  integration: "HTTP and JSON, an MCP server with 24 tools over Streamable HTTP or SSE and a 25th restore tool when the operator opts in, an unauthenticated onboarding document served at the root path, an OpenAPI document, an npm package and a skill file carrying the same guidance"
   background: "A one-second worker drains an index outbox and reconciles records against Qdrant; an hourly activation sweep moves low-activation records to the vault and ships as a dry run"
   trust: "None on the content. A record is active, archived or forgotten by lifecycle, and a kind of factual or creative is a caller-set filter"
-  strengths: "A tombstone checked independently on each read path, revision-checked corrections with retained history, index writes guarded by a content fingerprint and an outbox, and tests that assert absence from populated results"
-  risks: "The tool described as raising retrieval weight moves a record out of search; the tenant key can delete audit rows; the documented session shutdown erases the context its replay tool reads; the per-agent isolation flag turns the agent filter off"
+  strengths: "A tombstone checked independently on each read path, revision-checked corrections with retained history, an insert-only audit table the tenant key cannot prune, index writes guarded by a content fingerprint and an outbox, and tests that assert absence from populated results"
+  risks: "Agents inside a tenant share everything and the isolation trusts a declared agent id; audit rows are best-effort and the two moves out of search write none; the tool named promote archives without the dry-run gate"
 ---
 
 ## 1. Executive Summary
@@ -43,26 +44,28 @@ MCP or HTTP to store short texts and recall them by hybrid search. Records live
 in Redis under a tenant id; a BM25 index in Redis and a Qdrant collection are
 projections of them, fused by reciprocal rank fusion. What is notable is the
 lifecycle around a record: corrections carry the revision the caller read,
-forgetting leaves a tombstone that each read path checks for itself, and an
-outbox repairs the vector index. What is weak is the text addressed to agents,
-which describes three operations as something other than what the code does,
-and an audit table the tenant's own key can delete from.
+forgetting leaves a tombstone that each read path checks for itself, a store,
+correction or forget leaves an audit row the tenant's key cannot delete, and an
+outbox repairs the vector index. What is weak sits inside a tenant: agents share one
+store, the per-agent isolation trusts the agent id the requester declares, and
+the audit row is written best-effort after the change, with none for the two
+operations that move a record out of search.
 
-It carries `bitemporal`, `scope_enforced` and `negative_eval`.
+It carries `bitemporal`, `scope_enforced`, `audit_log` and `negative_eval`.
 
 **Licence.** MIT, and the tree agrees with itself: `LICENSE` and `npm/LICENSE`
 are byte-identical, `npm/package.json:26` declares `MIT`, and the copyright line
 names *HeurChain contributors*. No rider, no NOTICE file, no contributor
-agreement. The grant covers this edition only. `CHANGELOG.md:14-15` says the
+agreement. The grant covers this edition only. `CHANGELOG.md:21-22` says the
 release *omits features that are incompatible with the self-hosted version*
 without naming them; the tree shows their outline as two config sections
-accepted and ignored (`broker/config.go:115-128`) and seven empty schema
+accepted and ignored (`broker/config.go:116-129`) and seven empty schema
 migrations (`broker/migrate.go:59-70`).
 
 **A forgotten id is refused on write and hidden on read, separately.** Forget
 runs one Lua script that deletes the active hash, the vault copy, the version
 list and the BM25 entries, and sets a tombstone key with no expiry
-(`broker/memory_forget.go:13-59`). The store script refuses a tombstoned id
+(`broker/memory_forget.go:13-48`). The store script refuses a tombstoned id
 (`broker/memory_records.go:83`). Search hydration, the cosine scan, the
 manifest, the per-agent listing, session context, export and stats each test
 the tombstone themselves, so content restored from an older backup stays
@@ -73,12 +76,11 @@ revision it read; the same script compares it, pushes the previous fields onto
 a version list and writes the new hash (`broker/memory_records.go:82-126`). Two
 racing corrections produce one success and one conflict.
 
-**The agent-facing text disagrees with the code in three places.** The tool
-`heurchain_promote` is described as raising a memory's retrieval weight after a
-human confirms it; its handler moves the record to the vault, out of search,
-when its activation is below the threshold. The documented session shutdown
-deletes the list the replay tool reads. The guide says there is no background
-retry queue; there is one.
+**The tool named promote archives.** `heurchain_promote` moves a record whose
+activation is below the threshold into the vault, out of search, without the
+dry-run gate the sweep has and without an audit row. Its description says
+exactly that and warns that it is not a retrieval boost; the name is the one
+thing left pointing the other way.
 
 ## 2. Mental Model
 
@@ -88,7 +90,7 @@ id is in the tenant's active set, *archived* once moved to the vault key, and
 in the model says whether a record is believed.
 
 ```mermaid
-%% caption: one Lua script admits a write and keeps the old version; forget leaves an id tombstone every read checks; the promote tool and the sweep both end in the vault, outside search
+%% caption: one Lua script admits a write and keeps the old version; forget leaves an id tombstone every read checks; the audit table only grows; the promote tool and the sweep both end in the vault, outside search, with no audit row
 flowchart TD
     A["agent: /store,<br/>/memory/update or<br/>MCP heurchain_store"] --> B{"tombstone<br/>for this id?"}
     B -->|"yes"| R1["410 Gone"]
@@ -100,15 +102,14 @@ flowchart TD
     ACT --> S["/search: BM25 and dense,<br/>each checked against<br/>the active set, RRF"]
     S --> T{"hydrate: tombstone,<br/>filters, as_of"}
     T --> OUT["results"]
-    ACT -->|"hourly sweep,<br/>dry run as shipped"| V[("vault key:<br/>kept, not searched")]
-    ACT -->|"heurchain_promote,<br/>not gated"| V
-    V -->|"admin rehydrate"| ACT
+    ACT -->|"hourly sweep, dry run<br/>as shipped; no audit row"| V[("vault key:<br/>kept, not searched")]
+    ACT -->|"heurchain_promote,<br/>not gated; no audit row"| V
+    V -->|"admin rehydrate, or<br/>opt-in MCP tool"| ACT
     ACT -->|"forget + confirm"| F["delete hash, vault,<br/>versions, postings;<br/>set tombstone"]
-    F ~~~ AUD[("audit_log<br/>in SQLite")]
-    AUD -.->|"DELETE /agents<br/>with the tenant key"| X["rows removed"]
+    F --> AUD[("audit_log in SQLite:<br/>a row per store, update,<br/>forget and rehydrate,<br/>after the change;<br/>no delete path")]
     style R1 fill:#14532d,color:#fff
     style R2 fill:#14532d,color:#fff
-    style X fill:#7f1d1d,color:#fff
+    style V fill:#7f1d1d,color:#fff
 ```
 
 ## 3. Architecture
@@ -139,38 +140,35 @@ two brokers on one Redis beyond the Lua scripts and a per-document index lease.
 `docker compose up`, pull the embedding model, create a tenant with admin basic
 auth, and paste two headers into the agent's MCP configuration. Every port is
 published on loopback. The config loader is strict: an unknown key stops
-startup and names it (`broker/config.go:166-167`).
-
-Two things an operator is told do not match the tree. The documentation lists a
-vault *directory* to back up (`docs/install.md:105`) and the config sets
-`vault.path`, which is given a default and read by nothing
-(`broker/config.go:201-202`); the vault is Redis keys. And source comments
-point at `docs/architecture/archive-vs-working-set.md` and
-`docs/memory-lifecycle.md`, neither of which is in the repository.
+startup and names it (`broker/config.go:167-168`). The vault is Redis keys; a
+legacy `vault.path` key is accepted so older configurations load and is read by
+nothing, which the install guide states (`broker/config.go:33-37`,
+`docs/install.md:131-135`).
 
 ## 4. Essential Implementation Paths
 
 | Path | Location |
 | --- | --- |
 | Key validated against the named tenant | `broker/auth.go:59-120` |
-| Store handler | `broker/handlers.go:172-351` |
+| Store handler and its audit row | `broker/handlers.go:172-351` |
 | Admission script: tombstone, revision, history | `broker/memory_records.go:65-144` |
 | Atomic read of active or archived record | `broker/memory_records.go:183-207` |
-| Get, list, update and their audit row | `broker/memory_api.go:55-291` |
-| Forget script and handler | `broker/memory_forget.go:13-92` |
+| Get, list, update and their audit row | `broker/memory_api.go:55-293` |
+| Forget script and handler | `broker/memory_forget.go:13-101` |
 | Hybrid search | `broker/recall.go:196-397`, `broker/qdrant.go:306-442` |
 | Dense hit resolution against the active set | `broker/recall.go:150-194` |
 | BM25 candidate filter | `broker/bm25.go:723-818` |
 | Validity and kind checks | `broker/recall_options.go:65-125` |
-| Cosine scan behind /query | `broker/vectors.go:208-313` |
+| Cosine scan behind /query, with the isolation predicate | `broker/vectors.go:208-313` |
 | Index outbox and reconciler | `broker/semantic_index.go:78-348` |
 | Activation, sweep and the promote handler | `broker/consolidation.go:123-464` |
-| Rank-cut selector and vault move | `broker/demote.go:224-323`, `broker/bm25.go:403-431` |
-| Sessions | `broker/sessions.go:49-159` |
-| Export, import, rehydrate | `broker/vault.go:170-333`, `:856-1136` |
-| Audit row deletion | `broker/vault.go:1464-1556` |
-| MCP dispatch and tool text | `broker/mcp.go:330-675`, `broker/mcp_memory_tools.go:9-43` |
-| Agent guide served at the root path | `broker/discovery.go:22-387` |
+| Rank-cut selector and vault move | `broker/demote.go:223-322`, `broker/bm25.go:403-431` |
+| Sessions | `broker/sessions.go:43-189` |
+| Export, import, rehydrate | `broker/vault.go:169-332`, `:856-1149` |
+| Agent usage deletion and its audit row | `broker/vault.go:1478-1554` |
+| Audit writer for vault actions | `broker/http_helpers.go:75-91` |
+| MCP dispatch and tool text | `broker/mcp.go:330-681`, `broker/mcp_memory_tools.go:9-43`, `broker/mcp_vault_rehydrate.go:21-43` |
+| Agent guide served at the root path | `broker/discovery.go:23-404` |
 
 ## 5. Memory Data Model
 
@@ -236,8 +234,7 @@ counts. One arm failing degrades to the other; both failing is a 503.
 
 `POST /query` is older and different: it loads every active record's hash,
 embedding included, and scores cosine in the broker
-(`broker/vectors.go:208-313`). Its tag filter matches any listed tag; the guide
-says all must match (`broker/discovery.go:139`).
+(`broker/vectors.go:208-313`). Its tag filter matches any listed tag.
 
 Returning a result increments its `access_count` on both paths, so retrieval
 feeds the decay model.
@@ -282,8 +279,7 @@ writes. A record is retrievable when the call returns. An index failure is
 retried by the worker: the admission script itself adds the record to
 `broker:semantic-index:pending`, and a one-second loop drains sixteen entries
 per tick and re-queues failures a minute later
-(`broker/semantic_index.go:249-306`). The guide tells the agent the opposite
-and asks it to retry (`broker/discovery.go:178`).
+(`broker/semantic_index.go:249-306`).
 
 `POST /memory/update` requires the id, the revision read, and a reason; it
 re-embeds only if the text changed. Updating an archived record writes it back
@@ -300,10 +296,17 @@ version and deletes it.
   `d` 3.0, 1.0 and 0.1 for the three namespaces
   (`broker/consolidation.go:123-133`). An hourly sweep moves records below a
   threshold to the vault, or the lowest fraction if `demote_fraction` is set.
-  As shipped it logs and moves nothing (`deploy/broker.yaml:41-45`).
+  As shipped it logs and moves nothing (`deploy/broker.yaml:40-45`).
 - **Version cap.** 100 versions and 1 MiB per record, oldest dropped.
-- **Sessions.** A session is a list holding at most 50 record ids with a
-  sliding expiry.
+- **Sessions.** A session is a list holding at most 50 record ids, an hour by
+  default, with each linked store extending it and re-adding the session to
+  the agent's list (`broker/sessions.go:99-123`). Session recall lists only
+  sessions whose metadata exists and prunes the rest (`:160-189`). Ending a
+  session deletes its list (`:72-91`), and a summary stored after that is not
+  linked, since the append is a no-op once the metadata is gone (`:104`); the
+  guide tells the agent to store the summary first and leave the session open
+  if it wants replay (`broker/discovery.go:60-62`). Any key in the tenant can
+  use any session in it, and the guide says so.
 
 ### Operational cost
 
@@ -315,14 +318,20 @@ every embedding. The sweep and the reconciler page through all records.
 
 The MCP server registers 24 tools and dispatches each to the same HTTP handler
 through an in-process request carrying the session's key and tenant
-(`broker/mcp.go:330-494`). `GET /` serves a 365-line onboarding document
-without authentication, and `npm/AGENT_ONBOARDING.md` and
-`npm/AGENT_CONFIG.json` repeat it for agents to read at setup.
+(`broker/mcp.go:330-500`). A 25th, `heurchain_vault_rehydrate`, is listed and
+dispatched only when the operator sets `features.mcp_vault_rehydrate`
+(`broker/mcp_vault_rehydrate.go:21-43`, `broker/mcp.go:460-464`); shipped off.
+`GET /` serves a 381-line onboarding document without authentication, and
+`npm/AGENT_ONBOARDING.md`, `npm/AGENT_CONFIG.json` and
+`skills/heurchain-memory/SKILL.md` repeat it for agents to read at setup.
+`mcp/README.md` and `mcp/server.json` also describe a hosted service at a
+separate endpoint with separate credentials; nothing in this tree says what
+that service runs.
 
 That text instructs the agent to write memory: read the manifest first, open a
 session, store decisions, user-stated facts and a session summary, tag them
 from a seven-word taxonomy, and never store secret values
-(`broker/discovery.go:295-326`). It is prose; the broker enforces the tag
+(`broker/discovery.go:314-345`). It is prose; the broker enforces the tag
 syntax and nothing about content.
 
 Checkpoints are the handoff primitive. `heurchain_checkpoint` stores a
@@ -333,97 +342,83 @@ an instruction to treat it as saved context
 
 **`human_review` is withheld.** Store, update and forget are tools the writing
 agent holds. Forget's `confirm: true` is a boolean in the call
-(`broker/memory_forget.go:71`), and the tool text asking for an explicit user
-instruction is a request to the model. Rehydrating from the vault and importing
-an archive need admin basic auth, which separates operator from agent on those
-two verbs, but neither decides whether a memory is admitted.
+(`broker/memory_forget.go:74`, `:80`), and the tool text asking for an explicit
+user instruction is a request to the model. Importing an archive and
+rehydrating over HTTP need admin basic auth, which separates operator from
+agent on those two verbs; with the MCP restore switched on, any tenant key
+rehydrates, recorded as `apikey:<id>`. None of them decides whether a memory is
+admitted.
 
 ## 9. Reliability, Safety, and Trust
 
-### The promote tool archives
+### The tool named promote archives
 
-`heurchain_promote` reads: *"Increment a memory item's retrieval weight. Call
-after a human confirms a stored fact is correct."* (`broker/mcp.go:552`, and
-`broker/discovery.go:374` in the guide). The handler computes the record's
-activation and, if it is below the threshold, moves the record to the vault
-(`broker/consolidation.go:352-398`). The handler increments nothing. A
-comment states that this endpoint is deliberately not gated on the dry-run
-flag (`:386-390`).
+`heurchain_promote` reads: *"Conditionally archive one active memory below the
+activation threshold. An archived item leaves active retrieval. This is not a
+retrieval boost"* (`broker/mcp.go:558`, with the same text in the guide and the
+npm configuration). The handler computes the record's activation and, if it is
+below the threshold, moves the record to the vault
+(`broker/consolidation.go:352-398`). A comment states that this endpoint is
+deliberately not gated on the dry-run flag (`:386-390`), and it writes no audit
+row. `TestMCPPromoteArchivesWithoutEnablingRestore` sets the threshold to 100
+and asserts the record is in the vault afterwards
+(`broker/mcp_vault_rehydrate_test.go:130-151`).
 
 With the shipped threshold, -20, an `ops` record that was never retrieved
-crosses it about thirteen minutes after it was stored, so confirming it removes
-it from search. A `notes` record does not cross it for years. With the code's
+crosses it about thirteen minutes after it was stored, so one call removes it
+from search. A `notes` record does not cross it for years. With the code's
 default, -2, which applies when the config omits the key, a `notes` record
 crosses it after about six seconds. Those figures come from the formula,
-recomputed in a separate script. No committed test calls the handler.
+recomputed in a separate script.
 
-`heurchain_vault_flush` has the same shape. Its description says it persists
-accumulated memories into a durable vault (`broker/mcp.go:636`), and the guide
-says it deletes items tagged `conversation` (`broker/discovery.go:276`). The
-handler runs one consolidation pass, which under the shipped dry run moves
-nothing and answers `flushed: true`.
+`heurchain_vault_flush` runs one consolidation pass and its description says
+so; under the shipped dry run it moves nothing and reports `promoted: 0`, which
+`TestMCPVaultFlushReportsDryRunWithoutArchiving` asserts (`:153-173`).
 
-### The audit table can be deleted from with the tenant key
+### The audit table is insert-only and best-effort
 
 `audit_log` receives a row for each store, update, forget, export, import,
-flush and rehydrate, and also for each search and query. `DELETE /agents`
-removes every `audit_log` and `usage_events` row for one agent id in a tenant
-(`broker/vault.go:1516-1529`). It authenticates with the tenant's API key or
-admin auth, and writes no row of its own.
+flush and rehydrate, and also for each search and query. Update and forget rows
+carry the revision and the author of the record they changed: the forget script
+reads `agent_id` before it deletes the hash and returns it with the revision
+(`broker/memory_forget.go:23`, `broker/memory_api.go:286-293`). No statement in
+the broker deletes or updates a row. `DELETE /agents` removes `usage_events`
+rows for one agent and inserts an `agent.usage_delete` row in the same
+transaction, so the deletion is refused when its own row cannot be written
+(`broker/vault.go:1520-1541`).
 
-The update and forget rows are inserted without an agent id
-(`broker/memory_api.go:288`), as are the vault rows
-(`broker/http_helpers.go:84`). The handler maps the value `unspecified` to
-`agent_id IS NULL`. One request with that value therefore deletes every
-correction, deletion and export record the tenant has. Re-derived on the
-lifted statements: four rows in, three deleted, the store row left.
+**`audit_log` is earned** on that table: a named record of mutations in the
+broker's own store, written by store, update, forget, import and rehydrate,
+with no delete path, read back per record by `heurchain_memory_history`. The
+limits are three. Memory rows are written after the Redis change, in another
+store, and a failed insert is logged and dropped (`broker/handlers.go:332-336`),
+so a mutation can land unrecorded. A record moved to the vault by the sweep or
+by the promote handler writes no row, so the two ways a record leaves search
+leave no trace in the table. And a store row carries no revision.
 
-**`audit_log` is withheld** on that. The producers are real and
-`heurchain_memory_history` reads them back per record; the table is not
-append-only for the party it describes. Two gaps sit beside it: a record moved
-to the vault by the sweep or by the promote handler writes no row, and a store
-row carries no revision.
-
-### Ending a session erases what its replay reads
-
-The shutdown sequence in `npm/AGENT_CONFIG.json:65-74` is: end the session,
-then store a summary. `endSession` deletes the session's metadata and its
-context list and removes it from the agent's session set
-(`broker/sessions.go:83-102`). The tools for the next conversation are
-described as listing an agent's session ids *"to discover prior sessions"* and
-as replaying a prior session. A session ended as instructed is in neither. A
-committed test asserts the erasure as intended
-(`broker/session_memory_context_test.go:62-95`).
-
-The summary stored after the end is not linked either: the append is a no-op
-when the session's metadata is gone (`broker/sessions.go:114-124`). The
-records themselves survive and are findable by search or by a
-`metadata.session_id` filter. A session started without a TTL lasts one hour
-(`broker/sessions.go:50-52`) where the tool text says 24
-(`broker/mcp.go:571`).
-
-A session also stores the id of the key that created it, under a comment that
-sessions are usable only by that key (`broker/sessions.go:43-47`, `:64`). No
-read compares it.
-
-### The isolation flag removes the filter it is meant to add
+### Per-agent isolation trusts the declared agent id
 
 With `features.cross_agent_visibility` on, `/query` replaces the exact agent
-match with `visibleToRequester`, which takes the author from a `created_by`
-field (`broker/vectors.go:255-258`, `broker/agent_settings.go:149-154`). No
-write path sets `created_by`, `visibility` or `visibility_agents`. Every record
-therefore reads as legacy and visible to all, so with the flag on an agent
-filter on `/query` returns every agent's records, and marking an agent isolated
-through `PUT /agent-settings` is stored and changes no read. The flag is off by
-default and the startup log calls the feature an organisation control, not a
-security boundary.
+match with `visibleToRequester`, which takes the author from `created_by` and
+falls back to `agent_id` (`broker/vectors.go:255-258`,
+`broker/agent_settings.go:146-153`). No write path sets `created_by`, so the
+author is the `agent_id` the writer supplied. An agent marked isolated through
+`PUT /agent-settings` is hidden from every other requesting agent, which
+`TestQueryUsesStoredAgentForVisibility` asserts on a populated store
+(`broker/agent_settings_test.go:83-127`).
+
+The boundary is cooperative, and the startup log says so
+(`broker/main.go:140-144`). The requester is the `agent_id` in the request
+body; a query without one sees the whole tenant; any tenant key can mark any
+agent isolated or not; and `/search`, the main path, never calls the
+predicate. The flag is off by default.
 
 ### Tombstones are keyed on the id
 
 **`tombstone` is withheld.** The forget tombstone blocks the *id*: a store, an
 import or a rehydrate of that id is refused and every read hides residue under
 it. It holds no content and no hash of it, by design
-(`broker/memory_forget.go:94-95`). The same text stored under a new id, which
+(`broker/memory_forget.go:103-104`). The same text stored under a new id, which
 is what a store without an id produces, is accepted. Import skips ids already
 active and fails on tombstoned ones, so a re-imported archive cannot restore a
 forgotten record under its old id.
@@ -438,15 +433,18 @@ forgotten record under its old id.
 - Index writes compare a fingerprint of the source fields before
   acknowledging, and retry three times if the record changed underneath
   (`broker/vault.go:825-853`).
+- The MCP restore takes no tenant argument and refuses an unknown field, so a
+  key restores only into its own tenant
+  (`broker/mcp_vault_rehydrate_test.go:57-111`).
 
 ## 10. Tests, Evals, and Benchmarks
 
-176 test functions in 37 files. They run against miniredis, in-memory SQLite
+182 test functions in 39 files. They run against miniredis, in-memory SQLite
 and `httptest` servers standing in for Qdrant and the embedder, so they need no
 services and do not skip. One case skips on a host file
 (`broker/buildinfo_test.go:27`). No workflow runs `go test`; the one workflow
 that touches the broker builds the Compose stack and exercises store, search,
-sessions, MCP and a restart with `curl`
+session recall and its clearing on end, MCP and a restart with `curl`
 (`.github/workflows/selfhost-smoke.yml`). I ran none of it.
 
 **`negative_eval` is earned on the tombstone.**
@@ -461,15 +459,20 @@ record is the positive control on each.
 Others worth naming: a correction must leave one search result carrying the new
 text (`broker/memory_lifecycle_test.go:61-63`); session context must follow a
 correction and drop a forgotten record
-(`broker/session_memory_context_test.go:9-49`). A record under another tenant
+(`broker/session_memory_context_test.go:10-50`). A record under another tenant
 must be absent from a populated listing (`broker/memory_lifecycle_test.go:179`,
 `:198-203`), and a forget racing the index worker must not leave a point
-(`broker/retrieval_integration_test.go:143-226`).
+(`broker/retrieval_integration_test.go:143-226`). An isolated author's records
+must be absent from another agent's populated query
+(`broker/agent_settings_test.go:83-127`), and an archived record must be absent
+from search until it is restored (`broker/mcp_vault_rehydrate_test.go:92-110`).
+`TestDeleteAgentPreservesAuditHistory` checks the audit rows survive an agent
+deletion and that the deletion is refused when its own row cannot be written
+(`broker/agents_delete_test.go:10-78`).
 
-Not covered: the promote handler, `DELETE /agents`, a populated cross-tenant
-search, an `as_of` after a `valid_until` through the HTTP path, and the
-isolation flag end to end. The isolation tests call `visibleToRequester` with
-an author no stored record can have (`broker/agent_settings_test.go:77-89`).
+Not covered: a populated cross-tenant search, an `as_of` after a
+`valid_until` through the HTTP path, a memory write whose audit insert fails,
+and an audit row for a vault move, which the code does not write.
 
 No paper, DOI or benchmark result is cited or committed.
 `broker/combined_baseline_test.go` writes a local comparison file when an
@@ -494,95 +497,98 @@ and an acknowledgement is refused if the record changed during the write.
 **Queue index work in the same script as the record write.** The outbox entry
 cannot be lost between the store and the index call.
 
+**Refuse a maintenance delete whose audit row cannot be written.** `DELETE
+/agents` puts the deletion and its own row in one transaction, and a test
+proves the deletion rolls back when the row is refused.
+
 **Refuse an unknown decay tier.** A typo returns 400 instead of silently
 choosing a rate.
 
 ### Avoid
 
-**Do not name an archiving verb promote and describe it as a reward.** The
-agent acts on the description.
+**Do not name an archiving verb promote.** A description that says *"this is
+not a retrieval boost"* is a patch on the name, and the agent reads both.
 
-**Do not give the audited party a delete on the audit table.** If per-agent
-cleanup is needed, scope it to usage counters.
+**Do not write the memory audit row after the change, in another store, and
+drop it on failure.** The one transactional row here is the one for deleting
+usage counters.
 
-**Do not write audit rows for mutations without the actor field the cleanup
-keys on.**
+**Do not leave the moves out of search unaudited.** The sweep and the promote
+handler are the operations whose effect a reader cannot see in results.
 
-**Do not tell an agent to end a session if ending erases what the next session
-is told to read.**
-
-**Do not ship a filter that reads a field no writer sets.** With the flag on it
-is weaker than the filter it replaced.
-
-**Do not keep a config key and a backup instruction for a directory nothing
-writes.**
+**Do not key a visibility filter on an identity the requester declares.** It
+organises cooperating agents and nothing more.
 
 ### Fit
 
 It fits one operator running several cooperative agents on a private network
 who wants explicit, agent-written notes with correction and deletion that
-reach both indexes. The cost is four services and an embedding call per write.
+reach both indexes, and an audit trail the agents cannot prune. The cost is
+four services and an embedding call per write.
 
-It does not fit where agents under one tenant must be kept apart, where the
-audit trail must survive the tenant's own credential, or where memory should be
-extracted without the agent deciding to store. The edition is declared frozen,
-so the three description mismatches are for the adopter to patch.
+It does not fit where agents under one tenant must be kept apart, where every
+mutation must be on the audit record, or where memory should be extracted
+without the agent deciding to store. The edition is declared frozen at
+0.6.1-oss.1 and carries an Unreleased changelog section; the mainline broker it
+is cut from is not in the repository.
 
 ## 12. Open Questions
 
-- **Was promote meant to reinforce?** The description, the name and the
-  handler disagree, and no test covers the handler.
-- **Is `DELETE /agents` meant to reach `audit_log`?** Its comment says so; the
-  effect on correction and deletion rows through `unspecified` may be
-  unintended.
-- **What writes `created_by` in the mainline broker?** The reader is here and
-  the writer is not.
+- **Should a vault move write an audit row?** The sweep and the promote handler
+  are the only mutations without one.
 - **Which features were omitted?** The changelog does not name them; the config
   sections `ontology` and `graph` and migrations 4 to 10 are the only trace.
-- **Is the git tag for this release published?** The changelog names
-  `v0.6.1-oss.1`; the clone holds `v0.6.1` and `npm-v2.0.2`.
+- **What does the hosted service run?** `mcp/server.json` names version 0.6.1
+  for it; nothing in the tree ties it to this broker or to the mainline.
 
 ## Appendix: File Index
 
 | File | Role |
 | --- | --- |
 | `broker/memory_records.go` | Admission script, tombstone helpers, atomic read |
-| `broker/memory_api.go`, `broker/memory_forget.go`, `broker/memory_checkpoint.go` | Get, list, update, forget, checkpoint, resume |
+| `broker/memory_api.go`, `broker/memory_forget.go`, `broker/memory_checkpoint.go` | Get, list, update, forget, checkpoint, resume, memory audit rows |
 | `broker/recall.go`, `broker/recall_options.go`, `broker/rrf.go` | Hybrid search, validity and kind, fusion |
 | `broker/bm25.go` | Lexical index, candidate filter, vault move script |
 | `broker/qdrant.go`, `broker/semantic_index.go` | Vector client, search handler, outbox and reconciler |
 | `broker/vectors.go` | Record write, key names, cosine scan |
 | `broker/consolidation.go`, `broker/demote.go` | Activation, sweep, promote handler, rank cut |
 | `broker/sessions.go` | Sessions and context list |
-| `broker/vault.go` | Export, import, rehydrate, stats, agent listing and deletion |
+| `broker/vault.go`, `broker/http_helpers.go` | Export, import, rehydrate, stats, agent listing and usage deletion, vault audit rows |
 | `broker/auth.go`, `broker/admin.go` | Key validation, tenants, rate limit |
 | `broker/agent_settings.go` | Isolation settings and the visibility predicate |
-| `broker/mcp.go`, `broker/mcp_memory_tools.go`, `broker/discovery.go` | MCP tools and the agent guide |
+| `broker/mcp.go`, `broker/mcp_memory_tools.go`, `broker/mcp_vault_rehydrate.go`, `broker/discovery.go` | MCP tools, the opt-in restore tool and the agent guide |
 | `broker/schema.sql`, `broker/migrate.go` | SQLite schema and migrations |
-| `npm/AGENT_CONFIG.json`, `npm/AGENT_ONBOARDING.md` | The published agent configuration |
-| `deploy/compose.yaml`, `deploy/broker.yaml` | The stack and its shipped settings |
+| `npm/AGENT_CONFIG.json`, `npm/AGENT_ONBOARDING.md`, `skills/heurchain-memory/SKILL.md` | The published agent configuration and skill |
+| `mcp/README.md`, `mcp/server.json` | Hosted and self-hosted MCP connection guide |
+| `deploy/compose.yaml`, `deploy/broker.yaml`, `docs/install.md` | The stack, its shipped settings and the install guide |
 
 ### Recorded searches
 
 Run with `/usr/bin/git` in a full clone at the pinned commit.
 
-- `git ls-files 'broker/*.go' | grep -v _test.go | xargs wc -l` — 12,564 lines in 41 files.
-- `git grep -c -E '^func Test' -- broker`, summed — 176 in 37 files.
-- `git grep -n -E 'created_by|visibility_agents|"visibility"' -- .` — two readers in `broker/agent_settings.go` and `broker/vectors.go`, comments and test lines; no assignment. Control: `git grep -n -E 'fields\["agent_id"\]' -- broker` finds the writers at `memory_records.go:68` and `vectors.go:109`.
-- `git grep -n -E 'key_id|KeyID' -- 'broker/*.go' ':!broker/*_test.go'` — outside `auth.go` and `admin.go`, the struct, one write at `sessions.go:64` and its construction at `:278`; no read.
-- `git grep -n -E 'Vault\.Path|cfg\.Vault|config\.Vault' -- broker` — the default at `config.go:201-202` only.
-- `git grep -n -E 'DELETE FROM|INSERT INTO|UPDATE [a-z_]+ SET' -- 'broker/*.go' ':!broker/*_test.go'` — the four deletes are all in `vault.go:1516-1529`.
-- `git grep -n -E 'auditAction\(|auditMemoryChange\(' -- 'broker/*.go' ':!broker/*_test.go'` — update, forget, flush, export, rehydrate, import; none in `consolidation.go` or `demote.go`.
-- `git grep -n -E 'heurchain_promote|/promote' -- 'broker/*_test.go'` — nothing. Control: `git grep -n -E 'handlePromote' -- broker` finds the handler and two callers.
-- `git grep -n -E 'handleDeleteAgent|MethodDelete' -- 'broker/*_test.go'` — nothing.
-- `git grep -n -E 'as_of|valid_from|valid_until' -- npm docs README.md broker/discovery.go broker/mcp.go broker/mcp_memory_tools.go` — nothing. Control: the same pattern over `broker/openapi.go` finds line 188.
-- `git grep -n -E 'go test' -- .github deploy docs README.md` — `README.md:172` only.
-- `git grep -n -E 'docs/[a-z/-]+\.md' -- broker` with `git ls-files docs` — two documents named, neither tracked.
+- `git ls-files 'broker/*.go' | grep -v _test.go | xargs wc -l` — 12,662 lines in 42 files.
+- `git grep -c -E '^func Test' -- broker`, summed — 182 in 39 files.
+- `git grep -n -E 'created_by|visibility_agents|"visibility"' -- .` — one read each in `broker/agent_settings.go:149` and `broker/vectors.go:257`, and test lines; no assignment. Control: `git grep -n -E 'fields\["agent_id"\]' -- broker` finds the writers at `memory_records.go:68` and `vectors.go:109`.
+- `git grep -n -E 'visibleToRequester\(' -- 'broker/*.go' ':!broker/*_test.go'` — the definition and one caller, `vectors.go:257`; none in `recall.go`.
+- `git grep -n -E 'Vault\.Path|cfg\.Vault|config\.Vault' -- broker` — nothing. Control: `git grep -n -E 'vault\.path|vault:' -- deploy docs/install.md broker/config.go` finds `docs/install.md:135`.
+- `git grep -n -E 'DELETE FROM|INSERT INTO|UPDATE [a-z_]+ SET' -- 'broker/*.go' ':!broker/*_test.go'` — one delete, `usage_events` at `vault.go:1525`; the updates touch `api_keys` only.
+- `git grep -n -i -E 'DELETE FROM audit_log|UPDATE audit_log|DROP TABLE audit_log' -- broker` — nothing. Control: `git grep -n -c -i -E 'INSERT INTO audit_log' -- broker` matches in seven files.
+- `git grep -n -i -E 'DELETE FROM tenants|UPDATE tenants' -- broker` — two test fixtures only, so the `ON DELETE SET NULL` on `audit_log.tenant_id` has no trigger in the broker.
+- `git grep -n -E 'auditAction\(|auditMemoryChange\(' -- 'broker/*.go' ':!broker/*_test.go'` — update, forget, flush, export, rehydrate, import.
+- `git grep -n -E 'auditAction|auditMemoryChange|audit_log' -- broker/consolidation.go broker/demote.go broker/bm25.go` — nothing.
+- `git grep -n -E 'RAISE' -- 'broker/*_test.go'` — `agents_delete_test.go:71` only, a trigger refusing the `agent.usage_delete` row; no test makes a memory write's audit insert fail.
+- `git grep -n 'api.heurchain.com' -- .` — `mcp/README.md:14` and `mcp/server.json:18` only.
+- `git grep -n -E 'heurchain_promote|/promote' -- 'broker/*_test.go'` — `mcp_vault_rehydrate_test.go:139`. Control: `git grep -n -E 'handlePromote' -- broker` finds the handler and two callers.
+- `git grep -n -E 'handleDeleteAgent|MethodDelete' -- 'broker/*_test.go'` — `agents_delete_test.go:42`.
+- `git grep -n -E 'as_of|valid_from|valid_until' -- npm docs README.md broker/discovery.go broker/mcp.go broker/mcp_memory_tools.go skills mcp` — nothing. Control: `git grep -n -E 'as_of' -- broker/openapi.go` finds line 188.
+- `git grep -n -E 'go test' -- .github deploy docs README.md` — `README.md:174` only.
 - `git grep -n -E 't\.Skip' -- 'broker/*_test.go'` — `buildinfo_test.go:27` only.
 - `git grep -n -i -E 'arxiv|doi\.org|bibtex|@article|@misc|CITATION|LoCoMo|LongMemEval' -- .` — nothing. Control: `git grep -n -i -c 'license' -- README.md` matches.
 - `git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|contributing|third.party)'` — `LICENSE` and `npm/LICENSE`; `cmp` reports them identical.
-- `git tag` — `npm-v2.0.2` and `v0.6.1`.
+- `git tag` — `npm-v2.0.2`, `npm-v2.0.3` and `v0.6.1`.
 
 ## History
+
+**2026-11-18** — [`82fa9f6cd2e6c10c46597dd6dd3988ccab5702df`](https://github.com/peterjohannmedina/heurchain/commit/82fa9f6cd2e6c10c46597dd6dd3988ccab5702df) — four commits on. Screened before reading: no auto-run or build-time surface, `npm/package.json` inside the cooldown; nothing installed, built or run. **`audit_log` earned**: `DELETE /agents` no longer deletes audit rows and records its own, update and forget rows carry the author, and no statement deletes a row ([section 9](#the-audit-table-is-insert-only-and-best-effort)). Five criticisms went stale, all closed upstream: the promote, flush, session and retry descriptions match the code; the session shutdown stores the summary first; the isolation predicate reads `agent_id`; the vault directory and the missing documents are gone; promote and agent deletion are tested. Added: the opt-in MCP restore tool, the hosted-service guide and the skill file. Activation thresholds recomputed in a separate script. Marks: `bitemporal`, `scope_enforced`, `audit_log`, `negative_eval`.
 
 **2026-11-17** — [`a2feeb414f491cf57afab01854078278cc50167e`](https://github.com/peterjohannmedina/heurchain/commit/a2feeb414f491cf57afab01854078278cc50167e) — first reading, from a full clone holding 45 commits. Screened before reading: no auto-run or build-time surface; `broker/go.mod`, `broker/go.sum` and `npm/package.json` changed inside the seven-day cooldown; nothing was installed, built or run. The audit-row deletion was re-derived on lifted SQL in a scratch SQLite database, and the activation thresholds were recomputed from the formula in a separate script. Marks: `bitemporal`, `scope_enforced` and `negative_eval`.
