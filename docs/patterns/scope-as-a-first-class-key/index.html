@@ -1690,6 +1690,22 @@ them (<code>backend/pkg/tools/guide_test.go:81</code>). The pinned store
 library's filter code carries the comment that a caller's filter may be
 the only thing keeping one tenant's documents out of another's
 results.</p>
+<p><a href="../../systems/opencomputer/">OpenComputer</a> takes the
+scope from the session's admission, never from a tool argument. The
+caller that creates a session names a document or a whole resource per
+binding, and the Memory Durable Object writes one <code>grants</code>
+row per resource in the transaction that checks the document exists.
+Every session read starts from that row: a document grant reads only its
+own id, and a collection grant reads
+<code>WHERE resource = ? AND deleted = 0</code>
+(<code>services/managed-agents/src/edge/memory-do.ts:580-694</code>,
+<code>:868-875</code>). The model's one scope-like argument,
+<code>memory</code>, chooses among resources the render already
+selected, and a wrong choice returns <code>not_bound</code> with the
+alternatives. Project and environment sit above the key as a physical
+partition, one object each. The cost of binding a session to a document
+is that deleting the document fails the session's next recall, and with
+it every later turn.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

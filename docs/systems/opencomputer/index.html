@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hostable Slack coding-agent
+platform whose serverless agents keep revision-checked text documents
+per project, read whole before each render and replaced through one save
+tool.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenComputer — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hostable Slack
+coding-agent platform whose serverless agents keep revision-checked text
+documents per project, read whole before each render and replaced
+through one save tool.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenComputer — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hostable Slack
+coding-agent platform whose serverless agents keep revision-checked text
+documents per project, read whole before each render and replaced
+through one save tool.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenComputer — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenComputer",
+      "description": "A self-hostable Slack coding-agent platform whose serverless agents keep revision-checked text documents per project, read whole before each render and replaced through one save tool.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Whole documents behind per-session grants;
+deleting one stops every session bound to it</p>
+          <h1>OpenComputer</h1>
+          <p class="document-deck">A self-hostable Slack coding-agent
+platform whose serverless agents keep revision-checked text documents
+per project, read whole before each render and replaced through one save
+tool.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/diggerhq/opencomputer">
+              <span>Source</span>
+              <strong>diggerhq/opencomputer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/diggerhq/opencomputer/commit/4129fb169152e6ff072bd013c625b79577134cce" title="4129fb169152e6ff072bd013c625b79577134cce">
+              <span>Analyzed revision</span>
+              <code>4129fb16…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-18</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/diggerhq--opencomputer" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>diggerhq--opencomputer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE, agreeing with computer/package.json and
+services/managed-agents/package.json; the TypeScript and Python SDK
+manifests declare MIT, and no MIT licence file is in the
+tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>208,146
+lines of TypeScript in 640 non-test files, plus 8,517 lines of Go. The
+memory path is 2,729 lines:
+services/managed-agents/src/edge/memory-*.ts, runtime/memory-tools.ts
+and workerd-runtime/memory-client.ts, with the 425-line declaration
+module agent/src/memory.ts copied byte for byte into
+cli/src/memory.ts</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>2,608
+commits from 9 December 2025 to 17 November 2026 by 15 contributors;
+releases up to v0.6.0.50 (9 November 2026). services/managed-agents,
+which holds the memory store, was imported from a private repository as
+one commit on 10 November 2026, so its earlier history is not in this
+repository</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>393
+test files in the repository; the memory suites are 13 files and 5,350
+lines, 96 cases under services/managed-agents/test, run by a CI workflow
+in ten groups with no secrets. I ran none</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenComputer is a self-hostable coding-agent platform: a Slack
+gateway that starts Claude Code, Codex or OpenCode sessions in rootless
+Podman, and a Serverless Agents service on Cloudflare Workers whose
+agents declare memory in code. That memory is the subject here. It is a
+store of whole text documents per project and environment, recalled in
+full before every model step and replaced by one
+<code>memory_save</code> tool under a revision check. What is notable is
+the transactional discipline: a save checks session closure, grant,
+write policy, the render's revision and size in the same SQLite
+transaction that writes. What is weak is everything that is not a single
+current value. There is no version history and no mutation log, and
+deleting a document breaks every session bound to it at its next model
+step.</p>
+<p>It carries <code>scope_enforced</code> and
+<code>negative_eval</code>.</p>
+<p><strong>Licence.</strong> The two client SDKs declare a licence the
+tree does not contain: <code>sdks/typescript/package.json:29</code> and
+<code>sdks/python/pyproject.toml:14</code> say MIT, while the only
+licence file is the root Apache-2.0 <code>LICENSE</code>, and neither
+SDK directory carries its own. A reader embedding the SDK has two claims
+and one text. Separately, the pull request that imported the Serverless
+Agents service states that <em>hosted-only code and production
+configuration stay private and are laid over at deploy time</em>, so the
+hosted service runs code this tree does not hold. The memory store
+itself is in the tree.</p>
+<p><strong>The write is one transaction, and it refuses rather than
+merges.</strong> <code>MemoryDurableObject.save</code> reads the
+<code>closed_sessions</code> row, the session's grant, the document's
+<code>agent_writes</code> policy, its revision and the resource's
+<code>max_bytes</code>, and only then updates text, summary, revision
+and writer
+(<code>services/managed-agents/src/edge/memory-do.ts:624-668</code>).
+The revision a save is checked against is not the model's: the host
+takes it from the snapshot of the render that produced the tool call
+(<code>services/managed-agents/src/runtime/cloud-reactive-plugin.ts:229-238</code>).
+A second save in the same response conflicts with the first, and the
+conflict returns the current text for the next step to reconcile.</p>
+<p><strong>Deletion fails closed, and closed means the session
+stops.</strong> A delete keeps the row with <code>deleted = 1</code> so
+the id cannot be reused (<code>memory-do.ts:377-387</code>), and the
+grant that named it stays. The next <code>recall</code> returns
+<code>not_found</code>, and both runtimes treat any rejected recall as a
+failure of the request
+(<code>services/managed-agents/src/edge/index.ts:2366-2378</code>).
+Every session bound to that document can no longer take a turn.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a document an agent's code declared and an owner created.
+Nothing becomes memory by being said: there is no extraction, no
+summarisation of the conversation, and compaction leaves the store
+alone. The model writes only by replacing the whole text of one document
+it was bound to read-write, and the text it writes is stored as the
+current value with no candidate state between.</p>
+<p>The store holds claims, not beliefs. A document has no status beyond
+whether agents may write it (<code>agent_writes</code>) and whether it
+is deleted. Everything recalled is presented to the render as text plus
+<code>sources</code> (id, title, revision, update time), and the agent's
+own render function decides where the text goes. The documentation asks
+the author to treat it <em>as data the model reads, not as instructions
+it follows</em> (<code>docs/agents/memory.mdx</code>), and nothing
+enforces that.</p>
+<p>A document dies one way: an owner deletes it, and the id stays
+reserved. A session's access dies one way: the session ends and its id
+is written to <code>closed_sessions</code>, permanently. Freezing is
+reversible and affects only future agent saves.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an owner creates a document, a session's grant names it, every model step recalls it whole, and a save lands only if closure, grant, freeze, the render's revision and size all pass in one transaction; a delete keeps the id reserved and fails the next recall of every session bound to it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an owner creates a document, a session&#39;s grant names it, every model step recalls it whole, and a save lands only if closure, grant, freeze, the render&#39;s revision and size all pass in one transaction; a delete keeps the id reserved and fails the next recall of every session bound to it
+flowchart TD
+  OWN[&quot;Owner PUT, If-None-Match *&lt;br/&gt;document at revision 1&quot;]
+  ADM[&quot;Session create names&lt;br/&gt;resource and document id&quot;]
+  GR[&quot;issueGrants writes&lt;br/&gt;one grants row per resource&quot;]
+  REC[&quot;Before every model step&lt;br/&gt;recall whole text + revision&quot;]
+  REN[&quot;Agent render places text&lt;br/&gt;useMemory selects tools&quot;]
+  SAVE[&quot;memory_save(text)&lt;br/&gt;revision from that render&quot;]
+  CHK{&quot;One SQLite transaction:&lt;br/&gt;closed? grant? frozen?&lt;br/&gt;revision? size?&quot;}
+  OK[&quot;saved: revision + 1&lt;br/&gt;writer = agent, session id&quot;]
+  CON[&quot;conflict: current text&lt;br/&gt;back to the model&quot;]
+  REJ[&quot;rejected: read_only,&lt;br/&gt;agent_writes_disabled,&lt;br/&gt;too_large, session_closed&quot;]
+  DEL[&quot;Owner DELETE: text cleared,&lt;br/&gt;row kept, id reserved&quot;]
+  DEAD[&quot;Next recall not_found:&lt;br/&gt;request fails, no turn runs&quot;]
+  END[&quot;Session end writes&lt;br/&gt;closed_sessions row&quot;]
+  OWN --&gt; ADM --&gt; GR --&gt; REC --&gt; REN --&gt; SAVE --&gt; CHK
+  CHK --&gt; OK
+  CHK --&gt; CON
+  CHK --&gt; REJ
+  OK -.-&gt; REC
+  CON -.-&gt; REC
+  REJ ~~~ DEL
+  DEL --&gt; DEAD
+  DEAD ~~~ END
+  END -.-&gt;|&quot;every later read&lt;br/&gt;and save refused&quot;| REJ</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The memory store is a Cloudflare Durable Object class,
+<code>MemoryDurableObject</code>, exported by the Serverless Agents edge
+Worker (<code>services/managed-agents/src/edge/memory-do.ts:189</code>).
+One instance exists per account, project and environment, addressed by
+<code>memoryObjectName</code>
+(<code>services/managed-agents/src/edge/memory-contract.ts:263</code>).
+Its SQLite holds five tables (<code>memory-do.ts:196-242</code>). Three
+other parts talk to it:</p>
+<ul>
+<li><strong>The edge Worker's owner routes</strong>,
+<code>/v1/projects/:p/memory[/:r/documents[/:id]]</code>, authenticated
+by the account's API key and stamping the writer as owner
+(<code>services/managed-agents/src/edge/memory-routes.ts:186-343</code>).</li>
+<li><strong>The session Durable Object</strong>, which records an
+admission row in the same transaction as the session row and drives
+<code>issueGrants</code> and <code>closeSession</code> to
+acknowledgement, re-driven by its alarm
+(<code>services/managed-agents/src/edge/memory-session.ts:131-157</code>,
+<code>:242-360</code>).</li>
+<li><strong>Two runtimes for the model loop.</strong> The Workerd host
+calls the object over RPC through <code>memory-client.ts</code>; a
+sandbox runtime, which cannot reach a Durable Object, calls
+<code>/v1/sessions/:id/memory[/save|read|list]</code> on the edge with
+its runtime token
+(<code>services/managed-agents/src/edge/index.ts:2339-2442</code>).</li>
+</ul>
+<p>The Slack product in <code>computer/</code> has no memory of this
+kind. Its gateway persists a session registry so a restart resumes a
+Slack thread's conversation (<code>computer/src/main.ts:79-101</code>),
+and a workspace fork gets a generated <code>AGENTS.md</code> repository
+index that Claude Code reads
+(<code>computer/src/host/claim.ts:7</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The store needs Cloudflare Workers with Durable Objects, or the
+self-hosted equivalent the documentation describes; the Serverless
+Agents CI dry-runs each Worker configuration with no secrets. Storing
+anything requires a project, a deployment that declares the resource,
+and an API key. The store is not a file a person can open: repair goes
+through the owner API, CLI or web page, and
+<code>opencomputer memory export</code> writes one JSON file per
+document, read one at a time, which the documentation says is not a
+consistent snapshot. Production adds private code laid over this tree at
+deploy time.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Declaration.</strong>
+<code>defineMemory({ id, description, provider })</code> in
+<code>agent/src/memory.ts</code> produces a descriptor; the CLI's
+compiler extracts literal declarations from agent source and inlines the
+same module, kept byte-identical by a CLI test. Promotion of an
+environment allocates an <code>activation_seq</code>, applies resource
+limits to the Memory object with <code>applyConfig</code>, then selects
+the code
+(<code>services/managed-agents/src/edge/memory-activation.ts:12-30</code>,
+<code>memory-do.ts:394-463</code>). A stale sequence is a no-op and a
+provider-kind change is rejected.</p>
+<p><strong>Admission.</strong> Session create parses <code>memory</code>
+bindings (<code>memory-bindings.ts:17-64</code>), checks each resource
+is declared and each bound document exists
+(<code>memory-bindings.ts:85-107</code>), records the admission row and
+calls <code>issueGrants</code>, which re-checks atomically and inserts
+one <code>grants</code> row per resource
+(<code>memory-do.ts:465-516</code>). An identical retry returns the same
+grants; a different set for the same session id conflicts.</p>
+<p><strong>Recall.</strong> Before each model step the runtime recalls
+every bound resource (<code>index.ts:2366-2380</code> for the sandbox;
+<code>workerd-runtime/index.ts:1619</code> for Workerd). A document
+grant returns the row's text and revision; a collection grant returns
+<code>overviewLine</code> entries until 50 entries or 16,384 bytes
+(<code>memory-do.ts:580-622</code>). The Workerd host pins what the
+request saw in <code>workerd_request_snapshot</code>
+(<code>workerd-runtime/index.ts:825</code>, <code>:1590</code>).</p>
+<p><strong>Save.</strong> <code>memory_save</code> resolves the target
+among the resources the render selected and sends the snapshot's
+revision (<code>cloud-reactive-plugin.ts:199-238</code>;
+<code>workerd-runtime/index.ts:3084-3105</code>). <code>save</code> runs
+the checks and <code>writeText</code>
+(<code>memory-do.ts:624-668</code>, <code>:760-779</code>). The Workerd
+host writes a <code>workerd_memory_saved</code> outbox row and emits
+<code>opencomputer.memory.saved</code> from it
+(<code>workerd-runtime/index.ts:3105</code>, <code>:2483-2492</code>);
+the sandbox route appends <code>memory.saved</code> to the session's
+events after the save returns (<code>index.ts:2404-2411</code>).</p>
+<p><strong>Owner mutation.</strong> <code>createDocument</code>,
+<code>replaceDocument</code>, <code>patchDocument</code> and
+<code>deleteDocument</code>, each a compare-and-set transaction with the
+writer stamped by the route (<code>memory-do.ts:266-390</code>,
+<code>memory-routes.ts:221-343</code>).</p>
+<p><strong>Closure.</strong> Session end writes
+<code>memory_closure</code> and calls <code>closeSession</code>, which
+inserts into <code>closed_sessions</code>
+(<code>memory-session.ts:311-360</code>,
+<code>memory-do.ts:568-576</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>documents</code> is keyed on <code>(resource, id)</code> and
+carries <code>title</code>, <code>summary</code>, <code>text</code>,
+<code>agent_writes</code> (<code>enabled</code> or
+<code>disabled</code>, enforced by <code>CHECK</code>), an integer
+<code>revision</code>, <code>bytes</code>, <code>deleted</code>,
+<code>created_at</code>, <code>updated_at</code> and
+<code>writer_json</code> (<code>memory-do.ts:197-214</code>). The writer
+is <code>{ kind: "owner" }</code> or
+<code>{ kind: "agent", sessionId }</code>; <code>assertWriter</code>
+refuses anything else, and no route passes a user-supplied writer
+(<code>memory-do.ts:162-176</code>).</p>
+<p>There is one value per document. <code>writeText</code> overwrites
+text, summary and writer and increments the revision
+(<code>memory-do.ts:760-779</code>); the previous text is not kept
+anywhere in the object. The two timestamps are record time. There is no
+validity time, supersession link, TTL or pin.</p>
+<p><code>grants</code> is keyed on <code>(session_id, resource)</code>
+with <code>scope</code>, <code>document_id</code> and
+<code>access</code> (<code>memory-do.ts:229-237</code>);
+<code>closed_sessions</code> holds session ids
+(<code>memory-do.ts:238-241</code>). Neither table is ever pruned: the
+only <code>DELETE FROM</code> in the memory modules clears a
+deployment's declarations in the Account object
+(<code>memory-activation.ts:217</code>).</p>
+<p>Scope has two layers. Account, project and environment are a physical
+partition: a separate object, with no key on a row. Inside the object,
+the grant row is the scope key the session's reads are filtered by, and
+a document id chosen by the application is how one end user's notes are
+kept from another's (<code>docs/agents/document-memory.mdx</code>,
+<em>Session bindings</em>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no search. Retrieval is projection: the whole bound
+document, or for a collection the most recently updated entries as
+<code>id | title | summary | date</code> lines with newlines flattened
+(<code>memory-do.ts:135-139</code>, <code>:600-621</code>). The listing
+order is <code>updated_at DESC, id ASC</code> over non-deleted rows
+(<code>memory-do.ts:716-736</code>), and an owner's retitle or freeze
+moves a document to the top because <code>patchDocument</code> sets
+<code>updated_at</code> (<code>memory-do.ts:348-358</code>).</p>
+<p>Recall is automatic and unconditional: every bound resource is
+recalled before every render, and a rejected recall fails the request
+even when the render would not have used the hook
+(<code>docs/agents/document-memory.mdx</code>, <em>Reading</em>;
+<code>index.ts:2368-2376</code>). Size is bounded by declaration rather
+than by a token budget: at most eight bindings of up to 16,384 bytes
+each, plus 240-byte summaries, with no truncation
+(<code>memory-contract.ts:246-256</code>).</p>
+<p>The Workerd host cannot tell which render a tool call came from,
+because its pinned OpenCode context hook carries no message id. It
+records the assistant message ids each render saw and answers a tool
+call from an earlier render with
+<code>{ status: "rejected", reason: "stale" }</code> rather than saving
+against the latest snapshot
+(<code>workerd-runtime/index.ts:3035-3058</code>;
+<code>workerd-runtime/README.md</code>, <em>Project memory</em>). The
+sandbox plugin applies the same refusal
+(<code>cloud-reactive-plugin.ts:199-204</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and agent-initiated or owner-initiated; nothing
+is extracted. The model sends the whole text; omitting
+<code>summary</code> keeps it and <code>""</code> clears it. Agents
+cannot change ids, titles or write policy, because the tool schema has
+no such field and the save path updates only text and summary
+(<code>memory-tools.ts:24-44</code>,
+<code>memory-do.ts:649-660</code>).</p>
+<p>Conflicts are refused. A stale revision returns
+<code>{ status: "conflict", text, summary }</code>
+(<code>memory-do.ts:646-648</code>), and there is no merge. A committed
+save whose reply was lost conflicts on retry; the documentation tells
+the agent author to read again first.</p>
+<p>Lowering <code>maxBytes</code> never truncates. An oversized document
+stays readable and its next replacement must fit, and the limit is
+applied by promotion before the code that relies on it is selected
+(<code>memory-do.ts:781-806</code>;
+<code>services/managed-agents/test/memory-do.test.ts:209-233</code>).</p>
+<h3 id="forgetting">Forgetting</h3>
+<p>Delete clears content and keeps the id
+(<code>memory-do.ts:377-387</code>). The comment calls this <em>a
+minimal tombstone</em>, and it is one keyed on the document id: a new
+document with other text can say the same thing. Copies outside the
+object remain, and the documentation lists them: history, tool results
+and exports.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A save blocks the tool call for one Durable Object round trip and is
+readable at the next model step, which recalls again. No background pass
+reads or rewrites the store. Each step re-sends the full projection of
+every binding; if the agent's render places memory text in its system
+prompt, a save mid-turn changes that prompt for the next step, and with
+it the provider's cached prefix. That last point is an inference from
+the render contract, not something the tree measures.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent author writes <code>useMemory(notes)</code> in a render
+function and receives <code>{ text, sources, writable }</code>
+(<code>agent/src/index.ts:1704</code>); the render chooses where the
+text goes. Calling the hook also selects the memory tools for that step,
+so tool exposure follows what the render read, and a save can only
+target a resource the render selected
+(<code>cloud-reactive-plugin.ts:204-215</code>).</p>
+<p>The model holds three tools with fixed names and schemas shared by
+both runtimes
+(<code>services/managed-agents/src/runtime/memory-tools.ts:10-97</code>).
+Each tool's description lists the selected resources with their declared
+descriptions, and the result types are values the model can act on:
+<code>saved</code>, <code>conflict</code>, or <code>rejected</code> with
+a reason and, for <code>not_bound</code> and <code>read_only</code>, the
+list of resources it could have targeted.</p>
+<p>Bindings are fixed at session create by whoever holds the API key;
+schedules and webhooks do not set them, and the model cannot choose
+another document. The sandbox runtime reads its runtime token from a
+file named by <code>OPENCOMPUTER_REACTIVE_SESSION_PATH</code>
+(<code>cloud-reactive-plugin.ts:100</code>, <code>:252-261</code>).</p>
+<p>The <code>httpMemory</code> provider for an external memory service
+compiles, and is refused at admission:
+<code>validateMemoryBindings</code> returns <em>uses the http provider,
+which is not available for sessions yet</em>
+(<code>memory-bindings.ts:96-98</code>). The documentation calls it a
+contract preview.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="a-deleted-document-stops-the-sessions-bound-to-it">A deleted
+document stops the sessions bound to it</h3>
+<p>Deletion does not revoke or rewrite grants. The bound session's next
+recall gets <code>not_found</code> (<code>memory-do.ts:585-586</code>),
+the sandbox route turns that into a 409
+(<code>index.ts:2370-2376</code>), and the plugin throws <em>Memory
+recall failed</em> (<code>cloud-reactive-plugin.ts:163-172</code>). The
+documentation states the rule — <em>any failure blocks inference</em> —
+and a deleted id cannot be recreated to repair it. An owner who deletes
+a shared notes document ends the useful life of every open session that
+names it.</p>
+<h3 id="nothing-records-what-changed">Nothing records what changed</h3>
+<p>The <code>documents</code> row carries the last writer and a revision
+counter; the text before a save is gone. The <code>memory.saved</code>
+event records resource, document id, revision and bytes for agent saves
+only, in the session's event log, written after the Memory object's
+transaction commits, and the documentation calls its delivery
+best-effort. Owner creates, replacements, freezes and deletes write no
+event. <code>audit_log</code> is withheld on that: the record covers one
+writer, holds no content and is not part of the mutation.</p>
+<h3
+id="freezing-is-permission-and-owner-edits-come-after-the-write">Freezing
+is permission, and owner edits come after the write</h3>
+<p><code>agent_writes = disabled</code> makes every later agent save
+return <code>agent_writes_disabled</code>
+(<code>memory-do.ts:643-645</code>), and the web page links an agent
+writer to its session
+(<code>web/src/managed-agents/Memory.tsx:82-99</code>). An agent's save
+still commits the moment it is made; a person reviews by reading and
+rewriting afterwards. <code>human_review</code> is withheld: nothing
+waits for a person.</p>
+<h3 id="what-holds-up">What holds up</h3>
+<p>Every outcome is a typed value and nothing documented throws
+(<code>memory-do.ts:30-41</code>). Recovery for admission and closure is
+armed before the RPC leaves, so an object that dies mid-call is woken by
+its alarm (<code>memory-session.ts:4-22</code>). Session end is not
+reported as successful until the closure is acknowledged, and an
+unacknowledged end is reported as uncertain
+(<code>services/managed-agents/test/memory-admission.test.ts:375-418</code>).</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. They run on
+<code>@cloudflare/vitest-pool-workers</code> with real Durable Object
+evictions: <code>evict()</code> drops the object and the next call
+constructs a fresh one over the same storage
+(<code>services/managed-agents/test/memory-do.test.ts:13-18</code>,
+<code>:52-55</code>).</p>
+<p>The case behind <code>negative_eval</code> is
+<code>memory-do.test.ts:483-505</code>. The store holds
+<code>workshop</code>, <code>other</code> and a deleted
+<code>budget</code>. A session bound to <code>workshop</code> is refused
+<code>other</code>, a session bound to the collection reads
+<code>other</code> as the positive control, the deleted document reads
+as <code>deleted</code>, and the collection list matches exactly
+<code>other</code> and <code>workshop</code>.
+<code>memory-do.test.ts:132-146</code> adds a listing equal to the one
+live document after a delete and an eviction.</p>
+<p>Other memory suites cover admission retries and lost replies
+(<code>memory-admission.test.ts</code>), environment identity across
+promotions (<code>memory-environment.test.ts</code>), owner routes
+(<code>memory-routes.test.ts</code>), the Workerd host against a
+scripted client (<code>workerd-memory.test.ts</code>, 26 cases), and an
+integrated test that saves in one session and recalls in the next across
+a crash mid-closure (<code>integrated-memory.test.ts:455</code>).</p>
+<p>No test asserts the behaviour section 9 leads with: what a bound
+session does after its document is deleted beyond the rejected recall.
+No paper or benchmark concerns the memory; the README's benchmark
+measures time to a pull request against other cloud agents.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Take the expected revision from the render, not from the
+model.</strong> The host knows what text the model was shown; let it
+stamp the save, and a model that re-saves within one response conflicts
+with itself instead of silently overwriting.</li>
+<li><strong>Check closure, grant, policy, revision and size in the
+transaction that writes.</strong> A permission read in one call and a
+write in the next is a race; one transaction is not.</li>
+<li><strong>Record session end as a permanent row and refuse to report
+success until the store acknowledges it.</strong> Revocation that can be
+lost should say it is uncertain.</li>
+<li><strong>Return refusals as values with the alternatives.</strong>
+<code>not_bound</code> with the list of bindable resources lets the
+model recover without a tool error.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Failing every request when one bound object
+disappears.</strong> Fail closed on the write; on the read, a deleted
+binding can be reported in the projection and the turn allowed to
+run.</li>
+<li><strong>Overwriting the only copy.</strong> A document store with
+compare-and-set and no prior versions can tell you a conflict happened
+and cannot show you what was lost to the write that won.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team building agents on this platform that wants a few
+small, human-editable documents per project shared between sessions,
+with a person able to read and correct them through a page. It does not
+suit anyone who needs search over many memories, recall of what the
+model learned without the author deciding where it goes, or an answer to
+<em>what did this say last week</em>. Outside the platform the store is
+not separable: it is a Durable Object class tied to the session, account
+and promotion objects around it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether a process in the sandbox other than the plugin can read the
+runtime token file, and so call the save route with a revision of its
+choosing. The grant would still bind it; the render-revision discipline
+would not.</li>
+<li>What the private overlay changes in production, and whether any of
+it touches memory.</li>
+<li>Whether grants and closed-session rows are ever compacted in
+production; the tree never deletes them.</li>
+<li>How the self-hosted deployment provides Durable Objects, which this
+reading did not trace.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>services/managed-agents/src/edge/memory-do.ts</code></td>
+<td>The store: schema, owner operations, grants, recall, save,
+closure</td>
+</tr>
+<tr>
+<td><code>services/managed-agents/src/edge/memory-contract.ts</code></td>
+<td>Types, limits, <code>memoryObjectName</code></td>
+</tr>
+<tr>
+<td><code>services/managed-agents/src/edge/memory-routes.ts</code></td>
+<td>Owner REST routes with ETag preconditions</td>
+</tr>
+<tr>
+<td><code>services/managed-agents/src/edge/memory-session.ts</code></td>
+<td>Admission and closure rows, re-drive</td>
+</tr>
+<tr>
+<td><code>services/managed-agents/src/edge/memory-bindings.ts</code></td>
+<td>Binding parse and validation; HTTP provider refusal</td>
+</tr>
+<tr>
+<td><code>services/managed-agents/src/edge/memory-activation.ts</code></td>
+<td>Promotion of resource limits</td>
+</tr>
+<tr>
+<td><code>services/managed-agents/src/edge/index.ts</code></td>
+<td>Session create, sandbox runtime memory route</td>
+</tr>
+<tr>
+<td><code>services/managed-agents/src/runtime/memory-tools.ts</code></td>
+<td>Tool names, schemas, descriptions</td>
+</tr>
+<tr>
+<td><code>services/managed-agents/src/runtime/cloud-reactive-plugin.ts</code></td>
+<td>Sandbox runtime recall and tool execution</td>
+</tr>
+<tr>
+<td><code>services/managed-agents/src/workerd-runtime/index.ts</code>,
+<code>memory-client.ts</code>, <code>README.md</code></td>
+<td>Workerd host recall, snapshot, stale refusal, saved outbox</td>
+</tr>
+<tr>
+<td><code>agent/src/memory.ts</code>,
+<code>agent/src/index.ts</code></td>
+<td><code>defineMemory</code>, <code>useMemory</code></td>
+</tr>
+<tr>
+<td><code>web/src/managed-agents/Memory.tsx</code></td>
+<td>Owner page</td>
+</tr>
+<tr>
+<td><code>docs/agents/memory.mdx</code>,
+<code>document-memory.mdx</code>, <code>memory-providers.mdx</code></td>
+<td>Contract documentation</td>
+</tr>
+<tr>
+<td><code>services/managed-agents/test/memory-do.test.ts</code>,
+<code>memory-admission.test.ts</code>,
+<code>integrated-memory.test.ts</code></td>
+<td>The tests cited</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run with <code>/usr/bin/git</code> in a depth-1 clone at the pinned
+commit.</p>
+<ul>
+<li><code>git grep -n -E 'CREATE TABLE' -- services/managed-agents/src/edge/memory-do.ts</code>
+— five tables: <code>documents</code>, <code>resource_config</code>,
+<code>activation</code>, <code>grants</code>,
+<code>closed_sessions</code>; none holds prior text or events.</li>
+<li><code>git grep -n -i -E 'embedding|vector|fts5|bm25|similarity' -- 'services/managed-agents/src/edge/memory-*.ts' services/managed-agents/src/runtime/memory-tools.ts services/managed-agents/src/workerd-runtime/memory-client.ts</code>
+— nothing. Control:
+<code>git grep -c -E 'ORDER BY updated_at DESC' -- services/managed-agents/src/edge/memory-do.ts</code>
+— 2.</li>
+<li><code>git grep -n -E 'DELETE FROM' -- 'services/managed-agents/src/edge/memory-*.ts'</code>
+— <code>memory-activation.ts:217</code> only. Control: the same pattern
+counts 4 in <code>session-do.ts</code>.</li>
+<li><code>git grep -n -E 'recordMemorySaved|memory\.saved' -- services/managed-agents/src</code>
+— the sandbox route, the session object's append, the Workerd emit and
+its smoke test; no owner route.</li>
+<li><code>git grep -n -i -E 'memor(y|ies)' -- computer/src</code>,
+setting aside RAM limits — the session registry and
+<code>AGENTS.md</code> index only.</li>
+<li><code>git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice|contributing|third.party)'</code>
+— <code>LICENSE</code> and <code>computer/NOTICE</code>.
+<code>git grep -n -i -E '"licen[sc]e"|^licen[sc]e *=' -- '*.json' '*.toml' ':!*package-lock.json'</code>
+— Apache-2.0 twice, MIT in both SDK manifests.</li>
+<li><code>git grep -n -i -l -E 'arxiv|bibtex|@article|@misc|CITATION\.cff|LoCoMo|LongMemEval' -- .</code>
+— no paper on the system.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-18</strong> — <a
+href="https://github.com/diggerhq/opencomputer/commit/4129fb169152e6ff072bd013c625b79577134cce"><code class="commit-id" title="4129fb169152e6ff072bd013c625b79577134cce">4129fb16…</code></a>
+— first reading, from a depth-1 clone with history counts from the
+GitHub API. Screened before reading: no auto-running hooks; a
+<code>Makefile</code> and a <code>prepublishOnly</code> script as
+build-time execution; 28 dependency manifests reported inside the
+seven-day cooldown, which a shallow clone overstates by dating every
+file to the tip; <code>AGENTS.md</code> treated as data. Nothing was
+installed or run. Two marks: <code>scope_enforced</code> on the session
+grant, and <code>negative_eval</code> on the binding test.
+<code>audit_log</code> and <code>human_review</code> are withheld.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-815, generated from each report's frontmatter —
+816, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-815, generated from each report's frontmatter —
+816, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-815, generated from each report's frontmatter —
+816, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 815, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 816, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-815, generated from each report's frontmatter —
+816, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 815 systems by the seven mechanisms
+filters all 816 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -25492,6 +25492,52 @@ three separate stores answer to the word memory with different clear
 semantics</td>
 </tr>
 <tr>
+<td><a
+href="../systems/opencomputer/"><code>opencomputer</code></a></td>
+<td>A titled text document of at most maxBytes UTF-8 bytes (default
+8,192, ceiling 16,384) with a 240-byte summary, under a resource the
+agent's code declares with defineMemory; one revision counter and the
+last writer per document</td>
+<td>Durable Object SQLite, one object per account, project and
+environment: documents, resource_config, activation, grants and
+closed_sessions tables</td>
+<td>No search. Before every model step each bound resource is recalled
+whole: a document binding returns its full text and revision, a
+collection binding an overview of up to 50 id, title, summary and date
+lines within 16 KiB, newest first; memory_read and memory_list page
+further</td>
+<td>The model calls memory_save with the whole text; the host supplies
+the revision the render saw, and the object checks closure, grant, write
+policy, revision and size and writes in one SQLite transaction. Owners
+create, replace, retitle, freeze and delete over HTTP with If-Match. No
+extraction and no model call</td>
+<td>Whole-text replacement under compare-and-set; a conflict returns the
+current text to the model. Delete clears title, text and summary and
+keeps the row so the id stays reserved. No version history</td>
+<td>One store per account, project and environment as a physical
+partition; inside it a session reads only what its grant rows name, a
+document or a whole resource, fixed at session create by the API caller.
+A collection binding sees every document of the resource</td>
+<td>defineMemory and useMemory in the @opencomputer/agent SDK; three
+fixed tools, memory_save, memory_read and memory_list, served by the
+Workerd host over Durable Object RPC or by the sandbox runtime over a
+runtime-token edge route; owner REST API, CLI and web page</td>
+<td>None in the memory store. Admission and closure are re-driven by the
+session object's alarm until the Memory object acknowledges them;
+promotion applies resource limits before activating code</td>
+<td>Writer stamped by the platform as owner or agent with its session
+id; an owner can freeze agent writes per document; no state withholds a
+document from recall</td>
+<td>Every check and the write in one transaction, a save checked against
+the revision the render saw, session end recorded as a permanent closure
+before it reports success, typed outcomes the model can act on, and a
+binding test with a positive control</td>
+<td>Deleting a document makes the next recall of every session bound to
+it fail, and a failed recall blocks inference; no version history or
+mutation log; the HTTP provider compiles and cannot be bound; production
+lays private code over this tree</td>
+</tr>
+<tr>
 <td><a href="../systems/openconcho/"><code>openconcho</code></a></td>
 <td>None of its own. It renders Honcho's workspaces, peers, sessions,
 messages and conclusions, plus a client-side grouping of conclusions it
@@ -36616,7 +36662,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>78 of 815:</em> <a
+<p><em>78 of 816:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -36698,7 +36744,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>209 of 815:</em> <a
+<p><em>209 of 816:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -36914,7 +36960,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>137 of 815:</em> <a
+<p><em>137 of 816:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -37059,7 +37105,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>343 of 815:</em> <a
+<p><em>344 of 816:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -37315,6 +37361,7 @@ href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
 href="../systems/openclaw/"><code>openclaw</code></a>, <a
 href="../systems/opencode-mem/"><code>opencode-mem</code></a>, <a
 href="../systems/opencompany/"><code>opencompany</code></a>, <a
+href="../systems/opencomputer/"><code>opencomputer</code></a>, <a
 href="../systems/openexecutive/"><code>openexecutive</code></a>, <a
 href="../systems/openhands-sdk/"><code>openhands-sdk</code></a>, <a
 href="../systems/openlore/"><code>openlore</code></a>, <a
@@ -37418,7 +37465,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>271 of 815:</em> <a
+<p><em>271 of 816:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -37700,7 +37747,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>102 of 815:</em> <a
+<p><em>102 of 816:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -37806,7 +37853,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>523 of 815:</em> <a
+<p><em>524 of 816:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -38185,6 +38232,7 @@ href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
 href="../systems/opencode-mem/"><code>opencode-mem</code></a>, <a
 href="../systems/opencode-session-recall/"><code>opencode-session-recall</code></a>,
 <a href="../systems/opencompany/"><code>opencompany</code></a>, <a
+href="../systems/opencomputer/"><code>opencomputer</code></a>, <a
 href="../systems/openexecutive/"><code>openexecutive</code></a>, <a
 href="../systems/openhuman/"><code>openhuman</code></a>, <a
 href="../systems/openlore/"><code>openlore</code></a>, <a
@@ -38365,8 +38413,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-523 repositories of
-815 assert that particular material must
+524 repositories of
+816 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -38439,7 +38487,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 815 is the real figure for the second kind, and
+of 816 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

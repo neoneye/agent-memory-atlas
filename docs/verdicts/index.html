@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 815 reports.</strong></p>
+<p><strong>This page covers all 816 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33683,6 +33683,39 @@ meanwhile.</li>
 <li>Do not copy when: agent-written content must wait for a person's
 approval, deletion must be complete, or retrieval has to find the right
 note without the right words.</li>
+</ul>
+<h3 id="opencomputer"><a
+href="../systems/opencomputer/"><code>opencomputer</code></a></h3>
+<ul>
+<li>Best idea: the save is checked where it is written.
+<code>memory_save</code> sends the revision of the render that produced
+the call, not one the model chose, and the Memory Durable Object reads
+session closure, the session's grant, the document's freeze flag, that
+revision and the size limit in the same SQLite transaction that replaces
+the text; a stale revision returns the current text for the next
+step.</li>
+<li>Biggest risk: a deleted document takes its sessions with it. Delete
+keeps the row so the id stays reserved and leaves the grants in place;
+the next recall of every session bound to it is <code>not_found</code>,
+and a failed recall blocks inference. There is no version history, and
+owner edits, freezes and deletes leave no event.</li>
+<li>Most reusable component:
+<code>services/managed-agents/src/edge/memory-do.ts</code>,
+<code>save</code> and <code>issueGrants</code> with the
+<code>grants</code> and <code>closed_sessions</code> tables, and the
+re-driven admission and closure rows in
+<code>memory-session.ts</code>.</li>
+<li>Maturity impression: 208,146 lines of TypeScript from 2,608 commits
+by 15 contributors since December 2025; the memory service arrived on 10
+November 2026 as one commit imported from a private repository, with
+hosted-only code laid over at deploy time. 96 memory cases on real
+Durable Object evictions, run in CI. Two marks. Apache-2.0, with both
+SDK manifests declaring MIT and no MIT file.</li>
+<li>Study when: several sessions of a hosted agent share a few small
+documents a person can also edit, and a write must never land on text
+the model did not see.</li>
+<li>Do not copy when: memory needs search, history of what a value used
+to be, or deletion that leaves running sessions able to continue.</li>
 </ul>
         </article>
       </div>

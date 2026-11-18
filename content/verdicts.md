@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 815 reports.**
+**This page covers all 816 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7471,3 +7471,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 217,984 lines of TypeScript, 138 vault test files with 4,411 checks run in CI on three operating systems, 2,289 commits between 8 October and 16 November 2026 by one author; the pinned commit removes the Review plugin. One mark. Apache-2.0, with a CPAL component whose required attribution display was not found.
 - Study when: an agent and a person edit the same Markdown files and the agent must never overwrite or truncate what the person wrote meanwhile.
 - Do not copy when: agent-written content must wait for a person's approval, deletion must be complete, or retrieval has to find the right note without the right words.
+
+### [`opencomputer`](../systems/opencomputer/)
+
+- Best idea: the save is checked where it is written. `memory_save` sends the revision of the render that produced the call, not one the model chose, and the Memory Durable Object reads session closure, the session's grant, the document's freeze flag, that revision and the size limit in the same SQLite transaction that replaces the text; a stale revision returns the current text for the next step.
+- Biggest risk: a deleted document takes its sessions with it. Delete keeps the row so the id stays reserved and leaves the grants in place; the next recall of every session bound to it is `not_found`, and a failed recall blocks inference. There is no version history, and owner edits, freezes and deletes leave no event.
+- Most reusable component: `services/managed-agents/src/edge/memory-do.ts`, `save` and `issueGrants` with the `grants` and `closed_sessions` tables, and the re-driven admission and closure rows in `memory-session.ts`.
+- Maturity impression: 208,146 lines of TypeScript from 2,608 commits by 15 contributors since December 2025; the memory service arrived on 10 November 2026 as one commit imported from a private repository, with hosted-only code laid over at deploy time. 96 memory cases on real Durable Object evictions, run in CI. Two marks. Apache-2.0, with both SDK manifests declaring MIT and no MIT file.
+- Study when: several sessions of a hosted agent share a few small documents a person can also edit, and a write must never land on text the model did not see.
+- Do not copy when: memory needs search, history of what a value used to be, or deletion that leaves running sessions able to continue.
