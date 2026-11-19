@@ -9,7 +9,7 @@ source_url: https://github.com/google-research/harness2
 archive_name: "google-research--harness2"
 revision: 6868817518876de8fd170c6a8354daca273b6191
 revision_url: https://github.com/google-research/harness2/commit/6868817518876de8fd170c6a8354daca273b6191
-analyzed_at: 2026-11-03
+analyzed_at: 2026-11-19
 licence: "Apache-2.0"
 size: "13,062 lines of Python in harness2/, of which the library is 222 and the scheduler and selection code that drive it 1,423; 2,591 lines of vendored benchmark runners in third_party/"
 activity: "21 commits on main by 11 authors, 8 October – 2 November 2026"
@@ -217,8 +217,10 @@ always-on files — `systemprompt.md`, `guardrails.md`, `LongTermMEMORY.md` and
 on-demand skills, subagents, scripts and plugins. For Codex it is one
 `AGENTS.md` capped at 8,000 (`harness2/substrate/opencode.py:42-80`,
 `harness2/substrate/codex.py:38-75`). `LongTermMEMORY.md` is a memory file
-inside one harness. It travels to another task only if its harness is adopted
-and a later editor copies it.
+inside one harness, and it is what the README means by memory in its list of
+eight editable components (`README.md:70-71`). It travels to another task only
+if its harness is adopted and a later editor copies it. The release has no
+other long-lived memory component; cross-task carry is the library alone.
 
 Scope is physical. Run identity, mode and domain are directory names, and no
 record carries a key. The domain is `task_id.split("/", 1)[0]` for JobBench and
@@ -273,6 +275,14 @@ is not checked against the rows, the verdicts are not parsed, and a lesson
 resting only on confounded rows is admitted if its fields are filled. The
 selector that chose the adopted candidate saw no harness, so adoption records
 which deliverable read best, as the reflector's prompt itself says.
+
+The paper states the stronger property: *"Lessons are retained only when
+supported by execution contrasts; selecting an output alone does not establish
+transferability"* (§2.3). In the release that sentence is the reflector's
+instruction. The selection pool is exactly the `k` finals, with the reference
+executions excluded by construction (`selection.py:93-111`), and no step of
+the code compares a candidate's execution with a reference one before an entry
+is stored. The contrast is the reflector's to find and to cite.
 
 Admission does not wait on the task's own outcome. An editor stage whose
 session fails to execute falls back to its input tree and marks the mode not
@@ -404,7 +414,9 @@ The paper is [arXiv:2610.14224](https://arxiv.org/abs/2610.14224), submitted 9
 October 2026. Its Table 3 removes the library at `k = 1` and reports
 WorkBuddy-Bench falling from 77.5 to 74.4 and JobBench from 36.0 to 34.2. Its
 Figure 7 transfers a JobBench-derived library to WorkBuddy-Bench, and Appendix
-E.2 re-runs each task with its own entry excluded. The paper's description of
+E.2 with Figure 11 re-runs each task with its own entry excluded. The paper
+qualifies that last result itself: *"This retrospective test uses later-task
+experience to evaluate cross-task reuse, not online adaptation."* The paper's description of
 the library matches the code: per-domain directories, full trees, an index and
 sequential reads. None of the three experiments has a CLI path at the pin; the
 sweep's flags are listed in the appendix below.
@@ -508,7 +520,7 @@ Run with `/usr/bin/git grep` in the clone, `PIN=6868817518876de8fd170c6a8354daca
 - `git grep -n -E "confidence" ${PIN} -- harness2 ':!harness2/core/prompts.py'` — written at `library.py:146`, parsed at `selection.py:498`, set in `demo.py:154`; no reader.
 - `git grep -n -E 'confounded|helped|"hurt"|verdict' ${PIN} -- harness2 ':!harness2/core/prompts.py'` — `demo.py:148` only, once grader-marker names are excluded; no code parses an edit verdict.
 - `git grep -n -E "library_dir" ${PIN} -- harness2/core/selection.py` — no match; neither the selector nor the reflector receives the library.
-- `git grep -n -i "library" ${PIN} -- harness2/substrate third_party/wb_runner third_party/jb_runner` — no match; no executor path reads it.
+- `git grep -n -i "library" ${PIN} -- harness2/substrate third_party/wb_runner third_party/jb_runner third_party/lab_runner` — one match, `third_party/lab_runner/opencode/run_opencode.py:391`, help text for `--harness-dir` saying a directory holding only `AGENTS.md` loads as a single-body harness; the flag takes one harness tree, and no executor path reads the domain library.
 - `git grep -n -E "base_harness\(\)" ${PIN} -- harness2/core` — `schedule.py:671` and `selection.py:431`; every task starts from the base harness.
 - `git grep -n -E "fingerprint\(" ${PIN} -- harness2/core/schedule.py` — `:279` digests the task's prompt and files, `:453` and `:601` the adopted harness; no digest covers the library a task read.
 - `git grep -n -i "librar" ${PIN} -- harness2/core/runmark.py` — no match; the reuse marker carries no library identity.
@@ -522,6 +534,8 @@ Run with `/usr/bin/git grep` in the clone, `PIN=6868817518876de8fd170c6a8354daca
 - `git grep -n -i -E "arxiv|bibtex|@article|CITATION" ${PIN} -- .` — the README citation block for [arXiv:2610.14224](https://arxiv.org/abs/2610.14224); no `CITATION.cff`.
 
 ## History
+
+**2026-11-19** — [`6868817518876de8fd170c6a8354daca273b6191`](https://github.com/google-research/harness2/commit/6868817518876de8fd170c6a8354daca273b6191) — no commits since the previous reading; the pin is the head of `main`. Read against a comment on [issue 71](https://github.com/google-research/harness2/issues/71#issuecomment-6966840133) that describes the release as having no long-lived memory component, the library as its only cross-task store, entries read by improvement sessions and never handed to the executor, and nothing pruned. Sections 1, 5 and 7 hold each of those. One claim differs from the code: that entries are adopted only with contrast evidence. That is the paper's wording and the reflector's instruction; admission in code is three non-empty fields ([section 7](#7-write-mechanics)). Every recorded search re-run with the same result; the executor search now covers `third_party/lab_runner`. No mark moves. Nothing was installed, built or run.
 
 **2026-11-03** — [`6868817518876de8fd170c6a8354daca273b6191`](https://github.com/google-research/harness2/commit/6868817518876de8fd170c6a8354daca273b6191) — 18 commits, 17 October to 2 November 2026. `library.py`, `selection.py`, `context.py`, `prompts.py` and the sweep CLI are unchanged; no mark moves and no published claim was wrong. The scheduler gained a task-input digest that invalidates a task's own summary and rollouts when its prompt or source files change, and a `selected_at` time on the selection record; neither covers the library a task read, so the propagation finding in section 9 stands, with two more tests pinning the downstream skip. An editor stage that fails to execute marks its task `partial` while its entry is still stored (section 7). Moved anchors re-verified. LICENSE unchanged; screen findings match the first reading. Nothing was installed, built or run.
 
