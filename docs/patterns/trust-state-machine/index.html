@@ -819,6 +819,19 @@ source is gone. Its trigger is a metadata key that no example or
 document names, the orphaned text stays readable through
 <code>audit</code>, and nothing returns a row to
 <code>trusted</code>.</p>
+<p><a href="../../systems/artex/">ARTEX</a> derives the state from
+evidence that can be withdrawn. A lesson built from a triaged finding
+holds one evidence row per finding or retest. When a person reverses the
+finding's disposition, the next extraction deletes that finding's rows
+from lessons of the opposite kind, sets a lesson with none left to
+<code>retired</code>, and the selection query excludes retired rows
+(<code>db/lessons.go:230-302</code>, <code>:326</code>); a committed
+test walks confirmed, false positive, confirmed and fails if the retired
+lesson is selected. The transition waits for an extraction that runs
+when the task ends or when one route is called, the deleted rows were
+the only record of what the lesson rested on, and <code>adopted</code>,
+the third value, has no writer. The verdict on the finding itself is a
+label on three agent reads and filters none.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

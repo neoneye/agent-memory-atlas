@@ -448,6 +448,8 @@ evidence-derived ladder this page argues for, without the field, so no
 
 [Rakho](../../systems/rakho/) has two states and one transition, driven by deletion. After `forget` removes rows, every remaining row whose metadata `derived_from` names a deleted id is set to `orphaned`, and the recall query excludes orphaned rows (`src/rakho/storage.py:286-290`, `:437-456`). The state answers one question, whether a note's source is gone. Its trigger is a metadata key that no example or document names, the orphaned text stays readable through `audit`, and nothing returns a row to `trusted`.
 
+[ARTEX](../../systems/artex/) derives the state from evidence that can be withdrawn. A lesson built from a triaged finding holds one evidence row per finding or retest. When a person reverses the finding's disposition, the next extraction deletes that finding's rows from lessons of the opposite kind, sets a lesson with none left to `retired`, and the selection query excludes retired rows (`db/lessons.go:230-302`, `:326`); a committed test walks confirmed, false positive, confirmed and fails if the retired lesson is selected. The transition waits for an extraction that runs when the task ends or when one route is called, the deleted rows were the only record of what the lesson rested on, and `adopted`, the third value, has no writer. The verdict on the finding itself is a label on three agent reads and filters none.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

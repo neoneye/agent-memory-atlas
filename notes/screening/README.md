@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 816 of 816 screened at the report's current pin.**
+**Progress: 818 of 819 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
-off, and 0 report(s) have no record at all.
+off, and 1 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 387 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 369 |
-| Repositories with build-time execution (`EXEC`) | 592 |
+| Repositories with an auto-run surface (`RUNS`) | 388 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 370 |
+| Repositories with build-time execution (`EXEC`) | 594 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -92,6 +92,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`claude-total-memory`](../../content/systems/claude-total-memory.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`claudest`](../../content/systems/claudest.md) | `.claude-plugin/`, `plugins/claude-claw/.claude-plugin/plugin.json`, `plugins/claude-coding/.claude-plugin/plugin.json`, `plugins/claude-content/.claude-plugin/plugin.json`, `plugins/claude-memory/.claude-plugin/plugin.json`, `plugins/claude-memory/hooks/`, `plugins/claude-memory/hooks/hooks.json`, `plugins/claude-research/.claude-plugin/plugin.json` |
 | [`claudinio-brain`](../../content/systems/claudinio-brain.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
+| [`clickhouse-loom`](../../content/systems/clickhouse-loom.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `integrations/claude-code-plugin/.claude-plugin/plugin.json`, `integrations/claude-code-plugin/.mcp.json`, `integrations/claude-code-plugin/hooks/`, `integrations/claude-code-plugin/hooks/hooks.json` |
 | [`codemem`](../../content/systems/codemem.md) | `.claude-plugin/`, `.opencode/`, `opencode.jsonc`, `plugins/claude/.claude-plugin/plugin.json`, `plugins/claude/hooks/`, `plugins/claude/hooks/hooks.json` |
 | [`cognee`](../../content/systems/cognee.md) | `.devcontainer/devcontainer.json` |
 | [`cognicore`](../../content/systems/cognicore.md) | `.claude-plugin/`, `.cursor/mcp.json`, `.cursorrules`, `.vscode/mcp.json`, `plugins/cognicore-experience/.claude-plugin/plugin.json`, `plugins/cognicore-experience/.mcp.json`, `plugins/cognicore-experience/hooks/`, `plugins/cognicore-experience/hooks/hooks.json` |

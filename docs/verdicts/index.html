@@ -33446,24 +33446,34 @@ to eight source tasks; its agents read their facts, findings and
 finished intents tagged as inherited, a deleted source disappears on the
 next read, and writes cannot cross because every mutation carries the
 receiver's exploration id.</li>
-<li>Biggest risk: the lessons subsystem. Its ranking puts unscoped
-lessons ahead of the task's own because <code>(col = $1) DESC</code>
-sorts NULL first, its company scope reads a column nothing fills, its
-text derives from target output and joins the system prompt with a plain
-header, and a lesson has no edit, retire or delete path. Injection is
-off by default.</li>
+<li>Second idea: a lesson's support is one evidence row per finding or
+retest. A reversed disposition deletes that finding's rows from the
+opposite kind of lesson, a lesson with none left is
+<code>retired</code>, and the selection excludes retired rows.</li>
+<li>Biggest risk: a person's false-positive verdict does not gate what
+the agents do. It is a label on <code>list_findings</code>, the
+related-task overview and <code>node_detail</code>; the finding list
+injected into every planner round omits it, and <code>prove_goal</code>
+accepts the finding as proof.</li>
+<li>Second risk: lessons leak and linger at the edges. A task declared
+by domain alone has no company, so its lessons are served to every task;
+retraction runs only when the task ends again or one route is called,
+which no interface does; and it deletes the evidence rows that said what
+a lesson rested on. Injection is off by default.</li>
 <li>Most reusable component: <code>db/exploration_sources.go</code> with
 <code>db/exploration_sources_test.go</code>, and the nonce-framed data
 envelope in <code>agent/data_envelope.go</code>.</li>
-<li>Maturity impression: 133,382 lines of Go, 1,191 test functions run
-in CI against PostgreSQL, 897 commits in under four months across an
-original author and a fork's maintainer. Lessons are 395 lines with four
-tests, none on ordering. AGPL-3.0 with use restrictions added in the
-README.</li>
+<li>Maturity impression: 146,850 lines of Go, 1,372 test functions run
+in CI against PostgreSQL, 1,033 commits in under four months across an
+original author and a fork's maintainer. Lessons are 519 lines with
+nineteen tests, including the order, the company boundary and the
+retraction. AGPL-3.0 with use restrictions added in the README.</li>
 <li>Study when: several agent tasks must share what earlier ones learned
-without one task being able to write into another.</li>
-<li>Do not copy when: the lesson loop is what you want as it stands, or
-a person's rejection of a finding must change what the agents see.</li>
+without one task being able to write into another, or a derived lesson
+must lose its support when its source is overturned.</li>
+<li>Do not copy when: a person's rejection of a finding must stop the
+agents from building on it, or lessons must stay inside one engagement
+that is declared by domain.</li>
 </ul>
 <h3 id="llm-memory-morditux"><a
 href="../systems/llm-memory-morditux/"><code>llm-memory-morditux</code></a></h3>

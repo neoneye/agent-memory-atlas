@@ -3204,41 +3204,50 @@ that was true last quarter and false now has no way to say so</td>
 <td>Several: an asset row keyed on its value; an exploration node (goal,
 intent, fact, finding, hint, digest) with a state and a server-stamped
 origin; a coverage row per surface and risk area; and a lesson, a kind,
-cue and action built by string rules from one finding</td>
+cue and action built by string rules from one finding, with a status and
+evidence rows</td>
 <td>PostgreSQL: one global assets table, per-task exploration nodes and
 edges with anchors to assets, a coverage ledger with a history table,
 three lesson tables; content-addressed files for captured request and
 response evidence</td>
 <td>No search engine. Each planner round is rebuilt from windowed
 newest-first reads of the task's graph with cursors and digests for the
-rest; lessons are one SQL query capped at eight rows with no cursor</td>
+rest; lessons are one SQL query filtered by company, category and
+status, capped at eight rows with no cursor</td>
 <td>Agent tools write assets, facts, findings and coverage; a person
 sets a finding's disposition over an authenticated route; lessons are
-extracted by rule when a task ends, with no model call</td>
+extracted by rule when a task ends or when one route is called, with no
+model call</td>
 <td>Asset upserts overwrite scalars and union arrays with no history;
 facts are append-only; cold regions are folded into digests that keep
-their members; a lesson has no edit, retire or delete path</td>
+their members; a lesson is retired when a reversed disposition retracts
+its last evidence row, and has no edit or delete path</td>
 <td>A task reads assets inside its declared scope and graph nodes of
-itself plus at most eight direct source tasks; lessons filter on
-category and on a company column nothing fills. One operator, no
-tenants</td>
+itself plus at most eight direct source tasks; a lesson is served to
+tasks of its company and category, and to every task when its source
+task had no company. One operator, no tenants</td>
 <td>A Go server with an embedded web UI; planner, worker, retester and
-platform agents on an external agent SDK; lessons appended to the
-planner and worker system prompts when an environment flag is set</td>
+platform agents on an external agent SDK; lessons framed in the nonce
+envelope and appended to the planner and worker system prompts when an
+environment flag is set</td>
 <td>A compaction pass folds settled graph regions into model-written
 digests; lesson extraction runs when a task reaches a terminal
 status</td>
-<td>A finding's disposition is set by a person and gates which lesson is
-built; a fact carries a declared confidence and source that one tool
-refuses on. The lesson's own status column has a single value</td>
+<td>A finding's disposition is set by a person, gates which lesson is
+built, and is copied onto the node the agents read as a label; a lesson
+is <code>candidate</code> or <code>retired</code> and the selection
+excludes retired rows; a fact carries a declared confidence and source
+that one tool refuses on</td>
 <td>Explicit one-hop task inheritance that is read-only by construction
 and tested negatively, a nonce-framed envelope for stored text
-re-entering prompts, digests that hide and never delete, and evidence
-bound to captured traffic</td>
-<td>Lesson ranking sorts unscoped lessons ahead of the task's own;
-lesson text derived from target output enters the system prompt outside
-the envelope; a false-positive disposition never reaches the agents'
-reads; and no lesson can be removed</td>
+re-entering prompts, digests that hide and never delete, evidence bound
+to captured traffic, and lessons that lose their support when the
+verdict behind them is reversed</td>
+<td>A false-positive verdict is absent from the planner's round overview
+and unchecked by goal proof; a lesson from a task with no company is
+served to every task; retraction waits for an extraction no interface
+triggers and deletes the evidence rows it withdraws; no lesson can be
+edited or deleted</td>
 </tr>
 <tr>
 <td><a href="../systems/athena/"><code>athena</code></a></td>
@@ -36893,7 +36902,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>212 of 819:</em> <a
+<p><em>213 of 819:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -36915,6 +36924,7 @@ href="../systems/arcon/"><code>arcon</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
 href="../systems/artesian/"><code>artesian</code></a>, <a
+href="../systems/artex/"><code>artex</code></a>, <a
 href="../systems/aura/"><code>aura</code></a>, <a
 href="../systems/autobot-ai/"><code>autobot-ai</code></a>, <a
 href="../systems/beever-atlas/"><code>beever-atlas</code></a>, <a
