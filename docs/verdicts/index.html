@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 818 reports.</strong></p>
+<p><strong>This page covers all 819 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33783,6 +33783,41 @@ across months and to reproduce why it believes each one.</li>
 <li>Do not copy when: you need memory scoped to a repository, a forget
 that removes data, or injection that stays silent on unrelated
 prompts.</li>
+</ul>
+<h3 id="agentic-graphrag"><a
+href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a></h3>
+<ul>
+<li>Best idea: <strong>a decision knows which version of each document
+it read.</strong> Each document support stores the content hash and
+activation sequence it was recorded against; the cutover that activates
+a new version flags every active decision citing it in the same
+transaction, and dependents are flagged by a bounded, restartable
+propagation during which every clear decision reads as unknown.</li>
+<li>Biggest risk: <strong>the reviewer can be the author.</strong>
+<code>reaffirm_decision</code> is a tool on the built-in agent; it
+refuses without a fresh fetch of each cited document at its current
+hash, which proves the text was read, not judged.</li>
+<li>Second risk: rejecting an extraction candidate stops the same key
+being queued for review and does not stop a later confident extraction
+writing the value; decision search filters by project and not by
+document scope.</li>
+<li>Most reusable component: the decision support model and its review
+queries in <code>agrag/decisions.py</code> and
+<code>agrag/cypher/decision_review.py</code>, with
+<code>flag_decisions_for_activation_query</code> in
+<code>agrag/cypher/documents.py</code>.</li>
+<li>Maturity impression: Apache-2.0, release v0.0.7; 58,040 lines of
+Python in <code>agrag/</code>, 179 commits from 20 August to 12 November
+2026; 2,313 pytest functions with the integration suite on Neo4j and
+FalkorDB in CI, not run here; the committed benchmark records are lite
+runs of one or two questions. Four marks: <code>trust_state</code>,
+<code>scope_enforced</code>, <code>human_review</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: agents answer from a document corpus, cite what they
+read, and must not act on a conclusion whose sources changed underneath
+it.</li>
+<li>Do not copy when: you need conversational memory of a user, or a
+person to sign off each conclusion.</li>
 </ul>
         </article>
       </div>

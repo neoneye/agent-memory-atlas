@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 818 reports.**
+**This page covers all 819 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7500,3 +7500,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: all rights reserved, read-and-run only. 8,010 lines of Python and 7,069 of JavaScript, 256 pytest functions and 360 node tests in CI, 156 commits in three weeks from three authors. Benchmark harness and results are private.
 - Study when: you need an assistant to keep dated facts straight across months and to reproduce why it believes each one.
 - Do not copy when: you need memory scoped to a repository, a forget that removes data, or injection that stays silent on unrelated prompts.
+
+### [`agentic-graphrag`](../systems/agentic-graphrag/)
+
+- Best idea: **a decision knows which version of each document it read.** Each document support stores the content hash and activation sequence it was recorded against; the cutover that activates a new version flags every active decision citing it in the same transaction, and dependents are flagged by a bounded, restartable propagation during which every clear decision reads as unknown.
+- Biggest risk: **the reviewer can be the author.** `reaffirm_decision` is a tool on the built-in agent; it refuses without a fresh fetch of each cited document at its current hash, which proves the text was read, not judged.
+- Second risk: rejecting an extraction candidate stops the same key being queued for review and does not stop a later confident extraction writing the value; decision search filters by project and not by document scope.
+- Most reusable component: the decision support model and its review queries in `agrag/decisions.py` and `agrag/cypher/decision_review.py`, with `flag_decisions_for_activation_query` in `agrag/cypher/documents.py`.
+- Maturity impression: Apache-2.0, release v0.0.7; 58,040 lines of Python in `agrag/`, 179 commits from 20 August to 12 November 2026; 2,313 pytest functions with the integration suite on Neo4j and FalkorDB in CI, not run here; the committed benchmark records are lite runs of one or two questions. Four marks: `trust_state`, `scope_enforced`, `human_review` and `negative_eval`.
+- Study when: agents answer from a document corpus, cite what they read, and must not act on a conclusion whose sources changed underneath it.
+- Do not copy when: you need conversational memory of a user, or a person to sign off each conclusion.

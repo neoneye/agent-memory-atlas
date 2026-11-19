@@ -519,6 +519,7 @@ page_kind: comparison
 - [`opencomputer`](../systems/opencomputer/)
 - [`clickhouse-loom`](../systems/clickhouse-loom/)
 - [`spookling-memory`](../systems/spookling-memory/)
+- [`agentic-graphrag`](../systems/agentic-graphrag/)
 
 ## Repos Inspected
 
@@ -1342,6 +1343,7 @@ page_kind: comparison
 - [diggerhq/opencomputer](https://github.com/diggerhq/opencomputer) at [`4129fb169152e6ff072bd013c625b79577134cce`](https://github.com/diggerhq/opencomputer/commit/4129fb169152e6ff072bd013c625b79577134cce) — read only, the Serverless Agents memory store, its admission and closure protocol, both runtimes' recall and save paths, the owner routes and their tests, from a depth-1 clone with history counts from the GitHub API; the screen reported no auto-running hook, a `Makefile` and a `prepublishOnly` script, and 28 dependency manifests inside the cooldown, which the shallow clone overstates. Nothing was installed, built or run; the Slack gateway in `computer/` was searched for memory and not otherwise traced, and the private code production lays over `services/managed-agents` was not available. Apache-2.0, with both SDK manifests declaring MIT and no MIT licence file in the tree
 - [ClickHouse/loom](https://github.com/ClickHouse/loom) at [`fc930e0c8d11c9b6865b7d210f42080bea6575ff`](https://github.com/ClickHouse/loom/commit/fc930e0c8d11c9b6865b7d210f42080bea6575ff) — read only, from a full clone of `main` on 19 November 2026, first read at `39243b1` from a depth-one clone on 18 November; scoped to `server/memory/`, the identity, auth, erasure, transport and storage paths it calls, the Claude Code plugin and the tests, with the code index, knowledge plane and dashboard read only where they touch memory. Ten auto-run surfaces, each read and none opened, the same ten at both pins. Nothing was installed, built or run, and none of the 28,036 tests were run; the benchmark headlines were recomputed from the CSVs under `bench/results/`. Apache-2.0
 - [Spookling/spookling-memory](https://github.com/Spookling/spookling-memory) at [`d362ec0a3f1dd68f87b912800d662e61d5ba063e`](https://github.com/Spookling/spookling-memory/commit/d362ec0a3f1dd68f87b912800d662e61d5ba063e) — read only, the log, judgement, fold, fact, routing, recall, hook, compaction, reset and MCP paths and their tests; nothing installed or run
+- [ontogr/agentic-graphrag](https://github.com/ontogr/agentic-graphrag) at [`757b77bdf51b32d5bbe433ee3a685f04150a8619`](https://github.com/ontogr/agentic-graphrag/commit/757b77bdf51b32d5bbe433ee3a685f04150a8619) — read only, from a full clone of `main` at release `v0.0.7`, scoped to the decision, history, candidate, versioning, retrieval-scope, agent-tool and MCP paths and their tests; loaders, resolution and community detection read only where they write what those paths read. No auto-run surface; fifteen build-time execution points, all `conftest.py` files and a Makefile. Nothing was installed, built or run. Apache-2.0
 
 ## What the licences actually say
 

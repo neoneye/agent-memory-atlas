@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python framework that builds a
+schema-shaped document graph and stores agent tasks and evidence-linked
+decisions that are flagged when a cited document changes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Agentic
+GraphRAG — Agent Memory Atlas">
+    <meta property="og:description" content="A Python framework that
+builds a schema-shaped document graph and stores agent tasks and
+evidence-linked decisions that are flagged when a cited document
+changes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agentic
+GraphRAG — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python framework that
+builds a schema-shaped document graph and stores agent tasks and
+evidence-linked decisions that are flagged when a cited document
+changes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Agentic GraphRAG — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Agentic GraphRAG",
+      "description": "A Python framework that builds a schema-shaped document graph and stores agent tasks and evidence-linked decisions that are flagged when a cited document changes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Decisions that know when their sources
+moved</p>
+          <h1>Agentic GraphRAG</h1>
+          <p class="document-deck">A Python framework that builds a
+schema-shaped document graph and stores agent tasks and evidence-linked
+decisions that are flagged when a cited document changes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ontogr/agentic-graphrag">
+              <span>Source</span>
+              <strong>ontogr/agentic-graphrag</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ontogr/agentic-graphrag/commit/757b77bdf51b32d5bbe433ee3a685f04150a8619" title="757b77bdf51b32d5bbe433ee3a685f04150a8619">
+              <span>Analyzed revision</span>
+              <code>757b77bd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ontogr--agentic-graphrag" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ontogr--agentic-graphrag</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0,
+in LICENSE and pyproject; the FinanceBench example data carries its own
+CC BY-NC 4.0 file</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>58,040
+lines of Python in agrag/ across 261 files, 2,145 of them a generated
+BAML client; 8,358 in benchmarks/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>179
+commits from 20 August to 12 November 2026, 126 of them by the leading
+author; release v0.0.7</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,313
+pytest functions in 354 files and 80,562 lines, 1,708 unit and 605
+integration; CI runs the integration suite against Neo4j, FalkorDB and
+the vector stores on push, pull request and nightly; I ran none of
+it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Agentic GraphRAG is a Python framework from ontogr that ingests
+documents into a schema-shaped knowledge graph on Neo4j or FalkorDB. It
+stores what an agent did with that graph as tasks, events and decisions.
+A built-in LangGraph agent and an MCP server share one set of tools for
+search, exact-passage fetch, navigation, citation checking, history and
+decisions.</p>
+<p>What is notable is the decision layer. A decision is recorded only
+when every document it cites was fetched in the same run at its current
+version. When a cited document changes, the cutover that activates the
+new version flags the decision for review in the same transaction. Until
+someone re-reads the current text and reaffirms, the agent's search
+leaves it out and the agent cannot cite it. Scope is a predicate on
+every evidence query, and the suite proves it against populated
+decoys.</p>
+<p>What is weak is who does the reviewing.
+<code>reaffirm_decision</code> is a tool on the built-in agent, so the
+model that wrote a decision can clear its own review flag after
+re-fetching. Rejecting an extraction candidate stops it being queued
+again and does not stop the same value entering the graph. The graph
+keeps one clock.</p>
+<p><strong>Licence.</strong> Apache-2.0, in <code>LICENSE</code> and
+<code>pyproject.toml</code>, which agree. The FinanceBench example under
+<code>examples/eval/financebench/</code> carries its own CC BY-NC 4.0
+licence file, so that dataset is not usable commercially.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There are three kinds of stored thing, and only one of them is an
+agent's belief. Document structure and extracted entities are the
+corpus. Task events are a log of what happened in a run. A
+<strong>decision</strong> is the agent's conclusion: a
+<code>choice_key</code> within a task, a conclusion and rationale,
+assumptions, open questions, and up to 20 typed supports pointing at
+passages, task events or earlier decisions
+(<code>agrag/decisions.py:924-976</code>).</p>
+<p>A decision has two state fields. <code>status</code> is
+<code>active</code>, <code>rejected</code> or <code>superseded</code>;
+<code>review_state</code> is <code>clear</code>,
+<code>needs_review</code> or <code>unknown</code>
+(<code>agrag/common/data_models/decision.py:25-43</code>). The docstring
+is precise about the second: <code>needs_review</code> <em>"does not
+mean the decision is false"</em>, and <code>unknown</code> is treated as
+needing review.</p>
+<p>A belief becomes trusted by being recorded against current evidence.
+It stops being trusted in three ways: a cited document changes, a
+dependency is flagged, or a reviewer rejects or supersedes it. A flagged
+decision returns to <code>clear</code> only through
+<code>reaffirm_decision</code>, which requires a fetch of every cited
+document at its current content hash
+(<code>agrag/decisions.py:876-893</code>).</p>
+<p>A rejected decision closes its choice. <code>_record</code> refuses a
+new decision for a <code>(task, choice_key)</code> that has any
+revision, and supersede needs an active one, so nothing more can be
+recorded for that choice in that task
+(<code>agrag/decisions.py:636-641</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a decision is written only on supports fetched at their current version; a document change flags it, and a re-fetch, a replacement or a rejection ends the review</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a decision is written only on supports fetched at their current version; a document change flags it, and a re-fetch, a replacement or a rejection ends the review
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    AG[&quot;built-in agent:&lt;br/&gt;record_decision tool&quot;]
+    MCP[&quot;MCP client:&lt;br/&gt;writes off by default&quot;]
+    PY[&quot;Python API&quot;]
+    AG ~~~ MCP ~~~ PY
+  end
+  writers --&gt; SUP{&quot;every support fetched&lt;br/&gt;at its current version&lt;br/&gt;in this project?&quot;}
+  SUP --&gt;|&quot;no&quot;| REF[&quot;refused,&lt;br/&gt;nothing written&quot;]
+  SUP --&gt;|&quot;yes&quot;| ACT[&quot;decision active,&lt;br/&gt;review_state clear&quot;]
+  ACT --&gt; SRCH[&quot;agent search and&lt;br/&gt;citation: active and&lt;br/&gt;clear only&quot;]
+  SRCH ~~~ DOC
+  ACT --&gt; DOC[&quot;cited document&lt;br/&gt;updated or deleted&quot;]
+  DOC --&gt; NR[&quot;needs_review in the&lt;br/&gt;cutover transaction;&lt;br/&gt;dependents queued&quot;]
+  NR --&gt; RA[&quot;reaffirm: re-fetch&lt;br/&gt;current text; a tool&lt;br/&gt;the agent holds&quot;]
+  NR --&gt; SS[&quot;supersede: new&lt;br/&gt;revision, old kept&quot;]
+  NR --&gt; RJ[&quot;reject: MCP flag&lt;br/&gt;or Python API&quot;]
+  RA --&gt; ACT
+  RJ --&gt; CL[&quot;choice closed:&lt;br/&gt;no new record for&lt;br/&gt;this choice_key&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The library is the system. A deployment needs a graph database (Neo4j
+or FalkorDB), optionally a vector store (Qdrant, Milvus or Weaviate;
+otherwise vectors live in the graph), an embedder, and an LLM for the
+parts that use one. GLiNER runs locally and needs no key; an LLM is
+needed for hybrid extraction, community reports, the resolver's last
+tier and the built-in agent.</p>
+<p>Ingestion goes through Docling into a document hierarchy, then
+chunking, extraction, entity resolution and storage inside a cutover
+job, so a new version becomes visible in one transaction
+(<code>agrag/ingestion/_cutover.py</code>). The <code>agrag-mcp</code>
+entry point starts the MCP server (<code>pyproject.toml:87-88</code>).
+It refuses to start without a document scope, and it refuses writes
+unless a trusted project id and agent id are configured
+(<code>agrag/mcp_server/settings.py:71-84</code>).</p>
+<p>Operating it means running a graph database and keeping a schema. The
+schema is the ontology the extractor, the graph labels, the retrieval
+queries and the agent all read, and changing it is a reviewed patch.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Ingest.</strong> Docling parts become a Document, Sections,
+Chunks, Tables and Figures joined by <code>HAS_CHILD</code> and
+<code>HAS_PART</code>; each <code>HAS_PART</code> edge carries
+<code>valid_at</code> stamped at ingest and <code>invalid_at</code> set
+when a later version closes it
+(<code>agrag/ingestion/_lexical_backbone.py:43-60</code>,
+<code>agrag/cypher/relations.py:100-118</code>).</li>
+<li><strong>Extract.</strong> GLiNER keeps spans above each label's cut;
+spans in the band below it and relations below their cut or off the
+schema's allowed pairs become candidates
+(<code>agrag/ingestion/_gliner_decode.py:182-190</code>,
+<code>:240-268</code>).</li>
+<li><strong>Activate.</strong> The cutover records an activation and
+runs <code>flag_decisions_for_activation_query</code>, which flags every
+active decision with a current document support on that document whose
+recorded activation sequence differs, or whose document was deleted or
+purged (<code>agrag/cypher/documents.py:139-170</code>,
+<code>agrag/ingestion/_cutover.py:524-530</code>).</li>
+<li><strong>Run.</strong> The agent loads the task view, marks
+interrupted steps, expands at most 20 queued review units, records the
+user message as an event, and reuses completed step results that are
+still valid (<code>agrag/agents/build.py:165-180</code>).</li>
+<li><strong>Decide.</strong> <code>record_decision</code> resolves
+supports inside one transaction and refuses a document support not
+fetched with status <code>ok</code>, an event support outside the
+project, and a decision support that is not active
+(<code>agrag/decisions.py:924-976</code>).</li>
+<li><strong>Review.</strong> <code>reaffirm_decision</code>,
+<code>supersede_decision</code> and <code>reject_decision</code>
+(<code>agrag/decisions.py:190-314</code>);
+<code>continue_decision_review</code> expands queued units one
+dependency hop at a time (<code>:326-357</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <code>Task</code> node under a <code>Project</code> holds an
+ordered event log (<code>message</code>, <code>tool_call</code>,
+<code>tool_result</code>, <code>note</code>) with a sequence number and
+payload hash per event, and named <code>Step</code> nodes with a state
+and an optional result. A <code>Decision</code> hangs off its task by
+<code>MADE</code>; each <code>DecisionSupport</code> node records its
+kind, target, ordinal, <code>current</code> flag and, for a document,
+the content hash and activation sequence it was recorded against.
+Supersession links the new revision to the old by
+<code>SUPERSEDES</code>, and the old keeps its node.</p>
+<p>The decision row stores <code>author</code>, <code>rejected_by</code>
+and the reviewer as the configured <code>agent_id</code>, not as a
+verified principal (<code>agrag/decisions.py:653-673</code>,
+<code>:837</code>, <code>:855</code>). Every task, decision and support
+query carries <code>project_id</code>.</p>
+<p>Extraction candidates are <code>Candidate</code> nodes keyed by
+<code>kind|normalized label|normalized text or endpoints</code>, where
+normalization folds case, accents, punctuation and a leading English
+article (<code>agrag/common/data_models/candidate.py:32-55</code>).
+Their state is <code>pending</code>, <code>approved</code> or
+<code>rejected</code>. <code>Candidate</code> is a reserved label that
+no schema may declare (<code>agrag/cypher/entities.py:73</code>,
+<code>:91</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Passage search is lexical, semantic or hybrid with an optional
+reranker over the top hybrid results. Every evidence query restricts to
+documents in <code>$scope_ids</code> and to parts with an open
+<code>HAS_PART</code> edge, so superseded and deleted text drops out
+(<code>agrag/cypher/evidence.py:34-43</code>). Entity search runs per
+schema label and returns an entity only if it has a passage in scope;
+relation expansion returns, per relation, up to a limit of in-scope
+supporting passages and marks a relation with none as a bare connection
+(<code>agrag/cypher/evidence.py:371-393</code>, <code>:416-448</code>).
+Theme search matches the query to embedded community reports and returns
+the in-scope passages behind each theme, never the report text
+(<code>agrag/cypher/community_read.py:82-115</code>).</p>
+<p>Fetch is by evidence id and returns the version the id names. An id
+from before an edit returns the old text marked superseded; an
+out-of-scope id answers exactly as a missing one does. The citation
+check flags any cited id the run did not fetch, that is out of scope, or
+that is malformed.</p>
+<p>Decision search is full-text over conclusion and rationale, filtered
+to <code>status = 'active'</code> and the project
+(<code>agrag/decisions.py:484-521</code>). The agent's tool then drops
+any hit whose review state is not <code>clear</code> or whose supports
+are not all current (<code>agrag/agents/tools/core.py:431-446</code>).
+The MCP tool calls the library directly, so an MCP client receives
+<code>needs_review</code> decisions with their state in the payload
+(<code>agrag/mcp_server/read_tools.py:285-293</code>). Neither filters
+by document scope.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous graph transactions. An event append allocates
+its sequence and creates the event in one write callback; a decision
+write, its supports and its review flag share one transaction, and a
+request id makes a retry return the stored result of the first call
+(<code>agrag/decisions.py:1068-1118</code>). A decision written while
+one of its fetched documents changed is recorded with
+<code>review_state = 'needs_review'</code> and reason
+<code>source_changed_during_recording</code>
+(<code>:650-652</code>).</p>
+<p>Extraction runs during ingestion, not during a conversation. In
+<code>hybrid</code> mode the LLM reads only the chunks GLiNER is least
+sure of, within a budget, and its labels are built from the schema at
+call time. Ingestion blocks until the cutover commits; a passage is
+searchable once its version is active.</p>
+<p>Review propagation is lazy and bounded. The direct flag is written in
+the cutover; flags reach dependent decisions only when
+<code>continue_decision_review</code> runs. While any propagation is
+pending, the project carries <code>review_incomplete</code>, and every
+decision whose own state is <code>clear</code> reads as
+<code>unknown</code> (<code>agrag/decisions.py:111-124</code>), which
+the agent's filters treat as not clear.</p>
+<p>Rejecting an extraction candidate writes its state. Before the next
+upsert, <code>blocked_candidate_keys</code> drops candidates whose key
+has a committed reviewed row, and the upsert query checks again under
+the key's lock
+(<code>agrag/ingestion/_candidate_stage.py:206-213</code>,
+<code>agrag/cypher/candidates.py:44-92</code>). The entity and relation
+writers do not read candidate state, so a later chunk where GLiNER
+scores the same span above its cut writes the entity.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The built-in agent exposes evidence tools, history tools and decision
+tools: <code>record_decision</code>, <code>supersede_decision</code>,
+<code>search_decisions</code>, <code>list_decisions_for_review</code>,
+<code>reaffirm_decision</code> and <code>continue_decision_review</code>
+(<code>agrag/agents/tools/core.py:550-572</code>). It has no reject
+tool, and its prompt says <em>"You cannot reject a human decision"</em>
+(<code>agrag/agents/prompts.py:31</code>). Its decision-support check
+refuses a cited decision that is not active and clear, or whose supports
+are not all current (<code>:595-612</code>).</p>
+<p>The MCP server starts read-only. Writes need
+<code>MCP_READ_ONLY=false</code> with a trusted project id and agent id;
+<code>reject_decision</code> is registered only with
+<code>MCP_ALLOW_REJECT</code>
+(<code>agrag/mcp_server/write_tools.py:263-280</code>). The document
+scope is configuration, and no tool takes a scope argument.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-clears-a-review-flag">What clears a review flag</h3>
+<p><code>reaffirm_decision</code> refuses unless every document the
+decision cites is live and was fetched in this session at its current
+content hash, and unless no decision it depends on still needs review.
+It replaces the document supports and records the caller as reviewer
+(<code>agrag/decisions.py:259-314</code>, <code>:765-875</code>). The
+check is mechanical. It proves the current text was read, not that
+anyone judged it, and the built-in agent holds the tool
+(<code>agrag/agents/tools/core.py:519-541</code>). The integration tests
+cover the refusals: a reaffirm without a current fetch keeps the flag, a
+removed document cannot be revalidated, and a reaffirm is refused while
+a dependency needs review
+(<code>tests/integration/graphdb/history/test_decision_review.py:382-433</code>,
+<code>:529</code>).</p>
+<h3 id="what-a-rejection-stops">What a rejection stops</h3>
+<p>A rejected decision closes its <code>(task, choice_key)</code> for
+good. A rejected candidate stops the same key being queued for review
+again. Neither is keyed on the rejected value. A different task can
+record the same conclusion, and a confident extraction writes the value
+a reviewer rejected as a candidate.</p>
+<h3 id="what-the-reads-leave-out">What the reads leave out</h3>
+<ul>
+<li><strong>Decision search</strong> filters by project and not by
+document scope, so a decision whose supports are outside a caller's
+scope returns its conclusion and rationale. A fetch of its support ids
+answers unavailable.</li>
+<li><strong>MCP decision search</strong> labels
+<code>needs_review</code> and <code>unknown</code> rather than dropping
+them; only the built-in agent's tool drops them.</li>
+</ul>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — awarded on decision
+<code>status</code> and <code>review_state</code>. Rejected and
+superseded decisions are out of every search and cannot be cited;
+<code>needs_review</code> and <code>unknown</code> are out of the
+agent's search and citations, and labelled on MCP.</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on
+<code>$scope_ids</code> in every evidence query and
+<code>project_id</code> on every history query, both from configuration.
+Decision search is the gap.</li>
+<li><strong><code>human_review</code></strong> — awarded on the
+candidate queue. Model output below the confidence cut or off the
+schema's pairs waits outside search, and only
+<code>approve_candidates</code> turns it into graph content, through a
+schema patch. The agent and the MCP server cannot reach it. Decision
+review is not on this mark, since the agent can reaffirm.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>tombstone</code></strong> — withheld. The two
+rejection records close a choice slot and a review question, not a
+value.</li>
+<li><strong><code>bitemporal</code></strong> — withheld.
+<code>valid_at</code> and <code>invalid_at</code> on
+<code>HAS_PART</code> are both stamped from the clock at ingest and
+cutover, one record-time axis, and decisions carry
+<code>created_at</code> only.</li>
+<li><strong><code>audit_log</code></strong> — withheld. Task events log
+the agent's work, and <code>reaffirm_decision</code> appends a note
+event (<code>agrag/decisions.py:867</code>), but reject and supersede
+write no event, and <code>delete_task</code> removes a task's events and
+decisions together (<code>agrag/history/retention.py:96-158</code>).
+Superseded decisions and closed <code>HAS_PART</code> edges keep history
+as state, not as a mutation record.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>Redaction and deletion</strong> are Python-only
+(<code>redact_event</code>, <code>delete_task</code>), and dependent
+decisions in other tasks are flagged <code>needs_review</code> rather
+than left citing a deleted event.</li>
+<li><strong>FalkorDB</strong> can retain earlier statements when a later
+statement in a write fails, so a failed multi-statement history write
+may leave partial state; the module says so
+(<code>agrag/history/tasks.py:1-8</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 2,313 pytest functions, 1,708 unit and 605 integration.
+The integration workflow runs on push, pull request and nightly against
+Neo4j, FalkorDB and the vector stores as services
+(<code>.github/workflows/integration.yml:3-10</code>,
+<code>:44-110</code>). I ran none of it.</p>
+<p><code>negative_eval</code> rests on two populated cases:</p>
+<ul>
+<li><code>tests/integration/retrieval/evidence/test_search.py:750-790</code>
+ingests 90 decoys whose text ranks above the target — 30 out of scope,
+30 deleted, 30 superseded — and one live passage, and asserts the hits
+are exactly the live document.</li>
+<li><code>tests/integration/retrieval/evidence/test_entities.py:410-434</code>
+asserts an entity whose only passage is out of scope is absent, and the
+same query with that document in scope returns it.</li>
+</ul>
+<p>The decision lifecycle has its own integration file: activation and
+purge flags, propagation to dependents, a rejected parent making
+descendants <code>unknown</code> until propagation runs, and the
+reaffirm refusals
+(<code>tests/integration/graphdb/history/test_decision_review.py:58-632</code>).
+No test asserts that a rejected candidate's value stays out of the
+graph, which section 7 shows it does not.</p>
+<p>The committed benchmark records are five lite runs of one or two
+questions each, on FinanceBench, GraphRAG-Bench, BEAM, LegalBench-RAG
+and HealthBench, with traces (<code>benchmarks/results/lite/</code>).
+They show the harness runs; they are not an evaluation. No paper is
+associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Record a decision against the version it read.</strong>
+Store the content hash and activation sequence on each document support,
+and flag the decision in the same transaction that activates a new
+version. A stale conclusion then announces itself instead of waiting to
+be found.</li>
+<li><strong>Make clearing a flag cost a re-read.</strong> Reaffirm only
+with a fetch of every cited document at its current hash, and refuse
+while a dependency is still flagged.</li>
+<li><strong>Read as unknown while propagation is pending.</strong> A
+bounded, restartable propagation is cheap if every <code>clear</code>
+decision reads as <code>unknown</code> until it finishes.</li>
+<li><strong>Make scope configuration, not an argument.</strong> No tool
+takes a scope, and an out-of-scope id answers exactly as a missing
+one.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A review verb on the reviewed party's surface.</strong> The
+agent that records a decision can reaffirm it; a person-only review
+needs the verb off the agent's tools or an actor check.</li>
+<li><strong>A rejection keyed on the question.</strong> Closing a review
+slot or a choice key does not stop the value; key the refusal on the
+value and consult it in the writer.</li>
+<li><strong>A precedent search outside the evidence scope.</strong>
+Filter decisions by the scope of their supports, or a narrowly scoped
+session reads conclusions drawn from documents it may not see.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a team that already has an ontology and wants agents to
+answer from a document corpus with citations that can be checked, and to
+keep conclusions that go stale when the documents move. It suits work
+where the risk is acting on an outdated decision rather than forgetting
+a preference. Walk away if you want conversational memory of a user:
+there is no profile, no preference store and no fact extracted from a
+conversation. Walk away too if a person must sign off each conclusion,
+since the review flag is the agent's to clear.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>reaffirm_decision</code> is meant to stay on the
+built-in agent, given the prompt's line that it cannot reject a human
+decision.</li>
+<li>How the rejected-candidate key is meant to interact with later
+confident extractions of the same span.</li>
+<li>What the full benchmark runs show; the README does not publish
+numbers, and the committed records are lite runs.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Decisions: <code>agrag/decisions.py</code>,
+<code>agrag/common/data_models/decision.py</code>,
+<code>agrag/cypher/decision_review.py</code>,
+<code>agrag/cypher/history.py</code></li>
+<li>History: <code>agrag/history/tasks.py</code>,
+<code>agrag/history/retention.py</code></li>
+<li>Candidates: <code>agrag/candidates/review.py</code>,
+<code>agrag/cypher/candidates.py</code>,
+<code>agrag/common/data_models/candidate.py</code>,
+<code>agrag/ingestion/_candidate_stage.py</code>,
+<code>agrag/ingestion/_gliner_decode.py</code></li>
+<li>Versions and cutover: <code>agrag/ingestion/_cutover.py</code>,
+<code>agrag/ingestion/_lexical_backbone.py</code>,
+<code>agrag/cypher/documents.py</code>,
+<code>agrag/cypher/relations.py</code></li>
+<li>Retrieval: <code>agrag/cypher/evidence.py</code>,
+<code>agrag/cypher/community_read.py</code>,
+<code>agrag/evidence/</code></li>
+<li>Agent and MCP: <code>agrag/agents/tools/core.py</code>,
+<code>agrag/agents/build.py</code>,
+<code>agrag/agents/prompts.py</code>,
+<code>agrag/mcp_server/settings.py</code>,
+<code>agrag/mcp_server/read_tools.py</code>,
+<code>agrag/mcp_server/write_tools.py</code></li>
+<li>Tests:
+<code>tests/integration/retrieval/evidence/test_search.py</code>,
+<code>tests/integration/retrieval/evidence/test_entities.py</code>,
+<code>tests/integration/graphdb/history/test_decision_review.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No validity-time field.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_until|as_of|event_time|occurred_at' -- agrag</code>
+returns nothing;
+<code>git grep -n -E '"valid_at": |r\.invalid_at = ' -- agrag</code>
+matches <code>agrag/ingestion/_lexical_backbone.py:54</code>, stamped
+from <code>datetime.now</code>, and
+<code>agrag/cypher/relations.py:112</code>, whose
+<code>$closed_at</code> is <code>datetime.now</code> at
+<code>agrag/ingestion/_document_lifecycle.py:213</code>.</li>
+<li><strong>The entity writers do not read candidate state.</strong>
+<code>git grep -l -E 'CANDIDATE_LABEL|blocked_candidate|candidate_key\(' -- agrag</code>
+lists the candidate modules, the store, the schema, document cleanup,
+vector targets and <code>agrag/cypher/entities.py</code>, where the
+label appears only as a reserved name at lines 73 and 91.</li>
+<li><strong>Candidate review is off the agent and MCP surfaces.</strong>
+<code>git grep -n -E 'approve_candidates|reject_candidates|list_candidates|candidate_patch' -- agrag/agents agrag/mcp_server</code>
+returns nothing; the same pattern over <code>agrag/candidates</code>
+matches six lines.</li>
+<li><strong>Decision reads carry no document scope.</strong>
+<code>git grep -n 'scope_ids' -- agrag/decisions.py agrag/cypher/history.py agrag/cypher/decision_review.py</code>
+returns nothing;
+<code>git grep -c 'scope_ids' -- agrag/cypher/evidence.py</code> counts
+11.</li>
+<li><strong>Retention is Python-only.</strong>
+<code>git grep -n -E 'delete_task|redact_event' -- agrag/agents agrag/mcp_server</code>
+returns nothing.</li>
+<li><strong>Only reaffirm writes a note event.</strong>
+<code>git grep -n '_append_note(' -- agrag/decisions.py</code> matches
+line 867, inside <code>_reaffirm</code>, and the definition at 895.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|CITATION\.cff' -- README.md</code>
+matches only the GLiNER citation at line 364, and the tree has no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-19</strong> — <a
+href="https://github.com/ontogr/agentic-graphrag/commit/757b77bdf51b32d5bbe433ee3a685f04150a8619"><code class="commit-id" title="757b77bdf51b32d5bbe433ee3a685f04150a8619">757b77bd…</code></a>
+— first reading, from a full clone of <code>main</code> at release
+<code>v0.0.7</code>, scoped to the decision, history, candidate,
+versioning, retrieval-scope, agent-tool and MCP paths and their tests;
+the document loaders, resolution tiers and community detection were read
+only where they write what those paths read. Screened first: no auto-run
+surface; fifteen build-time execution points, fourteen
+<code>conftest.py</code> files and a Makefile; one unpinned surface, the
+docs site's <code>package.json</code>; nothing inside the cooldown.
+Apache-2.0, no rider. Nothing installed, built or run. Four marks:
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>human_review</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

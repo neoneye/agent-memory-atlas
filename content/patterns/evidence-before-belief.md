@@ -271,6 +271,8 @@ new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
 
 [LCM-X](../../systems/lcm-x/) moves the check into the database. An assertion insert aborts unless its quoted span equals the source message's substring at the stated offsets, and an update or deletion of the message marks every receipt derived from it `source_updated` or `source_deleted` by trigger, so default reads drop the claim whichever code path changed the source (`db_bootstrap.py:2208-2292`). The retained evidence is the raw row, and a model-proposed `supersedes` must quote an explicit update word from it. The gap is the other direction: invalidation hides the derived row and keeps its verbatim quote, so deleting the evidence does not delete what was derived from it.
 
+[Agentic GraphRAG](../../systems/agentic-graphrag/) holds an agent's decisions to the version of each document they read. A decision is refused unless every document support was fetched in the same run with status `ok`, and the support stores the content hash and activation sequence it saw (`agrag/decisions.py:924-976`). The cutover that activates a new version flags every active decision citing that document in the same transaction (`agrag/cypher/documents.py:139-170`), and clearing the flag requires a fresh fetch at the current hash. The built-in agent holds the reaffirm tool, so the check proves the text was read, not that a person judged it.
+
 ### Related: admission gates rather than evidence
 
 These decide what may become a belief — a shared derivation, a confirmation turn,

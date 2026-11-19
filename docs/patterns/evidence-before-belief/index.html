@@ -485,6 +485,17 @@ raw row, and a model-proposed <code>supersedes</code> must quote an
 explicit update word from it. The gap is the other direction:
 invalidation hides the derived row and keeps its verbatim quote, so
 deleting the evidence does not delete what was derived from it.</p>
+<p><a href="../../systems/agentic-graphrag/">Agentic GraphRAG</a> holds
+an agent's decisions to the version of each document they read. A
+decision is refused unless every document support was fetched in the
+same run with status <code>ok</code>, and the support stores the content
+hash and activation sequence it saw
+(<code>agrag/decisions.py:924-976</code>). The cutover that activates a
+new version flags every active decision citing that document in the same
+transaction (<code>agrag/cypher/documents.py:139-170</code>), and
+clearing the flag requires a fresh fetch at the current hash. The
+built-in agent holds the reaffirm tool, so the check proves the text was
+read, not that a person judged it.</p>
 <h3 id="related-admission-gates-rather-than-evidence">Related: admission
 gates rather than evidence</h3>
 <p>These decide what may become a belief — a shared derivation, a
