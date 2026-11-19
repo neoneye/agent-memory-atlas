@@ -135,8 +135,9 @@ them tests</strong></div>
             <div class="meta-pill fact-pill"><span>Activity</span><strong>8,699
 commits reachable from tag v1.0.2 under eight author names, 8,421 of
 them under two spellings of one name, 3 June – 16 October 2026; the
-testing branch deleted the memory module on 7 November
-2026</strong></div>
+testing branch deleted the memory module on 7 November 2026, and release
+v1.1.0 on 16 November 2026 ships its replacement as a binary built from
+private source</strong></div>
             <div class="meta-pill fact-pill"><span>Tests</span><strong>600
 Go test functions in 196 test files under server-go/modules/memory,
 2,408 across server-go, 787 C test files under src/tests; the
@@ -178,11 +179,47 @@ built-in memory owner is provided"</em>. The client contract package
 <code>server-go/memory</code> remains at 1,466 lines, beside eval
 corpora under <code>tests/eval</code> and a Postgres schema that keeps
 the refusal table. <code>RakuenSoftware/aims-db</code> is not publicly
-readable on 14 November 2026, so no public code replaces the Go owner.
+readable on 19 November 2026, so no public code replaces the Go owner.
 Between the tag and the removal, <a
 href="https://github.com/RakuenSoftware/aimee/commit/ec5fef7af156bd52431adff44318a2dd90c4cb8d"><code class="commit-id" title="ec5fef7af156bd52431adff44318a2dd90c4cb8d">ec5fef7a…</code></a>
 on 24 October 2026 deleted the Cognee and Hillock providers that
 <code>v1.0.2</code> ships, 4,559 lines of the module.</p>
+<p><strong>Release <code>v1.1.0</code> ships the replacement as a
+binary.</strong> Tagged on 16 November 2026 at <a
+href="https://github.com/RakuenSoftware/aimee/tree/825fe79c39a13ac0695a72039c535a5b494255ec"><code class="commit-id" title="825fe79c39a13ac0695a72039c535a5b494255ec">825fe79c…</code></a>,
+it serves memory from the private <code>aims-db</code> database and an
+Aimee memory module. Both arrive as a 43 MB vendored archive, <a
+href="https://github.com/RakuenSoftware/aimee/blob/825fe79c39a13ac0695a72039c535a5b494255ec/vendor/aims-memory/README.md"><code>vendor/aims-memory/linux-amd64.tar.xz</code></a>:
+seven stripped executables, static bridge archives that
+<code>Dockerfile.server</code> links into <code>aimee-server</code> and
+<code>aimee-kb</code>, and the provisioning scripts.
+<code>bundle.json</code> pins the archive to an
+<code>aims_db_commit</code> and to a hash of every public header its
+objects were compiled against. The public tree keeps the client SDK
+(<code>server-go/memory</code>, 1,495 lines), the unavailable adapter,
+the provisioning command
+(<code>deploy/container/memory-provision.py</code>) and the host side of
+a provider request.</p>
+<p>That host side fails closed and decides nothing about content. Before
+a request leaves, <code>ingress_revalidate_sources</code> asks the
+implementation for a source-release plan and refuses assembly unless the
+answer is <code>admitted</code> with a fresh 32-character ticket (<a
+href="https://github.com/RakuenSoftware/aimee/blob/825fe79c39a13ac0695a72039c535a5b494255ec/src/server/ingress_preinject.c#L532-L629"><code>src/server/ingress_preinject.c:532-629</code></a>).
+The send fence refuses when that revalidation is missing from the link
+(<a
+href="https://github.com/RakuenSoftware/aimee/blob/825fe79c39a13ac0695a72039c535a5b494255ec/src/wire_fence.c#L102-L110"><code>src/wire_fence.c:102-110</code></a>).
+Whether a source is still valid is decided inside the binary. So is
+everything the marks below rest on: the refusal table, the serving
+predicate and the candidate queue lived in the deleted Go owner. The
+release notes describe its successor — each serving decision recorded
+and reversible, retired records kept and withheld, a relation outside
+the ontology promoted once it recurs in three notes — and none of that
+can be read in this repository. The notes and the module page also
+disagree on whether a KB link carries memory (<a
+href="https://github.com/RakuenSoftware/aimee/blob/825fe79c39a13ac0695a72039c535a5b494255ec/docs/releases/v1.1.0/RELEASE_NOTES.md#L56-L62"><code>RELEASE_NOTES.md:56-62</code></a>,
+<a
+href="https://github.com/RakuenSoftware/aimee/blob/825fe79c39a13ac0695a72039c535a5b494255ec/docs/modules/memory.md#L76-L77"><code>docs/modules/memory.md:76-77</code></a>).
+This report therefore stays at <code>v1.0.2</code>.</p>
 <p>aimee is a personal-assistant runtime whose C services host a Go
 memory module that makes every memory decision in both of its
 placements, over one Postgres schema. A model-authored typed fact waits
@@ -205,9 +242,11 @@ third-party components and omits the wheels. A reader can install those
 bytes and cannot read, modify or rebuild them from this repository. The
 plugin's source is public in <code>RakuenSoftware/aimee-native</code>
 under AGPL-3.0 on 14 November 2026, and nothing in this tree links the
-wheels to it. On <code>testing</code> the memory owner itself moved to a
-private repository on 7 November 2026, so the grant there covers a
-client contract and an adapter that reports absence.</p>
+wheels to it. From <code>v1.1.0</code> the release image links static
+archives built from a private repository, and their README says this
+repository's licence <em>"does not by itself describe the terms"</em>
+under which they are distributed
+(<code>vendor/aims-memory/README.md</code>).</p>
 <p>There are two memory shapes and one owner. The episodic store is a
 <code>memories</code> table with tiers, an epistemic kind, a provenance
 category, validity bounds and a lifecycle state. The <strong>typed-fact
@@ -1367,6 +1406,22 @@ gh api repos/RakuenSoftware/aimee/releases --paginate --jq &#39;.[].tag_name&#39
 curl -s -o /dev/null -w &#39;%{http_code}\n&#39; https://pypi.org/pypi/aimee-native-runtime/json
 curl -sL https://zenodo.org/api/records/23453926</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-11-19</strong> — <a
+href="https://github.com/RakuenSoftware/aimee/commit/825fe79c39a13ac0695a72039c535a5b494255ec"><code class="commit-id" title="825fe79c39a13ac0695a72039c535a5b494255ec">825fe79c…</code></a>
+— release <code>v1.1.0</code> read; the report stays at
+<code>v1.0.2</code>. The release replaces the Go memory owner with the
+private <code>aims-db</code> database and memory module, shipped as a
+vendored binary archive that the server image links and provisions per
+deployment. The public tree holds the SDK, the unavailable adapter, the
+provisioning command and a host side that refuses a provider request
+unless the implementation revalidates its sources (<a
+href="#1-executive-summary">section 1</a>). No memory mechanism in
+<code>v1.1.0</code> is source, so no mark can rest on it, and
+<code>v1.0.2</code> remains the last tagged tree that holds one.
+Screened at <code>v1.1.0</code> from a depth-one clone: the same
+<code>.claude/hooks/</code> and <code>src/Makefile</code> surfaces as at
+<code>v1.0.2</code>; the archive's file list was read and nothing in it
+was unpacked or run.</p>
 <p><strong>2026-11-14</strong> — <a
 href="https://github.com/RakuenSoftware/aimee/commit/204d4e55828993a7683cb2610fb4165e44cabb9f"><code class="commit-id" title="204d4e55828993a7683cb2610fb4165e44cabb9f">204d4e55…</code></a>
 — release <code>v1.0.2</code>, 166 commits on, and the last tagged tree
