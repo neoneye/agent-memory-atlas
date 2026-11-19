@@ -2084,17 +2084,18 @@ on the agent id the requester declares. It carries
 <code>bitemporal</code>, <code>scope_enforced</code>,
 <code>audit_log</code> and <code>negative_eval</code>.</p>
 <p><strong><a href="../systems/clickhouse-loom/">Loom</a> judges every
-write against its peers before the insert, and lets its restore paths
-write back what its blacklist refuses.</strong> An Apache-2.0 server
-from ClickHouse, Inc. that keeps team memory, documents and a code index
-in ClickHouse and serves them over MCP and HTTP. Each write is checked
-against a pattern blacklist and the closest active peers, every change
-is a kept version, an LLM resolver retires contradicted rows with an
-audit row and an Undo, and memories linked to code leave search when the
-code goes. The blacklist holds on every intake path, model extraction
-included, and not on <code>memory.restore</code>, rollback or
-consolidate; the chunk leg serves text behind a retired fact. Seven
-marks: <code>tombstone</code>, <code>trust_state</code>,
+write against its peers before the insert, and checks every restore
+against its blacklist, but no forget writes a pattern.</strong> An
+Apache-2.0 server from ClickHouse, Inc. that keeps team memory,
+documents and a code index in ClickHouse and serves them over MCP and
+HTTP. Each write is checked against a pattern blacklist and the closest
+active peers, every change is a kept version, an LLM resolver retires
+contradicted rows with an audit row and an Undo, and memories linked to
+code leave search when the code goes. The blacklist holds on every
+intake and restore path, model extraction included, and no delete,
+forget or erasure writes a pattern, so a removed value can be extracted
+again; session summaries reach search with no status. Seven marks:
+<code>tombstone</code>, <code>trust_state</code>,
 <code>bitemporal</code>, <code>scope_enforced</code>,
 <code>audit_log</code>, <code>human_review</code> and
 <code>negative_eval</code>.</p>

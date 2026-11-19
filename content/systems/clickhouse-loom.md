@@ -7,22 +7,22 @@ page_kind: system
 source_name: "ClickHouse/loom"
 source_url: https://github.com/ClickHouse/loom
 archive_name: "ClickHouse--loom"
-revision: 39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc
-revision_url: https://github.com/ClickHouse/loom/commit/39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc
-analyzed_at: 2026-11-18
+revision: fc930e0c8d11c9b6865b7d210f42080bea6575ff
+revision_url: https://github.com/ClickHouse/loom/commit/fc930e0c8d11c9b6865b7d210f42080bea6575ff
+analyzed_at: 2026-11-19
 licence: "Apache-2.0, in LICENSE with a NOTICE naming ClickHouse, Inc. and a THIRD_PARTY_NOTICES file for bundled components under MIT, BSD, ISC, MPL-2.0, OFL and CC BY-SA 4.0; agrees with pyproject and the plugin manifests"
-size: "513,695 lines of Python under server/ in 1,740 files, 158,862 of them in server/memory/ (542 files); 99,726 lines of dashboard TypeScript, 62,975 in the Python and TypeScript SDKs, 23,231 in agent integrations, 69,572 in bench/"
-activity: "753 commits on main from 8 October to 18 November 2026, 700 of them by the leading author of fifteen contributors; release v1.2.0 on 12 November 2026. Counted through the GitHub API; the reading used a depth-one clone"
-tests: "27,617 pytest functions in tests/ (25,444 unit in 2,267 files, 2,157 integration in 323 files), 736,455 lines; CI runs unit tests in random order with a 40% coverage floor and the integration suite against a real ClickHouse with a fake embedder and model. I ran none"
+size: "518,914 lines of Python under server/ in 1,758 files, 159,103 of them in server/memory/ (542 files); 64,531 in the Python and TypeScript SDKs outside their tests, 70,514 of Python in bench/"
+activity: "832 commits on main from 8 October to 19 November 2026, 768 of them by the leading author; v1.2.0 released on 12 November and v1.3.0 squash-merged to main on 19 November 2026. Counted from a full clone"
+tests: "28,036 pytest functions in tests/ (25,853 unit in 2,320 files, 2,167 integration in 326 files), 751,613 lines; CI runs unit tests in random order with a 40% coverage floor and the integration suite against a real ClickHouse with a fake embedder and model. I ran none"
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
-  tombstone: "loom.blacklist — substring or RE2 patterns over the stored value text, consulted before the write by every path that takes in a new value | schemas/schema.sql:332-348, server/memory/app/blacklist_guard.py:378-390, server/memory/app/write.py:402-412, server/memory/app/bulk_rows.py:252-276, server/memory/app/blacklist.py:128-157, server/operations/toolsets.py:82, :152 | memory.set, update, bulk_set (and through it set_from_messages extraction, import and the observe and extraction workers), observe, decisions, evidence import and copy_to refuse a matching value with 422 BLACKLISTED. blacklist.add is a WRITER op on the agent's core MCP toolset; blacklist.remove is ADMIN and hidden from MCP. Delete, forget and erasure never add a pattern, a reworded value passes, and memory.restore (WRITER, within 14 days), namespace.rollback, namespace.restore and memory.consolidate write without the check | tests/integration/test_blacklist.py:59-126, tests/unit/test_memory_import.py:507-513"
-  trust_state: "the status column — proposed and rejected sit outside the served set | server/memory/domain/temporal_sql.py:38-65, :169-196, server/memory/domain/search_sql.py:74, server/memory/app/write.py:803-804, server/memory/store/lifecycle.py:520-579, server/memory/app/context_pack.py:408 | memory.set(proposed=true) and memory.reject write the states; the fact leg, the additive search arms, memory.ask, memory.for_file and the context.pack startup read all serve only active and conflicted rows, and include_proposed widens search explicitly. memory.list excludes proposed but not rejected rows, the chunk leg checks the parent's status only under hard tags or as_of (server/memory/app/retrieval/chunks.py:91), and memory.proposal_decide, which promotes a proposal, is a WRITER op on the agent's surface | tests/integration/test_graded_runs_proposals.py:70-76"
+  tombstone: "loom.blacklist — substring or RE2 patterns over the stored value text, consulted before the write by every path that takes in a new value | schemas/schema.sql:332-348, server/memory/app/blacklist_guard.py:379-391, :479-506, server/memory/app/write.py:402-412, server/memory/app/bulk_rows.py:252-276, server/memory/app/blacklist.py:128-157, server/operations/toolsets.py:82, :159 | memory.set, update, bulk_set (and through it set_from_messages extraction, import and the observe and extraction workers), observe, decisions, evidence import and copy_to refuse a matching value with 422 BLACKLISTED, and memory.restore, namespace.rollback, namespace.restore and memory.consolidate check every value against the current policy before they write (server/memory/app/restore.py:109, :375, server/memory/app/namespace_rollback.py:89-98, server/identity/app/namespace_snapshot.py:180, server/memory/app/consolidate.py:612). blacklist.add is a WRITER op on the agent's core MCP toolset; blacklist.remove is ADMIN and hidden from MCP. Delete, forget and erasure never add a pattern, and a reworded value passes | tests/integration/test_blacklist.py:59-126, :133-178, tests/unit/test_memory_import.py:507-513"
+  trust_state: "the status column — proposed and rejected sit outside the served set | server/memory/domain/temporal_sql.py:38-65, :169-196, server/memory/domain/search_sql.py:74, server/memory/app/write.py:803-804, server/memory/store/lifecycle.py:526-585, server/memory/app/context_pack.py:408 | memory.set(proposed=true) and memory.reject write the states; the fact leg, the additive search arms, memory.ask, memory.for_file and the context.pack startup read all serve only active and conflicted rows, and include_proposed widens search explicitly. the chunk leg drops a chunk whose known parent is not served (server/memory/app/retrieval/chunks.py:98-131). memory.list excludes proposed but not rejected rows, session summaries carry no parent status, and memory.proposal_decide, which promotes a proposal, is a WRITER op on the agent's surface | tests/integration/test_graded_runs_proposals.py:70-76"
   bitemporal: "valid_at, valid_to and temporal_anchor (world time) beside created_at, version and memory_versions (record time) | docs/concepts/memory.md §Time, server/memory/app/write.py:576-577, server/memory/app/pipeline.py:926-937, server/memory/domain/temporal_sql.py:145-168, server/memory/domain/search_sql.py:71 | memory.set takes valid_at and valid_to from the caller and stores NULL when none is given; extraction takes the date the model read from the text, then the fact's anchor, then the observation date; as_of reads replay either basis and search drops a row past valid_to. An undated extracted fact gets the request's day, invalid_at is written with world time by intra-batch supersession, and the knowledge_time replay reads current rows with a carried created_at, so a key revised after T replays its newer value | tests/integration/test_memory_valid_at.py"
-  scope_enforced: "org, namespace and user_id on every row, applied as predicates on every memory read, with a token-bound read_user_id pinned onto search and ask inputs | server/auth/authz.py:178, server/identity/domain/read_scope.py:38-42, :108-153, server/transport/gates.py:386-430, server/memory/domain/search_sql.py:57-59, :115, :121, server/memory/app/retrieval/chunks.py:471-498, server/memory/app/context_pack.py:396 | a narrowed token is refused every op not on the read-scope allowlist. The entity-graph leg reads edges and triples by namespace only and returns names and keys that boost rows the fact leg has already scoped, so another user's facts can shape a ranking; memory.for_file carries no user predicate and is held back from narrowed tokens by the allowlist alone | tests/integration/test_read_scope_isolation.py:360-423, tests/integration/test_cross_principal_leakage.py:885-955"
-  audit_log: "loom.audit_log — a plain MergeTree of hash-only rows, written for every audited op and by the write handlers | schemas/schema.sql:297-317, server/observability/audit.py:303-337, server/transport/post_rows.py:111-123, server/memory/app/set_commit.py:1148-1171, server/memory/app/bulk_set.py:1572-1604, server/memory/app/auto_resolution.py:31, :154-188, server/memory/app/restore.py:368 | delete, restore, clear, redact, verify, lock, reject, move, promote, proposal_decide, rollback, erasure requests, memory.set, bulk_set, update and the resolver's retirements each write a row; no server statement deletes or alters the table and erasure keeps it. Most rows are best-effort (emit swallows errors); a set of a non-embedded type or a high-sensitivity row on the ClickHouse authority, memory.touch, observe and the sweeps write none; and the table is a managed retention target, so a global or per-namespace retention_days ages it out (server/storage/retention_overrides.py:15, :50-56) | tests/integration/test_conflict_resolver_invariants_ch.py"
+  scope_enforced: "org, namespace and user_id on every row, applied as predicates on every memory read, with a token-bound read_user_id pinned onto search and ask inputs | server/auth/authz.py:178, server/identity/domain/read_scope.py:38-42, :108-153, server/transport/gates.py:399-443, server/memory/domain/search_sql.py:57-59, :115, :121, server/memory/app/retrieval/chunks.py:473-500, server/memory/app/context_pack.py:396 | a narrowed token is refused every op not on the read-scope allowlist. The entity-graph leg reads edges and triples by namespace only and returns names and keys that boost rows the fact leg has already scoped, so another user's facts can shape a ranking; memory.for_file carries no user predicate and is held back from narrowed tokens by the allowlist alone | tests/integration/test_read_scope_isolation.py:360-423, tests/integration/test_cross_principal_leakage.py:885-955"
+  audit_log: "loom.audit_log — a plain MergeTree of hash-only rows, written for every audited op and by the write handlers | schemas/schema.sql:297-317, server/observability/audit.py:303-337, server/transport/post_rows.py:111-123, server/memory/app/set_commit.py:436-464, :502-509, :1188, server/memory/app/bulk_set.py:1572-1604, server/memory/app/auto_resolution.py:31, :154-188, server/memory/app/restore.py:381 | delete, restore, clear, redact, verify, lock, reject, move, promote, proposal_decide, rollback, erasure requests, memory.set, bulk_set, update and the resolver's retirements each write a row; no server statement deletes or alters the table and erasure keeps it. Most rows are best-effort (emit swallows errors), the plain-row receipt for a non-embedded or high-sensitivity set included; memory.touch, observe and the sweeps write none; and the table is a managed retention target, so a global or per-namespace retention_days ages it out (server/storage/retention_overrides.py:15, :50-56) | tests/integration/test_conflict_resolver_invariants_ch.py"
   human_review: "the learnings queue — LLM-drafted definitions and assistant rules wait in loom.learnings_queue, which no retrieval leg reads, until learnings.review promotes them | server/memory/api/ops_learnings.py:32-42, server/operations/toolsets.py:64-65, server/cli/up.py:397-410 | learnings.review requires ADMIN and is hidden from MCP list and call; the tokens Loom mints for agents are writer tokens. With default settings the queue fills only when an admin asks knowledge.gaps.draft for a draft, the assistant-learnings and query-history producers being off. memory.proposal_decide, the review verb for proposed facts, is a WRITER op an agent can call, and the LLM conflict resolver retires and clears without a person; in single-user mode with auth off an agent with a shell can POST the review route | tests/integration/test_assistant_turn_learnings.py:190-253"
-  negative_eval: "proposals, read scope, code links and the knowledge plane, each against a populated result | tests/integration/test_graded_runs_proposals.py:70-76, tests/integration/test_read_scope_isolation.py:1278-1317, tests/integration/test_memory_code_links.py:1117-1136, tests/integration/test_knowledge_delete.py:66-93 | a proposed row served under include_proposed must be absent from the default read of the same query; a token pinned to user U must return U's rows and none of V's nonce or ids beside a namespace-wide control; a memory whose code was removed must leave the top results while its sibling stays and the read does not abstain; a deleted document must be absent while an identical-text document is served. CI runs them against ClickHouse; locally they skip without LOOM_BASE_URL or LOOM_CH_HOST | .github/workflows/ci.yml:602-830"
+  negative_eval: "proposals, read scope, code links and the knowledge plane, each against a populated result | tests/integration/test_graded_runs_proposals.py:70-76, tests/integration/test_read_scope_isolation.py:1278-1317, tests/integration/test_memory_code_links.py:1117-1136, tests/integration/test_knowledge_delete.py:66-93, tests/integration/test_chunk_parent_status.py:165-166 | a proposed row served under include_proposed must be absent from the default read of the same query; a token pinned to user U must return U's rows and none of V's nonce or ids beside a namespace-wide control; a memory whose code was removed must leave the top results while its sibling stays and the read does not abstain; a deleted document must be absent while an identical-text document is served; the chunk read must return exactly the active, conflicted, session-only and point-write chunks while rejected, superseded, proposed and duplicate parents are populated beside them. CI runs them against ClickHouse; locally they skip without LOOM_BASE_URL or LOOM_CH_HOST | .github/workflows/ci.yml:603-858"
 stack_storage: "clickhouse, postgres"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -37,7 +37,7 @@ matrix:
   background: "An LLM conflict resolver, extraction queue, entity extractor, embedding worker, expiry and sensitivity sweeps, code-link refresh, usage fold and projection repair; profile consolidation and reflection off by default"
   trust: "A status field with proposed and rejected outside the served set, server-stamped source_class and actor, verified attestations, sensitivity tiers that keep high rows out of search, and an admin-only review of drafted definitions"
   strengths: "Every write judged against its peers before the insert, every version kept and an Undo for every automatic retirement; memories linked to code that leave search when the code is removed; a scope predicate on every leg with a populated cross-user test"
-  risks: "memory.restore and three admin paths write a blacklisted value back; the chunk leg serves conversation text behind a rejected or superseded fact; the proposal verdict is an agent's to give; audit rows are best-effort, skip non-embedded writes and age out under retention"
+  risks: "No delete, forget or erasure writes a blacklist pattern, so a removed value can be extracted again; the proposal verdict is an agent's to give; session summaries restating a superseded fact reach search; audit rows are best-effort and age out under retention"
 ---
 
 ## 1. Executive Summary
@@ -57,9 +57,10 @@ removed. All seven marks rest on mechanisms with a producer on a reachable path,
 each with limits stated in section 9.
 
 What is weak sits at the seams between those mechanisms. The blacklist refuses a
-matching value on every intake path and none of the restore paths. The chunk leg
-serves conversation text behind a fact that was rejected or superseded. The verb
-that accepts a proposed fact is an agent's to call.
+matching value on every intake and restore path, and no delete, forget or
+erasure writes a pattern, so a removed value can be extracted again. The verb
+that accepts a proposed fact is an agent's to call, and audit rows are
+best-effort.
 
 **Licence.** Apache-2.0, with a NOTICE and a THIRD_PARTY_NOTICES file that agree
 with the manifests. No clause restricts use or analysis.
@@ -67,11 +68,11 @@ with the manifests. No clause restricts use or analysis.
 ## 2. Mental Model
 
 A memory is a row identified by its key under an identity tuple: org, namespace,
-agent, user and session (`schemas/schema.sql:2421-2501`). The table is a
+agent, user and session (`schemas/schema.sql:2447-2527`). The table is a
 `ReplacingMergeTree` on a nanosecond `version`, and a materialized view copies
 every insert into `memory_versions`, so the current row is the newest version and
 the old ones stay readable through `memory.history`
-(`schemas/schema.sql:3135-3206`, `server/memory/store/history.py:127`).
+(`schemas/schema.sql:3161-3232`, `server/memory/store/history.py:127`).
 
 A value becomes a belief through a judgement. `memory.set` fetches the live row,
 refuses a blacklisted value, embeds, and reads the closest active peers of the
@@ -85,11 +86,11 @@ accepts it (`server/memory/domain/temporal_sql.py:38-47`).
 A belief stops being served in five ways: a same-key or resolver supersession, a
 writer's `reject`, a `delete` tombstone, an expiry, or an erasure. Each writes a
 new version row, never an in-place edit, except `memory.clear` and the
-redaction, which update rows in place (`server/memory/store/lifecycle.py:929-947`,
+redaction, which update rows in place (`server/memory/store/lifecycle.py:935-953`,
 `server/memory/store/redaction.py:89-92`).
 
 ```mermaid
-%% caption: a write is checked against the blacklist and its peers before the insert, every version is kept, and the restore paths write back what the blacklist refused
+%% caption: a write is checked against the blacklist and its peers before the insert, every version is kept, a restore is checked again, and a delete leaves no pattern behind
 flowchart TD
   subgraph writers["Writers"]
     direction TB
@@ -105,15 +106,16 @@ flowchart TD
   ROW --> VER["memory_versions keeps it;<br/>hash-only audit row"]
   VER --> RES["LLM conflict resolver<br/>retires at 0.98,<br/>Undo restores"]
   ROW --> DEL["memory.delete:<br/>tombstone version"]
-  DEL --> RST["memory.restore within<br/>14 days: no blacklist<br/>check"]
+  DEL --> RST["memory.restore within<br/>14 days: blacklist<br/>checked again"]
+  DEL --> NOP["no pattern written:<br/>a later extraction<br/>can bring it back"]
 ```
 
 ## 3. Architecture
 
 Loom runs as three containers in the shipped Compose file: ClickHouse, the
-server and a document extractor (`compose.yaml:14-150`). The server is one Python
+server and a document extractor (`compose.yaml:14-152`). The server is one Python
 process with workers elected to a leader. The default storage authority is
-ClickHouse (`server/settings/catalog.py:5441`). The `postgres` authority moves
+ClickHouse (`server/settings/catalog.py:5557`). The `postgres` authority moves
 current heads, revisions, locks and idempotency to Postgres and publishes
 ClickHouse rows as projections; vectors and every search leg stay in ClickHouse
 (`docs/architecture/storage-authority.md:20-34`).
@@ -169,7 +171,7 @@ an embedder and a model, and about 3 GB of images.
 
 `loom.memory` carries `status` with seven values: active, conflicted,
 tombstoned, duplicate, superseded, rejected and proposed
-(`schemas/schema.sql:2444`). The served set is active and conflicted
+(`schemas/schema.sql:2470`). The served set is active and conflicted
 (`server/memory/domain/temporal_sql.py:38`). Provenance is server-stamped:
 `actor` from the token and `source_class` from the server, which a caller may
 only downgrade (`server/memory/app/write.py:547-552`, `:569-570`). `verified_by`
@@ -206,19 +208,23 @@ at alpha 0.5 (`server/memory/app/retrieval/fact_rank.py:425-434`). A
 correctness tail follows: demoted tags, a conflict penalty, a 0.1 sensitivity
 demotion, a capped reinforcement term and trust (`fact_rank.py:185-239`,
 `:524-570`). The wire default is `rrf`; an unpinned call is filled from the
-deployment default, `semantic` (`server/settings/catalog.py:3633-3638`).
+deployment default, `semantic` (`server/settings/catalog.py:3746-3751`).
 
 Search explains itself. `_finalize_abstain` returns `no_match`,
 `below_threshold` or `low_calibrated_confidence`, and calibration reports a
 retrieval risk (`server/memory/app/search/verdict.py:81-142`,
 `server/memory/domain/retrieval_calibration.py:46-51`).
 
-The chunk leg checks only the chunk's own tombstone. Parent status, tags and
-`as_of` apply only when the request names hard tags or replays a time:
-`if not hard_tags and not replaying: return ""`
-(`server/memory/app/retrieval/chunks.py:91`). The ask module says so in its own
-comment, and masks restatements at synthesis; search does not
-(`server/memory/app/ask/supersession.py:17-21`).
+The chunk leg drops a chunk whose known parent is not served. On every read,
+both stages and the neighbour windows exclude chunks whose parent row under the
+same identity fails the fact leg's tombstone, status and `as_of` predicates,
+and hard tags additionally require a matching searchable parent
+(`server/memory/app/retrieval/chunks.py:98-131`). A chunk with no parent row
+stays eligible as session evidence. Session summaries carry no parent and
+filter only their own tombstone (`server/memory/app/retrieval/summaries.py:130-137`),
+so a summary that restated a superseded fact reaches search; the ask module
+masks such restatements at synthesis, and its comment names the summary plane
+(`server/memory/app/ask/supersession.py:17-22`).
 
 Memories linked to code surface through `memory.for_file`, which reads
 `loom.memory FINAL` by path, basename or code link with tombstone, expiry,
@@ -256,15 +262,15 @@ flagged row; a row is judged once per version.
 The MCP server exposes toolsets. `core` carries `memory.set`, `pin`, `update`,
 `delete`, `get`, `history`, `apply`, `lock`, `blacklist.add` and `context.pack`,
 and `memory.search` is reached through a synthetic `loom_search` tool
-(`server/operations/toolsets.py:98`, `:140-162`). `coding` adds working memory
-and code-intelligence ops (`:178-197`). Any write op that is not hidden is
-callable by name through `loom_op` (`server/transport/mcp_op.py:93`).
+(`server/operations/toolsets.py:98`, `:147-169`). `coding` adds working memory
+and code-intelligence ops (`:185-204`). Any write op that is not hidden is
+callable by name through `loom_op` (`server/transport/mcp_op.py:100-102`).
 
 The Claude Code plugin's hooks run the loop (`integrations/claude-code-plugin/hooks/hooks.json`):
 
 - **SessionStart** packs context; **UserPromptSubmit** recalls on the first prompt
   only when memory is not abstaining and confidence is at least 0.5, capped at
-  1,200 characters (`hooks/loom-prompt-recall.mjs:35`, `:72-76`).
+  1,200 characters (`hooks/loom-prompt-recall.mjs:35`, `:80-84`).
 - **PreToolUse on Edit and Write** calls `memory.for_file` over the person's
   namespace and the repository's team-rules namespace
   (`lib/file-context.mjs:160-183`).
@@ -273,20 +279,31 @@ The Claude Code plugin's hooks run the loop (`integrations/claude-code-plugin/ho
 
 ## 9. Reliability, Safety, and Trust
 
-### The blacklist holds at intake and not at restore
+### The blacklist holds at intake and at restore, and nothing writes one for you
 
 A pattern refuses a matching value on `memory.set`, `update`, `bulk_set` and so
 on every extraction and import, on observe, decisions, evidence import and
 `copy_to` (`server/memory/app/bulk_rows.py:252-276`). The agent can add one
-mid-conversation, and only an admin can lift one. The restore paths write
-without the check. `memory.restore` is a WRITER op an agent reaches, and within
-14 days it revives a tombstone the blacklist's own sweep wrote
-(`server/memory/app/restore.py:632-677`). A committed test records the history:
-*"An older build's memory.restore copied the sweep's marker onto the live row it
-brought back"* (`tests/unit/test_namespace_rollback_unembedded.py:332-334`).
-`namespace.rollback`, `namespace.restore` with a caller-supplied snapshot, and
-`memory.consolidate`'s model-written merge skip it too. Delete, forget and
-erasure never add a pattern, so a deleted value can be extracted again.
+mid-conversation, and only an admin can lift one. Adding a pattern sweeps the
+live rows it matches, whatever their status, into tombstones
+(`server/memory/app/blacklist_sweep.py:1-21`, `:63`).
+
+The paths that put a value back check it too. `enforce_rows` runs the same match
+over every live row a restore, a namespace snapshot, a rollback or a
+consolidation is about to write, before any write, and under the Postgres
+authority binds the commit to the policy generation it checked
+(`server/memory/app/blacklist_guard.py:479-506`). `memory.restore`, a WRITER op
+with a 14-day window, refuses a value blacklisted after the delete
+(`server/memory/app/restore.py:109`, `:375`, `:647-692`); `namespace.rollback`
+checks every reinstated slice before writing the first
+(`server/memory/app/namespace_rollback.py:89-98`); `namespace.restore` checks
+the payload before it creates the namespace or its grants
+(`server/identity/app/namespace_snapshot.py:163-181`); and a model-written
+summary that matches is dropped and its sources kept
+(`server/memory/app/consolidate.py:488-491`, `:612`). Other writers that write a
+version row over an existing head carry a value already in the store. Delete,
+forget and erasure never add a pattern, so a deleted value can be extracted
+again.
 
 ### What a proposal and a conflict wait for
 
@@ -300,8 +317,8 @@ resolver retires at 0.98, flags at 0.95 and clears at 0.90 with no person
 
 ### What the reads leave out
 
-- **The chunk leg** serves conversation text behind a rejected or superseded
-  fact unless the request names hard tags or `as_of` (section 6).
+- **Session summaries** filter only their own tombstone, so one that restated a
+  superseded fact reaches search; `memory.ask` masks it (section 6).
 - **The entity-graph leg** reads edges and triples by namespace only, and its
   names and keys boost rows the fact leg already scoped
   (`server/memory/app/retrieval/graph.py:43-84`, `:290-293`). Another user's
@@ -312,10 +329,10 @@ resolver retires at 0.98, flags at 0.95 and clears at 0.90 with no person
 ### Marks
 
 - **`tombstone`** — awarded on `loom.blacklist`: keyed on the value text,
-  consulted by every intake writer, extraction included. Its limits are the
-  restore paths and that no forget writes one.
+  consulted by every intake writer, extraction included, and by every restore
+  path. Its limit is that no delete, forget or erasure writes one.
 - **`trust_state`** — awarded on `proposed` and `rejected`, excluded by every
-  default read. `memory.list` and the chunk leg are the gaps.
+  default read, the chunk leg through the parent row. `memory.list` is the gap.
 - **`bitemporal`** — awarded on world-time validity beside record time and the
   kept versions. The project calls it *"valid time plus a retirement stamp, not a
   bi-temporal model"*, meaning supersession, not date, decides which row is
@@ -323,9 +340,10 @@ resolver retires at 0.98, flags at 0.95 and clears at 0.90 with no person
 - **`scope_enforced`** — awarded on org, namespace and user predicates on every
   served leg, with the graph leg as the weak arm.
 - **`audit_log`** — awarded on `loom.audit_log`. Rows are hash-only and
-  best-effort. A set of a non-embedded type or a `high` row on the ClickHouse
-  authority skips the audit phase (`server/memory/app/set_commit.py:481-553`),
-  and a per-namespace `retention_days` applies to the audit table like every
+  best-effort, the plain-row receipt for a non-embedded or `high` set on the
+  ClickHouse authority included: it is emitted after the insert and a failure
+  only logs (`server/memory/app/set_commit.py:436-464`, `:502-509`). A
+  per-namespace `retention_days` applies to the audit table like every
   managed table (`server/storage/retention_overrides.py:15`, `:50-56`).
 - **`human_review`** — awarded on the learnings queue: drafted definitions and
   assistant rules no read serves until `learnings.review`, ADMIN and hidden from
@@ -337,19 +355,19 @@ resolver retires at 0.98, flags at 0.95 and clears at 0.90 with no person
 
 - **The memory.clear tombstone** is an in-place `ALTER UPDATE` that the
   materialized view does not copy, so `memory_versions` does not record it
-  (`server/memory/store/lifecycle.py:929-947`).
+  (`server/memory/store/lifecycle.py:935-953`).
 - **Erasure without purge** keeps the value in the tombstoned row, and
   `memory.restore` can revive it within 14 days; a running saga re-tombstones
   it (`server/erasure/store/mutations.py:414-435`). `loom.blacklist` survives
   erasure, and a pattern can itself hold the person's data
-  (`server/erasure/store/census.py:755`).
+  (`server/erasure/store/census.py:763`).
 
 ## 10. Tests, Evals, and Benchmarks
 
 `tests/` holds 27,617 pytest functions. CI runs the unit suite in random order
 with a 40% coverage floor, `pytest bench`, and the integration suite in four
 parts against a real ClickHouse with a fake embedder and model, plus auth-on
-isolation gates (`.github/workflows/ci.yml:602-830`). Locally the integration
+isolation gates (`.github/workflows/ci.yml:603-858`). Locally the integration
 suite skips without `LOOM_BASE_URL` or `LOOM_CH_HOST`
 (`tests/integration/conftest.py:83-97`). I ran none of it.
 
@@ -367,11 +385,21 @@ suite skips without `LOOM_BASE_URL` or `LOOM_CH_HOST`
   an abstention.
 - `tests/integration/test_knowledge_delete.py:66-93`: a deleted document is
   absent while an identical-text document is served.
+- `tests/integration/test_chunk_parent_status.py:165-166`: the chunk read
+  returns exactly the active, conflicted, session-only and point-write chunks,
+  with rejected, superseded, proposed and duplicate parents populated beside
+  them. It runs the leg's predicate against ClickHouse rather than through the
+  search service.
 
 No case asserts that a deleted or forgotten value re-extracted in a later
-session is refused, or that restore, rollback or consolidate refuse a
-blacklisted value. The superseded-row exclusion of the memory plane is tested at
-the predicate level only (`tests/unit/test_superseded_served.py`).
+session is refused; nothing writes the pattern that would refuse it.
+`tests/integration/test_blacklist.py:133-178` refuses a restore of a value
+blacklisted after its delete, checks that the refusal changed no persisted
+memory or search row, and restores an unrelated value beside it; the rollback,
+snapshot and consolidation checks are unit-tested against stubs
+(`tests/unit/test_blacklist_restore_paths.py`). The superseded-row exclusion of
+the memory plane is tested at the predicate level only
+(`tests/unit/test_superseded_served.py`).
 `bench/fama_forgetting.py` is a paired forgetting check run outside CI with no
 committed result.
 
@@ -399,15 +427,19 @@ software.
   moved, changed and missing states turns that into a filter.
 - **Carry the filter columns on the vector row.** Search never joins back, so a
   status or scope predicate cannot be forgotten in a join.
+- **Check every path that puts a value back, not only the ones that take values
+  in.** Loom runs one guard over restore, rollback, snapshot restore and
+  consolidation before any of them writes, and binds the commit to the policy it
+  checked.
 
 ### Avoid
 
-- **A refusal list that the restore path does not read.** Every path that can
-  put a value back, restore and rollback included, has to pass the same check
-  as the paths that take values in.
-- **A side leg that skips the parent's status.** Chunks and summaries of a
-  retired fact restate it; the predicate belongs on every leg, not only on the
-  one that holds the fact.
+- **A forget that leaves no refusal behind.** Delete, forget and erasure retire
+  the row and write no pattern, so the next extraction of the same sentence
+  stores it again.
+- **A derived plane with no parent.** A session summary that restated a
+  superseded fact has no row to inherit a status from, and only the answer path
+  masks it.
 - **A review verb on the reviewed party's surface.** `proposal_decide` as a
   WRITER op makes a proposal a request the agent can grant.
 
@@ -425,10 +457,8 @@ for it.
 
 ## 12. Open Questions
 
-- Whether `memory.restore` is meant to bypass the blacklist, given that the
-  sweep's own tombstones are what it revives.
-- How often the chunk leg returns text behind a superseded fact in practice; the
-  predicate is read, not measured.
+- How often search serves a session summary restating a superseded fact; the
+  plane is read, not measured.
 - Whether `proposal_decide` is meant to be callable by the agent that proposed.
 - What the agent sign-up flow mints; `loom up` mints a writer, and the security
   document says sign-up tokens are writer-only.
@@ -469,10 +499,16 @@ for it.
 
 Run from the repository root at the pinned commit with `/usr/bin/git grep`.
 
-- **The restore and consolidate writers do not consult the blacklist.**
-  `git grep -n -E 'blacklist|find_match|enforce_on_insert' -- server/memory/app/restore.py server/memory/app/consolidate.py`
-  returns nothing; `git grep -c -E 'find_match|enforce_on_insert' -- server/memory/app/write.py`
-  counts 2.
+- **Which writers consult the blacklist.**
+  `git grep -n -E 'enforce_on_insert\(|enforce_rows\(|find_match\(' -- server`
+  lists the guard calls in fifteen files: write, bulk rows, update, copy,
+  decisions, evidence transfer, learnings, assistant learnings, observe,
+  restore, rollback, snapshot rows, namespace restore, consolidate and the guard
+  itself. `git grep -n -E 'insert_memory_versions\(|insert_versions_over_heads\(' -- server`
+  lists the row writers; the rest write a version over an existing head.
+- **No delete, forget or erasure path writes a pattern.**
+  `git grep -n 'blacklist' -- server/erasure server/memory/app/handlers.py server/memory/domain/forget_requests.py`
+  matches only the two census descriptions in `server/erasure/store/census.py`.
 - **Nothing outside the guard reads the blacklist on a read path.**
   `git grep -n -E 'loom\.blacklist' -- server/memory/app/retrieval server/memory/app/search server/memory/domain/search_sql.py`
   returns nothing; the same pattern over `server/memory/store` matches the
@@ -481,18 +517,21 @@ Run from the repository root at the pinned commit with `/usr/bin/git grep`.
   `git grep -n -i -E '(DELETE FROM|ALTER TABLE)[[:space:]]+loom\.audit_log' -- server`
   returns nothing; `git grep -n 'loom.audit_log' -- server/storage/retention_overrides.py`
   matches line 53, the retention target.
-- **The chunk leg returns no status predicate by default.**
-  `git grep -n 'if not hard_tags and not replaying' -- server/memory/app/retrieval/chunks.py`
-  matches line 91.
+- **The summary plane reads no status.**
+  `git grep -n -E 'status|superseded' -- server/memory/app/retrieval/summaries.py`
+  returns nothing; `git grep -n 'tombstoned_at IS NULL' -- server/memory/app/retrieval/summaries.py`
+  matches lines 136, 264 and 313.
 - **The review verbs' roles.**
   `git grep -n -E 'required_role' -- server/memory/api/ops_learnings.py server/memory/api/ops_proposals.py`
   gives ADMIN for `learnings.review` and WRITER for `memory.proposal_decide`;
   `git grep -n -E '"learnings\.review"|"blacklist\.remove"|"blacklist\.add"' -- server/operations/toolsets.py`
-  matches lines 65 and 82 in the hidden set and 152 in the core toolset.
+  matches lines 65 and 82 in the hidden set and 159 in the core toolset.
 - **No paper.** `git grep -n -i -E 'arxiv|doi\.org' -- CITATION.cff README.md docs`
   returns nothing; the only `arxiv` in the tree is a test forbidding paper
   citations in public copy, `tests/unit/test_public_copy.py:144`.
 
 ## History
+
+**2026-11-19** — [`fc930e0c8d11c9b6865b7d210f42080bea6575ff`](https://github.com/ClickHouse/loom/commit/fc930e0c8d11c9b6865b7d210f42080bea6575ff) — re-read at the tip of `main`, 79 commits past the first pin. Three findings of the first reading were fixed upstream: pull request 923 (`06775eb`) puts the blacklist check on `memory.restore`, `namespace.rollback`, `namespace.restore` and consolidation, with an integration case; pull request 922 (`9522b2b`) gives plain-row writes their audit receipt; and the release 1.3.0 squash (`08eeb3d`) excludes chunks whose known parent is not served, the change pull request 924 proposes. The tombstone's remaining limit is that no delete, forget or erasure writes a pattern, and session summaries are the plane that reads no status ([section 9](#9-reliability-safety-and-trust)). Marks unchanged. Screened again: the same ten auto-run surfaces; nothing installed, built or run. Every line citation was re-checked against the new tree.
 
 **2026-11-18** — [`39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc`](https://github.com/ClickHouse/loom/commit/39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc) — first reading, from a depth-one clone of `main` with history from the GitHub API, scoped to `server/memory/`, the identity, auth, erasure and transport paths it relies on, the Claude Code plugin and the tests. Screened first: ten auto-run surfaces, each read (harness permissions, a reviewer subagent's read-only command hook, a Codespaces try-out, a localhost MCP manifest, the plugin's hooks); eleven build-time execution points, among them two Makefiles, two `conftest.py` files and an npm `prepublishOnly`; FRESH findings on every manifest, inflated by the shallow clone. Apache-2.0, no rider. Nothing installed, built or run; benchmark headlines recomputed from the committed CSVs. Seven marks, each with its limits in [section 9](#9-reliability-safety-and-trust).

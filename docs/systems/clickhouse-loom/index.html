@@ -110,14 +110,14 @@ peers on write, and keep every version.</p>
               <strong>ClickHouse/loom</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/ClickHouse/loom/commit/39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc" title="39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc">
+            <a class="meta-pill revision-pill" href="https://github.com/ClickHouse/loom/commit/fc930e0c8d11c9b6865b7d210f42080bea6575ff" title="fc930e0c8d11c9b6865b7d210f42080bea6575ff">
               <span>Analyzed revision</span>
-              <code>39243b17…</code>
+              <code>fc930e0c…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-11-18</strong>
+              <strong>2026-11-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ClickHouse--loom" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -131,19 +131,17 @@ in LICENSE with a NOTICE naming ClickHouse, Inc. and a
 THIRD_PARTY_NOTICES file for bundled components under MIT, BSD, ISC,
 MPL-2.0, OFL and CC BY-SA 4.0; agrees with pyproject and the plugin
 manifests</strong></div>
-            <div class="meta-pill fact-pill"><span>Size</span><strong>513,695
-lines of Python under server/ in 1,740 files, 158,862 of them in
-server/memory/ (542 files); 99,726 lines of dashboard TypeScript, 62,975
-in the Python and TypeScript SDKs, 23,231 in agent integrations, 69,572
-in bench/</strong></div>
-            <div class="meta-pill fact-pill"><span>Activity</span><strong>753
-commits on main from 8 October to 18 November 2026, 700 of them by the
-leading author of fifteen contributors; release v1.2.0 on 12 November
-2026. Counted through the GitHub API; the reading used a depth-one
-clone</strong></div>
-            <div class="meta-pill fact-pill"><span>Tests</span><strong>27,617
-pytest functions in tests/ (25,444 unit in 2,267 files, 2,157
-integration in 323 files), 736,455 lines; CI runs unit tests in random
+            <div class="meta-pill fact-pill"><span>Size</span><strong>518,914
+lines of Python under server/ in 1,758 files, 159,103 of them in
+server/memory/ (542 files); 64,531 in the Python and TypeScript SDKs
+outside their tests, 70,514 of Python in bench/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>832
+commits on main from 8 October to 19 November 2026, 768 of them by the
+leading author; v1.2.0 released on 12 November and v1.3.0 squash-merged
+to main on 19 November 2026. Counted from a full clone</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>28,036
+pytest functions in tests/ (25,853 unit in 2,320 files, 2,167
+integration in 326 files), 751,613 lines; CI runs unit tests in random
 order with a 40% coverage floor and the integration suite against a real
 ClickHouse with a fake embedder and model. I ran none</strong></div>
           </div>
@@ -178,22 +176,22 @@ and symbols, and it leaves search when that code is removed. All seven
 marks rest on mechanisms with a producer on a reachable path, each with
 limits stated in section 9.</p>
 <p>What is weak sits at the seams between those mechanisms. The
-blacklist refuses a matching value on every intake path and none of the
-restore paths. The chunk leg serves conversation text behind a fact that
-was rejected or superseded. The verb that accepts a proposed fact is an
-agent's to call.</p>
+blacklist refuses a matching value on every intake and restore path, and
+no delete, forget or erasure writes a pattern, so a removed value can be
+extracted again. The verb that accepts a proposed fact is an agent's to
+call, and audit rows are best-effort.</p>
 <p><strong>Licence.</strong> Apache-2.0, with a NOTICE and a
 THIRD_PARTY_NOTICES file that agree with the manifests. No clause
 restricts use or analysis.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is a row identified by its key under an identity tuple: org,
 namespace, agent, user and session
-(<code>schemas/schema.sql:2421-2501</code>). The table is a
+(<code>schemas/schema.sql:2447-2527</code>). The table is a
 <code>ReplacingMergeTree</code> on a nanosecond <code>version</code>,
 and a materialized view copies every insert into
 <code>memory_versions</code>, so the current row is the newest version
 and the old ones stay readable through <code>memory.history</code>
-(<code>schemas/schema.sql:3135-3206</code>,
+(<code>schemas/schema.sql:3161-3232</code>,
 <code>server/memory/store/history.py:127</code>).</p>
 <p>A value becomes a belief through a judgement. <code>memory.set</code>
 fetches the live row, refuses a blacklisted value, embeds, and reads the
@@ -211,9 +209,9 @@ supersession, a writer's <code>reject</code>, a <code>delete</code>
 tombstone, an expiry, or an erasure. Each writes a new version row,
 never an in-place edit, except <code>memory.clear</code> and the
 redaction, which update rows in place
-(<code>server/memory/store/lifecycle.py:929-947</code>,
+(<code>server/memory/store/lifecycle.py:935-953</code>,
 <code>server/memory/store/redaction.py:89-92</code>).</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write is checked against the blacklist and its peers before the insert, every version is kept, and the restore paths write back what the blacklist refused</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write is checked against the blacklist and its peers before the insert, every version is kept, and the restore paths write back what the blacklist refused
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write is checked against the blacklist and its peers before the insert, every version is kept, a restore is checked again, and a delete leaves no pattern behind</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write is checked against the blacklist and its peers before the insert, every version is kept, a restore is checked again, and a delete leaves no pattern behind
 flowchart TD
   subgraph writers[&quot;Writers&quot;]
     direction TB
@@ -229,13 +227,14 @@ flowchart TD
   ROW --&gt; VER[&quot;memory_versions keeps it;&lt;br/&gt;hash-only audit row&quot;]
   VER --&gt; RES[&quot;LLM conflict resolver&lt;br/&gt;retires at 0.98,&lt;br/&gt;Undo restores&quot;]
   ROW --&gt; DEL[&quot;memory.delete:&lt;br/&gt;tombstone version&quot;]
-  DEL --&gt; RST[&quot;memory.restore within&lt;br/&gt;14 days: no blacklist&lt;br/&gt;check&quot;]</code></pre></details></figure>
+  DEL --&gt; RST[&quot;memory.restore within&lt;br/&gt;14 days: blacklist&lt;br/&gt;checked again&quot;]
+  DEL --&gt; NOP[&quot;no pattern written:&lt;br/&gt;a later extraction&lt;br/&gt;can bring it back&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Loom runs as three containers in the shipped Compose file:
 ClickHouse, the server and a document extractor
-(<code>compose.yaml:14-150</code>). The server is one Python process
+(<code>compose.yaml:14-152</code>). The server is one Python process
 with workers elected to a leader. The default storage authority is
-ClickHouse (<code>server/settings/catalog.py:5441</code>). The
+ClickHouse (<code>server/settings/catalog.py:5557</code>). The
 <code>postgres</code> authority moves current heads, revisions, locks
 and idempotency to Postgres and publishes ClickHouse rows as
 projections; vectors and every search leg stay in ClickHouse
@@ -304,7 +303,7 @@ links, evidence, code links, caches and the webhook outbox
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><code>loom.memory</code> carries <code>status</code> with seven
 values: active, conflicted, tombstoned, duplicate, superseded, rejected
-and proposed (<code>schemas/schema.sql:2444</code>). The served set is
+and proposed (<code>schemas/schema.sql:2470</code>). The served set is
 active and conflicted
 (<code>server/memory/domain/temporal_sql.py:38</code>). Provenance is
 server-stamped: <code>actor</code> from the token and
@@ -350,19 +349,24 @@ sensitivity demotion, a capped reinforcement term and trust
 (<code>fact_rank.py:185-239</code>, <code>:524-570</code>). The wire
 default is <code>rrf</code>; an unpinned call is filled from the
 deployment default, <code>semantic</code>
-(<code>server/settings/catalog.py:3633-3638</code>).</p>
+(<code>server/settings/catalog.py:3746-3751</code>).</p>
 <p>Search explains itself. <code>_finalize_abstain</code> returns
 <code>no_match</code>, <code>below_threshold</code> or
 <code>low_calibrated_confidence</code>, and calibration reports a
 retrieval risk (<code>server/memory/app/search/verdict.py:81-142</code>,
 <code>server/memory/domain/retrieval_calibration.py:46-51</code>).</p>
-<p>The chunk leg checks only the chunk's own tombstone. Parent status,
-tags and <code>as_of</code> apply only when the request names hard tags
-or replays a time:
-<code>if not hard_tags and not replaying: return ""</code>
-(<code>server/memory/app/retrieval/chunks.py:91</code>). The ask module
-says so in its own comment, and masks restatements at synthesis; search
-does not (<code>server/memory/app/ask/supersession.py:17-21</code>).</p>
+<p>The chunk leg drops a chunk whose known parent is not served. On
+every read, both stages and the neighbour windows exclude chunks whose
+parent row under the same identity fails the fact leg's tombstone,
+status and <code>as_of</code> predicates, and hard tags additionally
+require a matching searchable parent
+(<code>server/memory/app/retrieval/chunks.py:98-131</code>). A chunk
+with no parent row stays eligible as session evidence. Session summaries
+carry no parent and filter only their own tombstone
+(<code>server/memory/app/retrieval/summaries.py:130-137</code>), so a
+summary that restated a superseded fact reaches search; the ask module
+masks such restatements at synthesis, and its comment names the summary
+plane (<code>server/memory/app/ask/supersession.py:17-22</code>).</p>
 <p>Memories linked to code surface through <code>memory.for_file</code>,
 which reads <code>loom.memory FINAL</code> by path, basename or code
 link with tombstone, expiry, sensitivity and status filters, and no
@@ -402,11 +406,11 @@ version.</p>
 <code>apply</code>, <code>lock</code>, <code>blacklist.add</code> and
 <code>context.pack</code>, and <code>memory.search</code> is reached
 through a synthetic <code>loom_search</code> tool
-(<code>server/operations/toolsets.py:98</code>, <code>:140-162</code>).
+(<code>server/operations/toolsets.py:98</code>, <code>:147-169</code>).
 <code>coding</code> adds working memory and code-intelligence ops
-(<code>:178-197</code>). Any write op that is not hidden is callable by
+(<code>:185-204</code>). Any write op that is not hidden is callable by
 name through <code>loom_op</code>
-(<code>server/transport/mcp_op.py:93</code>).</p>
+(<code>server/transport/mcp_op.py:100-102</code>).</p>
 <p>The Claude Code plugin's hooks run the loop
 (<code>integrations/claude-code-plugin/hooks/hooks.json</code>):</p>
 <ul>
@@ -414,7 +418,7 @@ name through <code>loom_op</code>
 <strong>UserPromptSubmit</strong> recalls on the first prompt only when
 memory is not abstaining and confidence is at least 0.5, capped at 1,200
 characters (<code>hooks/loom-prompt-recall.mjs:35</code>,
-<code>:72-76</code>).</li>
+<code>:80-84</code>).</li>
 <li><strong>PreToolUse on Edit and Write</strong> calls
 <code>memory.for_file</code> over the person's namespace and the
 repository's team-rules namespace
@@ -425,24 +429,40 @@ transcript to deferred extraction.</li>
 </ul>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
-<h3 id="the-blacklist-holds-at-intake-and-not-at-restore">The blacklist
-holds at intake and not at restore</h3>
+<h3
+id="the-blacklist-holds-at-intake-and-at-restore-and-nothing-writes-one-for-you">The
+blacklist holds at intake and at restore, and nothing writes one for
+you</h3>
 <p>A pattern refuses a matching value on <code>memory.set</code>,
 <code>update</code>, <code>bulk_set</code> and so on every extraction
 and import, on observe, decisions, evidence import and
 <code>copy_to</code>
 (<code>server/memory/app/bulk_rows.py:252-276</code>). The agent can add
-one mid-conversation, and only an admin can lift one. The restore paths
-write without the check. <code>memory.restore</code> is a WRITER op an
-agent reaches, and within 14 days it revives a tombstone the blacklist's
-own sweep wrote (<code>server/memory/app/restore.py:632-677</code>). A
-committed test records the history: <em>"An older build's memory.restore
-copied the sweep's marker onto the live row it brought back"</em>
-(<code>tests/unit/test_namespace_rollback_unembedded.py:332-334</code>).
-<code>namespace.rollback</code>, <code>namespace.restore</code> with a
-caller-supplied snapshot, and <code>memory.consolidate</code>'s
-model-written merge skip it too. Delete, forget and erasure never add a
-pattern, so a deleted value can be extracted again.</p>
+one mid-conversation, and only an admin can lift one. Adding a pattern
+sweeps the live rows it matches, whatever their status, into tombstones
+(<code>server/memory/app/blacklist_sweep.py:1-21</code>,
+<code>:63</code>).</p>
+<p>The paths that put a value back check it too.
+<code>enforce_rows</code> runs the same match over every live row a
+restore, a namespace snapshot, a rollback or a consolidation is about to
+write, before any write, and under the Postgres authority binds the
+commit to the policy generation it checked
+(<code>server/memory/app/blacklist_guard.py:479-506</code>).
+<code>memory.restore</code>, a WRITER op with a 14-day window, refuses a
+value blacklisted after the delete
+(<code>server/memory/app/restore.py:109</code>, <code>:375</code>,
+<code>:647-692</code>); <code>namespace.rollback</code> checks every
+reinstated slice before writing the first
+(<code>server/memory/app/namespace_rollback.py:89-98</code>);
+<code>namespace.restore</code> checks the payload before it creates the
+namespace or its grants
+(<code>server/identity/app/namespace_snapshot.py:163-181</code>); and a
+model-written summary that matches is dropped and its sources kept
+(<code>server/memory/app/consolidate.py:488-491</code>,
+<code>:612</code>). Other writers that write a version row over an
+existing head carry a value already in the store. Delete, forget and
+erasure never add a pattern, so a deleted value can be extracted
+again.</p>
 <h3 id="what-a-proposal-and-a-conflict-wait-for">What a proposal and a
 conflict wait for</h3>
 <p><code>proposed</code> keeps a fact out of every default read.
@@ -457,9 +477,9 @@ retires at 0.98, flags at 0.95 and clears at 0.90 with no person
 <code>:288-321</code>).</p>
 <h3 id="what-the-reads-leave-out">What the reads leave out</h3>
 <ul>
-<li><strong>The chunk leg</strong> serves conversation text behind a
-rejected or superseded fact unless the request names hard tags or
-<code>as_of</code> (section 6).</li>
+<li><strong>Session summaries</strong> filter only their own tombstone,
+so one that restated a superseded fact reaches search;
+<code>memory.ask</code> masks it (section 6).</li>
 <li><strong>The entity-graph leg</strong> reads edges and triples by
 namespace only, and its names and keys boost rows the fact leg already
 scoped (<code>server/memory/app/retrieval/graph.py:43-84</code>,
@@ -473,12 +493,12 @@ not rejected ones
 <ul>
 <li><strong><code>tombstone</code></strong> — awarded on
 <code>loom.blacklist</code>: keyed on the value text, consulted by every
-intake writer, extraction included. Its limits are the restore paths and
-that no forget writes one.</li>
+intake writer, extraction included, and by every restore path. Its limit
+is that no delete, forget or erasure writes one.</li>
 <li><strong><code>trust_state</code></strong> — awarded on
 <code>proposed</code> and <code>rejected</code>, excluded by every
-default read. <code>memory.list</code> and the chunk leg are the
-gaps.</li>
+default read, the chunk leg through the parent row.
+<code>memory.list</code> is the gap.</li>
 <li><strong><code>bitemporal</code></strong> — awarded on world-time
 validity beside record time and the kept versions. The project calls it
 <em>"valid time plus a retirement stamp, not a bi-temporal model"</em>,
@@ -488,12 +508,12 @@ asks only that the axes be tracked apart.</li>
 namespace and user predicates on every served leg, with the graph leg as
 the weak arm.</li>
 <li><strong><code>audit_log</code></strong> — awarded on
-<code>loom.audit_log</code>. Rows are hash-only and best-effort. A set
-of a non-embedded type or a <code>high</code> row on the ClickHouse
-authority skips the audit phase
-(<code>server/memory/app/set_commit.py:481-553</code>), and a
-per-namespace <code>retention_days</code> applies to the audit table
-like every managed table
+<code>loom.audit_log</code>. Rows are hash-only and best-effort, the
+plain-row receipt for a non-embedded or <code>high</code> set on the
+ClickHouse authority included: it is emitted after the insert and a
+failure only logs (<code>server/memory/app/set_commit.py:436-464</code>,
+<code>:502-509</code>). A per-namespace <code>retention_days</code>
+applies to the audit table like every managed table
 (<code>server/storage/retention_overrides.py:15</code>,
 <code>:50-56</code>).</li>
 <li><strong><code>human_review</code></strong> — awarded on the
@@ -509,14 +529,14 @@ Proposals and conflicts are not on it.</li>
 <li><strong>The memory.clear tombstone</strong> is an in-place
 <code>ALTER UPDATE</code> that the materialized view does not copy, so
 <code>memory_versions</code> does not record it
-(<code>server/memory/store/lifecycle.py:929-947</code>).</li>
+(<code>server/memory/store/lifecycle.py:935-953</code>).</li>
 <li><strong>Erasure without purge</strong> keeps the value in the
 tombstoned row, and <code>memory.restore</code> can revive it within 14
 days; a running saga re-tombstones it
 (<code>server/erasure/store/mutations.py:414-435</code>).
 <code>loom.blacklist</code> survives erasure, and a pattern can itself
 hold the person's data
-(<code>server/erasure/store/census.py:755</code>).</li>
+(<code>server/erasure/store/census.py:763</code>).</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
@@ -524,7 +544,7 @@ Benchmarks</h2>
 suite in random order with a 40% coverage floor,
 <code>pytest bench</code>, and the integration suite in four parts
 against a real ClickHouse with a fake embedder and model, plus auth-on
-isolation gates (<code>.github/workflows/ci.yml:602-830</code>). Locally
+isolation gates (<code>.github/workflows/ci.yml:603-858</code>). Locally
 the integration suite skips without <code>LOOM_BASE_URL</code> or
 <code>LOOM_CH_HOST</code>
 (<code>tests/integration/conftest.py:83-97</code>). I ran none of
@@ -545,12 +565,22 @@ exactly the sibling, not an abstention.</li>
 <li><code>tests/integration/test_knowledge_delete.py:66-93</code>: a
 deleted document is absent while an identical-text document is
 served.</li>
+<li><code>tests/integration/test_chunk_parent_status.py:165-166</code>:
+the chunk read returns exactly the active, conflicted, session-only and
+point-write chunks, with rejected, superseded, proposed and duplicate
+parents populated beside them. It runs the leg's predicate against
+ClickHouse rather than through the search service.</li>
 </ul>
 <p>No case asserts that a deleted or forgotten value re-extracted in a
-later session is refused, or that restore, rollback or consolidate
-refuse a blacklisted value. The superseded-row exclusion of the memory
-plane is tested at the predicate level only
-(<code>tests/unit/test_superseded_served.py</code>).
+later session is refused; nothing writes the pattern that would refuse
+it. <code>tests/integration/test_blacklist.py:133-178</code> refuses a
+restore of a value blacklisted after its delete, checks that the refusal
+changed no persisted memory or search row, and restores an unrelated
+value beside it; the rollback, snapshot and consolidation checks are
+unit-tested against stubs
+(<code>tests/unit/test_blacklist_restore_paths.py</code>). The
+superseded-row exclusion of the memory plane is tested at the predicate
+level only (<code>tests/unit/test_superseded_served.py</code>).
 <code>bench/fama_forgetting.py</code> is a paired forgetting check run
 outside CI with no committed result.</p>
 <p>Benchmarks are committed with per-question CSVs under
@@ -580,15 +610,19 @@ states turns that into a filter.</li>
 <li><strong>Carry the filter columns on the vector row.</strong> Search
 never joins back, so a status or scope predicate cannot be forgotten in
 a join.</li>
+<li><strong>Check every path that puts a value back, not only the ones
+that take values in.</strong> Loom runs one guard over restore,
+rollback, snapshot restore and consolidation before any of them writes,
+and binds the commit to the policy it checked.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>A refusal list that the restore path does not read.</strong>
-Every path that can put a value back, restore and rollback included, has
-to pass the same check as the paths that take values in.</li>
-<li><strong>A side leg that skips the parent's status.</strong> Chunks
-and summaries of a retired fact restate it; the predicate belongs on
-every leg, not only on the one that holds the fact.</li>
+<li><strong>A forget that leaves no refusal behind.</strong> Delete,
+forget and erasure retire the row and write no pattern, so the next
+extraction of the same sentence stores it again.</li>
+<li><strong>A derived plane with no parent.</strong> A session summary
+that restated a superseded fact has no row to inherit a status from, and
+only the answer path masks it.</li>
 <li><strong>A review verb on the reviewed party's surface.</strong>
 <code>proposal_decide</code> as a WRITER op makes a proposal a request
 the agent can grant.</li>
@@ -605,11 +639,8 @@ a SQLite file would hold. Walk away too if a forgotten value must stay
 forgotten without an administrator writing a pattern for it.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li>Whether <code>memory.restore</code> is meant to bypass the
-blacklist, given that the sweep's own tombstones are what it
-revives.</li>
-<li>How often the chunk leg returns text behind a superseded fact in
-practice; the predicate is read, not measured.</li>
+<li>How often search serves a session summary restating a superseded
+fact; the plane is read, not measured.</li>
 <li>Whether <code>proposal_decide</code> is meant to be callable by the
 agent that proposed.</li>
 <li>What the agent sign-up flow mints; <code>loom up</code> mints a
@@ -666,12 +697,19 @@ writer-only.</li>
 <p>Run from the repository root at the pinned commit with
 <code>/usr/bin/git grep</code>.</p>
 <ul>
-<li><strong>The restore and consolidate writers do not consult the
-blacklist.</strong>
-<code>git grep -n -E 'blacklist|find_match|enforce_on_insert' -- server/memory/app/restore.py server/memory/app/consolidate.py</code>
-returns nothing;
-<code>git grep -c -E 'find_match|enforce_on_insert' -- server/memory/app/write.py</code>
-counts 2.</li>
+<li><strong>Which writers consult the blacklist.</strong>
+<code>git grep -n -E 'enforce_on_insert\(|enforce_rows\(|find_match\(' -- server</code>
+lists the guard calls in fifteen files: write, bulk rows, update, copy,
+decisions, evidence transfer, learnings, assistant learnings, observe,
+restore, rollback, snapshot rows, namespace restore, consolidate and the
+guard itself.
+<code>git grep -n -E 'insert_memory_versions\(|insert_versions_over_heads\(' -- server</code>
+lists the row writers; the rest write a version over an existing
+head.</li>
+<li><strong>No delete, forget or erasure path writes a pattern.</strong>
+<code>git grep -n 'blacklist' -- server/erasure server/memory/app/handlers.py server/memory/domain/forget_requests.py</code>
+matches only the two census descriptions in
+<code>server/erasure/store/census.py</code>.</li>
 <li><strong>Nothing outside the guard reads the blacklist on a read
 path.</strong>
 <code>git grep -n -E 'loom\.blacklist' -- server/memory/app/retrieval server/memory/app/search server/memory/domain/search_sql.py</code>
@@ -683,16 +721,17 @@ table.</strong>
 returns nothing;
 <code>git grep -n 'loom.audit_log' -- server/storage/retention_overrides.py</code>
 matches line 53, the retention target.</li>
-<li><strong>The chunk leg returns no status predicate by
-default.</strong>
-<code>git grep -n 'if not hard_tags and not replaying' -- server/memory/app/retrieval/chunks.py</code>
-matches line 91.</li>
+<li><strong>The summary plane reads no status.</strong>
+<code>git grep -n -E 'status|superseded' -- server/memory/app/retrieval/summaries.py</code>
+returns nothing;
+<code>git grep -n 'tombstoned_at IS NULL' -- server/memory/app/retrieval/summaries.py</code>
+matches lines 136, 264 and 313.</li>
 <li><strong>The review verbs' roles.</strong>
 <code>git grep -n -E 'required_role' -- server/memory/api/ops_learnings.py server/memory/api/ops_proposals.py</code>
 gives ADMIN for <code>learnings.review</code> and WRITER for
 <code>memory.proposal_decide</code>;
 <code>git grep -n -E '"learnings\.review"|"blacklist\.remove"|"blacklist\.add"' -- server/operations/toolsets.py</code>
-matches lines 65 and 82 in the hidden set and 152 in the core
+matches lines 65 and 82 in the hidden set and 159 in the core
 toolset.</li>
 <li><strong>No paper.</strong>
 <code>git grep -n -i -E 'arxiv|doi\.org' -- CITATION.cff README.md docs</code>
@@ -701,6 +740,22 @@ forbidding paper citations in public copy,
 <code>tests/unit/test_public_copy.py:144</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-19</strong> — <a
+href="https://github.com/ClickHouse/loom/commit/fc930e0c8d11c9b6865b7d210f42080bea6575ff"><code class="commit-id" title="fc930e0c8d11c9b6865b7d210f42080bea6575ff">fc930e0c…</code></a>
+— re-read at the tip of <code>main</code>, 79 commits past the first
+pin. Three findings of the first reading were fixed upstream: pull
+request 923 (<code>06775eb</code>) puts the blacklist check on
+<code>memory.restore</code>, <code>namespace.rollback</code>,
+<code>namespace.restore</code> and consolidation, with an integration
+case; pull request 922 (<code>9522b2b</code>) gives plain-row writes
+their audit receipt; and the release 1.3.0 squash (<code>08eeb3d</code>)
+excludes chunks whose known parent is not served, the change pull
+request 924 proposes. The tombstone's remaining limit is that no delete,
+forget or erasure writes a pattern, and session summaries are the plane
+that reads no status (<a href="#9-reliability-safety-and-trust">section
+9</a>). Marks unchanged. Screened again: the same ten auto-run surfaces;
+nothing installed, built or run. Every line citation was re-checked
+against the new tree.</p>
 <p><strong>2026-11-18</strong> — <a
 href="https://github.com/ClickHouse/loom/commit/39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc"><code class="commit-id" title="39243b1731b3e0b2ce8a1a287957e4e9d4f3a8fc">39243b17…</code></a>
 — first reading, from a depth-one clone of <code>main</code> with

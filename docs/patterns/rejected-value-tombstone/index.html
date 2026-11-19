@@ -918,20 +918,22 @@ it with no such check, and the refusal text names the flag
 <code>mind/longterm.py:460-462</code>). A housemate's forget writes no
 fingerprint.</p>
 <p><strong><a href="../../systems/clickhouse-loom/">Loom</a> keeps its
-tombstone as a pattern list every intake path reads and no restore path
-does.</strong> <code>loom.blacklist</code> holds substring or RE2
-patterns scoped to a namespace, an org or the server, matched against
-the stored value text, and <code>memory.set</code>, <code>update</code>,
-<code>bulk_set</code> (so model extraction and import), observe and
-evidence import refuse a match with 422 before the write
-(<code>server/memory/app/blacklist_guard.py:378-390</code>,
+tombstone as a pattern list every intake and restore path reads and no
+forget writes.</strong> <code>loom.blacklist</code> holds substring or
+RE2 patterns scoped to a namespace, an org or the server, matched
+against the stored value text, and <code>memory.set</code>,
+<code>update</code>, <code>bulk_set</code> (so model extraction and
+import), observe and evidence import refuse a match with 422 before the
+write (<code>server/memory/app/blacklist_guard.py:379-391</code>,
 <code>server/memory/app/bulk_rows.py:252-276</code>). The agent can add
 a pattern from its core toolset; only an admin can lift one.
-<code>memory.restore</code>, a WRITER op, revives a tombstone the
-blacklist's own sweep wrote within 14 days, and rollback, snapshot
-restore and consolidate write without the check
-(<code>server/memory/app/restore.py:632-677</code>). Delete, forget and
-erasure write no pattern, so a deleted value can be extracted again.</p>
+<code>memory.restore</code>, rollback, snapshot restore and
+consolidation run the same match over every row they are about to write,
+before the first write, and bind the commit to the policy generation
+they checked
+(<code>server/memory/app/blacklist_guard.py:479-506</code>). Delete,
+forget and erasure write no pattern, so a deleted value can be extracted
+again.</p>
 <h3 id="sorted-by-what-actually-stops-the-value">Sorted by what actually
 stops the value</h3>
 <p>The mark covers four different mechanisms. The table sorts the

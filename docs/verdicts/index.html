@@ -33728,24 +33728,23 @@ the background LLM resolver makes carries an audit row and an Undo.</li>
 <li>Second idea: memories link to files and symbols by fingerprint and
 leave search when the code is removed; the filter columns ride on the
 vector row, so no leg joins back and loses a predicate.</li>
-<li>Biggest risk: <strong>the restore paths write back what the
-blacklist refuses.</strong> <code>memory.restore</code>, a WRITER op on
-the agent's reach, revives a sweep's tombstone within 14 days, and
-rollback, snapshot restore and consolidate skip the check; no forget
-writes a pattern.</li>
-<li>Second risk: the chunk leg serves conversation text behind a
-rejected or superseded fact by default,
-<code>memory.proposal_decide</code> lets an agent accept a proposal, and
-audit rows are best-effort, skip non-embedded writes and age out under a
-namespace's retention.</li>
+<li>Biggest risk: <strong>forgetting leaves no refusal behind.</strong>
+Delete, forget and erasure retire the row and write no blacklist
+pattern, so the next extraction of the same sentence stores it again;
+every intake and restore path does check the patterns an agent or admin
+wrote.</li>
+<li>Second risk: <code>memory.proposal_decide</code> lets an agent
+accept a proposal, session summaries restating a superseded fact reach
+search with only <code>memory.ask</code> masking them, and audit rows
+are best-effort and age out under a namespace's retention.</li>
 <li>Most reusable component: the peer verdict in
 <code>server/memory/app/conflicts.py</code> with
 <code>server/memory/app/set_commit.py</code>, and the resolver's Undo in
 <code>server/memory/app/restore.py</code>.</li>
-<li>Maturity impression: Apache-2.0 from ClickHouse, Inc.; 513,695 lines
-of Python under <code>server/</code>, 158,862 in
-<code>server/memory/</code>; 753 commits from 8 October to 18 November
-2026; 27,617 pytest functions with the integration suite on ClickHouse
+<li>Maturity impression: Apache-2.0 from ClickHouse, Inc.; 518,914 lines
+of Python under <code>server/</code>, 159,103 in
+<code>server/memory/</code>; 832 commits from 8 October to 19 November
+2026; 28,036 pytest functions with the integration suite on ClickHouse
 in CI, not run here; LongMemEval-S and LoCoMo headlines recompute from
 committed CSVs. Seven marks: <code>tombstone</code>,
 <code>trust_state</code>, <code>bitemporal</code>,
