@@ -18832,6 +18832,80 @@ lockfile; nothing was installed or run. If the engine were published,
 the first thing to read would be whether a <code>FORGET</code> event
 stops a later cook of the same conversation from writing the fact
 back.</li>
+<li><strong><a
+href="https://arxiv.org/abs/2611.22299"><code>arXiv:2611.22299</code></a>
+was examined and has no report: it releases no code, and the one thing
+its method keeps across tasks is the evolved harness, accepted a module
+at a time through a gate that compares against the seed.</strong>
+<em>Harnesses That Improve Themselves: A Unifying Framework for
+Self-Improving Agent Harnesses</em> (Deep Shah and Nehal Kathrotia,
+Google; v1 17 November 2026, cs.AI, no venue or comments line) is mostly
+a survey. It splits a harness into four editable components — context
+and state, agent control, action interfaces, verification and recovery —
+and the improvement loop into four stages: diagnose, propose a patch,
+validate, deploy. Memory appears twice, and neither time as a mechanism
+the paper builds. §III lists <em>"Cross-turn environment and memory
+persistence"</em> as the fourth family of mechanisms optimisers
+discover, citing other work for the split between working and
+experiential memory. Table III's third safeguard, <em>Securing
+Persistent Memory</em>, asks that saved memories and learned rules be
+treated <em>"as untrusted inputs with tracked origins"</em>, which is <a
+href="../patterns/evidence-before-belief/">evidence before belief</a>
+stated as advice. In memory terms the durable state of the paper's own
+method is harness code: an accepted module edit is a claim that the
+patch helps, and it can turn out false. Eq. 1 admits a harness
+<code>h</code> when its expected runtime tokens per task stay under a
+budget and the Stage 3 gate <code>G_val(h, h0)</code> passes, defined as
+runtime execution of the modified code paths and non-regression on a
+held-out validation split. The baseline is <code>h0</code>, the starting
+harness, not the incumbent, so as written each accepted edit can lose
+ground on the one before it while staying above the seed. The experiment
+is 60 SWE-bench Lite issues (sympy: development 12, validation 8,
+held-out 20; django: held-out 20 as out-of-distribution) from a 142-line
+seed, with Gemini 3.8 Flash as the frozen task model and Gemini 4 Carbon
+as the optimiser, the names as the paper gives them. Table IV, combined
+held-out: seed 5.0% (2/40), <em>Prompt-Only Reflection</em> 2.5% (1/40),
+<em>Unconstrained Full-Harness Rewrite</em> 42.5% (17/40) at 451.6k
+tokens per task, <em>Modular Gated Evolution</em> 40.0% (16/40) at
+46.7k. Transferred zero-shot to Gemini 4 Argon, the four read 10.0%,
+15.0%, 30.0% and 37.5%. Two readings sit against the abstract's
+<em>"gated modular evolution outperforms prompt reflection and
+full-harness rewrites across models and repositories"</em>. On the first
+model the ungated rewrite solves one task more and leads on django, 10
+of 20 to 8; the gated arm wins on tokens and on transfer, by three tasks
+of 40. And the arms had different search budgets: 100 rollouts for the
+gated arm against 24 for the rewrite and for the reflection (footnote
+‡). The reflection arm is the result that bears on memory. Its
+<code>RULES.md</code> opens with a rule forbidding a finish on an empty
+or untested diff, is appended to and never pruned, and the arm doubled
+unverified out-of-distribution exits from 15.0% to 30.0%; the gated
+arm's <code>verify.py</code> blocks the same exit in code and records
+none. A learned text rule that nothing enforces is advice to the model,
+not a mechanism. The narrated module sequence stands in for an ablation:
+<code>context_mgr.py</code> compaction and <code>action_aci.py</code>
+windowed views accepted, <code>control.py</code> raising the turn limit
+from 12 to 18 rejected on validation accuracy and the token cap,
+<code>verify.py</code> accepted. Search, 20 November 2026: of 10,639
+words of extracted text, <code>github</code> occurs once, in the title
+of reference [1], and <code>gitlab</code>, <code>huggingface</code> and
+<code>zenodo</code> not at all; the paper has no code or data
+availability statement, and the abstract page links no project page.
+<code>gh search repos</code> for the exact title returns four
+repositories for a different paper sharing the phrase, <em>Self-Harness:
+Harnesses That Improve Themselves</em> (<a
+href="https://arxiv.org/abs/2606.09498">arXiv:2606.09498</a>, Hangfan
+Zhang and co-authors, 8 June 2026); a code search for the id finds feed
+mirrors and reading lists; a GitHub user search finds no account for the
+second author and 107 for the first author's name, none attributable.
+With a release, two things would be read first: what Stage 3 keeps of a
+rejected edit — whether the <code>control.py</code> patch is recorded,
+keyed on what it changed, so the optimiser cannot propose it again next
+round, which is the <a
+href="../patterns/rejected-value-tombstone/">rejected-value
+tombstone</a> applied to harness code — and whether the gate's baseline
+is <code>h0</code> in the code as it is in the equation. <a
+href="../systems/harness2/">Harness²</a> is the reviewed system that
+keeps each adopted harness for later tasks.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a

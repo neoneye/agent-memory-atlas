@@ -518,6 +518,20 @@ note-and-wiki knowledge layer.
 - Status 2026-10-08: no project page, no Hugging Face record, every name
   variant tried returns 404.
 
+**Harnesses That Improve Themselves** — a survey framework for
+self-improving agent harnesses with a SWE-bench Lite experiment on modular
+gated evolution ([arXiv:2611.22299](https://arxiv.org/abs/2611.22299), v1).
+- Examined 2026-11-20; bullet opening "[`arXiv:2611.22299`](https://arxiv.org/abs/2611.22299) was examined and
+  has no report: it releases no code".
+- Missing: code, the 142-line seed harness and the evolved modules.
+- Monitor: the arXiv page. Not `zyw-yg/Self-Harness` or the other
+  repositories an exact-title search returns: they implement
+  [arXiv:2606.09498](https://arxiv.org/abs/2606.09498), a different paper.
+- Status 2026-11-20: v1; `github` appears once in the text, in a reference
+  title; no account matches the second author. If released: read what the
+  Stage 3 gate keeps of a rejected edit, and whether it compares against the
+  seed or the incumbent.
+
 ### Closed or hosted memory components
 
 These were excluded, or reported with a gap, because the memory is behind a
