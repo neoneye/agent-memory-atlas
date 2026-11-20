@@ -111,14 +111,14 @@ node.</p>
               <strong>the-open-engine/zeroshot</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/the-open-engine/zeroshot/commit/7353598ff2025de12acd60f1be15223317fa918b" title="7353598ff2025de12acd60f1be15223317fa918b">
+            <a class="meta-pill revision-pill" href="https://github.com/the-open-engine/zeroshot/commit/8ebba1a7d2a37254370197c408e5ac5b30a29946" title="8ebba1a7d2a37254370197c408e5ac5b30a29946">
               <span>Analyzed revision</span>
-              <code>7353598f…</code>
+              <code>8ebba1a7…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-11-14</strong>
+              <strong>2026-11-20</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/the-open-engine--zeroshot" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -128,16 +128,17 @@ node.</p>
                       </div>
                               <div class="document-meta document-facts">
             <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
-            <div class="meta-pill fact-pill"><span>Size</span><strong>376,104
-lines of Rust in 1,341 files; Active Memory is 8,156 lines in 30
-non-test files under zeroshot/src/active_memory, with 7,568 lines of
-tests in 23 files beside them</strong></div>
-            <div class="meta-pill fact-pill"><span>Activity</span><strong>898
-commits on main, 25 December 2025 – 13 November 2026; three maintainers
-under seven author identities account for 767. Active Memory first
-landed on 23 October 2026 and 16 commits touch it</strong></div>
-            <div class="meta-pill fact-pill"><span>Tests</span><strong>183
-#[test] and #[tokio::test] cases in 23 files under
+            <div class="meta-pill fact-pill"><span>Size</span><strong>428,927
+lines of Rust in 1,482 files; Active Memory is 9,922 lines in 31
+non-test files under zeroshot/src/active_memory, 1,152 of them the
+steering carrier, with 10,245 lines of tests in 25 files beside
+them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>957
+commits on main, 25 December 2025 – 19 November 2026; three maintainers
+under seven author identities account for 796. Active Memory first
+landed on 23 October 2026 and 27 commits touch it</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>219
+#[test] and #[tokio::test] cases in 25 files under
 zeroshot/src/active_memory, 12 more in the supervisor's postmortem tests
 and 4 on the config type; CI's native job runs cargo test --workspace on
 Linux and a test script on Windows. One live provider test is
@@ -247,10 +248,12 @@ from its snapshot (<code>retrieval.rs:40-67</code>).</li>
 <li><strong>Broker.</strong> A loopback TCP listener on one thread
 answers hook callbacks. A harness receives a private file holding the
 endpoint and a random 32-byte token bound to one invocation, never the
-database path (<code>hooks/broker.rs:96-158</code>).</li>
+database path (<code>hooks/broker.rs:140-223</code>). The same broker
+carries a person's steers to a running node, so it is installed for
+every agent conversation, with memory on or off.</li>
 <li><strong>Postmortem.</strong> A second, synthetic graph of four
 verifier nodes run through the finished run's own provider binding
-(<code>postmortem/plan.rs:107-146</code>).</li>
+(<code>postmortem/plan.rs:107-147</code>).</li>
 </ul>
 <h3 id="what-the-hosted-service-holds">What the hosted service
 holds</h3>
@@ -260,8 +263,8 @@ holds</h3>
 implementation in the tree is <code>SqliteMemoryBackend</code>.
 <code>ProductionHostingConfig.memory_backend</code> is the slot for
 another, and defaults to <code>None</code>
-(<code>zeroshot/src/native_v2_hosting.rs:106</code>,
-<code>:460</code>).</p>
+(<code>zeroshot/src/native_v2_hosting.rs:111</code>,
+<code>:479</code>).</p>
 <p>The Claude and OpenAI plugins register an HTTP MCP server at
 <code>https://api.app.zeroshot.sh/mcp</code>. The bundled skill says
 that server <em>"exposes typed environment and Memory operations"</em>
@@ -292,18 +295,18 @@ Paths</h2>
 <li><strong>Repository recall.</strong> harness hook →
 <code>Broker</code> → <code>RunMemorySource::tool_context</code> →
 <code>MemoryIndex::retrieve</code> → <code>render</code>
-(<code>hooks/broker.rs:171-190</code>, <code>runtime.rs:322-350</code>,
+(<code>hooks/broker.rs:300-368</code>, <code>runtime.rs:383-414</code>,
 <code>retrieval.rs:103-123</code>, <code>:168-215</code>).</li>
 <li><strong>Graph recall.</strong>
 <code>ActiveMemoryHooks::invocation</code> → <code>graph_context</code>
-→ <code>graph_guidance</code> (<code>hooks.rs:108-127</code>,
-<code>runtime.rs:352-359</code>,
+→ <code>graph_guidance</code> (<code>hooks.rs:339-358</code>,
+<code>runtime.rs:416-425</code>,
 <code>retrieval.rs:157-166</code>).</li>
 <li><strong>Delivery receipts.</strong>
 <code>RunMemorySource::select</code> and <code>manifest</code>
-(<code>runtime.rs:299-318</code>, <code>:385-394</code>); carrier
+(<code>runtime.rs:346-379</code>, <code>:451-460</code>); carrier
 acknowledgement in <code>return_context</code>
-(<code>hooks/broker.rs:228-246</code>).</li>
+(<code>hooks/broker.rs:462-480</code>).</li>
 <li><strong>Evidence.</strong> <code>evidence::collect_inner</code>
 pages the run ledger; <code>ImpactEvidence::new</code> indexes
 completions and tool receipts per node
@@ -320,8 +323,8 @@ completions and tool receipts per node
 <li><strong>Publication.</strong>
 <code>BuiltinPostmortem::reconcile</code> → <code>publish</code> →
 <code>SqliteMemoryBackend::publish</code> →
-<code>apply_checked_batch</code> (<code>postmortem.rs:341-386</code>,
-<code>:245-266</code>, <code>backend.rs:85-112</code>,
+<code>apply_checked_batch</code> (<code>postmortem.rs:348-393</code>,
+<code>:252-273</code>, <code>backend.rs:85-112</code>,
 <code>store.rs:85-104</code>).</li>
 <li><strong>Schema.</strong> <code>initialize</code>
 (<code>store.rs:214-244</code>).</li>
@@ -330,7 +333,7 @@ completions and tool receipts per node
 (<code>zeroshot/src/native_v2_cli/memory.rs:33-48</code>,
 <code>postmortem/initialize/publish.rs:16-30</code>).</li>
 <li><strong>Supervisor hook-up.</strong> <code>run_postmortem</code>
-(<code>zeroshot/src/native_v2_supervisor/postmortem.rs:22-95</code>).</li>
+(<code>zeroshot/src/native_v2_supervisor/postmortem.rs:26-108</code>).</li>
 </ul>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><code>Lesson</code> has seven fields: <code>schema_version</code>,
@@ -393,9 +396,15 @@ the byte budget, skipping one that does not and continuing
 default, at four bytes a token, with a ceiling of 64,000. There is no
 cumulative budget for a conversation.</p>
 <p>Deduplication is by exact id and revision per provider session
-(<code>runtime.rs:299-318</code>). Compaction does not reset it, so a
+(<code>runtime.rs:346-379</code>). Compaction does not reset it, so a
 card pushed out of context by compaction is not sent again in that
-conversation.</p>
+conversation. Copilot is the exception: it applies hook context to the
+turn in progress and writes none of it to its session, so its carrier
+marks the context as not kept
+(<code>harnesses/adapters/core/copilot/rpc.rs:401</code>) and a
+repository card is deduplicated per execution instead, given again in a
+later execution of the same conversation
+(<code>runtime/tests.rs:112</code>).</p>
 <p>Failure modes follow from exactness. A renamed file silences its
 lesson until maintenance adapts the association. Folder associations are
 broad: a lesson on a top-level folder matches every tool call beneath it
@@ -404,10 +413,15 @@ hash.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes happen once per run, after the main graph's outcome is
 latched. The supervisor starts the postmortem only when memory and the
-postmortem are enabled and the source node did not end on an
-authentication or model-availability refusal
-(<code>zeroshot/src/native_v2_supervisor/postmortem.rs:6-42</code>,
-<code>:125-154</code>).</p>
+postmortem are enabled, the store and hooks initialized, and the source
+node did not end on an authentication or model-availability refusal
+(<code>zeroshot/src/native_v2_supervisor/postmortem.rs:6-46</code>,
+<code>:151-180</code>). A store that fails to open disables recall and
+the postmortem together, and the diagnostic names the lessons file
+(<code>runtime.rs:221-242</code>). A skipped or failed postmortem goes
+to the run's error stream, and foreground <code>run</code> and
+<code>watch</code> print the latest five such records when they stop
+observing (<code>docs/guides/active-memory.md:56-64</code>).</p>
 <p>Four specialists run in parallel as verifier nodes with structured
 outputs: graph maintenance, repository maintenance, graph discovery and
 repository discovery (<code>postmortem/plan.rs:20-25</code>,
@@ -419,7 +433,7 @@ first, and up to 512 tool receipts
 (<code>postmortem/evidence.rs:11</code>, <code>:35-70</code>).</p>
 <p>The host then validates, and a single failure rejects that
 specialist's whole output
-(<code>postmortem/execution.rs:145-161</code>).</p>
+(<code>postmortem/execution.rs:152-165</code>).</p>
 <ul>
 <li>A discovery must name an agent node that executed, cite at least one
 reference owned by that node's completions or tool receipts, and resolve
@@ -443,14 +457,14 @@ decision fails the specialist (<code>proposals.rs:422-440</code>).
 well. If the delivery manifest is unknown, because a hook failed or a
 provider execution errored, maintenance is refused outright
 (<code>proposals.rs:594-596</code>,
-<code>runtime.rs:385-394</code>).</p>
+<code>runtime.rs:451-460</code>).</p>
 <p>Publication is one <code>BEGIN IMMEDIATE</code> transaction. Every
 lesson in the reviewed snapshot is checked against its stored revision
 first, then each mutation is checked again, and any mismatch rolls the
 batch back (<code>store.rs:85-104</code>, <code>:336-366</code>). On a
 conflict the postmortem re-reads the store, reruns maintenance only, and
 carries the validated discoveries forward
-(<code>postmortem.rs:341-386</code>,
+(<code>postmortem.rs:348-393</code>,
 <code>execution.rs:44-47</code>).</p>
 <p>Backfill uses the same validators. <code>zeroshot memory init</code>
 exports task files from local run history, a host agent's subagents
@@ -470,10 +484,10 @@ the commit.</p>
 run was given, so its token cost grows with deliveries, not with the
 corpus. On the read path a hook callback has a 250 ms socket budget per
 step and the Claude and Codex handler declares a one-second timeout
-(<code>hooks/broker.rs:20</code>, <code>hooks/native.rs:64-69</code>).
-Repository cards arrive mid-conversation as hook context or appended
-tool results, after the cached prefix. Graph cards are added to the
-invocation's host context (<code>hooks.rs:108-127</code>).</p>
+(<code>hooks/broker.rs:20</code>, <code>hooks/native.rs:64-72</code>).
+Repository cards arrive mid-conversation, after the cached prefix,
+through each harness's own channel (section 8). Graph cards are added to
+the invocation's host context (<code>hooks.rs:339-358</code>).</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>The model has no memory tool. Recall is automatic, and writing
 belongs to the postmortem. Six harness carriers share one broker
@@ -485,24 +499,48 @@ For Codex the installer computes the trust hash of exactly that handler,
 so no blanket hook trust is granted
 (<code>zeroshot/src/harnesses/adapters/core/claude/memory.rs:9-43</code>,
 <code>core/codex/memory.rs:19-47</code>).</li>
-<li>Copilot uses its RPC <code>preToolUse</code> callback.</li>
-<li>Pi, OpenCode and Hermes get a generated extension that appends cards
-to the tool result (<code>core/pi/memory.rs:29-80</code>,
-<code>contributed/opencode/memory.rs:25-76</code>,
-<code>contributed/hermes/native_memory.py</code>).</li>
+<li>Copilot uses its RPC <code>preToolUse</code> callback, and is given
+a card again in a later execution because it keeps none of the context
+(section 6).</li>
+<li>Pi gets a generated extension that adds cards to the session as an
+entry of their own at <code>turn_end</code>, after the tool calls of one
+model response (<code>core/pi/memory.rs:1-5</code>,
+<code>:79-95</code>).</li>
+<li>OpenCode gets a plugin that stores cards as a session message with
+<code>noReply</code> after the tool runs
+(<code>contributed/opencode/memory.rs:1-5</code>,
+<code>:79-95</code>).</li>
+<li>Hermes gets a Python patch that queues the cards as a plugin notice
+on the tool message being committed, and acknowledges only when the card
+is found in that message's content
+(<code>contributed/hermes/native_memory.py:97-117</code>,
+<code>:131-158</code>). The reference documentation states that
+<em>"Cards are never placed inside a tool result, which a model may
+refuse to follow"</em> and lists Codex, Claude, Copilot, Pi and
+OpenCode; Hermes, which attaches them to the tool message, is not on
+that list (<code>docs/reference/active-memory.md:124-135</code>).</li>
 </ul>
 <p>A pre-tool hook cannot change the call already issued, which the
 reference documentation states; the card informs the next decision.</p>
 <p>Each carrier acknowledges with one byte after it has handed the
 context to the harness. A missing acknowledgement marks the run's
 delivery as unknown, and that single flag is what makes maintenance
-abstain (<code>hooks/broker.rs:228-246</code>). The postmortem's own
+abstain (<code>hooks/broker.rs:462-480</code>,
+<code>hooks/steering.rs:649-650</code>). The postmortem's own
 specialists are marked auxiliary and receive no cards
-(<code>hooks.rs:70-72</code>, <code>:141-143</code>).</p>
+(<code>hooks.rs:288-290</code>, <code>:382-384</code>).</p>
+<p>The same carrier delivers <em>steers</em>: direction a person records
+against a running run, and guidance agents publish to each other over
+authorized steering networks. A steer is read from the run's own record,
+framed as the operator's words, and delivered at the next tool call as a
+user message where the harness has a channel for one, or ahead of the
+cards in hook context on Codex (<code>hooks/steering.rs:355-380</code>).
+It does not count against the card budgets, reads no lesson and writes
+none, and lasts for the run it was sent to.</p>
 <p>Authored instructions are untouched. Graph cards go into a host
 context field beside them, and the graph hash that scopes them is
 computed from the authored graph alone
-(<code>runtime.rs:539-544</code>). Editing the graph therefore orphans
+(<code>runtime.rs:605-610</code>). Editing the graph therefore orphans
 its graph lessons: they stay in the store under the old hash, and a run
 of the edited graph queries the new one.</p>
 <p>Porting the carrier to another harness needs a tool hook that can
@@ -528,8 +566,9 @@ retirement are all decided by models and validated by code. The backfill
 is driven by a host agent that writes the response files and calls the
 CLI; the command checks no terminal and takes no approval. No lesson
 waits in a state. <code>human_review</code> is withheld. The hosted
-service's <em>"human-only Memory permissions"</em> are not in the
-tree.</p>
+service's <em>"human-only Memory permissions"</em> are not in the tree.
+The one channel a person has into a run, a steer, directs that run and
+does not touch the store.</p>
 <p><strong>A lesson from a dirty checkout is permanent.</strong>
 <code>SourceGuard::capture</code> returns no reference unless
 <code>git status</code> is empty, including untracked files
@@ -549,7 +588,7 @@ expensive.</strong> A retired id blocks the same scope and advice. The
 insert is refused inside the transaction, so every other mutation the
 postmortem produced is rolled back with it. The retry finds the visible
 snapshot unchanged and stops with a storage error
-(<code>postmortem.rs:303-306</code>). Until discovery words the advice
+(<code>postmortem.rs:310-313</code>). Until discovery words the advice
 differently, each run that rediscovers it publishes nothing.</p>
 <p><strong>Scope holds on reads.</strong> One query and one recheck
 stand between a run and another repository's lessons
@@ -585,13 +624,13 @@ repository qualifier is delivered to that node in every repository that
 runs the same graph.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>I ran nothing. I counted 183 <code>#[test]</code> and
-<code>#[tokio::test]</code> attributes in 23 test files under
+<p>I ran nothing. I counted 219 <code>#[test]</code> and
+<code>#[tokio::test]</code> attributes in 25 test files under
 <code>zeroshot/src/active_memory</code>, 12 in
 <code>zeroshot/src/native_v2_supervisor/tests/postmortem.rs</code>, 4 on
 the config type and 1 on the Codex installer. CI's native job runs
 <code>cargo test --workspace</code> on Linux and a separate test script
-on Windows (<code>.github/workflows/ci.yml:315-323</code>). The two
+on Windows (<code>.github/workflows/ci.yml:317-329</code>). The two
 cases in <code>harnesses/live_tests/active_memory_tests.rs</code> need a
 real provider, and one is marked <code>#[ignore]</code>.</p>
 <p>The tests I read assert outcomes, and the negative ones carry
@@ -685,6 +724,12 @@ of injected cards are relevant to the tool call that triggered
 them?</li>
 <li>Are orphaned graph lessons from superseded graph hashes ever
 removed?</li>
+<li>Does a run resumed from a checkpoint re-send cards its restored
+conversations already hold? Delivery state is created empty when memory
+is prepared (<code>runtime.rs:146</code>, <code>:296-305</code>), while
+conversations are restored around it (<code>runtime.rs:272-277</code>),
+and the manifest maintenance relies on would then cover only what was
+delivered after the resume.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <p>Paths are under <code>zeroshot/src/</code> unless a longer path is
@@ -733,7 +778,7 @@ given.</p>
 </ul>
 <h3 id="recorded-searches">Recorded searches</h3>
 <p>Run with <code>/usr/bin/git grep</code> from the root of a checkout
-at <code class="commit-id" title="7353598ff2025de12acd60f1be15223317fa918b">7353598f…</code>.</p>
+at <code class="commit-id" title="8ebba1a7d2a37254370197c408e5ac5b30a29946">8ebba1a7…</code>.</p>
 <ul>
 <li><code>git grep -n -i 'DELETE FROM' -- zeroshot/src/active_memory</code>
 — one statement, over <code>active_memory_initializations</code> at
@@ -761,20 +806,28 @@ lists <code>zeroshot/src/main.rs</code> among five files.</li>
 <li><code>git grep -n -E 'MemoryCommand' -- zeroshot/src</code> with
 <code>zeroshot/src/native_v2_cli/memory.rs:10-31</code> — the enum has
 one variant, <code>Init</code>; no list, show, edit or delete verb.</li>
-<li><code>git grep -n -E '\.permits\(|\.stamp\(|source_bound\(|revalidat' -- zeroshot/src docs</code>,
-test files excluded — <code>stamp</code> is called at
-<code>proposals.rs:546</code> and <code>:689</code> only;
-<code>revalidat</code> matches
+<li><code>git grep -n -E '\.permits\(|\.stamp\(|source_bound\(|revalidat' -- zeroshot/src docs ':!*tests*'</code>
+— <code>stamp</code> is called at <code>proposals.rs:546</code> and
+<code>:689</code> only; <code>revalidat</code> matches
 <code>docs/reference/active-memory.md:38</code> and an unrelated comment
 at <code>native_v2_local.rs:187</code>.</li>
 <li><code>git grep -n -E 'impl ActiveMemoryBackend|dyn ActiveMemoryBackend|memory_backend' -- .</code>,
 test files excluded — one <code>impl</code>, for
 <code>SqliteMemoryBackend</code> at <code>backend.rs:73</code>;
 <code>memory_backend: None</code> at
-<code>native_v2_hosting.rs:460</code>.</li>
+<code>native_v2_hosting.rs:479</code>.</li>
 <li><code>git ls-files | grep -i mcp</code> —
 <code>planning/plans/shared-skills-plugins-mcp.md</code> and the two
 plugins' <code>.mcp.json</code>; no MCP server source.</li>
+<li><code>git grep -n -E 'context_kept' -- zeroshot/src ':!*tests*'</code>
+— the field and its plumbing in <code>hooks.rs</code>,
+<code>hooks/broker.rs</code> and <code>runtime.rs:408</code>, and one
+carrier setting it false,
+<code>harnesses/adapters/core/copilot/rpc.rs:401</code>.</li>
+<li><code>git grep -n -i -E 'hermes' -- docs/reference/active-memory.md docs/guides/active-memory.md</code>
+— no match, so neither memory page names Hermes. Control:
+<code>git grep -l -i hermes -- docs</code> lists six files, among them
+<code>docs/project/harness-adapters.md</code>.</li>
 <li><code>git grep -l -i -E 'lesson' -- ui sdks plugins</code> — no
 match; no UI, SDK or plugin surface names a lesson. Control: the same
 pattern matches throughout <code>zeroshot/src/active_memory</code>.</li>
@@ -791,6 +844,22 @@ returns 22.</li>
 match.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/the-open-engine/zeroshot/commit/8ebba1a7d2a37254370197c408e5ac5b30a29946"><code class="commit-id" title="8ebba1a7d2a37254370197c408e5ac5b30a29946">8ebba1a7…</code></a>
+— re-read at the head of <code>main</code>, 59 commits past
+<code>7353598</code>. The store, model, retrieval, proposal and
+source-guard files are unchanged, so the mechanism and the three marks
+stand; every recorded search returns what it did. Delivery moved: Pi and
+OpenCode no longer append cards to a tool result but add a session entry
+or a stored message, Copilot is given a card again in each execution,
+and the carrier also delivers a person's steers (<a
+href="#8-agent-integration">section 8</a>). Hermes still attaches cards
+to the tool message, which the reference's <em>never inside a tool
+result</em> does not cover. Initialization and postmortem failures reach
+the error stream (<a href="#7-write-mechanics">section 7</a>). Line
+citations re-mapped; census re-measured with the first reading's method.
+Screen unchanged in kind: three auto-run surfaces, manifests inside the
+cooldown; nothing was installed or run.</p>
 <p><strong>2026-11-14</strong> — <a
 href="https://github.com/the-open-engine/zeroshot/commit/7353598ff2025de12acd60f1be15223317fa918b"><code class="commit-id" title="7353598ff2025de12acd60f1be15223317fa918b">7353598f…</code></a>
 — first reading, at the head of <code>main</code>, dated 13 November

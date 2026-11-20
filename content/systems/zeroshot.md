@@ -7,18 +7,18 @@ page_kind: system
 source_name: "the-open-engine/zeroshot"
 source_url: https://github.com/the-open-engine/zeroshot
 archive_name: "the-open-engine--zeroshot"
-revision: 7353598ff2025de12acd60f1be15223317fa918b
-revision_url: https://github.com/the-open-engine/zeroshot/commit/7353598ff2025de12acd60f1be15223317fa918b
-analyzed_at: 2026-11-14
+revision: 8ebba1a7d2a37254370197c408e5ac5b30a29946
+revision_url: https://github.com/the-open-engine/zeroshot/commit/8ebba1a7d2a37254370197c408e5ac5b30a29946
+analyzed_at: 2026-11-20
 licence: "MIT"
-size: "376,104 lines of Rust in 1,341 files; Active Memory is 8,156 lines in 30 non-test files under zeroshot/src/active_memory, with 7,568 lines of tests in 23 files beside them"
-activity: "898 commits on main, 25 December 2025 – 13 November 2026; three maintainers under seven author identities account for 767. Active Memory first landed on 23 October 2026 and 16 commits touch it"
-tests: "183 #[test] and #[tokio::test] cases in 23 files under zeroshot/src/active_memory, 12 more in the supervisor's postmortem tests and 4 on the config type; CI's native job runs cargo test --workspace on Linux and a test script on Windows. One live provider test is #[ignore]"
+size: "428,927 lines of Rust in 1,482 files; Active Memory is 9,922 lines in 31 non-test files under zeroshot/src/active_memory, 1,152 of them the steering carrier, with 10,245 lines of tests in 25 files beside them"
+activity: "957 commits on main, 25 December 2025 – 19 November 2026; three maintainers under seven author identities account for 796. Active Memory first landed on 23 October 2026 and 27 commits touch it"
+tests: "219 #[test] and #[tokio::test] cases in 25 files under zeroshot/src/active_memory, 12 more in the supervisor's postmortem tests and 4 on the config type; CI's native job runs cargo test --workspace on Linux and a test script on Windows. One live provider test is #[ignore]"
 capabilities: "tombstone, scope_enforced, negative_eval"
 capability_evidence:
   tombstone: "lesson store — a retired lesson's content-derived id is kept with its revision and refuses a fresh insert | zeroshot/src/active_memory/postmortem/proposals.rs:481-490; zeroshot/src/active_memory/store.rs:346-366, :368-402, :228-237 | a discovered lesson's id is `lesson-` plus the SHA-256 of its canonical scope and its whitespace- and case-normalized recommendation. Retirement sets `deleted=1`, nulls the body and keeps the row at the next revision. A later discovery of the same advice under the same associations derives the same id and arrives as an insert expecting no row; `check_revision` finds the tombstone and returns `RevisionConflict` inside the write transaction. The key is exact: a reworded recommendation or a different file list is a new id. An adapted lesson keeps its first id, so retiring it tombstones the hash of text it no longer carries. The refusal rolls back the whole publication it arrived in. Nothing removes a tombstone. | `rediscovery_of_a_retired_id_stops_without_repeating_unchanged_model_work` in zeroshot/src/active_memory/postmortem/tests/reconciliation.rs:176-225 derives the id from scope and recommendation, retires it, replays the discovery and asserts the store stays empty; `revisions_tombstones_and_immutable_snapshots` in zeroshot/src/active_memory/tests.rs:107-154 asserts the conflict at the store"
-  scope_enforced: "run snapshot — repository key and graph hash as columns in the one query every read starts from | zeroshot/src/active_memory/store.rs:177-212, :228-239; zeroshot/src/active_memory/model.rs:243-261; zeroshot/src/active_memory/runtime.rs:64-73, :109-118, :492-537; zeroshot/src/active_memory/postmortem.rs:152-172 | one SQLite file holds every repository's lessons. `read_scoped_lessons` selects `deleted=0` rows whose `repository` column equals the run's key, or whose `graph_hash` equals the run's authored graph hash with a null or equal repository, and rechecks each decoded lesson with `LessonScope::matches`. A run's index is built from that snapshot only, so retrieval cannot reach a row the query left out. The repository key is a hash of the forge identity derived from the checkout's remote, not from caller-authored metadata. A hosted backend's snapshot is rechecked with the same predicate and refused on a mismatch. The mark covers reads; publication passes the scope to the backend, and the SQLite backend does not check a mutation's scope against it. | `snapshots_enforce_repo_graph_node_and_independent_toggles` in zeroshot/src/active_memory/tests.rs:243-311; `untrusted_forge_metadata_cannot_select_a_different_repository_scope` in zeroshot/src/active_memory/runtime/tests.rs:124"
-  negative_eval: "scope boundary and frozen snapshot — committed tests asserting named lessons are absent from a populated read | zeroshot/src/active_memory/tests.rs:243-311; zeroshot/src/active_memory/runtime/tests.rs:473-520; .github/workflows/ci.yml:315-319 | the store test writes seven lessons, among them one for another repository, one graph lesson qualified by another repository, one for another node and one for another graph hash, then asserts the snapshot equals exactly the three in scope. The runtime test updates a lesson after a run has prepared and asserts the first run's tool context contains the old card and does not contain the new text. Both assertions sit beside a positive control in the same result, so neither passes on an empty read. They are unit tests; no retrieval-quality evaluation set is committed. | the two tests named, run by `cargo test --workspace` in CI"
+  scope_enforced: "run snapshot — repository key and graph hash as columns in the one query every read starts from | zeroshot/src/active_memory/store.rs:177-212, :228-239; zeroshot/src/active_memory/model.rs:243-261; zeroshot/src/active_memory/runtime.rs:64-73, :109-118, :558-603; zeroshot/src/active_memory/postmortem.rs:159-179 | one SQLite file holds every repository's lessons. `read_scoped_lessons` selects `deleted=0` rows whose `repository` column equals the run's key, or whose `graph_hash` equals the run's authored graph hash with a null or equal repository, and rechecks each decoded lesson with `LessonScope::matches`. A run's index is built from that snapshot only, so retrieval cannot reach a row the query left out. The repository key is a hash of the forge identity derived from the checkout's remote, not from caller-authored metadata. A hosted backend's snapshot is rechecked with the same predicate and refused on a mismatch. The mark covers reads; publication passes the scope to the backend, and the SQLite backend does not check a mutation's scope against it. | `snapshots_enforce_repo_graph_node_and_independent_toggles` in zeroshot/src/active_memory/tests.rs:243-311; `untrusted_forge_metadata_cannot_select_a_different_repository_scope` in zeroshot/src/active_memory/runtime/tests.rs:190"
+  negative_eval: "scope boundary and frozen snapshot — committed tests asserting named lessons are absent from a populated read | zeroshot/src/active_memory/tests.rs:243-311; zeroshot/src/active_memory/runtime/tests.rs:539-586; .github/workflows/ci.yml:317-321 | the store test writes seven lessons, among them one for another repository, one graph lesson qualified by another repository, one for another node and one for another graph hash, then asserts the snapshot equals exactly the three in scope. The runtime test updates a lesson after a run has prepared and asserts the first run's tool context contains the old card and does not contain the new text. Both assertions sit beside a positive control in the same result, so neither passes on an empty read. They are unit tests; no retrieval-quality evaluation set is committed. | the two tests named, run by `cargo test --workspace` in CI"
 stack_storage: "sqlite"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -29,7 +29,7 @@ matrix:
   write: "After the main graph settles, four model specialists propose and maintain lessons; the host validates citations against the run ledger and current files, derives ids, stamps the checkout commit and publishes one compare-and-swap transaction"
   update_delete: "Maintenance keeps, adapts, retires or defers every card it was given. Adapt and retire need the card's recorded commit to be an ancestor of a clean HEAD. Retirement nulls the body and keeps id and revision. No person-facing edit or delete verb"
   scoping: "Repository key hashed from the checkout's forge identity, or authored graph hash plus node id with an optional repository qualifier; applied in the snapshot SQL and rechecked per lesson"
-  integration: "PreToolUse hooks for Claude Code and Codex, an RPC callback for Copilot, tool-result extensions for Pi, OpenCode and Hermes, all over a loopback broker with a per-invocation token; graph cards join the private provider prompt; one CLI verb for backfill"
+  integration: "PreToolUse hooks for Claude Code and Codex, an RPC callback for Copilot, a session entry for Pi, a stored session message for OpenCode and a plugin notice on the tool message for Hermes, all over a loopback broker with a per-invocation token; graph cards join the private provider prompt; one CLI verb for backfill"
   background: "The postmortem runs inside the finishing run under a shared deadline of at most ten minutes; nothing is scheduled between runs"
   trust: "No state on a lesson. Admission is a host check that a proposal cites an observed completion or tool receipt of its own node and an existing tracked file; cards are injected as guidance subordinate to authored instructions"
   strengths: "Workers hold no write path; proposals are validated against host-recorded evidence; revisions with whole-snapshot compare-and-swap; delivery receipts decide what maintenance may touch; a model cannot forge the source commit; bounded everything; dense tests"
@@ -130,9 +130,11 @@ store and matcher never invoke a model, a process, or a network service."*
 - **Broker.** A loopback TCP listener on one thread answers hook callbacks. A
   harness receives a private file holding the endpoint and a random 32-byte
   token bound to one invocation, never the database path
-  (`hooks/broker.rs:96-158`).
+  (`hooks/broker.rs:140-223`). The same broker carries a person's steers to a
+  running node, so it is installed for every agent conversation, with memory
+  on or off.
 - **Postmortem.** A second, synthetic graph of four verifier nodes run through
-  the finished run's own provider binding (`postmortem/plan.rs:107-146`).
+  the finished run's own provider binding (`postmortem/plan.rs:107-147`).
 
 ### What the hosted service holds
 
@@ -140,7 +142,7 @@ The tree defines the storage boundary as a trait, `ActiveMemoryBackend`, with
 `snapshot` and `publish` (`backend.rs:52-68`). Its one implementation in the
 tree is `SqliteMemoryBackend`. `ProductionHostingConfig.memory_backend` is the
 slot for another, and defaults to `None`
-(`zeroshot/src/native_v2_hosting.rs:106`, `:460`).
+(`zeroshot/src/native_v2_hosting.rs:111`, `:479`).
 
 The Claude and OpenAI plugins register an HTTP MCP server at
 `https://api.app.zeroshot.sh/mcp`. The bundled skill says that server *"exposes
@@ -170,12 +172,12 @@ Paths are under `zeroshot/src/active_memory/`.
   (`runtime.rs:53-83`, `store.rs:123-136`, `:177-212`).
 - **Repository recall.** harness hook → `Broker` → `RunMemorySource::tool_context`
   → `MemoryIndex::retrieve` → `render`
-  (`hooks/broker.rs:171-190`, `runtime.rs:322-350`, `retrieval.rs:103-123`, `:168-215`).
+  (`hooks/broker.rs:300-368`, `runtime.rs:383-414`, `retrieval.rs:103-123`, `:168-215`).
 - **Graph recall.** `ActiveMemoryHooks::invocation` → `graph_context` →
-  `graph_guidance` (`hooks.rs:108-127`, `runtime.rs:352-359`, `retrieval.rs:157-166`).
+  `graph_guidance` (`hooks.rs:339-358`, `runtime.rs:416-425`, `retrieval.rs:157-166`).
 - **Delivery receipts.** `RunMemorySource::select` and `manifest`
-  (`runtime.rs:299-318`, `:385-394`); carrier acknowledgement in
-  `return_context` (`hooks/broker.rs:228-246`).
+  (`runtime.rs:346-379`, `:451-460`); carrier acknowledgement in
+  `return_context` (`hooks/broker.rs:462-480`).
 - **Evidence.** `evidence::collect_inner` pages the run ledger;
   `ImpactEvidence::new` indexes completions and tool receipts per node
   (`postmortem/evidence.rs:107-140`, `postmortem/impact.rs:34-65`).
@@ -186,13 +188,13 @@ Paths are under `zeroshot/src/active_memory/`.
   (`source_guard.rs:24-109`).
 - **Publication.** `BuiltinPostmortem::reconcile` → `publish` →
   `SqliteMemoryBackend::publish` → `apply_checked_batch`
-  (`postmortem.rs:341-386`, `:245-266`, `backend.rs:85-112`, `store.rs:85-104`).
+  (`postmortem.rs:348-393`, `:252-273`, `backend.rs:85-112`, `store.rs:85-104`).
 - **Schema.** `initialize` (`store.rs:214-244`).
 - **Backfill.** `zeroshot memory init` → `initialize::init` →
   `publish::commit` (`zeroshot/src/native_v2_cli/memory.rs:33-48`,
   `postmortem/initialize/publish.rs:16-30`).
 - **Supervisor hook-up.** `run_postmortem`
-  (`zeroshot/src/native_v2_supervisor/postmortem.rs:22-95`).
+  (`zeroshot/src/native_v2_supervisor/postmortem.rs:26-108`).
 
 ## 5. Memory Data Model
 
@@ -254,8 +256,13 @@ per node invocation by default, at four bytes a token, with a ceiling of
 64,000. There is no cumulative budget for a conversation.
 
 Deduplication is by exact id and revision per provider session
-(`runtime.rs:299-318`). Compaction does not reset it, so a card pushed out of
-context by compaction is not sent again in that conversation.
+(`runtime.rs:346-379`). Compaction does not reset it, so a card pushed out of
+context by compaction is not sent again in that conversation. Copilot is the
+exception: it applies hook context to the turn in progress and writes none of
+it to its session, so its carrier marks the context as not kept
+(`harnesses/adapters/core/copilot/rpc.rs:401`) and a repository card is
+deduplicated per execution instead, given again in a later execution of the
+same conversation (`runtime/tests.rs:112`).
 
 Failure modes follow from exactness. A renamed file silences its lesson until
 maintenance adapts the association. Folder associations are broad: a lesson on
@@ -266,9 +273,14 @@ age or use, and ties fall to the id, which is a hash.
 
 Writes happen once per run, after the main graph's outcome is latched. The
 supervisor starts the postmortem only when memory and the postmortem are
-enabled and the source node did not end on an authentication or
-model-availability refusal
-(`zeroshot/src/native_v2_supervisor/postmortem.rs:6-42`, `:125-154`).
+enabled, the store and hooks initialized, and the source node did not end on
+an authentication or model-availability refusal
+(`zeroshot/src/native_v2_supervisor/postmortem.rs:6-46`, `:151-180`). A store
+that fails to open disables recall and the postmortem together, and the
+diagnostic names the lessons file (`runtime.rs:221-242`). A skipped or failed
+postmortem goes to the run's error stream, and foreground `run` and `watch`
+print the latest five such records when they stop observing
+(`docs/guides/active-memory.md:56-64`).
 
 Four specialists run in parallel as verifier nodes with structured outputs:
 graph maintenance, repository maintenance, graph discovery and repository
@@ -279,7 +291,7 @@ a 32 KiB tail of ledger records reclaimed from the largest consumer first, and
 up to 512 tool receipts (`postmortem/evidence.rs:11`, `:35-70`).
 
 The host then validates, and a single failure rejects that specialist's whole
-output (`postmortem/execution.rs:145-161`).
+output (`postmortem/execution.rs:152-165`).
 
 - A discovery must name an agent node that executed, cite at least one
   reference owned by that node's completions or tool receipts, and resolve
@@ -297,14 +309,14 @@ the specialist (`proposals.rs:422-440`). `keep` needs a current citation and a
 reason. `adapt` and `retire` need current-run evidence as well. If the
 delivery manifest is unknown, because a hook failed or a provider execution
 errored, maintenance is refused outright (`proposals.rs:594-596`,
-`runtime.rs:385-394`).
+`runtime.rs:451-460`).
 
 Publication is one `BEGIN IMMEDIATE` transaction. Every lesson in the reviewed
 snapshot is checked against its stored revision first, then each mutation is
 checked again, and any mismatch rolls the batch back (`store.rs:85-104`,
 `:336-366`). On a conflict the postmortem re-reads the store, reruns
 maintenance only, and carries the validated discoveries forward
-(`postmortem.rs:341-386`, `execution.rs:44-47`).
+(`postmortem.rs:348-393`, `execution.rs:44-47`).
 
 Backfill uses the same validators. `zeroshot memory init` exports task files
 from local run history, a host agent's subagents write response files, and the
@@ -325,9 +337,9 @@ No pass rewrites the store, but maintenance reads every lesson the run was
 given, so its token cost grows with deliveries, not with the corpus. On the
 read path a hook callback has a 250 ms socket budget per step and the Claude
 and Codex handler declares a one-second timeout (`hooks/broker.rs:20`,
-`hooks/native.rs:64-69`). Repository cards arrive mid-conversation as hook
-context or appended tool results, after the cached prefix. Graph cards are
-added to the invocation's host context (`hooks.rs:108-127`).
+`hooks/native.rs:64-72`). Repository cards arrive mid-conversation, after the
+cached prefix, through each harness's own channel (section 8). Graph cards are
+added to the invocation's host context (`hooks.rs:339-358`).
 
 ## 8. Agent Integration
 
@@ -339,24 +351,43 @@ postmortem. Six harness carriers share one broker protocol:
   trust hash of exactly that handler, so no blanket hook trust is granted
   (`zeroshot/src/harnesses/adapters/core/claude/memory.rs:9-43`,
   `core/codex/memory.rs:19-47`).
-- Copilot uses its RPC `preToolUse` callback.
-- Pi, OpenCode and Hermes get a generated extension that appends cards to the
-  tool result (`core/pi/memory.rs:29-80`,
-  `contributed/opencode/memory.rs:25-76`,
-  `contributed/hermes/native_memory.py`).
+- Copilot uses its RPC `preToolUse` callback, and is given a card again in a
+  later execution because it keeps none of the context (section 6).
+- Pi gets a generated extension that adds cards to the session as an entry of
+  their own at `turn_end`, after the tool calls of one model response
+  (`core/pi/memory.rs:1-5`, `:79-95`).
+- OpenCode gets a plugin that stores cards as a session message with
+  `noReply` after the tool runs (`contributed/opencode/memory.rs:1-5`,
+  `:79-95`).
+- Hermes gets a Python patch that queues the cards as a plugin notice on the
+  tool message being committed, and acknowledges only when the card is found in
+  that message's content (`contributed/hermes/native_memory.py:97-117`,
+  `:131-158`). The reference documentation states that *"Cards are never placed
+  inside a tool result, which a model may refuse to follow"* and lists Codex,
+  Claude, Copilot, Pi and OpenCode; Hermes, which attaches them to the tool
+  message, is not on that list (`docs/reference/active-memory.md:124-135`).
 
 A pre-tool hook cannot change the call already issued, which the reference
 documentation states; the card informs the next decision.
 
 Each carrier acknowledges with one byte after it has handed the context to the
 harness. A missing acknowledgement marks the run's delivery as unknown, and
-that single flag is what makes maintenance abstain (`hooks/broker.rs:228-246`).
-The postmortem's own specialists are marked auxiliary and receive no cards
-(`hooks.rs:70-72`, `:141-143`).
+that single flag is what makes maintenance abstain (`hooks/broker.rs:462-480`,
+`hooks/steering.rs:649-650`). The postmortem's own specialists are marked
+auxiliary and receive no cards (`hooks.rs:288-290`, `:382-384`).
+
+The same carrier delivers *steers*: direction a person records against a
+running run, and guidance agents publish to each other over authorized
+steering networks. A steer is read from the run's own record, framed as the
+operator's words, and delivered at the next tool call as a user message where
+the harness has a channel for one, or ahead of the cards in hook context on
+Codex (`hooks/steering.rs:355-380`). It does not count against the card
+budgets, reads no lesson and writes none, and lasts for the run it was sent
+to.
 
 Authored instructions are untouched. Graph cards go into a host context field
 beside them, and the graph hash that scopes them is computed from the authored
-graph alone (`runtime.rs:539-544`). Editing the graph therefore orphans its
+graph alone (`runtime.rs:605-610`). Editing the graph therefore orphans its
 graph lessons: they stay in the store under the old hash, and a run of the
 edited graph queries the new one.
 
@@ -383,7 +414,8 @@ decided by models and validated by code. The backfill is driven by a host
 agent that writes the response files and calls the CLI; the command checks no
 terminal and takes no approval. No lesson waits in a state. `human_review` is
 withheld. The hosted service's *"human-only Memory permissions"* are not in
-the tree.
+the tree. The one channel a person has into a run, a steer, directs that run
+and does not touch the store.
 
 **A lesson from a dirty checkout is permanent.** `SourceGuard::capture`
 returns no reference unless `git status` is empty, including untracked files
@@ -401,7 +433,7 @@ plausible state at admission.
 the same scope and advice. The insert is refused inside the transaction, so
 every other mutation the postmortem produced is rolled back with it. The retry
 finds the visible snapshot unchanged and stops with a storage error
-(`postmortem.rs:303-306`). Until discovery words the advice differently, each
+(`postmortem.rs:310-313`). Until discovery words the advice differently, each
 run that rediscovers it publishes nothing.
 
 **Scope holds on reads.** One query and one recheck stand between a run and
@@ -435,12 +467,12 @@ node in every repository that runs the same graph.
 
 ## 10. Tests, Evals, and Benchmarks
 
-I ran nothing. I counted 183 `#[test]` and `#[tokio::test]` attributes in 23
+I ran nothing. I counted 219 `#[test]` and `#[tokio::test]` attributes in 25
 test files under `zeroshot/src/active_memory`, 12 in
 `zeroshot/src/native_v2_supervisor/tests/postmortem.rs`, 4 on the config type
 and 1 on the Codex installer. CI's native job runs `cargo test --workspace` on
 Linux and a separate test script on Windows
-(`.github/workflows/ci.yml:315-323`). The two cases in
+(`.github/workflows/ci.yml:317-329`). The two cases in
 `harnesses/live_tests/active_memory_tests.rs` need a real provider, and one is
 marked `#[ignore]`.
 
@@ -524,6 +556,11 @@ take the validation design and add the person.
 - What does a postmortem cost in tokens on a real run, and what share of
   injected cards are relevant to the tool call that triggered them?
 - Are orphaned graph lessons from superseded graph hashes ever removed?
+- Does a run resumed from a checkpoint re-send cards its restored conversations
+  already hold? Delivery state is created empty when memory is prepared
+  (`runtime.rs:146`, `:296-305`), while conversations are restored around it
+  (`runtime.rs:272-277`), and the manifest maintenance relies on would then
+  cover only what was delivered after the resume.
 
 ## Appendix: File Index
 
@@ -557,7 +594,7 @@ Paths are under `zeroshot/src/` unless a longer path is given.
 ### Recorded searches
 
 Run with `/usr/bin/git grep` from the root of a checkout at
-`7353598ff2025de12acd60f1be15223317fa918b`.
+`8ebba1a7d2a37254370197c408e5ac5b30a29946`.
 
 - `git grep -n -i 'DELETE FROM' -- zeroshot/src/active_memory` — one statement, over `active_memory_initializations` at `store.rs:115`; none over `active_memory_records`, so no tombstone is ever removed.
 - `git grep -n -E 'CREATE TABLE|CREATE INDEX' -- zeroshot/src/active_memory` — three tables and one index, all in `store.rs:223-238`; no history, event or audit table.
@@ -566,9 +603,11 @@ Run with `/usr/bin/git grep` from the root of a checkout at
 - `git grep -n -i -E 'approve|approval|human|confirm\(|reviewer_id' -- zeroshot/src/active_memory ':!zeroshot/src/active_memory/postmortem/tests*' ':!zeroshot/src/active_memory/tests.rs'` — no match. Control: `git grep -c -i 'human' -- npm/zeroshot/skills/zeroshot/SKILL.md` returns 1.
 - `git grep -n -i -E 'is_terminal|isatty|IsTerminal' -- zeroshot/src/active_memory zeroshot/src/native_v2_cli/memory.rs` — no match. Control: `git grep -l -E 'is_terminal|IsTerminal' -- zeroshot/src` lists `zeroshot/src/main.rs` among five files.
 - `git grep -n -E 'MemoryCommand' -- zeroshot/src` with `zeroshot/src/native_v2_cli/memory.rs:10-31` — the enum has one variant, `Init`; no list, show, edit or delete verb.
-- `git grep -n -E '\.permits\(|\.stamp\(|source_bound\(|revalidat' -- zeroshot/src docs`, test files excluded — `stamp` is called at `proposals.rs:546` and `:689` only; `revalidat` matches `docs/reference/active-memory.md:38` and an unrelated comment at `native_v2_local.rs:187`.
-- `git grep -n -E 'impl ActiveMemoryBackend|dyn ActiveMemoryBackend|memory_backend' -- .`, test files excluded — one `impl`, for `SqliteMemoryBackend` at `backend.rs:73`; `memory_backend: None` at `native_v2_hosting.rs:460`.
+- `git grep -n -E '\.permits\(|\.stamp\(|source_bound\(|revalidat' -- zeroshot/src docs ':!*tests*'` — `stamp` is called at `proposals.rs:546` and `:689` only; `revalidat` matches `docs/reference/active-memory.md:38` and an unrelated comment at `native_v2_local.rs:187`.
+- `git grep -n -E 'impl ActiveMemoryBackend|dyn ActiveMemoryBackend|memory_backend' -- .`, test files excluded — one `impl`, for `SqliteMemoryBackend` at `backend.rs:73`; `memory_backend: None` at `native_v2_hosting.rs:479`.
 - `git ls-files | grep -i mcp` — `planning/plans/shared-skills-plugins-mcp.md` and the two plugins' `.mcp.json`; no MCP server source.
+- `git grep -n -E 'context_kept' -- zeroshot/src ':!*tests*'` — the field and its plumbing in `hooks.rs`, `hooks/broker.rs` and `runtime.rs:408`, and one carrier setting it false, `harnesses/adapters/core/copilot/rpc.rs:401`.
+- `git grep -n -i -E 'hermes' -- docs/reference/active-memory.md docs/guides/active-memory.md` — no match, so neither memory page names Hermes. Control: `git grep -l -i hermes -- docs` lists six files, among them `docs/project/harness-adapters.md`.
 - `git grep -l -i -E 'lesson' -- ui sdks plugins` — no match; no UI, SDK or plugin surface names a lesson. Control: the same pattern matches throughout `zeroshot/src/active_memory`.
 - `git grep -n -i -E 'embedding|cosine|fts5|bm25|vector_search' -- zeroshot/src/active_memory` — no match. Control: `git grep -c -i 'BTreeMap' -- zeroshot/src/active_memory/retrieval.rs` returns 22.
 - `git grep -n -i -E 'arxiv|bibtex|@article|@misc|CITATION|doi\.org' -- README.md docs '*.cff'` — two hits, both the word "citation" in `docs/reference/active-memory.md`; no paper.
@@ -576,5 +615,7 @@ Run with `/usr/bin/git grep` from the root of a checkout at
 - `git grep -n 'filter=' -- .gitattributes` — no match.
 
 ## History
+
+**2026-11-20** — [`8ebba1a7d2a37254370197c408e5ac5b30a29946`](https://github.com/the-open-engine/zeroshot/commit/8ebba1a7d2a37254370197c408e5ac5b30a29946) — re-read at the head of `main`, 59 commits past `7353598`. The store, model, retrieval, proposal and source-guard files are unchanged, so the mechanism and the three marks stand; every recorded search returns what it did. Delivery moved: Pi and OpenCode no longer append cards to a tool result but add a session entry or a stored message, Copilot is given a card again in each execution, and the carrier also delivers a person's steers ([section 8](#8-agent-integration)). Hermes still attaches cards to the tool message, which the reference's *never inside a tool result* does not cover. Initialization and postmortem failures reach the error stream ([section 7](#7-write-mechanics)). Line citations re-mapped; census re-measured with the first reading's method. Screen unchanged in kind: three auto-run surfaces, manifests inside the cooldown; nothing was installed or run.
 
 **2026-11-14** — [`7353598ff2025de12acd60f1be15223317fa918b`](https://github.com/the-open-engine/zeroshot/commit/7353598ff2025de12acd60f1be15223317fa918b) — first reading, at the head of `main`, dated 13 November 2026. Marks: `tombstone` on the content-derived id kept at retirement, `scope_enforced` on the snapshot query, `negative_eval` on the scope and frozen-snapshot tests. The root LICENSE and the three copies under `plugins/` and `sdks/python/` were read in full: MIT, identical, agreeing with the manifests, no rider. Screened before reading: three auto-run surfaces (a plugin marketplace, a plugin manifest and an HTTP MCP server entry pointing at a hosted endpoint), four dependency surfaces inside the seven-day cooldown, five build-time execution points, three unpinned manifests. Nothing was installed or run. The hosted service behind `api.app.zeroshot.sh` was not contacted.
