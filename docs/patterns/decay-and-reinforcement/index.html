@@ -796,6 +796,25 @@ the same repository keeps the stored score out of ranking and shows it
 to the planner as a label, so the reinforcement path is a measurement,
 not a design. No output is committed, so the paper's covariance does not
 recompute from the tree.</p>
+<p><strong><a href="../../systems/mimirs-memory-hub/">Mimir's Memory
+Hub</a> makes every read three writes.</strong> Vividness is importance
+times <code>exp(-age / stability)</code> with floors for flashbulb,
+anchored, cherished, semantic and importance-8-plus memories, computed
+at read time so a test moves it by patching the clock
+(<code>vividmimir/models.py:197-247</code>). Each recall then touches
+what it returned: a touch at least <code>MIN_SPACING_DAYS</code> after
+the previous one multiplies stability, a query classified as factual
+adds importance, and the emotion vector moves 5% toward the current mood
+(<code>vividmimir/models.py:142-188</code>). <code>resonate</code>
+lowers the stability of every unreturned memory sharing 70% of the
+returned words, and with probability 0.05 adds a random memory
+(<code>vividmimir/recall_mixin.py:578-603</code>). The reinforcement is
+spacing-gated, which keeps a burst of questions from inflating it.
+Reinforcement and interference both key on what the ranker returned, and
+nothing separates that from whether the memory is true. <strong>A decay
+model whose reads write needs a read path that does not, for the UI and
+for tests; this one has it as <code>recall(touch=False)</code> and the
+context block does not use it.</strong></p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

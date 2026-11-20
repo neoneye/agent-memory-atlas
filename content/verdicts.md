@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 825 reports.**
+**This page covers all 826 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7572,3 +7572,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, release v0.3.32; 17,052 lines of standard-library Python in `ctxproxy/`, 156 commits from 4 October to 17 November 2026; 1,218 unittest methods run in CI on Linux and Windows against an in-process fake engine, not run here. The AgentLongBench tables recompute from the hosted records except the 31 October repeat run, which is not among them. One mark: `negative_eval`.
 - Study when: a local coding agent outgrows its window and hidden context should come back verbatim rather than summarised, or you want a deletion command and test worth copying.
 - Do not copy when: you need facts, preferences or beliefs across sessions, a forget that holds while the client still has the conversation, or more than one person on the machine.
+
+### [`mimirs-memory-hub`](../systems/mimirs-memory-hub/)
+
+- Best idea: **forgetting is a property computed at read time.** Vividness is importance times `exp(-age / stability)` with explicit floors for the classes the app promises never to lose, recall raises stability on a spacing rule, and a superseded memory stays as how things used to be, labelled in the prompt and down-ranked rather than erased.
+- Biggest risk: **maintenance rewrites what was said.** A tag at Jaccard 0.55 against a stored memory replaces its text; consolidation truncates memories older than 90 days to 15 words, fuses clusters into chunks and copies recurring ones into near-permanent semantic memories, and none of these passes reads the supersession field.
+- Second risk: a delete removes the row and leaves its semantic copy and conversation snapshot, nothing stops the model re-tagging it, and every 40 turns an LLM curation pass deletes recent memories with a bare `pop` that skips the index shift `forget` performs.
+- Most reusable component: `Memory.vividness` and `Memory.touch` in `vividmimir/models.py`, and the swipe undo in `_forget_formed` in `playground/server.py`.
+- Maturity impression: PolyForm Noncommercial 1.0.0, app v1.0.5 and engine 2.1.0; 6,669 lines of Python in `vividmimir/`, 93 commits from 22 March to 17 November 2026; 180 test functions, 80 of which record metrics rather than assert, no CI, not run here; the LongMemEval headline is on the oracle split and below the script's own TF-IDF baseline. No marks.
+- Study when: you want a companion that fades and resurfaces memories on a curve a test can drive with a fake clock.
+- Do not copy when: stored wording must survive consolidation, a deletion must survive the next background pass, or the use is commercial.

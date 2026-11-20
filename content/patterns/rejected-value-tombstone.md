@@ -1090,6 +1090,8 @@ a change event keyed on its id, and the same sentence can be written again.
 
 [Mnemonic Proxy](../../systems/mnemonic-proxy/) is the case where a careful hard delete needs the tombstone most. `mnemonic-proxy forget` removes one conversation from every table found in the schema, rebuilds the FTS index under `secure_delete`, vacuums, deletes engine state files and filters the journal, and its test proves no table or file still holds the id. It records nothing about what it removed. Capture is the client's full history on every request, so the client's next request archives the forgotten conversation again, under a new id or under the same one when the client sends a conversation header. A record keyed on the forgotten content, consulted where `prepare` archives, is what the deletion is missing.
 
+**[Mimir's Memory Hub](../../systems/mimirs-memory-hub/) deletes the row and leaves what was built from it.** `forget` removes the memory, shifts every position-keyed index and drops its embedding (`vividmimir/write_mixin.py:491-533`). It does not touch the near-permanent `semantic` copy that consolidation made of a recurring memory, a chunk that absorbed it, or the conversation snapshot written beside it, and no code deletes a snapshot (`vividmimir/neuroscience_mixin.py:368-508`, `vividmimir/persistence_mixin.py:465-470`). The model can tag the same content again on the next turn and it is stored as new. **A deletion has to reach every derived copy before a tombstone is worth adding, or the value returns from a source the tombstone never checks.**
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

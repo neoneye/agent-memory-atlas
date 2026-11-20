@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local AI companion app whose
+Python engine keeps model-tagged memories per character in JSON, fades
+them on a forgetting curve and consolidates them.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mimir's Memory
+Hub — Agent Memory Atlas">
+    <meta property="og:description" content="A local AI companion app
+whose Python engine keeps model-tagged memories per character in JSON,
+fades them on a forgetting curve and consolidates them.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mimir's Memory
+Hub — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local AI companion app
+whose Python engine keeps model-tagged memories per character in JSON,
+fades them on a forgetting curve and consolidates them.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mimir's Memory Hub — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mimir's Memory Hub",
+      "description": "A local AI companion app whose Python engine keeps model-tagged memories per character in JSON, fades them on a forgetting curve and consolidates them.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Forgetting curves for companion
+characters</p>
+          <h1>Mimir's Memory Hub</h1>
+          <p class="document-deck">A local AI companion app whose Python
+engine keeps model-tagged memories per character in JSON, fades them on
+a forgetting curve and consolidates them.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Kronic90/Mimirs-Memory-Hub">
+              <span>Source</span>
+              <strong>Kronic90/Mimirs-Memory-Hub</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Kronic90/Mimirs-Memory-Hub/commit/aaf3befa063a65077ff1d3ee0a8b9a658270da5e" title="aaf3befa063a65077ff1d3ee0a8b9a658270da5e">
+              <span>Analyzed revision</span>
+              <code>aaf3befa…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Kronic90--Mimirs-Memory-Hub" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Kronic90--Mimirs-Memory-Hub</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>PolyForm
+Noncommercial 1.0.0, in LICENSE, pyproject.toml and the package header;
+no commercial use</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>6,669
+lines of Python in vividmimir/, copied file for file into
+mimir_modular/; 13,208 in playground/; 14,933 lines of front-end
+JavaScript, HTML and CSS</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>93
+commits from 22 March to 17 November 2026, 91 by Kronic90; app v1.0.5,
+engine package 2.1.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>180
+test functions in 20 files; the 80 in seven suite files record a metric
+instead of asserting; no CI; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mimir's Memory Hub is a local companion and character-chat app, a
+FastAPI server with a browser UI. Its memory engine is a Python package,
+<code>vividmimir</code>, that keeps one store of episodic memories per
+character as JSON. The chat model decides what to remember by writing
+<code>&lt;remember&gt;</code> tags in its reply. The engine scores each
+memory's <em>vividness</em> on an exponential forgetting curve that
+recall reinforces, and it runs Norse-named consolidation passes that
+merge, prune, summarise and invent "insights".</p>
+<p>What is notable is how literally the forgetting is modelled, and that
+it is all arithmetic a reader can follow. A memory's vividness is
+importance times retention, with floors for flashbulb, anchored,
+cherished, semantic and high-importance memories. A model-marked update
+keeps the old memory as "used to be true" rather than overwriting it. A
+swiped-away reply forgets the memories it created.</p>
+<p>What is weak is everything that changes stored text. A tag whose
+content words reach a Jaccard overlap of 0.55 with an existing memory
+replaces its text. Consolidation truncates memories older than 90 days
+to 15 words and fuses clusters into chunks, and none of it reads the
+supersession field. A user delete leaves the memory's semantic copy and
+its conversation snapshot on disk. Every 40 turns a model-driven
+curation pass deletes memories with no record. The README's 93.9%
+LongMemEval figure is measured on the oracle split and sits below the
+script's own TF-IDF baseline.</p>
+<p><strong>Licence.</strong> PolyForm Noncommercial 1.0.0 grants use
+only <em>"for any permitted purpose"</em>, and the permitted purposes
+are noncommercial ones, so a company may not run the hub or embed the
+engine in a product. The same text is in <code>LICENSE</code>,
+<code>pyproject.toml</code> and the header of
+<code>vividmimir/__init__.py</code>. The neurochemistry engine, the
+emotional audit log and the embedding layer the README describes are
+imported from two other packages, <code>vividnessmem</code> and
+<code>vividembed</code>, that are not in this tree, not in
+<code>requirements.txt</code>, and whose terms the tree does not state
+(<code>vividmimir/constants.py:22-50</code>).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a sentence the chat model chose to keep, with an emotion
+label and an importance from 1 to 10. It is not a fact with a truth
+value. The engine has no notion of a memory being wrong, only of it
+being faded, outdated, protected or archived.</p>
+<p>Strength is the central quantity. <code>vividness</code> is
+<code>importance × exp(-age / stability)</code>, raised to a floor for
+flashbulb (high arousal and importance), anchored, cherished, semantic
+and importance-8-plus memories
+(<code>vividmimir/models.py:197-247</code>). Every recall touches the
+memory: a well-spaced touch multiplies stability, a factual query adds
+importance, and the emotion vector moves 5% toward the current mood
+before the label is recomputed
+(<code>vividmimir/models.py:142-188</code>). Reading a memory changes
+it.</p>
+<p>A memory stops being current in one of six ways:</p>
+<ul>
+<li><strong>Superseded.</strong> The model's tag names an old memory
+with <code>updates="..."</code>. The old memory gets the new text in
+<code>_superseded_by</code>, its stability drops by 40%, and recall
+multiplies its score by 0.45. It is still served, labelled <em>"used to
+be true — now: …"</em> (<code>vividmimir/write_mixin.py:437-456</code>,
+<code>vividmimir/core.py:468-478</code>).</li>
+<li><strong>Overwritten.</strong> A new memory at Jaccard overlap 0.55
+or more replaces an existing one's text and keeps its date
+(<code>vividmimir/write_mixin.py:121-166</code>).</li>
+<li><strong>Faded.</strong> Below vividness 0.01 a memory moves to the
+attic, from which a person can rediscover it
+(<code>vividmimir/neuroscience_mixin.py:594-619</code>).</li>
+<li><strong>Absorbed.</strong> Consolidation merges near-duplicates,
+truncates old memories to a gist, and fuses clusters into one chunk
+memory, removing the originals.</li>
+<li><strong>Deleted.</strong> By a person in the memory browser, by a
+swipe, or by the periodic LLM curation pass.</li>
+<li><strong>Never.</strong> Flashbulb, anchored and cherished memories
+are exempt from pruning, gisting and the curation pass.</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a memory is born from a tag in the model's reply; reads reinforce it, consolidation rewrites it, and nothing records a deletion</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a memory is born from a tag in the model&#39;s reply; reads reinforce it, consolidation rewrites it, and nothing records a deletion
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    T[&quot;remember tag in&lt;br/&gt;the model&#39;s reply&quot;]
+    U[&quot;memory browser,&lt;br/&gt;import, API&quot;]
+    T ~~~ U
+  end
+  writers --&gt; D{&quot;Jaccard overlap 0.55&lt;br/&gt;with a stored memory?&quot;}
+  D --&gt;|&quot;yes&quot;| OV[&quot;old text replaced,&lt;br/&gt;old date kept&quot;]
+  D --&gt;|&quot;no&quot;| NEW[&quot;new memory,&lt;br/&gt;vividness = importance&lt;br/&gt;× retention&quot;]
+  OV --&gt; LIVE[&quot;live in&lt;br/&gt;reflections.json&quot;]
+  NEW --&gt; LIVE
+  LIVE --&gt; RD[&quot;each recall raises&lt;br/&gt;stability, drifts the&lt;br/&gt;emotion label&quot;]
+  RD --&gt; SUP[&quot;updates= names it:&lt;br/&gt;labelled used-to-be,&lt;br/&gt;score × 0.45, served&quot;]
+  SUP --&gt; CONS
+  subgraph CONS[&quot;Consolidation, every&lt;br/&gt;50 stores and on sleep&quot;]
+    direction TB
+    G[&quot;over 90 days:&lt;br/&gt;cut to 15 words&quot;]
+    C[&quot;clustered: fused&lt;br/&gt;into a chunk&quot;]
+    S[&quot;recurring entity:&lt;br/&gt;copied to a near-&lt;br/&gt;permanent semantic&quot;]
+    G ~~~ C ~~~ S
+  end
+  CONS --&gt; EXITS
+  subgraph EXITS[&quot;Exits&quot;]
+    direction TB
+    A[&quot;vividness under 0.01:&lt;br/&gt;attic, recoverable&quot;]
+    X[&quot;deleted by a person,&lt;br/&gt;a swipe, or the&lt;br/&gt;40-turn LLM pass&quot;]
+    A ~~~ X
+  end</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The app is one Python process. <code>python -m playground</code>
+starts uvicorn on <code>127.0.0.1:19009</code>
+(<code>playground/__main__.py:19-22</code>), serving a static UI and a
+WebSocket chat loop in <code>playground/server.py</code>.
+<code>playground/memory_manager.py</code> wraps the engine with
+tag-driven writes, preset-aware context and periodic consolidation. The
+engine is <code>vividmimir/</code>, a class composed from seven mixins
+(<code>vividmimir/core.py:37-63</code>).</p>
+<p><strong>Which package is live.</strong> The tree holds the engine
+twice. <code>vividmimir/</code> and <code>mimir_modular/</code> contain
+the same eleven modules byte for byte; only <code>__init__.py</code>
+differs, and the <code>mimir_modular</code> one exports four fewer model
+classes. <code>memory_manager.py</code> imports <code>vividmimir</code>
+first and falls back to <code>mimir_modular</code> only when that fails
+(<code>playground/memory_manager.py:20-44</code>). Both launchers put
+the repository root on <code>PYTHONPATH</code>, and the portable build
+copies <code>vividmimir/</code> to the app root so it shadows the PyPI
+copy that <code>requirements.txt</code> also installs
+(<code>run.sh:61</code>, <code>build_portable.ps1:88-93</code>). So the
+in-tree <code>vividmimir/</code> runs. <code>mimir_modular</code> is
+imported by the two benchmark scripts and nothing else
+(<code>benchmarks/bench_mimir_full.py:51</code>,
+<code>benchmarks/bench_preset_ab.py:42</code>). At this pin the copy is
+harmless; any future fix applied to one directory and not the other
+changes what the benchmarks measure.</p>
+<p><strong>What the default install runs.</strong>
+<code>requirements.txt</code> installs <code>vividmimir</code> without
+extras, and <code>pyproject.toml</code> declares no required
+dependencies. The engine imports <code>NeuroChemistry</code> and
+<code>EmotionalAuditLog</code> from <code>vividnessmem</code> and
+<code>VividEmbed</code> from <code>vividembed</code>, each inside a
+<code>try</code> that leaves <code>None</code>
+(<code>vividmimir/constants.py:22-50</code>). None of the launchers or
+installers names either package. On the documented install, chemistry is
+the <code>_NullChemistry</code> stub, the audit log is
+<code>_NullAuditLog</code>, and retrieval has no vector arm
+(<code>vividmimir/core.py:146-171</code>,
+<code>vividmimir/models.py:657-707</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing runs beside the process. Storage is a directory of JSON files
+per character, written atomically through a temp file and rename
+(<code>vividmimir/persistence_mixin.py:415-428</code>). The store is
+human-readable and repairable by hand. An unreadable file is copied
+aside before the next save can overwrite it (<code>:430-457</code>). No
+API key is needed to store anything; a chat model is needed to produce
+the tags. The engine supports Fernet encryption at rest, but
+<code>MemoryManager</code> never passes a key, so the app's store is
+plaintext (<code>playground/memory_manager.py:315-325</code>). The Open
+WebUI example is the one caller that does
+(<code>examples/openwebui_pipeline.py:82-89</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write from a tag.</strong> The model's reply is parsed by
+<code>_parse_remember_tags</code>, which reads <code>emotion</code>,
+<code>importance</code>, <code>why</code>, <code>entity</code>,
+<code>updates</code>, <code>cherish</code>, <code>anchor</code> and
+<code>identity</code> attributes
+(<code>playground/server.py:226-257</code>). If a thinking model wrote
+no tag, phrases like "I should remember" inside its think block become
+memories (<code>:3372-3389</code>). The server sends <code>done</code>,
+then schedules <code>_bg_memory_ops</code> as a task that calls
+<code>MemoryManager.remember</code> for each tag
+(<code>:3434-3500</code>, <code>:3856</code>).</li>
+<li><strong>Resolve an update.</strong> <code>_find_update_target</code>
+recalls five candidates for the <code>updates</code> text without
+touching them and picks the best word overlap above 0.15;
+<code>_apply_update</code> supersedes it, or records the old text on the
+merged memory when the new tag overwrote it
+(<code>playground/memory_manager.py:951-985</code>).</li>
+<li><strong>Store.</strong> <code>Mimir.remember</code> applies
+chemistry modulation, a novelty factor from the last memories, the
+0.55-overlap dedup merge, flashbulb detection, pattern separation, date
+extraction into reminders, and embedding if present
+(<code>vividmimir/write_mixin.py:61-265</code>).</li>
+<li><strong>Assemble context.</strong>
+<code>get_context_for_preset</code> calls <code>get_context_block</code>
+with the user's message as the cue
+(<code>playground/memory_manager.py:707-801</code>); the block goes into
+the system prompt under <code>## Your Memories</code>
+(<code>playground/server.py:3195-3218</code>).</li>
+<li><strong>Consolidate.</strong> <code>muninn</code>,
+<code>_compress_to_gist</code>, <code>chunk_memories</code>,
+<code>huginn</code> (which runs
+<code>_crystallize_semantic_memories</code>) and
+<code>volva_dream</code>
+(<code>vividmimir/neuroscience_mixin.py:227-1052</code>), called from
+<code>remember</code> every 50 stores, from <code>sleep_reset</code>,
+and on turn counters in <code>process_turn</code>
+(<code>vividmimir/write_mixin.py:250-263</code>,
+<code>vividmimir/core.py:217-233</code>,
+<code>playground/memory_manager.py:657-685</code>).</li>
+<li><strong>Delete.</strong> <code>Mimir.forget</code> pops the row and
+shifts every position-keyed structure — word and date indexes, graph
+edges, inferred edges, task links — then rebuilds the social index
+(<code>vividmimir/write_mixin.py:491-533</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Memory</code> uses <code>__slots__</code> with about 40 fields
+(<code>vividmimir/models.py:45-79</code>). Content, emotion, importance,
+<code>timestamp</code>, <code>source</code> and <code>entity</code> are
+public; the rest carry the mechanisms: <code>_stability</code>,
+<code>_access_count</code>, <code>_last_access</code>,
+<code>original_emotion</code> (the label at encoding, never drifted),
+<code>_emotion_pad</code>, <code>_encoding_mood</code>,
+<code>_is_flashbulb</code>, <code>_anchor</code>,
+<code>_cherished</code>, <code>_category</code> (<code>"self"</code> for
+identity memories), <code>_snapshot_id</code>, visual hash and
+description, <code>_superseded_by</code>, <code>_supersedes</code> and
+<code>_affect_intensity</code>.</p>
+<p>Memories are addressed by list position. Every index, graph edge and
+task link is keyed on the integer position in <code>_reflections</code>,
+which is why deletion has to shift them all and why any removal that
+skips <code>forget</code> leaves them stale.</p>
+<p><code>entity</code> names who a memory is about and drives
+entity-anchored recall and the per-entity impressions section. It is not
+a scope. Scope is the character directory: <code>get_memory_dir</code>
+returns <code>profile/characters/&lt;char_id&gt;</code>, and
+<code>_ensure_memory_raw</code> builds one <code>MemoryManager</code>
+per character id (<code>playground/character_manager.py:76-79</code>,
+<code>playground/server.py:676-695</code>). Nothing on a record names
+its character, and no read carries a predicate.</p>
+<p>Time is <code>timestamp</code> plus <code>_decay_from</code>. An
+import sets <code>timestamp</code> to the event's date and
+<code>_decay_from</code> to now minus up to
+<code>IMPORT_PREAGE_DAYS</code>, so the decay clock is synthetic rather
+than a record time
+(<code>playground/memory_manager.py:1741-1762</code>). Supersession
+stores no time.</p>
+<p>Each model-authored memory also writes the whole conversation so far
+to <code>snapshots/&lt;uuid&gt;.json</code>, for Deep Recall
+(<code>vividmimir/persistence_mixin.py:465-470</code>). No code deletes
+a snapshot.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The context block, not <code>recall</code>, is what the model sees
+each turn (<code>vividmimir/core.py:480-741</code>). It opens with the
+date and time to the minute (<code>:488</code>), then sections in a
+fixed order. WHO I AM holds identity memories by vividness. THINGS ON MY
+MIND and BACKGROUND KNOWLEDGE come from <code>get_active_self</code>,
+which ranks <em>every</em> memory by mood-adjusted vividness times word
+overlap with the cue (<code>vividmimir/recall_mixin.py:76-132</code>).
+Then come impressions of the user, lessons, reminders, dated items,
+images, drift, and SOMETHING THIS REMINDS ME OF, which calls
+<code>recall</code> through <code>resonate</code>
+(<code>vividmimir/core.py:675</code>). Recent insights and the top
+semantic memories are appended unconditionally
+(<code>:705-741</code>).</p>
+<p><code>recall</code> is a two-stage hybrid
+(<code>vividmimir/recall_mixin.py:152-450</code>):</p>
+<ul>
+<li><strong>Candidates.</strong> An IDF sum over a word index with a
+five-character prefix fallback
+(<code>vividmimir/core.py:1399-1425</code>), which is BM25 in name only,
+with no term frequency or length normalisation. Date-index hits, every
+memory whose <code>entity</code> appears in the query, VividEmbed hits
+if installed, and up to a constant number of neighbours from spreading
+activation over the Yggdrasil graph are added.</li>
+<li><strong>Mood gate.</strong> With a non-neutral mood, candidates
+whose encoding mood is far from the current mood are dropped unless
+flashbulb, anchored, cherished or needed to reach a minimum count
+(<code>:305-330</code>).</li>
+<li><strong>Re-rank.</strong> A weighted sum of keyword, semantic,
+vividness, mood and recency, with weights switched by counting factual
+or emotional words in the query. Cherished is ×1.1, superseded ×0.45,
+and flat boosts go to entity matches, distinctive tokens, priming,
+dates, salience, images and activation (<code>:334-421</code>).</li>
+</ul>
+<p><code>resonate</code> then lowers the stability of every non-returned
+memory whose words overlap the returned ones by 70% or more, and with
+probability 0.05 appends a random memory (<code>:578-603</code>). So a
+read is three writes: reinforcement of what was returned, interference
+on its neighbours, and emotion drift.</p>
+<p>The block is bounded by its section caps, not by a token budget, and
+it changes every turn and every minute. The prompt-prefix cache covers
+only what precedes <code>## Your Memories</code> in the system
+prompt.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The model authors memories; nothing extracts them from the
+transcript. A tag's attributes are taken as written, with importance
+coerced from words like "high" or "8/10"
+(<code>playground/memory_manager.py:56-81</code>). There is no filter on
+what the model may tag, so a user who asks the character to remember a
+false statement gets it stored with whatever importance the model
+assigns.</p>
+<p>Dedup is an overwrite. When a new memory's content words reach a
+Jaccard overlap of 0.55 with an existing one's, <code>remember</code>
+builds a merged memory with the <em>new</em> content and the
+<em>old</em> timestamp, stability and flags, and replaces the old object
+in the list (<code>vividmimir/write_mixin.py:121-166</code>). The old
+text survives only if the tag also carried <code>updates</code>, in
+which case <code>_apply_update</code> writes it into
+<code>_supersedes</code>
+(<code>playground/memory_manager.py:980-985</code>).</p>
+<p>Consolidation rewrites the whole store in process:</p>
+<ul>
+<li><strong>Merge</strong> keeps the longer of any pair at Jaccard 0.40
+and drops the other
+(<code>vividmimir/neuroscience_mixin.py:557-592</code>).</li>
+<li><strong>Gist</strong> replaces the content of every unprotected
+memory older than 90 days with <code>"[gist — &lt;emotion&gt;] "</code>
+and its first 15 words (<code>:775-800</code>). The original text is
+gone.</li>
+<li><strong>Chunk</strong> fuses clusters of three or more memories at
+0.30 to 0.55 overlap into one memory of up to 120 deduplicated words,
+and removes the originals (<code>:806-937</code>).</li>
+<li><strong>Crystallize</strong> copies the most representative memory
+about any entity with three mentions into a <code>semantic</code> memory
+with stability 150 and a vividness floor, and turns repeated n-grams
+into <code>"recurring fact"</code> memories (<code>:368-508</code>).
+Semantic memories are exempt from pruning and gisting.</li>
+</ul>
+<p>None of these four reads <code>_superseded_by</code>; the field
+appears nowhere in <code>neuroscience_mixin.py</code>. A chunk built
+from an outdated memory and its replacement carries both texts and
+neither label, and crystallization can pick an outdated memory as an
+entity's permanent semantic fact.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Writes do not block the reply. The server sends <code>done</code>
+before parsing tags and runs memory operations in a task, so a memory is
+retrievable on the next turn
+(<code>playground/server.py:3300-3310</code>, <code>:3856</code>). The
+task calls the engine synchronously on the event loop, so a store that
+triggers auto-consolidation, whose merge and chunk steps loop over every
+pair in the list, holds the server for that time. Two model calls run in
+the background on turn counters: a reflection every 20 turns stored as a
+<code>huginn</code> memory, and a curation pass every 40
+(<code>playground/server.py:3817-3831</code>). The counter lives in the
+<code>MemoryManager</code> instance and restarts with the process.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Integration is the hub's own chat loop. The preset's system prompt
+teaches the tag vocabulary: <code>&lt;remember&gt;</code>,
+<code>&lt;remind&gt;</code>, <code>&lt;social&gt;</code>,
+<code>&lt;treasure&gt;</code>, <code>&lt;recall&gt;</code> for a
+conversation snapshot, <code>&lt;dream/&gt;</code>,
+<code>&lt;self_reflect/&gt;</code>, and in agent presets
+<code>&lt;task&gt;</code> and <code>&lt;solution&gt;</code>
+(<code>playground/server.py:3338-3346</code>). The model has full write
+agency and no delete verb; <code>&lt;dream/&gt;</code> runs a whole
+consolidation cycle, rate-limited to once per 30 minutes
+(<code>vividmimir/core.py:235-251</code>).</p>
+<p>The engine is usable on its own:
+<code>examples/custom_agent_example.py</code> and an Open WebUI filter
+pipeline construct <code>vividmimir.Mimir</code> directly
+(<code>examples/openwebui_pipeline.py:80-93</code>).
+<code>playground/mcp_client.py</code> is an MCP client for agent tools;
+memory is not exposed over MCP.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-a-delete-reaches">What a delete reaches</h3>
+<p><code>forget</code> removes the row, its graph edges and its
+embedding, and the next save rewrites the social files
+(<code>vividmimir/write_mixin.py:491-533</code>,
+<code>vividmimir/persistence_mixin.py:155-176</code>). It does not reach
+the memory's conversation snapshot, any semantic or chunk memory built
+from it, or a dream insight that quoted it. The next
+<code>&lt;remember&gt;</code> of the same thing is stored as new;
+nothing records that a person removed it.</p>
+<h3 id="the-curation-pass-deletes-without-the-index-fix">The curation
+pass deletes without the index fix</h3>
+<p>Every 40 turns, <code>MemoryManager.edit_memories</code> asks the
+chat model to "forget trivial ones" among the last 20 memories and
+applies its JSON (<code>playground/memory_manager.py:1366-1455</code>).
+<code>FORGET</code> removes rows with a bare
+<code>_reflections.pop</code> (<code>:1446-1449</code>). That is the
+path <code>forget</code>'s docstring says left recall returning
+<em>"whatever slid into the deleted slot"</em>: the word and date
+indexes and graph edges are not shifted, and nothing rebuilds them until
+a later merge or consolidation. The BM25 scorer guards against an
+out-of-range index, not a stale one
+(<code>vividmimir/core.py:1418-1423</code>). Protected memories are
+skipped, and nothing is logged.</p>
+<h3 id="what-a-swipe-undoes">What a swipe undoes</h3>
+<p>Regenerating a reply forgets the memories that reply created, matched
+on content and timestamp (<code>playground/server.py:2835-2854</code>).
+A tag that merged into an existing memory is excluded by
+<code>_is_new_memory</code>, so its overwrite of the old text is kept,
+and a supersession it applied stays on the old memory
+(<code>:2881-2888</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — withheld.
+<code>_superseded_by</code> is the only status-like field, and every
+read of it ranks or labels: ×0.45 in <code>recall</code> and
+<code>get_active_self</code>, a sort key in impressions, and a "used to
+be true" suffix (<code>vividmimir/recall_mixin.py:92</code>,
+<code>:108</code>, <code>:375</code>,
+<code>vividmimir/core.py:569-579</code>). No read excludes a row.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. Characters
+are separated by directory, a physical partition with no key on a record
+and no predicate on a read.</li>
+<li><strong><code>audit_log</code></strong> — withheld.
+<code>EmotionalAuditLog</code> lives in <code>vividnessmem</code>, which
+the tree does not contain and the default install does not install. The
+calls into it record supersession, chemistry and consolidation counts;
+<code>forget</code>, dedup overwrites and the curation pass write
+nothing.</li>
+<li><strong><code>human_review</code></strong> — withheld. The memory
+browser edits importance and emotion, cherishes and deletes after the
+write. <code>proactive_agent.py</code> has a <code>PROPOSED</code> to
+<code>APPROVED</code> task state, which gates agent work, not
+memory.</li>
+<li><strong><code>tombstone</code></strong> — withheld; see <em>What a
+delete reaches</em>.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. An import's
+event date sits in <code>timestamp</code> and <code>_decay_from</code>
+is a synthetic decay start, not a record time; supersession is
+untimed.</li>
+<li><strong><code>negative_eval</code></strong> — withheld; see section
+10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The tree has 180 test functions in 20 files and no CI configuration.
+I ran none of them. Two styles coexist. Seven suite files
+(<code>test_memory_lifecycle.py</code>, <code>test_tags.py</code>,
+<code>test_conversation_quality.py</code> and four others) call
+<code>h.metrics.record(name, passed, msg)</code> and return the
+collector; under pytest they cannot fail.
+<code>tests/long_term/run_all.py</code> totals them into a pass rate and
+exits 1 on any failure. The other files are ordinary pytest functions
+with <code>assert</code>.</p>
+<p>The committed run artifacts disagree with the README.
+<code>results.json</code> is timestamped 8 April 2026 and reports
+402/413 records passing, 97.3%, with recall accuracy 92.8%. The README
+reports 94.4% and 84.9%, attributed to a later fix that made the harness
+clock reach the engine. Neither README figure appears in any committed
+file.</p>
+<p>No committed case earns <code>negative_eval</code>. The
+candidates:</p>
+<ul>
+<li><code>test_five_characters_full_year_no_cross_contamination</code>
+asserts that another character's secret is absent from a store
+(<code>tests/long_term/test_audit_multichar_and_import.py:33-135</code>).
+Each character is a separate harness in a separate temporary directory,
+so the test proves two objects do not share a list. It reads
+<code>_reflections</code>, not a retrieval. It also computes
+<code>leaked</code> and never uses it (<code>:79</code>).</li>
+<li><code>test_identity_memories_distinct_from_about_user_and_surfaced_in_context</code>
+asserts that a memory about the user is not returned by
+<code>get_self_identity</code>, with a positive control in the same test
+(<code>tests/long_term/test_audit_visual_and_identity.py:110-157</code>).
+It is populated and on a read path, and it asserts section routing: the
+excluded memory still reaches the same prompt under THINGS ON MY
+MIND.</li>
+<li><code>test_deleted_social_impression_stays_deleted_after_restart</code>
+asserts the deleted text is absent and the user's impressions list is
+empty, with no assertion that the surviving memory reloaded
+(<code>tests/long_term/test_sweep_regressions.py:93-102</code>). A
+loader that loaded nothing passes.</li>
+<li><code>test_outdated_memory_is_labelled_in_context</code> asserts the
+"used to be true" label only inside
+<code>if "Manchester" in block:</code>, so a block that omits the old
+memory passes
+(<code>tests/long_term/test_organic_memory_v2.py:61-68</code>).</li>
+</ul>
+<p>The benchmarks are one run on 22 March 2026, against
+<code>mimir_modular</code> with <code>chemistry=False</code> and
+VividEmbed installed (<code>benchmarks/results_20260322.json</code>).
+The README's headline, 93.9% Recall@5 on LongMemEval, recomputes from
+the record as 450/479 questions. The script downloads
+<code>longmemeval_oracle</code>, the split whose haystack holds only
+evidence sessions, and counts a hit when any top-k memory covers 40% of
+the answer's words or 25% of an evidence turn's
+(<code>benchmarks/bench_mimir_full.py:771</code>,
+<code>:844-849</code>). The same record's TF-IDF baseline scores 96.0%
+at k=5, and on LoCoMo the baseline also leads at every k;
+<code>BENCHMARKS.md</code> prints both rows. The Mem2ActBench row, 0.44
+tool accuracy against 0.10 without memory, is an LLM run on Gemma 3 12B
+over 100 items. No paper is associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make forgetting a computed property, not a job.</strong>
+Derive strength from age, stability and importance at read time, with
+explicit floors for the classes you promise never to lose. Nothing has
+to run for a memory to fade, and a test can move the clock.</li>
+<li><strong>Keep the outdated version as history, attached to its
+successor.</strong> A superseded memory that renders as "used to be true
+— now: X" answers "where did I used to live" without a second
+store.</li>
+<li><strong>Undo a regenerated reply's side effects.</strong> Record
+what each reply created, and forget it when the user picks another
+reply.</li>
+<li><strong>Rate-limit model-triggered maintenance.</strong> A
+model-callable consolidation verb with a cooldown keeps a chatty model
+from rescanning the store every turn.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Dedup by overwrite.</strong> Merging a near-duplicate by
+replacing the stored text loses what was said before, and a reply that
+is later swiped away has already done it.</li>
+<li><strong>Consolidation blind to correction state.</strong> Every pass
+that fuses, truncates or copies text has to read the supersession field,
+or it reintroduces the outdated value as a chunk or a permanent
+fact.</li>
+<li><strong>A delete that stops at the row.</strong> Derived copies,
+snapshots and summaries built from a memory have to be found and removed
+with it, and something has to stop the next write from re-adding it; see
+the deliberate tombstone in <a href="../mimir/">Mimir</a>.</li>
+<li><strong>Position-keyed indexes.</strong> If an index stores list
+offsets, every removal path must shift them; one path that does not is
+enough.</li>
+<li><strong>Reads that write.</strong> When recall changes stability,
+importance and the emotion label, two identical questions get different
+stores behind them, and a debugging session changes what the character
+remembers.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a person who wants a companion character that seems to
+remember them, on their own machine, for non-commercial use, and who
+values the texture of fading and resurfacing over exact recall. It is
+not a memory layer for an agent that must act on what it stored. Text
+changes under consolidation, nothing records a deletion, and the store
+cannot say a memory is wrong. Walk away if you need the stored wording
+to survive 90 days, or a deletion that survives the next background
+pass. Walk away too if your use is commercial, which the licence does
+not grant.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What <code>vividnessmem.EmotionalAuditLog</code> records and where,
+and whether the published <code>vividnessmem</code> and
+<code>vividembed</code> packages match what the benchmarks ran.</li>
+<li>Whether the README's 94.4% and 84.9% test figures come from a run
+whose output was not committed.</li>
+<li>How long the stale word index after a curation pass persists in
+practice, which depends on when the next merge or consolidation
+runs.</li>
+<li>Whether group chats share any memory across characters; the code
+reviewed builds one store per character id.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Engine: <code>vividmimir/core.py</code>,
+<code>vividmimir/models.py</code>,
+<code>vividmimir/constants.py</code></li>
+<li>Write and delete: <code>vividmimir/write_mixin.py</code></li>
+<li>Retrieval: <code>vividmimir/recall_mixin.py</code>,
+<code>vividmimir/yggdrasil_mixin.py</code></li>
+<li>Consolidation: <code>vividmimir/neuroscience_mixin.py</code>,
+<code>vividmimir/llm_mixin.py</code></li>
+<li>Persistence: <code>vividmimir/persistence_mixin.py</code></li>
+<li>App: <code>playground/memory_manager.py</code>,
+<code>playground/server.py</code>,
+<code>playground/character_manager.py</code>,
+<code>playground/__main__.py</code></li>
+<li>Packaging: <code>requirements.txt</code>,
+<code>pyproject.toml</code>, <code>run.sh</code>,
+<code>install.bat</code>, <code>build_portable.ps1</code></li>
+<li>Tests: <code>tests/long_term/harness.py</code>,
+<code>tests/long_term/_time_patch.py</code>,
+<code>tests/long_term/run_all.py</code>,
+<code>tests/long_term/test_sweep_regressions.py</code>,
+<code>tests/long_term/test_organic_memory_v2.py</code>,
+<code>tests/long_term/test_audit_multichar_and_import.py</code>,
+<code>tests/long_term/test_audit_visual_and_identity.py</code></li>
+<li>Benchmarks: <code>benchmarks/bench_mimir_full.py</code>,
+<code>benchmarks/results_20260322.json</code>,
+<code>benchmarks/BENCHMARKS.md</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Consolidation does not read supersession.</strong>
+<code>git grep -n -E '_superseded_by|supersed' -- vividmimir/neuroscience_mixin.py vividmimir/yggdrasil_mixin.py</code>
+returns nothing;
+<code>git grep -c '_superseded_by' -- vividmimir/recall_mixin.py</code>
+counts 3.</li>
+<li><strong>No value-keyed rejection.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist|do_not_remember|never_remember' -- vividmimir playground</code>
+matches only comments about the code-execution sandbox in
+<code>playground/tool_runner.py</code>.</li>
+<li><strong>No snapshot is deleted.</strong>
+<code>git grep -n -E 'unlink|rmtree|os\.remove' -- vividmimir</code>
+matches only the social-file cleanup at
+<code>vividmimir/persistence_mixin.py:174</code> and the image file in
+<code>forget_visual</code> at
+<code>vividmimir/write_mixin.py:361</code>.</li>
+<li><strong>forget writes no audit entry.</strong>
+<code>git grep -n '_audit.log' -- vividmimir/write_mixin.py</code>
+matches lines 314, 388, 454 and 589 (visual memory, mood shift,
+supersede, reframe), none inside <code>forget</code>.</li>
+<li><strong>The optional engines are not installed.</strong>
+<code>git grep -n -i -E 'vividnessmem|vividembed' -- requirements.txt install.bat run.sh start.command build_portable.ps1</code>
+returns nothing;
+<code>git grep -n -i 'vividmimir' -- requirements.txt</code> matches
+line 13.</li>
+<li><strong>No scope key in the engine.</strong>
+<code>git grep -n -E 'char_id|character_id|scope' -- vividmimir</code>
+returns nothing;
+<code>git grep -n 'entity' -- vividmimir/recall_mixin.py</code> matches
+the entity-anchored recall at line 200.</li>
+<li><strong>No MCP server.</strong>
+<code>git grep -n -i -E 'FastMCP|mcp\.server|@mcp\.tool|stdio_server'</code>
+matches only <code>_mcp.servers</code> in
+<code>playground/server.py:4475-4476</code>, the client's registry.</li>
+<li><strong>No CI.</strong> <code>git ls-files .github</code> lists
+nothing.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|CITATION' -- README.md benchmarks/BENCHMARKS.md docs/index.html</code>
+returns nothing, and no tracked file is named like
+<code>CITATION</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/Kronic90/Mimirs-Memory-Hub/commit/aaf3befa063a65077ff1d3ee0a8b9a658270da5e"><code class="commit-id" title="aaf3befa063a65077ff1d3ee0a8b9a658270da5e">aaf3befa…</code></a>
+— first reading, from a full clone of <code>main</code> at app v1.0.5,
+scoped to the <code>vividmimir</code> engine, the memory paths of
+<code>playground/</code>, the long-term test suite and the benchmark
+script and records; the UI, TTS, STT and model management were not read.
+Screened first: no auto-run surface; <code>pyproject.toml</code> and
+<code>requirements.txt</code> changed inside the seven-day cooldown, and
+both declare unpinned dependencies with no lockfile. PolyForm
+Noncommercial 1.0.0. Nothing installed, built or run. No marks.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
