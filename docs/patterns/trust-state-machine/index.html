@@ -848,6 +848,18 @@ paper, <a href="https://arxiv.org/abs/2608.00017">arXiv:2608.00017</a>,
 measures the theatre warning above: its parametric re-graders, a
 frontier model among them, recover little of what a retrieval-grounded
 verifier recovers on the same bank (its Table 4).</p>
+<p><a href="../../systems/lmc-5/">LMC-5</a> has the withholding state
+and no transition out of it. Its consolidation and hippocampus passes
+write every observation with <code>status = 'review'</code>, which every
+SQLite recall arm excludes through one shared predicate
+(<code>src/lmc5/consolidation.py:195-207</code>,
+<code>src/lmc5/hippocampus.py:500-513</code>,
+<code>src/lmc5/store.py:263</code>). The patrol counts the rows waiting
+for review, and no command, function or SQL statement in the tree
+promotes, rejects or archives one. The only status change the code makes
+is <code>current</code> to <code>superseded</code> on a same-key write,
+so the field records which writer produced a row, and no
+<code>trust_state</code> mark follows from it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

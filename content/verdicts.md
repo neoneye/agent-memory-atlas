@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 834 reports.**
+**This page covers all 835 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7662,3 +7662,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, release v0.16.0; 12,842 lines of Python in `src/resimind`, 56 commits from 8 October to 15 October 2026; 869 pytest functions under `tests/` run in CI on Python 3.10 to 3.13, not run here; the committed knowledge-growth result recomputes from its summary file. Three marks: `tombstone`, `trust_state` and `negative_eval`.
 - Study when: the memory is checkable claims — identities, proofs, plans against hard constraints — and you can write the verifier.
 - Do not copy when: you need conversational or user memory, text retrieval, scope, or an MCP server that remembers across restarts.
+
+### [`lmc-5`](../systems/lmc-5/)
+
+- Best idea: **one live-row predicate on every arm.** `LIVE_MEMORY_SQL` is spliced into the recent fallback, FTS, LIKE and the entity join, relation expansion requires both endpoints live, and a test writes six rows matching one query in six states and asserts only the current fact returns.
+- Biggest risk: **a fact cannot go back.** `add_memory` returns any row whose title, content and fact-key hash already exists before it supersedes anything, so Alice → Sam → Alice under one key leaves Sam current and reports `created: false`.
+- Second risk: rows from consolidation and the hippocampus pass are written `review` and no path moves them on; conflict audits, the PostgreSQL `--approve` step and the validity columns have no writer; vector search ignores status in both stores.
+- Most reusable component: `LIVE_MEMORY_SQL` with `_relation_expansion` in `src/lmc5/store.py`, and the E-axis authorship triggers in `_ensure_e_axis_triggers`.
+- Maturity impression: AGPL-3.0-or-later, version 0.3.0; 5,311 lines of Python in `src/lmc5` and 7,052, 5,296 and 418 in three `extras/` packages; 82 commits from 31 May to 19 November 2026; 160 pytest functions in CI, not run here; no paper and no published benchmark score. One mark: `negative_eval`.
+- Study when: you want a small local store whose every read path shares one status predicate, with a test that proves it.
+- Do not copy when: facts must be correctable back to an earlier value, or automatic writes need a review step that someone can complete.

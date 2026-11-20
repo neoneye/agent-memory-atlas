@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python agent memory with a
+zero-dependency SQLite store that versions facts under a fact key, plus
+PostgreSQL recall hooks for Claude Code.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LMC-5 — Agent Memory Atlas">
+    <meta property="og:description" content="A Python agent memory with
+a zero-dependency SQLite store that versions facts under a fact key,
+plus PostgreSQL recall hooks for Claude Code.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LMC-5 — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python agent memory with
+a zero-dependency SQLite store that versions facts under a fact key,
+plus PostgreSQL recall hooks for Claude Code.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LMC-5 — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "LMC-5",
+      "description": "A Python agent memory with a zero-dependency SQLite store that versions facts under a fact key, plus PostgreSQL recall hooks for Claude Code.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Fact keys that cannot go back</p>
+          <h1>LMC-5</h1>
+          <p class="document-deck">A Python agent memory with a
+zero-dependency SQLite store that versions facts under a fact key, plus
+PostgreSQL recall hooks for Claude Code.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/wuxuyun0606-collab/lmc-5">
+              <span>Source</span>
+              <strong>wuxuyun0606-collab/lmc-5</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/wuxuyun0606-collab/lmc-5/commit/01b321bf5a89a9d5d7e70fd9dbeefc515d156a10" title="01b321bf5a89a9d5d7e70fd9dbeefc515d156a10">
+              <span>Analyzed revision</span>
+              <code>01b321bf…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/wuxuyun0606-collab--lmc-5" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>wuxuyun0606-collab--lmc-5</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0-or-later
+from 0.3.0, in LICENSE, NOTICE and pyproject; releases through v0.2.0
+MIT; a commercial licence by separate written agreement
+only</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>5,311
+lines of Python in src/lmc5 across 14 files; 7,052 in
+extras/pgvector_backend, 5,296 in extras/aml and 418 in
+extras/claude_code</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>82
+commits from 31 May to 19 November 2026, 66 under the author name LMC-5
+contributors, 14 by wuxuyun0606-collab and 2 by bluewonder; version
+0.3.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>152
+pytest functions in 24 files under tests/ and 8 in extras/aml/tests; CI
+runs both on push and pull request on Python 3.9 to 3.12; I ran none of
+it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>LMC-5 is a Python memory for agents that keeps memories in one SQLite
+file and recalls them in a later session. Its README leads with that. A
+write under a <code>fact_key</code> supersedes the current row for that
+key and keeps the old one. A PostgreSQL toolkit in <code>extras/</code>
+supplies recall hooks for Claude Code, and <code>extras/aml</code> is an
+HTTP Add/Search service built on the SQLite core for an evaluation.</p>
+<p>What is notable is the discipline of the SQLite read path. Every
+recall arm applies one live-row predicate: FTS, the LIKE fallback, the
+entity index and two-hop relation expansion. A test with six populated
+rows proves it. Rows written by the automatic consolidation and
+hippocampus passes land as <code>review</code> and stay out of
+recall.</p>
+<p>What is weak is correction. Content deduplication runs before
+supersession, so rewriting a value the store already holds returns the
+old row. After Alice → Sam → Alice under one key, Sam stays current.
+Nothing moves a <code>review</code> row anywhere. The documented human
+gate on fact supersession, the conflict verdicts and the validity
+columns have no writer in the tree. Vector search ignores status in both
+stores.</p>
+<p><strong>Licence.</strong> The contribution term is the finding.
+<code>CONTRIBUTING.md</code> says a pull request grants rights <em>"only
+under the repository's public AGPL license"</em>. It says third-party
+code will not be merged into a release intended for dual licensing
+without <em>"a separate explicit written grant"</em> to the holder. A
+contributor therefore gives the holder proprietary relicensing rights
+and receives AGPL terms back, and no contributor agreement is in the
+tree. <code>COMMERCIAL-LICENSE.md</code> names the holder only as the
+GitHub handle <code>wuxuyun0606-collab</code> and states that it is not
+itself a grant. It also says ownership of the covered code must be
+verified before any commercial agreement. All but 16 of the commits
+carry the author name <code>LMC-5 contributors</code>. Releases through
+<code>v0.2.0</code> stay MIT.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row with a title, content, a thread (the "X" axis),
+tags, an optional <code>fact_key</code>, and a <code>status</code> drawn
+from <code>current</code>, <code>review</code>, <code>superseded</code>,
+<code>historical</code>, <code>archived</code> and
+<code>candidate_thread</code> (<code>src/lmc5/models.py:8</code>). Typed
+relations form the "Y" axis. Fact keys and status form "Z". Emotion
+fields with a mandatory author and initial priority form "E", and the
+recall gate forms "M".</p>
+<p>A row becomes a belief by being written as <code>current</code>. That
+is the default for <code>lmc5 add</code> and <code>import-jsonl</code>,
+and any caller may pass another status
+(<code>src/lmc5/cli.py:430</code>). It stops being one in one way. A
+later <code>current</code> write under the same <code>fact_key</code>
+sets <code>status = 'superseded'</code> and <code>active_fact = 0</code>
+on every current row for that key
+(<code>src/lmc5/store.py:874-886</code>). No other path changes a row's
+status, and no path deletes a memory.</p>
+<p>Rows from the two automatic passes are written <code>review</code>:
+consolidation observations
+(<code>src/lmc5/consolidation.py:195-207</code>) and hippocampus atoms
+(<code>src/lmc5/hippocampus.py:500-513</code>). <code>review</code> is
+withheld from every recall arm. The patrol reports <em>"memories are
+waiting for review"</em> (<code>src/lmc5/metabolism.py:114-125</code>),
+and nothing in the tree takes them out of that state. In the SQLite core
+the state records which writer produced a row.</p>
+<p>Deduplication decides before supersession does.
+<code>add_memory</code> hashes title, content and fact key, and if that
+hash exists it returns the stored row with <code>created = False</code>
+before reaching the supersede step
+(<code>src/lmc5/store.py:865-872</code>). Re-asserting an older value
+finds the superseded row and changes nothing, and the newer value stays
+current. The CLI prints the returned row with its
+<code>superseded</code> status. The same holds when a user writes, as
+<code>current</code>, text that a hippocampus atom already stored as
+<code>review</code>.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write under a fact key supersedes the current row unless its exact text was stored before; a review row never leaves review</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write under a fact key supersedes the current row unless its exact text was stored before; a review row never leaves review
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    CLI[&quot;lmc5 add, import-jsonl:&lt;br/&gt;current by default&quot;]
+    AUTO[&quot;consolidate, hippocampus&lt;br/&gt;--apply: review&quot;]
+    AML[&quot;AML /add: raw_message,&lt;br/&gt;one file per user&quot;]
+    CLI ~~~ AUTO ~~~ AML
+  end
+  writers --&gt; H{&quot;hash of title,&lt;br/&gt;content, fact_key&lt;br/&gt;already stored?&quot;}
+  H --&gt;|&quot;yes&quot;| OLD[&quot;old row returned,&lt;br/&gt;created false,&lt;br/&gt;status unchanged&quot;]
+  H --&gt;|&quot;no&quot;| K{&quot;current write&lt;br/&gt;with a fact_key?&quot;}
+  K --&gt;|&quot;yes&quot;| SUP[&quot;current rows under&lt;br/&gt;the key superseded&quot;]
+  K --&gt;|&quot;no&quot;| INS[&quot;row inserted&quot;]
+  SUP --&gt; INS
+  INS --&gt; CUR[&quot;current: FTS, LIKE,&lt;br/&gt;entity, 2-hop relations&quot;]
+  INS --&gt; REV[&quot;review: no path&lt;br/&gt;moves it on&quot;]
+  REV --&gt; VEC[&quot;vector-search:&lt;br/&gt;every status&quot;]
+  SUP --&gt; VEC</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The core is a zero-dependency Python package with a <code>lmc5</code>
+CLI (<code>pyproject.toml</code>). <code>MemoryStore.init</code> creates
+the SQLite schema: <code>memories</code> with an FTS5 mirror,
+<code>relations</code>, <code>memory_entities</code>,
+<code>events</code> with its own FTS5 table, <code>vectors</code> stored
+as JSON, <code>event_chunks</code>, <code>z_conflict_audits</code>,
+<code>recall_runs</code> with trace items, and the
+<code>current_state_*</code> pack
+(<code>src/lmc5/store.py:462-702</code>). SQLite triggers abort any
+insert carrying E-axis content without an author and initial priority,
+and any later change to those fields
+(<code>src/lmc5/store.py:719-756</code>).</p>
+<p><code>extras/pgvector_backend</code> is a toolkit, not a store with
+its own writers. It ships a PostgreSQL schema (<code>schema.sql</code>),
+a <code>RecallPipeline</code> with channel adapters, a pgvector store,
+embedder and reranker adapters, and three Claude Code hooks. Curated
+memories enter only through callbacks the host supplies to
+<code>NightDream</code>
+(<code>extras/pgvector_backend/night_dream.py:275-320</code>), and the
+installed CLI always opens SQLite
+(<code>extras/pgvector_backend/README.md</code>).</p>
+<p><code>extras/aml</code> is a threaded HTTP server with bearer auth.
+It stores each user's messages in a separate SQLite file named by a hash
+of <code>user_id</code>
+(<code>extras/aml/shell/server.py:558-559</code>). It embeds through
+DashScope and reranks through the TypeSafe JEV API under a local budget
+ledger.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The SQLite core needs Python 3.9 with FTS5 and nothing else, runs
+offline, and needs no API key. JEV reranking is opt-in and sends
+redacted query and memory text to <code>api.typesafe.ai</code>
+(<code>src/lmc5/jev.py:46-90</code>). The database is a plain SQLite
+file a person can open and repair by hand. The PostgreSQL path needs a
+server with pgvector 0.7 or later, <code>psycopg2</code>, an embedder
+key or a local sentence-transformers model for the vector channel, and a
+scheduler for the nightly passes. The AML service needs a DashScope key,
+a JEV key and an initialised ledger.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>MemoryStore.add_memory</code>
+validates enums and E-axis ranges, dedups on the content hash,
+supersedes same-key current rows, inserts the row and its FTS mirror,
+and re-indexes entities (<code>src/lmc5/store.py:805-940</code>).</li>
+<li><strong>Raw events.</strong> <code>log_event</code> dedups on a hash
+of role, content, channel and metadata
+(<code>src/lmc5/store.py:1047-1088</code>).
+<code>consolidate_events</code> groups unchunked events into windows of
+20 and writes one <code>review</code> observation per window
+(<code>src/lmc5/consolidation.py:124-227</code>).</li>
+<li><strong>Hippocampus.</strong> <code>run_hippocampus</code> builds
+one candidate per non-tool event, rejects low importance, non-normal
+risk and secret-looking text, and on <code>--apply</code> writes up to
+ten <code>review</code> rows with safe relations
+(<code>src/lmc5/hippocampus.py:441-585</code>).
+<code>contradicts</code>, <code>cause_effect</code> and
+<code>supports</code> hints are returned as plans and not written
+(<code>:397-415</code>).</li>
+<li><strong>Recall.</strong> <code>recall_hits</code> gathers FTS and
+LIKE candidates, adds entity matches and two-hop relation neighbours,
+scores them, applies the M gate, increments <code>hit_count</code>, and
+writes a trace (<code>src/lmc5/store.py:2045-2169</code>).</li>
+<li><strong>Conflict audit.</strong> <code>run_z_audit</code> finds
+same-key <code>current</code>/<code>review</code> pairs and live
+<code>contradicts</code> edges, and with <code>--apply</code> inserts
+<code>pending</code> rows
+(<code>src/lmc5/fact_evolution.py:73-235</code>).</li>
+<li><strong>Current state.</strong> <code>refresh_current_state</code>
+deletes and rebuilds a TTL-bound pack of current facts, active threads,
+pending audits and recent events
+(<code>src/lmc5/store.py:1239-1431</code>).</li>
+<li><strong>Hooks.</strong> SessionEnd archives a Claude Code transcript
+into <code>lmc5_raw_events</code>
+(<code>extras/pgvector_backend/hooks/session_end.py:20-84</code>).
+SessionStart injects identity rows, current facts, narrative and open
+threads (<code>hooks/session_start.py:24-144</code>). UserPromptSubmit
+runs the pipeline and prints its injection text
+(<code>hooks/user_prompt_submit.py:109-278</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memories</code> table carries <code>fact_key</code>,
+<code>active_fact</code>, <code>status</code>, <code>risk_level</code>,
+<code>urgency</code>, the E-axis fields, <code>confidence</code>,
+<code>source</code>, <code>created_at</code>, <code>updated_at</code>,
+<code>hit_count</code>, <code>last_hit_at</code> and a unique
+<code>content_hash</code> (<code>src/lmc5/store.py:465-493</code>).
+<code>updated_at</code> is overwritten on supersession. There is no
+<code>superseded_by</code> link in SQLite; the chain is recoverable only
+by <code>fact_key</code> and timestamps.</p>
+<p>No memory column names a user, project or agent. Events carry a
+<code>channel</code>. <code>z_conflict_audits</code> has
+<code>status</code>, <code>verdict</code> and <code>reviewer</code>
+columns, all defaulting to <code>pending</code> or empty
+(<code>src/lmc5/store.py:614-629</code>).</p>
+<p>The PostgreSQL schema adds <code>version_status</code>,
+<code>superseded_by</code>, <code>superseded_at</code>,
+<code>valid_at</code>, <code>invalid_at</code>, <code>protected</code>
+and <code>trust_level</code> to curated memories
+(<code>extras/pgvector_backend/schema.sql:42-55</code>), an
+<code>lmc5_z_audit</code> table whose comment says supersession runs
+only after a human <code>--approve</code> (<code>:180-197</code>), and
+an <code>lmc5_e_axis_proposals</code> queue (<code>:116-131</code>). Raw
+events carry <code>session_id</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>In SQLite, <code>LIVE_MEMORY_SQL</code> is
+<code>status = 'current' AND (fact_key IS NULL OR active_fact = 1)</code>
+(<code>src/lmc5/store.py:263</code>). The recent fallback, the FTS
+query, the LIKE fallback and the entity join all apply it
+(<code>:1770-1873</code>). Relation expansion requires both endpoints
+live and the relation type in the safe set, with a strength above 0.4 at
+one hop and 0.7 at two (<code>:1875-1937</code>).
+<code>metabolic_gate</code> then drops any non-current row, noise
+sources and categories, and in surface mode anything not in the
+<code>retain</code> bucket
+(<code>src/lmc5/scoring.py:119-226</code>).</p>
+<p>The score is a transparent sum of priority, match, relation, entity
+and recency terms times the gate factor. Priority adds 0.1 per past hit
+up to 1.0 (<code>src/lmc5/scoring.py:92-116</code>), and every recall
+increments <code>hit_count</code> on what it returns
+(<code>src/lmc5/store.py:2137-2147</code>). Results that are retrieved
+therefore rank higher next time.</p>
+<p><code>search_vectors</code> is separate. It scans every vector of the
+requested model, loads each owner, and applies no status filter
+(<code>src/lmc5/store.py:1724-1768</code>). It is reached from
+<code>lmc5 vector-search</code> and from the AML search, which fuses it
+with lexical recall by RRF
+(<code>extras/aml/shell/server.py:731-737</code>).</p>
+<p>The PostgreSQL pipeline fuses vector, curated FTS, raw-event FTS, a
+literal raw-event search, graph expansion, emotion resonance and a
+perception cache. The FTS, graph and emotion adapters filter
+<code>version_status = 'current'</code>
+(<code>extras/pgvector_backend/recall_pipeline.py:1218-1243</code>,
+<code>:1471-1580</code>, <code>:1583-1672</code>). The vector adapter
+passes only <code>owner_type</code> to
+<code>PgvectorStore.search_vectors</code>, which filters by model and
+dimension
+(<code>extras/pgvector_backend/vector_pgvector.py:195-224</code>). The
+quarantine migration deletes vectors for that reason, <em>"because
+vector recall may not be able to see version_status"</em>
+(<code>extras/pgvector_backend/migrations/20260620_quarantine_heartbeat_detector_pollution.sql:13-14</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous SQLite statements with a commit per call, and
+a row is recallable as soon as <code>add_memory</code> returns. No LLM
+is on the core write path. Consolidation and the hippocampus pass are
+deterministic and run only when invoked. Neither rewrites existing rows.
+<code>refresh_current_state</code> deletes and rebuilds its pack on each
+run, bounded by its four limits.</p>
+<p>Supersession is automatic and immediate for any <code>current</code>
+write with a <code>fact_key</code>. That contradicts
+<code>docs/Z_FACT_EVOLUTION.md:42</code>, <em>"never auto-supersede
+without review"</em>. The conflict audit can only find a same-key pair
+when at least one row was written as <code>review</code> or inactive,
+and the tests set it up by writing both as <code>review</code>
+(<code>tests/test_fact_evolution.py:6-31</code>). The same document says
+a superseded row <em>"gets a <code>superseded_at</code> timestamp"</em>
+(<code>:35</code>), and the SQLite table has no such column.</p>
+<p>The pgvector toolkit writes raw events from SessionEnd and E-axis
+proposals from <code>e_axis_trigger.py:196</code>, and its patrol
+expires duplicate, orphaned and dead <code>contradicts</code> edges by
+setting <code>valid_until</code>
+(<code>extras/pgvector_backend/patrol.py:195-211</code>). Curated rows,
+relations and audits are written by callbacks the host supplies. The
+express-dream step at session end returns
+<code>{"status": "skipped"}</code>
+(<code>hooks/session_end.py:87-106</code>). The AML Add endpoint stores
+each message as a <code>current</code> <code>raw_message</code> row with
+its timestamp in <code>source</code>, embeds it in the same request, and
+caches the response by <code>request_id</code>
+(<code>extras/aml/shell/server.py:647-711</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The core has no agent-facing tool surface. An agent reaches it
+through the CLI or the Python API. The Claude Code hooks inject context
+automatically at session start and on each non-trivial prompt, skipping
+messages such as <code>ok</code>
+(<code>hooks/user_prompt_submit.py:28-32</code>). A file-backed
+injection history prevents the same memory being injected twice in one
+session (<code>extras/pgvector_backend/recall_history.py</code>). The
+prompt hook excludes the active session's raw events from both raw-event
+channels (<code>hooks/user_prompt_submit.py:185-196</code>,
+<code>:220-227</code>).</p>
+<p><code>extras/claude_code/refined_session_carryover.py</code> trims a
+transcript for resume. It is stated not to be a memory writer and writes
+nothing to either store.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="correction-that-cannot-reverse">Correction that cannot
+reverse</h3>
+<p>The content hash covers title, content and fact key and is unique. A
+value that was ever stored under a key cannot be written again, so a
+correction back to an earlier value is absorbed by the superseded row
+while the wrong value stays current. No test covers the case. There is
+no delete either, so the only way out is SQL.</p>
+<h3 id="gates-without-a-hand">Gates without a hand</h3>
+<ul>
+<li><strong><code>review</code> rows</strong> have no exit. Recall
+withholds them and nothing promotes, rejects or archives them.</li>
+<li><strong><code>z_conflict_audits</code></strong> rows are inserted
+<code>pending</code>. The current-state pack and the patrol report them,
+and no code writes <code>verdict</code> or <code>reviewer</code>.</li>
+<li><strong>The PostgreSQL <code>lmc5_z_audit</code></strong> names an
+<code>--approve</code> step in a schema comment and in
+<code>docs/DEEPSEEK_INTEGRATION.md:70</code>. No such command or
+function exists, and only the quarantine migration writes the
+table.</li>
+<li><strong>E-axis proposals</strong> are inserted <code>pending</code>,
+read back only to avoid duplicates, and nothing resolves them.</li>
+</ul>
+<h3 id="what-holds">What holds</h3>
+<p>The E-axis rule is enforced in the database, not in Python. An insert
+with emotion fields and no author or priority aborts. An update to any
+of them aborts with <em>"create a successor record"</em>, and the
+PostgreSQL schema carries the same trigger
+(<code>extras/pgvector_backend/schema.sql:90-113</code>). The author is
+a caller-supplied string. Output redaction masks bearer tokens, keys,
+DSNs and IP addresses (<code>src/lmc5/redact.py:9-25</code>). The CLI's
+<code>recall</code> applies it, and the Python <code>recall</code>
+defaults to <code>redact=False</code>. The hippocampus rejects
+candidates matching secret patterns
+(<code>src/lmc5/hippocampus.py:27-30</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>trust_state</code></strong> — withheld. The
+<code>status</code> field filters every SQLite recall arm, and
+<code>review</code> withholds a row, which is the shape the mark asks
+for. But <code>review</code>, <code>historical</code>,
+<code>archived</code> and <code>candidate_thread</code> are set at write
+and never change. The one transition the code makes is
+<code>current</code> to <code>superseded</code> on a same-key write,
+which is versioning. No state is reached by judgement.</li>
+<li><strong><code>tombstone</code></strong> — withheld. The unique
+content hash does stop a superseded value being re-asserted, but as
+deduplication keyed on the whole row. It records no rejection, blocks
+legitimate reversals equally, and a one-word change to the title passes
+it.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. SQLite keeps
+<code>created_at</code> and <code>updated_at</code>. The PostgreSQL
+<code>valid_at</code> and <code>invalid_at</code> columns have no writer
+in Python, the migration sets <code>invalid_at</code> to
+<code>NOW()</code>, and relation <code>valid_until</code> is stamped
+<code>NOW()</code> by the patrol. AML keeps each message's timestamp in
+<code>source</code> and uses it only to order results.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. Memories
+carry no scope key. Event <code>channel</code> is a source label applied
+only when a caller passes it. AML's per-user files are a physical
+partition. Excluding the active session's raw events keeps the current
+conversation out, the reverse of a scope.</li>
+<li><strong><code>audit_log</code></strong> — withheld. Supersession is
+an in-place <code>UPDATE</code> with no event. <code>recall_runs</code>,
+<code>consolidation_runs</code> and <code>current_state_runs</code> log
+reads and runs, not mutations of memory.</li>
+<li><strong><code>human_review</code></strong> — withheld. Every queue
+above is filled and none is drained.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>Vector search ignores status</strong> in both stores, so a
+superseded or <code>review</code> row with a vector is returned by
+<code>vector-search</code> and the AML search.</li>
+<li><strong>Recall writes.</strong> Every recall commits
+<code>hit_count</code> updates and, by default, a trace row, so a
+read-only consumer still mutates the store.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 152 pytest functions under <code>tests/</code> and 8
+under <code>extras/aml/tests</code>. CI runs both on push and pull
+request (<code>.github/workflows/ci.yml:8-21</code>). I ran none of
+it.</p>
+<p><code>negative_eval</code> rests on
+<code>tests/test_store.py:41-85</code>. It writes six memories that all
+match "endpoint": a current fact, the fact it superseded, an inactive
+fact, and <code>review</code>, <code>historical</code> and
+<code>archived</code> rows. It asserts the current fact is returned and
+the other five are not, so the case fails if recall returns nothing.
+<code>:376-415</code> asserts that relation expansion does not reach
+archived, superseded or inactive targets. That case has no positive
+assertion.</p>
+<p><code>test_raw_event_session_exclusion.py</code> checks the
+active-session predicate against fake cursors.
+<code>test_auth_health_and_user_isolation</code> writes three messages
+for one user and asserts another user's search is empty
+(<code>extras/aml/tests/test_serving.py:128-147</code>). That user has
+no file, so the search returns before opening any store.</p>
+<p>No test re-asserts a superseded value, searches vectors after
+supersession, or resolves a conflict audit. No paper is associated with
+the project. The fusion A/B in
+<code>docs/archive/RECALL_FUSION_AB_20260706.md</code> reports channel
+composition over 726 private traces with no relevance labels. Its data
+is not committed. The 67% false-positive figure for automatic
+supersession is attributed to a private deployment. The AML README
+states its tests do not establish benchmark scores, and no score is
+published in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One live-row predicate, applied on every arm.</strong>
+Define the predicate once as SQL and splice it into FTS, the fallback,
+the entity join and both ends of a relation hop. Then test it with one
+query that matches a row in every excluded state.</li>
+<li><strong>Enforce authorship in the database.</strong> A trigger that
+refuses emotion fields without an author and refuses any later edit
+makes the immutability survive raw SQL.</li>
+<li><strong>Keep model-proposed relation types out of the
+graph.</strong> Write only a safe set automatically and return
+<code>contradicts</code> and <code>supports</code> as plans.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Deduplicating before versioning.</strong> Check the content
+hash only against the current row for the key, or a correction back to
+an earlier value is swallowed.</li>
+<li><strong>A review state with no exit.</strong> A status that
+withholds rows needs a verb that releases or rejects them, or the
+automatic writers produce rows nobody reads.</li>
+<li><strong>A vector arm outside the status predicate.</strong> If
+vectors live in a separate table, join the owner's status on every
+query.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person or one agent wanting a small, local,
+inspectable store of facts and notes, where values move forward and
+rarely back. The PostgreSQL toolkit suits someone already running a
+Claude Code companion who will write the curation callbacks and the
+review tooling the docs describe. Walk away if you need multi-user
+isolation inside one store, corrections that can return to an earlier
+value, or a review gate that works as shipped.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the private deployment behind the toolkit has the
+<code>--approve</code> and verdict writers the docs describe, and
+whether they will be published.</li>
+<li>Whether the content-hash dedup ahead of supersession is intended for
+fact keys, given the README's Alice/Sam example.</li>
+<li>What the AML evaluation measured, and on what data.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>src/lmc5/store.py</code>,
+<code>src/lmc5/models.py</code>,
+<code>extras/pgvector_backend/schema.sql</code>,
+<code>extras/pgvector_backend/migrations/</code></li>
+<li>Write path: <code>src/lmc5/store.py</code> (<code>add_memory</code>,
+<code>log_event</code>), <code>src/lmc5/consolidation.py</code>,
+<code>src/lmc5/hippocampus.py</code>,
+<code>extras/pgvector_backend/night_dream.py</code></li>
+<li>Retrieval: <code>src/lmc5/store.py</code> (<code>recall_hits</code>,
+<code>search_vectors</code>), <code>src/lmc5/scoring.py</code>,
+<code>extras/pgvector_backend/recall_pipeline.py</code>,
+<code>extras/pgvector_backend/vector_pgvector.py</code></li>
+<li>Correction and patrol: <code>src/lmc5/fact_evolution.py</code>,
+<code>src/lmc5/metabolism.py</code></li>
+<li>Integration: <code>src/lmc5/cli.py</code>,
+<code>extras/pgvector_backend/hooks/</code>,
+<code>extras/aml/shell/server.py</code>,
+<code>src/lmc5/jev.py</code></li>
+<li>Tests: <code>tests/test_store.py</code>,
+<code>tests/test_fact_evolution.py</code>,
+<code>tests/test_hippocampus.py</code>,
+<code>tests/test_raw_event_session_exclusion.py</code>,
+<code>extras/aml/tests/test_serving.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Only supersession and hit counting update a memory.</strong>
+<code>git grep -n -E "UPDATE memories" -- src extras</code> matches
+<code>src/lmc5/store.py:877</code> (supersede) and <code>:2141</code>
+(<code>hit_count</code>).</li>
+<li><strong>Nothing resolves a conflict audit.</strong>
+<code>git grep -n -E "UPDATE z_conflict_audits|reviewer *=" -- src extras</code>
+returns nothing;
+<code>git grep -c "z_conflict_audits" -- src/lmc5/fact_evolution.py</code>
+counts 3.</li>
+<li><strong>No validity-time writer.</strong>
+<code>git grep -n -E "valid_at|invalid_at|superseded_at" -- '*.py'</code>
+returns nothing; the same pattern over
+<code>extras/pgvector_backend/schema.sql</code> matches lines 46 and
+47.</li>
+<li><strong>No approve verb.</strong>
+<code>git grep -n -i "approve" -- '*.py'</code> returns nothing; over
+<code>extras/pgvector_backend/schema.sql</code> it matches line
+182.</li>
+<li><strong>No memory delete.</strong>
+<code>git grep -n -E "DELETE FROM memories([^_a-z]|$)" -- src extras</code>
+returns nothing;
+<code>git grep -n -E "DELETE FROM memories" -- src</code> matches the
+FTS rebuild at <code>src/lmc5/store.py:759</code>.</li>
+<li><strong>The pgvector vector search reads no status.</strong>
+<code>git grep -n -E "status" -- extras/pgvector_backend/vector_pgvector.py</code>
+returns nothing;
+<code>git grep -c "version_status" -- extras/pgvector_backend/recall_pipeline.py</code>
+counts 6.</li>
+<li><strong>No scope column in the core.</strong>
+<code>git grep -n -w -E "user_id|project_id|agent_id|tenant_id" -- src</code>
+returns nothing;
+<code>git grep -n -w "user_id" -- extras/aml/shell/server.py</code>
+matches.</li>
+<li><strong>The proposal queue has no reader that resolves it.</strong>
+<code>git grep -n "lmc5_e_axis_proposals" -- '*.py'</code> matches only
+<code>extras/pgvector_backend/e_axis_trigger.py:188</code> and
+<code>:196</code>.</li>
+<li><strong>No curated-memory writer in the toolkit.</strong>
+<code>git grep -n -i -E "INSERT INTO lmc5_curated" -- '*.py'</code>
+returns nothing; over <code>extras/pgvector_backend/README.md</code> it
+matches the walkthrough at line 56.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E "arxiv|bibtex|@article|@misc|doi\.org|CITATION"</code>
+returns nothing;
+<code>git grep -n -i -E "agpl|affero" -- LICENSING.md</code> matches
+lines 6 and 7.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/wuxuyun0606-collab/lmc-5/commit/01b321bf5a89a9d5d7e70fd9dbeefc515d156a10"><code class="commit-id" title="01b321bf5a89a9d5d7e70fd9dbeefc515d156a10">01b321bf…</code></a>
+— first reading, from a clone of <code>main</code> at version 0.3.0,
+covering the SQLite core in full, the PostgreSQL toolkit's schema,
+hooks, recall adapters and writers, the AML Add/Search path, and the
+tests behind each. Screened first: no auto-run surface; two build-time
+execution points, <code>setup.py</code> and a Makefile;
+<code>pyproject.toml</code> inside the seven-day cooldown and unpinned,
+with no lockfile; floating ranges in
+<code>extras/aml/requirements.txt</code>. AGPL-3.0-or-later with a
+commercial option, no rider against analysis. Nothing installed, built
+or run. One mark: <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
