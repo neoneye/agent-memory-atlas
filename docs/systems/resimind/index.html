@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A neuro-symbolic Python agent
+framework whose rule memory admits a candidate only when a domain
+verifier accepts it and re-verifies every rule on reload.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ResiMind — Agent Memory Atlas">
+    <meta property="og:description" content="A neuro-symbolic Python
+agent framework whose rule memory admits a candidate only when a domain
+verifier accepts it and re-verifies every rule on reload.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ResiMind — Agent Memory Atlas">
+    <meta name="twitter:description" content="A neuro-symbolic Python
+agent framework whose rule memory admits a candidate only when a domain
+verifier accepts it and re-verifies every rule on reload.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ResiMind — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ResiMind",
+      "description": "A neuro-symbolic Python agent framework whose rule memory admits a candidate only when a domain verifier accepts it and re-verifies every rule on reload.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Rules a verifier admits, not the model</p>
+          <h1>ResiMind</h1>
+          <p class="document-deck">A neuro-symbolic Python agent
+framework whose rule memory admits a candidate only when a domain
+verifier accepts it and re-verifies every rule on reload.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/1105216375-alt/resimind">
+              <span>Source</span>
+              <strong>1105216375-alt/resimind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/1105216375-alt/resimind/commit/4055d9c8a065b687c4b13b04f3094d6c14545db4" title="4055d9c8a065b687c4b13b04f3094d6c14545db4">
+              <span>Analyzed revision</span>
+              <code>4055d9c8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/1105216375-alt--resimind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>1105216375-alt--resimind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE and pyproject; the ChinaTravel evaluation data under
+docs/evidence and experiments stays CC BY 4.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>12,842
+lines of Python in src/resimind across 53 files, 1,125 of them the
+knowledge library, route memory, learning loop, lifelong agent, schema
+learner and rule index; 5,588 in benchmarks/ and 6,488 in
+experiments/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>56
+commits from 8 October to 15 October 2026, 41 of them under a shared
+ResiMind contributors identity; release v0.16.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>869
+pytest functions in 57 files and 12,881 lines under tests/, plus 138
+under experiments/ that the configured testpaths do not collect; CI runs
+tests/ on Python 3.10 to 3.13 on push and pull request, and the
+Lean-backed cases skip without a toolchain; I ran none of
+it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ResiMind is a neuro-symbolic agent framework in dependency-free
+Python. A model, a rule or a symbolic tool proposes a step, and a domain
+verifier decides what becomes a fact. Its memory is a library of rules
+learned from solved tasks, mostly bounded polynomial identities. A rule
+enters only when a registered verifier accepts it, and is re-verified
+whenever the library is loaded.</p>
+<p>What is notable is how little the library trusts its own file.
+Admission discards everything a candidate says about itself, and loading
+discards the stored verdict and asks the current verifier again. Every
+application of a retrieved rule re-reads its status and re-checks the
+result. On the lifelong learning path a rule's id is a digest of its
+statement, so a revoked rule cannot be learned back.</p>
+<p>What is weak is where the durable memory is reachable. The MCP server
+and the JSON-lines tools keep one library per process, lost on restart,
+with no save and no revoke. Persistence and revocation exist only on the
+Python API, and revocation records a reason but no actor. Rule retrieval
+is a structural match over polynomial expressions, so the memory is
+narrow by construction.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code>, which
+<code>pyproject.toml</code> names as its licence file and
+<code>CITATION.cff</code> and <code>CONTRIBUTING.md</code> repeat. The
+one carve-out is the evaluation material:
+<code>THIRD_PARTY_NOTICES.md</code> states that the ChinaTravel query,
+gold-constraint and sandbox data under
+<code>docs/evidence/chinatravel-*</code> and
+<code>experiments/chinatravel*</code> is CC BY 4.0 and <em>"is not
+relicensed by that MIT notice"</em>. A copy that redistributes those
+files must keep the upstream attribution. The core library and the
+memory modules carry no such condition.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong><code>KnowledgeCandidate</code></strong>: an
+id, a domain, a kind, a JSON statement, explicit assumptions, derivation
+steps, a source task id and evidence references
+(<code>src/resimind/knowledge.py:88-118</code>). The module treats it as
+an <em>"untrusted claim"</em>. Admission hands a detached copy to the
+verifier registered for its domain and records the verdict, which is
+<code>verified</code>, <code>rejected</code> or <code>unknown</code>
+(<code>knowledge.py:222-252</code>). A candidate without a source task
+id, with no verifier for its domain, or whose verifier raises or mutates
+its input is <code>unknown</code>. Rejected and unknown records are kept
+and never returned.</p>
+<p>A belief stops in one way:
+<strong><code>revoke(id, reason)</code></strong>, which sets
+<code>revoked</code> on any record and is terminal
+(<code>knowledge.py:332-341</code>). There is no edit, no supersession
+and no delete. <code>conflicts()</code> finds verified records with the
+same domain, kind and assumptions and a different statement, and nothing
+in the tree calls it (<code>knowledge.py:279-295</code>).</p>
+<p>Saving keeps every record, verdict and revocation reason. Loading
+validates the shape of the stored verdict and then discards it: each
+candidate is admitted afresh under the verifiers the caller passes, and
+a revoked one is revoked again (<code>knowledge.py:409-422</code>). So a
+status other than <code>revoked</code> lives as long as the process, and
+a change of verifier can turn a rejected rule into a verified one.</p>
+<p>Two learners write into the library. <code>LifelongMathAgent</code>
+anti-unifies pairs of solved examples into schemas and keys each on a
+digest of its statement. The generic <code>LearningAgent</code> takes
+candidates from an application's distiller after a solved task
+(<code>src/resimind/learning.py:53-80</code>). Two other stores carry
+the memory name and do not outlive a process. <code>RouteMemory</code>
+is reviewed action routes, an <em>"in-memory reference
+implementation"</em> (<code>src/resimind/memory.py:7</code>).
+<code>TheoremMemory</code> holds Lean lemmas, saved by the caller (see
+section 5).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a candidate becomes a rule only on a verifier's verdict, is re-judged at every load, and a revoked statement digest blocks re-learning on the lifelong path</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a candidate becomes a rule only on a verifier&#39;s verdict, is re-judged at every load, and a revoked statement digest blocks re-learning on the lifelong path
+flowchart TD
+  subgraph learners[&quot;Learners&quot;]
+    direction TB
+    LM[&quot;lifelong agent:&lt;br/&gt;schema from two&lt;br/&gt;solved examples;&lt;br/&gt;id = statement digest&quot;]
+    LA[&quot;LearningAgent:&lt;br/&gt;app distiller; id set&lt;br/&gt;by the distiller&quot;]
+    LM ~~~ LA
+  end
+  learners --&gt; DUP{&quot;id already held,&lt;br/&gt;any status?&quot;}
+  DUP --&gt;|&quot;yes&quot;| SKIP[&quot;skipped, or&lt;br/&gt;ValueError&quot;]
+  DUP --&gt;|&quot;no&quot;| VER{&quot;domain verifier&quot;}
+  VER --&gt;|&quot;verified&quot;| V[&quot;verified:&lt;br/&gt;lookup returns it&quot;]
+  VER --&gt;|&quot;rejected&quot;| R[&quot;rejected: kept,&lt;br/&gt;never returned&quot;]
+  VER --&gt;|&quot;unknown&quot;| U[&quot;unknown: kept,&lt;br/&gt;never returned&quot;]
+  V --&gt; APP[&quot;each use re-reads&lt;br/&gt;status and fingerprint,&lt;br/&gt;then re-checks result&quot;]
+  APP ~~~ RV
+  V --&gt; RV[&quot;revoke(id, reason):&lt;br/&gt;Python API only,&lt;br/&gt;no actor&quot;]
+  RV --&gt; RK[&quot;revoked: terminal;&lt;br/&gt;id refused forever&quot;]
+  RK --&gt; SV[&quot;save: JSON with&lt;br/&gt;every record&quot;]
+  SV --&gt; LD[&quot;load: verdict dropped,&lt;br/&gt;verifier re-runs,&lt;br/&gt;revocation re-applied&quot;]
+  LD ~~~ MCP
+  MCP[&quot;MCP / JSON-lines:&lt;br/&gt;one library per&lt;br/&gt;process, no save,&lt;br/&gt;no revoke&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The core is a library with no runtime dependencies
+(<code>pyproject.toml:19</code>). The memory modules are
+<code>knowledge.py</code>, <code>learning.py</code>,
+<code>memory.py</code>, <code>domains/lifelong_math.py</code>,
+<code>domains/schema_learning.py</code> and
+<code>domains/rule_index.py</code>. Optional extras add the MCP SDK and
+SymPy; Lean 4.29.0 is an external toolchain for the formal path.</p>
+<p>Three entry points reach memory. The Python API exposes
+<code>KnowledgeLibrary</code>, <code>LearningAgent</code> and
+<code>LifelongMathAgent</code> with <code>save</code> and
+<code>load</code>. <code>resimind api</code> runs a JSON-lines loop over
+stdin and stdout, and <code>resimind mcp</code> runs an MCP stdio server
+(<code>src/resimind/cli.py:78-100</code>). Both wrap one
+<code>ToolSession</code>, which builds a fresh
+<code>LifelongMathAgent</code> and tags every response
+<code>"memory_scope": "process"</code>
+(<code>src/resimind/tool_api.py:36</code>, <code>:41</code>,
+<code>:58-62</code>). The MCP instructions say learning changes
+<em>"process-local memory, lost on restart"</em>
+(<code>src/resimind/integrations/mcp.py:19-21</code>). The registry
+entry in <code>server.json</code> installs a release-asset bundle whose
+entry point is the same server
+(<code>distribution/mcpb/server.py:1-5</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run. A library is a Python object; persisting it is
+one JSON file written by temp file, <code>fsync</code> and
+<code>os.replace</code> (<code>knowledge.py:343-373</code>). The
+lifelong agent writes <code>rules.json</code> and a
+<code>learning.json</code> that records the rules file's digest, so a
+mixed generation fails to load (<code>lifelong_math.py:174-226</code>).
+The store is human-readable. Hand repair needs care, since a fingerprint
+check refuses an edited candidate and the verifier re-judges an edited
+statement (<code>knowledge.py:413-415</code>). No API key is needed to
+store anything. The JSON store is documented as unauthenticated and
+unsafe for concurrent writers (<code>knowledge.py:7-8</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Learn a schema.</strong>
+<code>LifelongMathAgent.solve(learn=True)</code> runs recall, compact
+expansion and search in policy order. On success <code>_learn</code>
+stores the solved example and pairs it with up to 31 earlier ones
+(<code>src/resimind/domains/lifelong_math.py:121-155</code>).
+<code>discover_schemas</code> anti-unifies each pair, checks the
+resulting identity, and names it <code>abstract:</code> plus 24 hex
+characters of a digest over <code>lhs</code>, <code>rhs</code> and
+<code>variables</code>
+(<code>src/resimind/domains/schema_learning.py:65-86</code>).</li>
+<li><strong>Admit.</strong> <code>_learn</code> calls
+<code>library.get(candidate.id)</code> and skips any id already present,
+with the comment <em>"Includes terminally revoked identities."</em>
+(<code>lifelong_math.py:147-152</code>). It then stops at 256 records,
+revoked ones counted (<code>:49</code>, <code>:151</code>).</li>
+<li><strong>Distil after a task.</strong> <code>LearningAgent.run</code>
+looks up verified records, builds an agent, runs the task, and on a
+solved run admits up to 16 distilled candidates bound to the task's id
+and domain (<code>src/resimind/learning.py:53-80</code>). The polynomial
+distiller names its candidate from a digest of the task id, input and
+output
+(<code>src/resimind/domains/polynomial_learning.py:549-564</code>).</li>
+<li><strong>Retrieve.</strong> <code>lookup</code> filters on
+<code>status == "verified"</code>, domain, optional kind and an
+assumption subset (<code>knowledge.py:264-277</code>).
+<code>RuleIndex</code> buckets verified unconditional identities by AST
+shape and matches them against every subexpression of the query, with a
+per-expression cache
+(<code>src/resimind/domains/rule_index.py:30-67</code>).</li>
+<li><strong>Apply.</strong> <code>apply_schema</code> re-reads the
+record and refuses it unless it is verified with the same fingerprint,
+then substitutes and re-verifies the whole identity
+(<code>schema_learning.py:90-107</code>). The search loop repeats the
+status check at <code>rule_revalidation</code>
+(<code>src/resimind/domains/search_learning.py:285-289</code>).</li>
+<li><strong>Revoke.</strong> <code>KnowledgeLibrary.revoke</code>
+(<code>knowledge.py:332-341</code>). Its callers in the tree are
+<code>load</code> and tests; no CLI, JSON-lines or MCP path reaches
+it.</li>
+<li><strong>Persist.</strong> <code>save</code>, <code>load</code>,
+<code>freeze</code> (<code>knowledge.py:343-423</code>,
+<code>lifelong_math.py:157-226</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>KnowledgeRecord</code> is a candidate, a
+<code>Verification(status, reason, verifier_id)</code>, a status and a
+SHA-256 fingerprint over the canonical candidate payload. Its
+constructor refuses a status that is neither the verdict nor
+<code>revoked</code>, and a fingerprint that does not match
+(<code>knowledge.py:141-161</code>). The fingerprint covers provenance
+as well as the statement, so the same claim from another task is a
+different fingerprint.</p>
+<p>There is no scope key. <code>domain</code> selects a verifier and
+<code>assumptions</code> are the claim's conditions, matched as exact
+strings that the caller asserts (<code>knowledge.py:202-209</code>).
+Ownership is by instance: each <code>ToolSession</code> holds its own
+library, a partition by process. There are no time fields in
+<code>knowledge.py</code>.</p>
+<p><code>TheoremMemory</code> is a tuple of at most 32 Lean lemmas, each
+admitted only after the backend compiles it
+(<code>src/resimind/integrations/formal.py:523-548</code>). Since the
+commit of 15 October 2026 each carries <code>LemmaMetadata</code>:
+source task, evidence references, applicability tags,
+<code>created_at</code>, <code>expires_at</code> and a verifier id
+(<code>formal.py:131-177</code>). Both timestamps are supplied by the
+caller, default to empty, and nothing stamps either one.
+<code>active_lemmas</code> drops expired lemmas and those whose tags the
+query lacks, and <code>solve</code> reads only
+<code>active_lemmas()</code> (<code>formal.py:550-566</code>,
+<code>:713</code>). <code>save</code> is a plain <code>write_text</code>
+(<code>formal.py:609-611</code>), not the atomic replace the knowledge
+library uses.</p>
+<p><code>RouteMemory</code> is a dict of immutable routes with
+<code>pending</code>, <code>approved</code> and <code>revoked</code>
+statuses and an appended audit list, all in process memory
+(<code>src/resimind/memory.py:98-222</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is application-driven and structural. A query names a
+domain and the assumptions it can vouch for, and receives verified
+records in insertion order with no score
+(<code>knowledge.py:264-277</code>). The lifelong agent's recall route
+asks <code>RuleIndex</code> for rules whose left side matches a
+subexpression of the input. It spends at most four search actions and no
+model call (<code>lifelong_math.py:101-107</code>).</p>
+<p>Without the index, <code>run_search_learning</code> takes the first
+16 verified records and drops conditional ones
+(<code>search_learning.py:128-129</code>), so a library past 16 rules is
+truncated by age on that path. On the model-proposer path the verified
+identities are listed in the prompt as <em>"Available verified
+identities"</em> (<code>polynomial_learning.py:841-844</code>). They are
+candidates the model may cite, and the state-bound verifier checks each
+citation.</p>
+<p>The failure modes are under-recall and stale caches, and both are
+handled. A rule that does not match syntactically is not found. The
+<code>RuleIndex</code> cache can return a rule revoked after indexing,
+which <code>apply_schema</code> then refuses
+(<code>tests/test_compact_lifelong.py:150-156</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and explicit. Learning happens inside
+<code>solve</code> only when the caller passes <code>learn=True</code>,
+and a frozen agent raises (<code>lifelong_math.py:69</code>). Admission
+is one verifier call per candidate and the rule is retrievable on
+return. Nothing runs in the background.</p>
+<p>The writers are deterministic. Schema discovery anti-unifies two
+checked rewrites and admits only an identity that checks universally in
+the bounded polynomial ring (<code>schema_learning.py:1-8</code>,
+<code>:74-77</code>). The distiller path takes the committed derivation
+of a solved task; a model can be the proposer of that derivation, and
+each step faces the task verifier before it is committed.</p>
+<p>Deduplication is by id. On the schema path the id is the statement
+digest, so a re-derived schema is a no-op whatever its status. On the
+distiller path the id includes the task id, and <code>admit</code>
+raises on a duplicate, which <code>LearningAgent.run</code> records as a
+learning error (<code>learning.py:77-79</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The agent never waits on a model to write memory; admission is local
+computation. Load re-runs the verifier over every stored candidate,
+capped at 256 records and a 16 MiB rules file on the lifelong agent
+(<code>lifelong_math.py:198</code>, <code>:212</code>).
+<code>save</code> rewrites the whole file. Nothing is injected into a
+prompt by default; only the model-proposer path lists the verified
+identities, unbounded beyond the library size.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server and JSON-lines loop register five tools:
+<code>verify_identity</code>, <code>expand_polynomial</code>,
+<code>learn_polynomial</code>, <code>recall_polynomial</code> and
+<code>list_rules</code> (<code>tool_api.py:15-21</code>). Only
+<code>learn_polynomial</code> writes, and it is annotated as the one
+non-read-only tool (<code>mcp.py:23-26</code>). An agent can teach the
+server a schema and recall it within one process. It cannot save, load,
+revoke or name a library.</p>
+<p><code>skills/verify-and-repair-algebra/SKILL.md</code> and
+<code>examples/agent_probe.py</code> give an agent a nine-call
+integration probe (reject, repair, learn, recall, and an
+unsupported-scope control) over the same tools. LangGraph, OpenAI and
+DeepSeek integrations wrap the verification loop and do not touch the
+library's persistence. Adapting the library to another domain means
+writing a <code>KnowledgeVerifier</code>, which the protocol keeps to
+one method (<code>knowledge.py:135-138</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-admission-trusts">What admission trusts</h3>
+<p>Only the verifier. Evidence references, source task ids and
+serialized flags are documented as <em>"not proofs"</em>
+(<code>knowledge.py:3-4</code>), and the code bears it out. A candidate
+the verifier mutates is <code>unknown</code>, and a tampered verdict in
+the file is replaced by a fresh one
+(<code>tests/test_knowledge.py:212-223</code>). An edited candidate
+fails its fingerprint. A recomputed fingerprint over a false statement
+loads as <code>rejected</code>
+(<code>tests/test_knowledge.py:225-247</code>). The design moves all
+trust onto the verifier: an unsound verifier admits false rules, and
+re-verification on load repeats its answer.</p>
+<h3 id="what-revocation-stops">What revocation stops</h3>
+<p>On the schema path it stops the value. The id is derived from the
+statement, <code>_learn</code> skips any id already held, and the
+revoked record is saved and re-applied on load. On the distiller path it
+stops the record: a later task that derives the same identity mints a
+new id and is admitted. Three limits apply even on the schema path:</p>
+<ul>
+<li><strong>Freeze drops it.</strong> <code>freeze()</code> rebuilds the
+library from <code>lookup('algebra')</code>, which returns verified
+records only, so a frozen snapshot carries no revoked or rejected record
+(<code>lifelong_math.py:157-166</code>). A frozen agent cannot learn, so
+nothing re-asserts within it.</li>
+<li><strong>The key is syntactic.</strong> The digest is over the
+anti-unified text, so an equivalent schema written with different
+operand order is a different id.</li>
+<li><strong>No actor.</strong> <code>revoke</code> takes a reason string
+and no principal, and no agent-facing tool reaches it.</li>
+</ul>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — awarded on the record
+status. <code>rejected</code>, <code>unknown</code> and
+<code>revoked</code> are kept and excluded by <code>lookup</code>, and
+every application re-reads the record and refuses one that is no longer
+<code>verified</code>. A verdict other than <code>revoked</code> is
+recomputed at load rather than carried; within a process the status is
+stored on every record and moved only by admission and revocation.</li>
+<li><strong><code>tombstone</code></strong> — awarded on the schema
+path's statement-digest id, consulted by <code>_learn</code> before
+admission and durable through <code>save</code> and <code>load</code>.
+The distiller path and frozen snapshots are outside it.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld.
+<code>domain</code>, <code>kind</code> and <code>assumptions</code>
+filter lookup, and none is a user, project, agent or tenant key. The
+per-process <code>ToolSession</code> is a physical partition.</li>
+<li><strong><code>human_review</code></strong> — withheld. Admission is
+the verifier's decision with no waiting state for a person.
+<code>RouteMemory</code> has <code>pending</code> until
+<code>review(reviewer=...)</code>, and the reviewer is a string the
+caller supplies, which its docstring says <em>"does not authenticate
+people"</em>, in a queue that lives in process memory
+(<code>memory.py:7-9</code>, <code>:135-144</code>).</li>
+<li><strong><code>audit_log</code></strong> — withheld.
+<code>RouteMemory._audit</code> appends a row per add, review and
+revoke, in process memory with no writer to disk
+(<code>memory.py:203-222</code>). The knowledge library keeps a
+revocation reason per record and <code>audit()</code> returns counts
+(<code>knowledge.py:297-309</code>); neither is an event record.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. The knowledge
+library has no time field. <code>LemmaMetadata</code> carries one
+caller-supplied window; no record time is stamped.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>The agent-facing memory never persists.</strong> Everything
+an MCP client teaches the server is gone at restart, which the server
+says. A reader adopting the MCP server is adopting a scratchpad.</li>
+<li><strong><code>TheoremMemory.save</code> is not atomic</strong> and
+the lemma file has no fingerprint; the backend re-compiles every lemma
+on load, so a damaged file fails rather than misleads
+(<code>formal.py:609-663</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite under <code>tests/</code> has 869 pytest functions in 57
+files. CI installs the package and runs <code>python -m pytest -q</code>
+on Python 3.10 to 3.13, and a second job runs the MCP tests over real
+stdio on 3.11 and 3.13 (<code>.github/workflows/tests.yml:10-41</code>).
+The Lean-backed formal tests skip when no toolchain is found
+(<code>tests/test_formal.py:18-23</code>). I ran none of it.</p>
+<p><code>negative_eval</code> rests on
+<code>tests/test_knowledge.py:49-57</code>. It admits a verified, a
+rejected and an unknown candidate into one library and asserts
+<code>lookup</code> returns exactly the verified record. Deleting the
+status predicate would return all three, so the case can fail. The
+conditions case at <code>:96-104</code> returns the conditional record
+for a matching query and nothing for another domain, kind or condition
+string. The revocation tests at <code>:177-196</code> and
+<code>tests/test_compact_lifelong.py:189-193</code> assert an empty
+lookup over a library holding only the revoked record, which an empty
+retriever would also pass. No test re-learns a revoked schema through
+<code>LifelongMathAgent</code>, so the tombstone's write-path half is
+untested. The formal expiry case asserts
+<code>active_lemmas(...) == ()</code> over a one-lemma memory
+(<code>tests/test_formal.py:88-110</code>).</p>
+<p>The knowledge-growth result is committed as
+<code>docs/evidence/knowledge-growth-v1/summary.json</code>. I
+recomputed it with <code>python3 -I</code> from that file. The fixed and
+growing arms both solve 10 of 10 transfer tasks with 84 and 24
+proposals, the growing arm makes 8 committed cross-task rule
+applications, and discovery costs 13 proposals. That matches the
+README's <em>"71.4% fewer transfer proposals"</em>. The tasks are
+handmade and the proposer is a deterministic grammar, which the file's
+own <code>limitations</code> list says. No paper is associated with the
+project; <code>CITATION.cff</code> cites the software.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Re-judge on load.</strong> Store the verdict for inspection
+and discard it when reading the file back; a changed verifier then
+re-decides the whole store, and a forged approval in the file buys
+nothing.</li>
+<li><strong>Derive the id from the claim.</strong> An id that is a
+digest of the canonical statement turns id-level deduplication into a
+value-level refusal for free, provided the writer checks the id before
+admitting.</li>
+<li><strong>Re-read status at the point of use.</strong> A cached
+retrieval result is a pointer; check the current record and fingerprint
+before applying it.</li>
+<li><strong>Bind snapshot files by digest.</strong> A metadata file
+naming the digest of the rules file makes a half-written generation fail
+to load.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A provenance field in the id.</strong> Folding the task id
+into a learned rule's id makes every re-derivation a new record and
+every revocation local to one task.</li>
+<li><strong>A snapshot built from the read path.</strong> Building a
+frozen copy from <code>lookup</code> leaves out exactly the records that
+say what must not come back.</li>
+<li><strong>An agent surface on a scratch store.</strong> Exposing
+learning to an agent over a store it cannot persist or correct teaches
+it a memory that disappears.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a builder whose memory is checkable claims — identities,
+proofs, plans against hard constraints — and who can write a sound
+verifier for them. The library is small enough to read in an afternoon
+and has no dependencies. It does not fit conversational memory: there is
+no text retrieval, no scope, no user model, and a claim nobody can
+verify lands as <code>unknown</code> and is never recalled. Walk away if
+you want an MCP server that remembers across sessions, since this one
+does not.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether a save or revoke surface is planned for the JSON-lines and
+MCP sessions, given the README's emphasis on persistent verified
+memory.</li>
+<li>Whether <code>freeze</code> is meant to drop revoked records, given
+that the lifelong learner relies on them to refuse a re-derivation.</li>
+<li>What the MiniF2F and LeanDojo runs the README lists as pending show
+for <code>TheoremMemory</code> with expiry in use.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Knowledge store: <code>src/resimind/knowledge.py</code></li>
+<li>Learning: <code>src/resimind/learning.py</code>,
+<code>src/resimind/domains/lifelong_math.py</code>,
+<code>src/resimind/domains/schema_learning.py</code>,
+<code>src/resimind/domains/polynomial_learning.py</code></li>
+<li>Retrieval and application:
+<code>src/resimind/domains/rule_index.py</code>,
+<code>src/resimind/domains/search_learning.py</code></li>
+<li>Routes: <code>src/resimind/memory.py</code>,
+<code>src/resimind/agent.py</code></li>
+<li>Formal memory: <code>src/resimind/integrations/formal.py</code></li>
+<li>Agent surfaces: <code>src/resimind/tool_api.py</code>,
+<code>src/resimind/integrations/mcp.py</code>,
+<code>src/resimind/cli.py</code>,
+<code>distribution/mcpb/server.py</code>, <code>server.json</code></li>
+<li>Tests: <code>tests/test_knowledge.py</code>,
+<code>tests/test_compact_lifelong.py</code>,
+<code>tests/test_formal.py</code>,
+<code>tests/test_search_learning.py</code>,
+<code>tests/test_polynomial_learning.py</code>,
+<code>tests/test_memory.py</code></li>
+<li>Evidence:
+<code>docs/evidence/knowledge-growth-v1/summary.json</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Route memory has no persistence.</strong>
+<code>git grep -n -E 'json|open\(|write_text|Path' -- src/resimind/memory.py</code>
+returns nothing; the same pattern counts 16 lines in
+<code>src/resimind/knowledge.py</code>.</li>
+<li><strong>No agent surface revokes.</strong>
+<code>git grep -n 'revoke' -- src/resimind/tool_api.py src/resimind/integrations/mcp.py src/resimind/cli.py distribution/mcpb/server.py</code>
+returns nothing;
+<code>git grep -c 'revoke' -- src/resimind/knowledge.py</code> counts
+13.</li>
+<li><strong>No agent surface saves or loads.</strong>
+<code>git grep -n -E '\.save\(|\.load\(' -- src/resimind/tool_api.py src/resimind/integrations/mcp.py</code>
+returns nothing; the same pattern matches
+<code>src/resimind/domains/lifelong_math.py:177</code> and
+<code>:215</code>.</li>
+<li><strong><code>conflicts()</code> has no caller.</strong>
+<code>git grep -n 'conflicts(' -- src benchmarks examples experiments tools</code>
+matches only its definition at
+<code>src/resimind/knowledge.py:279</code>.</li>
+<li><strong>The knowledge library has no time field.</strong>
+<code>git grep -n -w -E 'time|datetime|created_at|updated_at|timestamp' -- src/resimind/knowledge.py</code>
+returns nothing; the same pattern counts 25 lines in
+<code>src/resimind/integrations/formal.py</code>.</li>
+<li><strong>Nothing stamps a lemma's record time.</strong>
+<code>git grep -n -E 'created_at=|now\(' -- src/resimind/integrations/formal.py src/resimind/knowledge.py</code>
+matches the expiry check's clock at <code>formal.py:176</code> and the
+loader's pass-through at <code>formal.py:659</code>.</li>
+<li><strong>No scope key.</strong>
+<code>git grep -n -i -E 'user_id|tenant|project_id|agent_id|namespace|session_id' -- src</code>
+returns nothing;
+<code>git grep -c 'domain' -- src/resimind/knowledge.py</code> counts
+16.</li>
+<li><strong>No test re-learns a revoked schema.</strong>
+<code>git grep -n -E 'revoke\(|learn=True' -- tests/test_compact_lifelong.py tests/test_tool_api.py tests/test_mcp.py</code>
+matches learning at <code>test_compact_lifelong.py:87</code> and
+<code>:103</code> and revocations at <code>:105</code>,
+<code>:154</code> and <code>:192</code>, none followed by a learning
+call.</li>
+<li><strong>The model integrations do not persist memory.</strong>
+<code>git grep -n -E 'save|load\(|KnowledgeLibrary' -- src/resimind/integrations/langgraph.py src/resimind/integrations/openai.py src/resimind/integrations/deepseek.py</code>
+returns nothing; the same pattern matches
+<code>src/resimind/domains/lifelong_math.py</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc' -- README.md CITATION.cff</code>
+returns nothing; the same pattern counts 10 lines in
+<code>docs/public-systems-comparison.zh-CN.md</code>, which cites other
+projects' papers.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/1105216375-alt/resimind/commit/4055d9c8a065b687c4b13b04f3094d6c14545db4"><code class="commit-id" title="4055d9c8a065b687c4b13b04f3094d6c14545db4">4055d9c8…</code></a>
+— first reading, from a full clone of <code>main</code> at release
+v0.16.0, scoped to the knowledge library, the learning loops, rule
+retrieval and application, route memory, the formal lemma memory, the
+JSON-lines and MCP surfaces, their tests and the knowledge-growth
+evidence; the planning, bridge and ChinaTravel experiments were not
+read. Screened first: one auto-run surface, <code>server.json</code>, an
+MCP manifest declaring a start command that acts only if a harness
+installs it; one unpinned surface, <code>pyproject.toml</code> with no
+lockfile beside it; <code>AGENTS.md</code>, an agent-instruction file
+read as data. MIT, no rider. Nothing installed, built or run. Three
+marks: <code>tombstone</code>, <code>trust_state</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

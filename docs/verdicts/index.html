@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 833 reports.</strong></p>
+<p><strong>This page covers all 834 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34342,6 +34342,40 @@ what a memory alone supported.</li>
 <li>Do not copy when: you need memory that settles contradictions
 without deployer configuration, or a review step before a fact is
 served.</li>
+</ul>
+<h3 id="resimind"><a
+href="../systems/resimind/"><code>resimind</code></a></h3>
+<ul>
+<li>Best idea: <strong>the stored verdict is never trusted.</strong>
+<code>KnowledgeLibrary.load</code> validates the saved verdict's shape
+and discards it, re-admitting every candidate under the verifiers the
+caller passes and re-applying revocations, so a changed verifier
+re-decides the whole store and a forged approval loads as whatever the
+verifier says.</li>
+<li>Biggest risk: <strong>the memory an agent can reach does not
+persist.</strong> The MCP server and the JSON-lines tools build one
+<code>LifelongMathAgent</code> per process, tag every response
+<code>memory_scope: process</code>, and expose no save, load or revoke;
+persistence and revocation are Python-API calls only, and
+<code>revoke</code> records a reason and no actor.</li>
+<li>Second risk: <code>freeze</code> rebuilds the library from the
+verified lookup, so a frozen snapshot carries no revoked record; the
+distiller path keys a rule on its task id as well, so a revoked value
+re-derived by another task is admitted.</li>
+<li>Most reusable component: <code>KnowledgeLibrary</code> in
+<code>src/resimind/knowledge.py</code>, with the statement-digest id in
+<code>src/resimind/domains/schema_learning.py</code> and the
+point-of-use status check in <code>apply_schema</code>.</li>
+<li>Maturity impression: MIT, release v0.16.0; 12,842 lines of Python in
+<code>src/resimind</code>, 56 commits from 8 October to 15 October 2026;
+869 pytest functions under <code>tests/</code> run in CI on Python 3.10
+to 3.13, not run here; the committed knowledge-growth result recomputes
+from its summary file. Three marks: <code>tombstone</code>,
+<code>trust_state</code> and <code>negative_eval</code>.</li>
+<li>Study when: the memory is checkable claims — identities, proofs,
+plans against hard constraints — and you can write the verifier.</li>
+<li>Do not copy when: you need conversational or user memory, text
+retrieval, scope, or an MCP server that remembers across restarts.</li>
 </ul>
         </article>
       </div>

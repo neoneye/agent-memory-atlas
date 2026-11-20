@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 833 reports.**
+**This page covers all 834 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7652,3 +7652,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; extension 0.2.45, 1,934 commits from 31 August to 20 November 2026; 50,904 lines of SQL in `specs/` and 23,029 of Python in a mirrored `core/`; 240 SQL test files run in CI against a built image, not run here; the memory eval's 76% hit@1 recomputes from the committed ranked file and rests on supersession written from the fixture's answer key, as its README says. Three marks: `bitemporal`, `scope_enforced` and `negative_eval`.
 - Study when: you want memory scoped by row policy in PostgreSQL, facts dated by when they were said, or a delete that removes exactly what a memory alone supported.
 - Do not copy when: you need memory that settles contradictions without deployer configuration, or a review step before a fact is served.
+
+### [`resimind`](../systems/resimind/)
+
+- Best idea: **the stored verdict is never trusted.** `KnowledgeLibrary.load` validates the saved verdict's shape and discards it, re-admitting every candidate under the verifiers the caller passes and re-applying revocations, so a changed verifier re-decides the whole store and a forged approval loads as whatever the verifier says.
+- Biggest risk: **the memory an agent can reach does not persist.** The MCP server and the JSON-lines tools build one `LifelongMathAgent` per process, tag every response `memory_scope: process`, and expose no save, load or revoke; persistence and revocation are Python-API calls only, and `revoke` records a reason and no actor.
+- Second risk: `freeze` rebuilds the library from the verified lookup, so a frozen snapshot carries no revoked record; the distiller path keys a rule on its task id as well, so a revoked value re-derived by another task is admitted.
+- Most reusable component: `KnowledgeLibrary` in `src/resimind/knowledge.py`, with the statement-digest id in `src/resimind/domains/schema_learning.py` and the point-of-use status check in `apply_schema`.
+- Maturity impression: MIT, release v0.16.0; 12,842 lines of Python in `src/resimind`, 56 commits from 8 October to 15 October 2026; 869 pytest functions under `tests/` run in CI on Python 3.10 to 3.13, not run here; the committed knowledge-growth result recomputes from its summary file. Three marks: `tombstone`, `trust_state` and `negative_eval`.
+- Study when: the memory is checkable claims — identities, proofs, plans against hard constraints — and you can write the verifier.
+- Do not copy when: you need conversational or user memory, text retrieval, scope, or an MCP server that remembers across restarts.

@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 832 of 833 screened at the report's current pin.**
+**Progress: 833 of 834 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 392 |
+| Repositories with an auto-run surface (`RUNS`) | 393 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 381 |
 | Repositories with build-time execution (`EXEC`) | 600 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
@@ -352,6 +352,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`rememora`](../../content/systems/rememora.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`reporecall`](../../content/systems/reporecall.md) | `.claude/settings.json`, `.mcp.json` |
 | [`repowise`](../../content/systems/repowise.md) | `.claude-plugin/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/.mcp.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json`, `server.json` |
+| [`resimind`](../../content/systems/resimind.md) | `server.json` |
 | [`rexleimo-aios`](../../content/systems/rexleimo-aios.md) | `.gitmodules` |
 | [`ripwire`](../../content/systems/ripwire.md) | `.mcp.json`, `hooks/` |
 | [`ruflo`](../../content/systems/ruflo.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.claude/settings.json`, `.githooks/`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/`, `plugin/hooks/hooks.json`, `plugins/ruflo-adr/.claude-plugin/plugin.json` |

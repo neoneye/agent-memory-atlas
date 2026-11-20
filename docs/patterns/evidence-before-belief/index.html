@@ -644,6 +644,22 @@ and refuted when none do, and only active beliefs are injected. A
 restore deliberately does not put the source back. The gap is the other
 derived layer: entity facts point at a <code>source_node_id</code>, and
 nothing invalidates a fact when that memory is forgotten.</p>
+<p><a href="../../systems/resimind/">ResiMind</a> puts the whole gate in
+the verifier and runs it twice. A <code>KnowledgeCandidate</code>
+carries a statement, its assumptions, the derivation steps, a source
+task id and evidence references, and admission treats every one of them
+as an untrusted claim: the verifier registered for the candidate's
+domain decides, a candidate without a source task or with no verifier is
+<code>unknown</code>, and a verifier that mutates its input voids the
+verdict (<code>src/resimind/knowledge.py:222-252</code>). Loading a
+saved library validates and then discards each stored verdict and admits
+the candidate again under the current verifiers, so a forged
+<code>verified</code> in the file loads as <code>rejected</code>
+(<code>knowledge.py:409-422</code>,
+<code>tests/test_knowledge.py:212-223</code>). What it does not keep is
+the evidence itself: the references are strings, and the guarantee is
+exactly as strong as the verifier, which the module says in its first
+lines.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store the event before starting asynchronous extraction.</li>

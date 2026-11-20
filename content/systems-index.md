@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **833 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **834 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -783,6 +783,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/reporecall/"><span class="az-id">Reporecall</span><span class="az-what">Markdown memories under a code index</span><code class="az-repo">jags111/reporecall</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/repowise/"><span class="az-id">repowise</span><span class="az-what">A gate that drops the sentence it cannot quote</span><code class="az-repo">repowise-dev/repowise</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/reql/"><span class="az-id">REQL</span><span class="az-what">A work record&#x27;s id is a hash of its text, so a repeat is a no-op and a changed repeat is an error</span><code class="az-repo">sh1zen/reql</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/resimind/"><span class="az-id">ResiMind</span><span class="az-what">Rules a verifier admits, not the model</span><code class="az-repo">1105216375-alt/resimind</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/resonant/"><span class="az-id">Resonant</span><span class="az-what">Self-hosted companion over a searchable conversation archive</span><code class="az-repo">nekyialabs/resonant</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/resonant-mind/"><span class="az-id">Resonant Mind</span><span class="az-what">Single-mind MCP memory with a subconscious daemon</span><code class="az-repo">nekyialabs/resonant-mind</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/retrodict/"><span class="az-id">Retrodict</span><span class="az-what">A briefing for the successor</span><code class="az-repo">ryanbbrown/Retrodict</code><span class="az-caps"></span></a></li>

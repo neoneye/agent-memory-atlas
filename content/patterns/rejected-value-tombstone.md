@@ -1098,6 +1098,8 @@ a change event keyed on its id, and the same sentence can be written again.
 
 [ContextLattice](../../systems/contextlattice/) has the key and not the refusal. A claim's id defaults to a hash of project, subject, predicate and object, so a retracted claim and a later assertion of the same triple land on one row; `upsert` then takes the status from the new payload, defaulting to `active`, and the retraction is gone. The `contradicts` link that `correct --category wrong` writes leaves the target `active` and labels it `contested`. The value-keyed identity is already in place, and the missing piece is a check in `upsert` that keeps `retracted` unless the new write says why it should not.
 
+[ResiMind](../../systems/resimind/) gets a value-keyed refusal from an id. Its lifelong learner names each schema `abstract:` plus a digest of the statement's `lhs`, `rhs` and `variables`, and skips any id the library already holds — *"Includes terminally revoked identities"* — so a revoked rule re-derived from new examples is never re-admitted, and the revocation is saved and re-applied on load (`src/resimind/domains/schema_learning.py:78-79`, `src/resimind/domains/lifelong_math.py:147-152`). Two neighbours show how easily it is lost. The distiller path folds the task id into the digest, so the same identity from another task walks past (`src/resimind/domains/polynomial_learning.py:561`), and `freeze` rebuilds a snapshot from the verified lookup, dropping every revoked record (`lifelong_math.py:157-166`). The key is the anti-unified text, so an equivalent schema written in another operand order is a new id, and no test re-learns a revoked schema.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a
