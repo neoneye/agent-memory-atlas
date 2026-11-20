@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 832 reports.**
+**This page covers all 833 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7642,3 +7642,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 with a declared commercial lane not in the tree, release v5.2.0; 178,091 lines of Go in the gateway, 473 commits from 19 February to 16 November 2026, all but three by one author; 1,729 Go test functions, run by no committed CI and not run here; the project's own evidence report says it establishes no task-success gain. Five marks: `trust_state`, `bitemporal`, `scope_enforced`, `audit_log` and `negative_eval`.
 - Study when: you federate a primary store with vector indexes and need a correction to win over the stale embedding.
 - Do not copy when: you need authenticated multi-user writes, or memory extracted from conversations.
+
+### [`percolate`](../systems/percolate/)
+
+- Best idea: **a fact is no more visible than the memory it came from.** `upsert_graph` reads org, visibility and owner from the named resource or session and refuses a context that disagrees, and the edge policy admits a caller who may read any resource or session in `provenance.sources`, so a fact merged from two people's memories is one row each reads through their own.
+- Biggest risk: **a closed fact reopens on the next assertion.** The upsert's conflict branch sets `valid_to = null` and drops the `closed` record for any source, and dream's supersession selects by `created_at` or `valid_from` after its watermark, which a revival changes in neither, so a re-run extraction undoes a reconciliation and nothing repeats it.
+- Second risk: replacing a memory's text keeps the old text and leaves the facts extracted from it current; in a default deployment no relation is single-valued and `close_edge` has no product caller, so a conversation stating a move leaves both homes current.
+- Most reusable component: `aiq.upsert_graph`'s scope block and `aiq.edge_sources_readable` with the `edges_via_endpoints` policy in `specs/world-model-ingestion/graph.sql`, and `aiq.forget_deleted_sources` for refcounted deletion.
+- Maturity impression: MIT; extension 0.2.45, 1,934 commits from 31 August to 20 November 2026; 50,904 lines of SQL in `specs/` and 23,029 of Python in a mirrored `core/`; 240 SQL test files run in CI against a built image, not run here; the memory eval's 76% hit@1 recomputes from the committed ranked file and rests on supersession written from the fixture's answer key, as its README says. Three marks: `bitemporal`, `scope_enforced` and `negative_eval`.
+- Study when: you want memory scoped by row policy in PostgreSQL, facts dated by when they were said, or a delete that removes exactly what a memory alone supported.
+- Do not copy when: you need memory that settles contradictions without deployer configuration, or a review step before a fact is served.

@@ -1742,6 +1742,26 @@ prefetch, so the vector lanes answer across every project on each turn
 while the governed lane answers nothing. A federating retriever needs
 the scope on the request it fans out, not on each lane's optional
 filter.</p>
+<p><a href="../../systems/percolate/">Percolate</a> scopes a derived
+fact by the row it was read out of. <code>aiq.upsert_graph</code> reads
+org, visibility and owner from the resource or session its context
+names, and refuses a context <code>org_id</code> that disagrees, so a
+worker extracting with no identity cannot widen what it writes
+(<code>specs/world-model-ingestion/graph.sql:777-833</code>). Facts are
+shared rows keyed by <code>(src, dst, relation)</code>, so the read gate
+is per source: the <code>edges_via_endpoints</code> policy requires both
+endpoints readable and <code>aiq.edge_sources_readable</code>, true when
+the caller may read any resource or session in
+<code>provenance.sources</code> (<code>:3287-3317</code>). A fact two
+people's memories assert is then one row each reads through their own,
+and a memory made private or deleted later takes its facts with it with
+nothing to re-project. The scope test covers a private memory with no
+org, another member of a shared org, and a second owner reading the
+shared row
+(<code>dev/tests/rbac/21-a-fact-is-read-through-its-memory.sql</code>).
+The policy is row-level, so that second owner also receives the other
+memory's <code>resource_id</code>, agent and run in the provenance
+column.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

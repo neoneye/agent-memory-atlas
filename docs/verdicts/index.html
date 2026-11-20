@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 832 reports.</strong></p>
+<p><strong>This page covers all 833 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34302,6 +34302,46 @@ task-success gain. Five marks: <code>trust_state</code>,
 need a correction to win over the stale embedding.</li>
 <li>Do not copy when: you need authenticated multi-user writes, or
 memory extracted from conversations.</li>
+</ul>
+<h3 id="percolate"><a
+href="../systems/percolate/"><code>percolate</code></a></h3>
+<ul>
+<li>Best idea: <strong>a fact is no more visible than the memory it came
+from.</strong> <code>upsert_graph</code> reads org, visibility and owner
+from the named resource or session and refuses a context that disagrees,
+and the edge policy admits a caller who may read any resource or session
+in <code>provenance.sources</code>, so a fact merged from two people's
+memories is one row each reads through their own.</li>
+<li>Biggest risk: <strong>a closed fact reopens on the next
+assertion.</strong> The upsert's conflict branch sets
+<code>valid_to = null</code> and drops the <code>closed</code> record
+for any source, and dream's supersession selects by
+<code>created_at</code> or <code>valid_from</code> after its watermark,
+which a revival changes in neither, so a re-run extraction undoes a
+reconciliation and nothing repeats it.</li>
+<li>Second risk: replacing a memory's text keeps the old text and leaves
+the facts extracted from it current; in a default deployment no relation
+is single-valued and <code>close_edge</code> has no product caller, so a
+conversation stating a move leaves both homes current.</li>
+<li>Most reusable component: <code>aiq.upsert_graph</code>'s scope block
+and <code>aiq.edge_sources_readable</code> with the
+<code>edges_via_endpoints</code> policy in
+<code>specs/world-model-ingestion/graph.sql</code>, and
+<code>aiq.forget_deleted_sources</code> for refcounted deletion.</li>
+<li>Maturity impression: MIT; extension 0.2.45, 1,934 commits from 31
+August to 20 November 2026; 50,904 lines of SQL in <code>specs/</code>
+and 23,029 of Python in a mirrored <code>core/</code>; 240 SQL test
+files run in CI against a built image, not run here; the memory eval's
+76% hit@1 recomputes from the committed ranked file and rests on
+supersession written from the fixture's answer key, as its README says.
+Three marks: <code>bitemporal</code>, <code>scope_enforced</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: you want memory scoped by row policy in PostgreSQL,
+facts dated by when they were said, or a delete that removes exactly
+what a memory alone supported.</li>
+<li>Do not copy when: you need memory that settles contradictions
+without deployer configuration, or a review step before a fact is
+served.</li>
 </ul>
         </article>
       </div>

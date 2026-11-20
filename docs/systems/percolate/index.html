@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A PostgreSQL extension for agent
+workflows and memory, where conversations and documents become dated,
+provenanced graph edges readable only through their source.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Percolate — Agent Memory Atlas">
+    <meta property="og:description" content="A PostgreSQL extension for
+agent workflows and memory, where conversations and documents become
+dated, provenanced graph edges readable only through their source.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Percolate — Agent Memory Atlas">
+    <meta name="twitter:description" content="A PostgreSQL extension for
+agent workflows and memory, where conversations and documents become
+dated, provenanced graph edges readable only through their source.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Percolate — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Percolate",
+      "description": "A PostgreSQL extension for agent workflows and memory, where conversations and documents become dated, provenanced graph edges readable only through their source.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Dated facts read through the memory they
+came from</p>
+          <h1>Percolate</h1>
+          <p class="document-deck">A PostgreSQL extension for agent
+workflows and memory, where conversations and documents become dated,
+provenanced graph edges readable only through their source.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Percolation-Labs/percolate">
+              <span>Source</span>
+              <strong>Percolation-Labs/percolate</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Percolation-Labs/percolate/commit/2bb9b3bd6b6ca5ec19a9718fe751d0ffe024ba7b" title="2bb9b3bd6b6ca5ec19a9718fe751d0ffe024ba7b">
+              <span>Analyzed revision</span>
+              <code>2bb9b3bd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Percolation-Labs--percolate" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Percolation-Labs--percolate</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE and core/LICENSE, which name different holders; BEAM-derived
+sample data under dev/examples is CC BY-SA 4.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>50,904
+lines of SQL in specs/ across 44 files, the memory path mostly in
+graph.sql (3,382) and ingestion.sql (1,286); 23,029 lines of Python in
+core/percolate_core, a mirror of percolate-core; an 8,626-line Rust
+parser</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,934
+commits from 31 August to 20 November 2026, 1,869 of them by the leading
+author; extension version 0.2.45, latest tag v0.2.44</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>240
+SQL test files across six surfaces, run by dev/check.sh against a built
+image in CI on push, pull request and nightly; 615 pytest functions in
+core/tests that this repository's CI does not run; I ran none of
+it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Percolate is a PostgreSQL extension from Percolation Labs in which
+agents, workflows, runs and documents are rows driven from SQL. A Python
+worker and an Agent Runtime over Pydantic AI do the outside calls. Its
+memory is a typed graph: text memories and a user's conversation turns
+are read by an extractor into edges that carry their sources and the
+interval over which they held.</p>
+<p>What is notable is that a fact's visibility is read through the
+memory it came from. An edge is readable only by a caller who may read
+one of the resources or sessions in its provenance, so a fact merged
+from two people's memories is visible to each through their own. Valid
+time and record time are separate columns with a read that composes
+them, and deleting a memory deletes the edges it alone asserted.</p>
+<p>What is weak is ending a fact. Any later assertion of a closed edge
+reopens it. Replacing a memory's text in place leaves the old text's
+facts current. In the shipped vocabulary no relation is single-valued,
+and the one function that closes a single fact at a stated time has no
+caller outside tests and examples.</p>
+<p><strong>Licence.</strong> MIT, and the code carries no restriction.
+The term that travels is in the sample data:
+<code>dev/examples/advanced-walk/samples/beam/</code> and
+<code>dev/examples/muddling-through/samples/beam/</code> hold
+BEAM-derived files under CC BY-SA 4.0, whose share-alike clause attaches
+to anything built from them. The QASPER-derived questions are CC BY 4.0.
+The root <code>LICENSE</code> names Percolation Labs and
+<code>core/LICENSE</code> names "Percolate". <code>core/</code> is a
+mirror of a separate repository, percolate-core, overwritten on each
+sync, so its terms are that repository's as copied here.
+<code>CONTRIBUTING.md</code> asks for no contributor agreement.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one of three things the graph reads facts out of: a
+<strong>resource</strong> registered as text
+(<code>content.register_text</code>), an uploaded file, or a
+<strong>session's user turns</strong>. The belief itself is an
+<code>aiq.edges</code> row: a subject node, a relation from a closed
+vocabulary, an object node, a weight, <code>valid_from</code> and
+<code>valid_to</code>, and <code>provenance.sources</code>, one entry
+per reading with its resource or session, message ids, agent, run and
+time (<code>specs/world-model-ingestion/graph.sql:1166-1177</code>).
+Edge identity is <code>(src_id, dst_id, relation)</code>, so the same
+fact from two memories is one row with two sources
+(<code>specs/ai-query-layer/schema.sql:335-374</code>).</p>
+<p>A fact becomes current when an extractor lands it through
+<code>aiq.upsert_graph</code>. It holds from when its source was said if
+the writer knows that, otherwise from the write. Names the extractor
+cannot resolve exactly become <strong>soft nodes</strong>, private to
+the memory's owner where the memory is private, until a reconcile pass
+or a judge binds them to a typed node.</p>
+<p>A fact stops holding in four ways, and only one removes it:</p>
+<ul>
+<li><strong>Closed at a stated time.</strong>
+<code>aiq.close_edge</code> sets <code>valid_to</code> on exactly one
+current edge and records who closed it and when
+(<code>graph.sql:1326-1374</code>).</li>
+<li><strong>Superseded by dream.</strong> For a relation declared
+<code>single_valued</code>, every current edge but the newest per
+subject ends where the next begins
+(<code>graph.sql:1904-1923</code>).</li>
+<li><strong>Withdrawn.</strong> <code>aiq.retract_derived</code> ends
+what one agent asserted; a withdrawn period is a record-time end and
+drops out of every as-of read
+(<code>specs/ai-query-layer/schema.sql:605-654</code>,
+<code>:695</code>).</li>
+<li><strong>Deleted with its memory.</strong> Deleting a resource strips
+its entries from every edge's sources and deletes the edges left with
+none (<code>graph.sql:1474-1506</code>).</li>
+</ul>
+<p>Every other <code>DELETE</code> or <code>TRUNCATE</code> on
+<code>aiq.edges</code> is refused by a trigger
+(<code>graph.sql:1392-1405</code>). A closed fact is not final. The
+upsert's conflict branch sets <code>valid_to = null</code> on any
+re-assertion, from any source, and drops the <code>closed</code> record
+(<code>graph.sql:1201-1261</code>). A fact is ground truth as soon as it
+lands: no state marks it as a candidate.</p>
+<p>A separate memory lives in the clue walk, which keeps per-document
+verdicts from earlier walks and reads them as of a past run's start
+(<code>dev/tests/query/44-a-walk-reads-its-memory-as-of-a-past-start.sql</code>).
+It was read here only to that cutoff.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a fact lands with its source's scope and its said-at time; four paths end it, and any later assertion reopens a closed one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a fact lands with its source&#39;s scope and its said-at time; four paths end it, and any later assertion reopens a closed one
+flowchart TD
+  subgraph writers[&quot;Sources of a fact&quot;]
+    direction TB
+    RT[&quot;register_text:&lt;br/&gt;a memory as text&quot;]
+    RS[&quot;reflect_session:&lt;br/&gt;user turns only&quot;]
+    LM[&quot;land_message_facts:&lt;br/&gt;the person&#39;s agent&quot;]
+    RT ~~~ RS ~~~ LM
+  end
+  writers --&gt; UG[&quot;upsert_graph:&lt;br/&gt;scope read from&lt;br/&gt;the source row&quot;]
+  UG --&gt; CUR[&quot;edge current:&lt;br/&gt;valid_from = said&lt;br/&gt;or write time&quot;]
+  CUR --&gt; RD{&quot;caller may read&lt;br/&gt;any source?&quot;}
+  RD --&gt;|&quot;yes&quot;| SV[&quot;GRAPH, edges_current,&lt;br/&gt;edges_as_of&quot;]
+  RD --&gt;|&quot;no&quot;| HD[&quot;row hidden&lt;br/&gt;by policy&quot;]
+  SV ~~~ ENDQ
+  CUR --&gt; ENDQ{&quot;how does it&lt;br/&gt;stop holding?&quot;}
+  ENDQ --&gt; CE[&quot;close_edge:&lt;br/&gt;worker only, no&lt;br/&gt;product caller&quot;]
+  ENDQ --&gt; DR[&quot;dream: declared&lt;br/&gt;single-valued only&quot;]
+  ENDQ --&gt; DL[&quot;memory deleted:&lt;br/&gt;sole-sourced edge&lt;br/&gt;deleted&quot;]
+  CE --&gt; CL[&quot;closed: valid_to set,&lt;br/&gt;row kept&quot;]
+  DR --&gt; CL
+  CL --&gt; RV[&quot;any later assertion:&lt;br/&gt;valid_to = null&quot;]
+  RV --&gt; CUR</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The extension is pure SQL generated from <code>specs/</code> by
+<code>extension/percolate/build-sql.py</code>, plus a Rust
+<code>percolate_parser</code> extension for P8QL compiled with pgrx. It
+installs into PostgreSQL 19 as a non-superuser, so row-level security
+holds against the application role. pgvector holds one table per
+registered embedding model, and pg_trgm backs fuzzy lookup.</p>
+<p>The processes around it hold no state of their own. The Python worker
+in <code>core/</code> claims workflow tasks with
+<code>SKIP LOCKED</code>, calls models and embedders, and writes results
+back. The Content Server takes uploads into object storage. The Agent
+Runtime runs an agent turn from the agent's row. An MCP server fronts
+PostgREST with a P8QL <code>query</code> tool and, when it runs without
+connector keys, six memory tools
+(<code>core/percolate_core/query/mcp.py:731-760</code>).</p>
+<p>Standing it up means Docker Compose or a Helm chart from a separate
+get-percolate repository, or the two extensions installed into an
+existing PostgreSQL 19. An embedding provider is needed for vector
+search and a model provider for extraction; <code>register_text</code>
+and the lexical half of <code>aiq.search</code> work without either. The
+store is ordinary tables, readable and repairable in psql.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Register a memory.</strong>
+<code>content.register_text</code> keys on
+<code>(channel, external_id)</code>, writes owner, org and visibility
+from the caller, records chunks, and starts the channel's
+<code>ingest_workflow</code> if it has one
+(<code>specs/world-model-ingestion/schema.sql:557-683</code>).
+Re-registering changed text appends the old text to
+<code>metadata.replaced</code> and re-chunks (<code>:653-661</code>);
+the first <code>p_metadata</code>, including <code>said_at</code>, is
+kept (<code>:635-637</code>).</li>
+<li><strong>Extract from a document.</strong>
+<code>content.install_ingest_workflow</code> with graph indexing adds a
+matrix over windows to the upload pipeline. Each child calls the
+extractor agent, and <code>content.land_graph_windows</code> drops
+out-of-range and off-vocabulary edges, counts them, and calls
+<code>upsert_graph</code> with the resource and its <code>said_at</code>
+(<code>specs/world-model-ingestion/ingestion.sql:296-436</code>).</li>
+<li><strong>Extract from a conversation.</strong>
+<code>reflect_session</code> windows each user message as
+<code>&lt;speaker&gt; wrote: &lt;words&gt;</code> and lands each with
+the session id, the message id and its <code>created_at</code> as
+<code>valid_from</code> (<code>ingestion.sql:1055-1087</code>,
+<code>:394-401</code>). Assistant turns are not windows.</li>
+<li><strong>The person's agent extracts.</strong>
+<code>agentic.land_message_facts</code> refuses a message the caller may
+not read or one the assistant wrote, and lands the graph as
+<code>agent:&lt;user id&gt;</code>
+(<code>ingestion.sql:1143-1176</code>).</li>
+<li><strong>Land.</strong> <code>aiq.upsert_graph</code> validates,
+reads org, visibility and owner from the named resource or session and
+refuses a context org that disagrees, takes advisory locks in key order,
+resolves each node, and upserts edges
+(<code>graph.sql:651-1303</code>).</li>
+<li><strong>Reconcile.</strong> <code>aiq.dream</code> supersedes
+single-valued relations, promotes soft nodes whose key exactly matches
+one typed node, and queues the rest as <code>bind</code> judgements
+(<code>graph.sql:1868-1998</code>).</li>
+<li><strong>Read.</strong> <code>aiq.query</code> dispatches P8QL;
+<code>aiq.search</code> fuses full-text and vector ranks
+(<code>specs/ai-query-layer/schema.sql:4287-4410</code>);
+<code>aiq.graph_neighbors</code> reads <code>edges_current</code> or,
+with <code>AS OF</code>, <code>edge_periods</code>
+(<code>:1914-1930</code>).</li>
+<li><strong>Delete.</strong> <code>trg_forget_deleted_sources</code> on
+<code>content.resources</code> (<code>graph.sql:1474-1506</code>); chunk
+vectors go by <code>trg_forget_vectors</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>content.resources</code> carries <code>owner_id</code>,
+<code>org_id</code> and <code>visibility</code>, a channel,
+<code>external_id</code>, and <code>metadata</code> holding the caller's
+<code>said_at</code>, <code>agent</code>, <code>run</code> and the
+<code>replaced</code> list. Its chunks hold the text, and each embedding
+space is a table keyed by chunk.</p>
+<p><code>aiq.nodes</code> carries an entity type, org, visibility and
+owner. A soft node is a candidate identity keyed
+<code>(org_id, claimed_kind, key)</code>. <code>aiq.edges</code> holds
+the relation, a weight from the vocabulary's
+<code>machine_weight</code>, <code>valid_from</code> defaulting to
+<code>now()</code>, a nullable <code>valid_to</code>,
+<code>provenance</code>, <code>org_id</code>, <code>created_at</code>,
+and <code>recall_count</code> and <code>probe_count</code>, which a read
+path bumps through <code>aiq.note_recall</code>.
+<code>aiq.edge_retractions</code> records each interval a revived edge
+did not hold (<code>specs/ai-query-layer/schema.sql:544-594</code>).</p>
+<p><code>aiq.judgements</code> is the queue for cases a rule cannot
+decide: <code>bind</code>, <code>merge</code>, <code>withdraw</code>,
+<code>challenge</code> and <code>link</code>, with status
+<code>open</code>, <code>claimed</code>, <code>to_human</code>,
+<code>decided</code> or <code>moot</code>, a verdict, a reason, the
+decider and a tier (<code>graph.sql:2042-2066</code>).
+<code>aiq.node_distinctions</code> records a pair of nodes decided
+distinct, which refuses a later promotion between them.</p>
+<p>Conversation history is <code>agentic.sessions</code> and
+<code>agentic.messages</code>, windowed and summarized per branch. It is
+session state that <code>reflect_session</code> reads, not the
+memory.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is tool-mediated. The Agent Runtime does not inject memory
+into a turn: <code>core/percolate_core/agentic</code> contains no
+reference to an <code>aiq.</code> relation. An agent reads memory
+through the P8QL MCP tool, a workflow <code>p8ql:</code> step, or SQL.
+<code>SEARCH</code> over chunks fuses full-text and vector ranks by
+reciprocal rank fusion and returns memory text. <code>BY AGENT</code>
+and <code>BY RUN</code> become a join on the resource's metadata inside
+each half, so the limit counts only rows in scope
+(<code>specs/ai-query-layer/schema.sql:3895-3926</code>).</p>
+<p><code>GRAPH</code> walks typed edges from a node. A current read goes
+through <code>aiq.edges_current</code>, whose predicate is the one
+currency rule <code>aiq.edge_is_current</code>
+(<code>schema.sql:426-448</code>). <code>GRAPH ... AS OF</code> reads
+<code>aiq.edge_periods</code>, which cuts revived edges' holes out and
+leaves withdrawn periods out (<code>schema.sql:605-654</code>).
+<code>aiq.edges_as_of(valid_at, known_at)</code> returns the edges
+recorded by <code>known_at</code> that held at <code>valid_at</code>,
+counting an end only if it was recorded by <code>known_at</code>
+(<code>graph.sql:1425-1451</code>).</p>
+<p>Text search and the graph do not consult each other.
+<code>aiq.search</code> reads no edge or validity column
+(<code>schema.sql:4287-4410</code>), so "Maya lives in Leeds" stays a
+search hit after the Leeds edge is closed. The project's own memory eval
+applies the validity filter in the harness's SQL, not in a product read
+(<code>dev/evals/memory/percolate_run.py:222-236</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>register_text</code> is a synchronous write as the caller;
+chunks are searchable by text when it returns. Extraction is a workflow:
+a matrix of model calls rate-limited to a bucket of 20 refilling at one
+per second, then a SQL fan-in. A memory's facts land seconds to minutes
+after it is registered, depending on the queue, and nothing blocks the
+agent's turn. Dream, once scheduled, runs every 15 minutes by default
+over subjects with an edge created or dated since the last run
+(<code>graph.sql:2855-2883</code>, <code>:1904-1909</code>).</p>
+<p>The machine path never matches fuzzily. <code>upsert_graph</code>
+defaults <code>fuzzy</code> to false (<code>graph.sql:684</code>), and
+<code>aiq.resolve_ref</code> returns a miss for a key that names two
+nodes at the nearest scope (<code>graph.sql:580-640</code>), so an
+unknown or ambiguous name becomes a soft node rather than a bind to a
+near one. Concurrent landings take advisory locks on node keys in sorted
+order, a fix for a deadlock measured with eight workers
+(<code>graph.sql:880-889</code>).</p>
+<p><strong>A re-assertion revives a closed fact.</strong> The conflict
+branch appends the new source, drops <code>closed</code>, sets
+<code>valid_to = null</code> and keeps the earliest
+<code>valid_from</code> (<code>graph.sql:1201-1261</code>). The dedup
+key suppresses only a duplicate source entry; the revival happens on
+every assertion. Where dream has ended "Maya lives in Leeds", re-running
+<code>reflect_session</code> over the conversation that said it reopens
+the edge. Dream does not catch this: its supersession selects subjects
+whose edges have <code>created_at</code> or <code>valid_from</code>
+after the watermark (<code>graph.sql:1904-1909</code>), and a revival
+changes neither column.</p>
+<p><strong>Replacing a memory's text does not reach the graph.</strong>
+<code>register_text</code> keeps the old text in
+<code>metadata.replaced</code> and starts a new extraction run for the
+new text (<code>schema.sql:653-670</code>). Nothing in
+<code>specs/</code> reads <code>replaced</code> or
+<code>text_hash</code> to withdraw what the old text yielded, so the old
+facts stay current, citing a memory whose text no longer says them.</p>
+<p><strong>Who ends a fact in a default deployment.</strong>
+<code>close_edge</code> is granted to the worker role and has no caller
+in <code>specs/</code> or <code>core/</code>
+(<code>graph.sql:1326</code>, <code>:3150</code>). The default
+vocabulary declares no relation <code>single_valued</code>
+(<code>graph.sql:3365-3382</code>), so dream supersedes nothing until a
+deployer declares one, and <code>aiq.schedule_dream</code> has no caller
+in the tree. The Zep and advanced-memory tutorials declare single-valued
+relations in their own setup blocks. A conversation stating a move
+leaves both homes current.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server's memory tools are <code>read_session</code>,
+<code>land_message_facts</code>, <code>list_judgements</code>,
+<code>claim_judgement</code>, <code>decide_judgement</code> and
+<code>release_judgement</code>, each a pass-through to the SQL function
+as the caller
+(<code>core/percolate_core/query/memory_tools.py:30-115</code>). They
+are listed only when the server runs without connector keys and forwards
+the client's own <code>Authorization</code>
+(<code>mcp.py:736-738</code>); a per-user connector key allows only
+<code>query</code> and the canvas tools
+(<code>core/percolate_core/query/connector_auth.py:24-44</code>).</p>
+<p>The person's agent is therefore the extractor and the judge.
+<code>decide_judgement</code> always sends <code>p_tier: "agent"</code>
+(<code>memory_tools.py:106</code>) and may bind a soft node to a typed
+one, mark them distinct, or hand the case to a person with
+<code>{"decision": "human"}</code>. The P8QL tool runs plain SQL in a
+read-only transaction
+(<code>specs/ai-query-layer/schema.sql:4510</code>), so it cannot write
+memory.</p>
+<p>Adapting it to another agent means pointing that agent at the MCP
+server or at PostgREST. The memory is SQL, so any client with a token
+reaches the same rows under the same policies.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="scope">Scope</h3>
+<p>The read gate is the source, not the writer's context.
+<code>upsert_graph</code> reads the org, visibility and owner of the
+named resource or session and refuses a context org that disagrees
+(<code>graph.sql:777-833</code>). The edge policy
+<code>edges_via_endpoints</code> requires both endpoints readable and
+<code>aiq.edge_sources_readable</code>, which is true when the caller
+may read any resource or session in <code>provenance.sources</code>
+(<code>graph.sql:3287-3317</code>). Resources carry the generated scope
+policy over owner, org and visibility
+(<code>specs/world-model-ingestion/integration.sql:324</code>,
+<code>specs/user-rbac/schema.sql:1075-1083</code>,
+<code>:1556-1589</code>).</p>
+<p>The policy is row-level. A caller who reads a merged edge through
+their own memory receives the whole <code>provenance</code> column,
+including the other memory's <code>resource_id</code>, agent, run and
+times. The scope test asserts that the second owner reads the shared row
+(<code>dev/tests/rbac/21-a-fact-is-read-through-its-memory.sql:185-201</code>).</p>
+<h3 id="what-a-delete-reaches">What a delete reaches</h3>
+<p>Deleting a resource removes its chunks, its vectors, and the edges it
+alone asserted, and strips it from edges others also assert
+(<code>dev/tests/content/12-mem0-quickstart.sql:301-351</code>). Soft
+nodes it created remain. The extraction run's task rows keep the model's
+graph JSON until <code>workflow.purge_completed</code> removes completed
+runs, 30 days by default
+(<code>specs/workflow-engine/schema.sql:8250-8252</code>).</p>
+<h3 id="identity-merges">Identity merges</h3>
+<p>Dream binds a soft node only on an exact key match within its kind
+and org. Everything else becomes a <code>bind</code> judgement, which
+the agent can claim and decide. A wrong bind can be undone by name
+through <code>aiq.unresolve_node</code>, and
+<code>aiq.node_distinctions</code> keeps a decided pair apart.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code></strong> — awarded on row policy
+over stored owner, org and visibility, applied to every edge through its
+sources and to every chunk through its resource. Agent and run are
+caller-chosen search predicates on top.</li>
+<li><strong><code>bitemporal</code></strong> — awarded.
+<code>valid_from</code> comes from the message's <code>created_at</code>
+on the conversation path and from the resource's <code>said_at</code> on
+the document path, beside the edge's <code>created_at</code> and the
+close's recorded instant, and <code>edges_as_of</code> composes them. An
+upload passes metadata <code>"{}"</code>
+(<code>core/percolate_core/content/server.py:153-156</code>), so a
+file's facts hold from the extraction. The stated-time close has no
+product caller.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>tombstone</code></strong> — withheld. A closed or
+withdrawn edge revives on any re-assertion, and
+<code>node_distinctions</code> is keyed on a pair of node ids, which
+blocks a merge and not a value.</li>
+<li><strong><code>trust_state</code></strong> — withheld. A fact has no
+status; it is current or closed, which is validity. Edge
+<code>weight</code> and <code>aiq.source_reliability</code> are numbers.
+Judgement status belongs to the queue item, and the facts of an open
+case are served. <code>claims.bears_on</code> carries
+<code>proposed</code>, <code>confirmed</code> and <code>disputed</code>
+on a link between a fact and a research question, and its reads drop
+<code>disputed</code> (<code>specs/claims/schema.sql:1441-1448</code>,
+<code>:1566-1575</code>). The link is an annotation; the fact it points
+at carries no state.</li>
+<li><strong><code>human_review</code></strong> — withheld. Facts are
+served when they land, and the judgement queue is decided through
+<code>decide_judgement</code>, which the agent holds.
+<code>claims.review_bears_on</code> refuses any caller
+<code>rbac.current_actor()</code> does not call a person
+(<code>specs/claims/schema.sql:1529-1531</code>), a verified principal
+check, but it reviews the link, and a proposed link is returned by both
+reads before review.</li>
+<li><strong><code>audit_log</code></strong> — withheld. Edges are
+updated in place: sources are appended, <code>valid_to</code> set and
+cleared. <code>edge_retractions</code> records only holes a revival
+closed, and judgements and node resolutions record identity decisions,
+not fact mutations. The append-only <code>claims.tx</code> belongs to
+the research claims layer.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The SQL suite is 240 files across six surfaces, rbac, query,
+workflow, content, agentic and research, each one transaction that rolls
+back. <code>dev/check.sh</code> runs them against a database built from
+the tree, and <code>.github/workflows/check.yml</code> runs it on push,
+pull request and nightly. A file can be deferred when it needs a newer
+parser or core than the image has, and the runner names each deferral.
+The 615 pytest functions in <code>core/tests</code> are not run by this
+repository's CI. I ran none of it.</p>
+<p><code>negative_eval</code> rests on three populated cases:</p>
+<ul>
+<li><code>dev/tests/content/12-mem0-quickstart.sql:141-160</code> asks
+as Maya for the coach's memories where the planner's outrank them and
+requires exactly the coach's two; agent and run together must narrow to
+their empty overlap.</li>
+<li><code>:301-351</code> deletes one memory and requires its diet edge
+gone while the <code>works_at</code> edge a second memory also asserted
+stands on the survivor alone, and a non-owner's delete removes
+nothing.</li>
+<li><code>dev/tests/content/13-mem0-agent.sql:84-90</code> requires
+<code>GRAPH</code> now to equal exactly Lisbon and Harbour Health, so
+the closed Leeds edge is excluded beside live edges, and
+<code>AS OF</code> March to equal Leeds.</li>
+</ul>
+<p>Scope has its own file asserting that another user, with or without a
+shared org, reads no node, edge or document node from a private memory,
+through the table, <code>GRAPH</code> and the walk
+(<code>dev/tests/rbac/21-a-fact-is-read-through-its-memory.sql</code>).
+No test re-asserts a closed fact and checks it stays closed, and none
+replaces a memory's text and checks the old facts.</p>
+<p><code>dev/evals/memory/</code> compares Percolate with Mem0 and
+Graphiti on a 48-fact, 46-question fixture with a shared embedder and no
+judge. I recomputed hit@1 and recall@5 from the committed
+<code>ranked.jsonl</code> against <code>fixture.json</code> with my own
+script: <code>percolate-valid</code> is 35/46 (76%) and 87%, and
+<code>percolate-search</code> 24/46 (52%) and 80%, as
+<code>scores.txt</code> states. In that row the facts are written from
+the fixture's triples, <code>valid_from</code> and <code>valid_to</code>
+are set by operator <code>UPDATE</code> from the fixture's answer key,
+and the validity filter is the harness's SQL
+(<code>percolate_run.py:142-148</code>, <code>:222-236</code>). The
+README states each of these. Its extraction run, with Percolate's own
+extractor and dream inferring supersession, records 59% and 74% for
+<code>percolate-valid-dream</code>
+(<code>dev/evals/memory/scores-extract-full.txt</code>). No paper is
+associated with the project; the arXiv ids in the tree name the BEAM and
+QASPER datasets and the sources of design notes.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Scope a derived fact by its source row.</strong> Read owner,
+org and visibility from the memory the fact came from at write time, and
+refuse a caller's context that disagrees, instead of trusting what the
+extractor passes.</li>
+<li><strong>Gate a merged fact through any of its sources.</strong> One
+row per fact with a list of sources, readable when the caller may read
+one of them, lets two people's identical facts share a row without
+either reading the other's memory text.</li>
+<li><strong>Delete by refcount.</strong> A memory's delete strips its
+entry from every fact it supported and deletes only the facts left with
+none.</li>
+<li><strong>Take evidence about the user only from what the user
+wrote.</strong> The assistant's restatement never becomes a fact.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Revival without a guard.</strong> If a fact's identity is
+the triple, a closing must survive a later assertion from a source it
+already superseded, or a reconciliation that ran once is undone by the
+next import.</li>
+<li><strong>A watermark on creation time for a pass that repairs
+updates.</strong> A scan that selects by <code>created_at</code> misses
+every row that changed in place.</li>
+<li><strong>An in-place edit that does not reach what was
+derived.</strong> Keep the old text, and also withdraw the facts
+extracted from it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team already running PostgreSQL that wants memory,
+workflows and permissions in one database, with row policies doing the
+scoping. The memory is a well-scoped, dated fact graph with careful
+deletion. Its correction story needs deployer work: declare which
+relations are single-valued, schedule dream, and route supersession
+through <code>close_edge</code>. Walk away if you want memory that
+settles conflicts on its own, or a review step before a fact is served.
+Walk away too if you cannot run PostgreSQL 19 with custom
+extensions.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether a re-assertion of a superseded fact from its original source
+is meant to revive it, given that <code>close_edge</code> is documented
+as ending exactly the fact a memory replaced.</li>
+<li>Whether the full <code>provenance</code> of a merged edge is meant
+to be visible to every reader who reaches the row through one
+source.</li>
+<li>Whether the get-percolate deployment schedules dream and declares
+single-valued relations by default; this tree does neither.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Graph memory: <code>specs/world-model-ingestion/graph.sql</code>
+(<code>upsert_graph</code>, <code>resolve_ref</code>,
+<code>close_edge</code>, <code>edges_as_of</code>,
+<code>forget_deleted_sources</code>, <code>dream</code>,
+<code>judgements</code>, <code>edge_sources_readable</code>),
+<code>specs/ai-query-layer/schema.sql</code> (<code>aiq.edges</code>,
+<code>edge_is_current</code>, <code>edges_current</code>,
+<code>edge_retractions</code>, <code>edge_periods</code>,
+<code>retract_derived</code>, <code>scoped_source</code>,
+<code>search</code>, <code>graph_neighbors</code>),
+<code>specs/ai-query-layer/reliability.sql</code></li>
+<li>Writers: <code>specs/world-model-ingestion/schema.sql</code>
+(<code>register_text</code>),
+<code>specs/world-model-ingestion/ingestion.sql</code>
+(<code>land_graph_windows</code>, <code>session_windows</code>,
+<code>land_message_facts</code>,
+<code>install_reflect_workflow</code>)</li>
+<li>Scope: <code>specs/user-rbac/schema.sql</code>
+(<code>may_read</code>, <code>add_scope_policy</code>,
+<code>current_actor</code>),
+<code>specs/world-model-ingestion/integration.sql</code></li>
+<li>Agent surface: <code>core/percolate_core/query/mcp.py</code>,
+<code>core/percolate_core/query/memory_tools.py</code>,
+<code>core/percolate_core/query/connector_auth.py</code>,
+<code>core/percolate_core/content/server.py</code></li>
+<li>Claims links: <code>specs/claims/schema.sql</code>
+(<code>bears_on</code>, <code>propose_bears_on</code>,
+<code>review_bears_on</code>)</li>
+<li>Tests and evals:
+<code>dev/tests/content/12-mem0-quickstart.sql</code>,
+<code>dev/tests/content/13-mem0-agent.sql</code>,
+<code>dev/tests/rbac/21-a-fact-is-read-through-its-memory.sql</code>,
+<code>dev/tests/query/46-a-fact-is-read-on-both-clocks.sql</code>,
+<code>dev/evals/memory/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong><code>close_edge</code> has no product caller.</strong>
+<code>git grep -n -E 'close_edge\(' -- specs core</code> matches only
+its definition at
+<code>specs/world-model-ingestion/graph.sql:1326</code>, the revoke at
+<code>:3116</code> and the grant at <code>:3150</code>; the same pattern
+over <code>dev</code> matches tests and tutorial blocks.</li>
+<li><strong>The default vocabulary declares no single-valued
+relation.</strong>
+<code>git grep -n -E '"single_valued"' -- specs core</code> returns
+nothing; the same pattern over <code>dev/examples</code> matches the
+advanced-memory and Zep setup blocks.</li>
+<li><strong>Nothing reads a replaced text.</strong>
+<code>git grep -n -E "metadata-&gt;'replaced'|text_hash" -- specs core</code>
+matches only <code>register_text</code> at
+<code>specs/world-model-ingestion/schema.sql:634-656</code>.</li>
+<li><strong>Text search reads no validity.</strong>
+<code>sed -n 4287,4410p specs/ai-query-layer/schema.sql | grep -c -E 'edge|valid_'</code>
+counts 0; the same count over <code>aiq.graph_neighbors</code> at lines
+1914-1975 is 9.</li>
+<li><strong>The Agent Runtime reads no memory relation.</strong>
+<code>git grep -n 'aiq\.' -- core/percolate_core/agentic</code> returns
+nothing;
+<code>git grep -c 'aiq\.' -- core/percolate_core/query/mcp.py</code>
+counts 16.</li>
+<li><strong>An upload carries no <code>said_at</code>.</strong>
+<code>git grep -n -i 'said_at' -- core/percolate_core/content</code>
+returns nothing;
+<code>git grep -c 'said_at' -- specs/world-model-ingestion/ingestion.sql</code>
+counts 5.</li>
+<li><strong>Dream is never scheduled in the tree.</strong>
+<code>git grep -n -E 'schedule_dream\(' -- specs core</code> matches
+only the definition at <code>graph.sql:2855</code> and the revoke at
+<code>:3128</code>.</li>
+<li><strong>No value-keyed rejection on the graph.</strong>
+<code>git grep -n -i -E 'tombstone|rejected_value|blocked_value|never_again' -- specs core</code>
+matches only erasure records in <code>specs/claims</code> and
+<code>specs/research-platform</code> and snapshot bytes at
+<code>specs/world-model-ingestion/schema.sql:1373</code>.</li>
+<li><strong>This repository's CI runs no pytest.</strong>
+<code>git grep -n -E 'core/tests|pytest' -- .github dev/check.sh</code>
+returns nothing; <code>git grep -c 'dev/tests' -- dev/check.sh</code>
+counts 8.</li>
+<li><strong>No paper.</strong> The tree has no
+<code>CITATION.cff</code>, and
+<code>git grep -l -i -E 'arxiv|bibtex|@article|@misc'</code> lists BEAM
+and QASPER sample files, the generated extension SQL and design notes
+under <code>specs/</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/Percolation-Labs/percolate/commit/2bb9b3bd6b6ca5ec19a9718fe751d0ffe024ba7b"><code class="commit-id" title="2bb9b3bd6b6ca5ec19a9718fe751d0ffe024ba7b">2bb9b3bd…</code></a>
+— first reading, from a full clone of <code>main</code> at extension
+version 0.2.45, scoped to the graph memory, its writers from text,
+uploads and conversations, its scope policy, reconciliation and
+judgement queue, the MCP memory tools and their tests; the workflow
+engine, research claims and walk were read only where they touch those
+paths. Screened first: no auto-run, build-time execution or unpinned
+surface; four manifests inside the seven-day cooldown, and an
+uninstalled pre-push hook. MIT. Nothing installed, built or run; I
+recomputed the memory eval's scores from its committed ranked file.
+Three marks: <code>bitemporal</code>, <code>scope_enforced</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

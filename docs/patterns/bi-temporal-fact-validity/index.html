@@ -613,6 +613,25 @@ an instant three years back. Record time is written and never queried:
 writes, so "what did the agent believe on a date" has no read path.
 There is also no way to say a fact was never true while keeping it; that
 case is a hard delete.</p>
+<p><a href="../../systems/percolate/">Percolate</a> dates a fact from
+its source rather than its extraction. A conversation's facts hold from
+the message's <code>created_at</code> and a registered memory's from its
+<code>said_at</code>, while <code>aiq.edges.created_at</code> and
+<code>close_edge</code>'s recorded instant keep the record clock;
+<code>aiq.edges_as_of(valid_at, known_at)</code> composes the two, and a
+withdrawal is a record-time end that drops the period from every later
+as-of read
+(<code>specs/world-model-ingestion/graph.sql:1425-1451</code>,
+<code>specs/ai-query-layer/schema.sql:605-654</code>). The failure is on
+re-assertion. Edge identity is the triple, and the upsert's conflict
+branch sets <code>valid_to = null</code> for any later source
+(<code>graph.sql:1201-1261</code>); <code>edge_retractions</code>
+records the hole, but the fact is current again, and dream's
+supersession, which selects by <code>created_at</code> or
+<code>valid_from</code> after its watermark, never sees it. An upload
+carries no <code>said_at</code>, so a file's facts hold from the
+extraction. A test worth requiring of any instance: close a fact, re-run
+the extraction that first asserted it, and assert it stays closed.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision
