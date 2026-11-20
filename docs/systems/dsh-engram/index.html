@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A DeepSeek Harness plugin storing
+an agent's long-term memory in per-scope SQLite files, with hybrid
+search, a memory-palace layout and LLM-consolidated beliefs.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="dsh-engram — Agent Memory Atlas">
+    <meta property="og:description" content="A DeepSeek Harness plugin
+storing an agent's long-term memory in per-scope SQLite files, with
+hybrid search, a memory-palace layout and LLM-consolidated beliefs.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="dsh-engram — Agent Memory Atlas">
+    <meta name="twitter:description" content="A DeepSeek Harness plugin
+storing an agent's long-term memory in per-scope SQLite files, with
+hybrid search, a memory-palace layout and LLM-consolidated beliefs.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>dsh-engram — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "dsh-engram",
+      "description": "A DeepSeek Harness plugin storing an agent's long-term memory in per-scope SQLite files, with hybrid search, a memory-palace layout and LLM-consolidated beliefs.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A memory palace inside a coding harness</p>
+          <h1>dsh-engram</h1>
+          <p class="document-deck">A DeepSeek Harness plugin storing an
+agent's long-term memory in per-scope SQLite files, with hybrid search,
+a memory-palace layout and LLM-consolidated beliefs.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/kenz1117/dsh-engram">
+              <span>Source</span>
+              <strong>kenz1117/dsh-engram</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/kenz1117/dsh-engram/commit/ad0fa89bdde0420e8a409455b45f023f08f743a2" title="ad0fa89bdde0420e8a409455b45f023f08f743a2">
+              <span>Analyzed revision</span>
+              <code>ad0fa89b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kenz1117--dsh-engram" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>kenz1117--dsh-engram</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE and package.json</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>25,228
+lines of TypeScript in 87 files under src/ outside the panel, plus
+13,408 lines in 36 panel files under src/client</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>241
+commits from 1 September to 19 November 2026, 189 of them under the
+leading author's account; release 0.13.15</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>959
+vitest cases in 67 spec files, 15,517 lines; CI runs lint and dictionary
+checks but not the suite, which needs @deepseek-ai peers from a sibling
+harness checkout; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>dsh-engram is a <a href="../deepseek-harness/">DeepSeek Harness</a>
+plugin that gives a coding agent long-term memory across sessions.
+Memories live in SQLite files, one per scope: a user file, a shared
+file, and one file per project keyed on the normalized git origin. The
+agent reaches them through 23 narrow tools, and a profile of the user's
+most important memories is injected at session start. The design borrows
+the memory palace's layout, so every memory is pinned to a room and slot
+and can be walked in a fixed route.</p>
+<p>What is notable is the belief layer and the correction path. An
+auxiliary LLM consolidates raw memories into one-sentence beliefs, each
+citing its source rows. When a source is forgotten, archived or
+superseded, the belief drops it and turns stale; with no source left it
+turns refuted. Only active beliefs are injected. A correction writes a
+new revision under the same memory id and leaves the old one out of
+every read path, and a test proves it against the populated old row.</p>
+<p>What is weak is the trust boundary around the curated profile. It is
+injected in its own block, which tells the model these are <em>"the
+rules the user maintains by hand"</em> and to treat them as
+authoritative. The only writer is <code>engram_profile_edit</code>, a
+tool on the agent's own surface. A save whose nearest neighbour is at
+cosine 0.92 or above is merged into it and its text is dropped, so a
+high-similarity correction through <code>engram_save</code> is lost. A
+forgotten value is never consulted again by any write.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code> and
+<code>package.json</code>, which agree, with no contributor agreement in
+<code>CONTRIBUTING.md</code>. The grant is clean; the practical limit
+sits outside it. <code>typecheck</code>, <code>test</code> and
+<code>bundle</code> resolve values from <code>@deepseek-ai/*</code>
+peers that <code>.npmrc</code> records as not installable from npm, so
+the suite runs only inside a sibling <code>deepseek-harness</code>
+checkout. The embedding model and the WASM inference engine are fetched
+at install and run time under their own terms and are not in the
+tree.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>memory</strong> is a typed row: <code>fact</code>,
+<code>preference</code>, <code>decision</code>, <code>episode</code> or
+<code>skill</code> (<code>src/types.ts:51</code>). Its status is a
+lifecycle value, <code>active</code>, <code>archived</code> or
+<code>forgotten</code> (<code>src/types.ts:54</code>), and nothing
+epistemic: a captured inference and a user's statement are stored the
+same way, at the confidence their writer gave. Every read path filters
+to <code>active</code>.</p>
+<p>A memory enters by one of four dispositions decided against the
+nearest active neighbour in the same file
+(<code>src/write-disposition.ts:216-244</code>). At cosine 0.92 or above
+with the same kind it <strong>merges</strong>: the old row is reinforced
+and the new text is not stored. Between 0.88 and 0.92 it is
+<strong>deferred</strong>: written active, with a
+<code>contradicts</code> edge to the neighbour. Below that it is
+<strong>accepted</strong>. Empty or in-batch duplicate content is
+<strong>dropped</strong>. Without embeddings every write is
+accepted.</p>
+<p>A memory stops being believed in three ways.
+<code>engram_update</code> archives it and writes a new revision with
+the same <code>memory_id</code> and a <code>supersedes</code> edge
+(<code>src/store/sqlite.ts:1464-1497</code>). <code>engram_forget</code>
+sets <code>forgotten</code> and records an epitaph of three answers in
+<code>op_log</code> (<code>:1509-1524</code>). Decay and distillation
+archive in bulk. A restore reactivates a row and archives any active
+sibling revision (<code>:1701-1716</code>).</p>
+<p>A <strong>belief</strong> is a separate row in
+<code>observations</code>, formed by an auxiliary LLM from active
+memories not yet cited as evidence
+(<code>src/consolidation/reflect.ts:141-149</code>). It carries
+<code>active</code>, <code>stale</code> or <code>refuted</code>. A new
+memory within cosine 0.86 of an active belief marks it stale for review
+(<code>:153-172</code>), and the next reflection rules
+<code>still</code>, <code>refine</code> or <code>refute</code> on it
+(<code>:257-266</code>). Independently, whenever a source row dies, the
+belief loses that source: stale if any remain, refuted if none do
+(<code>src/store/sqlite.ts:856-886</code>). Only active beliefs reach
+the prompt (<code>src/index.ts:489</code>).</p>
+<p>The <strong>curated profile</strong> is a third kind of thing: a
+versioned text block per scope, injected ahead of everything else as the
+user's instructions, and written by the agent's
+<code>engram_profile_edit</code> tool.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write merges, defers or lands; a correction archives the old revision; a belief loses each dead source and only active beliefs are injected</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write merges, defers or lands; a correction archives the old revision; a belief loses each dead source and only active beliefs are injected
+flowchart TD
+  subgraph IN[&quot;Writers&quot;]
+    direction TB
+    CAP[&quot;per-turn capture:&lt;br/&gt;LLM over last turn&quot;]
+    SAVE[&quot;engram_save tool&quot;]
+    CAP ~~~ SAVE
+  end
+  IN --&gt; DW{&quot;nearest active&lt;br/&gt;neighbour, cosine&quot;}
+  DW --&gt;|&quot;0.92+, same kind&quot;| MRG[&quot;merge: old row&lt;br/&gt;reinforced, new&lt;br/&gt;text not stored&quot;]
+  DW --&gt;|&quot;0.88 to 0.92&quot;| DEF[&quot;defer: written active,&lt;br/&gt;contradicts edge&quot;]
+  DW --&gt;|&quot;below 0.88&quot;| ACC[&quot;accept: written active&quot;]
+  DEF --&gt; ACT[&quot;active memory:&lt;br/&gt;search and profile&quot;]
+  ACC --&gt; ACT
+  ACT --&gt;|&quot;update, decay,&lt;br/&gt;distill&quot;| ARC[&quot;archived:&lt;br/&gt;out of every read&quot;]
+  ACT --&gt;|&quot;engram_forget&lt;br/&gt;with epitaph&quot;| FGT[&quot;forgotten: row kept,&lt;br/&gt;no later write&lt;br/&gt;consults it&quot;]
+  ACT --&gt; REF[&quot;reflect: LLM forms&lt;br/&gt;a belief citing&lt;br/&gt;active rows&quot;]
+  REF --&gt; BA[&quot;belief active:&lt;br/&gt;injected, user&lt;br/&gt;file only&quot;]
+  BA --&gt;|&quot;close new memory&quot;| STL
+  ARC --&gt; STL
+  FGT --&gt; STL[&quot;belief stale:&lt;br/&gt;dead source dropped,&lt;br/&gt;not injected&quot;]
+  STL --&gt;|&quot;reflect: still&lt;br/&gt;or refine&quot;| BA
+  STL --&gt;|&quot;reflect: refute,&lt;br/&gt;or no source left&quot;| RFT[&quot;belief refuted:&lt;br/&gt;kept, never injected&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The plugin runs inside the DeepSeek Harness host process: a Cordis
+plugin with a Node half that owns the stores, tools and hooks, and a
+React panel served over a loopback HTTP API
+(<code>/api/engram/*</code>). Storage is <code>node:sqlite</code> in WAL
+mode with a five-second busy timeout, one file per scope under
+<code>~/.dsh/engram</code> (<code>src/index.ts:1079-1081</code>). A
+project file is named by a hash of the normalized git origin, so
+worktrees and the SSH and HTTPS forms of one remote share it.</p>
+<p>Embeddings default to
+<code>Xenova/paraphrase-multilingual-MiniLM-L12-v2</code> at 384
+dimensions, run locally by transformers.js on a WASM onnxruntime build
+that the bundle step copies into <code>lib/engine/</code>. A remote
+OpenAI-compatible endpoint is the alternative. A dimension that does not
+match the stored vectors is refused on write and on comparison rather
+than truncated. Vector search is an in-process scan of a packed matrix,
+with a streaming fallback above its size cap.</p>
+<p>An auxiliary LLM call is made for capture, query rewriting,
+distillation, belief consolidation, profile overflow compression and
+history backfill, on the session's own provider unless
+<code>provider</code> and <code>model</code> override it. An optional
+external judge, Jev, can rule on the 0.88–0.92 band and confirm
+contradiction edges; when it fails, the rules apply.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Installing is one command into a harness profile, and nothing else
+needs to run: no service, no API key for storage, no Docker. Offline, a
+failed model download degrades retrieval to keywords and marks results
+<code>degraded</code>. Without an LLM, capture, rewriting, distillation
+and reflection stop and saves still work. The store is plain SQLite and
+readable by hand, and <code>engram_mirror</code> writes one Markdown
+file per memory with YAML frontmatter. A schema upgrade takes a
+<code>VACUUM INTO</code> snapshot first. Building from source needs the
+harness repository checked out beside it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Save.</strong> <code>engram_save</code> scrubs protocol tags
+and secrets, embeds, runs <code>decideWrite</code>, then writes or
+reinforces; on <code>defer</code> it links the new row to up to three
+neighbours at 0.88 or above (<code>src/tools/create.ts:370-418</code>,
+<code>:588-664</code>).</li>
+<li><strong>Capture.</strong> With <code>ingest</code> on, the first
+step of each turn starts <code>ingestPreviousTurn</code> without
+awaiting it; an LLM extracts candidates from the previous turn's log,
+each candidate picks <code>user</code> or <code>project</code>, and each
+goes through the same <code>decideWrite</code>
+(<code>src/index.ts:375-395</code>,
+<code>src/ingest/hook.ts:620-707</code>). A <code>(session, turn)</code>
+key makes it idempotent and a failure leaves a pending key for the next
+session.</li>
+<li><strong>Search.</strong> <code>engram_search</code> runs one
+<code>store.search</code> per scope file, per rewritten query, and fuses
+the results (<code>src/tools/create.ts:685-700</code>); the store fuses
+FTS and vector lanes by RRF
+(<code>src/store/sqlite.ts:1196-1331</code>).</li>
+<li><strong>Inject.</strong> At step 1, or after a compaction, the
+pre-step hook reads the user file's curated profile, its top active
+memories by importance, and its top three active beliefs, and appends a
+profile packet, a directives packet and a memory packet
+(<code>src/index.ts:417-558</code>).</li>
+<li><strong>Correct and forget.</strong> <code>update</code>,
+<code>forgetWithTombstone</code> and <code>restore</code>
+(<code>src/store/sqlite.ts:1464-1524</code>, <code>:1701-1716</code>);
+each calls <code>detachArchivedEvidence</code> except restore.</li>
+<li><strong>Consolidate.</strong> <code>reflectObservations</code>
+(<code>src/consolidation/reflect.ts:134-330</code>) runs from the
+<code>engram_reflect</code> tool, or after a session through the job
+queue when <code>reflect</code> is <code>auto</code>.</li>
+<li><strong>Background.</strong> A daily decay and <code>op_log</code>
+prune over the user file and every existing project file
+(<code>src/index.ts:1997-2036</code>), and a daily pairwise merge over
+the user file (<code>:2039-2063</code>,
+<code>src/consolidation/run.ts:58-223</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>nodes</code> holds a row per revision: <code>id</code> is the
+revision, <code>memory_id</code> the stable identity, plus scope, kind,
+content, importance, confidence, status, access count, source session,
+round and event sequence, embedding blob, placard JSON, room and slot,
+and SM-2 review fields (<code>src/store/sqlite.ts:491-499</code>).
+<code>nodes_revisions</code> keeps the content of each superseded
+revision by <code>memory_id</code>. <code>edges</code> carries
+<code>supports</code>, <code>contradicts</code>, <code>refines</code>,
+<code>related</code> and <code>supersedes</code>
+(<code>src/types.ts:57</code>). <code>tour_routes</code> is the
+append-only palace route.</p>
+<p><code>entities</code> and <code>node_entities</code> hold an entity
+lexicon resolved by normalized name. <code>facts</code> attach
+one-sentence facts to an entity with <code>valid_at</code>,
+<code>invalid_at</code> and <code>replaced_by</code>
+(<code>src/store/sqlite.ts:526-529</code>). Both ends are record time:
+<code>valid_at</code> is <code>input.validAt ?? now</code> and no caller
+passes it (<code>:2233</code>), and <code>invalid_at</code> is the time
+a replacing fact was written. The <code>asOf</code> filter is a
+point-in-time read over that one clock.</p>
+<p><code>observations</code> holds beliefs with
+<code>sources_json</code>, <code>proof_count</code>, status and an
+embedding (<code>:530-533</code>). <code>profile_blocks</code> and
+<code>profile_block_versions</code> hold the curated profile per scope,
+versioned and append-only, with an optimistic lock
+(<code>:1656-1674</code>). <code>injection_snapshots</code> keep the
+exact packet each session received. <code>op_log</code> is the operation
+log (<code>:503-505</code>).</p>
+<p>Scope is a physical partition. Each scope has its own file, and a
+project file per git origin; nothing in a row names a project. Each
+file's queries also carry <code>scope IN (...)</code>
+(<code>:895</code>, <code>:907</code>), which matters only when a JSON
+import writes rows of one scope into another's file: the import keeps
+the record's own scope (<code>:1879-1880</code>), so those rows are
+invisible to search there.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The keyword lane runs FTS5 <code>MATCH</code> over content
+pre-tokenized into Chinese 2-grams, restricted to active rows, the scope
+and optional rooms, ordered by BM25 and capped at 64
+(<code>src/store/sqlite.ts:893-896</code>). The vector lane scans every
+active row with an embedding, keeps cosine 0.2 and above, and takes the
+top 64. Both contribute <code>1/(60 + rank)</code>. A recency factor
+over <code>last_accessed_at</code> and a log hit-count factor multiply
+the fused score. The <code>supports</code>, <code>refines</code> and
+<code>related</code> neighbours of the top results enter at half their
+source's score if active and in scope. Since 0.12.0 a search reinforces
+nothing; it writes one <code>search-exposure</code> row with the hit ids
+and a 12-character hash of the query (<code>:1323-1329</code>).</p>
+<p><code>engram_search</code> defaults <code>queryRewrite</code> to on,
+so each search can cost an auxiliary call that rewrites the query into
+up to three, fused across queries with a per-query floor. Results are
+rendered with a <code>ref=</code> per row and a batch id under a
+1,200-character item and 4,800-character total budget.
+<code>engram_assess</code> then accepts a verdict of <em>sufficient</em>
+only with a valid ref from that batch and
+<code>nextStrategy=answer</code>. The batches live in process memory, 20
+per session, and the gate is a reminder: nothing stops the model
+answering without it.</p>
+<p>The injected profile is the user file only: up to
+<code>profileTopN</code> (8) memories by importance within
+<code>injectTokenBudget</code> (1,024), near-duplicates folded by stored
+vectors, plus three active beliefs. It is appended after the turn's
+messages at step 1 and again after a compaction, and skipped when its
+hash is unchanged, so a session's earlier prefix is not disturbed.
+Project-file beliefs are formed and never injected, since the injection
+opens <code>openStore('user')</code>
+(<code>src/index.ts:429</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>engram_save</code> is synchronous: one local embedding, about
+90 ms per text on the WASM engine by the README's account, one
+nearest-neighbour scan, and the insert in one transaction with its FTS
+row and its <code>op_log</code> row. A saved memory is searchable when
+the call returns. Capture is deferred: it starts at the next turn's
+first step without blocking it, makes one LLM call, and its memories are
+searchable a turn plus that call's latency after the words were said.
+The final turn is captured at session end with a five-second
+timeout.</p>
+<p>The merge threshold is the weak point. At cosine 0.92 or above with
+the same kind, <code>decideWrite</code> returns <code>merge</code> with
+no further check (<code>src/write-disposition.ts:225-227</code>), and
+<code>applyMerge</code> only bumps access count and confidence and logs
+the first 40 characters (<code>:322-331</code>,
+<code>src/store/sqlite.ts:666-667</code>). The numeric-token guard that
+keeps "port 8080" from merging into "port 9090" applies only to the
+fallback merge in the 0.90–0.92 band
+(<code>src/write-disposition.ts:236-242</code>). The tool tells the
+model it merged, and a correction must go through
+<code>engram_update</code> to survive.</p>
+<p>Inbound text is stripped of the plugin's protocol tags and scrubbed
+by regex for API keys, bearer tokens, AWS and GitHub tokens, PEM keys,
+password assignments, mainland-China phone numbers and national ID
+numbers. Recall tool output inside captured slices is replaced with a
+placeholder so memory does not re-capture itself.</p>
+<p>Two background passes rewrite rows. A daily decay archives active
+memories below importance 0.3 not accessed in 30 days, except those
+under review scheduling. A daily merge over the user file's top 500
+active memories supersedes same-kind pairs at cosine 0.92 or above into
+a copy of the higher-ranked one
+(<code>src/consolidation/run.ts:165-207</code>); it is quadratic within
+that bound and needs no LLM. Reflection reads at most 300 active
+memories and 30 new candidates per run, in slices of ten.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent holds every verb: save, search, facts read and write,
+assess, timeline, episode timeline, update, forget, report, review
+queue, review, stats, export, import, distill, reflect, examine,
+neighbours, tour, forgotten audit, history backfill, profile edit and
+language guide (<code>src/tools/create.ts:2104</code>).
+<code>engram_forget</code> refuses without all three epitaph answers
+(<code>:1182-1209</code>). Retrieval is tool-mediated apart from the
+session-start profile.</p>
+<p>The person's surface is the panel. Its routes list memories, show
+<code>op_log</code>, resolve contradictions as <code>dismiss</code> or
+<code>forget-loser</code> (<code>src/routes.ts:914-941</code>), set a
+belief's status (<code>:966-987</code>), clear the log, and run
+backfill. Requests must come from a loopback peer, or a private LAN peer
+with <code>panelAccess: lan</code>, and writes need a matching or absent
+<code>Origin</code> and a JSON content type
+(<code>src/routes.ts:68-75</code>, <code>:153-164</code>). There is no
+token. The profile route is read-only, and its comment says editing goes
+through the tool (<code>:1722-1724</code>).</p>
+<p>Adapting it to another agent means replacing the Cordis host bindings
+in <code>src/index.ts</code> and <code>src/tools/create.ts</code>; the
+store, the disposition rules and the reflection module do not import the
+host.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-profile-block-the-agent-writes-and-the-model-obeys">The
+profile block the agent writes and the model obeys</h3>
+<p>The injection puts the curated profile first, in its own packet,
+explicitly outside the memory packet's warning not to follow embedded
+instructions (<code>src/index.ts:520-529</code>). That packet's header
+reads <em>"This block holds the rules the user maintains by hand
+(engram_profile_edit)... follow them and treat them as
+authoritative"</em> (<code>src/i18n/catalog/store.ts:117</code>,
+<code>src/security/sanitize.ts:101-108</code>).
+<code>saveProfileBlock</code> has two callers, both in the
+<code>engram_profile_edit</code> tool
+(<code>src/tools/create.ts:2040</code>, <code>:2056</code>), and the
+version row records <code>edit</code> or <code>rollback</code>, not who.
+Whatever the agent is persuaded to save there, by a user or by text in a
+tool result, becomes the user's standing orders for every later
+session.</p>
+<h3 id="what-forgetting-stops">What forgetting stops</h3>
+<p><code>engram_forget</code> keeps the row, its embedding, its FTS
+entry and its revisions, and records why in <code>op_log</code>. Nothing
+hard-deletes a memory on a reachable path: <code>purge</code> is called
+only from tests. The epitaph is keyed on the row id, and the write paths
+consult only active rows (<code>src/store/sqlite.ts:2077-2102</code>),
+so the same fact captured next week is accepted fresh. A comment above
+the epitaph promises desensitizing, and the code trims and truncates to
+200 characters without calling the redactor
+(<code>:1513-1518</code>).</p>
+<p>Facts extracted from a memory keep serving after it is forgotten. A
+fact records its <code>source_node_id</code>, the only invalidation is a
+replacing fact (<code>:2238</code>), and <code>factsOfEntity</code>
+reads the <code>facts</code> table without the source row's status
+(<code>:2257-2274</code>), so <code>engram_facts</code> and the
+<code>asOf</code> tail of a search still return it.</p>
+<h3 id="contradictions-are-detected-not-held">Contradictions are
+detected, not held</h3>
+<p>A deferred write is active and searchable from the moment it lands.
+The <code>contradicts</code> edge waits in the panel's governance list
+until a person dismisses it or forgets one side; until then both claims
+serve. The daily merge does not see the pair, since it acts only at
+0.92.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — awarded on belief
+status. Only active beliefs are injected, and the producers are
+reachable: <code>engram_reflect</code> and post-session reflection rule
+<code>refute</code>, and every forget, archive and supersede strips the
+dead source. Raw memories carry lifecycle only.</li>
+<li><strong><code>audit_log</code></strong> — awarded on
+<code>op_log</code>. Each node mutation appends a row, the update and
+restore rows in the same transaction as the change, and
+<code>engram_review</code> reads them per memory. The limits are real: a
+daily prune drops rows older than 366 days except ingest bookkeeping
+(<code>src/index.ts:1996</code>, <code>:2015</code>,
+<code>src/routes.ts:221</code>); <code>POST /api/engram/log-clear</code>
+deletes every other row and vacuums (<code>src/routes.ts:1143</code>);
+decay logs a count without ids; belief status changes, fact writes and
+the panel's belief override write no row. Clearing the log also erases
+every forget epitaph, since the forgotten audit joins on
+<code>op_log</code>.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>tombstone</code></strong> — withheld. The epitaph is
+keyed on a row id, and a refuted belief is only excluded from the merge
+search, which lets the same sentence form a new active belief.</li>
+<li><strong><code>bitemporal</code></strong> — withheld.
+<code>facts.valid_at</code> defaults to the write clock and no caller
+sets it.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. The
+boundary is the file each scope opens, a physical partition; the in-file
+<code>scope</code> predicate separates nothing that a correct write path
+would have mixed.</li>
+<li><strong><code>human_review</code></strong> — withheld. Nothing
+waits: deferred memories and new beliefs are active on write, and the
+panel's resolution acts afterwards.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li>Any local process that reaches the loopback port, including the
+agent's own shell, can set belief status, resolve contradictions or
+clear the log.</li>
+<li>A JSON import writes rows with the record's own scope into the
+chosen file, where a different scope makes them unsearchable.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 959 vitest cases in 67 spec files over real SQLite
+files in temporary directories. CI runs biome, the message-dictionary
+and language-pattern checks, a CSS-class check, a headless panel-layout
+check and a packaging smoke, and not vitest, because the suite imports
+the <code>@deepseek-ai/*</code> peers
+(<code>.github/workflows/checks.yml:1-12</code>). I ran none of it.</p>
+<p><code>negative_eval</code> rests on one populated case.
+<code>tests/store.spec.ts:164-171</code> writes "端口是 3000", updates
+it to "端口改为 4000", and searches "端口", a bigram both rows contain;
+it asserts the hits equal exactly the new revision's id. It exercises
+the keyword lane only. <code>tests/observations.spec.ts:106-120</code>
+drives a belief through stale to refuted by forgetting its two sources,
+and <code>:166-183</code> asserts a restore does not revive it. No test
+asserts that a stale or refuted belief is absent from the injected
+packet, or that a forgotten value is refused on a later save.</p>
+<p><code>tests/evaluation.spec.ts</code> is the committed retrieval
+baseline that <code>docs/evaluation-baseline-v15.md</code> reports:
+three targets, one update chain and twelve distractors, keyword lane
+only, Recall@5, Hit@5 and MRR of 1.0, and an abstention case. The
+document calls it a regression smoke, not a benchmark. The README
+roadmap's LoCoMo-zh gate is not in the tree. No paper is associated with
+the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Let a belief lose its sources.</strong> Store the evidence
+ids on each derived belief, and in the same transaction as any forget,
+archive or supersede, drop the dead id: stale while some remain, refuted
+when none do. A belief then cannot outlive what it was built from.</li>
+<li><strong>Give a correction a stable identity.</strong> A revision id
+per row plus a <code>memory_id</code> across revisions lets reads filter
+to the current revision while history, restore and evaluation key on one
+name.</li>
+<li><strong>Reinforce on feedback, not on exposure.</strong> Log what a
+search returned with a hash of the query, and bump confidence only on an
+explicit outcome or a merge, so ranking does not feed on itself.</li>
+<li><strong>Make the dimension a hard constraint.</strong> Refuse a
+vector whose dimension differs from the store's, on write and on query,
+naming both numbers.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A trusted block the agent can write.</strong> If a packet
+tells the model to obey its contents, its only writer must be a person,
+through a surface the agent cannot reach.</li>
+<li><strong>A merge threshold with no value check.</strong> Above the
+merge cut, a corrected number or name looks like a restatement; compare
+the distinguishing tokens at every threshold, or never discard the
+incoming text.</li>
+<li><strong>Forgetting by row.</strong> A soft delete that no writer
+consults lets capture re-learn the forgotten fact; keep a key on the
+value if forgetting must hold.</li>
+<li><strong>An audit log the operator can empty.</strong> A log that a
+route can clear and a timer prunes records history only until someone
+needs it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer on DeepSeek Harness who wants memory that
+works with nothing to run, follows them across repositories, and can be
+browsed and repaired in a panel. The engineering is careful where it is
+local: transactions, migration snapshots, dimension guards and
+per-candidate failure isolation. Walk away if several people or agents
+share a machine and must not shape each other's instructions, since the
+profile block is writable by the agent and the panel needs no token.
+Walk away too if forgetting must stick.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>engram_profile_edit</code> is meant to stay on the
+agent's tool surface, given the packet header attributes the block to
+the user's own hand.</li>
+<li>What cosine the default MiniLM model gives same-kind sentences that
+differ in one number, which decides how often a correction through
+<code>engram_save</code> is merged away; I did not run the model.</li>
+<li>Whether project-file beliefs are meant to be injected for project
+sessions.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>src/store/sqlite.ts</code>,
+<code>src/store/interface.ts</code>, <code>src/types.ts</code>,
+<code>src/store/import.ts</code></li>
+<li>Write path: <code>src/write-disposition.ts</code>,
+<code>src/tools/create.ts</code>, <code>src/ingest/hook.ts</code>,
+<code>src/security/redact.ts</code>,
+<code>src/security/sanitize.ts</code></li>
+<li>Retrieval: <code>src/store/sqlite.ts</code> (<code>search</code>),
+<code>src/retrieve/rewrite.ts</code>,
+<code>src/retrieve/evidence.ts</code>,
+<code>src/retrieve/budget.ts</code></li>
+<li>Context assembly: <code>src/index.ts</code> (pre-step hook),
+<code>src/security/sanitize.ts</code></li>
+<li>Beliefs and consolidation:
+<code>src/consolidation/reflect.ts</code>,
+<code>src/consolidation/run.ts</code>,
+<code>src/jobs/host-reflect.ts</code></li>
+<li>Panel API: <code>src/routes.ts</code></li>
+<li>Tests: <code>tests/store.spec.ts</code>,
+<code>tests/store-v2.spec.ts</code>,
+<code>tests/observations.spec.ts</code>,
+<code>tests/reflect.spec.ts</code>,
+<code>tests/write-disposition.spec.ts</code>,
+<code>tests/evaluation.spec.ts</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No caller sets a fact's valid time.</strong>
+<code>git grep -n -E 'validAt[[:space:]]*:' -- src ':!src/client'</code>
+matches only the row mapper at <code>src/store/sqlite.ts:332</code>, the
+type at <code>src/types.ts:245</code> and a message parameter at
+<code>src/tools/create.ts:125</code>; the positive control
+<code>git grep -n 'input.validAt' -- src</code> matches
+<code>src/store/sqlite.ts:2233</code>.</li>
+<li><strong>The write paths do not consult forgotten rows.</strong>
+<code>git grep -n -E 'forgotten|tombstone' -- src/write-disposition.ts src/ingest/hook.ts</code>
+returns nothing;
+<code>git grep -c 'forgotten' -- src/store/sqlite.ts</code> counts
+13.</li>
+<li><strong>Nothing reachable hard-deletes.</strong>
+<code>git grep -n -E '\.purge\(' -- src scripts</code> returns nothing;
+over <code>tests</code> it matches four lines.</li>
+<li><strong>What deletes from op_log.</strong>
+<code>git grep -n 'DELETE FROM op_log' -- src</code> matches
+<code>src/store/sqlite.ts:671</code>, <code>:779</code>,
+<code>:1783</code> and <code>:2404</code>.</li>
+<li><strong>Belief and fact writers append no op_log row.</strong>
+<code>git grep -n -E 'sqlLog\.run\(' -- src/store/sqlite.ts</code> lists
+18 sites, none between lines 2229 and 2374, where
+<code>writeFacts</code> through <code>nearestObservation</code>
+sit.</li>
+<li><strong>The profile block has one writer, the agent's tool.</strong>
+<code>git grep -n 'saveProfileBlock(' -- src</code> matches the
+interface, the store and <code>src/tools/create.ts:2040</code> and
+<code>:2056</code>.</li>
+<li><strong>Contradiction resolution is panel-only.</strong>
+<code>git grep -n 'resolveContradiction(' -- src</code> matches the
+interface, the store and <code>src/routes.ts:935</code>.</li>
+<li><strong>CI runs no test suite.</strong>
+<code>git grep -n -E 'run:.*(vitest|pnpm test|pnpm run test)' -- .github</code>
+returns nothing;
+<code>git grep -n -E 'run:.*pnpm lint' -- .github</code> matches
+<code>.github/workflows/checks.yml:41</code>.</li>
+<li><strong>Forgetting a memory does not invalidate its facts.</strong>
+<code>git grep -n -E 'source_node_id|sqlFactInvalidate\.run' -- src</code>
+matches the schema, the row mapper, the insert and one invalidation, by
+<code>replaces</code>, at <code>src/store/sqlite.ts:2238</code>.</li>
+<li><strong>No LoCoMo harness.</strong>
+<code>git grep -n -i 'locomo' -- src tests scripts .github</code>
+returns nothing; over <code>README.en.md</code> it matches the roadmap
+line.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -I -i -E 'arxiv|bibtex|CITATION'</code> returns
+nothing, and no <code>CITATION.cff</code> is tracked;
+<code>git grep -c -i 'LongMemEval' -- docs</code> counts lines in three
+planning documents.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/kenz1117/dsh-engram/commit/ad0fa89bdde0420e8a409455b45f023f08f743a2"><code class="commit-id" title="ad0fa89bdde0420e8a409455b45f023f08f743a2">ad0fa89b…</code></a>
+— first reading, from a clone of <code>main</code> at release 0.13.15,
+scoped to the store, write disposition, capture, search, injection,
+belief consolidation, panel routes and their tests; the panel UI, i18n
+and history backfill were read only where they write what those paths
+read. Screened first: no auto-run surface; one build-time execution
+point, the npm <code>prepare</code> lifecycle running
+<code>scripts/link-peers.mjs</code> and
+<code>scripts/ensure-build.mjs</code>; <code>package.json</code> and
+<code>pnpm-lock.yaml</code> inside the seven-day cooldown; ten floating
+ranges under a lockfile. MIT, no rider. Nothing installed, built or run.
+Three marks: <code>trust_state</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

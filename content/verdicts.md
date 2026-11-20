@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 830 reports.**
+**This page covers all 831 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7622,3 +7622,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 17,745 lines of non-test Go in `internal/arcadedb` and `cmd/arcadedb-mcp`, about 7.7% of the repository with its wiring; 8,308 commits from 27 May to 20 November 2026, release v1.2.0; 708 Go test functions, 101 of them live against ArcadeDB in a CI job that fails on a skip, not run here. Two marks: `bitemporal`, `negative_eval`.
 - Study when: you need per-person isolation enforced by the database server, and corrections that keep the past answerable without guessing which fact they replace.
 - Do not copy when: facts arrive from untrusted sources and need review or a disputed state before the agent acts on them.
+
+### [`dsh-engram`](../systems/dsh-engram/)
+
+- Best idea: **a belief loses its sources as they die.** Each consolidated belief stores the ids of the memories it was formed from; every forget, archive, supersede, distill and decay strips the dead ids in the same call, leaving the belief stale while some remain and refuted when none do, and only active beliefs are injected.
+- Biggest risk: **the agent writes the block the model is told to obey.** The curated profile is injected first, outside the memory packet's warning, under a header calling it the rules the user maintains by hand; its only writer is the agent's `engram_profile_edit` tool.
+- Second risk: a same-kind save at cosine 0.92 or above is merged into its neighbour and its text discarded, with the numeric guard applied only below that cut; a forgotten value is consulted by no later write, so capture can learn it again.
+- Most reusable component: `detachArchivedEvidence` and the `observations` table in `src/store/sqlite.ts`, with `reflectObservations` in `src/consolidation/reflect.ts`; the revision-plus-`memory_id` correction path in the same store.
+- Maturity impression: MIT, release 0.13.15; 25,228 lines of TypeScript outside a 13,408-line panel, 241 commits from 1 September to 19 November 2026; 959 vitest cases that CI does not run, since they need the harness's unpublished peers, not run here; the committed retrieval baseline is a 15-memory fixture on the keyword lane. Three marks: `trust_state`, `audit_log` and `negative_eval`.
+- Study when: you want derived beliefs that fall when their evidence is forgotten, or a correction model with a stable identity across revisions, in a memory that needs nothing running.
+- Do not copy when: anyone but the user must be kept from shaping the agent's standing instructions, or forgetting must survive the next capture.

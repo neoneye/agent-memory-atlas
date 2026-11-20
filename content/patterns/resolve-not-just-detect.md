@@ -344,6 +344,8 @@ wired: the row changes status and the losing edge is still served
 
 [Engram](../../systems/engram/) detects after the write and resolves by label. A save commits, an FTS query on its title inserts `pending` relation rows for up to three same-project candidates, and the agent is told to call `mem_judge` on each. A `supersedes` verdict is stored and printed beside later hits; neither row leaves search until the agent deletes or consolidates it.
 
+[dsh-engram](../../systems/dsh-engram/) detects at write time and resolves only in a person's panel. A save between cosine 0.88 and 0.92 of an active neighbour that the band's rules do not merge, including a near-restatement that differs in a number, is written active with a `contradicts` edge to up to three neighbours; an optional external judge can confirm or drop each edge first. The governance view lists the pairs, and a person dismisses one into a `related` edge or forgets the loser, with a `governance` or `forget` row in `op_log`. Until then both claims serve every search and the profile, so the edge is a queue that holds nothing back, and the agent has no verb to drain it.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval
