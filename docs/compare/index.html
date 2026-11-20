@@ -5833,24 +5833,26 @@ session: a JSON value with a type, a status, world-time validity,
 provenance, tags, entities and files, and a version; every version is
 kept in memory_versions</td>
 <td>ClickHouse for memory, its embedding mirror, versions, chunks,
-evidence, the entity graph, the audit log and the blacklist; optionally
-Postgres as the authority for current heads, revisions and
-idempotency</td>
+session digests, evidence, the entity graph, the audit log and the
+blacklist; optionally Postgres as the authority for current heads,
+revisions and idempotency</td>
 <td>A cosine fact leg over the embedding mirror with BM25 in the same
 query, fused by RRF or a hybrid weight, plus chunk, record, graph,
 summary, key-match and definition legs; abstain codes and a calibrated
 risk; memory.ask answers with an LLM from the same retrieval</td>
 <td>memory.set and update from the agent over MCP or HTTP, judged
-against peers before the insert; set_from_messages runs LLM extraction,
-deferred by the Claude Code SessionEnd hook; bulk_set, import, observe
-and profile workers</td>
-<td>Every change is a new version; same-key supersession and an LLM
-conflict resolver retire rows with an Undo; delete writes a tombstone
-row and retires derived chunks, summaries and records; a blacklist
-refuses matching values; erasure sagas run about thirty steps</td>
+against peers before the insert; set_from_messages runs LLM extraction
+and drafts a session digest, deferred by the Claude Code SessionEnd
+hook; bulk_set, import, observe and profile workers</td>
+<td>Every change is a new version; same-key supersession within the
+write's user and an LLM conflict resolver retire rows with an Undo;
+delete and clear write tombstone versions and retire derived chunks,
+summaries and records; a blacklist refuses matching values; erasure
+sagas run about thirty steps</td>
 <td>Org, namespace and user_id on every row and predicate, a token-bound
 read ceiling and user pin, an allowlist refusing unscoped ops to
-narrowed tokens; the entity-graph leg reads by namespace only</td>
+narrowed tokens; the entity-graph leg reads by namespace only and is
+skipped on reads bounded to one identity</td>
 <td>A streamable-HTTP MCP server with core and coding toolsets, an HTTP
 API and SDKs; Claude Code, Codex, Cline and Cursor plugins whose hooks
 pack context at session start, recall on the first prompt, inject
@@ -5860,6 +5862,7 @@ embedding worker, expiry and sensitivity sweeps, code-link refresh,
 usage fold and projection repair; profile consolidation and reflection
 off by default</td>
 <td>A status field with proposed and rejected outside the served set,
+inherited by chunks and session digests through their sources,
 server-stamped source_class and actor, verified attestations,
 sensitivity tiers that keep high rows out of search, and an admin-only
 review of drafted definitions</td>
@@ -5868,9 +5871,9 @@ version kept and an Undo for every automatic retirement; memories linked
 to code that leave search when the code is removed; a scope predicate on
 every leg with a populated cross-user test</td>
 <td>No delete, forget or erasure writes a blacklist pattern, so a
-removed value can be extracted again; the proposal verdict is an agent's
-to give; session summaries restating a superseded fact reach search;
-audit rows are best-effort and age out under retention</td>
+removed value can be extracted again; session digests are drafted from
+raw turns with no blacklist check; the proposal verdict is an agent's to
+give; audit rows are best-effort and age out under retention</td>
 </tr>
 <tr>
 <td><a href="../systems/clio/"><code>clio</code></a></td>
