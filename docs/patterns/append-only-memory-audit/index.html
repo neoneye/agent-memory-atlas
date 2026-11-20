@@ -1036,6 +1036,22 @@ append-only by file handle, and <code>load()</code> hash-checks each
 turn but not each decision, so a hand-edited ruling replays as written;
 and there is no purge, so a secret in a shape the masker misses stays in
 the turn log.</p>
+<p><a href="../../systems/persistent-mind-model/">Persistent Mind
+Model</a> is the case where the log is not beside the memory but is the
+memory, so the pattern's dashed edge runs the other way by design: every
+projection, the identity line and retrieval itself are read back out of
+the <code>events</code> table. Each row carries <code>prev_hash</code>
+and a sha256 over kind, content, meta and <code>prev_hash</code>, and a
+<code>BEFORE INSERT</code> trigger refuses any writer without a live
+fenced lease (<code>pmm/core/event_log.py:434-451</code>,
+<code>:1001-1021</code>). Two things fall short of tamper-evidence. No
+trigger guards <code>UPDATE</code> or <code>DELETE</code>, and the only
+chain reader, <code>ledger_metrics</code>, counts <code>prev_hash</code>
+discontinuities without recomputing a digest, so an edited
+<code>content</code> reads as intact; its tests assert
+<code>broken_links == 0</code> only on clean ledgers. And there is no
+erasure at all: no code path removes or redacts an event, so the
+deletion obligation this page names is not met.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

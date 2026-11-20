@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 826 reports.**
+**This page covers all 827 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7582,3 +7582,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: PolyForm Noncommercial 1.0.0, app v1.0.5 and engine 2.1.0; 6,669 lines of Python in `vividmimir/`, 93 commits from 22 March to 17 November 2026; 180 test functions, 80 of which record metrics rather than assert, no CI, not run here; the LongMemEval headline is on the oracle split and below the script's own TF-IDF baseline. No marks.
 - Study when: you want a companion that fades and resurfaces memories on a curve a test can drive with a fake clock.
 - Do not copy when: stored wording must survive consolidation, a deletion must survive the next background pass, or the use is commercial.
+
+### [`persistent-mind-model`](../systems/persistent-mind-model/)
+
+- Best idea: **the reply is stored before anything is parsed out of it.** Each user message gets exactly one terminal outcome, `assistant_message` or `generation_failure`; control lines are parsed only from a complete, already-stored reply, a failed check appends a typed `validation_failure` citing it, and a claim may cite only events retrieval selected that turn.
+- Biggest risk: **nothing can be forgotten.** No code path updates or deletes an event, and the primer tells the model every message lives in the ledger *"forever"*; a user has no way to withdraw what they said.
+- Second risk: the `Identity:` line in every prompt is built from `name_change` claims, which pass validation as `ACCEPTED_UNKNOWN_TYPE`; the hash chain is checked for linkage only, never re-derived; idle autonomy ticks count toward the 27-event auto-close of commitments.
+- Most reusable component: the governed append paths and writer fencing in `pmm/core/event_log.py` and `pmm/core/writer_session.py`, with the terminal-outcome and claim handling in `RuntimeLoop._run_turn_serialized` in `pmm/runtime/loop.py`.
+- Maturity impression: PMM-1.0, a custom non-commercial licence; 20,008 lines of Python in `pmm/`, 299 commits from 4 November 2025 to 12 November 2026, almost all by one author; 551 pytest functions with no CI workflow, not run here; two nonproduction experiments whose committed numbers recompute. Two marks: `audit_log` and `negative_eval`.
+- Study when: you want an agent whose every self-description can be replayed from an append-only log, and want to see utterance, validated claim and typed failure kept as separate layers.
+- Do not copy when: users must be able to delete what they said, more than one user or project shares a store, or the use is commercial.

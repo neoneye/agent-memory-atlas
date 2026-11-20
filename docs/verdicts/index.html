@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 826 reports.</strong></p>
+<p><strong>This page covers all 827 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34083,6 +34083,41 @@ on a curve a test can drive with a fake clock.</li>
 <li>Do not copy when: stored wording must survive consolidation, a
 deletion must survive the next background pass, or the use is
 commercial.</li>
+</ul>
+<h3 id="persistent-mind-model"><a
+href="../systems/persistent-mind-model/"><code>persistent-mind-model</code></a></h3>
+<ul>
+<li>Best idea: <strong>the reply is stored before anything is parsed out
+of it.</strong> Each user message gets exactly one terminal outcome,
+<code>assistant_message</code> or <code>generation_failure</code>;
+control lines are parsed only from a complete, already-stored reply, a
+failed check appends a typed <code>validation_failure</code> citing it,
+and a claim may cite only events retrieval selected that turn.</li>
+<li>Biggest risk: <strong>nothing can be forgotten.</strong> No code
+path updates or deletes an event, and the primer tells the model every
+message lives in the ledger <em>"forever"</em>; a user has no way to
+withdraw what they said.</li>
+<li>Second risk: the <code>Identity:</code> line in every prompt is
+built from <code>name_change</code> claims, which pass validation as
+<code>ACCEPTED_UNKNOWN_TYPE</code>; the hash chain is checked for
+linkage only, never re-derived; idle autonomy ticks count toward the
+27-event auto-close of commitments.</li>
+<li>Most reusable component: the governed append paths and writer
+fencing in <code>pmm/core/event_log.py</code> and
+<code>pmm/core/writer_session.py</code>, with the terminal-outcome and
+claim handling in <code>RuntimeLoop._run_turn_serialized</code> in
+<code>pmm/runtime/loop.py</code>.</li>
+<li>Maturity impression: PMM-1.0, a custom non-commercial licence;
+20,008 lines of Python in <code>pmm/</code>, 299 commits from 4 November
+2025 to 12 November 2026, almost all by one author; 551 pytest functions
+with no CI workflow, not run here; two nonproduction experiments whose
+committed numbers recompute. Two marks: <code>audit_log</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: you want an agent whose every self-description can be
+replayed from an append-only log, and want to see utterance, validated
+claim and typed failure kept as separate layers.</li>
+<li>Do not copy when: users must be able to delete what they said, more
+than one user or project shares a store, or the use is commercial.</li>
 </ul>
         </article>
       </div>

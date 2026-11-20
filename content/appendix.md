@@ -527,6 +527,7 @@ page_kind: comparison
 - [`typegraph`](../systems/typegraph/)
 - [`mnemonic-proxy`](../systems/mnemonic-proxy/)
 - [`mimirs-memory-hub`](../systems/mimirs-memory-hub/)
+- [`persistent-mind-model`](../systems/persistent-mind-model/)
 
 ## Repos Inspected
 
@@ -1358,19 +1359,20 @@ page_kind: comparison
 - [nicia-ai/typegraph](https://github.com/nicia-ai/typegraph) at [`3e927804a4e9833de01fde4059d8c0702300a763`](https://github.com/nicia-ai/typegraph/commit/3e927804a4e9833de01fde4059d8c0702300a763) — read only, from a full clone of `main` at release 0.75.0, scoped to the provenance subpath, valid and recorded time, deletion, graph scoping and their tests; the query compiler, graph merge, identity and interchange read only where they bear on those. No auto-run surface and no build-time execution; four dependency files inside the cooldown (three `package.json` files and `pnpm-lock.yaml`) and six unpinned surfaces; `AGENTS.md` and `CLAUDE.md` read as data. Nothing was installed, built or run. MIT
 - [lastreload/mnemonic-proxy](https://github.com/lastreload/mnemonic-proxy) at [`3ac2d91f52b1aa804c01d2fdbdba28e26415ee35`](https://github.com/lastreload/mnemonic-proxy/commit/3ac2d91f52b1aa804c01d2fdbdba28e26415ee35) — read only, from a full clone of `main` at release v0.3.32, scoped to the archive, recall, segment, pin, forget and MCP paths and their tests; window fitting, tool paging and engine adapters read only where they touch the archive. The AgentLongBench records were read from the linked Hugging Face dataset and recomputed. No auto-run surface; `pyproject.toml` changed inside the seven-day cooldown and declares dependencies with no lockfile. Nothing was installed, built or run. MIT
 - [Kronic90/Mimirs-Memory-Hub](https://github.com/Kronic90/Mimirs-Memory-Hub) at [`aaf3befa063a65077ff1d3ee0a8b9a658270da5e`](https://github.com/Kronic90/Mimirs-Memory-Hub/commit/aaf3befa063a65077ff1d3ee0a8b9a658270da5e) — read only, from a full clone of `main` at app v1.0.5, scoped to the `vividmimir` engine (and its byte-identical copy `mimir_modular`, which only the benchmarks import), the memory paths of `playground/`, the long-term tests and the benchmark script and records. No auto-run surface; `pyproject.toml` and `requirements.txt` changed inside the seven-day cooldown and declare unpinned dependencies with no lockfile. Nothing was installed, built or run. PolyForm Noncommercial 1.0.0
+- [scottonanski/persistent-mind-model-v1.0](https://github.com/scottonanski/persistent-mind-model-v1.0) at [`f7814dc86ed410b9745faa20fdd435890b63c36a`](https://github.com/scottonanski/persistent-mind-model-v1.0/commit/f7814dc86ed410b9745faa20fdd435890b63c36a) — read only, from a full clone of `main`, scoped to the ledger, writer lease, projections, turn loop, retrieval, validators, identity, commitment, autonomy and MCP paths and their tests; the coherence, learning and meta-learning packages read only where they append events. No auto-run surface, nothing inside the cooldown, no build-time execution; one unpinned surface, `pyproject.toml` with no lockfile; `AGENTS.md` treated as data. Nothing was installed, built or run. PMM-1.0, a custom dual licence: revocable non-commercial grant, commercial use only under a signed agreement
 
 ## What the licences actually say
 
 A licence is an operational caveat, not a memory mechanism, so it lives in the
 appendix — but a reader deciding whether they can *use* something needs it.
-"Publicly readable source" is not "open source": **twenty-four carry a licence
+"Publicly readable source" is not "open source": **twenty-five carry a licence
 that is not open source**, each named in its own report and collected here.
 
 | Licence | Systems |
 | --- | --- |
 | Elastic License 2.0 — no hosted service, no licence-key circumvention | [AgentSwarms](../systems/agentswarms/), [ByteRover](../systems/byterover/), [Dexto](../systems/dexto/) |
 | Business Source License 1.1 — source-available, converts later | [Cognis](../systems/cognis/), [Empryo](../systems/empryo/), [Intaris](../systems/intaris/), [MuninnDB](../systems/muninndb/), [Skales](../systems/skales/) |
-| Non-commercial — read and run, do not build a product on it | [Memento](../systems/memento/) (PolyForm Noncommercial 1.0.0), [Mimir's Memory Hub](../systems/mimirs-memory-hub/) (PolyForm Noncommercial 1.0.0; the audit, neurochemistry and embedding packages it imports are outside the tree and state no terms), [Project Golem](../systems/project-golem/) (its own source-available non-commercial licence), [NouGenShards](../systems/nougenshards/) (its own source-available licence; inspection and personal use granted, commercial use, competing hosted services and use to build competing AI memory or retrieval products prohibited) |
+| Non-commercial — read and run, do not build a product on it | [Memento](../systems/memento/) (PolyForm Noncommercial 1.0.0), [Persistent Mind Model](../systems/persistent-mind-model/) (its own PMM-1.0: non-commercial use only, revocable, and a derivative work defined to reach any system *"inspired by PMM principles"*), [Mimir's Memory Hub](../systems/mimirs-memory-hub/) (PolyForm Noncommercial 1.0.0; the audit, neurochemistry and embedding packages it imports are outside the tree and state no terms), [Project Golem](../systems/project-golem/) (its own source-available non-commercial licence), [NouGenShards](../systems/nougenshards/) (its own source-available licence; inspection and personal use granted, commercial use, competing hosted services and use to build competing AI memory or retrieval products prohibited) |
 | Conditional MIT — three added conditions, revocable at the author's discretion | [Z-Waif](../systems/z-waif/) (a 2% royalty on gross income above $100,000 lifetime; an "ethical treatment" clause *"DEFINED AT SugarcaneDefender's SOLE DESCRECION"*; and — the one that constrains the memory itself — no collection or storage of "user logs, character configurations, or other user data" without consent obtained through terms the user "MUST ACCEPT UPON OPENING" the software) |
 | Conditional BSD — branding may not be altered above fifty users | [Open WebUI](../systems/open-webui/) (the "Open WebUI License": BSD-3 plus a fourth clause making removal of the branding "a material breach" in any deployment reaching fifty end users in a rolling thirty days, absent a written permission or an enterprise licence) |
 | Commercial source-available — read, evaluate and fork to contribute; a subscription to run; no redistribution or reuse | [QualityLayer](../systems/qualitylayer/) (its own licence, under German law; the public tree is a deliberate projection and most of it is encrypted) |
@@ -1381,9 +1383,9 @@ that is not open source**, each named in its own report and collected here.
 Two things this table is not. It is **not a complete licence taxonomy of the
 corpus**: it collects what the reports happened to record, and a report is
 written about mechanisms, so a permissive licence usually goes unmentioned. The
-rest have not each been checked — the honest claim is that twenty-four are known
+rest have not each been checked — the honest claim is that twenty-five are known
 non-open-source and the others are unrecorded, not that the others are MIT. And
-it is **not a reason to skip those twenty-four**: every mechanism in this atlas is
+it is **not a reason to skip those twenty-five**: every mechanism in this atlas is
 described so it can be re-implemented rather than copied, which is the only way a
 restrictively licensed system can be read usefully. What changes is what you may
 do with the code afterwards, and that is worth knowing before you open the file

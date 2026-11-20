@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python agent runtime whose only
+memory is a hash-linked SQLite event ledger, from which it rebuilds
+commitments, concepts and identity each turn.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Persistent Mind
+Model — Agent Memory Atlas">
+    <meta property="og:description" content="A Python agent runtime
+whose only memory is a hash-linked SQLite event ledger, from which it
+rebuilds commitments, concepts and identity each turn.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Persistent Mind
+Model — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python agent runtime
+whose only memory is a hash-linked SQLite event ledger, from which it
+rebuilds commitments, concepts and identity each turn.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Persistent Mind Model — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Persistent Mind Model",
+      "description": "A Python agent runtime whose only memory is a hash-linked SQLite event ledger, from which it rebuilds commitments, concepts and identity each turn.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A self-model kept as a hash-chained
+ledger</p>
+          <h1>Persistent Mind Model</h1>
+          <p class="document-deck">A Python agent runtime whose only
+memory is a hash-linked SQLite event ledger, from which it rebuilds
+commitments, concepts and identity each turn.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/scottonanski/persistent-mind-model-v1.0">
+              <span>Source</span>
+              <strong>scottonanski/persistent-mind-model-v1.0</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/scottonanski/persistent-mind-model-v1.0/commit/f7814dc86ed410b9745faa20fdd435890b63c36a" title="f7814dc86ed410b9745faa20fdd435890b63c36a">
+              <span>Analyzed revision</span>
+              <code>f7814dc8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/scottonanski--persistent-mind-model-v1.0" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>scottonanski--persistent-mind-model-v1.0</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>PMM-1.0,
+a custom dual licence in LICENSE.md: a revocable non-commercial grant,
+and commercial use only under a signed agreement; GitHub reports
+NOASSERTION</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>20,008
+lines of Python in pmm/ across 78 files outside its tests; 2,326 in
+experiments/ and 1,685 in scripts/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>299
+commits from 4 November 2025 to 12 November 2026, all but one by the
+author under two names; 182 of them in November 2025</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>551
+pytest functions in 103 files and 17,626 lines under pmm/tests and
+tests; no CI workflow is committed; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Persistent Mind Model (PMM) is a single-user Python agent runtime
+that wraps a language model in an event ledger. Every user message,
+reply, commitment, claim, concept operation and reflection is a row in
+one SQLite table. Each turn it rebuilds three projections from that
+table, retrieves a bounded slice of it, and parses the model's
+exact-prefix control lines into new events.</p>
+<p>What is notable is how strictly it keeps layers apart. The
+assistant's text is preserved before any parser runs; a structured line
+that fails validation becomes a typed <code>validation_failure</code>,
+not silence; and a claim may cite evidence only if retrieval selected
+that event this turn. Writes go through a fenced single-writer lease,
+and every projection can be replayed from the log.</p>
+<p>What is weak is correction. The ledger has no delete and no forget,
+so a user cannot remove anything they said. The identity line injected
+into every prompt comes from <code>name_change</code> claims, which pass
+validation as an unknown type. The hash chain is checked for linkage
+only, never re-derived.</p>
+<p><strong>Licence.</strong> PMM-1.0 §1 defines a Derivative Work as
+<em>"any modification, extension, or system implementing or inspired by
+PMM principles"</em>, and §3 puts every Commercial Use, including use
+for <em>"organizational benefit"</em>, behind a signed agreement. A
+reader who builds an event-sourced memory after reading this code is
+therefore told a licence may be owed; §5 claims the disclosure covers
+<em>"any system that maintains AI identity, memory, or agency through
+append-only cryptographic event logs"</em>. The §2 non-commercial grant
+is <em>"revocable"</em>, and §9 lets the licensor amend it. §2 does
+permit publishing analyses. §8 accepts contributions only under a CLA
+whose link the tree does not contain.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>PMM's memory is history, not facts. Nothing is extracted from a
+conversation into a profile; the user's messages and the model's replies
+stay as events, and everything else is a further event the model or the
+runtime appended about them. The system prompt states the premise:
+<em>"There is no you outside E"</em>, where E is the ledger
+(<code>pmm/runtime/prompts.py:18-47</code>).</p>
+<p>Four kinds of thing can become state.</p>
+<ul>
+<li><strong>A commitment</strong> opens when the model writes
+<code>COMMIT: &lt;text&gt;</code>; its CID is the first 8 hex digits of
+<code>sha1(text)</code>
+(<code>pmm/core/commitment_manager.py:97</code>). One CID has at most
+one active open. <code>CLOSE: &lt;cid&gt;</code> closes it, and the same
+text later opens a new episode under the same CID. The autonomy kernel
+also closes any open commitment followed by more than 27 events
+(<code>pmm/runtime/autonomy_kernel.py:107</code>,
+<code>:661-674</code>).</li>
+<li><strong>A claim</strong> is a
+<code>CLAIM:&lt;type&gt;=&lt;json&gt;</code> line. Five types are
+checked against the ledger or the Mirror; any other type is accepted
+with code <code>ACCEPTED_UNKNOWN_TYPE</code>
+(<code>pmm/core/validators.py:172-206</code>). An accepted claim becomes
+a <code>claim</code> event; a rejected one becomes
+<code>validation_failure</code>, while the reply that carried it stays
+in history.</li>
+<li><strong>An identity</strong> is adopted when the model proposes a
+token, the runtime appends an anchor reflection, and the model ratifies
+it on a later turn (<code>pmm/core/identity_manager.py:29-155</code>).
+All three acts come from the same model.</li>
+<li><strong>A concept</strong> is defined, aliased, related or bound to
+events through a <code>concept_ops</code> header the model emits, or by
+runtime fallbacks. A later define for the same token replaces the
+current definition in the projection
+(<code>pmm/core/concept_graph.py:154-190</code>).</li>
+</ul>
+<p>Nothing dies. A closed commitment's episode stays retrievable as
+history, a rejected claim stays in the reply that made it, and a
+replaced concept definition stays in <code>concept_history</code>. The
+ledger is treated as ground truth for <em>what was said</em>; the code
+is explicit that a validated event is not a proved one. The
+commitment-outcome policy says recording an outcome <em>"does not mean
+PMM has proved the observation true"</em>
+(<code>docs/commitment-outcome-later-review-policy.md:16-18</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the reply is preserved first; exact-prefix lines then become events or typed failures, and nothing is ever removed</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the reply is preserved first; exact-prefix lines then become events or typed failures, and nothing is ever removed
+flowchart TD
+  U[&quot;user_message&lt;br/&gt;appended&quot;] --&gt; R[&quot;retrieval selects&lt;br/&gt;up to 240 events&quot;]
+  R --&gt; G[&quot;model reply&quot;]
+  G --&gt; P{&quot;generation&lt;br/&gt;complete?&quot;}
+  P --&gt;|&quot;no&quot;| GF[&quot;generation_failure;&lt;br/&gt;no parser runs&quot;]
+  P --&gt;|&quot;yes&quot;| AM[&quot;assistant_message&lt;br/&gt;preserved as written&quot;]
+  AM --&gt; X[&quot;exact-prefix parse:&lt;br/&gt;COMMIT, CLOSE, CLAIM,&lt;br/&gt;OUTCOME, REVIEW&quot;]
+  X --&gt; V{&quot;validator&lt;br/&gt;for this type?&quot;}
+  V --&gt;|&quot;five types:&lt;br/&gt;check fails&quot;| VF[&quot;validation_failure;&lt;br/&gt;text stays in reply&quot;]
+  V --&gt;|&quot;check passes&quot;| CL[&quot;claim event&quot;]
+  V --&gt;|&quot;unknown type,&lt;br/&gt;e.g. name_change&quot;| CL
+  CL --&gt; ID[&quot;name_change shown&lt;br/&gt;as Identity in&lt;br/&gt;every prompt&quot;]
+  X --&gt; CO[&quot;commitment_open&lt;br/&gt;(sha1 CID)&quot;]
+  CO --&gt; CC[&quot;closed by CLOSE, or&lt;br/&gt;by kernel after&lt;br/&gt;27 later events&quot;]
+  CC --&gt; RO[&quot;same text reopens&lt;br/&gt;as a new episode&quot;]
+  ID ~~~ NF[&quot;no event is ever&lt;br/&gt;updated or deleted&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>PMM is a library with three entry points: <code>pmm</code>
+(interactive), <code>pmm-turn</code> (one turn, JSON out) and
+<code>pmm-codex</code>, which registers the STDIO MCP server with Codex
+CLI (<code>pyproject.toml:29-32</code>). All of them open one SQLite
+file through <code>EventLog</code>. Model calls go to Ollama or OpenAI,
+or to a deterministic dummy adapter.</p>
+<p><code>EventLog</code> owns the database. Its <code>events</code>
+table has <code>id</code>, <code>ts</code>, <code>kind</code>,
+<code>content</code>, <code>meta</code>, <code>prev_hash</code> and
+<code>hash</code> (<code>pmm/core/event_log.py:284-293</code>). Beside
+it sit a writer lease, a projection-status table, and four registries
+recording which events are the authoritative terminal outcome,
+commitment outcome, review or reinterpretation (<code>:347-422</code>).
+A writer acquires the lease with a fencing token; a
+<code>BEFORE INSERT</code> trigger aborts any insert whose connection
+does not hold an unexpired lease (<code>:434-451</code>). Leases last 30
+seconds with a 5-second heartbeat (<code>:207-208</code>).</p>
+<p><code>RuntimeLoop</code> rebuilds three projections at start and
+registers each as a required listener: <code>MemeGraph</code>, a
+networkx graph of message, commitment and reflection links;
+<code>Mirror</code>, open commitments and stale flags; and
+<code>ConceptGraph</code>, concepts and bindings
+(<code>pmm/runtime/loop.py:271-306</code>). A projection that fails to
+rebuild or to consume an event fails the managed operation closed.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>It needs Python, <code>networkx</code>, <code>openai</code> and
+<code>mcp</code>, and either a local Ollama or an OpenAI key; the dummy
+adapter runs with neither. Install is
+<code>pip install -e ".[full,dev]"</code>. Everything is local and
+offline with Ollama. The store is a SQLite file a person can query by
+hand, and <code>scripts/export_session.py</code> dumps it. Only one
+writer may hold a database at a time, and the README warns against
+concurrent one-shot writers.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Turn.</strong> <code>RuntimeLoop._run_turn_serialized</code>
+appends the <code>user_message</code>, runs
+<code>run_retrieval_pipeline</code>, renders the prior completed pair
+and the context, calls the adapter, and appends either
+<code>assistant_message</code> or <code>generation_failure</code> as the
+turn's single terminal outcome
+(<code>pmm/runtime/loop.py:616-958</code>).</li>
+<li><strong>Structured effects.</strong> After the reply is stored, the
+loop compiles concept ops, parses <code>REF:</code> lines, appends
+<code>retrieval_selection</code> and <code>metrics_turn</code>,
+synthesises a reflection, summary and lifetime-memory chunk when
+thresholds are met, then opens commitments, validates claims, derives
+identity adoptions, applies closures and validates outcome and review
+candidates (<code>:1018-1309</code>).</li>
+<li><strong>Append.</strong> <code>EventLog._append_owned</code> routes
+commitment, identity-adoption, outcome, review and reinterpretation
+kinds to governed transactions, rejects unknown kinds, checks a
+<code>forbid_sources</code> policy for four sensitive kinds, and inserts
+with <code>INSERT OR IGNORE</code> on the digest
+(<code>pmm/core/event_log.py:742-1066</code>).</li>
+<li><strong>Retrieve.</strong> <code>run_retrieval_pipeline</code> seeds
+concepts, selects bound events and threads, refines with the hash-vector
+stage, pins lifetime-memory chunks, expands one hop in
+<code>MemeGraph</code>, selects commitment episodes, and merges with
+per-event reason tags
+(<code>pmm/retrieval/pipeline.py:91-736</code>).</li>
+<li><strong>Render.</strong> <code>render_context_with_metrics</code>
+writes the concept story, threads, graph, identity and open commitments,
+retrieval provenance and raw evidence
+(<code>pmm/runtime/context_renderer.py:225-276</code>).</li>
+<li><strong>MCP.</strong> <code>pmm_status</code>,
+<code>pmm_read_events</code> and <code>pmm_get_event</code> open the
+ledger read-only; <code>pmm_turn</code> runs
+<code>pmm.runtime.oneshot_cli</code> in a subprocess with a 240-second
+timeout (<code>pmm/runtime/mcp_server.py:48-187</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Every memory is an event row; there is no second table of facts.
+<code>meta</code> is canonical JSON and carries the relationships:
+<code>about_event</code> from a reply to its user message,
+<code>cid</code> and <code>open_event_id</code> on commitment events,
+<code>origin_event_id</code> from a structured effect to the reply that
+produced it, and binding attribution (<code>model_declared</code>,
+<code>operator_declared</code>, <code>runtime_*</code>) on concept
+bindings (<code>pmm/core/binding_attribution.py</code>).</p>
+<p>Temporal data is one field, <code>ts</code>, stamped at insert. The
+digest deliberately excludes it, so two runs that produce the same
+content hash alike (<code>pmm/core/event_log.py:1006-1014</code>).
+Ordering, not time, carries meaning: commitment outcomes are validated
+on event-id order
+(<code>docs/commitment-outcome-later-review-policy.md:53</code>), and so
+is identity adoption.</p>
+<p>There is no scope key on any record. The identity subject is the
+constant <code>pmm.self</code>
+(<code>pmm/core/identity_adoption.py:16</code>). Isolation between minds
+is a separate database file.</p>
+<p>Three derived tiers sit on top of the raw events.
+<code>summary_update</code> is an identity summary after three
+reflections or more than ten events; <code>lifetime_memory</code> is a
+deterministic chunk every 120 events, listing top concepts, commitments
+opened and closed, and up to 32 sampled messages with their ids
+(<code>pmm/runtime/lifetime_memory.py:23-24</code>);
+<code>retrieval_selection</code> records what each turn selected and
+why.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is deterministic and runs on every turn. It returns event
+ids, never a ranked list of facts.</p>
+<ul>
+<li><strong>Concept seeding.</strong> <code>CTLLookupInjector</code>
+matches query words against every concept token by full or suffix match,
+plus a five-word synonym map to <code>user.identity</code>
+(<code>pmm/runtime/ctl_injector.py</code>). <code>user.identity</code>
+is sticky, and tokens with <code>identity.</code>, <code>role.</code>,
+<code>policy.</code>, <code>commitment.</code> or
+<code>governance.</code> prefixes are force-included
+(<code>pmm/retrieval/pipeline.py:30-67</code>).</li>
+<li><strong>Concept and thread selection.</strong> Events bound to
+seeded concepts, and the current episode of each CID bound to them.</li>
+<li><strong>Vector refinement.</strong>
+<code>DeterministicEmbedder</code> sums a sha256-derived vector per
+whitespace token and normalises it
+(<code>pmm/retrieval/vector.py:20-63</code>), so the cosine is a hashed
+bag-of-words overlap with no learned model. It re-embeds candidate
+content on every call; the stored <code>embedding_add</code> rows feed
+only status commands and dedup, and <code>build_index</code> has no
+caller. Message refinement considers only <code>user_message</code> and
+<code>assistant_message</code> (<code>:80-84</code>).</li>
+<li><strong>Summaries.</strong> The two newest
+<code>lifetime_memory</code> chunks are pinned with their sampled
+message ids, plus the earliest chunk naming each seeded concept.</li>
+<li><strong>Episodes.</strong> A concept-to-CID link selects only the
+current episode. An older episode is added only when an independently
+selected event belongs to it, capped at two episodes of twelve events
+each (<code>pmm/retrieval/pipeline.py:38-39</code>,
+<code>:495-501</code>, <code>:520-522</code>).</li>
+</ul>
+<p>The budget is a count: <code>limit_total_events</code> starts at 120
+and grows with <code>log1p</code> of ledger size to a cap of 240
+(<code>:34</code>, <code>:52</code>). Evidence is rendered as
+<code>[id] kind: content</code>, each truncated to 300 characters
+(<code>pmm/runtime/context_renderer.py:557-586</code>). No token budget
+is computed.</p>
+<p>The rendered context precedes the base prompt in the system message
+(<code>pmm/runtime/loop.py:735</code>), so the part that changes every
+turn sits at the front, where a provider's prefix cache would need it to
+be stable.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The model writes memory by emitting control lines after its prose:
+<code>COMMIT:</code>, <code>CLOSE:</code>, <code>CLAIM:</code>,
+<code>REFLECT:</code>, <code>COMMITMENT_OUTCOME:</code>,
+<code>COMMITMENT_REVIEW:</code> and
+<code>REFLECTION_REINTERPRETATION:</code>, plus an optional JSON header
+with <code>concepts</code> and <code>concept_ops</code>
+(<code>pmm/runtime/prompts.py:55-66</code>). <code>REF:</code> lines are
+parsed too. Parsers run only on a <code>complete</code> generation
+already stored as <code>assistant_message</code>, so a truncated reply
+cannot open a commitment.</p>
+<p>When no concepts are declared, the loop binds the turn to
+<code>identity.continuity</code> with origin
+<code>runtime_continuity_fallback</code>; on turns where the ledger
+count is a multiple of 37 past 20 it seeds three ontology tokens instead
+(<code>pmm/runtime/loop.py:653</code>, <code>:915-926</code>). Validated
+claims are auto-bound to a concept named after their type.</p>
+<p>Writes are synchronous and block the turn: each is its own
+<code>BEGIN IMMEDIATE</code> transaction, and a new event is retrievable
+on the next turn. There is no LLM extraction pass; reflections,
+summaries and lifetime chunks are deterministic. Two full-ledger reads
+run on every turn regardless of size:
+<code>maybe_append_identity_adoptions</code> reads all events
+(<code>pmm/core/identity_manager.py:43</code>), and appending the
+per-turn <code>retrieval_selection</code>, a policy-sensitive kind,
+scans the whole ledger for the latest policy
+(<code>pmm/core/event_log.py:957-995</code>). That policy check fails
+open if the policy cannot be read (<code>:994</code>).</p>
+<p>There is no update and no delete. A commitment closes and reopens; a
+concept is redefined by a later define, and the <code>supersedes</code>
+field that define may carry is stored and serialised but never branched
+on.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>PMM is the agent, not a memory for one. Its MCP server exposes the
+ledger to another agent: three read-only tools page events and fetch one
+in full, and <code>pmm_turn</code> runs a whole PMM turn with PMM's
+configured model (<code>pmm/runtime/mcp_server.py:48-187</code>).
+<code>pmm-codex</code> registers that server with Codex CLI
+(<code>pmm/runtime/codex_cli.py</code>). The calling agent therefore
+talks to a second mind; it does not store its own memories in PMM.</p>
+<p>Inside PMM, the model has broad agency over its memory and no tools:
+it writes by emitting text lines, and the runtime decides what each line
+becomes. Its reads are automatic. Autonomy is on by default in the
+interactive CLI and off in <code>pmm-turn</code> and MCP
+(<code>pmm/runtime/oneshot_cli.py:181-187</code>). With it on, a
+supervisor appends <code>autonomy_stimulus</code> every ten seconds, and
+each stimulus appends at least an <code>autonomy_tick</code> and an
+<code>outcome_observation</code> before or after the kernel reflects,
+summarises or indexes (<code>pmm/runtime/loop.py:323-336</code>,
+<code>:1354-1420</code>). Because auto-closure counts events, an idle
+interactive session ages its open commitments toward closure.</p>
+<p>The repository ships an auditing skill for coding agents that work on
+PMM itself (<code>.agents/skills/pmm-development-auditor/</code>); it
+governs development, not memory.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-validation-covers">What validation covers</h3>
+<p>Claim validation checks evidence ids for existence and, in the
+managed loop, for membership in this turn's retrieval selection
+(<code>pmm/core/validators.py:144-170</code>). Type-specific checks
+exist for <code>identity_proposal</code>, <code>identity_ratify</code>,
+<code>event_existence</code>, <code>commitment_status</code> and
+<code>reference</code>. Every other type is accepted.</p>
+<p><code>render_identity_claims</code> builds the <code>Identity:</code>
+line of every prompt from <code>claim</code> events of type
+<code>name_change</code>
+(<code>pmm/runtime/context_utils.py:19-45</code>), which is not a
+validated type. The newest such claim wins. The identity adoption
+protocol, the most guarded path in the tree, never feeds that line; it
+feeds identity-concept bindings in <code>ConceptGraph</code>.</p>
+<h3 id="what-the-ledger-guarantees">What the ledger guarantees</h3>
+<p>The append path and the fenced lease are careful: a reply computed
+after the writer lost its lease is discarded, not stored
+(<code>pmm/runtime/loop.py:740-748</code>). The chain is weaker than the
+licence's <em>"cryptographically-chained"</em> suggests. Nothing in
+SQLite prevents an <code>UPDATE</code> or <code>DELETE</code> on
+<code>events</code>; the test suite itself edits <code>meta</code> in
+place to simulate legacy rows. <code>ledger_metrics</code> counts
+<code>prev_hash</code> discontinuities but never recomputes a digest, so
+an edited <code>content</code> with its <code>hash</code> left alone
+reads as intact (<code>pmm/core/ledger_metrics.py:40-53</code>).</p>
+<h3 id="what-cannot-be-removed">What cannot be removed</h3>
+<p>The user has no way to delete a message, and the model has no way to
+retract a claim. A rejected claim's text remains in its
+<code>assistant_message</code>, which retrieval can select and the
+evidence renderer prints unfiltered; only the prior-pair renderer strips
+control lines
+(<code>pmm/runtime/context_renderer.py:162-192</code>).</p>
+<h3 id="a-model-supplied-path">A model-supplied path</h3>
+<p><code>_parse_ref_lines</code> opens any path written in a
+<code>REF: &lt;path&gt;#&lt;id&gt;</code> line as a read-only SQLite
+database and records whether that event exists, with its hash
+(<code>pmm/runtime/loop.py:562-604</code>). The kernel's own reflection
+proposes <code>../other_pmm.db#47</code> whenever a commitment is open
+(<code>pmm/runtime/autonomy_kernel.py:686-691</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>audit_log</code></strong> — awarded. The
+<code>events</code> table is the store, every mutation is an insert, and
+no production path rewrites or removes an event. The limits are those
+above: immutability by convention, linkage-only checking, and a digest
+that omits <code>ts</code>.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>trust_state</code></strong> — withheld. Four
+candidates have the shape and none is an epistemic status a read filters
+on. Claim versus <code>validation_failure</code> is a kind fixed at
+write; nothing later moves a claim, and the identity read takes an
+unvalidated type. Commitment open versus closed is an obligation's
+lifecycle; it decides which episode retrieval drags in, not whether a
+memory is believed. Authoritative versus non-authoritative outcomes,
+reviews and reinterpretations are structural provenance re-derived on
+read, and the policy says authority proves nothing about truth. Identity
+adoption is the model ratifying its own proposal.</li>
+<li><strong><code>human_review</code></strong> — withheld. No surface
+puts a memory in front of a person before it takes effect; the CLI's
+<code>/pm</code> commands are configuration, checkpoint and
+backfill.</li>
+<li><strong><code>tombstone</code></strong> — withheld. The
+identity-adoption path looks up an earlier
+<code>validation_failure</code> by attempted digest only to avoid
+writing a second failure record
+(<code>pmm/core/event_log.py:1703-1716</code>). No write path consults a
+rejected value.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. One
+<code>ts</code>, stamped at insert.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. There is no
+scope key; one file per mind is a physical partition.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>There are 551 pytest functions in 103 files. No CI workflow is
+committed, and I ran none of them. The suites cover the governed append
+paths, writer fencing, projection barriers, terminal outcomes,
+commitment episodes, claim and evidence validation, identity adoption,
+retrieval provenance and the MCP and one-shot entry points. The three
+files triage named, <code>tests/test_ctl_injector.py</code>,
+<code>tests/test_concept_context.py</code> and
+<code>tests/test_concept_metrics.py</code>, hold 486 lines on
+concept-token matching and rendering.</p>
+<p><code>negative_eval</code> rests on
+<code>pmm/tests/test_commitment_episode_retrieval.py:299-320</code>. One
+commitment is opened and closed, the same text reopened, and the new
+episode bound to a concept. Retrieval for that concept must return the
+current assistant event and open and must not return the first episode's
+assistant event, open or close. Vector search and summary pinning are
+disabled, so the absences are not an empty result. The material excluded
+is an earlier episode, not a corrected or out-of-scope value.</p>
+<p>The hash chain has no failing case.
+<code>pmm/tests/test_metrics.py:26</code> and <code>:56</code> assert
+<code>broken_links == 0</code> on ledgers nobody tampered with.</p>
+<p>Two experiments are committed and marked nonproduction. The
+concept-authorship channel's artifacts recompute as its README states:
+Gemma's spontaneous appropriate authorship is 14/15 in
+<code>conformance-025-reserved-template/report.json</code> and 7/15 once
+a current-turn reference is required, in
+<code>conformance-03-turn-ref/report.json</code>, which records
+<code>structural_and_behavioral_pass: false</code>. The
+continuity-fallback ablation reports that its pilot failed its own
+diagnostic gate. No paper is associated; the Zenodo record the README
+links, dated 28 November 2025, is a software archive of v1.2 with no
+quantitative results.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Store the reply before parsing it.</strong> Make the
+terminal outcome one event per user message, and let structured effects
+only append after it, so a parser bug can never lose what the model
+said.</li>
+<li><strong>Type the failure.</strong> When a structured line fails
+validation, append a <code>validation_failure</code> that cites the
+reply, rather than dropping it.</li>
+<li><strong>Bound evidence to what was retrieved.</strong> Refuse a
+claim whose cited ids were not in this turn's selection; it stops a
+model citing events it never saw.</li>
+<li><strong>Fence the writer in the database.</strong> A lease row and
+an insert trigger that checks owner and fence make a stale process fail
+loudly.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An accept-unknown default on the path that feeds the
+prompt.</strong> A compatibility pass-through is harmless until a
+renderer reads one of the types it lets through.</li>
+<li><strong>A chain check that never re-hashes.</strong> Linkage proves
+order, not content; verification has to recompute each digest and fail a
+test that tampers.</li>
+<li><strong>Staleness counted in events when idle ticks write
+events.</strong> Measure age on the clock, or exclude the system's own
+heartbeats from the count.</li>
+<li><strong>A memory with no erasure.</strong> An append-only log needs
+a redaction that keeps the row and records itself, or a user cannot
+withdraw what they said.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a researcher studying one long-running, self-describing
+agent who wants every step of its self-model replayable. It does not
+suit memory for a product. There are no users, no scopes, no deletion,
+and no facts extracted for recall; the store grows with every heartbeat
+and every turn, with two full-ledger scans per turn. Walk away too if a
+commercial use is likely: the licence reaches systems <em>"inspired
+by"</em> this one.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>name_change</code> is meant to become a validated
+claim type, given that it is the one claim the prompt's identity line
+reads.</li>
+<li>How the ledger is meant to handle a user's request to forget, since
+the primer tells the model every message lives there
+<em>"forever"</em>.</li>
+<li>What the two full-ledger scans cost per turn at the
+multi-thousand-event sizes the Zenodo record mentions; nothing committed
+measures it.</li>
+<li>Where the CLA named in §8 of the licence is published.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Ledger and writer: <code>pmm/core/event_log.py</code>,
+<code>pmm/core/writer_session.py</code>,
+<code>pmm/core/ledger_metrics.py</code></li>
+<li>Projections: <code>pmm/core/meme_graph.py</code>,
+<code>pmm/core/mirror.py</code>, <code>pmm/core/concept_graph.py</code>,
+<code>pmm/core/concept_ops_compiler.py</code></li>
+<li>Commitments, claims and identity:
+<code>pmm/core/commitment_manager.py</code>,
+<code>pmm/core/commitment_outcome.py</code>,
+<code>pmm/core/validators.py</code>,
+<code>pmm/core/identity_manager.py</code>,
+<code>pmm/core/identity_adoption.py</code></li>
+<li>Turn and autonomy: <code>pmm/runtime/loop.py</code>,
+<code>pmm/runtime/autonomy_kernel.py</code>,
+<code>pmm/runtime/autonomy_supervisor.py</code>,
+<code>pmm/runtime/lifetime_memory.py</code>,
+<code>pmm/runtime/identity_summary.py</code></li>
+<li>Retrieval and context: <code>pmm/retrieval/pipeline.py</code>,
+<code>pmm/retrieval/vector.py</code>,
+<code>pmm/runtime/ctl_injector.py</code>,
+<code>pmm/runtime/context_renderer.py</code>,
+<code>pmm/runtime/context_utils.py</code>,
+<code>pmm/runtime/prompts.py</code></li>
+<li>Entry points: <code>pmm/runtime/cli.py</code>,
+<code>pmm/runtime/oneshot_cli.py</code>,
+<code>pmm/runtime/mcp_server.py</code>,
+<code>pmm/runtime/codex_cli.py</code></li>
+<li>Tests: <code>pmm/tests/test_commitment_episode_retrieval.py</code>,
+<code>pmm/tests/test_metrics.py</code>,
+<code>pmm/tests/test_claim_persistence.py</code>,
+<code>pmm/tests/test_context_utils.py</code></li>
+<li>Experiments: <code>experiments/concept_authorship_channel/</code>,
+<code>experiments/continuity_fallback_ablation/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No production code updates or deletes an event.</strong>
+<code>git grep -n -i -E 'DELETE FROM|UPDATE events SET' -- pmm scripts experiments</code>
+matches only the three authority-registry deletes at
+<code>pmm/core/event_log.py:1292</code>, <code>:1353</code> and
+<code>:1411</code>, and lines in <code>pmm/tests</code>, where the same
+pattern hits four test files.</li>
+<li><strong>No trigger guards update or delete.</strong>
+<code>git grep -n -i -E 'BEFORE (UPDATE|DELETE)|AFTER (UPDATE|DELETE)'</code>
+returns nothing; <code>git grep -n 'BEFORE INSERT'</code> matches
+<code>pmm/core/event_log.py:435</code>.</li>
+<li><strong>No forget or delete verb.</strong>
+<code>git grep -n -i -E 'def (forget|delete|remove|purge|redact|erase)' -- pmm</code>
+returns nothing;
+<code>git grep -n -i -E 'def (close|open)_commitment' -- pmm/core/commitment_manager.py</code>
+matches two lines.</li>
+<li><strong>Chain checking never re-derives a digest.</strong>
+<code>git grep -n 'broken_links' -- pmm tests scripts</code> matches
+only <code>pmm/core/ledger_metrics.py</code> and the two zero assertions
+in <code>pmm/tests/test_metrics.py</code>;
+<code>git grep -n -E 'sha256\(' -- pmm/core/event_log.py</code> matches
+nine lines, every one computing a digest for an insert.</li>
+<li><strong>No scope key.</strong>
+<code>git grep -n -i -w -E 'tenant|tenant_id|workspace|workspace_id|project_id|agent_id' -- pmm</code>
+returns nothing;
+<code>git grep -n 'IDENTITY_SUBJECT_ID_V1 =' -- pmm</code> matches
+<code>pmm/core/identity_adoption.py:16</code>.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_until|event_time|occurred_at|as_of' -- pmm</code>
+returns nothing;
+<code>git grep -n -E '"ts"' -- pmm/core/event_log.py</code>
+matches.</li>
+<li><strong>The stored embedding index is not read for scoring.</strong>
+<code>git grep -n 'build_index(' -- pmm scripts experiments</code>
+matches only its definition at
+<code>pmm/retrieval/vector.py:221</code>.</li>
+<li><strong><code>supersedes</code> is never branched on.</strong>
+<code>git grep -n 'supersedes' -- pmm ':!pmm/tests'</code> matches
+assignments and validation in <code>concept_schemas.py</code>,
+<code>concept_ops_compiler.py</code> and
+<code>concept_graph.py:44</code>, <code>:55</code> and
+<code>:176-178</code>, and no condition on the stored value.</li>
+<li><strong>No approval verb on any entry point.</strong>
+<code>git grep -n -i -E 'approve|ratif' -- pmm/runtime/cli.py pmm/runtime/mcp_server.py pmm/runtime/codex_cli.py pmm/runtime/oneshot_cli.py</code>
+returns nothing; the same pattern over
+<code>pmm/runtime/prompts.py</code> matches.</li>
+<li><strong>No CI.</strong> <code>git ls-files .github</code> lists
+nothing.</li>
+<li><strong>No CLA link.</strong>
+<code>git grep -n -i -E 'CLA([^[:alnum:]]|$)|contributor license'</code>
+matches only <code>LICENSE.md:134</code> and <code>:136</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation|doi|zenodo'</code>
+outside <code>experiments/</code> JSON matches the Zenodo link in
+<code>LICENSE.md:82</code> and <code>README.md:194</code> and no arXiv
+id; the tree has no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/scottonanski/persistent-mind-model-v1.0/commit/f7814dc86ed410b9745faa20fdd435890b63c36a"><code class="commit-id" title="f7814dc86ed410b9745faa20fdd435890b63c36a">f7814dc8…</code></a>
+— first reading, from a full clone of <code>main</code>, scoped to the
+ledger, writer, projections, turn loop, retrieval, validators, identity,
+commitment, autonomy and MCP paths and their tests; the coherence,
+learning and meta-learning packages were read only where they append
+events. Screened first: no auto-run surface, nothing inside the
+cooldown, no build-time execution, one unpinned surface
+(<code>pyproject.toml</code> with no lockfile); <code>AGENTS.md</code>
+was treated as data. A custom non-commercial licence with no rider
+against analysis. Nothing installed, built or run. Two marks:
+<code>audit_log</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
