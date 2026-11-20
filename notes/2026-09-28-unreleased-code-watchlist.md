@@ -18,7 +18,60 @@ the entry says so.
 
 ## Code now available
 
-All nine were examined on 2026-09-28, the day this list was compiled: eMEM, EmbodiedLGR, FARM and Agent Memory Distillation have reports, and each has a Known Limitations correction for the earlier no-code statement; THREADS and Harness-of-Harness stay excluded on their released code, with revised bullets; VISTA's report dates from 2026-09-18 and its two stale bullets were corrected; OmniIntelligence was re-read and its "private framework" claim withdrawn; CSM's living-mind service is confirmed and has its own report, Living Mind Cortex. The entries below record what was found public on that date.
+Six were examined on 2026-11-20. HomeBody, EvoMemNav, LUCID (the code for Memory Reward Inflation) and Maximem Synap Core have reports, and the bullets that recorded each as unreleased were replaced; MAP-Graph stays excluded on its released code, because its store is rebuilt empty for every task; VLM2 was not read, since its entry said a release would not change the call. Nine were examined on 2026-09-28, the day this list was compiled: eMEM, EmbodiedLGR, FARM and Agent Memory Distillation have reports, and each has a Known Limitations correction for the earlier no-code statement; THREADS and Harness-of-Harness stay excluded on their released code, with revised bullets; VISTA's report dates from 2026-09-18 and its two stale bullets were corrected; OmniIntelligence was re-read and its "private framework" claim withdrawn; CSM's living-mind service is confirmed and has its own report, Living Mind Cortex. Each entry records what was found public on the date it was examined.
+
+**HomeBody** — a humanoid that explores, stores ego observations in a shared
+frame and recalls them for skill selection.
+- Examined 2026-09-28; the appendix bullet opening "`Stanford-TML/homebody`
+  was examined and has no report" was replaced by the report's History.
+- Missing then: code and paper; the repository was the project page.
+- Now: [Stanford-TML/homebody](https://github.com/Stanford-TML/homebody),
+  Apache-2.0, code released 2026-10-17 and 2026-10-30. Report:
+  `content/systems/homebody.md` at `d7eb208`. No paper yet.
+
+**EvoMemNav** — self-evolving fine-grained memory for zero-shot navigation
+([arXiv:2606.03509](https://arxiv.org/abs/2606.03509), v1).
+- Examined 2026-09-05 in the grouped spatial-memory bullet, which no longer
+  lists it.
+- Missing then: code.
+- Now: [caicaiya123/EvoMemNav](https://github.com/caicaiya123/EvoMemNav),
+  MIT, one root commit on 2026-10-26 that replaced the placeholder history.
+  Report: `content/systems/evomemnav.md` at `5770e8c`.
+
+**Memory Reward Inflation in Self-Improving LLM Agents** — the Echo Gap
+measurement and the LUCID detector
+([arXiv:2608.00017](https://arxiv.org/abs/2608.00017), v1).
+- Examined 2026-08-10; the Echo Gap bullet was replaced by the report's
+  History.
+- Missing then: the repository the paper names, which still returns 404.
+- Now: [MohammadAsadolahi/Memory-Reward-Inflation-in-Self-Improving-LLM-Agents](https://github.com/MohammadAsadolahi/Memory-Reward-Inflation-in-Self-Improving-LLM-Agents),
+  no licence, created 2026-10-08 on the first author's account. Report:
+  `content/systems/lucid.md` at `f563bca`. The prompts are placeholders and
+  the analysis code for Tables 3, 4, 7 and 8 is absent.
+
+**MAP-Graph** — provenance-aware shared memory with scope intersection and
+recursive revocation ([arXiv:2608.10509](https://arxiv.org/abs/2608.10509), v1).
+- Examined 2026-09-08; its bullet was rewritten on the released code.
+- Missing then: code, dataset and artifacts.
+- Now: [xiaoqi-7/MAP-Graph](https://github.com/xiaoqi-7/MAP-Graph), no
+  licence, one commit on 2026-10-25 by the first author's account. Still no
+  report: `reset_task` empties every store per task.
+
+**Maximem Synap engine** — the hosted engine behind the Synap SDK.
+- Examined 2026-08-15 (SDK bullet) and 2026-09-16 (SDK report).
+- Missing then: the engine, run as a managed service.
+- Now: [maximem-ai/maximem_synap_core](https://github.com/maximem-ai/maximem_synap_core),
+  Apache-2.0, created 2026-11-03: a self-hosted edition of Cloud's server
+  code with Cloud-only switches refused. Report:
+  `content/systems/maximem-synap-core.md` at `ecfbb3b`. Cloud itself is
+  still closed.
+
+**Vision-Language Memory for Spatial Reasoning** — a model-internal memory
+for spatial reasoning ([arXiv:2511.20644](https://arxiv.org/abs/2511.20644), v2).
+- Examined 2026-09-05 in the grouped spatial-memory bullet.
+- Now: [sair-lab/VLM2](https://github.com/sair-lab/VLM2), Apache-2.0,
+  created 2026-10-08 by the last author's lab. Not read: the memory is a
+  model's internal state, so the release does not reopen the call.
 
 **VISTA** — a visual harness for ARC-AGI-3 from MIT with a lossless frame
 store and two model-authored notes files.
@@ -196,20 +249,6 @@ Berkeley and CMU.
   party's rebuild. If released: would not change the call (the bullet
   judged the memory per run, like the other three).
 
-**Memory Reward Inflation in Self-Improving LLM Agents** — the Echo Gap
-measurement and the LUCID de-inflation detector
-([arXiv:2608.00017](https://arxiv.org/abs/2608.00017), v1).
-- Examined 2026-08-10; bullet opening "[`arXiv:2608.00017`](https://arxiv.org/abs/2608.00017) was examined and
-  has no report, and the reason is that its own advertised repository does
-  not exist".
-- Missing: code, data and per-episode memory traces the paper says are
-  released.
-- Monitor: [the author's account](https://github.com/MohammadAsadolahi).
-- Status 2026-09-28: still v1; the paper's URL,
-  `github.com/MohammadAsadolahi/Reliable-Memory-Agents-in-the-Wild`, returns
-  404; the account has 49 public repositories, the newest created
-  2026-09-16 and unrelated. If released: a report, per the bullet.
-
 **Weighted Memory Tree** — a retention-scored memory tree with a four-value
 lifecycle state for long-horizon agents
 ([arXiv:2608.20631](https://arxiv.org/abs/2608.20631), v1).
@@ -304,14 +343,6 @@ edge (*IEEE Network*, early access; doi:10.1109/MNET.2026.3694694).
   once, offline, from a mapping run, so the exclusion stands on that ground;
   `content/appendix.md` carries the correction. Nothing left to monitor.
 
-**EvoMemNav** — self-evolving fine-grained memory for zero-shot navigation
-([arXiv:2606.03509](https://arxiv.org/abs/2606.03509), v1).
-- Examined 2026-09-05; same bullet.
-- Missing: code.
-- Monitor: [caicaiya123/EvoMemNav](https://github.com/caicaiya123/EvoMemNav).
-- Status 2026-09-28: one commit, "Initial placeholder", 2026-06-01; the
-  README is "Code coming soon."
-
 **When Memory Lies** — an empirical study of spatial memory staleness in VLM
 agents ([arXiv:2608.04574](https://arxiv.org/abs/2608.04574), v1).
 - Examined 2026-09-05; bullet opening "Seven spatial-memory papers from the
@@ -339,14 +370,6 @@ VLA policy ([arXiv:2605.22283](https://arxiv.org/abs/2605.22283), v1).
 - Status 2026-09-28: that repository calls itself the official code and
   holds two files; its README says "Code will be released soon." Last
   commit 2026-05-21.
-
-**Vision-Language Memory for Spatial Reasoning** — a model-internal memory
-for spatial reasoning ([arXiv:2511.20644](https://arxiv.org/abs/2511.20644), v2).
-- Examined 2026-09-05; same bullet.
-- Missing: code.
-- Monitor: the arXiv page.
-- Status 2026-09-28: v2, no code link found. If released: would not change
-  the call (the memory is a model's internal state).
 
 **Survey of spatial memory representations for robot navigation**
 ([arXiv:2604.16482](https://arxiv.org/abs/2604.16482), v1).
@@ -393,16 +416,6 @@ engine (*Nucleic Acids Research* 54(16), doi:10.1093/nar/gkag833).
   state was not re-checked).
 - If released: would not change the call (the memory is the literature,
   not the user).
-
-**MAP-Graph** — provenance-aware shared memory with scope intersection and
-recursive revocation ([arXiv:2608.10509](https://arxiv.org/abs/2608.10509), v1).
-- Examined 2026-09-08; bullet opening "[`arXiv:2608.10509`](https://arxiv.org/abs/2608.10509) was examined and
-  has no report: it releases no code".
-- Missing: code, dataset and artifacts.
-- Monitor: the arXiv page.
-- Status 2026-09-28: v1, no code link; the name is too common for a
-  repository search to settle it. If released: read the scope-intersection
-  rule and the revoked-ancestor check first.
 
 **xiaoO RAM-A server** — the long-term memory server openEuler's AgentOS
 runtime calls over MCP.
@@ -484,17 +497,6 @@ evolved DGM-H agents wrote, per the paper
   evolved agents are committed: the case the Gödel-machine note said would
   enter the atlas.
 
-**HomeBody** — a humanoid that explores, stores ego observations in a shared
-frame and recalls them for skill selection.
-- Examined 2026-09-28; bullet opening "`Stanford-TML/homebody` was examined
-  and has no report".
-- Missing: code and paper.
-- Monitor: [Stanford-TML/homebody](https://github.com/Stanford-TML/homebody),
-  [project page](https://tml.stanford.edu/homebody/).
-- Status 2026-09-28: still six commits; the 22 code files are the page's
-  scripts; the README still says "Code coming soon."; a title search finds
-  only this repository.
-
 **AIM** — agentic idea management for automated research, with a lesson
 memory gated by a Solution Auditor.
 - Examined 2026-10-08; appendix bullet opening "AIM", which links the paper.
@@ -548,7 +550,6 @@ the organisation's repository listing on 2026-09-28.
 | graperoot | 2026-07-31 | appendix, "Five repositories named in a Reddit thread were examined" | proprietary graph engine package | [kunal12203/graperoot](https://github.com/kunal12203/graperoot) | no engine repository in the listing |
 | bhived | 2026-07-31 | same bullet | hosted memory API | [ArtKeyAi/bhived-mcp](https://github.com/ArtKeyAi/bhived-mcp) | the account has one repository |
 | Empryo `packages/memory` | 2026-08-05 | appendix, "Empryo's maintainer reports substantial changes" | private memory workspace | [proxysoul/Empryo](https://github.com/proxysoul/Empryo) | public head moved to `669ff9198da5` (2026-09-27, docs commits); still `src/core/memory/`, no `packages/memory/` |
-| Maximem Synap | 2026-08-15 | appendix, "`maximem-ai/maximem_synap_sdk` was examined" | hosted engine | [maximem-ai/maximem_synap_sdk](https://github.com/maximem-ai/maximem_synap_sdk) | no engine repository in the listing |
 | Custodian Labs | 2026-08-17 | appendix, "`Custodian-Labs/custodian-labs-python` was examined" | hosted SDK | [Custodian-Labs/custodian-labs-python-examples](https://github.com/Custodian-Labs/custodian-labs-python-examples) | the repository was renamed to `custodian-labs-python-examples`; no SDK source in the listing |
 | Warp memory stores | 2026-08-18 | appendix, "`warpdotdev/warp` was examined" | server-side memory stores | [warpdotdev/warp](https://github.com/warpdotdev/warp) | not re-checked beyond the repository resolving |
 | Memstate | 2026-08-27 | appendix, "`memstate-ai/memstate-mcp` was examined" | hosted MCP server | [memstate-ai/memstate-mcp](https://github.com/memstate-ai/memstate-mcp) | no server repository in the listing |
@@ -570,11 +571,11 @@ Repository placeholders: last push, commit count and code files.
 
 ```sh
 for r in Darwin-Agent/Mi-Memory elizaOS/agentmemory bingreeky/JIT \
-         HorizonRobotics/HoloAgent caicaiya123/EvoMemNav Hoantrbl/SOMA \
+         HorizonRobotics/HoloAgent Hoantrbl/SOMA \
          EchoVLA-project/EchoVLA_web prove2me/prove2me_workspace \
          FreshHillyer/xiaoO zhengkid/Dream-RSI jerber/arc-code \
          Tongyi-MAI/Qwen-Planner-Agent facebookresearch/HyperAgents \
-         Stanford-TML/homebody neomjs/neo; do
+         neomjs/neo; do
   gh api "repos/$r" --jq '[.full_name, .pushed_at] | @tsv' 2>/dev/null || { echo "$r 404"; continue; }
   gh api "repos/$r/commits?per_page=1" -i | grep -i '^link:' | grep -o 'page=[0-9]*>; rel="last"'
   gh api "repos/$r/git/trees/HEAD?recursive=1" \
@@ -603,7 +604,7 @@ Memory Distillation all did):
 
 ```sh
 for u in https://darwin-agent.github.io/Mi-Memory/ https://schema-harness.github.io/ \
-         https://tongyi-mai.github.io/Qwen-Planner-Agent/ https://tml.stanford.edu/homebody/ \
+         https://tongyi-mai.github.io/Qwen-Planner-Agent/ \
          https://prove2.me/; do
   echo "$u $(curl -sL "$u" | grep -o -E '(github\.com|huggingface\.co)/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+' | sort -u | tr '\n' ' ')"
 done
