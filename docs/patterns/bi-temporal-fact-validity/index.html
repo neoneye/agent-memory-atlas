@@ -600,6 +600,19 @@ Recorded views answer point reads and traversal and refuse
 hold only the present. A hard delete closes the recorded interval
 without removing earlier rows, so erasure does not reach history short
 of clearing the graph.</p>
+<p><a href="../../systems/aura-chetto1983/">Aura (chetto1983)</a> keeps
+both clocks on a graph edge and writes them in the same statement: a
+correction sets the old <code>FACT</code> edge's <code>valid_to</code>
+to the new fact's caller-stated <code>valid_from</code> and its
+<code>expired_at</code> to the clock, and nulls its
+<code>fact_key</code> so the closed edge can no longer be targeted.
+Every fact read filters on the valid window at <code>as_of</code>,
+default now, and a live test shows a superseded residence answering for
+an instant three years back. Record time is written and never queried:
+<code>expired_at</code> appears only as an <code>IS NULL</code> guard on
+writes, so "what did the agent believe on a date" has no read path.
+There is also no way to say a fact was never true while keeping it; that
+case is a hard delete.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

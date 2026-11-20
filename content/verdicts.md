@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 829 reports.**
+**This page covers all 830 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7612,3 +7612,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 public layer and a withheld, non-commercial engine; release v0.11.0; 81,076 lines of Rust in `src/`, 333 commits from 30 May to 20 November 2026; 785 test functions that CI runs with the private submodule checked out, not run here; the LongMemEval-S figures recompute from their shard rows, and the harness and logs are not committed. Three marks: `trust_state`, `scope_enforced` and `negative_eval`.
 - Study when: you want a forget command that cannot re-assert its own target, or lifecycle state kept beside the store rather than in it.
 - Do not copy when: you fuse several retrieval arms, unless the exclusion sits in the filter they all share.
+
+### [`aura-chetto1983`](../systems/aura-chetto1983/)
+
+- Best idea: **a correction closes one named window and refuses the rest.** `supersedes_fact_key` closes exactly the edge a prior recall returned; without it, a unique still-valid subject-and-predicate match closes and zero or several refuse with candidate keys, writing nothing. The old edge's `valid_to` becomes the new fact's `valid_from` and its `expired_at` the clock, so past instants stay answerable.
+- Biggest risk: **nothing in memory can be doubted.** A fact has no candidate or rejected state, the prompt tells the model recalled facts are reliable knowledge, and `memory_forget` deletes with no value-keyed record, so the same inference is written again on the next turn.
+- Second risk: the worker rule is enforced on supersede and inside `memory_batch` but not on the direct `memory_merge_entities` tool, which the bridge classifies as an ungated mutation; every automatic capture loads the identity's whole fact graph, embeddings included, to apply one fact.
+- Most reusable component: the supersede resolution in `internal/arcadedb/memory_supersede.go` with the authority check in `fact_authority.go`, and the per-identity database and HMAC-derived credential in `internal/arcadedb/tenant.go`.
+- Maturity impression: MIT; 17,745 lines of non-test Go in `internal/arcadedb` and `cmd/arcadedb-mcp`, about 7.7% of the repository with its wiring; 8,308 commits from 27 May to 20 November 2026, release v1.2.0; 708 Go test functions, 101 of them live against ArcadeDB in a CI job that fails on a skip, not run here. Two marks: `bitemporal`, `negative_eval`.
+- Study when: you need per-person isolation enforced by the database server, and corrections that keep the past answerable without guessing which fact they replace.
+- Do not copy when: facts arrive from untrusted sources and need review or a disputed state before the agent acts on them.

@@ -277,6 +277,8 @@ date *"never decides which of two contradicting edges the graph retires"*
 
 [TypeGraph](../../systems/typegraph/) is the library form of both clocks. Every node and edge write takes a caller-stated `validFrom` and `validTo` and stamps the write instant only when no lower bound is given (`packages/typegraph/src/utils/date.ts:545-555`); `history: true` copies each committed row into recorded relations at a per-graph revision that stays distinct when commits share a millisecond, and `store.asOf(T).asOfRecorded(anchor)` composes the two reads (`tests/backends/integration/recorded-time.ts:2575-2596`). Recorded views answer point reads and traversal and refuse `find`, search and vector predicates, because those indexes hold only the present. A hard delete closes the recorded interval without removing earlier rows, so erasure does not reach history short of clearing the graph.
 
+[Aura (chetto1983)](../../systems/aura-chetto1983/) keeps both clocks on a graph edge and writes them in the same statement: a correction sets the old `FACT` edge's `valid_to` to the new fact's caller-stated `valid_from` and its `expired_at` to the clock, and nulls its `fact_key` so the closed edge can no longer be targeted. Every fact read filters on the valid window at `as_of`, default now, and a live test shows a superseded residence answering for an instant three years back. Record time is written and never queried: `expired_at` appears only as an `IS NULL` guard on writes, so "what did the agent believe on a date" has no read path. There is also no way to say a fact was never true while keeping it; that case is a hard delete.
+
 ## A third clock
 
 Two clocks answer *what was true* and *what did we believe*. The temporal

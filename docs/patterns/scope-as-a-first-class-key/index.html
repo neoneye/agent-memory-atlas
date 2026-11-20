@@ -1718,6 +1718,19 @@ is the right boundary for what it protects: a pose is meaningless in the
 wrong frame. The cost is the other edge of a hash. Re-mapping the room
 retires the set, with nothing to migrate its poses into the new
 frame.</p>
+<p><strong><a href="../../systems/aura-chetto1983/">Aura
+(chetto1983)</a> moves the boundary from the query to the
+credential.</strong> Each identity is its own ArcadeDB database,
+reachable only by a server user whose password is an HMAC of the
+database name, and the source argues the choice in one line: a forgotten
+<code>WHERE</code> clause leaks silently, a credential that cannot reach
+the data fails loudly. Facts carry no scope key at all. Projected
+conversation turns carry <code>identity_id</code> in every query, but
+the projector routes each identity to its own database and refuses a
+foreign turn, so the predicate can never exclude a row, which is why the
+report withholds <code>scope_enforced</code>. The MCP live test writes
+in one tenant and reads by name from the other with a positive read on
+each side.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

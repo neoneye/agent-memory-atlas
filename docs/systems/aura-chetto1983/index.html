@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted multi-user Go agent
+platform whose memory is a bitemporal fact graph in ArcadeDB, one
+database and credential per identity, served over MCP.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Aura
+(chetto1983) — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted multi-user Go
+agent platform whose memory is a bitemporal fact graph in ArcadeDB, one
+database and credential per identity, served over MCP.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Aura
+(chetto1983) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted multi-user
+Go agent platform whose memory is a bitemporal fact graph in ArcadeDB,
+one database and credential per identity, served over MCP.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Aura (chetto1983) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Aura (chetto1983)",
+      "description": "A self-hosted multi-user Go agent platform whose memory is a bitemporal fact graph in ArcadeDB, one database and credential per identity, served over MCP.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Bitemporal facts, one database per
+identity</p>
+          <h1>Aura (chetto1983)</h1>
+          <p class="document-deck">A self-hosted multi-user Go agent
+platform whose memory is a bitemporal fact graph in ArcadeDB, one
+database and credential per identity, served over MCP.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/chetto1983/Aura">
+              <span>Source</span>
+              <strong>chetto1983/Aura</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/chetto1983/Aura/commit/f1ebda534d9b5c510f9d3f98f8b40320dec5ac66" title="f1ebda534d9b5c510f9d3f98f8b40320dec5ac66">
+              <span>Analyzed revision</span>
+              <code>f1ebda53…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/chetto1983--Aura" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>chetto1983--Aura</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE; two embedded skills carry their own Apache-2.0
+files</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>17,745
+lines of non-test Go in internal/arcadedb and cmd/arcadedb-mcp, about
+2,100 of them document retrieval, plus 2,173 in cmd/aura and
+internal/runner; 259,324 lines of non-test Go in the
+repository</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>8,308
+commits from 27 May to 20 November 2026, 7,270 by the maintainer and 937
+credited to Claude; release v1.2.0 on 25 October 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>708
+Go test functions in 27,142 lines across internal/arcadedb and
+cmd/arcadedb-mcp, 101 of them tagged to run against a live ArcadeDB;
+CI's Agent Memory job runs that tier and fails on a skip; I ran none of
+it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Aura is a self-hosted, multi-user AI agent platform in Go by Davide
+Marchetto. One binary hosts the agent runtime, tools, CLI, Telegram
+gateway and a web cockpit, with Postgres, ArcadeDB, an object store and
+sidecars beside it in Docker Compose. Its long-term memory is a graph of
+facts in ArcadeDB, served to the agent by a separate MCP server,
+<code>cmd/arcadedb-mcp</code>. That subsystem is what this report
+covers.</p>
+<p>What is notable is the correction path. A fact is an edge whose valid
+window is stated by the writer and whose record window is stamped by the
+store. A correction closes exactly one still-valid edge, at the new
+fact's <code>valid_from</code>, and refuses rather than guesses when the
+subject and predicate match zero or several facts. Who wrote a fact is
+derived from the connection, not from a model argument, and a swarm
+worker may add facts but not supersede them. Each person's memory is a
+separate ArcadeDB database with its own derived credential, so the
+server refuses a cross-tenant read.</p>
+<p>What is weak is that nothing in memory can be doubted. A fact has no
+candidate, disputed or rejected state, and the system prompt tells the
+model to treat recalled facts as reliable knowledge.
+<code>memory_forget</code> deletes and keeps no record, so the same
+value can be written again. The worker rule is enforced on supersede and
+in <code>memory_batch</code>, and not on the direct merge tool. Every
+automatic capture loads the identity's whole fact graph to apply one
+fact.</p>
+<p><strong>Scope.</strong> The memory subsystem is
+<code>internal/arcadedb</code> and <code>cmd/arcadedb-mcp</code>, about
+17,700 lines of non-test Go of which about 2,100 are document retrieval,
+plus about 2,200 lines of wiring in <code>cmd/aura</code> and
+<code>internal/runner</code>. Together they are about 7.7% of the
+repository's 259,324 non-test Go lines, beside a React cockpit and a
+Python ingest service. Document retrieval shares the per-identity
+databases and some of the package, and is read here only where it shares
+code.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code>, copyright
+2026 Davide Marchetto, and no manifest or README disagrees. Nothing in
+it restricts use. Two skills in the tree,
+<code>.claude/skills/mcp-builder/</code> and
+<code>internal/skills/embed/web-artifacts-builder/</code>, carry their
+own Apache-2.0 files, and <code>THIRD_PARTY_NOTICES.md</code> lists the
+adapted sources and their terms. The memory store is ArcadeDB, a
+separate Apache-2.0 server pinned by digest in
+<code>compose.yaml</code>;
+<code>docs/adr/0038-graph-store-license-neo4j-gplv3-vs-arcadedb-apache.md</code>
+records the move away from Neo4j Community's GPLv3.
+<code>CONTRIBUTING.md</code> asks for no contributor agreement.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an assertion of the form <em>subject, predicate,
+object</em>, with a sentence that says it, stored on a <code>FACT</code>
+edge between two <code>Entity</code> vertices
+(<code>internal/arcadedb/memory.go:38-62</code>, <code>:124-146</code>).
+The statement is the text that is embedded and searched. The object must
+name an entity and not be prose: over 80 characters, a line break or
+closing punctuation refuses the write (<code>:189-219</code>,
+<code>:251-253</code>).</p>
+<p>Each edge carries two windows (<code>memory.go:13-26</code>).
+<code>valid_from</code> and <code>valid_to</code> say when the fact was
+true in the world; the writer may state them, and
+<code>valid_from</code> defaults to now (<code>:295-298</code>).
+<code>created_at</code> and <code>expired_at</code> say when the store
+learned it and when it stopped believing it. A fact is live while
+<code>expired_at</code> is null and its valid window contains now.</p>
+<p>A fact stops being believed in one of two ways. A
+<strong>correction</strong> writes a new fact with
+<code>supersedes</code> or <code>supersedes_fact_key</code>; the old
+edge's <code>valid_to</code> is set to the new fact's
+<code>valid_from</code>, its <code>expired_at</code> to now, and its
+<code>fact_key</code> to null, and the row stays
+(<code>internal/arcadedb/memory_supersede.go:24-37</code>). A
+<strong>forget</strong> deletes the edge outright
+(<code>internal/arcadedb/forget.go:108-114</code>). The tool
+descriptions draw the line: supersede for what <em>stopped</em> being
+true, forget for what <em>was never</em> true
+(<code>cmd/arcadedb-mcp/tool_forget.go:42-48</code>). There is no third
+way to mark a fact as wrong while keeping it.</p>
+<p>A correction is resolved before anything is written. With an explicit
+<code>fact_key</code> it closes that one edge or refuses. Without one,
+it resolves the still-valid facts sharing subject and predicate, and
+closes only when there is exactly one
+(<code>memory_supersede.go:79-122</code>, <code>:154-174</code>). A
+refused correction writes neither the close nor the new fact, and
+returns the candidates with their keys so the caller can retry
+(<code>memory.go:345-369</code>). The writer's role is checked first: a
+<code>worker</code> is refused before any query touches the old fact
+(<code>internal/arcadedb/fact_authority.go:47-54</code>).</p>
+<p>Nothing gives a fact a status. Every write is believed on arrival,
+every read treats a live fact as true, and the prompt says so
+(<code>internal/agent/prompt.go:93</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a fact is believed on arrival; a correction closes exactly one valid window and refuses ambiguity, while forget deletes without a trace</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a fact is believed on arrival; a correction closes exactly one valid window and refuses ambiguity, while forget deletes without a trace
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    AG[&quot;Aura turn:&lt;br/&gt;role from headers&quot;]
+    WK[&quot;swarm worker:&lt;br/&gt;role worker&quot;]
+    EXT[&quot;OAuth MCP client:&lt;br/&gt;role parent&quot;]
+    AG ~~~ WK ~~~ EXT
+  end
+  writers --&gt; VAL{&quot;fields present,&lt;br/&gt;object not prose?&quot;}
+  VAL --&gt;|&quot;no&quot;| ERR[&quot;error,&lt;br/&gt;nothing written&quot;]
+  VAL --&gt;|&quot;yes&quot;| SUP{&quot;a correction?&quot;}
+  SUP --&gt;|&quot;no&quot;| OPEN[&quot;open FACT edge:&lt;br/&gt;valid_from stated&lt;br/&gt;or now&quot;]
+  SUP --&gt;|&quot;yes&quot;| WRK{&quot;writer is&lt;br/&gt;a worker?&quot;}
+  WRK --&gt;|&quot;yes&quot;| REF[&quot;refused,&lt;br/&gt;nothing written&quot;]
+  WRK --&gt;|&quot;no&quot;| CAND{&quot;exactly one&lt;br/&gt;still-valid match?&quot;}
+  CAND --&gt;|&quot;0 or several&quot;| REF2[&quot;refused, with&lt;br/&gt;candidate keys&quot;]
+  CAND --&gt;|&quot;one&quot;| CLOSE[&quot;old edge closed:&lt;br/&gt;valid_to = new&lt;br/&gt;valid_from,&lt;br/&gt;expired_at = now&quot;]
+  CLOSE --&gt; OPEN
+  OPEN --&gt; READ[&quot;reads keep edges&lt;br/&gt;valid at as_of,&lt;br/&gt;default now&quot;]
+  CLOSE --&gt; PAST[&quot;a past as_of&lt;br/&gt;still returns it&quot;]
+  READ ~~~ FG
+  OPEN --&gt; FG[&quot;memory_forget:&lt;br/&gt;edge deleted,&lt;br/&gt;nothing kept&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Memory is a separate process. <code>cmd/arcadedb-mcp</code> is a Go
+MCP server on the official SDK that verifies OAuth tokens against the
+Aura daemon's JWKS, resolves the caller's identity from the token, and
+opens that identity's database (<code>cmd/arcadedb-mcp/main.go</code>,
+<code>cmd/arcadedb-mcp/tenant.go</code>). The Aura daemon mounts it as a
+trusted recipe and bridges its tools to the agent
+(<code>internal/agent/mcptools/bridge_risk.go:129-157</code>). The
+daemon also writes to ArcadeDB directly, through the same client
+package, for conversation projection, automatic capture and erasure
+(<code>cmd/aura/chat_memory_projection.go:118</code>).</p>
+<p>Each identity is a database named <code>mem_&lt;uuid&gt;</code>,
+reachable only with a server user <code>u_&lt;uuid&gt;</code> whose
+password is an HMAC of the database name under one server secret
+(<code>internal/arcadedb/tenant.go:37-54</code>, <code>:105-116</code>).
+The secret must be at least 32 characters or the sidecar refuses to
+start (<code>:84-95</code>). The source's rationale is that a forgotten
+<code>WHERE</code> clause leaks silently, while a credential that cannot
+reach the database fails loudly (<code>:14-28</code>). Erasing a person
+drops the database and then the user
+(<code>cmd/aura/serve_deprovision_purgers.go:102</code>,
+<code>:139</code>).</p>
+<p>Retrieval runs inside ArcadeDB: a Lucene full-text index on
+<code>FACT.statement</code> with the English analyzer
+(<code>memory.go:55-60</code>), an LSM vector index of EmbeddingGemma
+vectors, and the engine's <code>vector.fuse</code> with RRF
+(<code>internal/arcadedb/memory_recall.go:25-44</code>). The embedder is
+an HTTP sidecar; without it every read degrades to lexical and says
+so.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The supported install is the Docker Compose appliance: Postgres,
+ArcadeDB, Garage, the embedding sidecar, the memory MCP server, the
+ingest service and more, on a machine the README sizes at 14 GiB of
+usable RAM. Memory needs ArcadeDB, the MCP sidecar, the derivation
+secret and an Aura-issued OAuth token; it needs no model API key to
+store a fact. The store is a graph database an operator can query by
+hand with ArcadeDB's SQL or Cypher, and the CLI exposes search, facts,
+entities, digest, remember, merge and forget
+(<code>cmd/aura/memory.go:32-33</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Explicit write.</strong> <code>memory_upsert_fact</code>
+resolves the caller and derives the actor from the
+<code>X-Aura-Actor-Run-Id</code> and <code>X-Aura-Actor-Role</code>
+headers or, for an external client, from the OAuth session as
+<code>parent</code>
+(<code>cmd/arcadedb-mcp/tool_memory.go:78-97</code>). The write schema
+has no <code>run_id</code> field at all (<code>:45-47</code>).
+<code>UpsertFact</code> validates, takes a per-<code>fact_key</code>
+lock, and attaches the source to an existing identical fact or creates a
+new edge with its vector in the same statement
+(<code>internal/arcadedb/memory.go:290-400</code>).</li>
+<li><strong>Batch.</strong> <code>memory_batch</code> applies upserts,
+supersedes, merges and forgets as one ArcadeDB transaction under an
+idempotency key, refuses supersede, merge and forget for a worker, and
+stores a <code>MemoryBatchReceipt</code> with the result
+(<code>internal/arcadedb/memory_batch.go:301-438</code>,
+<code>:465-486</code>).</li>
+<li><strong>Automatic capture.</strong> After a successful
+<code>memory_upsert_fact</code>, or a <code>write_file</code> or
+<code>patch</code> under <code>/workspace/</code>, the runner builds an
+<code>AcceptedCapture</code> and queues it; the turn waits at its end
+for the queue to flush
+(<code>internal/runner/runner_memory_capture.go:291-305</code>,
+<code>:309-374</code>). A file write becomes a fact with the path as
+subject and <code>durable_artifact</code> as predicate
+(<code>:353-368</code>). Text the secret redactor would change is
+dropped (<code>:380-389</code>).</li>
+<li><strong>Conversation projection.</strong> A reconciler projects user
+and assistant turns from Postgres into <code>ConversationTurn</code>
+vertices, embeds changed turns, links them in order, and deletes the
+projection of a deleted conversation
+(<code>internal/arcadedb/memory_conversation.go:173-246</code>,
+<code>:349-365</code>,
+<code>internal/runner/runner_memory_projection.go:270-320</code>).</li>
+<li><strong>Recall.</strong> <code>memory_recall</code> runs semantic,
+recent, period, open, scroll or reasoning modes; semantic ranks facts
+and turns separately and merges them by quota
+(<code>internal/arcadedb/memory_recall.go:73-187</code>).</li>
+<li><strong>Context.</strong> Every turn carries a pointer with the fact
+and entity counts and the names of the read tools
+(<code>cmd/aura/serve_memory_context.go:60-93</code>,
+<code>:141-152</code>). A per-message recall preload exists and is off
+by default (<code>internal/config/config.go:425</code>,
+<code>cmd/aura/serve_memory_context.go:174-206</code>).</li>
+<li><strong>Forget, merge, erase.</strong> <code>Forget</code> detaches
+one source run or deletes matching edges and prunes orphan entities
+(<code>internal/arcadedb/forget.go:62-122</code>);
+<code>MergeEntities</code> copies each edge onto the survivor and
+deletes the original (<code>internal/arcadedb/merge.go:117</code>);
+identity erasure drops the database.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>FACT</code> properties are <code>statement</code>,
+<code>predicate</code>, <code>valid_from</code>, <code>valid_to</code>,
+<code>created_at</code>, <code>expired_at</code>, <code>fact_key</code>
+and <code>sources</code>, a <code>LIST OF MAP</code>
+(<code>memory.go:45-53</code>). <code>fact_key</code> is a SHA-256 over
+subject, predicate, object and statement
+(<code>internal/arcadedb/memory_provenance.go:207-217</code>), set only
+while the fact is active and nulled when it closes
+(<code>:219-222</code>). A source is a run id, the memory ids the model
+cited and a writer role (<code>memory.go:115-121</code>). A capture adds
+its idempotency key, source kind, conversation, tool call, observation
+time and a confidence the runner always sets to 1
+(<code>internal/arcadedb/memory_capture.go:51-61</code>,
+<code>internal/runner/runner_memory_capture.go:321</code>). Entities are
+typed into six POLE+O classes, and the first class an entity is written
+with wins (<code>memory.go:305-316</code>).</p>
+<p>Facts carry no scope key: the database is the scope. Projected turns
+carry <code>identity_id</code>, <code>conversation_id</code>,
+<code>turn_seq</code>, <code>role</code>, <code>content</code>,
+<code>content_hash</code>, <code>occurred_at</code>,
+<code>source_ref</code>, <code>deleted_at</code>, an embedding and
+routing metadata (<code>memory_conversation.go:97-117</code>).
+<code>MENTIONS</code> edges link facts to the entities their statements
+name and keep a <code>fact_rid</code>, so a closed fact still supports a
+historical path (<code>docs/ARCHITECTURE.md:107-109</code>). Reasoning
+traces are a third kind, stored with mandatory identity and source
+fields, read only in <code>reasoning</code> mode, and expired on a
+schedule (<code>internal/arcadedb/memory_reasoning.go:18-60</code>,
+<code>internal/arcadedb/memory_reasoning_lifecycle.go:19-49</code>).</p>
+<p><code>ConversationTurn.deleted_at</code> is declared
+(<code>memory_conversation.go:106</code>), cleared to null on every
+projection write (<code>:141</code>), and filtered on by every turn read
+(<code>memory_recall.go:38</code>, <code>:41</code>, <code>:54</code>,
+<code>:65</code>). Nothing outside a test sets it. The predicate
+excludes nothing in production; deleted conversations are removed by a
+hard delete instead.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>When the question names an entity, <code>memory_facts_about</code>
+walks that entity's edges in both directions, filtered to the valid
+window at <code>as_of</code>, and depth 2 adds facts reached through
+<code>MENTIONS</code>
+(<code>internal/arcadedb/memory_facts_about.go:22-82</code>). Otherwise
+<code>memory_search</code> and <code>memory_recall</code> run full-text
+and dense legs per kind, each leg already restricted to facts valid at
+<code>as_of</code>. They fuse with RRF, apply relevance floors, and
+require any technical identifier in the query to appear as a token in
+the hit (<code>memory_recall.go:25-33</code>, <code>:123-187</code>,
+<code>memory.go:468-476</code>). A query with no qualifying candidate
+returns an explicit abstention. Facts and turns are ranked in separate
+statements because a fused pool was losing facts below the candidate cut
+(<code>memory_recall.go:20-24</code>).</p>
+<p><code>as_of</code> defaults to now on every fact read
+(<code>memory.go:456-458</code>, <code>memory_recall.go:136-138</code>),
+so a closed fact drops out of present-tense answers and returns for a
+past instant. It is a valid-time query only. No read asks what the store
+believed at a past record time; <code>expired_at</code> is read only as
+an <code>IS NULL</code> guard on writes (see Recorded searches).</p>
+<p><code>memory_recall</code> excludes the active conversation's turns
+when the bridge sends its id in a host-only header, so a turn is not
+recalled into itself
+(<code>cmd/arcadedb-mcp/tool_memory_recall.go:310-340</code>). Turn
+recall for reasoning effort and tool preloading is a separate read over
+the identity's own past user turns, filtered by context, route and
+policy (<code>internal/arcadedb/turn_recall.go:13-18</code>,
+<code>:76-86</code>); it decides effort, not what the agent
+believes.</p>
+<p>The per-turn context carries only counts and tool names
+(<code>cmd/aura/serve_memory_context.go:141-152</code>). With the
+preload enabled, at most five ranked statements, three conversation
+lines of 240 runes and a short outline per reached entity are injected
+(<code>cmd/aura/serve_memory_preload.go:13-28</code>,
+<code>:93-115</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The model writes explicitly; there is no extraction model.
+<code>memory_upsert_fact</code> is synchronous and a fact is retrievable
+as soon as the call returns, with its vector written in the same
+statement when the embedder answers (<code>memory.go:393-396</code>).
+When it does not, the fact is stored without a vector, a backfill pass
+fills it later, and lexical recall finds it meanwhile.</p>
+<p>Deduplication is by identity: a write whose <code>fact_key</code>
+names an active edge attaches its source to that edge instead of
+creating one (<code>memory.go:331-344</code>). A write of an
+already-closed historical fact is matched by content, so replays do not
+duplicate it (<code>:328-334</code>). A reply lists newly coined entity
+names with the nearest existing ones, because a measured memory held 211
+entities for 107 facts
+(<code>cmd/arcadedb-mcp/tool_memory.go:162-168</code>).</p>
+<p>The capture queue re-applies each accepted fact through
+<code>applyMemoryBatch</code>. That opens a transaction and loads every
+<code>Entity</code> and every <code>FACT</code> row of the identity,
+embeddings included, before applying one operation
+(<code>internal/arcadedb/memory_batch.go:406</code>,
+<code>internal/arcadedb/memory_batch_store.go:155-216</code>). The cost
+of one capture therefore grows with the store, not with the write. The
+turn blocks at its end until the queue flushes or its timeout expires
+(<code>internal/runner/runner_memory_capture.go:291-305</code>).</p>
+<p>The per-<code>fact_key</code> lock is per process
+(<code>internal/arcadedb/fact_lock.go:5-33</code>). Its comment argues
+that only one process writes a tenant database. The MCP sidecar and the
+Aura daemon both write facts, the first through <code>UpsertFact</code>
+and the second through the capture batch. The batch's transaction
+retries on a conflict, so a collision fails over rather than losing a
+write.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Write latency.</strong> Explicit writes are synchronous and
+add one embedding call. Captures run off the tool call and block the end
+of the turn.</li>
+<li><strong>Background passes.</strong> The projection reconciler
+replays turns once a minute and re-embeds only turns whose content hash
+changed (<code>memory_conversation.go:195-197</code>). No pass rewrites
+or summarises the fact store; ADR 0042 rules out unowned consolidation
+(<code>docs/adr/0042-memory-provenance-and-erasure.md:25-27</code>).</li>
+<li><strong>Per turn.</strong> One <code>memory_digest</code> call for
+the pointer, plus one <code>memory_recall</code> when the preload is on,
+each under a two-second default timeout
+(<code>cmd/aura/serve_memory_context.go:14-17</code>).</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent reaches memory through bridged MCP tools named
+<code>memory__&lt;tool&gt;</code>. <code>memory_recall</code>,
+<code>memory_upsert_fact</code>, <code>memory_batch</code> and
+<code>memory_entities</code> ride in every manifest; the rest are
+deferred behind <code>tool_search</code>
+(<code>internal/agent/mcptools/bridge_policy.go:53-58</code>). The
+<code>memory-aura</code> skill teaches writing, correction and the batch
+semantics (<code>internal/skills/embed/memory-aura/SKILL.md</code>).
+External MCP clients, such as a coding agent, connect with an
+Aura-issued OAuth token and write as <code>parent</code>.</p>
+<p>The bridge classifies each memory tool for the gateway. Writes and
+merges are <code>Mutate</code> and run without a stop;
+<code>memory_forget</code> is <code>Destructive</code>, except a dry
+run, which is a read
+(<code>internal/agent/mcptools/bridge_risk.go:138-157</code>). Under the
+strict profiles, which are the default, a destructive call asks the
+person in an interactive turn and is denied in a run with nobody
+present. Under <code>dev</code> and <code>local_trusted</code> the
+gateway allows everything
+(<code>internal/gateway/decide.go:69-75</code>,
+<code>internal/config/config_runtimeprofile.go:31</code>,
+<code>:55-57</code>). External clients do not pass through this
+gateway.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="who-may-change-a-fact">Who may change a fact</h3>
+<p><code>maySupersede</code> refuses a worker
+(<code>fact_authority.go:47-54</code>), and
+<code>authorizeMemoryBatch</code> refuses a worker's supersede, merge
+and forget (<code>memory_batch.go:465-486</code>). The direct
+<code>memory_merge_entities</code> and <code>memory_forget</code>
+handlers resolve the caller and never read the actor
+(<code>cmd/arcadedb-mcp/tool_browse.go:102-129</code>,
+<code>cmd/arcadedb-mcp/tool_forget.go:57-91</code>). A worker's tool
+registry is the parent's minus <code>swarm_spawn</code>
+(<code>internal/swarm/runner_adapter.go:21-22</code>), so wherever the
+parent's registry carries the memory tools, a worker can merge two
+entities through the direct tool that the batch would refuse; I did not
+trace which registries carry them. The merge tool declares
+<code>DestructiveHint</code> in its MCP annotations and the bridge
+classifies it <code>Mutate</code>, so the gateway does not stop it
+either.</p>
+<h3 id="what-a-recalled-fact-is">What a recalled fact is</h3>
+<p>Memory tool results are marked <code>TrustTrusted</code> by the
+bridge (<code>internal/agent/mcptools/bridge_call.go:120-123</code>),
+and the prompt tells the model to treat them as <em>"your own reliable
+recalled knowledge"</em> (<code>internal/agent/prompt.go:93</code>). A
+fact the model wrote from a web page, a mistaken inference, or a file
+path it saved is recalled with the same standing as one the person
+dictated. The source records which run wrote it and which messages it
+cited. That is enough to forget a bad run and not enough to weigh a
+fact.</p>
+<h3 id="what-a-forget-prevents">What a forget prevents</h3>
+<p>Nothing after the delete. <code>Forget</code> removes the edge and
+keeps no value-keyed record (<code>forget.go:101-114</code>), and the
+write path consults no list of refused values, so the next turn that
+infers the same fact writes it again. Conversation deletions are synced
+through tombstones in Postgres
+(<code>internal/conversations/store_projection.go:45-47</code>), which
+are keyed on a conversation id and only drive the projection delete.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>bitemporal</code></strong> — awarded. Valid time is
+caller-stated on the MCP write path
+(<code>tool_memory.go:134-135</code>) and carried through the capture
+path (<code>runner_memory_capture.go:345-350</code>); record time is the
+write clock, and a supersede writes both in one statement. Reads query
+valid time only.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>trust_state</code></strong> — withheld.
+<code>FACT</code> has no status field; the only discrete fields on a
+fact are its windows and <code>fact_key</code>. A reasoning trace's
+<code>status</code> is the trace's lifecycle, not a judgement of a
+fact.</li>
+<li><strong><code>tombstone</code></strong> — withheld. Forget deletes,
+supersede closes a record, and the projection tombstones are delete-sync
+markers on conversations.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. Isolation
+is a physical partition: one database and one credential per identity,
+refused by the server. Facts carry no scope key. Turns carry
+<code>identity_id</code> and every turn query filters on it, but the
+projector routes each identity to its own database and refuses a turn
+whose identity differs from the projection's
+(<code>memory_conversation.go:306-307</code>), so the predicate cannot
+exclude a row. The recall handler says a foreign row <em>"cannot happen
+by construction"</em> (<code>tool_memory_recall.go:322-325</code>).</li>
+<li><strong><code>audit_log</code></strong> — withheld.
+<code>MemoryBatchReceipt</code> stores each batch's request hash and
+result, written with <code>UPDATE ... UPSERT</code> and only for batch
+and capture writes (<code>memory_batch_store.go:336-359</code>); a
+direct upsert, forget or merge writes no record in the memory store.
+Postgres keeps an append-only <code>tool_invocations</code> ledger of
+agent tool calls, but it records calls rather than mutations, misses
+external clients and captures, and its rows cascade away when their
+conversation is deleted while the facts stay
+(<code>internal/db/migrations/0016_tool_invocations_allow_cascade.up.sql:3-5</code>).</li>
+<li><strong><code>human_review</code></strong> — withheld. No fact waits
+for anyone. The approval the gateway asks for <code>memory_forget</code>
+gates a deletion, not an admission, and the cockpit's memory displays
+show results.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>Profile-dependent deletion guard.</strong> The
+person-in-the-loop for forget exists only in the strict profiles and
+only for calls through Aura's own agent.</li>
+<li><strong>Erasure scope.</strong> A database drop removes facts, turns
+and traces together. <code>memory_forget</code> on a subject removes
+edges and orphaned entities, and leaves the conversation turns the fact
+was learned from.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The memory packages hold 708 Go test functions, 101 of them behind
+the <code>arcadedb_integration</code> tag. The live helper fails instead
+of skipping when <code>CI</code> is set and <code>ARCADEDB_URL</code> is
+not (<code>internal/arcadedb/memory_integration_test.go:29-37</code>).
+CI's <code>arcadedb-integration-test</code> job brings up ArcadeDB, the
+embedder and the MCP sidecar built from the commit and runs
+<code>make agent-memory-eval</code>
+(<code>.github/workflows/ci.yml:772</code>, <code>:945</code>). That
+evaluator runs the deterministic suites and the live tiers and scores
+named test functions into a weighted "memory reliability score" with a
+pass line above 96.5 (<code>scripts/agent_memory_eval.py:31</code>,
+<code>:51-55</code>, <code>:57-98</code>). I ran none of it.</p>
+<p><code>negative_eval</code> rests on two populated cases:</p>
+<ul>
+<li><code>TestFactsAboutAnswersExactlyAndRespectsTime</code> writes one
+open <code>works_for</code> fact and one <code>lives_in</code> fact that
+expired three years earlier for the same subject, and asserts the
+present-tense traversal returns exactly one fact and that it is
+<code>works_for</code>
+(<code>internal/arcadedb/memory_integration_test.go:506-546</code>).</li>
+<li><code>TestAgentMemoryMCPLiveInitializeListCallAndIsolation</code>
+writes a fact in tenant alpha and asserts beta's
+<code>memory_facts_about</code> for that entity is empty. It then writes
+a fact in beta, asserts alpha reads none of it while beta reads its own,
+and asserts that client metadata naming the other tenant changes nothing
+(<code>cmd/arcadedb-mcp/memory_live_integration_test.go:70-166</code>).</li>
+</ul>
+<p>The evaluator's labels run the other way. It scores the first case as
+positive (<code>scripts/agent_memory_eval.py:90</code>). The case it
+scores as negative,
+<code>TestExpiredFactIsExcludedFromAPresentTenseSearch</code>, writes
+only the expired fact and asserts it is absent, which a search returning
+nothing would also pass
+(<code>memory_integration_test.go:390-409</code>,
+<code>scripts/agent_memory_eval.py:88</code>). The supersede refusals
+are covered live, including an eight-sibling replay of the incident
+where a broad match closed all eight
+(<code>internal/arcadedb/memory_supersede_integration_test.go</code>).
+No test asserts that a forgotten value stays out after the model writes
+it again, which section 9 shows it does not.</p>
+<p>The validation documents in <code>docs/</code> record operator-run
+checks: a mounted MCP acceptance of 11 of 11 cases, 18 of 18 guided
+answers that the document calls <em>"not a blind benchmark"</em>, and
+abstention on six invented-identifier queries rising from 2 of 6 to 6 of
+6 (<code>docs/memory-graph-validation.md:19-43</code>,
+<code>docs/memory-retrieval-validation.md:27-44</code>). Their raw
+captures are not committed, and the first document says they were
+removed. A comment in <code>memory.go:25-26</code> cites LOCOMO temporal
+scores for other systems; the project declined to fetch LOCOMO and
+deleted its LOCOMO tests
+(<code>docs/adr/0045-evaluation-corpora-licensing.md:8-26</code>). No
+paper is associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Close one window, and refuse the rest.</strong> Let a
+correction name the exact fact it replaces by a content-derived key.
+Without the key, close only on a unique subject-and-predicate match and
+return the candidates otherwise. A refusal must write nothing, including
+the new endpoints.</li>
+<li><strong>Close the old fact at the new fact's valid time.</strong>
+Setting <code>valid_to</code> from the correction's
+<code>valid_from</code> and <code>expired_at</code> from the clock keeps
+"where did she live in 2024" and "when did we learn she moved" separate
+in one statement.</li>
+<li><strong>Take the writer from the connection.</strong> Remove
+<code>run_id</code> and role from the write schema so the model cannot
+assert them, and refuse a write whose role is missing or unknown.</li>
+<li><strong>One credential per tenant database.</strong> A derived
+password per database makes a wrong tenant name an authentication
+failure, and erasure a drop.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A status filter with no writer.</strong> A
+<code>deleted_at</code> that every read checks and nothing sets reads as
+soft deletion in review and does nothing.</li>
+<li><strong>An authority rule in two of three doors.</strong> If workers
+may not merge in a batch, the direct merge tool needs the same check;
+put it in the store function both call.</li>
+<li><strong>Reading the whole store to apply one fact.</strong> A
+final-state batch engine is simple to reason about, and it makes every
+capture's cost proportional to the memory's size.</li>
+<li><strong>Telling the model memory is reliable</strong> when nothing
+in memory can be marked doubtful.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a person or a small group running their own agent on their
+own hardware who want long-lived facts with history, correction that
+keeps the past, and hard tenant isolation, and who will operate a
+Compose stack of a dozen services. The memory is the model's to write
+and the model's to trust. Walk away if facts arrive from untrusted
+sources and need review or a disputed state before they are acted on.
+Walk away too if you want the memory without the platform: the client
+package could be lifted, but its writer roles, capture queue and
+deletion guard live in the daemon.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the direct <code>memory_merge_entities</code> and
+<code>memory_forget</code> handlers are meant to accept a worker, given
+that <code>authorizeMemoryBatch</code> refuses both.</li>
+<li>What <code>ConversationTurn.deleted_at</code> is for, since no
+production path sets it.</li>
+<li>How long a capture takes on a large identity, since each one loads
+every fact and embedding; nothing in the tree measures it.</li>
+<li>Whether record-time reads ("what did Aura believe on a date") are
+planned; the store keeps <code>created_at</code> and
+<code>expired_at</code> and no read selects by them.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>internal/arcadedb/memory.go</code>,
+<code>internal/arcadedb/memory_provenance.go</code>,
+<code>internal/arcadedb/memory_conversation.go</code>,
+<code>internal/arcadedb/memory_reasoning.go</code>,
+<code>internal/arcadedb/tenant.go</code></li>
+<li>Write path: <code>internal/arcadedb/memory.go</code>,
+<code>internal/arcadedb/memory_supersede.go</code>,
+<code>internal/arcadedb/fact_authority.go</code>,
+<code>internal/arcadedb/fact_lock.go</code>,
+<code>internal/arcadedb/memory_batch.go</code>,
+<code>internal/arcadedb/memory_batch_store.go</code>,
+<code>internal/arcadedb/memory_capture.go</code>,
+<code>internal/runner/runner_memory_capture.go</code></li>
+<li>Retrieval: <code>internal/arcadedb/memory_recall.go</code>,
+<code>internal/arcadedb/memory_facts_about.go</code>,
+<code>internal/arcadedb/turn_recall.go</code></li>
+<li>Delete and merge: <code>internal/arcadedb/forget.go</code>,
+<code>internal/arcadedb/merge.go</code>,
+<code>cmd/aura/serve_deprovision_purgers.go</code></li>
+<li>MCP and integration: <code>cmd/arcadedb-mcp/tool_memory.go</code>,
+<code>cmd/arcadedb-mcp/tool_forget.go</code>,
+<code>cmd/arcadedb-mcp/tool_browse.go</code>,
+<code>cmd/arcadedb-mcp/tool_memory_recall.go</code>,
+<code>internal/agent/mcptools/bridge_risk.go</code>,
+<code>cmd/aura/serve_memory_context.go</code>,
+<code>cmd/aura/serve_memory_preload.go</code>,
+<code>internal/agent/prompt.go</code></li>
+<li>Tests and evals:
+<code>internal/arcadedb/memory_integration_test.go</code>,
+<code>internal/arcadedb/memory_supersede_integration_test.go</code>,
+<code>cmd/arcadedb-mcp/memory_live_integration_test.go</code>,
+<code>scripts/agent_memory_eval.py</code>,
+<code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No status field on a fact.</strong>
+<code>git grep -n -E 'factEdgeType \+ "\.(status|state|trust|verified|pending|confidence) IF' -- internal/arcadedb</code>
+returns nothing;
+<code>git grep -n -c -E 'factEdgeType \+ "\.(valid_from|expired_at) IF' -- internal/arcadedb</code>
+counts 2 in <code>internal/arcadedb/memory.go</code>.</li>
+<li><strong>No value-level tombstone in the memory store.</strong>
+<code>git grep -n -i 'tombstone' -- internal/arcadedb cmd/arcadedb-mcp</code>
+returns nothing;
+<code>git grep -l -i 'tombstone' -- internal/runner internal/conversations</code>
+lists <code>internal/conversations/store_projection.go</code> and
+<code>internal/runner/runner_memory_projection.go</code>.</li>
+<li><strong>Nothing sets a turn's <code>deleted_at</code>.</strong>
+<code>git grep -n -E 'deleted_at = :' -- internal cmd</code> matches
+only
+<code>internal/arcadedb/memory_recall_period_live_test.go:43</code>.</li>
+<li><strong>Only two handlers derive an actor.</strong>
+<code>git grep -n 'hostDerivedActor(req)' -- cmd/arcadedb-mcp</code>
+matches <code>tool_memory.go:223</code>,
+<code>tool_memory_batch.go:125</code> and one test.</li>
+<li><strong>No read selects by record time.</strong>
+<code>git grep -n -E 'expired_at (&lt;|&gt;|&lt;=|&gt;=)' -- internal/arcadedb cmd/arcadedb-mcp</code>
+returns nothing;
+<code>git grep -n -c -E 'valid_to (&lt;|&gt;|&lt;=|&gt;=)' -- internal/arcadedb/memory.go</code>
+counts 1, the <code>asOfCondition</code>.</li>
+<li><strong>No mutation audit table in the memory store.</strong>
+<code>git grep -n -i -E 'audit|event_log|mutation_log' -- internal/arcadedb cmd/arcadedb-mcp ':!*_test.go'</code>
+matches only comments in <code>cmd/arcadedb-mcp/auth.go</code>,
+<code>internal/arcadedb/document_lexical.go</code> and
+<code>internal/arcadedb/memory_reasoning_hydrate.go</code>;
+<code>git grep -l -i 'audit' -- internal/share</code> lists
+<code>internal/share/audit.go</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@misc|@article' -- README.md docs/ARCHITECTURE.md docs/TECHNICAL_OVERVIEW.md</code>
+returns nothing and the tree has no <code>CITATION.cff</code>; the same
+pattern over
+<code>docs/recon-2026-08-02-document-indexing-at-scale.md</code> matches
+the papers it surveys.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/chetto1983/Aura/commit/f1ebda534d9b5c510f9d3f98f8b40320dec5ac66"><code class="commit-id" title="f1ebda534d9b5c510f9d3f98f8b40320dec5ac66">f1ebda53…</code></a>
+— first reading, from a full clone of <code>master</code>, scoped to the
+memory files of <code>internal/arcadedb</code>,
+<code>cmd/arcadedb-mcp</code>, the memory wiring in
+<code>cmd/aura</code> and <code>internal/runner</code>, the bridge and
+gateway classification of memory tools, and their tests; document
+retrieval read only where it shares code. Screened first: one auto-run
+surface, <code>.claude/settings.json</code> agent-harness hooks, not
+triggered since no harness ran in the clone; build-time execution in two
+Makefiles and <code>services/ingest/tests/conftest.py</code>;
+<code>go.mod</code>, <code>go.sum</code> and the npm manifests inside
+the seven-day cooldown. MIT, no rider. Nothing installed, built or run.
+Two marks: <code>bitemporal</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
