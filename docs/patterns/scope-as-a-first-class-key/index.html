@@ -1731,6 +1731,17 @@ foreign turn, so the predicate can never exclude a row, which is why the
 report withholds <code>scope_enforced</code>. The MCP live test writes
 in one tenant and reads by name from the other with a positive read on
 each side.</p>
+<p><a href="../../systems/contextlattice/">ContextLattice</a> enforces
+the key unevenly across the lanes one search merges. Its own
+current-state lane returns nothing without a project and walks only that
+project's index, and a populated test proves an identical summary in
+another project stays out. Qdrant and pgvector apply the project only
+when the caller supplies one, and the shipped Hermes provider sends a
+second, project-less <code>CROSS-PROJECT RECALL</code> search on every
+prefetch, so the vector lanes answer across every project on each turn
+while the governed lane answers nothing. A federating retriever needs
+the scope on the request it fans out, not on each lane's optional
+filter.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 831 reports.</strong></p>
+<p><strong>This page covers all 832 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34266,6 +34266,42 @@ revisions, in a memory that needs nothing running.</li>
 <li>Do not copy when: anyone but the user must be kept from shaping the
 agent's standing instructions, or forgetting must survive the next
 capture.</li>
+</ul>
+<h3 id="contextlattice"><a
+href="../systems/contextlattice/"><code>contextlattice</code></a></h3>
+<ul>
+<li>Best idea: <strong>a vector hit must name the current
+event.</strong> Each Qdrant and pgvector point carries the event id of
+the write that produced it, and before a hit is served the gateway
+checks it against the current state of its path, dropping stale versions
+and retired, superseded or retracted memories.</li>
+<li>Biggest risk: <strong>the check covers two of eight lanes.</strong>
+The memory-bank and Letta lanes are served without it, and a third-party
+memory-bank MCP server in the same Compose stack writes into the
+gateway's volume with no history row or secret filter.</li>
+<li>Second risk: the memory routes accept a request with no API key when
+one is configured; a retracted claim is revived by the next write of the
+same triple; <code>remember</code> overwrites one checkpoint file per
+project.</li>
+<li>Most reusable component: <code>reconcileVectorRowsDetailed</code> in
+<code>services/gateway-go/memory_current_state.go</code> with the
+event-keyed point ids in
+<code>services/gateway-go/source_native_adapters.go</code>, and the
+history-before-fanout write in
+<code>services/gateway-go/memory_store.go</code> and
+<code>services/gateway-go/write_ingress.go</code>.</li>
+<li>Maturity impression: Apache-2.0 with a declared commercial lane not
+in the tree, release v5.2.0; 178,091 lines of Go in the gateway, 473
+commits from 19 February to 16 November 2026, all but three by one
+author; 1,729 Go test functions, run by no committed CI and not run
+here; the project's own evidence report says it establishes no
+task-success gain. Five marks: <code>trust_state</code>,
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code>.</li>
+<li>Study when: you federate a primary store with vector indexes and
+need a correction to win over the stale embedding.</li>
+<li>Do not copy when: you need authenticated multi-user writes, or
+memory extracted from conversations.</li>
 </ul>
         </article>
       </div>

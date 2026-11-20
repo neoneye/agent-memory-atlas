@@ -1096,6 +1096,8 @@ a change event keyed on its id, and the same sentence can be written again.
 
 **[LRC](../../systems/lrc/) keys a forget on the value and spends it once.** A short "forget X" sent to its consolidate endpoint suppresses every existing memory containing X within the same owner and project, and the instruction is deliberately not stored, since its text would match X (`src/v1_api.rs:2821-2839`, `src/memory_store.rs:7455-7499`). Nothing records X afterwards. The batch path that receives the instruction skips similarity merge, so the same text written later is a new active memory. The single-write path does merge, into the suppressed record, which hides the new text by accident rather than by refusal. **A value-keyed forget needs a durable record the writers read, not a one-time sweep.**
 
+[ContextLattice](../../systems/contextlattice/) has the key and not the refusal. A claim's id defaults to a hash of project, subject, predicate and object, so a retracted claim and a later assertion of the same triple land on one row; `upsert` then takes the status from the new payload, defaulting to `active`, and the retraction is gone. The `contradicts` link that `correct --category wrong` writes leaves the target `active` and labels it `contested`. The value-keyed identity is already in place, and the missing piece is a check in `upsert` that keeps `retracted` unless the new write says why it should not.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

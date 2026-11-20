@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 831 reports.**
+**This page covers all 832 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7632,3 +7632,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, release 0.13.15; 25,228 lines of TypeScript outside a 13,408-line panel, 241 commits from 1 September to 19 November 2026; 959 vitest cases that CI does not run, since they need the harness's unpublished peers, not run here; the committed retrieval baseline is a 15-memory fixture on the keyword lane. Three marks: `trust_state`, `audit_log` and `negative_eval`.
 - Study when: you want derived beliefs that fall when their evidence is forgotten, or a correction model with a stable identity across revisions, in a memory that needs nothing running.
 - Do not copy when: anyone but the user must be kept from shaping the agent's standing instructions, or forgetting must survive the next capture.
+
+### [`contextlattice`](../systems/contextlattice/)
+
+- Best idea: **a vector hit must name the current event.** Each Qdrant and pgvector point carries the event id of the write that produced it, and before a hit is served the gateway checks it against the current state of its path, dropping stale versions and retired, superseded or retracted memories.
+- Biggest risk: **the check covers two of eight lanes.** The memory-bank and Letta lanes are served without it, and a third-party memory-bank MCP server in the same Compose stack writes into the gateway's volume with no history row or secret filter.
+- Second risk: the memory routes accept a request with no API key when one is configured; a retracted claim is revived by the next write of the same triple; `remember` overwrites one checkpoint file per project.
+- Most reusable component: `reconcileVectorRowsDetailed` in `services/gateway-go/memory_current_state.go` with the event-keyed point ids in `services/gateway-go/source_native_adapters.go`, and the history-before-fanout write in `services/gateway-go/memory_store.go` and `services/gateway-go/write_ingress.go`.
+- Maturity impression: Apache-2.0 with a declared commercial lane not in the tree, release v5.2.0; 178,091 lines of Go in the gateway, 473 commits from 19 February to 16 November 2026, all but three by one author; 1,729 Go test functions, run by no committed CI and not run here; the project's own evidence report says it establishes no task-success gain. Five marks: `trust_state`, `bitemporal`, `scope_enforced`, `audit_log` and `negative_eval`.
+- Study when: you federate a primary store with vector indexes and need a correction to win over the stale embedding.
+- Do not copy when: you need authenticated multi-user writes, or memory extracted from conversations.

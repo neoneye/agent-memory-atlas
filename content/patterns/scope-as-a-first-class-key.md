@@ -988,6 +988,8 @@ that matches only through `LIKE`'s `_` wildcard.
 
 **[Aura (chetto1983)](../../systems/aura-chetto1983/) moves the boundary from the query to the credential.** Each identity is its own ArcadeDB database, reachable only by a server user whose password is an HMAC of the database name, and the source argues the choice in one line: a forgotten `WHERE` clause leaks silently, a credential that cannot reach the data fails loudly. Facts carry no scope key at all. Projected conversation turns carry `identity_id` in every query, but the projector routes each identity to its own database and refuses a foreign turn, so the predicate can never exclude a row, which is why the report withholds `scope_enforced`. The MCP live test writes in one tenant and reads by name from the other with a positive read on each side.
 
+[ContextLattice](../../systems/contextlattice/) enforces the key unevenly across the lanes one search merges. Its own current-state lane returns nothing without a project and walks only that project's index, and a populated test proves an identical summary in another project stays out. Qdrant and pgvector apply the project only when the caller supplies one, and the shipped Hermes provider sends a second, project-less `CROSS-PROJECT RECALL` search on every prefetch, so the vector lanes answer across every project on each turn while the governed lane answers nothing. A federating retriever needs the scope on the request it fans out, not on each lane's optional filter.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)
