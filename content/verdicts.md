@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 824 reports.**
+**This page covers all 825 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7562,3 +7562,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, release 0.75.0; 284,569 lines of TypeScript in `packages/typegraph/src`, 590 commits from 8 February to 20 November 2026; about 10,200 test cases across SQLite, libSQL, PGlite and PostgreSQL lanes in CI, not run here; no memory evaluation, and the benchmarks measure graph-query performance. Three marks: `bitemporal`, `audit_log` and `negative_eval`.
 - Study when: agents write conclusions into shared state, and a source turning out wrong must withdraw exactly the conclusions that rested on it and leave the rest.
 - Do not copy when: you want memory an agent can call, per-user isolation from the library, or erasure that reaches history.
+
+### [`mnemonic-proxy`](../systems/mnemonic-proxy/)
+
+- Best idea: **compute the receipt from the bytes, not with a model.** A hidden tool output becomes one line read off the archived text — exit code, size, error type, first error line — ending *"For the CURRENT state re-read the file or re-run the command"*, so the same output always gets the same receipt, the prefix stays cacheable, and the model is told the archive is the past.
+- Biggest risk: **forget is undone by the next request.** `mnemonic-proxy forget` deletes one conversation from every table, the FTS index, engine state and journal, and keeps no record of it; the client still holds the history, and `prepare` archives every message it is sent.
+- Second risk: id lookups fall back to `store.get(rid)` with no conversation, and the MCP reader takes any conversation and applies no branch filter, so an abandoned branch the proxy refuses is served there; ids carry no conversation, so an identical message at one position in two conversations is stored once, under the first.
+- Most reusable component: `ctxproxy/forget.py` — schema-driven deletion with list, dry run and apply under the data-directory lock — with the two-conversation end-to-end case in `tests/test_forget.py`.
+- Maturity impression: MIT, release v0.3.32; 17,052 lines of standard-library Python in `ctxproxy/`, 156 commits from 4 October to 17 November 2026; 1,218 unittest methods run in CI on Linux and Windows against an in-process fake engine, not run here. The AgentLongBench tables recompute from the hosted records except the 31 October repeat run, which is not among them. One mark: `negative_eval`.
+- Study when: a local coding agent outgrows its window and hidden context should come back verbatim rather than summarised, or you want a deletion command and test worth copying.
+- Do not copy when: you need facts, preferences or beliefs across sessions, a forget that holds while the client still has the conversation, or more than one person on the machine.

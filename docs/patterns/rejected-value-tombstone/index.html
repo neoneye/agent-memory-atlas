@@ -127,7 +127,7 @@ belief.</p>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
 recurs across the corpus. 80 systems of
-824 carry the mark, and <a
+825 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -292,7 +292,7 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>80 systems of
-824 in the atlas carry the mark.</strong> The
+825 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -1929,6 +1929,18 @@ closed
 (<code>synap/db/core_migrations/002_graph_sync_restore.sql</code>). A
 forgotten memory keeps its text in a soft-deleted row that no extraction
 path consults.</p>
+<p><a href="../../systems/mnemonic-proxy/">Mnemonic Proxy</a> is the
+case where a careful hard delete needs the tombstone most.
+<code>mnemonic-proxy forget</code> removes one conversation from every
+table found in the schema, rebuilds the FTS index under
+<code>secure_delete</code>, vacuums, deletes engine state files and
+filters the journal, and its test proves no table or file still holds
+the id. It records nothing about what it removed. Capture is the
+client's full history on every request, so the client's next request
+archives the forgotten conversation again, under a new id or under the
+same one when the client sends a conversation header. A record keyed on
+the forgotten content, consulted where <code>prepare</code> archives, is
+what the deletion is missing.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

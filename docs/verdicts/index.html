@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 824 reports.</strong></p>
+<p><strong>This page covers all 825 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34010,6 +34010,43 @@ turning out wrong must withdraw exactly the conclusions that rested on
 it and leave the rest.</li>
 <li>Do not copy when: you want memory an agent can call, per-user
 isolation from the library, or erasure that reaches history.</li>
+</ul>
+<h3 id="mnemonic-proxy"><a
+href="../systems/mnemonic-proxy/"><code>mnemonic-proxy</code></a></h3>
+<ul>
+<li>Best idea: <strong>compute the receipt from the bytes, not with a
+model.</strong> A hidden tool output becomes one line read off the
+archived text — exit code, size, error type, first error line — ending
+<em>"For the CURRENT state re-read the file or re-run the command"</em>,
+so the same output always gets the same receipt, the prefix stays
+cacheable, and the model is told the archive is the past.</li>
+<li>Biggest risk: <strong>forget is undone by the next request.</strong>
+<code>mnemonic-proxy forget</code> deletes one conversation from every
+table, the FTS index, engine state and journal, and keeps no record of
+it; the client still holds the history, and <code>prepare</code>
+archives every message it is sent.</li>
+<li>Second risk: id lookups fall back to <code>store.get(rid)</code>
+with no conversation, and the MCP reader takes any conversation and
+applies no branch filter, so an abandoned branch the proxy refuses is
+served there; ids carry no conversation, so an identical message at one
+position in two conversations is stored once, under the first.</li>
+<li>Most reusable component: <code>ctxproxy/forget.py</code> —
+schema-driven deletion with list, dry run and apply under the
+data-directory lock — with the two-conversation end-to-end case in
+<code>tests/test_forget.py</code>.</li>
+<li>Maturity impression: MIT, release v0.3.32; 17,052 lines of
+standard-library Python in <code>ctxproxy/</code>, 156 commits from 4
+October to 17 November 2026; 1,218 unittest methods run in CI on Linux
+and Windows against an in-process fake engine, not run here. The
+AgentLongBench tables recompute from the hosted records except the 31
+October repeat run, which is not among them. One mark:
+<code>negative_eval</code>.</li>
+<li>Study when: a local coding agent outgrows its window and hidden
+context should come back verbatim rather than summarised, or you want a
+deletion command and test worth copying.</li>
+<li>Do not copy when: you need facts, preferences or beliefs across
+sessions, a forget that holds while the client still has the
+conversation, or more than one person on the machine.</li>
 </ul>
         </article>
       </div>

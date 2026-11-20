@@ -94,6 +94,16 @@ buys resilience, and resilience you do not need is complexity.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [OpenWolf](../../systems/openwolf/) — the argument in one repository: the hook-captured half never fails, and the half left to a model's obedience goes stale.
+- [Helm](../../systems/helm/) — the smallest instance, and the failure that matters next: capture without a model is easy, and the key it is stored under is the hard part.
+- [CSM](../../systems/csm/) — the pattern at scale with the keying done right, and a failed embedding that stores the row instead of failing the capture.
+- [Midas](../../systems/midas/) — the model taken off both ends, which is what makes recall against gold source turns measurable at all.
+- [Daimon](../../systems/daimon/) — the variant for a system that must extract with a model: every guard around that call is deterministic code.
+
+### Every instance
+
 [OpenWolf](../../systems/openwolf/) is the pattern applied per tool call rather
 than per session, and it is worth reading beside what the same repository does
 *without* it. Its hooks write the file map, the action log and the bug index
@@ -303,6 +313,8 @@ is the thing a deletion request has to survive.
 [sqlite-graph-memory](../../systems/sqlite-graph-memory/) is capture with no reader. A Claude Code Stop hook parses the new transcript bytes after each turn and appends one row with the ask, the assistant text, files written, tools, commands and lines matching a bilingual decision regex, with no model and no output (`src/sqlite_graph_memory/turnstate_hook.py:131-235`). Only a terminal viewer reads it; the MCP tool recalls from the user's notes and never from the ledger. Two details generalise. The hook advances its byte offset before the insert, so a locked database loses the turn rather than retrying it (`:160`). And the crash guard that makes it safe sits under `__main__`, while the console script the settings snippet installs calls `main` directly (`pyproject.toml:81`); its tests exercise `python -m`, the guarded path.
 
 [Memgraph Context Graph](../../systems/memgraph-ai-toolkit/) keeps the model off capture and off indexing, and pays for it in when the index exists. Hooks on every runtime event write messages, tool calls and results into Memgraph after a regex redaction pass, and a detached process embeds each turn inside the database (`context-graph/memgraph-context-graph/src/memgraph_context_graph/capture_policy.py:1-17`, `context-graph/sessions-graph/src/sessions_graph/connector.py:148-150`). Extraction is local GLiNER2 in an out-of-band `reconcile --pending` sweep, behind an extra setup does not install. A default install therefore recalls by turn vectors and full text, and finds memory files by full text alone until a sweep embeds them (`context-graph/sessions-graph/src/sessions_graph/reconciler.py:571`). The family's one LLM call learns the user's relation vocabulary, adopted only when a held-out gate passes.
+
+[Mnemonic Proxy](../../systems/mnemonic-proxy/) captures at the transport. Every message of every request is written to SQLite before the call is forwarded, verbatim and with no model, and the receipt that replaces a hidden tool output in the prompt is computed from the archived bytes too: exit code, size, error type and first error line. The only model-written thing it stores is the handoff note at a segment switch, and that is the one stored item that can be wrong about the session rather than merely out of date. The capture also defuses what it re-presents: a client control frame copied into notes or a pins block is relabelled as a quotation, so a copy cannot be read as a fresh instruction. The cost of capturing at the transport shows on deletion: the client resends the whole history on every request, so a forgotten conversation is captured again by the next one.
 
 ## Implementation checklist
 

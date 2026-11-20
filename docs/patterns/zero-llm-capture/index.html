@@ -196,6 +196,25 @@ drift unless enrichment is idempotent and re-runnable.</p>
 is reliable. The pattern buys resilience, and resilience you do not need
 is complexity.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<h3 id="read-these-first">Read these first</h3>
+<ul>
+<li><a href="../../systems/openwolf/">OpenWolf</a> — the argument in one
+repository: the hook-captured half never fails, and the half left to a
+model's obedience goes stale.</li>
+<li><a href="../../systems/helm/">Helm</a> — the smallest instance, and
+the failure that matters next: capture without a model is easy, and the
+key it is stored under is the hard part.</li>
+<li><a href="../../systems/csm/">CSM</a> — the pattern at scale with the
+keying done right, and a failed embedding that stores the row instead of
+failing the capture.</li>
+<li><a href="../../systems/midas/">Midas</a> — the model taken off both
+ends, which is what makes recall against gold source turns measurable at
+all.</li>
+<li><a href="../../systems/daimon/">Daimon</a> — the variant for a
+system that must extract with a model: every guard around that call is
+deterministic code.</li>
+</ul>
+<h3 id="every-instance">Every instance</h3>
 <p><a href="../../systems/openwolf/">OpenWolf</a> is the pattern applied
 per tool call rather than per session, and it is worth reading beside
 what the same repository does <em>without</em> it. Its hooks write the
@@ -519,6 +538,19 @@ them
 (<code>context-graph/sessions-graph/src/sessions_graph/reconciler.py:571</code>).
 The family's one LLM call learns the user's relation vocabulary, adopted
 only when a held-out gate passes.</p>
+<p><a href="../../systems/mnemonic-proxy/">Mnemonic Proxy</a> captures
+at the transport. Every message of every request is written to SQLite
+before the call is forwarded, verbatim and with no model, and the
+receipt that replaces a hidden tool output in the prompt is computed
+from the archived bytes too: exit code, size, error type and first error
+line. The only model-written thing it stores is the handoff note at a
+segment switch, and that is the one stored item that can be wrong about
+the session rather than merely out of date. The capture also defuses
+what it re-presents: a client control frame copied into notes or a pins
+block is relabelled as a quotation, so a copy cannot be read as a fresh
+instruction. The cost of capturing at the transport shows on deletion:
+the client resends the whole history on every request, so a forgotten
+conversation is captured again by the next one.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>

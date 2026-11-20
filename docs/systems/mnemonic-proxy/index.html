@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local proxy between a coding
+agent and its model server that hides old tool outputs behind receipts
+and archives every message verbatim for recall.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mnemonic
+Proxy — Agent Memory Atlas">
+    <meta property="og:description" content="A local proxy between a
+coding agent and its model server that hides old tool outputs behind
+receipts and archives every message verbatim for recall.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mnemonic
+Proxy — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local proxy between a
+coding agent and its model server that hides old tool outputs behind
+receipts and archives every message verbatim for recall.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mnemonic Proxy — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mnemonic Proxy",
+      "description": "A local proxy between a coding agent and its model server that hides old tool outputs behind receipts and archives every message verbatim for recall.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A verbatim archive behind a context
+proxy</p>
+          <h1>Mnemonic Proxy</h1>
+          <p class="document-deck">A local proxy between a coding agent
+and its model server that hides old tool outputs behind receipts and
+archives every message verbatim for recall.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/lastreload/mnemonic-proxy">
+              <span>Source</span>
+              <strong>lastreload/mnemonic-proxy</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/lastreload/mnemonic-proxy/commit/3ac2d91f52b1aa804c01d2fdbdba28e26415ee35" title="3ac2d91f52b1aa804c01d2fdbdba28e26415ee35">
+              <span>Analyzed revision</span>
+              <code>3ac2d91f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/lastreload--mnemonic-proxy" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>lastreload--mnemonic-proxy</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE and pyproject.toml; one test fixture is a model chat template
+copied with no licence note</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>17,052
+lines of Python in ctxproxy/ across 33 files, standard library only;
+1,130 in bench/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>156
+commits from 4 October to 17 November 2026, 149 of them by the leading
+author; release v0.3.32</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,218
+unittest methods in 80 files and 23,063 lines; CI runs the suite on
+Linux and Windows against an in-process fake engine on every push; I ran
+none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mnemonic Proxy, the Python package <code>ctxproxy</code>, sits
+between a coding agent and a local model server. On every request it
+archives every message verbatim into SQLite, replaces old tool outputs
+in the prompt with one-line receipts carrying an id, and answers a
+<code>recall</code> tool itself so the model can read any hidden text
+back. When the masked window still fills, the model writes handoff notes
+and a new segment starts.</p>
+<p>What is notable is that nothing is summarised on the way into the
+archive. A receipt is computed from the archived bytes with no model,
+and it tells the model that the archive is the past: <em>"For the
+CURRENT state re-read the file or re-run the command."</em> Deletion is
+the strongest part. <code>mnemonic-proxy forget</code> finds every table
+with a <code>conv</code> column from the schema, rebuilds the FTS index,
+vacuums, deletes the engine state and filters the journal. One test
+drives two conversations through the HTTP proxy and checks that no table
+or file still holds the forgotten one.</p>
+<p>What is weak is what makes it memory at all. The proxy's own recall
+reads only the conversation in progress. Later sessions reach the
+archive through <code>mnemonic-mcp</code>, which reads whichever
+conversation the caller names, defaults to the latest, and skips the
+branch filter the proxy applies. <code>forget</code> keeps nothing, so
+the client's next request archives the same history again.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code>, and
+<code>pyproject.toml</code> declares the same with
+<code>license-files = ["LICENSE"]</code>; there is no rider. The one
+file that is not the author's is
+<code>tests/fixtures/pack_chat_template.jinja</code>, a model's chat
+template copied byte for byte from a Strata pack so a test can render
+against it. Its test file records the source path and a sha256 and
+nothing about the template's terms. The recall benchmark's archives are
+private sessions and are not in the repository. The AgentLongBench
+records sit in a Hugging Face dataset outside the tree, which carries
+its own copy of the AgentLongBench licence.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Most of this system is conversation-window management: deciding what
+stays in the prompt of one conversation and making the rest retrievable
+by id. That half is on the far side of the line drawn in <a
+href="../../families/#not-in-scope-conversation-window-management">Not
+in scope: conversation-window management</a>, and it is the same shape
+as the CCR table described under <a
+href="../../patterns/cache-preserving-injection/#the-same-constraint-one-layer-down">cache-preserving
+injection</a>. Two things put the repository in scope. The archive
+outlives the proxy process and is re-attached when a client resumes the
+conversation, along with the handoff notes a previous run wrote. And
+<code>mnemonic-mcp</code> lets any later session list every archived
+conversation and search it. What it holds can turn out false in the
+ordinary way a record can: a tool output describes a file that has since
+changed, and handoff notes are a model's account of its own work.</p>
+<p>The unit is a message. Each message, each assistant reasoning block
+and each set of tool-call arguments is a row with role, position,
+verbatim text and token count (<code>ctxproxy/core.py:851-853</code>).
+Its id is a hash of its position and canonical content,
+<code>rid_for</code> (<code>ctxproxy/core.py:458-459</code>), so the
+same message at the same position always gets the same id.</p>
+<p>A row moves through four conditions and holds no belief about
+itself:</p>
+<ul>
+<li><strong>Archived and in the prompt.</strong> Every message of every
+request is written, whether or not it is masked.</li>
+<li><strong>Masked.</strong> The prompt carries a receipt instead of the
+text; the row is unchanged.</li>
+<li><strong>Abandoned.</strong> A regenerated or edited turn leaves the
+old branch's rows in the archive. The proxy's recall excludes them
+through the chain filter (<code>ctxproxy/core.py:478-489</code>); the
+MCP reader does not.</li>
+<li><strong>Forgotten.</strong> <code>forget</code> deletes every row of
+the conversation. Nothing records that it existed.</li>
+</ul>
+<p>Two derived things are claims rather than records. Handoff notes are
+the model's answer to a request to summarise its state, stored per
+segment and reinjected at the start of the next one
+(<code>ctxproxy/core.py:2485-2492</code>, <code>:1353-1358</code>). Pins
+are lines a person starts with <code>!!</code> or 📌 in a human user
+message, carried into every segment
+(<code>ctxproxy/core.py:2054-2072</code>, <code>:623-628</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every request is archived before it is forwarded; the proxy's recall is held to one conversation, the MCP reader is not, and forget leaves nothing to stop a resend</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every request is archived before it is forwarded; the proxy&#39;s recall is held to one conversation, the MCP reader is not, and forget leaves nothing to stop a resend
+flowchart TD
+  REQ[&quot;client request:&lt;br/&gt;full message history&quot;] --&gt; ID[&quot;conversation id from&lt;br/&gt;hash chain, or the&lt;br/&gt;client&#39;s header&quot;]
+  ID --&gt; ARC[&quot;every message archived&lt;br/&gt;INSERT OR IGNORE;&lt;br/&gt;id = hash(position,&lt;br/&gt;content)&quot;]
+  ARC --&gt; MASK[&quot;old outputs replaced&lt;br/&gt;by receipts with ids&quot;]
+  MASK --&gt; RC[&quot;proxy recall:&lt;br/&gt;query paths filter&lt;br/&gt;conversation and branch&quot;]
+  RC --&gt; BYID[&quot;recall by id:&lt;br/&gt;falls back to any&lt;br/&gt;conversation&quot;]
+  ARC --&gt; MCP[&quot;mnemonic-mcp:&lt;br/&gt;any conversation,&lt;br/&gt;default the latest,&lt;br/&gt;no branch filter&quot;]
+  ARC --&gt; FG[&quot;forget --conv:&lt;br/&gt;rows, FTS, state files,&lt;br/&gt;journal lines deleted&quot;]
+  FG --&gt; RS[&quot;client resends history:&lt;br/&gt;archived again,&lt;br/&gt;nothing remembered&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The proxy is one Python process with no third-party dependencies
+(<code>pyproject.toml:14</code>). It listens on <code>127.0.0.1</code>,
+speaks Chat Completions, Anthropic Messages and Responses to the client,
+and forwards to a local server: Strata, llama-server, ds4-server,
+Ollama, LM Studio or any OpenAI-compatible endpoint. The store is one
+SQLite file in WAL mode, <code>archive.sqlite</code>, with an
+external-content FTS5 index kept current by an insert trigger
+(<code>ctxproxy/core.py:873-878</code>). <code>journal.jsonl</code>
+beside it logs events.</p>
+<p>Engine state is a second store. On engines that can save a slot, the
+proxy writes the KV state of each segment to disk so a resumed
+conversation restores in about a second instead of being re-read, and
+old state files go into a content-addressed zstd archive verified by
+sha256 before restore (<code>ctxproxy/kvarchive.py</code>). That store
+is per conversation and <code>forget</code> removes it too.</p>
+<p><code>mnemonic-mcp</code> is a second entry point
+(<code>pyproject.toml:47</code>). It opens the same file read-only
+through a <code>mode=ro</code> URI and builds its passage index in TEMP
+tables, so it writes nothing
+(<code>ctxproxy/mcp_server.py:99-118</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>It needs a running model server with tool calling and a window of at
+least 16K tokens; the proxy runs no model itself. No API key is involved
+and nothing leaves the machine except the upstream calls. Installation
+is <code>pip install mnemonic-proxy</code>;
+<code>mnemonic-proxy check</code> reports readiness line by line, and
+<code>demo</code> runs against a scripted fake engine. The archive is
+plaintext SQLite and the journal is JSONL, so both can be read and
+repaired by hand, and <code>docs/manual-forget.md</code> gives the
+deletion as a manual checklist. The proxy has no authentication, and its
+HTTP API serves any archived row by id at
+<code>GET /v1/strata/archive/&lt;id&gt;</code>
+(<code>ctxproxy/server.py:1407-1411</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Identify.</strong> <code>Manager.prepare</code> hashes the
+message chain, looks up the last known hash in <code>chains</code>, and
+takes the conversation it belongs to. A
+<code>X-Strata-Conversation</code> header or a Responses
+<code>prompt_cache_key</code> replaces that with <code>c-</code> plus a
+hash of the hint (<code>ctxproxy/core.py:1544-1556</code>,
+<code>ctxproxy/server.py:1487</code>).</li>
+<li><strong>Archive.</strong> The same function writes a row for every
+message, reasoning block and argument set in the request through
+<code>archive_many</code>, an <code>INSERT OR IGNORE</code>
+(<code>ctxproxy/core.py:1567-1576</code>, <code>:936-938</code>).</li>
+<li><strong>Mark.</strong> <code>_scan_marks</code> re-reads every human
+user message on every request and records pins and disposable exchanges,
+idempotently (<code>ctxproxy/core.py:2054-2072</code>).</li>
+<li><strong>Mask.</strong> <code>_mask_batch</code> replaces old outputs
+in blocks with receipts built by <code>receipt</code> from the archived
+text (<code>ctxproxy/core.py:2074</code>, <code>:693</code>).</li>
+<li><strong>Seal.</strong> When the masked window is still too full, the
+proxy asks the model for handoff notes, wraps them with the verbatim
+first request and an archive index, and stores them as the next segment
+(<code>ctxproxy/core.py:2400-2437</code>, <code>:2485-2492</code>).</li>
+<li><strong>Recall.</strong> <code>Manager.recall</code> and
+<code>Recall2.recall</code> answer the injected tool inside the proxy;
+the client never sees the call (<code>ctxproxy/core.py:2660</code>,
+<code>ctxproxy/recall2.py:448</code>).</li>
+<li><strong>Read across sessions.</strong> <code>Archive.recall</code>
+and <code>Archive.conversations</code> in
+<code>ctxproxy/mcp_server.py:148-180</code>.</li>
+<li><strong>Forget.</strong> <code>mnemonic-proxy forget</code>
+dispatches to <code>ctxproxy/forget.py</code>
+(<code>ctxproxy/server.py:1705-1707</code>); <code>plan</code>
+inventories, <code>apply</code> deletes
+(<code>ctxproxy/forget.py:124-183</code>, <code>:220-266</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The schema is eleven tables plus the FTS index
+(<code>ctxproxy/core.py:851-878</code>). <code>archive</code> holds the
+text. <code>chains</code> maps every prefix hash to a conversation and
+position, which is how a later request finds its conversation.
+<code>masks</code> records what was hidden and when,
+<code>segments</code> the cut points and handoff notes,
+<code>anchors</code> and <code>autosaves</code> the engine state files,
+<code>pins</code> and <code>drops</code> the person's marks,
+<code>fileops</code> an index of reads and writes by path, and
+<code>kv</code> per-conversation settings such as the prompt
+language.</p>
+<p>Every table but <code>kv</code> carries <code>conv</code>, and that
+column is the only scope. There is no user, project or agent key; the
+archive belongs to whoever runs the proxy.</p>
+<p>The archive's primary key is the row id alone, and the id has no
+conversation in it (<code>ctxproxy/core.py:458-459</code>). Two
+conversations with an identical message at the same position, such as an
+unchanged system prompt at position 0, store it once, under whichever
+conversation sent it first; the second conversation's query paths, which
+filter on <code>conv</code>, do not see it as its own. Forgetting the
+first conversation deletes the shared row.</p>
+<p>Time is <code>created</code> on each row, the clock at archive time.
+There is no validity time and no version: a row is never updated, and
+the only mutation is the delete in <code>forget</code>. A pin has an
+<code>active</code> flag a person can clear from the dashboard
+(<code>ctxproxy/server.py:1223-1227</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is lexical. The query paths use SQLite <code>instr</code> for
+exact substrings and FTS5 with <code>bm25</code> for words, both with
+<code>conv = ?</code> and the chain filter in the <code>WHERE</code>
+clause (<code>ctxproxy/core.py:960-1003</code>). The structured path
+splits rows into passages, indexes them twice in FTS5 (raw and
+normalised for camelCase and accents), and filters the same way
+(<code>ctxproxy/recall2.py:182-189</code>). <code>path</code> returns
+the timeline of reads and writes on a file from <code>fileops</code>,
+and <code>mode=tree</code> a map of the session. The README says so
+directly: search is by words, and a paraphrase with no word in common
+can miss.</p>
+<p>The chain filter is
+<code>idx &lt; max_idx OR rid IN cur_chain</code>, where
+<code>cur_chain</code> holds the ids of the prefix sent in the current
+request (<code>ctxproxy/core.py:478-489</code>, <code>:940-944</code>).
+It keeps the question being asked out of its own answer, admits what the
+current agentic turn just masked, and keeps an abandoned sibling branch
+out.</p>
+<p>The id paths do not filter. <code>Recall2._row</code>, the leaf
+selector and the legacy id path all read
+<code>store.get(rid, conv) or store.get(rid)</code>, so an id from
+another conversation resolves (<code>ctxproxy/recall2.py:300-302</code>,
+<code>ctxproxy/core.py:2725</code>, <code>:2800</code>). The project's
+own note lists this as an open defect
+(<code>docs/dev-notes/RECALL-CURRENT-TURN-RESULT.md:102-104</code>). Ids
+are content hashes the model only sees in its own receipts, so reaching
+another conversation this way needs the id, or the shared-row case in
+section 5.</p>
+<p>The MCP server is the cross-session reader. Its <code>recall</code>
+takes <code>conversation</code> as an argument, falls back to the
+conversation of the given id, and otherwise uses the conversation with
+the most recent row (<code>ctxproxy/mcp_server.py:142-160</code>). It
+calls <code>Recall2.recall</code> with no <code>max_idx</code>, which
+becomes <code>10 ** 9</code>, against a <code>cur_chain</code> that
+stays empty (<code>ctxproxy/recall2.py:454</code>,
+<code>ctxproxy/mcp_server.py:43-45</code>). Every branch of every
+conversation is readable there. <code>conversations</code> lists all of
+them with the first 200 characters of each first user message
+(<code>ctxproxy/mcp_server.py:162-180</code>).</p>
+<p>Automatic recall, which would insert relevant hidden pieces before
+the model asks, is off by default
+(<code>ctxproxy/core.py:280</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and model-free. <code>prepare</code> archives
+the whole request before anything is forwarded, so a message is
+retrievable on the request that carries it. Because
+<code>INSERT OR IGNORE</code> skips rows already present, the cost per
+request is hashing the whole history and probing each id, which grows
+with the conversation. Nothing deduplicates beyond the id, consolidates
+or rewrites.</p>
+<p>The one model call on the write side is the handoff note. At a
+segment switch the proxy sends the current prompt plus an instruction
+and waits for the notes before continuing;
+<code>docs/benchmarks.md</code> measures about two minutes per switch in
+its three-hour session. When the model answers with a tool call and no
+text, its reasoning and the call become the notes, marked as rebuilt in
+the journal's <code>handoff_status</code>
+(<code>ctxproxy/core.py:2400-2437</code>).</p>
+<p>Text the proxy re-presents is defused first. The verbatim first
+request, the handoff notes and the pins block are all
+<code>role: user</code> messages, and <code>quote_control_frames</code>
+relabels any client control frame inside them, such as Hermes's
+out-of-band user message, as a quotation, so a copy cannot be read as a
+fresh delivery (<code>ctxproxy/core.py:608-614</code>,
+<code>:2484-2485</code>).</p>
+<p>Pins are taken only from human user messages:
+<code>is_human_user</code> refuses a <code>user</code> message wrapped
+as a <code>&lt;tool_response&gt;</code>
+(<code>ctxproxy/core.py:582-586</code>). A model's own output cannot
+pin. Any line starting <code>!!</code> in text a person sends can.</p>
+<p>Injection per turn is bounded by the window configuration. Masking
+runs in blocks between a trigger and a target, so the prefix stays
+byte-identical between blocks and the engine's KV cache keeps working;
+the pins block has its own token cap, <code>pins_max_tokens</code>
+(<code>ctxproxy/core.py:292</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model gets one tool, <code>recall</code>, renamed if the client
+already has a tool of that name, and answered inside the proxy even
+while streaming. Tool definitions beyond a core set are paged and loaded
+by name. The client sees neither. Setup is the base URL plus switching
+off the client's own compaction, documented for Claude Code, Codex,
+opencode, pi, Hermes and DeepSeek Harness.</p>
+<p>The cross-session path is the MCP server, registered in a client with
+<code>claude mcp add mnemonic -- mnemonic-mcp --db ...</code>
+(<code>docs/agents.md:261-269</code>). It exposes <code>recall</code>,
+<code>conversations</code> and <code>journal</code>, all read-only. A
+person can also pin, unpin and mark exchanges disposable from the
+optional dashboard, which posts to the proxy's
+<code>/v1/strata/marks</code> route
+(<code>ctxproxy/server.py:1206-1241</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-forget-removes">What forget removes</h3>
+<p><code>plan</code> reads the schema of a private copy of the database
+and its WAL, counts the conversation's rows in every table with a
+<code>conv</code> column, finds <code>kv</code> keys ending in
+<code>:&lt;id&gt;</code> or whose JSON names the conversation, and lists
+its segment, anchor and autosave files, cold-archive manifests, blocks
+no other manifest references, full-prompt sidecars, journal lines and
+live dump. Every <code>journal.jsonl</code> line is parsed first, and a
+malformed one refuses the whole forget before anything changes
+(<code>ctxproxy/forget.py:112-183</code>). <code>apply</code> deletes
+under <code>secure_delete</code>, drops the derived passage index,
+rebuilds FTS, vacuums, truncates the WAL and fails if a reader keeps it
+busy, then unlinks files and rewrites the journal atomically. Any
+failure leaves a non-zero exit and a retryable state
+(<code>ctxproxy/forget.py:220-266</code>). It runs only while no proxy
+holds the data-directory lock (<code>ctxproxy/forget.py:304</code>).</p>
+<h3 id="what-forget-does-not-stop">What forget does not stop</h3>
+<p>The client holds the conversation and resends all of it on its next
+request. <code>prepare</code> archives every message it receives, and
+with the chains gone the conversation comes back under a new id, or
+under the same id when the client sends a hint header
+(<code>ctxproxy/core.py:1550-1556</code>, <code>:1576</code>). Nothing
+records what was forgotten, so nothing can refuse it.
+<code>docs/security.md</code> lists backups, snapshots and engine memory
+as outside the command's reach; the client's own transcript is the copy
+that matters, and it is not named.</p>
+<h3 id="what-the-reads-leave-out">What the reads leave out</h3>
+<ul>
+<li><strong>Id lookups</strong> fall back to any conversation (section
+6).</li>
+<li><strong>The MCP reader</strong> takes any conversation, defaults to
+the latest, and applies no branch filter.</li>
+<li><strong>The proxy's HTTP route</strong> serves any row by id with no
+conversation check.</li>
+</ul>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>negative_eval</code></strong>, awarded on the forget
+tests; see section 10.</li>
+<li><strong><code>tombstone</code></strong>, withheld.
+<code>forget</code> is a hard delete that keeps no record of the value
+or the conversation, and the next request re-archives it.</li>
+<li><strong><code>trust_state</code></strong>, withheld. Archive rows
+carry no status. The pin <code>active</code> flag is a person's toggle
+on what is carried forward, and <code>handoff_status</code> is a journal
+label; neither withholds a row as untrue.</li>
+<li><strong><code>bitemporal</code></strong>, withheld. Rows carry
+<code>created</code> only.</li>
+<li><strong><code>scope_enforced</code></strong>, withheld.
+<code>conv = ?</code> is on every query path, but the id paths on the
+same tool fall back to an unscoped lookup, and the one reader that
+crosses sessions takes the conversation as an argument. The conversation
+is also the memory unit itself, not a boundary between principals.</li>
+<li><strong><code>audit_log</code></strong>, withheld.
+<code>journal.jsonl</code> is append-only during operation and records
+requests, masks, recalls, pins and seals. It is a log of what the
+context manager did with the window, and <code>forget</code> rewrites it
+and writes no event of its own.</li>
+<li><strong><code>human_review</code></strong>, withheld. Nothing waits
+for a decision. Pins are written by a person, which is authorship, not
+review.</li>
+</ul>
+<h3 id="privacy">Privacy</h3>
+<p>The archive holds everything the agent saw, secrets included, in
+plaintext, and the README says so. The MCP server binds to
+<code>127.0.0.1</code> and opens the file read-only; a long-running MCP
+process can still hold content <code>forget</code> has deleted, which
+<code>docs/security.md</code> says.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is 1,218 <code>unittest</code> methods in 80 files, run in
+CI on Linux and Windows under Python 3.10 and 3.14 against
+<code>ctxproxy.fake_engine</code>, an in-process scripted model server
+(<code>.github/workflows/ci.yml:38</code>, <code>:261</code>).
+<code>test_live</code> and <code>test_ds4</code> start that fake engine
+in-process and <code>test_lang</code> drives the manager directly; none
+needs a network or a GPU, and none of the three has a skip path. A
+real-model job with llama-server and Qwen3-0.6B runs only when triggered
+by hand. I ran none of it.</p>
+<p><code>negative_eval</code> rests on the forget tests:</p>
+<ul>
+<li><code>tests/test_forget.py:114-138</code> seeds two conversations,
+forgets <code>c1</code>, and asserts an
+<code>archive_fts MATCH 'secretwordc1'</code> returns 0 rows while
+<code>'secretwordc10'</code> returns 1, that no table holds a
+<code>c1</code> row, and that the word is not in the file's bytes.</li>
+<li><code>tests/test_forget.py:286-413</code> drives two conversations
+through the HTTP proxy with masks, segments and autosaves, forgets one,
+and asserts its word is out of FTS, its id is in no table and no file
+under the data root, and the survivor's recall by id and by query
+returns what it did before.</li>
+</ul>
+<p>Both assert against the FTS index the recall query paths read, with a
+populated survivor. Neither calls <code>recall</code> or the MCP server
+for the forgotten conversation, and neither covers a resend after
+forget.</p>
+<p>The sibling-branch tests assert that an abandoned branch's row,
+present in the store, is refused by recall by id and absent from query
+hits, while the live branch at the same position answers
+(<code>tests/test_recall_current_turn.py:187-207</code>). They are
+populated and sound, and they guard the window of the conversation in
+progress, which is the window-management side of the line in section 2.
+The MCP reader has no equivalent filter and no test.</p>
+<p>Two cases headed as cross-conversation are vacuous.
+<code>tests/test_postprova.py:137-138</code> and
+<code>tests/test_recall_current_turn.py:181-183</code> assert that an id
+"of another conversation" is not found, and use <code>r0000000000</code>
+and <code>r000000000000</code>, which exist in no conversation, so both
+pass against the unscoped fallback. The MCP test asserts the opposite on
+purpose: with an id from <code>convB</code>, recall answers from
+<code>convB</code> (<code>tests/test_engines.py:337-338</code>).</p>
+<p>Benchmarks are in <code>docs/benchmarks.md</code>, with the recall
+benchmark scripts in <code>bench/</code>. The AgentLongBench comparison
+links a Hugging Face dataset with per-question records. I recomputed
+both runs from it: <code>results/confirm-run.jsonl</code> gives the
+clarified run as full window 69, proxy 86, summary 47, truncation 49 out
+of 100, and <code>results/main-run.jsonl</code> gives the original
+wording as 51, 52, 56 and 44, both as published. The repeat run the
+README cites (75, 85, 57, 62, dated 31 October 2026) is in neither file,
+and the dataset was last modified on 26 October 2026. The benchmark
+measures recall inside one conversation, not across sessions. The recall
+benchmark's 71 questions run against private archives that are not in
+the repository, and the documentation calls it a regression suite. No
+paper is associated with the project; <code>docs/credits.md</code>
+carries a <code>@software</code> citation for the repository.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Compute the receipt from the bytes, not with a
+model.</strong> Exit code, line and byte counts, error type and the
+first error line are read off the archived output, so the same output
+always gets the same receipt and the prefix stays cacheable.</li>
+<li><strong>Find what to delete from the schema.</strong>
+<code>forget</code> deletes from every table that has the scope column,
+including tables added after it was written, and the test proves it with
+a table named <code>"future table"</code>.</li>
+<li><strong>Assert deletion against a survivor.</strong> Check the
+forgotten word is gone and the surviving conversation's recall is
+byte-identical, in the same test.</li>
+<li><strong>Label re-presented text as quoted.</strong> A control frame
+copied into notes or a pins block becomes <code>[quoted …]</code>, so a
+copy is never a second delivery.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A forget with no memory of itself.</strong> When the source
+of the data will send it again, a hard delete is undone by the next
+write; keep a record keyed on what was forgotten and consult it on
+capture.</li>
+<li><strong>A scope filter on queries and not on ids.</strong> An
+<code>or store.get(rid)</code> fallback on the id path makes the filter
+a property of how the caller asked.</li>
+<li><strong>A second reader without the first reader's filters.</strong>
+The MCP path skips the branch filter the proxy enforces; a read-only
+side door inherits none of the main path's predicates unless it calls
+the same function with the same state.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person running a local model with a small window who
+wants long coding sessions without compaction, and who can treat the
+archive as a private transcript store. It is not a memory system for
+facts or preferences: nothing is extracted, nothing is believed, and
+recall across sessions is a read-only search over transcripts through
+MCP. Walk away if more than one person shares the machine or the proxy
+port, since nothing is authenticated and every conversation is readable
+by id. Walk away too if "forget" has to hold while the client still has
+the conversation. <a
+href="../../systems/lossless-context-mcp/">lossless-context-mcp</a> is
+the nearest design for keeping what an agent saw, and <a
+href="../../systems/headroom/">Headroom</a> is the nearest proxy with a
+memory store of its own.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>forget</code> is meant to be paired with deleting the
+client's session, or whether a refusal of a resent forgotten
+conversation is planned.</li>
+<li>Whether the id fallback is kept deliberately so a row shared with
+another conversation stays recallable, which the shared-id design in
+section 5 would require.</li>
+<li>Whether the MCP reader is meant to see abandoned branches.</li>
+<li>Where the 31 October repeat run's per-question records are.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>ctxproxy/core.py</code>
+(<code>SCHEMA</code>, <code>FTS_SCHEMA</code>, <code>Store</code>),
+<code>ctxproxy/datalock.py</code></li>
+<li>Write path: <code>ctxproxy/core.py</code>
+(<code>Manager.prepare</code>, <code>_scan_marks</code>,
+<code>_mask_batch</code>, <code>receipt</code>, the segment switch)</li>
+<li>Retrieval: <code>ctxproxy/core.py</code>
+(<code>Manager.recall</code>, <code>recall_legacy</code>,
+<code>_leaf_recall</code>, <code>chain_ok</code>),
+<code>ctxproxy/recall2.py</code>, <code>ctxproxy/leafsel.py</code></li>
+<li>Context assembly: <code>ctxproxy/core.py</code> (<code>build</code>,
+<code>pins_block</code>, <code>quote_control_frames</code>),
+<code>ctxproxy/window.py</code>, <code>ctxproxy/paging.py</code></li>
+<li>Engine state: <code>ctxproxy/autosave.py</code>,
+<code>ctxproxy/kvarchive.py</code>,
+<code>ctxproxy/savedstate.py</code></li>
+<li>Deletion: <code>ctxproxy/forget.py</code>,
+<code>docs/manual-forget.md</code>, <code>docs/security.md</code></li>
+<li>MCP and HTTP: <code>ctxproxy/mcp_server.py</code>,
+<code>ctxproxy/server.py</code></li>
+<li>Tests: <code>tests/test_forget.py</code>,
+<code>tests/test_recall_current_turn.py</code>,
+<code>tests/test_postprova.py</code>,
+<code>tests/test_engines.py</code>, <code>tests/test_live.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No value-level rejection record.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist|forgotten_' -- ctxproxy</code>
+returns nothing; <code>git grep -n -i 'rejected' -- ctxproxy</code>
+matches only calibration samples and the fake engine, and
+<code>git grep -c 'DELETE FROM' -- ctxproxy/forget.py</code> counts
+2.</li>
+<li><strong>Forget writes no journal event.</strong>
+<code>git grep -n -E 'journal\.log\(|Journal\(' -- ctxproxy/forget.py</code>
+returns nothing;
+<code>git grep -c 'journal.log(' -- ctxproxy/core.py</code> counts
+40.</li>
+<li><strong>No validity-time field.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_at|valid_until|event_time|occurred_at' -- ctxproxy</code>
+returns nothing;
+<code>git grep -n 'created REAL' -- ctxproxy/core.py</code> matches
+lines 853, 856 and 858.</li>
+<li><strong>The MCP reader never fills the chain table.</strong>
+<code>git grep -n 'cur_chain' -- ctxproxy/mcp_server.py</code> matches
+only the <code>CREATE</code> at line 45;
+<code>git grep -n 'INSERT OR IGNORE INTO cur_chain' -- ctxproxy/core.py</code>
+matches line 944.</li>
+<li><strong>Unscoped id lookups.</strong>
+<code>git grep -n -E 'store\.get\([a-z_]+\)' -- ctxproxy</code> matches
+<code>ctxproxy/core.py:2725</code>, <code>:2800</code> and
+<code>ctxproxy/mcp_server.py:153</code>.</li>
+<li><strong>No forget test calls recall on the forgotten
+conversation.</strong>
+<code>git grep -n -E 'recall\(' -- tests/test_forget.py</code> matches
+lines 342, 402, 405 and 417, all on the survivor or before the
+forget.</li>
+<li><strong>No review state.</strong>
+<code>git grep -n -i -E 'approve|approval|pending_review|needs_review' -- ctxproxy dashboard</code>
+returns nothing;
+<code>git grep -n 'update_pin' -- ctxproxy/server.py</code> matches the
+dashboard route.</li>
+<li><strong>The named live tests have no skip path.</strong>
+<code>git grep -n -E 'skip|SkipTest|environ' -- tests/test_live.py tests/test_ds4.py tests/test_lang.py</code>
+returns nothing;
+<code>git grep -n 'SkipTest' -- tests/test_kvarchive.py</code> matches
+line 17.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|doi\.org|@article|@misc|@inproceedings' -- .</code>
+returns nothing; <code>git grep -n '@software' -- docs</code> matches
+<code>docs/credits.md:13</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/lastreload/mnemonic-proxy/commit/3ac2d91f52b1aa804c01d2fdbdba28e26415ee35"><code class="commit-id" title="3ac2d91f52b1aa804c01d2fdbdba28e26415ee35">3ac2d91f…</code></a>
+— first reading, from a full clone of <code>main</code> at release
+v0.3.32, scoped to the archive, recall, segment, pin, forget and MCP
+paths and their tests; window fitting, tool paging and engine adapters
+were read only where they touch the archive. Screened first: no auto-run
+surface; <code>pyproject.toml</code> changed inside the seven-day
+cooldown and declares dependencies with no lockfile. MIT, no rider.
+Nothing installed, built or run. The AgentLongBench records were read
+from the linked Hugging Face dataset and recomputed. One mark:
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
