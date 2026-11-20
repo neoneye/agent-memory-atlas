@@ -1157,8 +1157,8 @@ That last line is the habit worth naming. Every publisher discussed on this page
 makes choices that shape a number; almost none of them state which way their own
 conservatism cuts, in the artifact, before anyone asks.
 
-**The clearest published instance of the placebo arm is not in this corpus at
-all, which is itself the point.**
+**The clearest published instance of the placebo arm is in a paper's table,
+not in any committed code, which is itself the point.**
 [arXiv:2608.00017](https://arxiv.org/abs/2608.00017) evaluates a rule that
 demotes memories it believes are wrong, and answers the objection above head on:
 its Table 7 sets budget-matched random pruning beside it on the same bank, at
@@ -1171,10 +1171,11 @@ explanation, and it flags its own weakness in the direction that weakens the
 finding: with only 15 correct memories in the bank, *"the '0 demoted' figure is a
 low-count estimate, and we read it accordingly."* Two further cost-matched
 baselines are reported as failures. This is the design this section asks for,
-and the caveat that travels with it is the one recorded in the
-[comparative report](../appendix/#known-limitations):
-the repository the paper twice names as holding its code, traces and result
-files returns 404, so none of it can be re-run.
+and the caveat that travels with it is recorded in the
+[LUCID report](../systems/lucid/): the repository the paper twice names returns
+404, the code is in another repository on the first author's account, and that
+tree holds no code for the Table 7 comparison and commits no result file, so
+the table cannot be re-run from it.
 
 ### The system may not be optimizing that axis at all
 

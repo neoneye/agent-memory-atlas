@@ -781,6 +781,21 @@ deleting an anchor record once both decayed counts reach 2, needs at
 least three stops at the same cell under the same goal key, and a
 deleted record restarts at zero rather than remembering it was
 contradicted.</p>
+<p><strong><a href="../../systems/lucid/">LUCID</a> ships a simulation
+of reinforcement driven by a self-grade.</strong>
+<code>reuse_loop.py</code> issues every question of a self-graded
+SimpleQA bank as a query each epoch, reuses the top two candidates above
+a similarity percentile by stored score <code>Q</code>, and moves
+<code>Q</code> toward the memory's own self-grade by
+<code>Q ← Q + 0.1 (r − Q)</code> on each reuse
+(<code>factual_bank/reuse_loop.py:52-71</code>). It then prints
+<code>Cov(b, n | U=0)</code>, the covariance between a wrong memory's
+inflation and its reuse count, which is the feedback loop the Tradeoffs
+section names, stated as a number (<code>:127-137</code>). The agent in
+the same repository keeps the stored score out of ranking and shows it
+to the planner as a label, so the reinforcement path is a measurement,
+not a design. No output is committed, so the paper's covariance does not
+recompute from the tree.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

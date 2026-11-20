@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 821 reports.**
+**This page covers all 822 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7532,3 +7532,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 with research-only AMO weights committed; 38,868 lines of Python under `src/`, 427 of them the memory package; 15 commits from 26 September to 18 November 2026, the memory arriving in the 30 October release; 416 pytest functions, three on the store, no CI, not run here; no paper released. No capability mark: `audit_log` is withheld on a removal ledger with no time, actor or reason, `scope_enforced` on a per-set refusal over a directory per name, `negative_eval` because no test calls remove.
 - Study when: an embodied agent needs to know what a spot looked like on a fixed, localized map, and you want each stored view to say it is history.
 - Do not copy when: you need to find things by description, correct one view without losing its neighbours, or erase what a camera in a home recorded.
+
+### [`lucid`](../systems/lucid/)
+
+- Best idea: **check a memory with something that fails differently from its author.** `answer_free_signal` scores an episode 0 on an execution error, a timeout, a difference between two identical runs, an empty or all-NULL result, or a quoted literal absent from the question, with no model call. The `lucid` arm shows the planner `min(self-grade, that score)`, so the check can demote and never promote.
+- Biggest risk: **the release cannot run its own experiment.** The twelve planner, executor and self-grader prompt texts are placeholders the runner refuses to start without, the arXiv HTML contains none either, and nothing in the tree turns an episode log into the paper's precision, slope or paired intervals.
+- Second risk: demotion relabels and never filters, so a flagged episode is still retrieved and shown as a negative example through withheld prompt text. The degeneracy channel flags any empty result, and literal grounding passes on a substring match of the literal's first token.
+- Most reusable component: `bird_agent/answer_free.py` with the double-run read-only sandbox in `bird_agent/sql_sandbox.py`, and `EpisodeMemory.stored_reward` in `bird_agent/memory.py`.
+- Maturity impression: no licence; 1,934 lines of Python, six commits by one author from 8 to 22 October 2026, all code in one of them; no tests, no CI, no committed output. Tables 3, 4, 7 and 8 have no analysis code, and the README reports 57.6% and 53.7% where arXiv v1 reports 56.9% and 54.0%. No marks.
+- Study when: an agent writes its own episodes back with a self-assigned score, and you want a cheap demotion signal and an experimental design that isolates it.
+- Do not copy when: you need memory that outlives a run, can be corrected after the fact, or must reproduce from the released code alone.

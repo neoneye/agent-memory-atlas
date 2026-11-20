@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Paper code for an episodic
+text-to-SQL agent whose stored self-grades are capped by a model-free
+execution check, plus SimpleQA banks measuring self-grade inflation.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LUCID — Agent Memory Atlas">
+    <meta property="og:description" content="Paper code for an episodic
+text-to-SQL agent whose stored self-grades are capped by a model-free
+execution check, plus SimpleQA banks measuring self-grade inflation.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LUCID — Agent Memory Atlas">
+    <meta name="twitter:description" content="Paper code for an episodic
+text-to-SQL agent whose stored self-grades are capped by a model-free
+execution check, plus SimpleQA banks measuring self-grade inflation.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LUCID — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "LUCID",
+      "description": "Paper code for an episodic text-to-SQL agent whose stored self-grades are capped by a model-free execution check, plus SimpleQA banks measuring self-grade inflation.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Self-grades capped by what the query
+did</p>
+          <h1>LUCID</h1>
+          <p class="document-deck">Paper code for an episodic
+text-to-SQL agent whose stored self-grades are capped by a model-free
+execution check, plus SimpleQA banks measuring self-grade inflation.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MohammadAsadolahi/Memory-Reward-Inflation-in-Self-Improving-LLM-Agents">
+              <span>Source</span>
+              <strong>MohammadAsadolahi/Memory-Reward-Inflation-in-Self-Improving-LLM-Agents</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MohammadAsadolahi/Memory-Reward-Inflation-in-Self-Improving-LLM-Agents/commit/f563bca784be6feece6cacf1dc3c9f2893c68282" title="f563bca784be6feece6cacf1dc3c9f2893c68282">
+              <span>Analyzed revision</span>
+              <code>f563bca7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/MohammadAsadolahi--Memory-Reward-Inflation-in-Self-Improving-LLM-Agents" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>MohammadAsadolahi--Memory-Reward-Inflation-in-Self-Improving-LLM-Agents</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>None:
+no licence file in the tree, no licence statement in the README, and
+GitHub reports none; model outputs are withheld and offered on request
+for research use</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>1,934
+lines of Python in 21 files: 1,026 in bird_agent/, 842 in factual_bank/,
+66 in common/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>6
+commits by one author, 8 to 22 October 2026; the first is a README
+announcing code after publication, and all code arrived in one commit on
+10 October</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>None:
+no test file, no CI configuration and no committed result; I ran
+nothing</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This is the experiment code for <em>Memory Reward Inflation in
+Self-Improving LLM Agents</em>. It has two parts.
+<code>bird_agent/</code> is a Memento-style text-to-SQL agent: each task
+retrieves similar past episodes, plans, writes one query, grades it
+without the reference, and appends the episode to an unbounded memory.
+<code>factual_bank/</code> builds self-graded SimpleQA banks and scores
+them with verifiers and re-graders. The memory this report is about is
+the BIRD episode store, which carries every episode of a run into every
+later task.</p>
+<p>What is notable is the check that caps the stored reward. In the
+<code>lucid</code> arm a retrieved episode is shown with the minimum of
+its self-grade and an answer-free score. That score is computed with no
+model call, from whether the query failed, ran non-deterministically,
+returned nothing, or filtered on a literal the question does not
+contain. It cannot share the self-grader's bias, because it reads what
+the program did rather than what a model thinks.</p>
+<p>What is weak is what the release lets anyone check. The twelve prompt
+texts of the planner, executor and self-grader are placeholders, and the
+runner refuses to start until they are filled. Most of the paper's
+tables have no script, no output is committed, and the README's headline
+numbers differ from the only arXiv version.</p>
+<p><strong>Licence.</strong> The tree carries no licence file, the
+README states no licence, and GitHub reports none, so nothing in the
+repository grants a right to copy, modify or redistribute the code. The
+data paragraph narrows the paper's availability statement further. The
+paper says code, traces, run configurations and result files <em>"are
+released at"</em> a repository that returns 404. This README withholds
+every model output instead, offering it only on request from an academic
+address, for research use, under a promise not to redistribute
+(<code>README.md:286</code>).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one finished episode: the question with its BIRD hint,
+the database id, the plan, the SQL, and two binary scores
+(<code>bird_agent/memory.py:76-82</code>). It becomes an influence on
+later work the moment it is written. There is no candidate state, no
+review and no expiry, and every episode is written back whether it was
+right or wrong (<code>memory.py:3-5</code>).</p>
+<p>The stored reward is not a filter. Retrieval ranks by similarity
+alone, and the reward travels with each retrieved episode as a label
+(<code>memory.py:53-74</code>). The planner then splits the neighbours
+into positive examples, reward of at least 0.5, and negative examples
+otherwise (<code>bird_agent/planner.py:38-54</code>). An episode's trust
+therefore decides how it is framed, never whether it is seen.</p>
+<p>The arms differ only in that label. <code>memento</code> shows the
+self-grade. <code>lucid</code> shows
+<code>min(self_score, answer_free_score)</code>, so a flagged episode
+moves from the positive group to the negative one and nothing is ever
+promoted (<code>memory.py:44-51</code>). <code>no-memory</code>
+retrieves nothing. Both scores are fixed in the step that writes the
+episode (<code>bird_agent/run_bird.py:199-211</code>), and nothing
+afterwards re-reads a stored episode to revise either one. The reference
+query's result, the <code>gold</code> field, goes to the episode log and
+the counters and never into memory (<code>run_bird.py:181-184</code>,
+<code>:203-211</code>).</p>
+<p>The scope test passes for this store, narrowly. It outlives each task
+and survives a restart through its log, it holds claims that turn out
+false, and the whole design is about which of them the agent believes.
+It does not outlive a run: a new tag or seed starts empty.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one task of the BIRD loop; the arms share neighbours and differ only in the reward label each neighbour carries, and both scores are fixed when the episode is written</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one task of the BIRD loop; the arms share neighbours and differ only in the reward label each neighbour carries, and both scores are fixed when the episode is written
+flowchart TD
+  T[&quot;next task:&lt;br/&gt;question + HINT&quot;] --&gt; R[&quot;top-4 prior episodes&lt;br/&gt;by SimCSE cosine;&lt;br/&gt;reward never ranks&quot;]
+  R --&gt; RW{&quot;reward label&lt;br/&gt;shown per episode&quot;}
+  RW --&gt;|&quot;memento&quot;| M1[&quot;self-grade&quot;]
+  RW --&gt;|&quot;lucid&quot;| M2[&quot;min of self-grade&lt;br/&gt;and answer-free score&quot;]
+  M1 --&gt; LB{&quot;label &gt;= 0.5?&quot;}
+  M2 --&gt; LB
+  LB --&gt;|&quot;yes&quot;| PO[&quot;positive example&quot;]
+  LB --&gt;|&quot;no&quot;| NE[&quot;negative example&quot;]
+  PO --&gt; PL[&quot;planner prompt:&lt;br/&gt;text withheld&quot;]
+  NE --&gt; PL
+  PL --&gt; EX[&quot;executor writes&lt;br/&gt;one SQL query&quot;]
+  EX --&gt; SB[&quot;sandbox runs it twice,&lt;br/&gt;read-only, 30 s&quot;]
+  SB --&gt; AF[&quot;answer-free score:&lt;br/&gt;no model call&quot;]
+  SB ~~~ SG
+  EX --&gt; SG[&quot;self-grade reads the&lt;br/&gt;SQL, not its result&quot;]
+  AF --&gt; W[&quot;episode appended;&lt;br/&gt;never revised&quot;]
+  SG --&gt; W
+  W -.-&gt;|&quot;task i+1&quot;| T
+  SB --&gt; G[&quot;reference scored for&lt;br/&gt;EX only; gold never&lt;br/&gt;enters memory&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs in one Python process per invocation.
+<code>run_bird.py</code> loads the BIRD development set, fixes one
+seeded permutation shared by all arms, and runs the chosen arms in
+parallel threads at each step, each arm holding its own
+<code>EpisodeMemory</code> (<code>run_bird.py:225-230</code>,
+<code>:262-275</code>). SimCSE
+(<code>princeton-nlp/sup-simcse-bert-base-uncased</code>) is loaded once
+and serialised behind a lock
+(<code>bird_agent/simcse_embedder.py:17</code>, <code>:25</code>). Every
+model call goes through the OpenAI client in
+<code>common/llm_client.py</code>.</p>
+<p>Persistence is two append-only JSONL files per run. The episode log
+is one record per episode, and <code>load_done_episodes</code> rebuilds
+memory from its contiguous prefix of steps on resume
+(<code>bird_agent/call_cache.py:77-101</code>). The call cache keys
+model calls and query executions by
+<code>sha256(operation, payload)</code>
+(<code>call_cache.py:17-21</code>). A run's configuration is written
+beside its log and a resume with different arguments is refused
+(<code>run_bird.py:152-164</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>It needs an OpenAI-compatible endpoint, the BIRD development
+databases downloaded by hand, and Torch with Transformers for SimCSE; a
+GPU is used if present. The retrieval verifier in
+<code>factual_bank/</code> needs an endpoint offering the Responses API
+web-search tool (<code>common/llm_client.py:53-59</code>). The episode
+log is plain JSONL and readable by hand. The BIRD runner exits with
+status 2 until all twelve prompt placeholders are replaced, so the
+released tree cannot run its own end-to-end experiment
+(<code>run_bird.py:218-222</code>, <code>:330-334</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>One episode.</strong> <code>_step_arm</code> retrieves,
+plans, writes SQL, executes it in the sandbox, computes the answer-free
+score, requests a self-grade (except for <code>no-memory</code>, which
+stores <code>0.0</code>), scores against the reference, builds the log
+record and appends to memory (<code>run_bird.py:191-214</code>).</li>
+<li><strong>Retrieval.</strong> <code>EpisodeMemory.retrieve</code>
+embeds the task description, scores every stored episode by cosine,
+sorts, and copies task id, question, SQL, similarity, the arm's reward
+and a same-database flag (<code>memory.py:53-74</code>).</li>
+<li><strong>Context assembly.</strong> <code>format_cases</code> strips
+the hint from each neighbour's question and caps it at 110 characters,
+flattens the SQL to one line capped at 300, and fills the positive or
+negative template by the 0.5 cut (<code>planner.py:38-54</code>). The
+executor never sees the neighbours
+(<code>bird_agent/executor.py:3-4</code>).</li>
+<li><strong>Answer-free score.</strong> <code>answer_free_signal</code>
+returns 0.0 on a timeout, an execution error, non-determinism, an empty
+or all-NULL result, or an ungrounded literal, in that order, and 1.0
+otherwise (<code>bird_agent/answer_free.py:62-78</code>).</li>
+<li><strong>Sandbox.</strong> Each query runs in a fresh interpreter
+against a read-only SQLite URI. The candidate runs twice, and
+non-determinism is a difference between the sorted row reprs
+(<code>bird_agent/sql_sandbox.py:23-57</code>,
+<code>:94-99</code>).</li>
+<li><strong>Resume.</strong> <code>_resume_arm</code> checks each logged
+step against the task order and replays <code>self</code> and
+<code>answer_free</code> into a fresh memory
+(<code>run_bird.py:167-187</code>).</li>
+<li><strong>Factual banks.</strong> <code>build_bank.py</code> answers,
+self-grades and gold-grades sampled SimpleQA questions;
+<code>verifier_bakeoff.py</code> and <code>regrade_bank.py</code> score
+a bank; <code>reuse_loop.py</code> simulates score-ranked reuse over
+it.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>An episode in memory is a dict of <code>task_id</code>,
+<code>task_desc</code>, <code>db_id</code>, <code>plan</code>,
+<code>code</code>, <code>self_score</code> and
+<code>answer_free_score</code>, the last <code>None</code> when absent
+(<code>memory.py:76-82</code>). The log record adds <code>step</code>,
+<code>seed</code>, <code>difficulty</code>, <code>gold</code>, the
+detector's <code>note</code>, sandbox flags and the retrieved neighbours
+with the label each was shown (<code>run_bird.py:204-210</code>). There
+are no timestamps; <code>step</code> is the only order.</p>
+<p>Scope is physical. Each arm, seed and tag has its own list and its
+own log file (<code>run_bird.py:246-250</code>). <code>db_id</code> is
+stored on every episode and read once, to set <code>_same_db</code> on a
+retrieved neighbour (<code>memory.py:72</code>); the planner marks such
+a neighbour through the withheld <code>SAME_DB</code> text
+(<code>planner.py:33</code>, <code>:47</code>).</p>
+<p>The factual bank's row is <code>question</code>, <code>gold</code>,
+<code>topic</code>, <code>answer</code>, <code>self_grade</code>,
+<code>gold_grade</code>, <code>exact_match</code> and both grader
+replies (<code>factual_bank/build_bank.py:117-125</code>). The
+further-model banks grade gold by substring match rather than with a
+model (<code>factual_bank/selfgraded_bank.py:36-38</code>), which is the
+difference behind the paper's caveat that its gold-judging setup is not
+identical across banks.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is dense and exhaustive: one SimCSE vector per task
+description, cached per text, cosine against every stored episode in
+pure Python, top 4 (<code>memory.py:39-42</code>, <code>:61-67</code>;
+<code>run_bird.py:315</code>). There is no lexical arm, no threshold, no
+recency term and no database filter, so a neighbour from an unrelated
+database outranks a weaker match from the same one.</p>
+<p>Because ranking reads only task descriptions, and every arm sees the
+same task order, the <code>memento</code> and <code>lucid</code> arms
+retrieve the same neighbour ids at every step. They differ in the SQL
+those neighbours carry and the label each is shown with. The shared call
+cache then returns one stored reply wherever two arms build the same
+prompt (<code>call_cache.py:46-68</code>), so the arms diverge only
+where their memory does. The log's <code>retrieved</code> field records
+ids, labels and similarities for every step
+(<code>run_bird.py:209-210</code>).</p>
+<p>Injection is bounded by construction: four neighbours, 110 characters
+of question and 300 of SQL each, beside a schema capped at 6,000
+characters (<code>planner.py:44-48</code>;
+<code>bird_agent/loader.py:27</code>, <code>:48-49</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every task writes exactly one episode, synchronously, after the
+self-grade returns and before the next step starts
+(<code>run_bird.py:211</code>, <code>:262-299</code>). The episode is
+retrievable by the next task. Nothing deduplicates, consolidates,
+expires or deletes; the list grows to the length of the task stream.</p>
+<p>The self-grader reads the schema, the question and the SQL, and the
+query is not executed for the grade
+(<code>bird_agent/self_grader.py:3-4</code>, <code>:34-37</code>). Its
+reply counts as correct when the first of <code>correct</code> and
+<code>incorrect</code> in it is <code>correct</code>
+(<code>self_grader.py:28-31</code>).</p>
+<p>The answer-free channels are narrower than their descriptions in two
+places. Degeneracy fires on any empty or all-NULL result, while its note
+says <em>"for a question that expects an answer"</em>; nothing checks
+that the question expects one (<code>answer_free.py:24-29</code>,
+<code>:72-73</code>). Literal grounding passes a literal when the
+lowercased literal or its first token occurs anywhere in the lowercased
+question as a substring. It also skips literals under three characters,
+literals without a letter, and a fixed list of keywords and coded values
+(<code>answer_free.py:17-21</code>, <code>:43-59</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Each episode costs three model calls (planner, executor, self-grader)
+and two sandboxed executions of the candidate plus one of the reference,
+all cached. The answer-free score adds no model call. Retrieval cost
+grows linearly with the run. No background pass exists.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no API, tool or plugin. The agent is the runner's fixed
+pipeline, and the model has no agency over memory: it neither chooses to
+save nor to search. Memory reaches the model in one place, the planner's
+user prompt. Adapting it means replacing
+<code>common/llm_client.py</code>'s three functions and writing the
+twelve prompt texts, whose fields the placeholders name
+(<code>planner.py:22-35</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-the-detector-can-and-cannot-see">What the detector can and
+cannot see</h3>
+<p>The answer-free score reads the episode's own behaviour. Its error
+therefore cannot echo the self-grade's, which is the paper's argument
+for it. It misses every wrong query that runs, returns rows and quotes
+only grounded literals. A correct query whose true answer is empty is
+flagged and shown as a negative example. Recall is low by design, and
+the paper argues low recall is harmless because an unflagged wrong
+episode leaves the <code>memento</code> status quo.</p>
+<h3 id="model-written-sql">Model-written SQL</h3>
+<p>Candidate SQL from the model runs in a separate interpreter, against
+a read-only SQLite URI, under a 30-second timeout
+(<code>sql_sandbox.py:37</code>, <code>:60-78</code>;
+<code>run_bird.py:318</code>). A failing arm writes nothing for that
+step, and the step is recomputed from the cache on resume
+(<code>run_bird.py:277-285</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — withheld. The two scores
+are floats, 0.0 or 1.0, and their minimum decides whether a neighbour is
+framed as positive or negative. No read excludes a row: a flagged
+episode is still retrieved and shown (<code>memory.py:5</code>,
+<code>:67-74</code>). What the negative frame tells the planner is in
+the withheld <code>NEGATIVE_CASE</code> text
+(<code>planner.py:32</code>).</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. The
+boundary is one list per arm, seed and tag, a physical partition.
+<code>db_id</code> is a label, never a predicate.</li>
+<li><strong><code>audit_log</code></strong> — withheld. The episode log
+is append-only, and it is the store itself rather than a record of
+changes to one; memory has no mutations to record.</li>
+<li><strong><code>tombstone</code></strong> — withheld. A flagged
+episode stays in memory, and nothing is keyed on a rejected query.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Episodes carry
+no time at all.</li>
+<li><strong><code>human_review</code></strong> — withheld. No surface
+exists.</li>
+<li><strong><code>negative_eval</code></strong> — withheld. The tree has
+no tests.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The repository has no tests, no CI configuration and no committed
+output; <code>results/</code> and <code>data/</code> are gitignored
+(<code>.gitignore:1-5</code>). I ran nothing.</p>
+<p>The paper is <a
+href="https://arxiv.org/abs/2608.00017">arXiv:2608.00017</a>, submitted
+29 June 2026, v1 the only version. The repository does not cite it. The
+README names the criterion <em>Error-Independence Criterion</em> and
+reports 57.6% for LUCID, 53.7% for the Memento-style agent and 52.4%
+without memory (<code>README.md:47-55</code>). The arXiv text names it
+the <em>Error-Independence Assumption</em> and reports 56.9%, 54.0% and
+52.4% (its Table 5). Neither set recomputes from anything committed. The
+paper's footnote and Appendix F name
+<code>github.com/MohammadAsadolahi/Reliable-Memory-Agents-in-the-Wild</code>
+as the release; it returned 404 on 20 November 2026.</p>
+<p>The mechanism matches the paper where both describe it. Section 6.3
+lists the same three channels as <code>answer_free.py</code>. Appendix
+F's top-4 SimCSE retrieval by similarity alone, same-database tag,
+unbounded append-only memory, 30-second timeout and double execution are
+all in the code. Its "demote 1 to 0" is <code>min</code> over binary
+scores. The arXiv HTML contains no BIRD prompt text either, so the
+planner's framing of a demoted episode is in neither artifact.</p>
+<p>What each result has behind it in the tree:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Paper result</th>
+<th>Code</th>
+<th>Committed output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Table 2, leniency per bank</td>
+<td><code>build_bank.py:74-93</code> prints it; no interval</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Equations 16–17, <code>Cov(b, n | U=0)</code></td>
+<td><code>reuse_loop.py:127-137</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>Table 3, verifier correlations</td>
+<td>verdicts from <code>verifier_bakeoff.py</code> and
+<code>regrade_bank.py</code>; no script computes either correlation; no
+ensemble or gold-fit aggregator</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Table 4 payoff, Table 7 filtering comparison</td>
+<td>no demotion operator over a bank, no random or uncertainty pruning,
+no budget sweep</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Table 8, calibration maps</td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Leave-one-seed-out selection</td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Table 5, BIRD EX</td>
+<td><code>run_bird.py:128-148</code> prints EX per arm; prompts
+withheld; no paired interval</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Precision 0.90 (n = 649); κ ≈ 0.38; corruption 0.42</td>
+<td>fields in the episode log suffice; no script</td>
+<td>none</td>
+</tr>
+</tbody>
+</table></div>
+<p>Table 7's LUCID row, the result set against budget-matched random
+pruning, reports +0.59 on the pooled 300-memory factual bank. That is
+the gain Table 4 gives the retrieval-based verifier on the same bank.
+The three channels in <code>answer_free.py</code> read SQL execution and
+have no factual-bank counterpart in the tree, so the code does not show
+which signal that row demotes on.</p>
+<p>Before trusting the code I would want a fixture-level test of each
+detector channel, including a correct empty result and a substring false
+pass. I would want a test that <code>gold</code> never reaches memory or
+a prompt, and the analysis scripts that turn episode logs into the
+paper's numbers.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Check a memory with something that fails differently from
+its author.</strong> Execution errors, non-determinism across two runs,
+empty results and ungrounded literals cost no model call and cannot
+share a grader's bias.</li>
+<li><strong>Cap, never raise.</strong> Combining the self-grade and the
+check with <code>min</code> means the check can only demote, so a noisy
+detector cannot launder a wrong episode into a trusted one.</li>
+<li><strong>Hold neighbours fixed across arms.</strong> Rank on task
+text only and share a content-addressed cache, and an ablation of the
+trust signal changes nothing but the trust signal.</li>
+<li><strong>Refuse a resume under a different configuration.</strong> A
+config file written beside the log and compared on restart prevents a
+run silently mixing two settings.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A trust signal that only relabels.</strong> A demoted
+episode still enters context; whether that helps depends on how the
+prompt frames a negative example, which here is unpublished.</li>
+<li><strong>A substring test as grounding.</strong> Matching a literal's
+first token anywhere in the question passes most multi-word entities on
+a common word.</li>
+<li><strong>A detector note that claims a condition the code does not
+check.</strong> The degeneracy note says the question expects an answer;
+nothing asks.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Read this to understand the Echo Gap experiment and to lift the
+detector. Do not adopt it as memory. It is one list per run, with no
+correction, deletion or persistence beyond a resume log. It cannot run
+its headline experiment without prompt texts you must write yourself, so
+any number you get is yours, not the paper's. And the tree grants no
+licence to copy any of it.</p>
+<p>Read the paper if your own store keeps a score the model gave its own
+output and reads it back as evidence. That is the failure recorded for
+<a href="../core-memory/">Core Memory</a>, <a
+href="../nooa-memory/">NOOA</a>, <a href="../mnemopi/">Mnemopi</a> and
+<a href="../powermem/">PowerMem</a>, and <a
+href="../engram-alpha/">Engram Alpha</a>'s <em>"exposure doesn't
+validate"</em> is the same argument without the inequality.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Which manuscript the README's 57.6%, 53.7% and <em>Criterion</em>
+wording come from, given that arXiv carries only v1.</li>
+<li>What signal drives Table 7's LUCID row on the factual bank.</li>
+<li>Whether the planner, executor and self-grader prompt texts will be
+released.</li>
+<li>Whether the analysis code for Tables 3, 4, 7 and 8 and Appendix G
+exists outside this repository.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory and retrieval: <code>bird_agent/memory.py</code>,
+<code>bird_agent/simcse_embedder.py</code></li>
+<li>Write path and runner: <code>bird_agent/run_bird.py</code>,
+<code>bird_agent/call_cache.py</code></li>
+<li>Trust signals: <code>bird_agent/answer_free.py</code>,
+<code>bird_agent/self_grader.py</code>,
+<code>bird_agent/sql_sandbox.py</code></li>
+<li>Context assembly: <code>bird_agent/planner.py</code>,
+<code>bird_agent/executor.py</code>,
+<code>bird_agent/loader.py</code></li>
+<li>Factual banks: <code>factual_bank/build_bank.py</code>,
+<code>factual_bank/selfgraded_bank.py</code>,
+<code>factual_bank/verifier_bakeoff.py</code>,
+<code>factual_bank/regrade_bank.py</code>,
+<code>factual_bank/reuse_loop.py</code>,
+<code>factual_bank/graders.py</code></li>
+<li>Model client: <code>common/llm_client.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git</code>.</p>
+<ul>
+<li><strong>No licence.</strong>
+<code>git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice)'</code>
+and <code>git grep -n -i -E 'licen[sc]e'</code> return nothing; the
+control <code>git grep -n -i 'usage terms'</code> matches
+<code>README.md:286</code>.</li>
+<li><strong>No tests or CI.</strong>
+<code>git ls-files | grep -i -E '(^|/)tests?(/|_)|_test\.py|conftest|\.github'</code>
+returns nothing; the control
+<code>git ls-files | grep -E 'call_cache'</code> lists two files.</li>
+<li><strong>No committed output.</strong>
+<code>git ls-files | grep -E '\.jsonl$|^results/|^data/'</code> returns
+nothing; <code>git grep -n 'results/' -- .gitignore</code> matches line
+2.</li>
+<li><strong>No demotion operator or pruning baseline.</strong>
+<code>git grep -n -i -E 'prune|pruning|demot|budget' -- '*.py'</code>
+matches only the docstring at <code>bird_agent/memory.py:10</code>.</li>
+<li><strong>No correlation, precision or slope analysis.</strong>
+<code>git grep -n -i -E 'precision|recall|spearman|isotonic|platt|kappa|slope|bootstrap' -- '*.py'</code>
+returns nothing; the control
+<code>git grep -n '_pearson' -- '*.py'</code> matches
+<code>factual_bank/reuse_loop.py:81</code>, <code>:131</code> and
+<code>:133</code>.</li>
+<li><strong>No ensemble or cross-validation.</strong>
+<code>git grep -n -i -E 'ensemble|majority|leave.one' -- '*.py'</code>
+returns nothing;
+<code>git grep -n -i 'adversarial' -- factual_bank/verifier_bakeoff.py</code>
+matches.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|2608|bibtex|Reliable-Memory'</code>
+returns nothing; <code>git grep -n -i 'memento' -- README.md</code>
+matches lines 54, 66 and 210.</li>
+<li><strong>Nothing revises or removes a stored episode.</strong>
+<code>git grep -n -E '\.experiences\.(pop|remove|clear|insert)|experiences\[' -- bird_agent</code>
+and <code>git grep -n -w 'del' -- bird_agent</code> return nothing;
+<code>git grep -n 'experiences' -- bird_agent</code> matches
+<code>memory.py:36</code>, <code>:59</code>, <code>:63</code>,
+<code>:77</code> and <code>run_bird.py:185</code>.</li>
+<li><strong><code>db_id</code> is never a predicate.</strong>
+<code>git grep -n 'db_id' -- bird_agent/memory.py</code> matches lines
+53, 72, 76 and 78; line 72 is the only read.</li>
+<li><strong>Gold never reaches memory or the planner.</strong>
+<code>git grep -n 'gold' -- bird_agent/memory.py bird_agent/planner.py</code>
+returns nothing;
+<code>git grep -c 'gold' -- bird_agent/run_bird.py</code> counts
+12.</li>
+<li><strong>The BIRD prompts are placeholders.</strong>
+<code>git grep -c -E '^[A-Z_]+ = "&lt;' -- bird_agent</code> counts 8 in
+<code>planner.py</code>, 2 in <code>executor.py</code> and 2 in
+<code>self_grader.py</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/MohammadAsadolahi/Memory-Reward-Inflation-in-Self-Improving-LLM-Agents/commit/f563bca784be6feece6cacf1dc3c9f2893c68282"><code class="commit-id" title="f563bca784be6feece6cacf1dc3c9f2893c68282">f563bca7…</code></a>
+— first reading, from a full clone of <code>main</code>: all 21 Python
+files, the README and its history, and the manifests, against <a
+href="https://arxiv.org/abs/2608.00017">arXiv:2608.00017</a> v1.
+Screened first: no auto-run surface and no build-time execution;
+<code>requirements.txt</code> names five unpinned requirements (openai,
+python-dotenv, requests, torch, transformers). No licence in the tree.
+Nothing installed, built or run. No marks.</p>
+<p><strong>2026-08-10</strong> — examined from the paper alone, with no
+commit to pin: the repository it names twice,
+<code>MohammadAsadolahi/Reliable-Memory-Agents-in-the-Wild</code>,
+returned 404, and the author's account held no other copy. No report; an
+exclusion bullet in the appendix's Known Limitations, which this reading
+replaces, and <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-10-the-loop-this-atlas-keeps-naming-has-a-number-now.md">a
+note</a> on the paper's argument and what its appendices do in place of
+a limitations section.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

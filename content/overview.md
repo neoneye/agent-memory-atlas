@@ -2041,7 +2041,8 @@ made general: over a corpus of memories and real changes, how often a genuine
 drift surfaces and how often a surfaced one is spurious. See [GMR](../systems/gmr/).
 
 **There is also an argument that this pattern's model-free-ness is load-bearing
-rather than merely cheap**, and it comes from outside the corpus.
+rather than merely cheap**, and it comes from a paper whose code is reviewed
+here as [LUCID](../systems/lucid/).
 [arXiv:2608.00017](https://arxiv.org/abs/2608.00017) formalises the condition a
 de-inflation signal must meet — it must track truth *and* have its error
 decorrelated from the bias of the grader that wrote the memory — and proves that
