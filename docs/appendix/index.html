@@ -15541,60 +15541,95 @@ the system is asserted to be <em>"by design … incapable of
 hallucination,"</em> with every result traceable to its source
 knowledge, and the positive control reports 46 of 50 hallmark gene sets
 recovered without a curated pathway knowledgebase.</li>
-<li><strong><a
-href="https://arxiv.org/abs/2608.10509"><code>arXiv:2608.10509</code></a>
-was examined and has no report: it releases no code, and its central
-mechanism is the one this atlas most often finds missing.</strong>
-<em>MAP-Graph: Provenance-Aware Shared Memory for Multi-Agent
-Workflows</em> (Wang, Yan, Zhang, Wu, Zheng, Sun, Zhu and Cai; submitted
-11 August 2026, v1, cs.AI and cs.MA). It puts agents, sources, memories,
-claims and actions in one typed graph — ten registered edge types
-including <code>derived_from</code>, <code>written_by</code>,
-<code>read_by</code>, <code>verified_by</code>,
-<code>invalidated_by</code> and <code>used_for_action</code> — and
-separates two things most systems here collapse. <strong>Hard
-authorization</strong> is a permission scope carried on the record and
-applied as a filter before ranking, and a derived record <em>"receives
-the intersection of referenced scopes"</em>, so a summary cannot widen
-the audience of what it summarises. <strong>Graded trust</strong> is a
-multiplier: retrieval filters on permission, then ranks the remainder
-<em>"by semantic score times path trust"</em> and returns at most five,
-and an action-time gate demands a trust threshold that rises with the
-action's risk — 0.30 for answering, 0.60 for a low or medium-risk
-action, 0.85 for a high-risk one. Revocation is the part worth carrying:
-an explicit event <em>"marks a source revoked, clears its scope, and
-updates directly referenced or already affected records"</em>, while
-remaining descendants <em>"detect the revoked ancestor during later
-recursive trust evaluation"</em> — restriction propagating along
-derivation edges rather than stopping at the row someone thought to
-update. The authors are precise about what they did not build:
-<em>"There is no general active/superseded/contradicted state
-machine"</em>, writes append without content deduplication, and the
-structured audit output is identifiers, component scores and reasons
-rather than an explanation, with human-facing explanation quality
-explicitly not measured. <strong>The ablation is the reason to read
-it.</strong> Removing the hard permission filter <em>improves</em>
-utility and <em>"allows every observed unauthorized read, a failure
-hidden by aggregate utility and leakage alone"</em> — a direct
-measurement of something this atlas asserts and cannot usually show,
-that a scope filter's value is invisible to any metric that only counts
-whether the answer was good. Against seven baselines over 2,700
-synthetic tasks the reported figures are 94.96% task success and 72.70%
-exact decision accuracy with zero on each of attack success, leakage,
-unauthorized access and revocation failure, against 74.67% and 46.41%
-for the best baseline; the authors label these <em>"single-run
-controlled results, not deployment-scale claims"</em> over a benchmark
-that is <em>"synthetic and templated"</em> with simulated actions, one
-four-agent round per task, and Qwen2.5-7B-Instruct at temperature zero.
-No code, dataset or artifact is released:
-<code>rg -i 'github.com|gitlab.com|code will be|code is available|open.source|available at'</code>
-over the extracted text of the PDF returns zero matches, and the arXiv
-page carries no availability statement. If an implementation appears,
-the first things to read are the scope-intersection rule on a derived
-record and the recursive trust evaluation that is supposed to catch a
-revoked ancestor, because those two are what the ablation credits and
-both are the shape this corpus repeatedly finds declared and
-unwired.</li>
+<li><strong><code>xiaoqi-7/MAP-Graph</code> (<a
+href="https://arxiv.org/abs/2608.10509">arXiv:2608.10509</a>) was
+examined and has no report: its code was released on 25 October 2026,
+and the store is rebuilt empty at the start of every task, so nothing it
+holds outlives one four-agent round.</strong> No licence file and no
+licence statement in the README, the manifests or the code, so the tree
+grants nothing; only the bundled AAAI style files carry terms of their
+own (CC BY 4.0 in <code>paper/aaai2027.sty</code>, LPPL in
+<code>paper/aaai2027.bst</code>). Read at <a
+href="https://github.com/xiaoqi-7/MAP-Graph/commit/d94b0bf3c73efdb60fcc08014989b44ce8eae99d"><code class="commit-id" title="d94b0bf3c73efdb60fcc08014989b44ce8eae99d">d94b0bf3…</code></a>,
+the repository's only commit, dated 25 October 2026 and authored as
+YiqiWANG under the noreply address of account 53900555, which is
+<code>xiaoqi-7</code>, whose profile name is YiqiWANG; with the paper's
+LaTeX source in <code>paper/</code> under the same title, the owner
+appears to be the first author, Yiqi Wang. The tree is 3,307 files:
+3,243 synthetic task, ground-truth and transfer-subset JSON files under
+<code>artifact/data/</code>, the paper and appendix sources, and 12,309
+lines of Python, of which MAP-Graph's own backend is 1,789 lines under
+<code>artifact/src/map_graph/</code>. The screen could see two files,
+and found nothing that auto-runs, no build-time execution and no
+unpinned dependency (<code>artifact/requirements.txt</code> pins all
+eight packages exactly); nothing was installed or run. The paper calls
+MAP-Graph task-scoped, and the code agrees.
+<code>AutoGenWorkflow.run_task</code> calls <code>reset_task</code>
+first (<code>artifact/src/agents/autogen_workflow.py:118</code>), which
+empties the record and source catalogs, replaces the NetworkX graph and
+opens a new <code>chromadb.EphemeralClient</code>
+(<code>artifact/src/map_graph/memory.py:155-187</code>). The graph is
+written to JSON after each task
+(<code>artifact/scripts/run_mapgraph.py:54-65</code>), and only the
+evaluator reads that file back
+(<code>artifact/scripts/evaluate.py:196-199</code>); the paper itself
+describes the experiments as <em>"within-task coordination rather than
+cross-session accumulation"</em>
+(<code>paper/anonymous-submission-latex-2026.tex:208</code>). The two
+mechanisms the paper credits match the code. A derived record gets the
+intersection of its references' scopes, falling back to the writer when
+the intersection is empty (<code>memory.py:716-739</code>). Revocation
+clears the source's scope and recomputes the records that cite it
+directly (<code>memory.py:428-458</code>). The filter's revocation check
+reads only a record's direct references
+(<code>memory.py:760-769</code>), so a record two derivations below a
+revoked source passes it. That record is caught by the recursive trust
+walk instead (<code>artifact/src/map_graph/trust.py:372-410</code>),
+which multiplies its rank by 0.15 (<code>trust.py:170-171</code>) and
+makes the gate block any action it supports
+(<code>trust.py:279-287</code>). The typed graph with ten edge types is
+not what decides anything: retrieval and the gate walk each record's
+<code>derived_from</code> list, and the graph is read only by
+<code>propagate_affected</code> and <code>export</code>
+(<code>artifact/src/map_graph/graph_builder.py:237-281</code>), both
+called after the gate has ruled (<code>autogen_workflow.py:258</code>,
+<code>:294</code>). This explains two ablation rows. <em>Compressed
+graph</em> barely moves (94.33% task success against 94.96%), and <em>No
+provenance graph</em> switches off all seven components at once
+(<code>memory.py:56-66</code>), so its drop measures the whole stack
+rather than the graph. The headline numbers do recompute. Re-deriving
+them with <code>python3 -I</code> from the 21,600 committed per-task
+rows in
+<code>artifact/final_results/canonical/main/task_metrics.csv</code>, I
+reproduced every task-success, decision-accuracy and unsafe-action
+figure in <code>paper_table.csv</code>. Each attack, leakage and
+revocation figure is the rate over that condition's 450 tasks (MAP-Graph
+0.00 on each; B6 36.44, 20.44 and 39.33). The seven ablation rows
+recompute from <code>per_task/ablation_task_metrics.csv</code>,
+including <em>No permission filter</em> at 96.00% success and 78.63%
+accuracy. The 3.2 GB of raw run outputs those rows came from are not
+committed, as the README says. No test exercises MAP-Graph's backend:
+<code>artifact/tests/test_paper_baselines.py</code> covers four of the
+baselines and the model client. The one store in the tree that outlives
+a task is the G-Memory baseline (B3), which keeps up to 512 trajectories
+and its insight graph across the tasks of one process
+(<code>artifact/src/memory_baselines/gmemory_graph.py:82-109</code>) and
+rebuilds them from saved outputs on resume
+(<code>artifact/scripts/run_baseline.py:171</code>). That is an
+adaptation of another system, and the paper names it as a limitation
+(<code>anonymous-submission-latex-2026.tex:297</code>). Searches:
+<code>git grep -n -E 'PersistentClient|persist_directory|sqlite3|pickle|shelve' -- artifact/src artifact/scripts</code>
+returns nothing, against
+<code>git grep -c EphemeralClient -- artifact/src</code>, one line in
+each of five files;
+<code>git grep -n -E 'graph_builder\.graph|\.graph\.(nodes|edges|successors|predecessors|in_edges|out_edges)' -- artifact/src</code>
+returns eight lines, six inside <code>propagate_affected</code> and
+<code>export</code> and two at <code>memory.py:438-439</code>, a write;
+<code>git grep -n -E 'MAPGraph|map_graph' -- artifact/tests</code>
+returns nothing, against 39 lines for the same pattern over
+<code>artifact/src</code>;
+<code>git ls-files | grep -i -E '(^|/)(licen[sc]e|copying|notice)'</code>
+returns nothing.</li>
 <li><strong><code>pantheon-org/agentic-context</code> was examined and
 has no report: it is a reading list about the context window, and it
 draws the boundary itself.</strong> At <a
