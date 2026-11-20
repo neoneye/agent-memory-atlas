@@ -486,6 +486,25 @@ request returns (<code>:262-313</code>, <code>:428-436</code>,
 logs at debug level and carries on under the thread lock alone
 (<code>:285-296</code>), and the guard against a second process goes
 with it. A replay guard is only as sound as the lock around it.</p>
+<p><a href="../../systems/maximem-synap-core/">Synap Core</a> puts the
+outbox inside the retirement's own transaction and leaves one store
+outside it. <code>retire_memory_with_audit</code> updates the memory row
+and inserts a <code>graph_sync_pending</code> row and the changelog row
+in one Postgres transaction
+(<code>synap/cloud/agents/ingestion/storage/sqlalchemy_rdbms_wrapper.py:737-875</code>).
+Stage 4 drains its own rows after the graph write, the delete route
+drains inline after its commit, and a worker started at boot takes the
+rest with a 120-second lease and a backoff from 5 seconds to an hour
+that never gives up
+(<code>synap/cloud/agents/ingestion/storage/graph_sync_outbox.py:32-57</code>).
+Its docstring records why an ingestion's rows wait 300 seconds: the
+worker took a row before Stage 4's graph write and held the lease while
+Stage 4 looked for it. Releasing an absent id changes nothing, so every
+retry is safe. The memory-vector delete at supersession is not in the
+outbox. It is called once and logged as non-fatal on failure
+(<code>synap/cloud/agents/ingestion/storage/coordinator.py:1169-1182</code>),
+and the vector arm does no liveness check, so a failed delete leaves the
+superseded text servable with nothing queued to retry it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>

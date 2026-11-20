@@ -127,7 +127,7 @@ belief.</p>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
 recurs across the corpus. 80 systems of
-822 carry the mark, and <a
+823 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -292,7 +292,7 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>80 systems of
-822 in the atlas carry the mark.</strong> The
+823 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -1909,6 +1909,26 @@ kept again at once. The key is the <code>content</code> whichever field
 caused the refusal, so a secret in <code>metadata</code> blocks the
 clean note beside it for good, and the fingerprint of a refused secret
 is unsalted and survives every forget.</p>
+<p><a href="../../systems/maximem-synap-core/">Synap Core</a> ships the
+guard and refuses to run it.
+<code>_retired_value_blocks_supersession</code> blocks a supersession
+whose new text carries an email address, URL or phone number the user
+already retired, unless the text signals a deliberate switch back
+(<code>synap/cloud/agents/ingestion/storage/coordinator.py:1129-1137</code>);
+its docstring cites the case, an old notification email re-asserted by a
+later extraction retiring the new one.
+<code>SYNAP_KU_RETIRED_VALUE_GUARD</code> is in
+<code>CORE_REFUSED_SWITCHES</code>, so the Core edition stops at
+start-up when it is set
+(<code>synap/cloud/shared/edition.py:224</code>), and the echo guard
+beside it is refused the same way. What Core does instead runs the other
+way: <code>memories.superseded_by</code> is
+<code>ON DELETE SET NULL</code>, so deleting the correcting memory makes
+the corrected one live again, and the graph reopens the records it had
+closed
+(<code>synap/db/core_migrations/002_graph_sync_restore.sql</code>). A
+forgotten memory keeps its text in a soft-deleted row that no extraction
+path consults.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

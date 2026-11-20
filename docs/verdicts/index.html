@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 822 reports.</strong></p>
+<p><strong>This page covers all 823 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33935,6 +33935,42 @@ experimental design that isolates it.</li>
 <li>Do not copy when: you need memory that outlives a run, can be
 corrected after the fact, or must reproduce from the released code
 alone.</li>
+</ul>
+<h3 id="maximem-synap-core"><a
+href="../systems/maximem-synap-core/"><code>maximem-synap-core</code></a></h3>
+<ul>
+<li>Best idea: <strong>a graph statement names the memories that support
+it.</strong> Each relationship and entity node carries the supporting
+memory ids; one rule shared by the writer, the repair job and the read
+path closes it when no live supporter is left or a newer memory
+superseded one, stamping <code>retired_at</code> and a
+<code>valid_to</code> taken from the newer memory's event date; the
+release is owed through a <code>graph_sync_pending</code> row committed
+with the retirement.</li>
+<li>Biggest risk: <strong>the vector arm trusts a delete.</strong> Fast
+mode does no liveness check, and the vector delete at supersession is
+called once and logged as non-fatal on failure, so a failed call leaves
+the superseded text servable with nothing queued to retry it.</li>
+<li>Second risk: delete by id writes the deleted text into the
+changelog's <code>DELETE</code> row and leaves the original under
+<code>originals/</code>; deleting a correction restores the value it
+replaced; the retired-value guard is in the code and Core refuses to
+start with it on.</li>
+<li>Most reusable component: <code>graph_lifecycle_rule.py</code> with
+<code>memory_liveness.py</code>, and the outbox in
+<code>graph_sync_outbox.py</code> with its two Core migrations.</li>
+<li>Maturity impression: Apache-2.0, release v0.1.0; 93,402 lines of
+engine Python, 40 commits from 3 to 18 November 2026; 2,717 unit tests
+that CI does not run and I did not run; the LongMemEval records
+recompute exactly to the claimed 418/500, for a run dated before this
+repository's first commit. Four marks: <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: a vector store and a graph sit beside a relational store
+of record, and derived statements must stop being served when their
+source does.</li>
+<li>Do not copy when: deletion must be complete and provable, or a
+person must review what is stored.</li>
 </ul>
         </article>
       </div>

@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **822 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **823 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -845,6 +845,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/swafra/"><span class="az-id">Swafra</span><span class="az-what">Compact local graph-RAG</span><code class="az-repo">kunal12203/swafra</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/swarmai/"><span class="az-id">SwarmAI</span><span class="az-what">Self-evolving agent OS</span><code class="az-repo">xg-gh-25/SwarmAI</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/syke/"><span class="az-id">Syke</span><span class="az-what">It counts the memories the cycle deleted, and reads the number back nowhere</span><code class="az-repo">saxenauts/syke</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/maximem-synap-core/"><span class="az-id">Synap Core</span><span class="az-what">Cloud&#x27;s engine under a Core edition switch</span><code class="az-repo">maximem-ai/maximem_synap_core</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/synapse-hippocampus/"><span class="az-id">Synapse</span><span class="az-what">The exclusion is tested by reading the query, not by running it</span><code class="az-repo">Ardha-Eco-System/synapse</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/synapse-layer/"><span class="az-id">Synapse Layer</span><span class="az-what">An open SDK with a keyword-matched SQLite store beside a closed hosted engine</span><code class="az-repo">SynapseLayer/synapse-layer</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>

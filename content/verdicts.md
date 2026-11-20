@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 822 reports.**
+**This page covers all 823 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7542,3 +7542,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: no licence; 1,934 lines of Python, six commits by one author from 8 to 22 October 2026, all code in one of them; no tests, no CI, no committed output. Tables 3, 4, 7 and 8 have no analysis code, and the README reports 57.6% and 53.7% where arXiv v1 reports 56.9% and 54.0%. No marks.
 - Study when: an agent writes its own episodes back with a self-assigned score, and you want a cheap demotion signal and an experimental design that isolates it.
 - Do not copy when: you need memory that outlives a run, can be corrected after the fact, or must reproduce from the released code alone.
+
+### [`maximem-synap-core`](../systems/maximem-synap-core/)
+
+- Best idea: **a graph statement names the memories that support it.** Each relationship and entity node carries the supporting memory ids; one rule shared by the writer, the repair job and the read path closes it when no live supporter is left or a newer memory superseded one, stamping `retired_at` and a `valid_to` taken from the newer memory's event date; the release is owed through a `graph_sync_pending` row committed with the retirement.
+- Biggest risk: **the vector arm trusts a delete.** Fast mode does no liveness check, and the vector delete at supersession is called once and logged as non-fatal on failure, so a failed call leaves the superseded text servable with nothing queued to retry it.
+- Second risk: delete by id writes the deleted text into the changelog's `DELETE` row and leaves the original under `originals/`; deleting a correction restores the value it replaced; the retired-value guard is in the code and Core refuses to start with it on.
+- Most reusable component: `graph_lifecycle_rule.py` with `memory_liveness.py`, and the outbox in `graph_sync_outbox.py` with its two Core migrations.
+- Maturity impression: Apache-2.0, release v0.1.0; 93,402 lines of engine Python, 40 commits from 3 to 18 November 2026; 2,717 unit tests that CI does not run and I did not run; the LongMemEval records recompute exactly to the claimed 418/500, for a run dated before this repository's first commit. Four marks: `bitemporal`, `scope_enforced`, `audit_log` and `negative_eval`.
+- Study when: a vector store and a graph sit beside a relational store of record, and derived statements must stop being served when their source does.
+- Do not copy when: deletion must be complete and provable, or a person must review what is stored.

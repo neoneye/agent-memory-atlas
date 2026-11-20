@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The self-hosted, single-tenant
+edition of Maximem's Synap memory server: LLM extraction into typed
+memories, entity resolution, supersession and a liveness-checked Neo4j
+graph.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Synap Core — Agent Memory Atlas">
+    <meta property="og:description" content="The self-hosted,
+single-tenant edition of Maximem's Synap memory server: LLM extraction
+into typed memories, entity resolution, supersession and a
+liveness-checked Neo4j graph.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Synap
+Core — Agent Memory Atlas">
+    <meta name="twitter:description" content="The self-hosted,
+single-tenant edition of Maximem's Synap memory server: LLM extraction
+into typed memories, entity resolution, supersession and a
+liveness-checked Neo4j graph.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Synap Core — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Synap Core",
+      "description": "The self-hosted, single-tenant edition of Maximem's Synap memory server: LLM extraction into typed memories, entity resolution, supersession and a liveness-checked Neo4j graph.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Cloud's engine under a Core edition
+switch</p>
+          <h1>Synap Core</h1>
+          <p class="document-deck">The self-hosted, single-tenant
+edition of Maximem's Synap memory server: LLM extraction into typed
+memories, entity resolution, supersession and a liveness-checked Neo4j
+graph.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/maximem-ai/maximem_synap_core">
+              <span>Source</span>
+              <strong>maximem-ai/maximem_synap_core</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/maximem-ai/maximem_synap_core/commit/ecfbb3b01dc00b465afa1c29f451cddaa6ec8e54" title="ecfbb3b01dc00b465afa1c29f451cddaa6ec8e54">
+              <span>Analyzed revision</span>
+              <code>ecfbb3b0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/maximem-ai--maximem_synap_core" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>maximem-ai--maximem_synap_core</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0,
+in LICENSE and NOTICE; no package manifest. The entity-resolution
+library synap-er is a PyPI dependency, MIT by its PyPI metadata, and not
+in the tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>93,402
+lines of Python in the engine outside synap/tests across 367 files,
+88,404 of them in synap/cloud; 51,989 lines of unit tests</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>40
+commits from 3 to 18 November 2026, 32 of them by one author; release
+v0.1.0; the first commit adds 774 files</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,717
+pytest functions in 230 files under synap/tests, 52 for the setup skill
+and 19 end-to-end; CI runs only the skill tests; I ran none of
+it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Synap Core is the self-hosted, single-tenant edition of Maximem's
+Synap memory server: a FastAPI service over Postgres, ChromaDB, Neo4j
+and Redis that turns conversations and documents into typed statements
+with an LLM, resolves the entities they mention, replaces a statement a
+newer one contradicts, and serves context through a vector search and a
+graph walk. It speaks the API of the hosted Synap Cloud, so the clients
+in <a href="../maximem-synap-sdk/">Maximem Synap SDK</a> work against it
+with no key.</p>
+<p>What is notable is that the tree is Cloud's own server code run under
+an edition switch, not a rewrite.
+<code>synap/cloud/shared/edition.py</code> forces 30 settings into the
+environment for Core, refuses 30 Cloud-only switches and two settings at
+start-up by name, and declares 45 hooks that Cloud fills from a
+<code>synap.cloud.cloud_hooks</code> package the tree does not contain.
+On that base Core runs a graph lifecycle in which every relationship
+names the memories that support it and stops being served when none of
+them is alive.</p>
+<p>What is weak is everything outside the graph. The vector arm relies
+on a best-effort vector delete at supersession that nothing retries.
+Delete by id writes the deleted text into the changelog and leaves the
+stored original on disk. Deleting a correction brings the corrected
+value back. The guard that would stop a retired value superseding its
+replacement is in the code and refused by Core.</p>
+<p><strong>Licence.</strong> Apache-2.0, in <code>LICENSE</code>, with a
+<code>NOTICE</code> that agrees; there is no package manifest. The grant
+covers the Core edition only: the engine names a
+<code>synap.cloud.cloud_hooks</code> package and Cloud modules for
+privacy, credits, consolidation and audit that are not in the tree
+(<code>synap/cloud/shared/edition.py:417</code>), so the Cloud behaviour
+the README compares against cannot be read or rebuilt under it. The 23
+MB benchmark file quotes conversation sessions from ShareGPT and
+UltraChat, which <code>NOTICE</code> says <em>"keep whatever terms those
+sources carry"</em>. Entity resolution is <code>synap-er==0.4.0</code>
+from PyPI (<code>requirements.txt:50</code>), MIT by its PyPI metadata,
+and its source is not in this tree.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one short statement extracted from a user's text by the
+configured LLM, typed as a fact, preference, episode, emotion or dated
+event, with a confidence and, when the text gives one, a validity period
+and an event window. It is stored as a belief. Nothing marks it as a
+candidate awaiting confirmation. Extractions under the type's confidence
+threshold go to a separate <code>candidates</code> table
+(<code>synap/cloud/agents/ingestion/pipeline/stage3_extraction.py:1609-1623</code>),
+and no read path, promotion or review in the tree reads that table
+again; only forget by description deletes from it.</p>
+<p>A memory stops being current in four ways, and each is a lifecycle
+state rather than a judgement of truth:</p>
+<ul>
+<li><strong>Superseded.</strong> Each new memory is compared with at
+most five same-user neighbours above a similarity of 0.55, and an LLM
+classifier labels the pair <code>SUPERSEDE</code>, <code>ENRICH</code>,
+<code>NONE</code> or unrelated
+(<code>synap/cloud/agents/ingestion/pipeline/knowledge_update.py:270</code>,
+<code>:826</code>). <code>SUPERSEDE</code> sets
+<code>superseded_by</code> and <code>superseded_at</code> on the old
+row.</li>
+<li><strong>Dropped.</strong> <code>NONE</code> drops the new memory as
+a duplicate of the stored one.</li>
+<li><strong>Forgotten.</strong> Forget by description sets
+<code>deleted_at</code> on the rows a judge picked.</li>
+<li><strong>Erased.</strong> Delete by id removes the row.</li>
+</ul>
+<p>The live predicate is one string,
+<code>superseded_by IS NULL AND deprecated_at IS NULL AND deleted_at IS NULL</code>
+(<code>synap/cloud/shared/memory_liveness.py:33</code>).</p>
+<p>Erasure runs one way back. <code>memories.superseded_by</code> is a
+foreign key <code>ON DELETE SET NULL</code>
+(<code>synap/db/baseline.sql:1698</code>), so deleting the newer memory
+makes the one it replaced live again. The delete route reads those ids
+first so the graph can reopen what it closed
+(<code>synap/cloud/application/sdk_api/sdk_memories.py:1550-1559</code>,
+<code>synap/db/core_migrations/002_graph_sync_restore.sql</code>). The
+migration calls it an owner decision.</p>
+<p>The graph is derived state with its own rule. A relationship or
+entity node carries the ids of the memories that support it. It is
+closed when it once had support and none is left (T1), or when a
+supporter was superseded by a memory that does not itself support it and
+nothing current was said after (T2). Closing stamps
+<code>retired_at</code> from the clock and <code>valid_to</code> from
+the superseding memory's event date
+(<code>synap/cloud/agents/ingestion/services/graph_lifecycle_rule.py:199-280</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an extraction becomes a live memory or a candidate nothing reads; supersession, forget and delete end it, and the graph follows through an outbox while the vector arm relies on one delete</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an extraction becomes a live memory or a candidate nothing reads; supersession, forget and delete end it, and the graph follows through an outbox while the vector arm relies on one delete
+flowchart TD
+  EX[&quot;LLM extraction:&lt;br/&gt;typed statement&lt;br/&gt;and confidence&quot;] --&gt; TH{&quot;confidence at or&lt;br/&gt;above the type&lt;br/&gt;threshold?&quot;}
+  TH --&gt;|&quot;no&quot;| CAND[&quot;candidates table:&lt;br/&gt;no reader,&lt;br/&gt;no promotion&quot;]
+  TH --&gt;|&quot;yes&quot;| KU{&quot;LLM classifier vs&lt;br/&gt;five same-user&lt;br/&gt;neighbours&quot;}
+  KU --&gt;|&quot;NONE&quot;| DROP[&quot;new memory&lt;br/&gt;dropped&quot;]
+  KU --&gt;|&quot;ENRICH or&lt;br/&gt;unrelated&quot;| LIVE[&quot;live memory&quot;]
+  KU --&gt;|&quot;SUPERSEDE&quot;| SUP[&quot;old row:&lt;br/&gt;superseded_by set&quot;]
+  SUP --&gt; LIVE
+  SUP --&gt; VD[&quot;old vector deleted:&lt;br/&gt;best effort,&lt;br/&gt;not retried&quot;]
+  SUP --&gt; OB[&quot;outbox row in the&lt;br/&gt;same transaction&quot;]
+  OB --&gt; GR[&quot;graph statement&lt;br/&gt;closed: retired_at&lt;br/&gt;and valid_to&quot;]
+  LIVE --&gt; FG[&quot;forget by description:&lt;br/&gt;deleted_at set&quot;]
+  LIVE --&gt; DEL[&quot;delete by id:&lt;br/&gt;row removed&quot;]
+  DEL --&gt; RES[&quot;what it superseded&lt;br/&gt;is live again&quot;]
+  FG --&gt; OB
+  DEL --&gt; OB</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One container runs the API and its workers; Compose adds pinned
+upstream images for Postgres with pgvector, Redis, ChromaDB and Neo4j,
+none of which publishes a port (<code>deploy/docker-compose.yml</code>).
+The first start downloads two embedding models from Hugging Face and a
+spaCy model, checked against stored hashes
+(<code>synap/boot/first_start.py</code>). A model provider is required
+to store anything: extraction, classification, compaction and the
+profile all call the configured LLM, which may be a local Ollama.</p>
+<p>The edition module decides what runs. <code>_CORE</code> sets
+<code>prompt_pack="core"</code>, <code>retrieval_llm=False</code>,
+<code>engine_uses_jev=False</code>,
+<code>scope_levels=("user", "customer", "install")</code> and
+<code>forget_default_mode="direct"</code>
+(<code>synap/cloud/shared/edition.py:135-155</code>).
+<code>apply_environment</code> writes <code>CORE_ENV</code> into
+<code>os.environ</code> and raises <code>EditionConflict</code> if any
+of those values, a refused switch or a per-instance list is already set
+otherwise (<code>:276-308</code>). Hook calls are no-ops in Core because
+<code>_load_cloud_hooks</code> returns early when <code>is_core</code>
+(<code>:433-436</code>).</p>
+<p>The import statements in the tree name 38 modules that are not in it,
+among them <code>synap.cloud.privacy.gate</code>,
+<code>synap.cloud.application.consolidation.invalidation</code> and the
+credits workers. <code>main.py</code> starts each such service inside a
+<code>try</code>, and <code>AbsentServiceFilter</code> turns the
+resulting <code>ModuleNotFoundError</code> into one INFO line
+(<code>synap/cloud/shared/absent_services.py:1-12</code>).</p>
+<p>The prompts differ from Cloud's.
+<code>synap/cloud/core_prompts/README.md:3</code> says <em>"Cloud
+prompts are not here and never ship"</em>, and lists which Core prompts
+were written new and which are earlier drafts;
+<code>prompt_switch.py</code> maps 27 prompt modules to
+<code>CLOUD_ONLY</code>. The SQL schema is a <code>pg_dump</code> of a
+larger database: it creates columns and tables for PII obfuscation,
+replication, nested scope levels and dashboard deletion requests, and
+code comments cite migrations 155, 156 and 163 against a Core runner
+holding two.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>docker compose -f deploy/docker-compose.yml up -d</code> from a
+clone, with a model line in <code>.env</code>, is the whole install; the
+README budgets 10 to 25 minutes to the first healthy server. The API
+binds to <code>127.0.0.1:8000</code>. There is no login: an optional
+static <code>SYNAP_API_TOKEN</code> is the only gate, and the server
+warns at start without it. The read-only browser at
+<code>/browser</code> shows memories, entities, the changelog and the
+config. Postgres rows are inspectable and repairable with SQL; the graph
+has a <code>graph_reconcile</code> command that reports until run with
+<code>--commit</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>POST /api/v1/memories/create</code>,
+<code>/batch</code>, <code>/upload</code> and the conversation routes
+enqueue to Redis and return an <code>ingestion_id</code>. A router feeds
+<code>Stage1Worker</code> (qualification), <code>Stage23Worker</code>
+(extraction) and <code>Stage4Worker</code> (resolution, classification,
+persistence)
+(<code>synap/cloud/agents/ingestion/workers/README.md</code>). The
+original text is written to the file store
+(<code>synap/cloud/application/ingestion/storage_provider.py:53-65</code>).</li>
+<li><strong>Extract.</strong> Core runs <code>hybrid_graph</code>
+extraction with graph extraction v2 (<code>edition.py:159-161</code>):
+one call returns memories, entities and relationships, with the date
+guidance addendum asking for <code>valid_from</code>,
+<code>valid_until</code>, <code>event_start</code> and
+<code>event_end</code>
+(<code>synap/cloud/core_prompts/date_guidance/addendum.txt</code>).</li>
+<li><strong>Resolve.</strong> <code>EntityResolutionService</code> wraps
+synap-er's <code>PipelineResolver</code> in adjudicated mode with no
+adjudicator, so synap-er decides by score
+(<code>synap/cloud/agents/ingestion/resolution/entity_resolver.py:105-107</code>).</li>
+<li><strong>Supersede.</strong>
+<code>KnowledgeUpdateDetector.detect_updates</code>
+(<code>knowledge_update.py:1854</code>) produces actions;
+<code>StorageCoordinator.execute_supersessions</code>
+(<code>synap/cloud/agents/ingestion/storage/coordinator.py:1081</code>)
+retires each old row through <code>_retire_and_release</code>
+(<code>:223</code>), deletes its vectors (<code>:1169-1182</code>) and
+queues a graph release.</li>
+<li><strong>Retire.</strong> <code>retire_memory_with_audit</code>
+updates the row and writes the <code>graph_sync_pending</code> row and
+the <code>memory_actions</code> row in one transaction
+(<code>synap/cloud/agents/ingestion/storage/sqlalchemy_rdbms_wrapper.py:737-875</code>).</li>
+<li><strong>Release.</strong> <code>GraphLifecycle.release</code> moves
+the ids to <code>released_memory_ids</code>, evaluates each touched
+record with the shared rule, writes the state, and on erase deletes
+triple and entity vectors
+(<code>synap/cloud/agents/ingestion/storage/graph_lifecycle.py:1-30</code>).
+The drain worker retries pending rows with backoff from 5 seconds to an
+hour and a 120-second lease, and leaves an ingestion's rows to Stage 4
+for 300 seconds (<code>graph_sync_outbox.py:32-57</code>).</li>
+<li><strong>Read.</strong> <code>RetrievalManager.fetch_context</code>
+(<code>retrieval_manager.py:3437</code>) runs <code>_fetch_fast</code>
+(<code>:3905</code>) or <code>_fetch_accurate</code>
+(<code>:4184</code>); the graph arm is
+<code>_neo4j_graph_discovery</code> (<code>:7415</code>), which loads
+supporter liveness once per discovery (<code>:7615</code>).</li>
+<li><strong>Delete and forget.</strong> <code>delete_memory</code>
+(<code>sdk_memories.py:1477-1731</code>);
+<code>POST /api/v1/memories/forget</code>
+(<code>synap/cloud/application/sdk_api/sdk_forget.py</code>) into
+<code>memory_forget/service.py</code> and
+<code>soft_delete.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> carries <code>client_id</code>,
+<code>instance_id</code>, <code>customer_id</code> and
+<code>user_id</code>; <code>memory_type</code>, <code>content</code> and
+a <code>confidence</code> constrained to 0..1; <code>valid_from</code>,
+<code>valid_until</code>, <code>temporal_category</code> and
+<code>temporal_confidence</code>; <code>event_start</code>,
+<code>event_end</code>, <code>event_precision</code> and
+<code>event_anchor</code>; <code>document_created_at</code>;
+<code>superseded_by</code>, <code>superseded_at</code>,
+<code>deprecated_at</code>, <code>deleted_at</code> and
+<code>deleted_reason</code>; and a <code>subject_id</code>
+(<code>synap/db/baseline.sql:375-420</code>). <code>memory_links</code>
+holds typed links between memories, and
+<code>memory_source_documents</code> records which documents contributed
+to a memory.</p>
+<p><code>memory_actions</code> is the changelog: one row per action from
+a closed vocabulary of 14 values, with the memory and the replacing
+memory, the before and after text, a reason and a correlation id
+(<code>synap/db/baseline.sql:424-442</code>).</p>
+<p>Scope has two modes, fixed once the first memory exists. In
+<code>equals_customer</code> every user is their own customer; in
+<code>strict</code> each request names both. The install is one client
+and one instance, seeded at first start
+(<code>synap/cloud/application/sdk_api/core_seed.py</code>). A request
+carrying a nested scope path is refused in Core
+(<code>synap/cloud/application/sdk_api/core_identity.py:171</code>).</p>
+<p>In Neo4j, Core sets <code>SYNAP_GRAPH_PER_SCOPE</code>, so each user,
+customer and the client has a graph namespace of its own, and each node
+and relationship also carries the <code>customer_id</code> and
+<code>user_id</code> it was written for
+(<code>edition.py:162</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Fast mode embeds the queries and searches the memory vectors with a
+where-clause built from the request's customer and user ids and the
+requested memory types (<code>retrieval_manager.py:6275-6278</code>).
+The predicate is compiled once from <code>legacy_read_predicate</code>
+for both Chroma and the Python post-filter
+(<code>synap/cloud/shared/scope_filter.py:251-286</code>). Cross-user
+and cross-customer reads are configuration flags that default to off
+(<code>retrieval_manager.py:1482-1483</code>). Compound queries are
+split by rule (<code>query_decomposition.py</code>), and Core builds no
+retrieval LLM client
+(<code>synap/cloud/application/shared/providers.py:194-196</code>).</p>
+<p>Accurate mode adds the graph arm. It walks the reader's own graph,
+then the customer's, then the client's, from anchor names, and passes
+every record through <code>_graph_scope_gate</code>
+(<code>retrieval_manager.py:2746-2844</code>), which refuses a record
+stamped with another user even in a namespace the reader may walk. It
+then loads the Postgres state of every supporting memory id in one query
+and drops any relationship or entity the shared rule closes. A liveness
+failure drops all graph statements and keeps the response out of the
+cache.</p>
+<p>The vector arm does no liveness check. A superseded memory leaves
+fast-mode results only because its vectors were deleted at supersession,
+and that delete is logged as <em>"non-fatal"</em> on failure and queued
+nowhere (<code>coordinator.py:1169-1182</code>). The outbox carries
+graph releases only.</p>
+<p>A Postgres reader with the full live predicate exists,
+<code>_fetch_from_postgres_memories</code>
+(<code>retrieval_manager.py:5119</code>), and nothing calls it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes do not block the agent. The create route returns once the job
+is queued, and the SDK's <code>wait_for_completion</code> polls
+<code>/status/{ingestion_id}</code>. A memory is retrievable after Stage
+4 commits, behind several LLM calls: extraction, then one classifier
+call per new memory that has neighbours. The README says the first
+memory can take up to a minute while models load, and the default model
+read timeout is 5 minutes per call.</p>
+<p>Conversation turns are recorded as messages and promoted to ingestion
+every five turns, when the conversation goes idle, and at session end,
+from the raw turns rather than from a summary
+(<code>synap/cloud/application/conversation/promotion.py:1-21</code>).
+Compaction keeps a separate rolling summary per conversation in
+<code>compacted_contexts</code>. No background pass rereads the whole
+store. The retention sweep deletes memories past a configured age
+through the delete route, in batches of 200 and at most five batches per
+instance per hourly cycle
+(<code>synap/cloud/application/retention/sweep.py:32-36</code>).</p>
+<p>Supersession is the classifier's call. A new memory can retire an old
+one only among the same user's neighbours, filtered by
+<code>_build_dedup_scope_filter</code>
+(<code>knowledge_update.py:63</code>). The guard against a re-asserted
+old value retiring the current one,
+<code>_retired_value_blocks_supersession</code>, is in the coordinator
+(<code>coordinator.py:1129-1137</code>). Its switch
+<code>SYNAP_KU_RETIRED_VALUE_GUARD</code> is in
+<code>CORE_REFUSED_SWITCHES</code> (<code>edition.py:224</code>), so a
+Core server set to use it refuses to start. The echo guard and the
+natural-language delete classifier are refused the same way
+(<code>:212</code>, <code>:215</code>).</p>
+<p><code>PATCH /api/v1/memories/{id}</code> overwrites
+<code>content</code> in place, re-embeds it, retires the old graph
+support and writes an <code>UPDATE</code> row carrying the previous text
+(<code>sdk_memories.py:1297-1475</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Core has no MCP server and no agent-facing tool of its own.
+Integration is the SDK: an application records messages and fetches
+context, and the framework packages in the SDK repository turn that into
+tools or middleware. Core has no gRPC stream, so those packages need
+<code>SYNAP_AUTO_LISTEN=false</code>. Every memory verb, including
+PATCH, delete and forget, sits on one HTTP surface behind one optional
+token, so whatever holds the token holds all of them.</p>
+<p>The setup skill under <code>skills/synap-core/</code> is an installer
+for coding agents: it checks the machine, writes the use-case file and
+runs a write-and-recall check. It is not a memory interface.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-a-delete-leaves">What a delete leaves</h3>
+<p>Delete by id hard-deletes the row and its entity links and commits
+the graph outbox row with it. It then deletes the memory and question
+vectors, purges the source chunks only when no other memory came from
+that document, releases the graph and clears the query cache, reporting
+any store that failed in <code>still_present_in</code>
+(<code>sdk_memories.py:1477-1731</code>). Two copies are outside that
+report:</p>
+<ul>
+<li><strong>The changelog.</strong> The route writes a
+<code>DELETE</code> row whose <code>previous_content</code> is the
+deleted text (<code>:1592-1606</code>), beside the <code>CREATE</code>
+row that already holds it. Only forget by description nulls changelog
+text
+(<code>synap/cloud/application/memory_forget/erase_copies.py:90-101</code>,
+<code>:299</code>).</li>
+<li><strong>The original.</strong> The text sent to <code>create</code>
+is written under <code>originals/</code>
+(<code>storage_provider.py:53-65</code>). The local file store has a
+<code>delete</code> method
+(<code>synap/providers/file/adapters/local.py:126-129</code>) and
+nothing in the engine calls it.</li>
+</ul>
+<p>The README says <code>fully_removed</code> <em>"is true only when
+nothing is left anywhere"</em>. The field covers the vector, source,
+graph and cache stores and not these two; its own comment scopes it to
+the search index (<code>sdk_memories.py:163-175</code>).</p>
+<h3 id="forget-by-description">Forget by description</h3>
+<p>Forget soft-deletes: it sets <code>deleted_at</code> and keeps
+<code>content</code> in the row
+(<code>synap/cloud/application/memory_forget/soft_delete.py:98-111</code>),
+then erases copies from vectors, candidates, the profile and the
+changelog. Matching is done by Jev, TypeSafe's hosted judge at
+<code>api.typesafe.ai</code>
+(<code>synap/cloud/shared/jev_client.py:16</code>), which receives the
+description and the text of every candidate in a pool of about 100
+(<code>memory_forget/judge.py:54-58</code>). It fails closed: with no
+key or no answer nothing is deleted. Core's default mode is
+<code>direct</code>. A request for <code>preview</code> is honoured and
+files a <code>pending</code> row in <code>deletion_requests</code>;
+<code>service.approve</code> and <code>service.reject</code> have no
+caller in the tree, so that row stays pending.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>bitemporal</code></strong> — awarded. A closed graph
+record keeps <code>retired_at</code> (when the system closed it) and
+<code>valid_to</code> (the superseding memory's event date or said-at
+date) as separate properties
+(<code>synap/providers/graph/adapters/neo4j.py:171-190</code>). Memories
+carry <code>valid_from</code> and <code>valid_until</code> from the
+extraction, null when the text gives none, beside
+<code>created_at</code> and <code>superseded_at</code>
+(<code>stage3_extraction.py:1653</code>). Reopening a record clears
+both.</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on the vector
+where-clause and the graph gate (section 6). Get, patch and delete by id
+filter on the fixed client id only, so they check no user.</li>
+<li><strong><code>audit_log</code></strong> — awarded on
+<code>memory_actions</code>. Every lifecycle writer adds a row, the
+retirement inside its own transaction; no statement in the tree deletes
+one; the forget path redacts text and keeps the row. The other writers
+log and continue when the insert fails
+(<code>sqlalchemy_rdbms_wrapper.py:654-711</code>).</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>tombstone</code></strong> — withheld. The
+retired-value guard is keyed on high-entropy values a user retired, and
+Core refuses to start with it on. Nothing keyed on a forgotten or
+deleted value is consulted at extraction, and deleting a correction
+revives the value it replaced.</li>
+<li><strong><code>trust_state</code></strong> — withheld. Superseded,
+deprecated and deleted are lifecycle states. The <code>candidates</code>
+table holds low-confidence extractions out of retrieval with no state
+field and no reader. The entity-resolution hold that would make a
+mention wait is off: <code>SYNAP_ER_HOLD_UNSURE</code> is pinned to
+<code>false</code> (<code>edition.py:176</code>), and the applier and
+<code>er_held_mentions</code> table named in <code>holds.py:1-22</code>
+are not in the tree.</li>
+<li><strong><code>human_review</code></strong> — withheld. The forget
+preview queue has no approve route in Core, and the browser only
+reads.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>The README describes Cloud's resolver.</strong> It says an
+unsure match <em>"is held for review instead of merged"</em>; in Core
+the hold is off and synap-er's score decides.</li>
+<li><strong>A restored memory has no vector.</strong> Supersession
+deleted the old memory's vectors, and deleting the newer one reopens
+graph records without re-embedding it, so fast mode cannot find the
+restored value while accurate mode's graph serves it.</li>
+<li><strong>Single tenant, no auth.</strong> Anyone reaching the port
+reads and writes every memory; the README says so, and the API binds to
+loopback by default.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>synap/tests</code> holds 2,717 pytest functions in 230 files.
+CI runs the Compose checks, an image build and the 52 setup-skill tests,
+not these (<code>.github/workflows/check.yml:62-63</code>);
+<code>CONTRIBUTING.md</code> says the maintainers run them. The 19
+end-to-end tests drive the real SDK against a Compose stack and need a
+model key, so they are run by hand. I ran none of it.</p>
+<p><code>negative_eval</code> rests on two unit files that drive the
+real retrieval code with a fake graph:</p>
+<ul>
+<li><code>synap/tests/unit/graph_lifecycle/test_read_graph_liveness.py:146-167</code>
+serves a graph holding a superseded-only edge, a deleted-only edge and a
+stored-retired edge beside a live and an unbacked one, and asserts the
+first three are absent and the last two present in the same result.</li>
+<li><code>synap/tests/core/test_graph_per_scope_isolation.py:91-134</code>
+asserts user A's record is absent from user B's read, including when it
+sits in a graph B may walk or in B's own graph, with B's record present
+each time.</li>
+</ul>
+<p><code>e2e/test_core_e2e.py:143-154</code> asserts the user boundary
+on a running stack: Alice's reads do not return Bob's vegetarian memory,
+while Bob's do. No test asserts that a superseded memory is absent from
+fast-mode results.</p>
+<p>The shared rule, the outbox, the restore and the delete route have 13
+test files under <code>synap/tests/unit/graph_lifecycle/</code>. The
+changelog tests check that <code>CREATE</code> and
+<code>SUPERSEDE</code> rows are emitted, through a mocked RDBMS.</p>
+<p><strong>LongMemEval.</strong> The README claims 83.6% (418/500) for
+Core and 95.6% for Cloud. <code>benchmarks/results/longmemeval/</code>
+holds a manifest, the answering prompt and 500 per-question records with
+the retrieved context, the generated answer and the judge's raw output.
+I recomputed the score from those records with the stated rule, a
+<code>judge_raw</code> starting with "yes" and no error: 418/500, every
+per-type figure in <code>RESULTS.md</code>, 390/470 answerable and 28/30
+abstentions, all exact. The one errored question returned no retrieval
+on four attempts and counts as wrong. Three qualifications apply:</p>
+<ul>
+<li>The run is dated 2 November 2026 and the manifest names no engine
+commit. This repository's first commit is dated 3 November, and the
+graph lifecycle and liveness read path arrived on 5 November, so the
+score is for an earlier build than the pin.</li>
+<li>Extraction used <code>gemini-3.1-pro-preview</code>; the quick start
+ships no model.</li>
+<li><code>benchmarks/METHODOLOGY.md</code> says Cloud's run <em>"is a
+different system"</em>, with memory metadata on and Cloud's prompts.
+Cloud's records are in another repository and were not read here.</li>
+</ul>
+<p>No paper is associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make derived records name their support.</strong> A graph
+edge that carries the ids of the memories behind it can be judged
+against the store of record at read time, and one pure rule shared by
+writer, repair job and reader keeps them from disagreeing.</li>
+<li><strong>Owe the derived store a release in the same
+transaction.</strong> A <code>graph_sync_pending</code> row committed
+with the retirement, drained inline and by a leased worker with backoff,
+turns "two stores, no transaction" into a retry.</li>
+<li><strong>Refuse settings you ignore.</strong> An edition that rejects
+a Cloud-only switch at start-up by name tells the operator the switch
+does nothing, where a silent ignore leaves them believing a guard is
+on.</li>
+<li><strong>Fail a liveness check closed.</strong> When the support
+lookup fails, drop the graph statements and keep the response out of the
+cache.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A read path that depends on a delete having worked.</strong>
+If one arm filters by liveness and another trusts that a vector was
+removed, the second needs the same outbox or the same check.</li>
+<li><strong>Deleted text in the receipt of the delete.</strong> Record
+that a memory was deleted and why; keep its text out of the row, or
+redact on every delete path rather than one.</li>
+<li><strong>A write-only staging table.</strong> Low-confidence
+extractions that nothing reads, promotes or expires are a growing copy
+of user text with no use.</li>
+<li><strong>Undo by foreign key.</strong>
+<code>ON DELETE SET NULL</code> on the supersession pointer makes
+deleting a correction restore the error, a policy that should be a
+decision per delete.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Core fits a team that wants a self-hosted conversational memory
+server behind its own backend, uses or plans to use the Synap SDKs, and
+can run five containers and a capable model. It suits single-product,
+single-tenant use where "remember what the user said and replace what
+changed" is the job. Walk away if deletion must be complete and
+provable, since originals and changelog text survive delete by id. Walk
+away too if a person must review what is stored. Read it as Cloud's code
+run with Cloud's guards and judges switched off.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether a private Cloud repository is the source of truth for
+<code>synap/</code>, and how the engine commits made here since 5
+November flow back to it.</li>
+<li>What score the pinned build gets on LongMemEval, given the graph
+liveness read path landed after the published run.</li>
+<li>Whether the vector delete at supersession is meant to join the
+outbox, as the coordinator's docstring anticipates with "lifecycle-aware
+filtering".</li>
+<li>Whether delete by id is meant to purge <code>originals/</code> and
+changelog text, as forget by description does for the changelog.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Edition: <code>synap/cloud/shared/edition.py</code>,
+<code>synap/cloud/shared/absent_services.py</code>,
+<code>synap/cloud/shared/prompt_switch.py</code>,
+<code>synap/cloud/core_prompts/README.md</code></li>
+<li>Schema: <code>synap/db/baseline.sql</code>,
+<code>synap/db/core_migrations/001_graph_sync_pending.sql</code>,
+<code>synap/db/core_migrations/002_graph_sync_restore.sql</code></li>
+<li>Write:
+<code>synap/cloud/agents/ingestion/pipeline/stage3_extraction.py</code>,
+<code>synap/cloud/agents/ingestion/pipeline/stage4_organization.py</code>,
+<code>synap/cloud/agents/ingestion/pipeline/knowledge_update.py</code>,
+<code>synap/cloud/agents/ingestion/storage/coordinator.py</code>,
+<code>synap/cloud/agents/ingestion/storage/sqlalchemy_rdbms_wrapper.py</code>,
+<code>synap/cloud/agents/ingestion/resolution/</code></li>
+<li>Graph lifecycle:
+<code>synap/cloud/agents/ingestion/services/graph_lifecycle_rule.py</code>,
+<code>synap/cloud/agents/ingestion/storage/graph_lifecycle.py</code>,
+<code>synap/cloud/agents/ingestion/storage/graph_sync_outbox.py</code>,
+<code>synap/cloud/shared/memory_liveness.py</code>,
+<code>synap/providers/graph/adapters/neo4j.py</code></li>
+<li>Retrieval:
+<code>synap/cloud/application/client_api/retrieval_manager.py</code>,
+<code>synap/cloud/shared/scope_filter.py</code></li>
+<li>Delete and forget:
+<code>synap/cloud/application/sdk_api/sdk_memories.py</code>,
+<code>synap/cloud/application/sdk_api/sdk_forget.py</code>,
+<code>synap/cloud/application/memory_forget/</code>,
+<code>synap/cloud/application/retention/sweep.py</code></li>
+<li>Tests: <code>synap/tests/unit/graph_lifecycle/</code>,
+<code>synap/tests/core/test_graph_per_scope_isolation.py</code>,
+<code>synap/tests/agents/ingestion/test_memory_actions_changelog.py</code>,
+<code>e2e/test_core_e2e.py</code></li>
+<li>Benchmark:
+<code>benchmarks/results/longmemeval/manifest.json</code>,
+<code>benchmarks/results/longmemeval/question_records.json</code>,
+<code>benchmarks/METHODOLOGY.md</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Forget approval has no caller.</strong>
+<code>git grep -n -E 'service\.(approve|reject)' -- synap ':!synap/tests'</code>
+returns nothing;
+<code>git grep -n -E 'service\.(preview|direct)' -- synap/cloud/application/sdk_api/sdk_forget.py</code>
+matches lines 99 and 106.</li>
+<li><strong>Nothing promotes or reads candidates outside
+forget.</strong>
+<code>git grep -n -i -E 'UPDATE[[:space:]]+candidates|promoted_to_id' -- synap ':!synap/db'</code>
+returns nothing;
+<code>git grep -c 'INSERT INTO candidates' -- synap</code> counts one in
+each RDBMS wrapper.</li>
+<li><strong>No statement deletes changelog rows.</strong>
+<code>git grep -n -i -E 'DELETE[[:space:]]+FROM[[:space:]]+memory_actions' -- synap</code>
+returns nothing; the same pattern for <code>memory_entity_links</code>
+matches <code>sdk_memories.py</code>.</li>
+<li><strong>Nothing deletes an original.</strong>
+<code>git grep -n -E '(file_store|_file_store|store)\.delete\(' -- synap ':!synap/tests'</code>
+returns nothing;
+<code>git grep -n 'store.write(' -- synap/cloud/application/ingestion/storage_provider.py</code>
+matches lines 61 and 77.</li>
+<li><strong>The vector arm loads no liveness.</strong>
+<code>git grep -n -E 'load_supporter_rows|_GraphLiveness\.load\(' -- synap/cloud/application/client_api/retrieval_manager.py</code>
+matches line 1055, inside <code>_GraphLiveness.load</code>, and line
+7615, inside <code>_neo4j_graph_discovery</code>.</li>
+<li><strong>The Postgres memory reader has no caller.</strong>
+<code>git grep -n -E '_fetch_from_postgres_memories\(' -- synap</code>
+matches only its definition at
+<code>retrieval_manager.py:5119</code>.</li>
+<li><strong>No held-mention applier or table.</strong>
+<code>git ls-files | grep -i review_apply</code> returns nothing;
+<code>git grep -n er_held_mentions -- synap/db</code> returns nothing;
+<code>git grep -n er_name_equivalents -- synap/db</code> matches the
+baseline.</li>
+<li><strong>Cloud modules named and absent.</strong>
+<code>git grep -h -o -E '(from|import) synap\.cloud\.(privacy|cloud_hooks|application\.(credits|consolidation|audit|grpc|lifecycle))[a-zA-Z0-9_.]*' -- synap | sort -u</code>
+lists 18 modules, and
+<code>git ls-files synap/cloud/privacy synap/cloud/cloud_hooks synap/cloud/application/credits synap/cloud/application/consolidation</code>
+returns nothing. Checking every <code>synap.*</code> import against the
+tree finds 38 absent modules, none imported at the top of a test
+file.</li>
+<li><strong>CI runs no engine test.</strong>
+<code>grep -n pytest .github/workflows/check.yml</code> matches only the
+skill-test lines 62 and 63.</li>
+<li><strong>The benchmark names no commit.</strong>
+<code>grep -c -E '"(commit|revision|sha)"' benchmarks/results/longmemeval/manifest.json</code>
+counts 0.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|CITATION' -- . ':!benchmarks/results'</code>
+matches only the LongMemEval citation in <code>NOTICE</code> and
+<code>benchmarks/METHODOLOGY.md</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/maximem-ai/maximem_synap_core/commit/ecfbb3b01dc00b465afa1c29f451cddaa6ec8e54"><code class="commit-id" title="ecfbb3b01dc00b465afa1c29f451cddaa6ec8e54">ecfbb3b0…</code></a>
+— first reading, from a full clone at a commit dated 18 November 2026,
+after release <code>v0.1.0</code>. Scoped to the edition module, schema,
+ingestion stages 3 and 4, knowledge update, storage coordinator, graph
+lifecycle and outbox, retrieval scope and liveness, delete, forget,
+retention and their tests; compaction, profile and the browser read only
+where they touch those tables; synap-er not read. Screened first: no
+auto-run surface; twelve build-time execution points, all
+<code>conftest.py</code>; two unpinned surfaces,
+<code>requirements.txt</code> and <code>e2e/requirements.txt</code>;
+<code>requirements.txt</code> inside the cooldown;
+<code>AGENTS.md</code> read as data. LongMemEval score recomputed from
+the committed records. Nothing installed, built or run. Four marks:
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
