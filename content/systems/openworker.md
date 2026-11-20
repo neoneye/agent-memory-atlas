@@ -135,7 +135,7 @@ Every clause in the policy maps to something another system in this atlas builds
 | "revise that entry instead of adding a near-duplicate" | dedupe and merge passes in [mem0](../mem0/), [agentmemory](../agentmemory/), [Memora](../memora/) |
 | "retire wrong or obsolete entries" | supersession chains in [Graphiti](../graphiti/), [Atomic Agent](../atomic-agent/) |
 | "verify it still exists before relying on it" | [Magic Context](../magic-context/)'s git-triggered re-verification |
-| "include the why" | reason fields in [Core Memory](../core-memory/), [Verel](../verel/) |
+| "include the why" | reason fields in [Core Memory](../core-memory/) 1.x, [Verel](../verel/) |
 | "use absolute dates" | nothing — most systems here have this bug |
 
 The last row is worth pausing on. "Use absolute dates, never 'yesterday'" fixes

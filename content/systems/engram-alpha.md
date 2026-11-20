@@ -91,7 +91,7 @@ and `crates/engram-core/src/policy.rs` names both:
 > certifying its own outputs.**
 
 That second sentence is the exact failure this atlas records in
-[Core Memory](../core-memory/) ("recall raises the class… still a use signal
+[Core Memory](../core-memory/)'s 1.x line ("recall raises the class… still a use signal
 feeding a trust field"), in [NOOA](../nooa-memory/)'s myelination, and in the
 decay curves of [Mnemopi](../mnemopi/) and [PowerMem](../powermem/). Engram names
 it and refuses it. The header adds that both principles were *"learned from

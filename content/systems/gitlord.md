@@ -54,8 +54,8 @@ enabled, clears the Chroma collection and re-adds every turn from the log
 (`gitlord/cli.py:176-197`, `gitlord/index.py:61-103`). That is the
 [evidence before belief](../../patterns/evidence-before-belief/) arrangement
 stated as architecture: a stale or corrupted index is a rebuild, not a data
-loss. [Core Memory](../core-memory/) reaches it with session JSONL as the
-authority; GitLord makes the authority a git repository.
+loss. [Core Memory](../core-memory/)'s 1.x line reached it with session JSONL as
+the authority; GitLord makes the authority a git repository.
 
 **No capability mark is awarded, and the reason is a category difference.**
 GitLord durably records *what happened* — turns, tool calls, their order and

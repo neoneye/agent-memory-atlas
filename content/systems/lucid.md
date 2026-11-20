@@ -366,7 +366,7 @@ persistence beyond a resume log. It cannot run its headline experiment without
 prompt texts you must write yourself, so any number you get is yours, not the
 paper's. And the tree grants no licence to copy any of it.
 
-Read the paper if your own store keeps a score the model gave its own output and reads it back as evidence. That is the failure recorded for [Core Memory](../core-memory/), [NOOA](../nooa-memory/), [Mnemopi](../mnemopi/) and [PowerMem](../powermem/), and [Engram Alpha](../engram-alpha/)'s *"exposure doesn't validate"* is the same argument without the inequality.
+Read the paper if your own store keeps a score the model gave its own output and reads it back as evidence. That is the failure recorded for [Core Memory](../core-memory/)'s 1.x line, [NOOA](../nooa-memory/), [Mnemopi](../mnemopi/) and [PowerMem](../powermem/), and [Engram Alpha](../engram-alpha/)'s *"exposure doesn't validate"* is the same argument without the inequality.
 
 ## 12. Open Questions
 

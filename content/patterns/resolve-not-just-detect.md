@@ -144,14 +144,16 @@ refilling with pairs someone already dismissed. What it lacks is requirement 5:
 `remove_both` deletes permanently and leaves no tombstone, so the next night's
 extraction may restore it.
 
-[Core Memory](../../systems/core-memory/) has the governance half. Its approval
-workflow states the non-blocking rule explicitly — "pending beads stay
-retrievable… rejection is the only state that removes" — distinguishes *rejected*
-(not memory-worthy, excluded unconditionally, retained with rejecter and reason)
-from *superseded* (once true, surfaced on request), and makes a reason mandatory
-on every governance action. It is aimed at review rather than at contradiction
-specifically, and its approve and reject verbs are also MCP tools the writing
-agent holds, recording the approver as a string rather than verifying it.
+[Core Memory](../../systems/core-memory/) keeps a detected contradiction open
+instead of settling it by recency. A judge model's `!contradicts` arrow ends
+neither statement, recall marks both `disputed`, and the judge is shown open
+disputes first in every later window until a statement replaces one side. The
+typed arrows meet requirement 1 and the open dispute requirement 3. A
+disposition that ends a statement, `repl` or `withdraws`, is written only when a
+second read without the first answer gives it again, and its actor is the judge
+call rather than a person with a reason, so requirement 4 holds only as
+provenance. It misses requirement 5: a withdrawn value restated in a new
+message is a new current bead unless the judge relates it again.
 
 [Daimon](../../systems/daimon/) solves requirement 5, which Memanto misses, while
 placing the decision somewhere neither of the others does: **inside the artifact the user is already reading**. A

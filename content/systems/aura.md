@@ -787,7 +787,7 @@ operator tags in a class nothing constructs, and scars keyed on failure
 classes — are the shape to avoid. It is it is what a system
 converges to when each mechanism is added where it was needed rather than to one
 model. The atlas's better examples put the status on the record and the record in
-the store: [Core Memory](../core-memory/) and [Daimon](../daimon/) both do.
+the store: [Daimon](../daimon/) does, and [Core Memory](../core-memory/)'s 1.x line did.
 
 ## 14. Open Questions
 

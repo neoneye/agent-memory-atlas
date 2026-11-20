@@ -197,14 +197,17 @@ apart, and retrieval moves only the last. Its paper adds the detail that closes
 the loop: "injected memories are not reinforced, so what the harness surfaces
 does not distort the usage signal" — the fix for dsh-ai-memory's prefetch.
 
-**A ceiling.** [Core Memory](../../systems/core-memory/) caps a ladder by its
-source. Grounding — `observed`, `extracted`, `inferred`, `speculative` — bounds
-the C/B/A `confidence_class` a bead can reach: a speculative bead "cannot reach
-canonical status", explicitly "not via recall, not even via promotion", and
-committed cases assert it across an index rebuild. The ladder it caps ranks and
-sets assembly depth rather than moving a bead between stores, so this is the
+**A ceiling.** [Core Memory](../../systems/core-memory/)'s 1.x line, read at
+[`b3857ff5c771d8c2b17ed2d19326de1fac19dbfd`](https://github.com/JohnnyFiv3r/Core-Memory/commit/b3857ff5c771d8c2b17ed2d19326de1fac19dbfd)
+and frozen on its `v1.x` branch, caps a ladder by its source. Grounding —
+`observed`, `extracted`, `inferred`, `speculative` — bounds the C/B/A
+`confidence_class` a bead can reach: a speculative bead "cannot reach canonical
+status", explicitly "not via recall, not even via promotion", and committed
+cases assert it across an index rebuild. The ladder it caps ranks and sets
+assembly depth rather than moving a bead between stores, so this is the
 ceiling shown on a confidence ladder; a status cap of the same kind is on
-[trust-state machine](../trust-state-machine/).
+[trust-state machine](../trust-state-machine/). The 2.0 rewrite dropped the
+ladder with promotion.
 
 **A recorded decision.** [CSM](../../systems/csm/) promotes from a candidate
 queue into durable memory through five gates — confidence, reinforcement,

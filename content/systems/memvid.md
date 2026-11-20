@@ -111,8 +111,8 @@ second and third questions answerable at all.
 The consequence worth stating: **a correction here never destroys the thing it
 corrected.** Supersession is a link, not an overwrite, so the pre-correction
 state remains addressable. That is the property [Graphiti](../graphiti/) achieves
-by closing validity intervals and [Core Memory](../core-memory/) by retaining
-superseded beads — Memvid gets it from the storage format rather than the schema.
+by closing validity intervals and [Core Memory](../core-memory/)'s 1.x line by
+retaining superseded beads — Memvid gets it from the storage format rather than the schema.
 
 ## 3. Architecture
 

@@ -2124,7 +2124,7 @@ Prepare derived context before the hard prompt threshold, persist the exact sour
 
 ### Resolve, do not just detect
 
-Repos: [`memanto`](../systems/memanto/) and [`daimon`](../systems/daimon/); governance half in [`core-memory`](../systems/core-memory/); the absence in
+Repos: [`memanto`](../systems/memanto/) and [`daimon`](../systems/daimon/); an open-dispute queue a model settles in [`core-memory`](../systems/core-memory/); the absence in
 [`gini-agent`](../systems/gini-agent/), [`mateclaw`](../systems/mateclaw/), [`magic-context`](../systems/magic-context/), [`openviking`](../systems/openviking/), [`holographic`](../systems/holographic/).
 
 Every contradiction a system detects must end in a named disposition, chosen by
@@ -2335,8 +2335,9 @@ observability only, because otherwise *"a broad recurring query would keep an
 attractive but wrong note alive forever — retrieval certifying its own outputs."*
 Trust anchors instead on `confirmed_at`, which only a deliberate act refreshes.
 
-That is the exact criticism this atlas records against
-[Core Memory](../systems/core-memory/) — recall raises the confidence class —
+That is the exact criticism this atlas recorded against
+[Core Memory](../systems/core-memory/)'s 1.x line, where recall raised the
+confidence class until the 2.0 rewrite dropped the class, and records
 against [NOOA](../systems/nooa-memory/)'s myelination, and against the
 reinforcement terms in [Mnemopi](../systems/mnemopi/) and
 [PowerMem](../systems/powermem/). A use signal feeding a trust field means the

@@ -823,9 +823,8 @@ returns no list of what it took.
 **GitLord is a clear instance of the mechanism the rubric deliberately
 excludes.** Every turn is a git commit, every session a branch, and
 `IndexBuilder` regenerates both its JSON index and its Chroma index by walking
-the log — the log is the authority and the indexes are projections, which is
-[Core Memory](../systems/core-memory/)'s arrangement obtained for free by making
-the authority a repository. It carries no capability marks and the reason is a
+the log — the log is the authority and the indexes are projections, obtained
+for free by making the authority a repository. It carries no capability marks and the reason is a
 category difference rather than a deficiency: it durably records *what happened*
 and has no representation of *what is believed*, so a user's correction and the
 mistake it corrects are both in the log, in order, with nothing preferring
@@ -3867,10 +3866,10 @@ tombstones that block model re-assertion. **Magic Context** maps each memory to
 the files it describes and re-verifies when git reports those files changed,
 keeping lifecycle and verification on separate axes. **MetaClaw** applies the
 idea one level up, promoting a candidate *retrieval policy* only when it does
-not regress across eight measured deltas. **Core Memory** goes furthest on the
-axis: a record's epistemic grounding sets a *ceiling* on how trusted it can ever
-become, so a speculative memory cannot be promoted into canon by being recalled
-often — the guarantee is structural rather than procedural. **Daimon** attacks
+not regress across eight measured deltas. **Core Memory** gates the change of
+belief rather than the belief: a judge's arrow that replaces or withdraws a
+statement is written only when a second read, made without the first answer,
+gives it again, and a contradiction ends neither side. **Daimon** attacks
 the problem one step earlier than any of them: the model is asked to label each
 item verbatim or inferred *and to cite the span*, and then code greps the quote
 against the transcript and downgrades the item when it is not there. Everywhere

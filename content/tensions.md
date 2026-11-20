@@ -156,8 +156,9 @@ principles its trust module states outright — *"Time doesn't validate"* and
 only, because otherwise *"a broad recurring query would keep an attractive but
 wrong note alive forever — retrieval certifying its own outputs."* Trust anchors
 instead on `confirmed_at`, which only a deliberate act refreshes. The atlas
-records the opposite choice against [Core Memory](../systems/core-memory/), where
-recall raises the confidence class.
+recorded the opposite choice against [Core Memory](../systems/core-memory/)'s
+1.x line, where recall raised the confidence class; its 2.0 rewrite keeps no
+confidence class and recall writes nothing.
 
 [Helix AGI](../systems/helix-agi/) found the loop in a running system and cut it:
 relation count was removed from a belief's mass under a comment naming what it

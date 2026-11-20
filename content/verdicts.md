@@ -560,12 +560,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: recall must be reproducible, or the memories are facts rather than attempts.
 
 ### [`core-memory`](../systems/core-memory/)
-- Best idea: epistemic grounding caps the confidence ladder, so a speculative record cannot reach canonical status by any amount of use.
-- Biggest risk: correction is record-keyed. `tombstone_bead` is documented as the single-bead semantic action and keyed on a bead id, so supersession and rejection do not stop re-extraction from the retained turns that produced the value.
-- Most reusable component: the grounding-to-ceiling table plus the monotonic class, which is a lookup and a `min()`.
-- Maturity impression: the largest and most specification-like system in the atlas, five of seven capability marks, 412 test files, and its distinctive claim asserted end to end — a promoted speculative bead stays capped at B across an index rebuild.
-- Study when: you need to explain why an incorrect memory never became permanent, and want the answer to be structural.
-- Do not copy when: you cannot carry the surface — thirteen subpackages and forty store-ops modules is a real maintenance budget.
+- Best idea: only the two arrows that end a statement's currency, `repl` and `withdraws`, are held back, and each is written only when a second read made without the first answer gives it again; every other judged arrow is written at once, and a contradiction ends neither side.
+- Biggest risk: the judge is the only producer of belief change and both reads go to one model binding, so the second read guards against run-to-run variance and not against a judgment the model makes the same way twice. Inside a workspace a statement in one scope can end another scope's statement.
+- Most reusable component: one copy of source text in `chunk_text`, immutability held by triggers and an insert-only engine role, and an erasure that deletes every derived row and writes its journal in one SQL function.
+- Maturity impression: a 2.0.0 rewrite in Rust on PostgreSQL alone, released on 20 November 2026 with 218 integration tests run against PostgreSQL 15 and 18 in CI; three of seven capability marks, `scope_enforced`, `audit_log` and `negative_eval`. The Python 1.x line is frozen on its `v1.x` branch.
+- Study when: you need an auditable record of what sources said, model-judged relationships that never overwrite it, and erasure you can defend.
+- Do not copy when: you need semantic recall, a person in the loop on what the store believes, or isolation stronger than a workspace the judge reads across.
 
 ### [`memanto`](../systems/memanto/)
 - Best idea: a conflict workflow that terminates in a human decision, including `keep_both` and a human-authored `manual` resolution.
