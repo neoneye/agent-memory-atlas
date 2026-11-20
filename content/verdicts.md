@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 827 reports.**
+**This page covers all 828 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7592,3 +7592,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: PMM-1.0, a custom non-commercial licence; 20,008 lines of Python in `pmm/`, 299 commits from 4 November 2025 to 12 November 2026, almost all by one author; 551 pytest functions with no CI workflow, not run here; two nonproduction experiments whose committed numbers recompute. Two marks: `audit_log` and `negative_eval`.
 - Study when: you want an agent whose every self-description can be replayed from an append-only log, and want to see utterance, validated claim and typed failure kept as separate layers.
 - Do not copy when: users must be able to delete what they said, more than one user or project shares a store, or the use is commercial.
+
+### [`lokalbot`](../systems/lokalbot/)
+
+- Best idea: **learned memory leaves with its evidence.** Each claim learned from a meeting carries the meeting and a store revision; deleting the meeting, or correcting away the line the claim quotes, retracts it, a claim the person states or keeps outlives the source, and a pending-revocation file withholds every learned claim until cleanup succeeds.
+- Biggest risk: **the extractor's label picks the gate.** For a meeting line the Think model's `kind` decides routing, so a preference it calls a fact is saved and used without review; only typed, dictated and work-memory items wait whatever their kind.
+- Second risk: `update` writes no tombstone for the replaced value, so a value corrected by editing can be learned again from a later line; a restated fact sits beside the one it contradicts; tombstones expire after 180 days and *Forget everything* deletes them.
+- Most reusable component: `PersonalModel.learn`, `remove` and `retract` in `LokalBot/Services/PersonalModel/PersonalClaim.swift`, with `DreamStore.invalidateEvidence` and `withEvidenceMutation` in `LokalBot/Services/Dreaming/DreamStore.swift`.
+- Maturity impression: GPL-3.0-only with an AGPL-3.0 portion, release v0.13.3, 2,485 commits from 11 June to 20 November 2026; 5,221 XCTest and 2,817 Rust test functions in CI with a skip guard, not run here; the GBrain keyword metrics recompute from committed raw files and the hybrid headline's raw files were not committed. Four marks: `tombstone`, `trust_state`, `human_review` and `negative_eval`.
+- Study when: an assistant learns about one person from their own speech and typing, and deleting a source has to take back what it taught.
+- Do not copy when: you need memory for a team or several users, contradiction handling, or a record of when a fact was true.

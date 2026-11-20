@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first meeting memory app
+whose Personal Context learns facts about the user overnight from their
+own words and retracts them with the source.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LokalBot — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first meeting
+memory app whose Personal Context learns facts about the user overnight
+from their own words and retracts them with the source.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LokalBot — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first meeting
+memory app whose Personal Context learns facts about the user overnight
+from their own words and retracts them with the source.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LokalBot — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "LokalBot",
+      "description": "A local-first meeting memory app whose Personal Context learns facts about the user overnight from their own words and retracts them with the source.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A personal profile that retracts with its
+source</p>
+          <h1>LokalBot</h1>
+          <p class="document-deck">A local-first meeting memory app
+whose Personal Context learns facts about the user overnight from their
+own words and retracts them with the source.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/stevyhacker/LokalBot">
+              <span>Source</span>
+              <strong>stevyhacker/LokalBot</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/stevyhacker/LokalBot/commit/dd49d90ad7fc05ad0fa61cc6d776bdf0193c9b41" title="dd49d90ad7fc05ad0fa61cc6d776bdf0193c9b41">
+              <span>Analyzed revision</span>
+              <code>dd49d90a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/stevyhacker--LokalBot" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>stevyhacker--LokalBot</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>GPL-3.0-only,
+in LICENSE and the Rust workspace manifest; ported autocomplete code
+stays AGPL-3.0, whose network clause covers the combined
+work</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>209,129
+lines of Swift in LokalBot/ and CLI/ and 458,187 lines of Rust in
+LinuxWindows/; the memory read here is 4,946 Swift and 3,986 Rust
+lines</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>2,485
+commits from 11 June to 20 November 2026, 2,373 of them under the
+maintainer's two author names; release v0.13.3</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>5,221
+XCTest functions and 2,817 Rust test functions; CI runs the macOS unit
+suite and cargo test on pull requests and pushes to master and dev, and
+fails any skip not on an opt-in list; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>LokalBot is a local-first macOS app, with a Rust Windows and Linux
+port in alpha, that records meetings without a bot, keeps screen and
+activity memory, and answers questions over them with local models. Most
+of the code is capture, transcription, search, autocomplete and the
+agent surfaces. The agent memory in it is small: <strong>Personal
+Context</strong>, an encrypted list of at most 300 claims about the
+person, and the <strong>work memory</strong> the nightly review keeps of
+projects and goals. Their services are about 2% of the Swift and 1% of
+the Rust. This report is scoped to them; the meeting library and screen
+memory appear only as the evidence they are learned from.</p>
+<p>What is notable is that a learned claim depends on its source. The
+overnight pass reads only the person's own lines and keeps an item only
+if it is grounded in the line it cites. A claim learned from a meeting
+is retracted when that meeting is deleted, or when a correction removes
+the quoted line. Forgetting or dismissing a learned claim leaves a hash
+of its text that the next night's writer checks.</p>
+<p>What is weak is the routing. For a meeting line the model's own kind
+label decides whether an item waits for review: a fact or goal is saved
+and used at once. Editing a claim leaves the old value learnable, a
+restated fact sits beside the one it contradicts, and tombstones lapse
+after 180 days.</p>
+<p><strong>Licence.</strong> The AGPL-3.0 network clause reaches the
+whole app, not only the code it covers. Cotabby-derived autocomplete
+parts <em>"remain under the GNU Affero General Public License version
+3"</em>, and, as GPL-3.0 section 13 provides, <em>"AGPL-3.0's section 13
+requirements on interaction through a network apply to the combination
+as such"</em> (<code>THIRD_PARTY_NOTICES.md:44-56</code>). Anyone who
+offers a modified LokalBot to users over a network owes them the
+complete source, whichever part was changed. The rest of the tree is
+GPL-3.0-only in <code>LICENSE</code> and
+<code>LinuxWindows/Cargo.toml:9</code>, and the memory code is GPL-3.0.
+Models are downloaded, not bundled. The notices say the LFM licence
+carries a commercial-use revenue threshold
+(<code>THIRD_PARTY_NOTICES.md:40-42</code>), and LFM2.5 is the
+Lightweight preset's autocomplete model.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>claim</strong> is one sentence about the person, of one of
+four kinds: fact, preference, goal or principle
+(<code>LokalBot/Services/PersonalModel/PersonalClaim.swift:10-78</code>).
+Each claim carries an origin, a <code>status</code> and an
+<code>authority</code>. Status is <code>confirmed</code> (in use) or
+<code>proposed</code> (<em>"waiting for the person's review; never
+used"</em>). Authority is <code>stated</code>, <code>learned</code>, or
+<code>confirmed</code> for a learned claim the person kept
+(<code>:46-60</code>). A learned claim also carries
+<code>evidence</code>, the meeting or day it came from, and
+<code>quote</code>, the person's own line.</p>
+<p>There are two ways in. The person types <em>Remember …</em> in Ask,
+which a parser recognizes in English and Serbian, or adds a claim in
+Settings. Either way it is <code>confirmed</code> and
+<code>stated</code>, with no evidence (<code>:521-557</code>,
+<code>:315-338</code>). The second way is the overnight pass. It reads
+the day's own-speech meeting turns and typed lines, asks the Think model
+for at most three items, and keeps only those grounded in the line they
+cite (<code>PersonalLearning.swift:551-570</code>).
+<code>PersonalModel.learn</code> then decides where each lands
+(<code>PersonalClaim.swift:433-466</code>):</p>
+<ul>
+<li>a principle is never learned;</li>
+<li>a duplicate, a near-duplicate of a current claim, or a value
+matching a tombstone is skipped;</li>
+<li>a preference, or any item flagged for review, becomes
+<code>proposed</code>;</li>
+<li>anything else, a fact or goal from a meeting line, is
+<code>confirmed</code> with authority <code>learned</code>.</li>
+</ul>
+<p>A claim stops being believed in four ways. <strong>Forget</strong>
+removes it, and for a learned claim writes a tombstone keyed on a
+SHA-256 of its normalized text (<code>:369-374</code>).
+<strong>Dismiss</strong> does the same to a suggestion
+(<code>:489-491</code>). <strong>Retraction</strong> removes a learned
+claim, with no tombstone, when its source changed and the source no
+longer holds the quoted line (<code>:378-380</code>,
+<code>PersonalModelController.swift:91-111</code>).
+<strong>Expiry</strong> drops a suggestion nobody reviewed after 14 days
+(<code>PersonalClaim.swift:506-510</code>). Saying a learned claim
+again, or <strong>Keep as statement</strong>, makes it the person's own.
+Its evidence is dropped, so deleting the meeting no longer removes it
+(<code>:326-330</code>, <code>:496-503</code>).</p>
+<p>The work memory is a second, separate belief store. The nightly
+review's model proposes full lists of projects, goals and patterns, and
+app code merges them
+(<code>LokalBot/Services/Dreaming/DreamModels.swift:336-430</code>). An
+entry the model stops mentioning is kept until it ages out, after 30
+days for a project and 45 for a goal (<code>:279-280</code>). A goal
+leaves early only when the day's evidence marks it completed or
+abandoned. Every entry carries the provenance of what the synthesis
+could read, and a source deletion removes it, pinned or not
+(<code>:452-471</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Personal Context claim is admitted, withheld, used and ended</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Personal Context claim is admitted, withheld, used and ended
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    U[&quot;person: Remember&lt;br/&gt;or Settings add&quot;]
+    N[&quot;overnight pass:&lt;br/&gt;Think model,&lt;br/&gt;at most 3 items&quot;]
+    U ~~~ N
+  end
+  U --&gt; ST[&quot;confirmed, stated:&lt;br/&gt;no evidence&quot;]
+  N --&gt; G{&quot;grounded in the&lt;br/&gt;cited own line?&quot;}
+  G --&gt;|&quot;no&quot;| DROP[&quot;dropped&quot;]
+  G --&gt;|&quot;yes&quot;| TB{&quot;duplicate, or&lt;br/&gt;tombstone hash?&quot;}
+  TB --&gt;|&quot;yes&quot;| SKIP[&quot;skipped&quot;]
+  TB --&gt;|&quot;no&quot;| R{&quot;meeting line and&lt;br/&gt;model says fact&lt;br/&gt;or goal?&quot;}
+  R --&gt;|&quot;yes&quot;| LC[&quot;confirmed, learned:&lt;br/&gt;tied to the meeting&quot;]
+  R --&gt;|&quot;no&quot;| P[&quot;proposed: preference,&lt;br/&gt;typed or uncertain;&lt;br/&gt;in no prompt&quot;]
+  P --&gt;|&quot;Keep in Settings&quot;| LC
+  P --&gt;|&quot;Dismiss&quot;| TS[&quot;tombstone:&lt;br/&gt;SHA-256 of text,&lt;br/&gt;180 days&quot;]
+  P --&gt;|&quot;14 days&quot;| EXP[&quot;expired&quot;]
+  LC --&gt; SRC{&quot;source deleted, or&lt;br/&gt;quoted line gone?&quot;}
+  SRC --&gt;|&quot;yes&quot;| RET[&quot;retracted,&lt;br/&gt;no tombstone&quot;]
+  LC --&gt;|&quot;Forget&quot;| TS
+  LC --&gt;|&quot;Keep as statement&quot;| ST</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The app is the system. Personal Context is one file,
+<code>memory/personal-model.json.enc</code>, sealed with AES-GCM under
+the per-install <code>chat-key</code> from the Keychain, written
+atomically with mode 0600
+(<code>LokalBot/Services/PersonalModel/PersonalModelStore.swift:4-90</code>).
+A file that cannot be opened, or one saved by a newer version, makes
+every edit fail rather than be overwritten (<code>:52-74</code>,
+<code>PersonalModelController.swift:283-301</code>).
+<code>PersonalModelController</code> is the single owner. It loads
+lazily so launch never touches the Keychain for it.</p>
+<p>The work memory is <code>memory/memory.json</code> with a rendered
+<code>memory.md</code>, plaintext at 0600, beside one report per
+analysed day in <code>dreams/</code>
+(<code>LokalBot/Services/Dreaming/DreamStore.swift:32-44</code>,
+<code>:555-574</code>). An evidence journal,
+<code>memory/evidence-revisions.json</code>, holds a store revision and
+the revision at which each day, meeting or activity day was last
+invalidated. A pending-revocation file at the library root blocks every
+reader while a retraction is unfinished, and an advisory
+<code>flock</code> makes the revision check and the commit atomic across
+the app and the headless runner (<code>:52-84</code>,
+<code>:499-521</code>).</p>
+<p>Agents never read the encrypted file. While the person's Personal
+context grant is on, the app writes
+<code>control/personal-context.json</code>, a plaintext copy of the
+claims marked shared. It rewrites the copy on every change and deletes
+it on any failure
+(<code>LokalBot/Services/PersonalModel/PersonalContextAccessManager.swift:54-79</code>).
+<code>lokalbot-cli personal-context</code> and the MCP tool
+<code>get_personal_context</code> read only that copy
+(<code>LokalBot/CLISupport/PersonalContextAccess.swift:293-349</code>).</p>
+<p>The Rust app in <code>LinuxWindows/</code> reimplements the same
+model, controller, learning pass and projection, and reads the Mac's
+file format
+(<code>LinuxWindows/crates/lokalbot-core/src/personal/mod.rs</code>,
+<code>controller.rs</code>,
+<code>LinuxWindows/crates/lokalbot-ai/src/personal_learning.rs</code>).
+An encrypted file opens only on the computer that saved it.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run beside the app. Learning needs the Think model,
+local by default; a remote engine needs explicit approval, and an
+automatic run stops unless the settings allow automatic Think inference
+(<code>LokalBot/AppState.swift:3303</code>). Cross-language grounding
+needs the local EmbeddingGemma embedder. Without semantic search a
+translated item is dropped rather than saved (<code>:3327-3331</code>).
+Storing a claim needs no model and no key. The Personal Context file is
+not readable by hand, by design; the work memory is, and Settings offers
+per-claim edit, forget and <em>Forget everything</em>
+(<code>PersonalModelController.swift:257-271</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Remember.</strong> <code>ChatViewModel.send</code> matches
+<code>RememberIntent.parse</code> on the visible text and saves through
+<code>PersonalModelController.remember</code> with no model call, then
+appends a receipt message
+(<code>LokalBot/Services/Chat/ChatViewModel.swift:579-586</code>,
+<code>:644-681</code>).</li>
+<li><strong>Validate.</strong> <code>validatedText</code> sanitizes,
+refuses empty text, refuses text over 280 characters rather than cutting
+it (<em>"a cut sentence can drop a negation"</em>), and refuses text the
+screen-privacy redactor would scrub as a secret
+(<code>PersonalClaim.swift:294-302</code>).</li>
+<li><strong>Learn.</strong> <code>AppState.learnAboutPerson</code> runs
+after each night's review. It first promotes long-running work memory,
+then gathers the day's lines, skips a day already read with the same
+fingerprint, and captures the evidence revision before the model call
+(<code>LokalBot/AppState.swift:3293-3346</code>).
+<code>PersonalLearning.utterances</code> takes own-microphone turns and
+skips a meeting whose microphone was shared by voices it cannot tell
+apart, unless one voice dominates four to one
+(<code>LokalBot/Services/PersonalModel/PersonalLearning.swift:217-249</code>).
+It keeps only lines with a first-person word, at most 40 lines and 6,000
+characters, of which 15 may be typed (<code>:62-68</code>,
+<code>:77-126</code>).</li>
+<li><strong>Ground.</strong> <code>proposals</code> drops items citing
+no real handle or of an unknown kind. <code>isGrounded</code> needs a
+third of the item's content words in the cited line. A translated item
+is compared by embedding: below 0.82 it is dropped, and between 0.82 and
+0.90 it waits for review unless a word root matches
+(<code>:379-395</code>, <code>:410-415</code>,
+<code>:430-484</code>).</li>
+<li><strong>Route.</strong> <code>candidate</code> sets
+<code>needsReview</code> for every typed line, whatever kind the model
+chose (<code>:515-526</code>). <code>WorkMemoryPromotion.evaluate</code>
+suggests a goal or project the review has kept for 14 days and seen in
+the last 7, always for review, and never one built on unattributed
+context
+(<code>LokalBot/Services/PersonalModel/WorkMemoryPromotion.swift:20-49</code>).</li>
+<li><strong>Retract.</strong> A meeting deletion or correction calls
+<code>DreamStore.invalidateEvidence</code>, which writes the pending
+intent, advances the revision, re-filters the work memory and removes
+invalidated reports (<code>DreamStore.swift:199-283</code>). The app
+then calls <code>retractIfLoaded</code>
+(<code>AppState.swift:2663</code>). Every read of learned claims re-runs
+<code>retractInvalidated</code> anyway. It keeps a changed claim whose
+source still holds its quote and removes the rest
+(<code>PersonalModelController.swift:91-111</code>,
+<code>AppState.swift:3351-3372</code>).</li>
+<li><strong>Use.</strong> <code>PersonalContextBuilder.select</code>
+orders the usable claims and packs them into 2,000 characters, skipping
+what does not fit
+(<code>LokalBot/Services/PersonalModel/PersonalContextBuilder.swift:11-37</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <code>PersonalClaim</code> has <code>id</code>, <code>kind</code>,
+<code>text</code>, <code>origin</code>, <code>alwaysUse</code>,
+<code>sharing</code>, <code>status</code>, <code>authority</code>,
+<code>evidence</code>, <code>quote</code>, <code>createdAt</code>,
+<code>updatedAt</code> and <code>lastUsedAt</code>
+(<code>PersonalClaim.swift:62-78</code>). <code>origin</code> says where
+the words came from: said in Ask, added in Settings, learned from a
+meeting, typed to a coding agent, asked in Ask, dictated, or promoted
+from work memory (<code>:13-36</code>). <code>evidence</code> is a
+<code>DreamEvidenceProvenance</code>: the meeting, screen day or digest
+sources plus the store revision captured before they were read
+(<code>DreamModels.swift:81-121</code>).</p>
+<p>The model file also holds <code>tombstones</code> (hash and date),
+<code>workSightings</code> (when each work goal or project was first
+seen) and <code>learnedDays</code> (a day key and a fingerprint of the
+lines read) (<code>PersonalClaim.swift:217-250</code>). Limits are 300
+confirmed claims, 20 open suggestions, 280 characters, and lifetimes of
+14 days for suggestions, 180 for tombstones and 60 for learned days
+(<code>:187-244</code>). A full model refuses new claims and never
+evicts one (<code>:334</code>).</p>
+<p>There is no scope key. It is one person's library, and the only
+partitions are <code>sharing</code> (<code>lokalBotOnly</code> or
+<code>agents</code>) and the authority filter scoped questions apply.
+There is no validity time: <code>createdAt</code> and
+<code>updatedAt</code> are record times, and a goal's horizon in the
+work memory is free text, <em>"never a normalized date"</em>
+(<code>DreamModels.swift:297-299</code>).</p>
+<p>The design document describes fields the code does not carry. Its
+claim shape has <code>supersedes</code>, <code>reviewAfter</code>,
+<code>sensitive</code> and <code>domains</code>, and its tombstone is
+kind plus text hash
+(<code>Docs/designs/personal-world-model-rfc-2026-10-14.md:112-137</code>).
+The code keys tombstones on text alone. Sensitive topics are excluded by
+the learning prompt, not by a flag
+(<code>PersonalLearning.swift:307</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no search over claims.
+<code>PersonalContextSelection.ordered</code> puts <em>Always use</em>
+claims first, then every principle and preference, then facts and goals
+sharing content words with the question and the person's last two
+messages, then the rest, newest first within each step
+(<code>LokalBot/CLISupport/PersonalContextAccess.swift:29-59</code>).
+Content words are folded, at least three letters long, and not stopwords
+(<code>:80-90</code>). The CLI and MCP tool use the same ordering over
+the shared copy, so an agent and Ask rank alike.</p>
+<p>Every block is labelled. A learned claim is rendered as
+<code>learned</code> with its date. The header says the items <em>"are
+not evidence"</em>, and the footer tells the model to prefer the newer
+of two conflicting items and to say so
+(<code>PersonalContextBuilder.swift:39-50</code>). The work memory is
+appended whole, up to 6,000 characters, and only to unscoped questions
+(<code>LokalBot/Services/Chat/ChatAgent.swift:135-138</code>,
+<code>ChatViewModel.swift:1100-1102</code>).</p>
+<p>Two failure modes follow from the ordering. Every preference goes in
+before any matching fact, so a large preference list crowds facts out of
+the budget. A two-letter token such as <em>CI</em> is never a content
+word, a miss the GBrain comparison recorded
+(<code>Benchmarks/memory/GBrain/2026-11-17/REPORT.md:188-190</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A <em>Remember</em> is synchronous and immediate: one sealed write,
+no model call. A learned claim waits for the nightly review. It is
+retrievable the next morning, or, as a suggestion, only after the person
+keeps it. The pass makes one model call per day read, at temperature 0
+with at most 1,024 output tokens. It does not run again for a day whose
+own lines are unchanged (<code>PersonalLearning.swift:560-570</code>,
+<code>AppState.swift:3317-3321</code>). Dictated text is kept only until
+that pass reads it (<code>AppState.swift:3334-3337</code>).</p>
+<p>The writer defends the store in five places:</p>
+<ul>
+<li>grounding against the cited line;</li>
+<li>an exact-key and near-duplicate check against current claims, at 70%
+of the shorter item's content words
+(<code>PersonalClaim.swift:441-447</code>, <code>:470-476</code>);</li>
+<li>the tombstone check;</li>
+<li>the review routing;</li>
+<li>the known list sent to the model, which includes open suggestions so
+the model does not repeat them (<code>AppState.swift:3326</code>).</li>
+</ul>
+<p>Nothing detects a contradiction. <em>I live in Novi Sad</em>, stated
+after <em>I live in Belgrade</em>, is a second claim, and both reach the
+prompt with their dates.</p>
+<p>The tombstone is narrower than forgetting:</p>
+<ul>
+<li><strong>Only forget and dismiss write one.</strong>
+<code>update</code> replaces the text and writes none, so a value the
+person corrected by editing can be learned again from a later day's line
+(<code>PersonalClaim.swift:340-365</code>).</li>
+<li><strong>A stated claim leaves none.</strong> That includes a learned
+claim the person kept as a statement and later forgot
+(<code>:369-374</code>).</li>
+<li><strong>A source retraction leaves none, by design.</strong> The
+value may be learned again from evidence that still exists
+(<code>:376-380</code>).</li>
+<li><strong>Forget everything deletes the tombstones</strong> with the
+file (<code>PersonalModelStore.swift:92-98</code>).</li>
+</ul>
+<p>The work memory is rewritten by every review: the model sees the
+current memory and returns full lists, and the merge caps them at 12
+projects, 10 goals and 12 patterns
+(<code>DreamModels.swift:271-280</code>). Settings can pin an entry or
+clear all of it. A single entry cannot be deleted. Only clearing, a
+source deletion or age-out removes it
+(<code>DreamStore.swift:350-377</code>, <code>:418-434</code>).</p>
+<p>On the read path, Personal Context costs at most 2,000 characters and
+work memory at most 6,000 per Ask turn. Both sit in the system prompt
+and change with the question, so a cached system-prompt prefix does not
+survive a new question.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>LokalBot's own Ask agent receives Personal Context automatically and
+has no tool that writes it. External agents read through
+<code>lokalbot-cli</code> or its stdio MCP server, which the README
+describes as read-only. Personal context needs its own grant on top of
+the general one, and returns only shared claims
+(<code>LokalBot/CLISupport/PersonalContextAccess.swift:315-318</code>).
+The bundled Claude Code plugin and the Agent Mode skill tell the agent
+to call <code>personal-context</code> <em>"before advising on a personal
+decision"</em>. They also tell it never to create or edit files in
+LokalBot's <code>control</code> folder
+(<code>LokalBot/Resources/pi/lokalbot-cli-skill/SKILL.md:23</code>,
+<code>:85</code>). Agent Mode runs a general shell, so that last rule is
+a request to the model.</p>
+<p>What agents type is memory input. With <em>Read coding agent
+sessions</em> on, the person's requests to Claude Code and Codex become
+typed lines for the overnight pass. Anything learned from them waits for
+review, and deleting the saved sessions retracts it
+(<code>PersonalLearning.swift:532-545</code>). The app also mirrors the
+notes Claude Code and Codex keep for themselves into a rebuildable
+SQLite index for <code>search_agent_notes</code>
+(<code>LokalBot/Services/AgentMemory/AgentMemoryStore.swift:9-14</code>).
+That index is a copy of other agents' memory, not LokalBot's.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-admits-a-learned-claim">What admits a learned claim</h3>
+<p>The overnight model cannot write status. It returns
+<code>line</code>, <code>kind</code> and <code>text</code> under a JSON
+schema, and app code sets status, authority, evidence and quote
+(<code>PersonalLearning.swift:338-395</code>,
+<code>PersonalClaim.swift:456-461</code>). It can choose
+<code>kind</code>, and for a meeting line that choice decides whether
+the item waits: a preference labelled a fact is saved and used at once.
+Every typed, dictated and work-memory item waits, whatever the kind.
+Only the person's microphone turns are read, so another speaker in a
+meeting cannot plant a claim. <em>"My microphone is me"</em> is assumed
+for older transcripts with no attribution
+(<code>PersonalLearning.swift:251-257</code>).</p>
+<h3 id="what-a-deletion-reaches">What a deletion reaches</h3>
+<p>Source deletion is the strongest part. The revision is advanced and
+the intent written before the memory journal, and a failure blocks every
+reader in every process until a retry succeeds
+(<code>DreamStore.swift:199-283</code>). A generation that started
+before a deletion cannot commit its output (<code>:398-413</code>).
+Learned claims are withheld while a revocation is pending, not served
+stale (<code>PersonalModelController.swift:65-73</code>). Forgetting a
+claim removes the record from the sealed file. A plaintext copy of every
+shared claim sits in <code>control/</code> while the grant is on.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code></strong> — awarded on the value-hash
+ledger the overnight writer checks before saving. It holds no text. It
+expires, an edit does not write one, and a reworded value passes it
+(section 7).</li>
+<li><strong><code>trust_state</code></strong> — awarded on
+<code>status</code>. <code>proposed</code> claims are in no prompt and
+no agent projection. <code>authority</code> additionally filters scoped
+questions, and pending revocation withholds evidence-backed claims.</li>
+<li><strong><code>human_review</code></strong> — awarded on the
+suggestion queue. Keep and Dismiss exist only in Settings on both
+platforms, and no CLI, MCP or Agent Mode surface reaches the personal
+model. The gap is that the model's kind decides whether a
+meeting-derived item enters the queue.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. There is no
+user, project or tenant key. <code>sharing</code> is applied when the
+app writes the agent copy, a separate file, so the agent boundary is a
+physical partition.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Claims carry
+record times only.</li>
+<li><strong><code>audit_log</code></strong> — withheld. No mutation
+record exists for claims or work memory. The evidence journal holds
+revision numbers, not changes.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 5,221 XCTest functions and 2,817 Rust test functions.
+CI runs the macOS unit tests on pull requests and pushes to
+<code>master</code> and <code>dev</code>. It then fails the run if any
+test skipped that is not on an opt-in list
+(<code>.github/workflows/build.yml:258-318</code>).
+<code>cargo test --workspace</code> runs on Linux and Windows
+(<code>.github/workflows/linux-windows.yml:148</code>,
+<code>:265</code>). I ran none of it.</p>
+<p><code>negative_eval</code> rests on populated read-path cases:</p>
+<ul>
+<li><code>LokalBotTests/Services/PersonalModel/PersonalLearningTests.swift:357-378</code>
+learns two claims from two meetings beside a stated one, invalidates one
+meeting, and asserts the usable claims are exactly the other two. A
+reopened controller must hold two, so the retraction was saved and not
+just filtered.</li>
+<li><code>:380-398</code> withholds the learned claim while a revocation
+is pending, keeps it in the file, and serves it again afterwards.</li>
+<li><code>LinuxWindows/crates/lokalbot-core/src/personal/tests.rs:722-770</code>
+marks a proposed preference as shared and asserts the agent projection
+is empty. It then confirms the claim and asserts the projection holds
+one, and blocks evidence and asserts the projection is empty again.</li>
+</ul>
+<p>Write-side cases cover the tombstone: a forgotten fact and a
+dismissed preference are not learned again, and a retraction writes none
+(<code>PersonalLearningTests.swift:268-288</code>,
+<code>tests.rs:350-403</code>). The Dream store has 19 retraction tests,
+including an empty regeneration that must not bring back deleted memory
+(<code>LokalBotTests/Services/Dreaming/DreamMemoryRetractionTests.swift:311-327</code>).
+No test asserts that an edited value stays out of a later night's
+learning, and section 7 shows it does not.</p>
+<p>Two committed benchmarks touch this memory. No paper is associated
+with the project.</p>
+<ul>
+<li><strong><code>Benchmarks/memory/GBrain/2026-11-17/</code></strong>
+compares Ask's meeting retrieval and Personal Context corrections with
+<a href="../gbrain/">GBrain</a> on QMSum. The headline hybrid result,
+R@1 0.280 against 0.239, does not recompute from the tree: the Mac run's
+per-question files <em>"stayed on the Mac"</em>
+(<code>REPORT.md:247-249</code>). The keyword run's raw files are
+committed. From <code>results-cloud/raw.tar.gz</code>, with my own
+script, I recomputed R@1 0.193 against 0.253, R@4 0.335 against 0.412
+and MRR 0.274 against 0.325 over 1,576 questions, as published. The
+Personal Context counts also recompute: current 39/40 after an edit;
+stale 40/40 after a restatement, current first in 28; 0/40 after a
+forget. The forget case removes stated facts and never re-runs learning,
+so it does not exercise the tombstone.</li>
+<li><strong><code>Benchmarks/think/MemoryRetention/2026-10-23/</code></strong>
+scores four local models on the learning prompt over 120 authored cases.
+Every non-comment line of its
+<code>PersonalLearning.swift.snapshot</code> matches the pinned file.
+The report's English table matches <code>scores.json</code>: Qwen3.5 9B
+recalled 37/52 eligible items with 5 unwanted proposals and was correct
+on 40/44 empty cases, and Hy-Memory 30B recalled 52/52 with 76 unwanted
+and 0/44 empty. I did not re-score the 480 raw completions. The report
+states that the assistant authored the cases and reviewed outputs with
+model identity visible.</li>
+</ul>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Tie learned memory to its evidence, and keep what the person
+said.</strong> Record the source and a store revision on each learned
+item, and drop it when the source is deleted or the quoted line
+corrected. A claim the person states or keeps outlives the source.</li>
+<li><strong>Withhold while a revocation is unfinished.</strong> A
+pending-intent file that blocks every reader until cleanup succeeds
+turns a half-finished deletion into a refusal rather than a stale
+answer.</li>
+<li><strong>Hash the rejected value.</strong> A SHA-256 of the
+normalized text stops re-learning and stores nothing the person asked to
+forget.</li>
+<li><strong>Route by source, not by the model's confidence.</strong>
+Everything learned from typing or dictation waits for review regardless
+of what the model called it.</li>
+<li><strong>Refuse over-long text instead of truncating it</strong>,
+because a cut sentence can drop the negation.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Letting the extractor's label pick the gate.</strong> If one
+kind is reviewed and another is not, the model choosing the kind chooses
+the review.</li>
+<li><strong>Treating an edit as anything but a rejection of the old
+value.</strong> Write the tombstone on replacement too, or the corrected
+value returns the next time it is said.</li>
+<li><strong>An expiring tombstone without saying so to the
+person.</strong> "Forgotten" that lasts 180 days is a different
+promise.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single-user desktop assistant that learns from a
+person's own meetings and typing, where privacy and the right to delete
+matter more than recall. Its design argues that a small, reviewed,
+source-linked profile is worth more than a large inferred one. It has no
+notion of a team, a second user or a shared library, and nothing in it
+tracks when a fact was true. A builder who needs contradiction handling,
+history, or memory shared across people should take the retraction
+machinery and build the rest. Compare <a
+href="../screenpipe/">Screenpipe</a>, a desktop recorder in the same
+product class that remembers only what someone writes down.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether meeting-derived facts and goals are meant to bypass review
+when the model's kind is wrong, given that the <a
+href="https://github.com/stevyhacker/LokalBot/tree/dd49d90ad7fc05ad0fa61cc6d776bdf0193c9b41/Benchmarks/think/MemoryRetention/2026-10-23">memory-retention
+benchmark</a> scores kind errors separately.</li>
+<li>Whether <code>update</code> should tombstone the replaced value, as
+the GBrain report's third recommendation implies for restatements.</li>
+<li>What the Mac hybrid run's per-question files show; they are not
+committed.</li>
+<li>How often a person's microphone carries another voice that
+diarization does not split, which the four-to-one dominance rule would
+then accept.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Personal Context model:
+<code>LokalBot/Services/PersonalModel/PersonalClaim.swift</code>,
+<code>PersonalModelStore.swift</code>,
+<code>PersonalModelController.swift</code></li>
+<li>Learning:
+<code>LokalBot/Services/PersonalModel/PersonalLearning.swift</code>,
+<code>WorkMemoryPromotion.swift</code>,
+<code>DictationLearningLog.swift</code>,
+<code>LokalBot/AppState.swift</code> (<code>learnAboutPerson</code>,
+<code>learnedClaimSourceStillQuotes</code>)</li>
+<li>Use:
+<code>LokalBot/Services/PersonalModel/PersonalContextBuilder.swift</code>,
+<code>LokalBot/Services/Chat/ChatViewModel.swift</code>,
+<code>LokalBot/Services/Chat/ChatAgent.swift</code></li>
+<li>Work memory and retraction:
+<code>LokalBot/Services/Dreaming/DreamModels.swift</code>,
+<code>DreamStore.swift</code></li>
+<li>Agent access:
+<code>LokalBot/CLISupport/PersonalContextAccess.swift</code>,
+<code>LokalBot/Services/PersonalModel/PersonalContextAccessManager.swift</code>,
+<code>CLI/Commands/PersonalContextCommand.swift</code></li>
+<li>Rust port:
+<code>LinuxWindows/crates/lokalbot-core/src/personal/</code>,
+<code>LinuxWindows/crates/lokalbot-ai/src/personal_learning.rs</code></li>
+<li>Tests: <code>LokalBotTests/Services/PersonalModel/</code>,
+<code>LokalBotTests/Services/Dreaming/DreamMemoryRetractionTests.swift</code>,
+<code>LokalBotTests/CLISupport/PersonalContextAccessTests.swift</code>,
+<code>LinuxWindows/crates/lokalbot-core/src/personal/tests.rs</code></li>
+<li>Benchmarks: <code>Benchmarks/memory/GBrain/2026-11-17/</code>,
+<code>Benchmarks/think/MemoryRetention/2026-10-23/</code></li>
+<li>Design:
+<code>Docs/designs/personal-world-model-rfc-2026-10-14.md</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No validity time on claims or work memory.</strong>
+<code>git grep -n -w -E 'validFrom|validTo|validUntil|validAt|valid_from|valid_to|valid_until|valid_at|occurredAt|occurred_at|eventTime|event_time' -- LokalBot/Services/PersonalModel LokalBot/Services/Dreaming LinuxWindows/crates/lokalbot-core/src/personal</code>
+returns nothing; the control
+<code>git grep -c -w -E 'createdAt|validFrom|validTo' -- LokalBot/Services/PersonalModel/PersonalClaim.swift</code>
+counts 14.</li>
+<li><strong>No mutation log for claims.</strong>
+<code>git grep -n -i -E 'audit|changelog|history' -- LokalBot/Services/PersonalModel LinuxWindows/crates/lokalbot-core/src/personal</code>
+returns nothing;
+<code>git grep -c -i -E 'audit|history' -- LokalBot/Services/Chat/ChatViewModel.swift</code>
+counts 45.</li>
+<li><strong>No scope key on claims.</strong>
+<code>git grep -n -i -E 'userID|user_id|tenant|accountID|account_id|projectID|project_id' -- LokalBot/Services/PersonalModel LinuxWindows/crates/lokalbot-core/src/personal</code>
+returns nothing;
+<code>git grep -c -E 'sharing' -- LokalBot/Services/PersonalModel/PersonalClaim.swift</code>
+counts 7.</li>
+<li><strong>Only <code>remove</code> writes a tombstone.</strong>
+<code>git grep -n 'tombstones.append' -- LokalBot/Services/PersonalModel</code>
+matches only <code>PersonalClaim.swift:371</code>, inside
+<code>remove</code>; <code>update</code> at lines 340-365 contains no
+<code>tombstone</code>.</li>
+<li><strong>The design document's extra fields are not in the
+code.</strong>
+<code>git grep -n -w -E 'supersedes|reviewAfter|review_after|domains|sensitive' -- LokalBot/Services/PersonalModel/PersonalClaim.swift LinuxWindows/crates/lokalbot-core/src/personal/mod.rs</code>
+returns nothing;
+<code>git grep -c -w -E 'alwaysUse|supersedes' -- LokalBot/Services/PersonalModel/PersonalClaim.swift</code>
+counts 8.</li>
+<li><strong>No agent surface writes the personal model.</strong>
+<code>git grep -n -E 'keepAsStatement|keep_as_statement|PersonalModelController|PersonalModelStore|personal\(\)\.(confirm|learn|remember|update|dismiss)' -- CLI LokalBot/CLISupport LinuxWindows/crates/lokalbot-cli LinuxWindows/crates/lokalbot-agent LokalBot/Resources/pi</code>
+returns nothing;
+<code>git grep -c -E 'personal\(\)\.(confirm|update)' -- LinuxWindows/crates/lokalbot-app/src/pages/settings/personal_context.rs</code>
+counts 3.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc' -- README.md Docs</code>
+returns nothing and no <code>CITATION.cff</code> is tracked; the pattern
+counts 7 in
+<code>Benchmarks/autocomplete/Cotyping/results/2026-10-10-models/RESEARCH.md</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/stevyhacker/LokalBot/commit/dd49d90ad7fc05ad0fa61cc6d776bdf0193c9b41"><code class="commit-id" title="dd49d90ad7fc05ad0fa61cc6d776bdf0193c9b41">dd49d90a…</code></a>
+— first reading, from a blobless clone of the default branch at release
+v0.13.3. Scoped to Personal Context and the nightly work memory on macOS
+and in the Rust port, their retraction path, agent access and tests, and
+the two memory benchmarks; the meeting library, screen memory and
+autocomplete were read only where they feed those. Screened first: two
+auto-run entries, both Claude Code plugin manifests that act only if a
+harness installs the plugin; eleven Cargo, bun and npm manifests changed
+one to six days before the pin; three build-time execution points, two
+<code>build.rs</code> and one <code>setup.py</code>; one floating-range
+manifest. GPL-3.0-only with an AGPL-3.0 portion, no rider. Nothing
+installed, built or run; I recomputed the GBrain keyword metrics from
+the committed raw files. Four marks: <code>tombstone</code>,
+<code>trust_state</code>, <code>human_review</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

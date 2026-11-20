@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 826 of 827 screened at the report's current pin.**
+**Progress: 827 of 828 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 388 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 375 |
-| Repositories with build-time execution (`EXEC`) | 595 |
+| Repositories with an auto-run surface (`RUNS`) | 389 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 376 |
+| Repositories with build-time execution (`EXEC`) | 596 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -205,6 +205,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
 | [`lobu`](../../content/systems/lobu.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitmodules`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/.mcp.json`, `server.json` |
 | [`local-memory-mcp`](../../content/systems/local-memory-mcp.md) | `server.json` |
+| [`lokalbot`](../../content/systems/lokalbot.md) | `.claude-plugin/`, `Distribution/claude-plugin/.claude-plugin/plugin.json` |
 | [`longterm-memory-mcp`](../../content/systems/longterm-memory-mcp.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.mcp.json`, `.vscode/mcp.json`, `server.json` |
 | [`lorekit`](../../content/systems/lorekit.md) | `.claude-plugin/`, `plugins/lorekit-claude/.claude-plugin/plugin.json`, `plugins/lorekit-claude/hooks/`, `plugins/lorekit-claude/hooks/hooks.json` |
 | [`loreweave`](../../content/systems/loreweave.md) | `server.json` |

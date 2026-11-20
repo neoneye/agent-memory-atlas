@@ -616,6 +616,22 @@ claim types without a validator are accepted as
 <code>name_change</code>, is what the prompt's <code>Identity:</code>
 line is built from
 (<code>pmm/runtime/context_utils.py:19-45</code>).</p>
+<p><a href="../../systems/lokalbot/">LokalBot</a> ties each learned
+claim about its user to the meeting it came from and lets the person cut
+the tie. A claim learned overnight carries the meeting id, the store
+revision captured before the lines were read, and the person's quoted
+line
+(<code>LokalBot/Services/PersonalModel/PersonalLearning.swift:532-545</code>).
+Deleting or correcting a meeting advances the revision; on every read, a
+changed claim survives only if its source still holds the quote, and
+while a revocation is unfinished every learned claim is withheld
+(<code>LokalBot/Services/PersonalModel/PersonalModelController.swift:65-73</code>,
+<code>:91-111</code>). The person can move a claim out of the evidence
+layer: <em>Keep as statement</em> drops its evidence, and it then
+outlives the meeting. The work memory beside it inherits, for any
+reworded entry, every source the synthesis could read, because a model
+citation cannot prove what did not influence it
+(<code>LokalBot/Services/Dreaming/DreamModels.swift:432-450</code>).</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store the event before starting asynchronous extraction.</li>
