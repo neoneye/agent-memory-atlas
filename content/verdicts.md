@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 820 reports.**
+**This page covers all 821 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7522,3 +7522,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, one commit on 26 October 2026; 7,324 lines of Python, 338 of them the experience memory and 1,879 vendored ConceptGraphs; no tests and no committed results; the paper's experience-memory ablation used one episode per scene. No mark.
 - Study when: an agent repeats tasks in the same static environment and you want a small, inspectable prior over places that fades without a clock.
 - Do not copy when: the agent's own verdicts are the only signal, the world changes between visits, or a prior must be correctable by anything other than decay.
+
+### [`homebody`](../systems/homebody/)
+
+- Best idea: **a memory set is bound to the map its poses are valid in.** `MapBinding` hashes the scene asset, the frame id and the navigation raster; a set refuses to open against any other, and every stored photo and depth array is content-addressed and re-verified on read, so a recalled view cannot be placed in the wrong frame or served altered.
+- Biggest risk: **removal is by spatial rank, not by record.** `recall` with `op="remove"` hides the top `k` records nearest a pose, and only the nearest is compared with the 2.0 m radius, so `k=8` can hide views from across the room; the model cannot remove the record id it was shown.
+- Second risk: a removed photo keeps its record, its files and its copies in run evidence, and the integrity check still covers it, so one damaged retired asset makes the whole set refuse to open; no test exercises removal.
+- Most reusable component: `NamedMemory` and `MapBinding` in `src/homebody/memory/store.py` and `src/homebody/memory/binding.py`.
+- Maturity impression: Apache-2.0 with research-only AMO weights committed; 38,868 lines of Python under `src/`, 427 of them the memory package; 15 commits from 26 September to 18 November 2026, the memory arriving in the 30 October release; 416 pytest functions, three on the store, no CI, not run here; no paper released. No capability mark: `audit_log` is withheld on a removal ledger with no time, actor or reason, `scope_enforced` on a per-set refusal over a directory per name, `negative_eval` because no test calls remove.
+- Study when: an embodied agent needs to know what a spot looked like on a fixed, localized map, and you want each stored view to say it is history.
+- Do not copy when: you need to find things by description, correct one view without losing its neighbours, or erase what a camera in a home recorded.

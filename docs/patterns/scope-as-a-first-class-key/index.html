@@ -1706,6 +1706,18 @@ alternatives. Project and environment sit above the key as a physical
 partition, one object each. The cost of binding a session to a document
 is that deleting the document fails the session's next recall, and with
 it every later turn.</p>
+<p><strong><a href="../../systems/homebody/">HomeBody</a> scopes a
+robot's photo memory by the coordinate frame it is valid in, and does it
+as a partition.</strong> A named set is a directory, and its
+<code>MapBinding</code> — scene id, scene hash, frame id and a hash of
+the navigation raster — is stored once per set and compared on open, so
+a set recorded on one map refuses to open on another, with a
+parametrised test for each field. No record carries the key and no read
+filters on it, so it does not earn <code>scope_enforced</code>, and it
+is the right boundary for what it protects: a pose is meaningless in the
+wrong frame. The cost is the other edge of a hash. Re-mapping the room
+retires the set, with nothing to migrate its poses into the new
+frame.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

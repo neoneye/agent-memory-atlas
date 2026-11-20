@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 820 reports.</strong></p>
+<p><strong>This page covers all 821 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33860,6 +33860,44 @@ clock.</li>
 <li>Do not copy when: the agent's own verdicts are the only signal, the
 world changes between visits, or a prior must be correctable by anything
 other than decay.</li>
+</ul>
+<h3 id="homebody"><a
+href="../systems/homebody/"><code>homebody</code></a></h3>
+<ul>
+<li>Best idea: <strong>a memory set is bound to the map its poses are
+valid in.</strong> <code>MapBinding</code> hashes the scene asset, the
+frame id and the navigation raster; a set refuses to open against any
+other, and every stored photo and depth array is content-addressed and
+re-verified on read, so a recalled view cannot be placed in the wrong
+frame or served altered.</li>
+<li>Biggest risk: <strong>removal is by spatial rank, not by
+record.</strong> <code>recall</code> with <code>op="remove"</code> hides
+the top <code>k</code> records nearest a pose, and only the nearest is
+compared with the 2.0 m radius, so <code>k=8</code> can hide views from
+across the room; the model cannot remove the record id it was
+shown.</li>
+<li>Second risk: a removed photo keeps its record, its files and its
+copies in run evidence, and the integrity check still covers it, so one
+damaged retired asset makes the whole set refuse to open; no test
+exercises removal.</li>
+<li>Most reusable component: <code>NamedMemory</code> and
+<code>MapBinding</code> in <code>src/homebody/memory/store.py</code> and
+<code>src/homebody/memory/binding.py</code>.</li>
+<li>Maturity impression: Apache-2.0 with research-only AMO weights
+committed; 38,868 lines of Python under <code>src/</code>, 427 of them
+the memory package; 15 commits from 26 September to 18 November 2026,
+the memory arriving in the 30 October release; 416 pytest functions,
+three on the store, no CI, not run here; no paper released. No
+capability mark: <code>audit_log</code> is withheld on a removal ledger
+with no time, actor or reason, <code>scope_enforced</code> on a per-set
+refusal over a directory per name, <code>negative_eval</code> because no
+test calls remove.</li>
+<li>Study when: an embodied agent needs to know what a spot looked like
+on a fixed, localized map, and you want each stored view to say it is
+history.</li>
+<li>Do not copy when: you need to find things by description, correct
+one view without losing its neighbours, or erase what a camera in a home
+recorded.</li>
 </ul>
         </article>
       </div>

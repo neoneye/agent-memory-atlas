@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **820 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **821 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -354,6 +354,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/holo-invariant/"><span class="az-id">HOLO-Invariant</span><span class="az-what">A correction is appended beside the claim, and every earlier check on it goes stale</span><code class="az-repo">Deathburgerz013/HOLO-Invariant</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/holographic/"><span class="az-id">Holographic</span><span class="az-what">Vector-symbolic memory</span><code class="az-repo">NousResearch/hermes-agent</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/holomem/"><span class="az-id">holomem</span><span class="az-what">One vector that forgets on a schedule</span><code class="az-repo">polmanas1998-star/holomem</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/homebody/"><span class="az-id">HomeBody</span><span class="az-what">A humanoid&#x27;s map-bound photo memory</span><code class="az-repo">Stanford-TML/homebody</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/honcho/"><span class="az-id">Honcho</span><span class="az-what">Peer and session representation</span><code class="az-repo">plastic-labs/honcho</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/huiran-cerebro/"><span class="az-id">Huiran-cerebro</span><span class="az-what">A merge the command line only previews</span><code class="az-repo">qilunuojiang9-hue/Huiran-cerebro</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/humans/"><span class="az-id">HUMANs</span><span class="az-what">Recall is an action the mind must choose</span><code class="az-repo">munch2u-a11y/HUMANs</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>

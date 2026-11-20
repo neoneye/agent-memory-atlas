@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Unitree G1 humanoid framework
+whose VLM agent stores map-localized camera photos in a named persistent
+set and recalls them by viewpoint.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="HomeBody — Agent Memory Atlas">
+    <meta property="og:description" content="A Unitree G1 humanoid
+framework whose VLM agent stores map-localized camera photos in a named
+persistent set and recalls them by viewpoint.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="HomeBody — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Unitree G1 humanoid
+framework whose VLM agent stores map-localized camera photos in a named
+persistent set and recalls them by viewpoint.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>HomeBody — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "HomeBody",
+      "description": "A Unitree G1 humanoid framework whose VLM agent stores map-localized camera photos in a named persistent set and recalls them by viewpoint.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A humanoid's map-bound photo memory</p>
+          <h1>HomeBody</h1>
+          <p class="document-deck">A Unitree G1 humanoid framework whose
+VLM agent stores map-localized camera photos in a named persistent set
+and recalls them by viewpoint.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Stanford-TML/homebody">
+              <span>Source</span>
+              <strong>Stanford-TML/homebody</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Stanford-TML/homebody/commit/d7eb20834024f0fdbf2b8357fb55e8bbd01610cf" title="d7eb20834024f0fdbf2b8357fb55e8bbd01610cf">
+              <span>Analyzed revision</span>
+              <code>d7eb2083…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Stanford-TML--homebody" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Stanford-TML--homebody</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0,
+in LICENSE, NOTICE and pyproject; the committed AMO walking-policy
+weights are released upstream for research use only</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>38,868
+lines of Python under src/, of which the memory package is 427 and the
+two memory skills 105; 62 vendored files under vendor/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>15
+commits from 26 September to 18 November 2026; code released in three
+drops on 6 October, 17 October and 30 October, the memory in the
+last</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>416
+pytest functions in tests/, 12,252 lines; three exercise the photo store
+and three more run remember and recall through the skills or a session;
+no CI configuration; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>HomeBody is the Stanford Movement Lab's framework for driving a
+Unitree G1 humanoid with a frontier vision-language model, one
+registered skill per decision. Its persistent memory is a small, named
+photo store. On the physical robot the model can <code>remember</code>
+the current calibrated camera frame with a description, and
+<code>recall</code> stored views near a map pose. The scan of the room
+enters the prompt separately, as a fixed list of labelled objects.</p>
+<p>What is notable is how carefully a stored view is tied to the frame
+it is valid in. A named set is bound to the hash of the deployment map,
+and opening it against any other map is refused. Every stored image and
+depth array is content-addressed and re-hashed on every read. Writes are
+atomic with a directory <code>fsync</code>. Every recalled view is
+labelled <code>historical</code>, and the prompt tells the model to
+check the live camera before acting on it.</p>
+<p>What is weak is correction. The only correction is
+<code>recall</code> with <code>op="remove"</code>, which hides whichever
+records rank nearest a pose rather than a record the model names. The
+2.0 m absence gate checks only the nearest of them. A removed photo
+keeps its record and its files. No test exercises removal.</p>
+<p><strong>Licence.</strong> The three AMO walking-policy weight files
+committed under <code>assets/models/</code> are listed in
+<code>THIRD_PARTY_NOTICES.md:10</code> as Apache-2.0 while <em>"the
+original project releases the weights for research use only"</em>. The
+walking controller loads them in SIM and on the robot
+(<code>src/homebody/backends/controller.py:109</code>,
+<code>src/homebody/backends/g1/assets.py:56</code>), and
+<code>homebody check</code> reports them missing otherwise
+(<code>src/homebody/__main__.py:66-67</code>). The repository's own code
+is Apache-2.0 in <code>LICENSE</code>, <code>NOTICE</code> and
+<code>pyproject.toml</code>, which agree. SuperOdometry, which
+<code>hardware/g1/superodom/</code> builds into the localization image,
+is GPLv3 by the same notices table; it is built from source and not
+vendored.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>There are two stored things the model treats as memory, and only one
+can be corrected.</p>
+<p><strong>The initial-scene memory</strong> is the scan's entity list
+from <code>semantics.json</code>: a label, a map anchor, a visual and a
+location description, and a <code>portable</code> flag
+(<code>src/homebody/vlm/observations.py:117-127</code>). REAL2SIM
+reconstruction writes it once per scene package. Every decision's prompt
+carries it as <em>"Initial-scene memory"</em>
+(<code>src/homebody/session/session.py:267</code>), and the agent prompt
+says it <em>"describes the environment as it was when it was scanned; it
+is not a live inventory"</em>
+(<code>src/homebody/vlm/agent_prompt.md:16-19</code>). Nothing on the
+task path writes it, so it can be wrong and stay wrong. The README's
+hardest suggested test is exactly that: move an object before the run
+and see whether the model notices (<code>README.md:143-146</code>).</p>
+<p><strong>The photo memory</strong> is a list of remembered views. A
+record is born when the model calls <code>remember</code>. It holds the
+photograph, optional metric depth with intrinsics and the camera pose,
+the robot's map pose <code>[x, y, yaw]</code>, the capture time, the
+frame identity and a free-text <code>content</code>
+(<code>src/homebody/memory/store.py:264-267</code>). It has two states,
+active and removed. A record becomes removed only when its id is
+appended to the set's <code>removals</code> list
+(<code>src/homebody/memory/store.py:311-314</code>), and every read
+subtracts that list (<code>src/homebody/memory/store.py:274-277</code>).
+Nothing else moves a record. There is no expiry, no supersession and no
+edit.</p>
+<p>The store makes no claim that a record is still true. Every hit
+carries <code>"historical": True</code>
+(<code>src/homebody/memory/store.py:283</code>), a non-empty result
+carries the reason <em>"Historical photos; verify current presence"</em>
+(<code>src/homebody/memory/store.py:315</code>), and the skill prompt
+says <em>"this observation does not certify future presence"</em>
+(<code>src/homebody/skills/remember.py:11-13</code>). A recalled photo
+is evidence of where the robot once saw something, which is what it is.
+The label is the same on every record, so it describes the store rather
+than distinguishing one memory from another.</p>
+<p>Memory is agent-controlled. The model decides what to remember, what
+to recall and what to remove. The operator console shows the set's
+counts and the recalled photos and has no memory verb.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write is refused unless the current map matches the set's binding; recall ranks by pose alone, and removal appends ids to a ledger the reads subtract while the files stay</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write is refused unless the current map matches the set&#39;s binding; recall ranks by pose alone, and removal appends ids to a ledger the reads subtract while the files stay
+flowchart TD
+  A[&quot;remember(content)&lt;br/&gt;model&#39;s decision&quot;] --&gt; B{&quot;current map hash&lt;br/&gt;= set binding?&quot;}
+  B --&gt;|no| R[&quot;MEMORY_INVALID&lt;br/&gt;nothing written&quot;]
+  B --&gt;|yes| C[&quot;append record&lt;br/&gt;pose, unix time,&lt;br/&gt;frame_id, content&quot;]
+  C --&gt; D[(&quot;memory.json&lt;br/&gt;records + removals&lt;br/&gt;assets by sha256&quot;)]
+  E[&quot;recall(pose, k, op)&lt;br/&gt;model&#39;s decision&quot;] --&gt; F[&quot;rank active records&lt;br/&gt;planar distance&lt;br/&gt;+ yaw penalty&quot;]
+  D --&gt; F
+  F --&gt; G{&quot;nearest score&lt;br/&gt;above 2.0 m?&quot;}
+  G --&gt;|yes| H[&quot;absent&lt;br/&gt;a valid result&quot;]
+  G --&gt;|no| I{&quot;op&quot;}
+  I --&gt;|retrieve| J[&quot;top k hits&lt;br/&gt;historical: true&quot;]
+  I --&gt;|remove| K[&quot;append top k ids&lt;br/&gt;to removals&lt;br/&gt;files kept&quot;]
+  K --&gt; D
+  J --&gt; L[&quot;photos attached to&lt;br/&gt;every later prompt&lt;br/&gt;until next recall&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>HomeBody is a Python package with a CLI, <code>homebody</code>, and
+three workflows. SIM runs the G1 in a MuJoCo reconstruction of a
+kitchen. REAL2SIM explores a room on the robot and reconstructs it into
+a scene package with a coding agent. REAL runs the task skills on the
+physical robot through a local web console. The model is reached through
+the Codex or Claude Code CLIs, or the OpenAI or Anthropic APIs
+(<code>src/homebody/vlm/catalog.py</code>).</p>
+<p>The photo memory exists only in REAL.
+<code>homebody run --backend real</code> requires
+<code>--memory NAME</code>
+(<code>src/homebody/__main__.py:346-347</code>), and the memory flags
+are rejected for SIM (<code>src/homebody/__main__.py:348-349</code>).
+The SIM <code>Session</code> is built with no memory and the default
+registry of navigate, pick and place
+(<code>src/homebody/__main__.py:145-150</code>,
+<code>src/homebody/skills/registry.py:8</code>).
+<code>session/real_sim.py</code> composes the REAL task policy, memory
+included, on MuJoCo, and only tests call it.</p>
+<p>The store is <code>NamedMemory</code> in
+<code>src/homebody/memory/store.py</code>, 342 lines over the standard
+library, NumPy and Pillow. A set is a directory
+<code>&lt;memory_root&gt;/&lt;name&gt;</code>, and the root defaults to
+<code>$XDG_STATE_HOME/homebody/memory</code>
+(<code>src/homebody/__main__.py:269</code>). It holds
+<code>memory.json</code>, a <code>.lock</code> file and an
+<code>assets/</code> directory of <code>&lt;sha256&gt;.png</code> and
+<code>&lt;sha256&gt;.npy</code> files. Each operation takes a thread
+<code>RLock</code> and an exclusive <code>fcntl.flock</code>
+(<code>src/homebody/memory/store.py:113-123</code>). Each state write
+goes through a temporary file, <code>fsync</code>,
+<code>os.replace</code> and an <code>fsync</code> of the directory
+(<code>src/homebody/memory/store.py:42-58</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The memory itself needs nothing running: no database, no embedding
+model, no network. It is a JSON file and image files a person can open.
+The system around it needs a great deal: a G1 with Dex3 hands and a
+MID-360 LiDAR, a Linux workstation with an NVIDIA GPU and Docker,
+SuperOdometry localization, a calibrated head RGB-D camera, SAM2.1
+tracking weights fetched separately, and a model login or API key for
+every decision (<code>README.md</code>,
+<code>guides/real-long-horizon.md</code>). A model is required to store
+anything, because only the model calls <code>remember</code>. Repair by
+hand is possible and constrained: a record's text fields can be edited,
+but a missing or altered asset makes the whole set refuse to open
+(section 9).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Composition.</strong> <code>run_real</code> resolves the
+memory root and calls <code>session.real.compose</code>
+(<code>src/homebody/__main__.py:269-271</code>). That builds a
+<code>MapBinding</code> from the deployment map's frame id, file hash
+and navigation raster (<code>src/homebody/session/real.py:11-13</code>).
+<code>session/task.py</code> opens the set with the map's diagonal and
+registers <code>remember</code> and <code>recall</code>
+(<code>src/homebody/session/task.py:24-31</code>,
+<code>src/homebody/skills/registry.py:30-39</code>).</li>
+<li><strong>Open.</strong> <code>NamedMemory.open</code> validates the
+name, refuses symlinks, creates the state on first use with
+<code>radius_m</code> 2.0 and <code>yaw_weight</code> 0.30, and reads it
+back (<code>src/homebody/memory/store.py:84-111</code>). A directory
+with assets and no <code>memory.json</code> is refused, <em>"existing
+files retained for recovery"</em>
+(<code>src/homebody/memory/store.py:98-100</code>).</li>
+<li><strong>Write.</strong> <code>remember.execute</code> observes a
+fresh frame and calls <code>NamedMemory.remember</code>
+(<code>src/homebody/skills/remember.py:37-46</code>). The store checks
+the frame's navigation against the binding and encodes the PNG and the
+depth. Under the lock it re-reads the state, writes both assets, appends
+the record and writes the state
+(<code>src/homebody/memory/store.py:234-272</code>).</li>
+<li><strong>Read.</strong> <code>recall.prepare</code> checks the
+binding against the current map and validates <code>pose</code>,
+<code>k</code> in 1..8 and <code>op</code>
+(<code>src/homebody/skills/recall.py:29-45</code>).
+<code>NamedMemory.recall</code> ranks the active records and applies the
+gate (<code>src/homebody/memory/store.py:288-316</code>).</li>
+<li><strong>Injection.</strong> After a successful retrieve,
+<code>Session.run_task</code> keeps the hits in
+<code>self.recalled</code>
+(<code>src/homebody/session/session.py:410-411</code>).
+<code>Session.images</code> loads each through <code>load_image</code>,
+copies the pixels into the run's evidence with
+<code>Recorder.historical_image</code>, and appends them after the
+current images (<code>src/homebody/session/session.py:287-310</code>,
+<code>src/homebody/session/recorder.py:130-154</code>).
+<code>Session.prompt</code> adds their metadata under a fixed
+instruction (<code>src/homebody/session/session.py:272-278</code>).</li>
+<li><strong>Remove.</strong> The same <code>recall</code> call with
+<code>op="remove"</code> extends <code>removals</code> with
+<code>{"record_id", "query_pose"}</code> for each hit and writes the
+state (<code>src/homebody/memory/store.py:311-314</code>). The session
+then clears its attached photos
+(<code>src/homebody/session/session.py:411</code>).</li>
+<li><strong>Display.</strong> The console prints the set name, active
+count and removed count
+(<code>src/homebody/ui/console.py:95-101</code>), and a gallery of
+recalled photos captioned as not the live camera
+(<code>src/homebody/ui/console.py:544-564</code>).</li>
+<li><strong>Tests.</strong> <code>tests/test_real_memory.py</code>,
+<code>tests/test_real_memory_skills.py</code>, and the session runs in
+<code>tests/test_real_composition.py:19-88</code> and
+<code>tests/test_real_navigation_sim.py:11-45</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory.json</code> has five keys: <code>schema</code>
+(<code>homebody-photo-memory/v1</code>), <code>binding</code>,
+<code>retrieval</code>, <code>records</code> and <code>removals</code>
+(<code>src/homebody/memory/store.py:106-109</code>).</p>
+<p>A record is <code>id</code> (a <code>uuid4</code> hex),
+<code>pose</code>, <code>time</code>, <code>frame_id</code>,
+<code>content</code>, <code>image</code>, <code>depth</code> and
+<code>camera</code> (<code>src/homebody/memory/store.py:264-267</code>).
+<code>image</code> and <code>depth</code> are references of path,
+SHA-256, size and media type
+(<code>src/homebody/memory/store.py:225-226</code>). <code>camera</code>
+holds the 3×3 intrinsics and the 4×4 world-camera transform when depth
+was captured.</p>
+<p>The scope is the set. <code>MapBinding</code> carries
+<code>scene_id</code>, <code>scene_hash</code>, <code>frame_id</code>,
+<code>navigation_hash</code> and an optional <code>geometry_hash</code>
+(<code>src/homebody/memory/binding.py:44-63</code>), stored once per set
+and not per record. <code>_validate</code> refuses a state whose binding
+differs from the one the deployment supplied
+(<code>src/homebody/memory/store.py:160-161</code>), and
+<code>check_navigation</code> refuses a frame from a map whose hashes
+differ (<code>src/homebody/memory/binding.py:73-80</code>). Records
+carry no scope key; a hit is stamped with the set's binding when it is
+returned (<code>src/homebody/memory/store.py:286</code>).</p>
+<p>Provenance is the capture time and the frame identity, and both are
+narrower than they look. On the robot, <code>time</code> is the
+capture's Unix time (<code>src/homebody/backends/real.py:227</code>,
+<code>:247</code>). <code>frame_id</code> is
+<code>(epoch, sequence)</code>
+(<code>src/homebody/primitives/observations.py:130-132</code>), and the
+REAL backend starts its epoch at 1 in every process
+(<code>src/homebody/backends/real.py:95</code>), so the same
+<code>frame_id</code> recurs across sessions. The record names no
+session and no run directory. Linking a record back to the run that
+wrote it means matching its time against a session's
+<code>events.jsonl</code>.</p>
+<p>There is one clock. <code>time</code> is when the frame was captured;
+nothing records when the record was written or when it stopped being
+believed. A removal entry holds a record id and the query pose and no
+time (<code>src/homebody/memory/store.py:312-313</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is spatial and nothing else. The score of a record is the
+planar distance between the query pose and the record's pose, plus a yaw
+term: 0.30 times the map diagonal times the yaw error over π
+(<code>src/homebody/memory/store.py:303-306</code>).
+<code>session/task.py</code> passes the map's own diagonal, the raster's
+shape times its resolution
+(<code>src/homebody/session/task.py:24</code>), so on a larger map a
+heading difference costs more metres. Ties break by insertion order
+(<code>src/homebody/memory/store.py:307</code>).</p>
+<p>The absence gate looks only at the nearest record. If no record is
+active, or the best score exceeds <code>radius_m</code>, the result is
+<code>absent</code> with a reason, and the prompt says an empty result
+is valid (<code>src/homebody/memory/store.py:308-309</code>,
+<code>src/homebody/session/session.py:276</code>). Otherwise the top
+<code>k</code> are returned
+(<code>src/homebody/memory/store.py:310</code>), and the second through
+eighth are not compared with the radius. A <code>recall</code> with
+<code>k=8</code> from a well-covered spot can return views from the far
+side of the room.</p>
+<p><code>content</code> is never searched. A query with no pose is
+answered <em>"Spatial photo recall requires a map pose; text search is
+unavailable"</em> (<code>src/homebody/memory/store.py:299-301</code>),
+and the skill supplies the current pose when the model gives none
+(<code>src/homebody/skills/recall.py:35</code>). To find where it saw
+the cups, the model must already have a pose in mind; the scan's anchors
+in the initial-scene memory are what give it one.</p>
+<p>Injection is bounded and sticky. At most eight photos are attached,
+after the four current images, with record id, pose, time, frame id,
+content and image number in the prompt
+(<code>src/homebody/session/session.py:302-306</code>).
+<code>self.recalled</code> is set only after a successful recall and is
+not cleared when a new task starts
+(<code>src/homebody/session/session.py:134</code>, <code>:411</code>).
+The last recalled photos therefore ride along on every decision of every
+later task in the session until the model recalls again. The full recall
+result, with camera matrices and binding hashes for every hit, also sits
+in the recent-step history the prompt replays for 24 steps
+(<code>src/homebody/session/session.py:262-263</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A memory is created only by the model's <code>remember</code> call on
+a REAL task, from a frame observed at execution time
+(<code>src/homebody/skills/remember.py:37-41</code>). Exploration does
+not write the photo store, since <code>NamedMemory</code> is opened only
+in <code>session/task.py</code>. The exploration run keeps its own
+pose-tagged views in <code>VisualHistory</code>, which starts a new
+epoch on construction and leaves earlier epochs on disk <em>"their poses
+unused"</em>
+(<code>src/homebody/real2sim/exploration/visual_history.py:271-289</code>).
+That is working memory for one exploration run.</p>
+<p>The write validates shape and finiteness, not meaning. The image must
+be RGB <code>uint8</code>, depth must match the image grid and use NaN
+for invalid readings, and the camera geometry must be finite
+(<code>src/homebody/memory/store.py:238-259</code>).
+<code>content</code> must be a string and is otherwise unbounded and
+unchecked (<code>src/homebody/skills/remember.py:31-33</code>). There is
+no deduplication. Two remembers from the same pose write two records;
+identical pixels share one content-addressed asset
+(<code>src/homebody/memory/store.py:227-231</code>).</p>
+<p>Nothing updates a record and nothing deletes one. The only state
+change after creation is the removal append; the files of a removed
+record stay in <code>assets/</code> and its entry stays in
+<code>records</code>.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write is synchronous. It blocks the decision loop for a PNG
+encode, a depth serialisation and two hashes, with no model call, and
+the record is retrievable at the next decision. There is no background
+pass.</p>
+<p>Every operation pays for the whole store. <code>_read</code> runs
+<code>_validate</code>, which re-hashes every asset of every record,
+removed ones included, opens each PNG with Pillow and loads each depth
+array (<code>src/homebody/memory/store.py:146-216</code>). That cost
+grows with the number of views ever remembered. It is paid on
+<code>remember</code>, on <code>recall</code>, on each attached photo
+through <code>load_image</code>, and on every console status refresh
+(<code>src/homebody/memory/store.py:322-342</code>). For the set sizes
+one room produces it is probably small; nothing in the tree measures
+it.</p>
+<p>On the read side, up to eight full-resolution historical images go to
+the model on every decision while they stay attached, with their
+metadata at the end of the prompt.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model holds the whole surface. <code>remember</code> and
+<code>recall</code> are skills in the REAL registry beside navigate,
+pick and place, each with a one-line prompt
+(<code>src/homebody/skills/remember.py:11-13</code>,
+<code>src/homebody/skills/recall.py:14-18</code>). Both are
+<code>PASSIVE</code> and declare no robot commands, and a test asserts
+that remember and recall issue not even a hold
+(<code>tests/test_real_memory_skills.py:43-52</code>).</p>
+<p>Retrieval is tool-mediated, and injection is automatic once the model
+has recalled. Nothing recalls on the model's behalf and nothing prompts
+it to remember. The session block says what each verb does and that
+recalled views are <em>"not live evidence"</em>
+(<code>src/homebody/session/session.py:272-278</code>).</p>
+<p>The lifecycle is per console session and per named set. STOP keeps
+the session and its memory
+(<code>guides/real-long-horizon.md:35-36</code>), and a new console on
+the same <code>--memory</code> name reopens the set. Two consoles on one
+set serialise through the file lock.</p>
+<p>Adapting this to another agent is easy at the store and hard at the
+binding. <code>NamedMemory</code> is self-contained, but it needs a
+<code>MapBinding</code> and frames that carry a localized pose and a
+navigation raster.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-a-removal-does">What a removal does</h3>
+<p><code>op="remove"</code> ranks exactly as retrieve does and removes
+the top <code>k</code>
+(<code>src/homebody/memory/store.py:310-314</code>). The model sees
+record ids in a retrieve result but cannot remove by id. Removing one
+stale view means choosing a pose and a <code>k</code> that rank it, and
+everything ranked above it goes too. Because only the nearest record is
+gated, <code>k=8</code> removes the eight nearest records once one lies
+within 2.0 m, wherever the other seven are. The skill prompt offers
+<code>remove</code> with no further guidance
+(<code>src/homebody/skills/recall.py:14-18</code>).</p>
+<p>A removal hides; it does not erase. The record stays in
+<code>records</code>, its PNG and depth stay in <code>assets/</code>,
+and copies made while it was attached stay in the run's
+<code>memory/</code> evidence directory
+(<code>src/homebody/session/recorder.py:132-134</code>). The ledger's
+only consumers are <code>_active</code> and the counts. For a camera in
+a home, nothing short of deleting files by hand makes a photograph
+unrecoverable.</p>
+<h3 id="what-the-binding-buys">What the binding buys</h3>
+<p>The binding is the strongest part of the design. Poses are
+meaningless off their map, and the set refuses to open against a
+different scene id, scene hash or frame id, with a parametrised test for
+each (<code>tests/test_real_memory.py:59-66</code>). It cuts both ways:
+a re-mapped room leaves its set unusable, with no migration of poses
+into the new frame, so a new map means a new name.</p>
+<h3 id="integrity-and-its-blast-radius">Integrity, and its blast
+radius</h3>
+<p>Every asset is content-addressed and verified by size and SHA-256 on
+every read (<code>src/homebody/memory/store.py:128-144</code>). Symlinks
+are refused at the directory, lock, state and asset, and tampering is
+refused on reopen and on a live query
+(<code>tests/test_real_memory.py:69-76</code>). The check covers removed
+records too. One damaged photo the model removed long ago makes the
+whole set refuse to open, and every later <code>remember</code> and
+<code>recall</code> fails with <code>MEMORY_INVALID</code> until someone
+repairs it by hand.</p>
+<h3 id="injection-risk">Injection risk</h3>
+<p><code>content</code> is free text the model wrote, returned verbatim
+into later prompts as JSON
+(<code>src/homebody/session/session.py:302</code>). The model is the
+only writer and the console has no login (<code>README.md:107</code>),
+so the exposure is the model's own words and whoever can reach the
+console's port. A view of a printed note carries that note's text into a
+later prompt as pixels.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — withheld.
+<code>historical</code> is the constant <code>True</code> on every hit
+(<code>src/homebody/memory/store.py:283</code>). Active versus removed
+is a deletion state, and nothing marks a view doubtful while keeping it
+readable.</li>
+<li><strong><code>tombstone</code></strong> — withheld. The ledger is
+keyed on <code>record_id</code>; a later <code>remember</code> of the
+same scene from the same pose writes a new id that no removal
+covers.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. One timestamp,
+the capture time.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. The binding
+is a per-set refusal over a directory per name, a physical partition
+with a guard; no record carries a key and no read filters on one.</li>
+<li><strong><code>audit_log</code></strong> — withheld, the closest
+call. Nothing in the store removes a record or a removal, so
+<code>memory.json</code> only grows, and the docstring calls the ledger
+<em>"persistent removal history"</em>
+(<code>src/homebody/memory/store.py:1</code>). But a removal entry has
+no time, actor or reason, a creation is the record itself rather than an
+event, and the ledger is the set <code>_active</code> subtracts. The
+run's <code>events.jsonl</code> records each skill result
+(<code>src/homebody/session/session.py:407</code>), but it lives per
+session under the evidence root, and no record points to it.</li>
+<li><strong><code>human_review</code></strong> — withheld. The console
+displays counts and recalled photos and has no approve, reject or remove
+control; removal is the model's verb.</li>
+<li><strong><code>negative_eval</code></strong> — withheld. No test
+calls <code>op="remove"</code>, and the binding tests assert an
+exception, not an exclusion from a populated result (section 10).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 416 pytest functions in <code>tests/</code>, and the
+tree has no CI configuration. I ran none of it.</p>
+<p>The store has three test functions and five cases:</p>
+<ul>
+<li><code>test_two_distinct_views_survive_restart_with_original_pixels_and_geometry</code>
+writes two views, reopens the set with <code>create=False</code>, and
+asserts the ranking, the provenance fields, the original pixels, the
+NaN-bearing depth and the camera transform
+(<code>tests/test_real_memory.py:40-56</code>).</li>
+<li><code>test_map_or_frame_mismatch_refused_before_recall</code>, over
+three binding changes
+(<code>tests/test_real_memory.py:59-66</code>).</li>
+<li><code>test_image_tampering_is_refused_on_reopen_and_live_query</code>
+(<code>tests/test_real_memory.py:69-76</code>).</li>
+</ul>
+<p>Three more run the skills. One goes through the production
+<code>Runner</code> with no actuator command
+(<code>tests/test_real_memory_skills.py:43-52</code>). One goes through
+the public REAL command and asserts that the last decision received five
+images, the recalled one included, and that <code>memory.json</code>
+exists (<code>tests/test_real_composition.py:40-41</code>,
+<code>:84-85</code>). One runs the REAL policy on MuJoCo
+(<code>tests/test_real_navigation_sim.py:24-38</code>).</p>
+<p>The correction path is untested. No test calls
+<code>op="remove"</code>, so nothing asserts that a removed view stays
+out of a later recall while its neighbour is returned. No test covers
+the absence gate, the yaw term, or <code>k</code> above 2.
+<code>tests/test_real_provenance.py</code> covers sensor metadata in the
+run recording, not the memory store.</p>
+<p>The <code>evaluation/</code> scorer and
+<code>tools/score_session.py</code> score SIM object placement against
+simulator state; neither reads the photo memory. The README reports that
+in its wrong-memory demonstration Opus found the moved carton in both
+runs, once after 29 minutes (<code>README.md:143-146</code>); no run
+artifact for it is committed. No paper is released. The README's BibTeX
+entry is a <code>@misc</code> pointing at the project page
+(<code>README.md:330-336</code>), the project page in
+<code>docs/index.html</code> shows its Paper button as <em>"coming
+soon"</em>, and an arXiv title search for <code>HomeBody</code> on 20
+November 2026 returned no entries.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Bind a spatial memory to the map it was recorded
+on.</strong> Store the hash of the occupancy raster, its transform and
+the scene asset with the set, and refuse to open it on anything else. A
+pose recalled into the wrong frame is a confident wrong answer.</li>
+<li><strong>Say in the data that a recalled observation is
+history.</strong> A field on every hit, a reason on every non-empty
+result and a prompt line telling the model to verify before acting cost
+nothing and frame the photo correctly.</li>
+<li><strong>Content-address the evidence and check it on read.</strong>
+A view whose pixels changed is refused, not served.</li>
+<li><strong>Make an empty recall a valid answer.</strong> The gate
+returns a reason, the prompt says absence is normal, and the model is
+told never to move just to recall.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Removal by query rank.</strong> If a delete takes a query
+and a <code>k</code>, it deletes neighbours. Take the record id the
+model was shown.</li>
+<li><strong>A radius gate on the first hit only.</strong> Gate every
+returned hit, or a <code>k</code> above one reaches outside the radius
+the gate advertises.</li>
+<li><strong>Integrity checks that include retired records.</strong>
+Verify what you serve; a damaged removed record should not take the live
+set down with it.</li>
+<li><strong>Provenance that restarts per process.</strong> A per-process
+<code>(epoch, sequence)</code> is not an identity across sessions; store
+the session or run id.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a research platform for one humanoid in one mapped room, and
+its memory is sized to match: a few hundred photos a VLM can be shown,
+in a directory a person can read. Take it if you are building an
+embodied agent that needs to know what a spot looked like, and you
+already localize on a fixed map. Walk away if you need to find things by
+description, to correct a belief without losing its neighbours, or to
+erase what a camera in someone's home recorded; none of those is in the
+design. The rest of the system is the expensive part: a G1, a GPU
+workstation and a model call per decision.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether removal by pose rank is intended, or a
+<code>record_id</code> argument was planned; the result already returns
+ids.</li>
+<li>Whether the absence gate was meant to apply to every hit; the module
+docstring says <em>"a nearest-score absence gate"</em>.</li>
+<li>How large a set grows in the long-horizon runs, and what the
+per-operation re-hash costs at that size.</li>
+<li>Whether the internal localization stack the README mentions changes
+the map hash between runs, which would retire a set each time.</li>
+<li>What the paper, when released, reports about recall in the
+long-horizon runs, and whether its memory matches this store.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Store and binding: <code>src/homebody/memory/store.py</code>,
+<code>src/homebody/memory/binding.py</code>,
+<code>src/homebody/memory/__init__.py</code></li>
+<li>Skills: <code>src/homebody/skills/remember.py</code>,
+<code>src/homebody/skills/recall.py</code>,
+<code>src/homebody/skills/registry.py</code></li>
+<li>Composition: <code>src/homebody/__main__.py</code>,
+<code>src/homebody/session/real.py</code>,
+<code>src/homebody/session/task.py</code>,
+<code>src/homebody/session/real_sim.py</code></li>
+<li>Injection and evidence:
+<code>src/homebody/session/session.py</code>,
+<code>src/homebody/session/recorder.py</code>,
+<code>src/homebody/ui/console.py</code></li>
+<li>Scan prior: <code>src/homebody/vlm/observations.py</code>,
+<code>src/homebody/vlm/agent_prompt.md</code></li>
+<li>Exploration views:
+<code>src/homebody/real2sim/exploration/visual_history.py</code></li>
+<li>Tests: <code>tests/test_real_memory.py</code>,
+<code>tests/test_real_memory_skills.py</code>,
+<code>tests/test_real_composition.py</code>,
+<code>tests/test_real_navigation_sim.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No path deletes a record, a removal or an asset.</strong>
+<code>git grep -n -E 'unlink|rmtree|\.pop\(|\.remove\(|del ' -- src/homebody/memory</code>
+matches only <code>src/homebody/memory/store.py:58</code>, the temporary
+file in <code>_atomic_write</code>.</li>
+<li><strong>No test exercises removal.</strong>
+<code>git grep -n -E '"remove"' -- tests</code> returns nothing; the
+same pattern over <code>src</code> matches
+<code>src/homebody/memory/store.py:291</code>, <code>:311</code> and
+<code>src/homebody/skills/recall.py:15</code>.</li>
+<li><strong>Only the two skills reach the store's verbs.</strong>
+<code>git grep -n -E '\.remember\(|\.recall\(|removals' -- src tools evaluation</code>
+matches <code>src/homebody/memory/store.py</code> and the calls at
+<code>src/homebody/skills/remember.py:41</code> and
+<code>src/homebody/skills/recall.py:52</code>.</li>
+<li><strong>The store is opened in one place.</strong>
+<code>git grep -n -w NamedMemory -- src tools evaluation hardware</code>
+matches the memory package and
+<code>src/homebody/session/task.py:6</code>, <code>:25</code>.</li>
+<li><strong>No caller sets the radius.</strong>
+<code>git grep -n -E 'radius_m=' -- src/homebody/session src/homebody/memory src/homebody/__main__.py tests</code>
+matches the default at <code>src/homebody/memory/store.py:86</code> and
+navigation fixtures in three test files that are not memory calls.</li>
+<li><strong>No expiry or pruning in the memory code.</strong>
+<code>git grep -n -i -E 'expire|ttl|max_records|prune|evict' -- src/homebody/memory src/homebody/skills/recall.py src/homebody/skills/remember.py</code>
+returns nothing; the same pattern over <code>src</code> matches
+<code>src/homebody/backends/g1/real.py:900</code>.</li>
+<li><strong><code>NamedMemory.records()</code> has no caller.</strong>
+<code>git grep -n -E 'records\(\)' -- src tests</code> returns nothing;
+<code>git grep -n -E 'def records\(' -- src</code> matches
+<code>src/homebody/memory/store.py:318</code>.</li>
+<li><strong>The console has no memory verb.</strong>
+<code>git grep -n -i -E 'memory|recall|remove' -- src/homebody/ui/console.py</code>
+matches the status rows at 95-101, the recall gallery at 432-564 and the
+handover confirmation at 255.</li>
+<li><strong>The attached photos are reset in one place.</strong>
+<code>git grep -n -w 'self.recalled' -- src</code> matches
+<code>src/homebody/session/session.py:134</code>, <code>:294</code> and
+<code>:411</code>.</li>
+<li><strong>No CI.</strong>
+<code>git ls-files | grep -E '^\.github/|gitlab-ci|\.circleci'</code>
+returns nothing;
+<code>git ls-files | grep -E '^tests/test_real_memory'</code> lists the
+two memory test files.</li>
+<li><strong>No paper in the tree.</strong>
+<code>git grep -n -i -E 'arxiv|doi\.org|CITATION' -- ':!vendor' ':!docs'</code>
+matches only the word <em>citation</em> in
+<code>src/homebody/real2sim/exploration/visual_history.py</code>; the
+BibTeX entry at <code>README.md:331</code> cites the project page.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/Stanford-TML/homebody/commit/d7eb20834024f0fdbf2b8357fb55e8bbd01610cf"><code class="commit-id" title="d7eb20834024f0fdbf2b8357fb55e8bbd01610cf">d7eb2083…</code></a>
+— first reading, from a <code>--depth 1</code> clone of
+<code>main</code>; commit counts and dates are from the GitHub API.
+Scoped to the photo store, its binding, the two memory skills, their
+session injection and tests, the scan prior and the exploration view
+history; <code>vendor/</code> read only as a dependency list. Screened
+first: no auto-run surface and no build-time execution;
+<code>pyproject.toml</code> declares ranged dependencies with no
+lockfile, and its cooldown hits are inflated by the shallow clone;
+<code>CLAUDE.md</code> addresses agents and was read as data.
+Apache-2.0, no rider. Nothing installed, built or run. No marks.</p>
+<p><strong>2026-09-28</strong> — <a
+href="https://github.com/Stanford-TML/homebody/commit/77d2c333fe0adc12ed35172fe086b382bcd5772b"><code class="commit-id" title="77d2c333fe0adc12ed35172fe086b382bcd5772b">77d2c333…</code></a>
+— examined when the repository was the project page alone: six commits
+on 26 September 2026, a README reading <em>"Code coming soon."</em>, and
+22 scripts under <code>docs/</code> for the page's viewer; no report,
+and an exclusion bullet in the appendix's Known Limitations that this
+reading replaces.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
