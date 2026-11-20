@@ -19058,6 +19058,64 @@ tombstone</a> applied to harness code — and whether the gate's baseline
 is <code>h0</code> in the code as it is in the equation. <a
 href="../systems/harness2/">Harness²</a> is the reviewed system that
 keeps each adopted harness for later tasks.</li>
+<li><strong><code>ldclabs/KIP</code> was examined and has no report: it
+is the KIP 2.0 protocol specification and its tooling, and the engines
+that store memory under it live in two other ldclabs repositories the
+atlas already reports.</strong> MIT, in <code>LICENSE</code> and in both
+packages' own <code>LICENSE</code> and <code>package.json</code>, which
+agree; 149 commits from one author account between 9 June 2025 and 18
+November 2026, release <code>v2.4.3</code>, read at <a
+href="https://github.com/ldclabs/KIP/commit/f63848ee88184ccf1e82fdd25fbf1c25d4d2e82d"><code class="commit-id" title="f63848ee88184ccf1e82fdd25fbf1c25d4d2e82d">f63848ee…</code></a>.
+The README says so itself: <em>"it does not contain a production engine
+or Brain"</em> (<code>README.md:110</code>). The tree is about 120,000
+lines of Markdown in 129 files, English and Chinese, plus grammars and
+JSON schemas. Its code is the <code>@ldclabs/kip-lang</code> toolkit,
+11,188 lines of TypeScript that lex, parse, format and lower KIP to an
+executable AST and execute nothing. Beside it sit a VS Code extension,
+1,672 lines of bounded Python models of governance, purge, temporal
+succession and Watch firing under <code>formal/</code>, and test-only
+contract oracles under <code>conformance/reference/</code>, each opening
+by disclaiming a store (<em>"not a Brain or Nexus implementation"</em>,
+<code>memory-interface.mjs:1-3</code>; <em>"No database … is implemented
+here"</em>, <code>reliability.mjs:1-2</code>). The one stateful class,
+<code>MemorySession</code>, keeps outstanding receipt references and an
+attention cursor for a host to persist; it holds no memory content and
+grants no authority
+(<code>packages/kip-lang/src/memory-session.ts:3-5</code>). The archived
+v1 MCP server and skill are HTTP clients: every tool posts to a
+configured backend
+(<code>v1/mcp/kip-mcp-server/src/services/kipClient.ts:40</code>), and
+the skill script is a client <em>"for anda_cognitive_nexus_server"</em>
+(<code>v1/skill/kip-cognitive-nexus/scripts/execute_kip.py:3</code>).
+The memory mechanisms the specification defines are implemented in <a
+href="../systems/anda-db/">Anda DB</a>, as the Rust Cognitive Nexus and
+the <code>kip-do</code> engine, and served by <a
+href="../systems/anda-brain/">Anda Brain</a>; marks belong to those
+reports. What transfers is the conformance layer: 434 engine-suite cases
+in 26 fixtures behind an adapter contract of three methods and one
+optional hook (<code>conformance/engine-runner.mjs:8-14</code>). The
+manifest records them as imported from anda-db's
+<code>fixtures/kip-conformance-2.0</code> and passed by both engines at
+named anda-db heads. In this tree they run only against scripted fakes
+(<code>packages/kip-lang/test/engine-suite.test.mjs:173-178</code>), so
+the pass is a manifest record, not evidence produced here. Searches run
+at this pin with <code>/usr/bin/git grep</code>:
+<code>-n -i -E 'sqlite|writeFile|createWriteStream|localStorage|indexeddb|new Database' -- '*.ts' '*.mjs' '*.py' '*.js'</code>
+matches only <code>writeFile</code> in the digest and vocabulary-card
+regenerators and a test's temporary directory, which also shows the
+pattern can match; <code>-n resetSpace -- ':!*.md'</code> matches the
+contract comment, the runner's call and the scripted fakes;
+<code>-n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION'</code>
+matches three arXiv links that
+<code>KIP-2.0-Architecture.md:2540-2546</code> lists as
+<em>"architectural influences only"</em>, so no paper describes KIP
+itself. Screened before reading: no auto-run surface; one build-time
+execution point, <code>prepublishOnly</code> running
+<code>npm test</code> in <code>packages/kip-lang/package.json</code>;
+the toolkit's and the extension's manifests inside the seven-day
+cooldown; three unpinned surfaces, one of them with a lockfile beside
+it; <code>AGENTS.md</code> treated as data. Nothing was installed, built
+or run.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
