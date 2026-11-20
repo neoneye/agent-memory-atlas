@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A training-free GOAT-Bench
+navigation agent whose per-scene JSON memory scores map cells by its own
+VLM stop verdicts and frontier gains, decayed each subtask.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="EvoMemNav — Agent Memory Atlas">
+    <meta property="og:description" content="A training-free GOAT-Bench
+navigation agent whose per-scene JSON memory scores map cells by its own
+VLM stop verdicts and frontier gains, decayed each subtask.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EvoMemNav — Agent Memory Atlas">
+    <meta name="twitter:description" content="A training-free GOAT-Bench
+navigation agent whose per-scene JSON memory scores map cells by its own
+VLM stop verdicts and frontier gains, decayed each subtask.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>EvoMemNav — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "EvoMemNav",
+      "description": "A training-free GOAT-Bench navigation agent whose per-scene JSON memory scores map cells by its own VLM stop verdicts and frontier gains, decayed each subtask.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Navigation priors written from its own stop
+verdicts</p>
+          <h1>EvoMemNav</h1>
+          <p class="document-deck">A training-free GOAT-Bench navigation
+agent whose per-scene JSON memory scores map cells by its own VLM stop
+verdicts and frontier gains, decayed each subtask.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/caicaiya123/EvoMemNav">
+              <span>Source</span>
+              <strong>caicaiya123/EvoMemNav</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/caicaiya123/EvoMemNav/commit/5770e8cc31763f11374a74483c6e4b1ca982513f" title="5770e8cc31763f11374a74483c6e4b1ca982513f">
+              <span>Analyzed revision</span>
+              <code>5770e8cc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/caicaiya123--EvoMemNav" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>caicaiya123--EvoMemNav</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE; the perception path imports ultralytics, which PyPI
+distributes under AGPL-3.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>7,324
+lines of Python in 37 files; 1,879 are vendored ConceptGraphs and 929
+carry HiPart and tsdf-fusion headers; the experience memory is
+338</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>One
+commit, 26 October 2026, a root commit with no parent</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>None;
+no test file in the tree</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>EvoMemNav is the evaluation code for a training-free embodied
+navigation paper: an agent that finds objects in HM3D scenes on
+GOAT-Bench, given a category, a description or an image, and asks
+Qwen3-VL to choose among candidate views and to verify a stop. What
+outlives an episode is Scene-LTM, a JSON file per scene that scores grid
+cells per goal by the agent's earlier stop verdicts and exploration
+gains. It is decayed each subtask, pruned on contradiction, and read
+back to reorder candidates and to brief the verifier. What is weak is
+the signal: an acceptance is the agent's own <code>STOP</code>, never
+the outcome, so a wrong stop is recorded as a reliable place to stop for
+that goal and handed to the next verification as prior evidence.</p>
+<p>The view graph, the object instances and the raw images are rebuilt
+for every episode. The paper's ablation of the experience memory was run
+on the first episode of each scene, where the per-scene store can hold
+only that episode's subtasks.</p>
+<p><strong>Licence.</strong> The repository is MIT, but running it is
+not: <code>agent.py:90</code> imports <code>YOLOWorld</code> and
+<code>SAM</code> from <code>ultralytics</code>, which
+<code>requirements.txt</code> names without a version and PyPI
+distributes under AGPL-3.0, so the perception path carries terms the MIT
+file does not mention. The six files under
+<code>evomemnav/third_party/conceptgraph/</code> open with <em>"Adapted
+from ConceptGraphs (…), MIT License"</em>, and ConceptGraphs' own
+copyright notice appears nowhere in the tree. The second line of
+<code>LICENSE</code>, <em>"Copyright (c) Meta Platforms, Inc. and
+affiliates"</em>, is the line 3D-Mem's licence carries;
+<code>planner.py</code>, <code>geom.py</code> and <code>scene.py</code>,
+from the codebase the README says this is built upon, carry no header of
+their own.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The memory that persists is a set of <strong>priors attached to
+places</strong>. A place is a 0.5 m grid cell of the scene frame
+(<code>evomemnav/experience/keys.py:46-49</code>), and a prior is filed
+under a goal key at three levels: modality, category and a SHA-1 digest
+of the description or goal image (L1), modality and category (L2), and
+modality alone (L3) (<code>keys.py:26-28</code>, <code>:35-43</code>).
+An object goal has no content digest, so its L1 and L2 differ only in
+name.</p>
+<p>Two kinds of record exist
+(<code>evomemnav/experience/memory.py:22-40</code>):</p>
+<ul>
+<li><strong>Anchor records</strong> count acceptances and rejections
+from goal verification. Reliability is
+<code>accept / (accept + reject)</code>.</li>
+<li><strong>Frontier records</strong> keep moving averages of the area
+newly explored after a frontier leg and of whether that leg was a dead
+end (under 2 m², per <code>cfg/evomemnav_goatbench.yaml:113</code>),
+with a decayed support count.</li>
+</ul>
+<p>An acceptance is <code>decision == "STOP"</code>
+(<code>memory.py:280</code>), and the decision is the VLM's verification
+answer thresholded at 0.62
+(<code>evomemnav/vlm/prompts.py:390-396</code>). Ground truth is read
+only after the subtask, to compute success and SPL
+(<code>evomemnav/agent.py:256-266</code>). Nothing writes the outcome
+back, so the store cannot distinguish a correct stop from a confident
+wrong one. The README states this as a property: the memory is updated
+<em>"only from the agent's own verification decisions and
+trajectory"</em>.</p>
+<p>A record stops being believed in one way only: it is deleted.
+<code>_prune</code> removes a record whose decayed support falls under
+0.3, an anchor record whose decayed acceptances and rejections are both
+at least 2, and any record past the top 200 by support for its key
+(<code>memory.py:192-209</code>). After deletion the cell reads as
+having no record, which ranks it level with an unvisited cell, and the
+next verdict at that cell starts a new record from zero.</p>
+<p>Episode-STM sits beside it with the same counts keyed by goal L1 and
+view id, plus a suppression timer: a rejected anchor view is left out of
+the candidate set for 10 steps (<code>memory.py:73-82</code>,
+<code>evomemnav/policy/coarse.py:79</code>). It is cleared at the start
+and end of every episode (<code>memory.py:234-240</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the store learns from its own stop verdicts; nothing feeds back whether the stop was right, and the only exit is deletion</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the store learns from its own stop verdicts; nothing feeds back whether the stop was right, and the only exit is deletion
+flowchart TD
+  subgraph ev[&quot;Events in a subtask&quot;]
+    direction TB
+    V[&quot;VLM verification:&lt;br/&gt;STOP is an acceptance,&lt;br/&gt;RESELECT a rejection&quot;]
+    F[&quot;frontier leg ends:&lt;br/&gt;area gained,&lt;br/&gt;dead end under 2 m²&quot;]
+    V ~~~ F
+  end
+  ev --&gt; STM[&quot;Episode-STM:&lt;br/&gt;counts and a 10-step&lt;br/&gt;suppression timer&quot;]
+  ev --&gt; Q[&quot;queued for&lt;br/&gt;Scene-LTM&quot;]
+  Q --&gt; DEC[&quot;subtask end: every&lt;br/&gt;record in the scene&lt;br/&gt;decays by 0.9&quot;]
+  DEC --&gt; W[&quot;queued events written&lt;br/&gt;at L1, L2 and L3&quot;]
+  W --&gt; PR{&quot;support under 0.3,&lt;br/&gt;both counts at 2,&lt;br/&gt;or past top 200?&quot;}
+  PR --&gt;|&quot;yes&quot;| DEL[&quot;record deleted;&lt;br/&gt;cell reads as new&quot;]
+  PR --&gt;|&quot;no&quot;| SAVE[&quot;scene JSON rewritten&quot;]
+  SAVE --&gt; LOAD[&quot;next episode of&lt;br/&gt;the same scene loads it&quot;]
+  LOAD --&gt; LVL[&quot;first level with any&lt;br/&gt;record: L1, else L2,&lt;br/&gt;else modality-wide L3&quot;]
+  LVL --&gt; USE[&quot;reorders candidates;&lt;br/&gt;counts go into the&lt;br/&gt;verification prompt&quot;]
+  USE --&gt; V
+  STM --&gt; USE
+  SAVE ~~~ GT
+  GT[&quot;ground truth read only&lt;br/&gt;for SR and SPL;&lt;br/&gt;never written back&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>run_goatbench.py</code> is the only entry point. It loads a
+YAML config, builds the agent once (YOLO-World, SAM and OpenCLIP models,
+and an OpenAI-compatible client for a Qwen3-VL server), then walks the
+GOAT-Bench scenes in sorted order. For each scene it builds one
+<code>ExperienceMemory</code> whose Scene-LTM path is
+<code>&lt;output_dir&gt;/scene_ltm/&lt;scene_id&gt;.json</code>
+(<code>run_goatbench.py:83</code>). For each episode it builds a fresh
+Habitat <code>Scene</code> (<code>:92</code>), which owns the object
+instances, the anchor views and every raw image of that episode
+(<code>evomemnav/env/scene.py:104</code>). The VSMGraph is reset at the
+start and end of every episode (<code>agent.py:131</code>,
+<code>:166</code>; <code>evomemnav/memory/vsmgraph.py:71-78</code>).</p>
+<p>Scene-LTM is the only state written to disk apart from logs,
+per-subtask result lines and the summary. <code>save</code> writes the
+whole dictionary to a temporary file and replaces the target
+(<code>memory.py:122-129</code>) after every subtask
+(<code>:242-246</code>). <code>--start_ratio</code> and
+<code>--end_ratio</code> shard the scene list across processes, so two
+shards write disjoint files unless their ranges overlap.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>It needs a GPU for the perception models, Habitat-Sim, HM3D v0.2
+scenes and the GOAT-Bench episode files, which the README points to and
+the tree does not include, and a Qwen3-VL server; the README gives a
+vLLM command for the 8B instruct model. <code>requirements.txt</code>
+lists 20 packages with no versions and says habitat-sim and pytorch3d
+are <em>"installed separately (see README)"</em>; the README has no
+install section. The store itself is human-readable JSON and can be
+inspected or deleted per scene. A new output directory starts every
+scene empty.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Episode lifecycle.</strong>
+<code>ExperienceMemory.start_episode</code> clears Episode-STM and
+reloads Scene-LTM from disk; <code>end_subtask</code> writes the queued
+events and saves; <code>end_episode</code> clears Episode-STM
+(<code>memory.py:234-246</code>). The agent calls them at
+<code>agent.py:132</code>, <code>:146</code> and <code>:165</code>.</li>
+<li><strong>Verification write.</strong> On arriving at a selected
+anchor view, <code>_verify</code> builds the manifest, the VLM returns
+STOP or RESELECT, and <code>on_verification</code> records it in
+Episode-STM, suppresses a rejected view and queues
+<code>(cell, accepted)</code> (<code>agent.py:237-252</code>,
+<code>memory.py:277-284</code>). A STOP ends the subtask
+(<code>agent.py:243-245</code>), so a subtask yields at most one
+acceptance.</li>
+<li><strong>Frontier write.</strong> <code>_close_frontier_leg</code>
+takes the explored area gained since the leg began and calls
+<code>on_frontier_explored</code>, which updates the moving average in
+Episode-STM and queues <code>(cell, gain, dead_end)</code>
+(<code>agent.py:519-528</code>, <code>memory.py:286-289</code>).</li>
+<li><strong>Scene-LTM update.</strong> <code>SceneLTM.update</code>
+decays every record in the scene, averages the subtask's frontier
+outcomes per cell into one moving-average step, adds anchor events one
+by one, writes both at all three goal-key levels, and prunes
+(<code>memory.py:150-181</code>).</li>
+<li><strong>Read.</strong> <code>_candidates</code> asks
+<code>anchor_score</code> for each anchor view's reliability and
+<code>frontier_score</code> for each frontier, both keyed by the view's
+cell (<code>agent.py:359-405</code>). <code>anchor_score</code> sums the
+Episode-STM entry and the Scene-LTM record; <code>frontier_score</code>
+averages them (<code>memory.py:252-271</code>).</li>
+<li><strong>Ranking.</strong> <code>rank_anchors</code> drops suppressed
+views and sorts by target hit, hinted room, reliability minus 0.5, then
+recency; <code>rank_frontiers</code> sorts by hinted room, then
+experience, then the area and distance heuristic
+(<code>coarse.py:63-116</code>).</li>
+<li><strong>Verification prior.</strong> <code>_verify</code> puts an
+anchor's acceptances, rejections and reliability into the manifest as
+<code>experience_policy</code> when any count exists
+(<code>agent.py:547-554</code>, <code>prompts.py:369-370</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>SceneLTM.data</code> is
+<code>{"anchors": {...}, "frontiers": {...}}</code>, each mapping a
+level key such as <code>L2|object|bed</code> to a dictionary from cell
+string to a record (<code>memory.py:85-110</code>). Anchor records hold
+<code>accept</code> and <code>reject</code> as floats, since decay
+multiplies them; frontier records hold <code>gain</code>,
+<code>dead_end</code> and <code>support</code> (<code>:22-40</code>). A
+record carries no timestamp, episode id, view id or provenance, and
+<code>evomemnav/experience/</code> has no time field.</p>
+<p>The goal key's three levels are all written on every update
+(<code>memory.py:162</code>). The scene is the only boundary, and it is
+a file. The episode store's keys carry view ids, which are unique across
+episodes because they include the agent's global step
+(<code>agent.py:299</code>), and it is discarded at episode end.</p>
+<p>The paper describes priors attached to room nodes, anchor views and
+frontier views, including <em>"room support"</em>, and trajectory events
+such as revisits and loop indicators. The code attaches priors to grid
+cells only, and <code>evomemnav/experience/</code> has no reference to
+rooms, revisits or loops.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is a dictionary lookup per candidate. <code>_level</code>
+returns the first of L1, L2 and L3 whose dictionary for that record kind
+holds at least <code>fallback_min_records</code> records, set to 1
+(<code>memory.py:132-137</code>,
+<code>cfg/evomemnav_goatbench.yaml:120</code>). The test counts records
+under the level, not whether the candidate's cell has one. Two
+consequences follow:</p>
+<ul>
+<li><strong>Once a goal has any L1 record, its other cells never fall
+back.</strong> A cell with an L2 record and no L1 record reads as having
+none.</li>
+<li><strong>A goal with no L1 or L2 records reads the modality-wide
+level.</strong> A new object goal reads acceptances written for every
+earlier object goal in the scene, and if the candidate's cell has one,
+the verifier is told that cell's reliability for this goal.</li>
+</ul>
+<p>The prompt sets the weight: experience is listed among <em>"soft
+priors"</em>, and <em>"Experience hints must not override visual
+evidence"</em> (<code>prompts.py:124</code>, <code>:130</code>). In the
+coarse stage, reliability is a tie-breaker inside the target- hit and
+hinted-room buckets (<code>coarse.py:73-77</code>). The only filter on
+the read path is Episode-STM suppression
+(<code>coarse.py:79</code>).</p>
+<p>Within an episode, a goal whose L1 key recurs reads its earlier
+verdicts twice. Episode-STM still holds them, the Scene-LTM dictionary
+in memory absorbed them at the earlier subtask's end, and
+<code>anchor_score</code> adds the two
+(<code>memory.py:252-259</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>All writes are synchronous and local. Events are queued during the
+subtask and applied at its end, before the result record is logged
+(<code>agent.py:146</code>, <code>run_goatbench.py:101</code>), so a new
+prior is readable from the next subtask on. No model call is involved in
+writing; the VLM only produces the verdict. Each update rewrites the
+scene's whole JSON file, which the 200-per-key cap bounds.</p>
+<p>Decay is scene-wide and counted in subtasks, not time. A record
+touched once and never again is deleted at the twelfth later subtask in
+that scene, since 0.9¹¹ is 0.314 and 0.9¹² is 0.282 against the 0.3
+floor (<code>cfg/evomemnav_goatbench.yaml:116-117</code>; the arithmetic
+is mine). The paper puts 5–10 subtasks in an episode, so an unreinforced
+prior lasts into one or two later episodes. The frontier moving averages
+themselves do not decay; only their support does
+(<code>memory.py:183-190</code>).</p>
+<p>The contradiction rule needs both decayed counts at 2 or above
+(<code>memory.py:202</code>). Acceptances accrue at most one per
+subtask, and three in consecutive subtasks reach 2.71 where two reach
+1.9, so an anchor record is pruned as contradicted only after at least
+three stops at that cell under that key. A cell where the agent stopped
+wrongly once and was rejected five times is kept, at reliability
+1/6.</p>
+<p><strong>Resume replays subtasks into the store.</strong> An episode
+counts as finished only when every subtask has a result line
+(<code>run_goatbench.py:89</code>,
+<code>evomemnav/eval/recorder.py:22-27</code>). An interrupted episode
+is re-run from its first subtask against a Scene-LTM that already holds
+the subtasks it completed, so their verdicts are counted twice. The
+result file keeps the latest record per subtask
+(<code>recorder.py:34-44</code>); the store has no such
+deduplication.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The memory is internal to the navigation loop; there is no API, tool
+or command for it beyond the config block
+(<code>cfg/evomemnav_goatbench.yaml:110-120</code>). The VLM never reads
+or writes the store directly. It sees an anchor's counts as a manifest
+field during verification and is otherwise given candidate images, room
+labels and a topological summary built from the episode's graph
+(<code>agent.py:418-437</code>, <code>vsmgraph.py:153-170</code>).
+Adapting it to another agent means lifting <code>experience/</code> and
+supplying a cell function and a verdict.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-the-store-learns-from">What the store learns from</h3>
+<p>The verdict is the model's own. Across a scene, the store converges
+on where the agent tends to stop, not on where the goals are. A
+systematic false positive becomes a prior that ranks the same cell's
+anchor views up for later goals of that key and tells the verifier the
+place is reliable. The two correctives are the prompt's instruction to
+the VLM and the contradiction prune, which needs at least three stops at
+the cell. GOAT-Bench scenes are static, so a wrong prior here comes from
+a wrong verdict, never from a changed world.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — withheld. Reliability is
+a float used for ordering (<code>coarse.py:76-77</code>) and as a prompt
+hint. Suppression is the one exclusion on the read path, and it is a
+10-step timer in the episode store, keyed by view, that never reaches
+disk.</li>
+<li><strong><code>tombstone</code></strong> — withheld. A contradicted
+record is deleted, and the next verdict at that cell writes a new
+one.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. The scene
+boundary is one file per scene, a physical partition. The goal key
+indexes records within it, and the L3 fallback shows it is not a
+boundary.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Records carry
+no time field of any kind.</li>
+<li><strong><code>audit_log</code></strong> — withheld. The file is
+overwritten whole; the per-subtask result lines record outcomes and
+verification counts, not mutations of the store.</li>
+<li><strong><code>human_review</code></strong> — withheld. No surface
+exists; a person can edit or delete the JSON, which is authoring.</li>
+<li><strong><code>negative_eval</code></strong> — withheld. There are no
+tests.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>Episode order is part of the result.</strong> The run
+docstring says <em>"The episodes of a scene run in order, so that
+Scene-LTM accumulates over them"</em>
+(<code>run_goatbench.py:12</code>). Selecting episodes with
+<code>--episodes</code>, or reusing an output directory, changes what
+every later episode reads.</li>
+<li><strong>The store is learned on the evaluation split.</strong>
+Scene-LTM accumulates over the val-unseen episodes it is scored on. That
+is the lifelong setting the benchmark defines, and it means the memory
+never meets a held-out scene.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The tree has no test file, and I ran nothing. No result, log or
+Scene-LTM file is committed; <code>results/</code> is in
+<code>.gitignore</code>.</p>
+<p>The paper is <em>EvoMemNav: Efficient Self-Evolving Fine-Grained
+Memory for Zero-Shot Embodied Navigation</em> by Ge, Jia, Wu, Zhou, Wu
+and Jiang of Fudan University (<a
+href="https://arxiv.org/abs/2606.03509">arXiv:2606.03509</a>, v1
+submitted 2 June 2026). It reports 59.6 SR and 38.9 SPL on GOAT-Bench
+val unseen, and HM3D object-goal results; this repository holds only the
+GOAT-Bench evaluation, and no HM3D object-goal code is in the tree.</p>
+<p>Its ablation (Table 3) adds the experience memory, which it calls
+RDCMA, last: 60.8 to 64.8 SR and 40.8 to 43.1 SPL. It was run on
+<em>"episode index=1 for each of the 36 scenes"</em>. Run that way into
+a fresh output directory, Scene-LTM can hold only the subtasks of that
+one episode, so the row measures carry-over between subtasks of an
+episode, not persistence across episodes. Figure 5's caption places the
+gains <em>"where in-episode experience accumulation yields maximal
+gains"</em>.</p>
+<p>The README's three-row component table (43.7, 55.4 and 59.6 SR) does
+not appear in the v1 paper; only its last row matches the paper's
+headline. No experiment in the paper or the tree isolates Scene-LTM's
+cross-episode reuse from Episode-STM.</p>
+<p>The code cites a supplementary file throughout, for Algorithms S1 and
+S2, Appendices A and C and the parameter Table S2
+(<code>agent.py:3</code>, <code>keys.py:3</code>,
+<code>cfg/evomemnav_goatbench.yaml:2</code>). The arXiv v1 PDF ends at
+its references and contains none of them, and the tree has no copy. The
+decay, contradiction and fallback constants are therefore checkable
+against the code only.</p>
+<p>Tests to want first: a fixture that writes a wrong STOP and asserts
+what the next goal of the same modality reads; a resume test asserting
+an interrupted episode leaves the store as one full run would; and an
+assertion that L1 fallback is decided per cell.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Key a prior by place, at several goal
+granularities.</strong> A cell key survives the per-episode graph
+rebuild, and the three-level goal key lets a new goal borrow from a
+broader one.</li>
+<li><strong>Decay in units of work, not time.</strong> Decaying per
+subtask ties a prior's life to how much the agent has done in the scene,
+which suits a benchmark with no wall clock.</li>
+<li><strong>Prune on disagreement.</strong> A record with enough
+evidence on both sides is removed rather than averaged into a middling
+score that still ranks.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Learning from your own verdict alone.</strong> Without an
+outcome signal or an independent check, a memory of where the agent
+stopped reinforces its false positives. Record the verdict and the
+outcome separately, or weight a verdict by later evidence.</li>
+<li><strong>A fallback decided per key and applied per item.</strong>
+Decide the fallback for each item you score, or a broad level is either
+never consulted or consulted for everything.</li>
+<li><strong>A resume that replays into an accumulating store.</strong>
+Make the update idempotent per subtask id, or roll the store back with
+the result file.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a research artifact for reproducing one benchmark, and a
+clean one to read: 338 lines hold the whole memory, and its rules fit on
+a page. It suits a reader studying test-time adaptation in a static,
+simulated scene, where a prior about a place can only be wrong because
+the verdict was. Walk away if the world changes, if the agent's verdicts
+are not trustworthy enough to learn from, or if you need memory that
+someone other than the decay constant can inspect, correct or scope.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the ablation in Table 3 ran with a fresh output directory,
+and what the experience-memory row is on the full ten-episode
+protocol.</li>
+<li>Where the README's three-row component table was measured.</li>
+<li>What the supplementary file says about the contradiction threshold
+and the fallback rule, and whether the per-key fallback is
+intended.</li>
+<li>Whether the double count of a recurring goal within an episode is
+intended as a stronger in-episode prior.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Experience memory: <code>evomemnav/experience/memory.py</code>,
+<code>evomemnav/experience/keys.py</code></li>
+<li>Agent loop and memory calls: <code>evomemnav/agent.py</code>,
+<code>run_goatbench.py</code></li>
+<li>Ranking and verification: <code>evomemnav/policy/coarse.py</code>,
+<code>evomemnav/policy/fine.py</code>,
+<code>evomemnav/vlm/prompts.py</code></li>
+<li>Per-episode observation memory:
+<code>evomemnav/memory/vsmgraph.py</code>,
+<code>evomemnav/memory/views.py</code>,
+<code>evomemnav/memory/view_clustering.py</code>,
+<code>evomemnav/env/scene.py</code></li>
+<li>Configuration and results:
+<code>cfg/evomemnav_goatbench.yaml</code>,
+<code>evomemnav/eval/recorder.py</code></li>
+<li>Benchmark goals: <code>evomemnav/env/goatbench.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Scene-LTM is the only store written to disk.</strong>
+<code>git grep -n -E 'json\.dump|pickle|np\.save|torch\.save|open\(|sqlite|os\.replace|gzip'</code>
+matches <code>evomemnav/experience/memory.py:116</code> and
+<code>:127-129</code>, the result writer and reader in
+<code>evomemnav/eval/recorder.py:30-38</code>, the summary at
+<code>run_goatbench.py:106-107</code>, two readers of input files, and
+prompt serialisation in <code>evomemnav/vlm/prompts.py</code>.</li>
+<li><strong>No room, revisit or loop prior.</strong>
+<code>git grep -n -i 'room' -- evomemnav/experience</code> returns
+nothing, and
+<code>git grep -c -i 'room' -- evomemnav/memory/vsmgraph.py</code>
+counts 30;
+<code>git grep -n -i -E 'revisit|loop|suppress' -- evomemnav/experience</code>
+matches only <code>suppress</code> lines in <code>memory.py</code>.</li>
+<li><strong>No time field on a record.</strong>
+<code>git grep -n -E 'time\.time|datetime|timestamp|created_at' -- evomemnav/experience run_goatbench.py</code>
+returns nothing; the same pattern over the whole tree matches
+<code>evomemnav/vlm/client.py:57</code> and <code>:65</code>.</li>
+<li><strong>Ground truth does not reach the memory.</strong>
+<code>git grep -n -E 'goal_eval|viewpoints' -- evomemnav/agent.py evomemnav/policy evomemnav/experience</code>
+matches only <code>evomemnav/agent.py</code>, at lines 21, 32, 135-136,
+145, 171 and 256-266.</li>
+<li><strong>No test file.</strong>
+<code>git ls-files | grep -i -E '(^|/)tests?/|test_|_test\.py|conftest'</code>
+returns nothing; the same pattern matches <code>tests/x.py</code> given
+on stdin.</li>
+<li><strong>No HM3D object-goal evaluation.</strong>
+<code>git grep -n -i -E 'objectnav|objnav|hm3dv1|hm3d_v0\.1' -- '*.py' '*.yaml'</code>
+returns nothing;
+<code>git grep -c -i 'goat' -- evomemnav/env/goatbench.py</code> counts
+10.</li>
+<li><strong>No supplementary file in the tree.</strong>
+<code>git ls-files | grep -i -E 'supp|\.pdf$'</code> returns nothing;
+<code>git grep -n -E 'Algorithm S[0-9]|Table S2|supplementary' -- '*.py' '*.yaml'</code>
+matches five citations of it. Over <code>pdftotext</code> output of the
+v1 PDF, <code>grep -c -E 'Algorithm S|Table S'</code> counts 0.</li>
+<li><strong>The README's component table is not in the paper.</strong>
+Over the same text, <code>grep -c -E '43\.7|55\.4'</code> counts 0 and
+<code>grep -c '59\.6'</code> counts 2.</li>
+<li><strong>ConceptGraphs' copyright notice is absent.</strong>
+<code>git grep -c -i 'Copyright (c) 2023 concept-graphs'</code> returns
+nothing; <code>git grep -n -i 'Copyright (c) 2018 Andy Zeng'</code>
+matches <code>evomemnav/mapping/tsdf.py:2</code>. The notice text is
+from ConceptGraphs' <code>LICENSE</code> at
+<code class="commit-id" title="93277a02bd89171f8121e84203121cf7af9ebb5d">93277a02…</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/caicaiya123/EvoMemNav/commit/5770e8cc31763f11374a74483c6e4b1ca982513f"><code class="commit-id" title="5770e8cc31763f11374a74483c6e4b1ca982513f">5770e8cc…</code></a>
+— first reading, from a full clone of <code>main</code>, a single root
+commit dated 26 October 2026; the <em>"Code coming soon"</em> commit
+<code>e85ee0e</code> is not in its history. Read in full:
+<code>experience/</code>, <code>agent.py</code>,
+<code>run_goatbench.py</code>, the policy, prompts, recorder and config;
+the VSMGraph and scene read for what persists. Paper v1 read in full.
+Screened first: no auto-run surface and no build-time execution;
+<code>requirements.txt</code> has 20 unpinned requirements. MIT, no
+rider. Nothing installed, built or run. No mark.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

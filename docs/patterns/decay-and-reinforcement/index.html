@@ -765,6 +765,22 @@ every file is gone
 Retrieval does not reinforce. The rule latches: a marker set at the
 first automatic retirement is never cleared, so a restored lesson is
 exempt from then on.</p>
+<p><strong><a href="../../systems/evomemnav/">EvoMemNav</a> decays in
+units of work and reinforces from its own verdicts, and the second
+undoes the first.</strong> Its per-scene store of navigation priors
+multiplies every count by 0.9 at the end of each subtask and deletes a
+record below 0.3 support, so a prior touched once is gone at the twelfth
+later subtask, a lifetime set by how much the agent has done rather than
+by a clock (<code>evomemnav/experience/memory.py:183-209</code>).
+Reinforcement is a <code>STOP</code> from the agent's own VLM
+verification, counted as an acceptance at that grid cell whether or not
+the stop was correct (<code>memory.py:280</code>), and the counts go
+back into the next verification prompt as prior evidence. Decay
+therefore only slows a self-confirming loop: the one corrective,
+deleting an anchor record once both decayed counts reach 2, needs at
+least three stops at the same cell under the same goal key, and a
+deleted record restarts at zero rather than remembering it was
+contradicted.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

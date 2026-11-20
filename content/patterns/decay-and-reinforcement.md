@@ -409,6 +409,8 @@ permanent."*
 
 **[QualityLayer](../../systems/qualitylayer/) decays on repository change instead of on a clock.** A lesson stores the commit it was last checked at and the files it is about; nothing ages while those files are untouched. Commits that touch them label the lesson changed, a confirm at HEAD resets the check point, and the lesson retires when its first unreviewed change is more than 90 days old or every file is gone (`qualitylayer/src/core/memory/source-observation.ts:99-123`). Retrieval does not reinforce. The rule latches: a marker set at the first automatic retirement is never cleared, so a restored lesson is exempt from then on.
 
+**[EvoMemNav](../../systems/evomemnav/) decays in units of work and reinforces from its own verdicts, and the second undoes the first.** Its per-scene store of navigation priors multiplies every count by 0.9 at the end of each subtask and deletes a record below 0.3 support, so a prior touched once is gone at the twelfth later subtask, a lifetime set by how much the agent has done rather than by a clock (`evomemnav/experience/memory.py:183-209`). Reinforcement is a `STOP` from the agent's own VLM verification, counted as an acceptance at that grid cell whether or not the stop was correct (`memory.py:280`), and the counts go back into the next verification prompt as prior evidence. Decay therefore only slows a self-confirming loop: the one corrective, deleting an anchor record once both decayed counts reach 2, needs at least three stops at the same cell under the same goal key, and a deleted record restarts at zero rather than remembering it was contradicted.
+
 ## Implementation checklist
 
 - Store retrieval strength separately from confidence and trust.

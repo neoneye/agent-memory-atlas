@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 819 reports.**
+**This page covers all 820 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7512,3 +7512,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, release v0.0.7; 58,040 lines of Python in `agrag/`, 179 commits from 20 August to 12 November 2026; 2,313 pytest functions with the integration suite on Neo4j and FalkorDB in CI, not run here; the committed benchmark records are lite runs of one or two questions. Four marks: `trust_state`, `scope_enforced`, `human_review` and `negative_eval`.
 - Study when: agents answer from a document corpus, cite what they read, and must not act on a conclusion whose sources changed underneath it.
 - Do not copy when: you need conversational memory of a user, or a person to sign off each conclusion.
+
+### [`evomemnav`](../systems/evomemnav/)
+
+- Best idea: **decay counted in subtasks, keyed by place.** Every record in a scene's store loses 10% per subtask and is deleted under 0.3 support, so an unreinforced prior lasts twelve subtasks; records are keyed by a grid cell that survives the per-episode graph rebuild, under goal keys at three granularities.
+- Biggest risk: **the store reinforces the agent's own false positives.** An acceptance is the VLM's `STOP`, and nothing writes the outcome back, so a wrong stop is recorded as a reliable stopping place and sent to the next verification as `experience_policy`.
+- Second risk: the goal-level fallback is decided per key rather than per cell, so a goal with no specific records reads acceptances from every goal of its modality; an interrupted episode is re-run against a store that already holds its finished subtasks.
+- Most reusable component: `SceneLTM` in `evomemnav/experience/memory.py`, with the three-level `GoalKey` and `cell_key` in `evomemnav/experience/keys.py`.
+- Maturity impression: MIT, one commit on 26 October 2026; 7,324 lines of Python, 338 of them the experience memory and 1,879 vendored ConceptGraphs; no tests and no committed results; the paper's experience-memory ablation used one episode per scene. No mark.
+- Study when: an agent repeats tasks in the same static environment and you want a small, inspectable prior over places that fades without a clock.
+- Do not copy when: the agent's own verdicts are the only signal, the world changes between visits, or a prior must be correctable by anything other than decay.
