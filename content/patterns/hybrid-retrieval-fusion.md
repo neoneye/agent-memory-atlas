@@ -255,6 +255,8 @@ between a retriever that degrades and one that degrades silently.
 
 **[Vanilla RAG Memory](../../systems/vanilla-rag-memory/) proves its lexical arm contributes with an embedder built to be wrong.** It fuses cosine with BM25 by weighted reciprocal rank at k = 60, over one user's rows, so document frequencies are per user (`src/vanilla_rag/memory_store.py:486-511`). `MisleadingEmbedder` gives the one document holding the target term a vector orthogonal to every query. The test asserts dense mode misses that document and hybrid mode over the same file returns it first (`tests/test_memory_store.py:39-49`, `:183-198`). Under the default `hybrid` mode, multiple-choice options are appended to the BM25 query, so a distractor's words pull up chunks that mention the wrong answer. **Make one arm fail on purpose, and assert the fusion recovers.**
 
+**[LRC](../../systems/lrc/) applies its privacy filter on every arm and its lifecycle filter on two of three.** `is_visible` runs in the TF-IDF, geometric and sentence-vector arms alike, while `lifecycle_allows`, which drops `Superseded` and `Suppressed` memories before the top-k cut, is called by the first two and not by `semantic_recall` (`src/memory_store.rs:6260`, `:7276`, `:6647-6703`). The release build fuses all three by default, so a memory a user asked to forget can return through the vector arm. Its negative test calls the TF-IDF arm alone (`src/memory_store_tests.rs:7547-7586`). **Put the exclusion in the filter every arm shares, and assert it against the fused result.**
+
 ## Tests to require
 
 - Exact identifiers, paraphrases, dates, negation, and typo cases.

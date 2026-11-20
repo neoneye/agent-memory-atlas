@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Rust memory sidecar for AI
+tools: JSON store, scoped recall, suppression and correction over MCP,
+REST and CLI; the engine is private.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LRC (Loong
+Recall) — Agent Memory Atlas">
+    <meta property="og:description" content="A local Rust memory sidecar
+for AI tools: JSON store, scoped recall, suppression and correction over
+MCP, REST and CLI; the engine is private.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LRC (Loong
+Recall) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Rust memory
+sidecar for AI tools: JSON store, scoped recall, suppression and
+correction over MCP, REST and CLI; the engine is private.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LRC (Loong Recall) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "LRC (Loong Recall)",
+      "description": "A local Rust memory sidecar for AI tools: JSON store, scoped recall, suppression and correction over MCP, REST and CLI; the engine is private.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Open shell, private engine</p>
+          <h1>LRC (Loong Recall)</h1>
+          <p class="document-deck">A local Rust memory sidecar for AI
+tools: JSON store, scoped recall, suppression and correction over MCP,
+REST and CLI; the engine is private.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/zhibaiYingChuan/LRC">
+              <span>Source</span>
+              <strong>zhibaiYingChuan/LRC</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/zhibaiYingChuan/LRC/commit/3ae886a84578e47981d7e29d2d377c212825e946" title="3ae886a84578e47981d7e29d2d377c212825e946">
+              <span>Analyzed revision</span>
+              <code>3ae886a8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/zhibaiYingChuan--LRC" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>zhibaiYingChuan--LRC</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Split:
+Apache-2.0 (LICENSE_CODE) for the public layer; the DaoTi Research
+License (LICENSE), non-commercial, for the engine, a private submodule
+the crate cannot build without</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>81,076
+lines of Rust in src/ across 52 files, plus 13,327 in the Tauri desktop
+shell; the engine under core/lrc-algo is not in the tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>333
+commits from 30 May to 20 November 2026 under two committer names;
+release v0.11.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>785
+Rust test functions in the crate and 92 in the desktop shell; the eight
+test targets Cargo.toml declares live in the private submodule; CI
+checks it out with a repository secret; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>LRC (Loong Recall) is a local memory sidecar for AI tools, written in
+Rust. It stores typed memories in JSON files under
+<code>~/.loong-recall/</code> and serves them to coding agents over MCP,
+a REST API, the <code>lrc</code> CLI and a Tauri desktop app. The same
+process indexes code for search. Hooks for Claude Code, Cursor and Trae
+inject recent memories at session start and migrate a transcript before
+compaction.</p>
+<p>What is notable is the forgetting path. A memory can be marked
+<code>Superseded</code> or <code>Suppressed</code> in a separate
+lifecycle table, and the fast and deep recall arms drop it before the
+top-k cut. A short "forget X" sent to the consolidate endpoint
+suppresses every existing memory containing X, and the instruction
+itself is not stored, since its text contains X. A populated test
+asserts both exclusions. A synthesis memory takes the strictest privacy
+of its sources, or is not written.</p>
+<p>What is weak is coverage and visibility. The semantic arm, which the
+shipped ML build fuses by default, and association expansion do not read
+lifecycle state, so a suppressed memory can still be recalled. A new
+memory similar to a suppressed one is merged into it and disappears with
+it. The encoder, the deep arm's geometry, rank fusion, synthesis
+planning, garbage collection and the audit trail are in
+<code>core/lrc-algo</code>, a submodule pinned at
+<code class="commit-id" title="7ceba1d548721d6cc7aa6fd316431fdedd5a7ae1">7ceba1d5…</code> whose repository
+returns 404. The public crate does not compile without it
+(<code>src/lib.rs:278-283</code>). This report covers the public tree
+only.</p>
+<p><strong>Licence.</strong> The engine is withheld:
+<code>LICENSE</code> states that since 30 October 2026 the protected
+source <em>"不再随公开仓库分发"</em> and that
+<em>"公开仓库不构成任何源码授权"</em> (<code>LICENSE:15-24</code>), so
+the Apache-2.0 layer is a crate no outside party can build. The engine's
+DaoTi Research License bars any commercial use (§1.2(b)) and
+<em>"以任何方式尝试提取、推断或重建受保护算法背后的设计原理、架构决策或核心参数"</em>
+(§1.2(f)), and terminates automatically on breach with a duty to destroy
+every copy (§5). The two licence files also disagree on scope:
+<code>LICENSE</code> §2.2 puts everything outside
+<code>src/engine/</code> under Apache-2.0, while the appendix of
+<code>LICENSE_CODE</code> lists five files
+(<code>LICENSE_CODE:193-202</code>).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a stored statement with an owner, not a belief with a
+status. It enters through <code>remember</code>,
+<code>batch_remember</code>, the consolidate endpoint or a transcript
+migration, and it is retrievable as soon as it is written. Nothing marks
+it as a candidate, and nothing in the public tree asks whether it is
+true.</p>
+<p>The one epistemic axis is the lifecycle table, kept apart from the
+memory record in <code>lifecycle.json</code>
+(<code>src/lifecycle.rs:1-12</code>). A memory with no row is
+<code>Active</code>. <code>Superseded</code> records the id of the
+memory that replaced it, and <code>Suppressed</code> records that a user
+or rule withdrew it (<code>src/lifecycle.rs:73-100</code>). Both are
+excluded from the fast and deep arms; <code>clear</code> returns a
+memory to <code>Active</code>.</p>
+<p>Two things move a memory out of <code>Active</code>. A REST call to
+<code>/v1/memories/lifecycle</code> with <code>mark_superseded</code> or
+<code>mark_suppressed</code> does it by id. A forget instruction sent to
+<code>/v1/memories/consolidate</code> suppresses by contained text.
+Nothing in the tree marks supersession automatically: the route's own
+comment says the judgement belongs to the caller
+(<code>src/v1_api.rs:7037-7041</code>).</p>
+<p>A memory dies three ways. <code>forget</code> deletes it by id. TTL
+expiry hides it, then <code>archive</code> moves it to cold storage and
+<code>purge-archived</code> deletes it. The regulator quarantines and
+purges synthesis memories that the private journal rates low quality. A
+correction is not a death: <code>correct</code> and <code>update</code>
+overwrite the content in place and keep the previous five versions on
+the record (<code>src/memory_types.rs:580-608</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a memory is Active until a lifecycle call or a forget instruction excludes it; two of the three recall arms honour the exclusion</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a memory is Active until a lifecycle call or a forget instruction excludes it; two of the three recall arms honour the exclusion
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    MCP[&quot;MCP remember,&lt;br/&gt;batch_remember&quot;]
+    REST[&quot;REST remember,&lt;br/&gt;consolidate, migrate&quot;]
+    HOOK[&quot;PreCompact hook:&lt;br/&gt;distill, then migrate&quot;]
+    MCP ~~~ REST ~~~ HOOK
+  end
+  writers --&gt; FI{&quot;consolidate only:&lt;br/&gt;a short&lt;br/&gt;forget-X instruction?&quot;}
+  FI --&gt;|&quot;yes&quot;| SUP[&quot;suppress existing&lt;br/&gt;rows containing X;&lt;br/&gt;instruction not stored&quot;]
+  FI --&gt;|&quot;no&quot;| ACT[&quot;stored, no lifecycle&lt;br/&gt;row: Active&quot;]
+  ACT --&gt; LC[&quot;REST lifecycle call:&lt;br/&gt;mark_superseded or&lt;br/&gt;mark_suppressed&quot;]
+  ACT --&gt; CHG[&quot;correct or update:&lt;br/&gt;in place, five&lt;br/&gt;versions kept&quot;]
+  ACT --&gt; GONE[&quot;forget by id, or TTL:&lt;br/&gt;hidden, archived,&lt;br/&gt;purged&quot;]
+  LC --&gt; EXC[&quot;Superseded or&lt;br/&gt;Suppressed&quot;]
+  SUP --&gt; EXC
+  EXC --&gt; FD[&quot;fast and deep arms:&lt;br/&gt;dropped before top_k&quot;]
+  EXC --&gt; SEM[&quot;semantic arm and&lt;br/&gt;associations:&lt;br/&gt;still returned&quot;]
+  EXC --&gt;|&quot;clear&quot;| ACT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The product is one sidecar process, <code>code-memory-server</code>
+(<code>src/bin/server.rs</code>), shipped inside a Tauri desktop app or
+beside the <code>lrc</code> CLI. It listens on port 3099 by default and
+serves MCP at <code>/mcp</code> and the REST API under <code>/v1</code>.
+The CLI is an HTTP client that probes ports 3099 to 3118.</p>
+<p>Persistence is JSON files in <code>~/.loong-recall/</code>.
+<code>JsonPersistence</code> appends writes and delete markers to
+<code>memories.journal.jsonl</code> and rewrites the base file when the
+journal reaches 64 MB (<code>src/persistence/json.rs:195-203</code>,
+<code>:247-271</code>). Lifecycle state, archive, graph edges, the state
+machine snapshot and semantic vectors each have their own file.
+Postgres, Qdrant and Neo4j backends are optional Cargo features of the
+library; the sidecar constructs <code>JsonPersistence</code> only
+(<code>src/bin/server.rs:698</code>). Only the JSON backend implements
+<code>save_lifecycle</code>. The trait default discards it, so on the
+other backends a suppression lasts until restart
+(<code>src/persistence/mod.rs:273-278</code>).</p>
+<p>Retrieval has three arms. The fast arm is TF-IDF over a bigram-aware
+tokenizer in <code>MemoryStore::recall_with_cancel</code>. The deep arm,
+<code>trapezoid_focus_recall</code>, selects candidates by the engine's
+nine-value "LuoShu" encoding and eight-way "bagua" class. The semantic
+arm, <code>semantic_recall</code>, ranks every eligible memory by
+sentence-vector cosine from <code>src/semantic_index.rs</code>. Fusion
+weights and reciprocal rank fusion are <code>engine::rrf</code>, in the
+private submodule.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>An adopter installs a desktop package or two binaries; nothing else
+has to run. The release workflow builds with
+<code>--features server,ml</code>
+(<code>.github/workflows/release.yml:498-501</code>), so the shipped
+sidecar downloads a sentence-embedding model on first start, 100 to 400
+MB from a domestic mirror by default. Without the model the semantic arm
+returns nothing and recall falls back to two arms. No API key is needed
+to store or recall; an LLM endpoint is optional and used for query
+enrichment and synthesis.</p>
+<p>The store is human-readable JSON and repairable by hand. Building
+from source is not possible outside the project: every module that
+encodes, fuses or synthesizes is mounted from <code>core/lrc-algo</code>
+by <code>#[path]</code> (<code>src/lib.rs:278-283</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Single write.</strong> MCP <code>remember</code>
+(<code>src/server.rs:2889</code>) calls
+<code>MemoryStore::remember</code>, which splits into
+<code>prepare_remember</code> and <code>commit_remember</code>
+(<code>src/memory_store.rs:5042-5360</code>). A visible memory in the
+same project with word-set Jaccard at or above 0.5 is merged into
+instead of appended to; <code>apply_merge</code> keeps the older
+<code>created_at</code>, the stricter privacy and the union of tags and
+entities (<code>src/memory_write.rs:155-192</code>).</li>
+<li><strong>Batch write and forget instruction.</strong>
+<code>/v1/memories/consolidate</code> separates forget instructions with
+<code>parse_forget_intent</code>, writes the rest through
+<code>remember_batch_preencoded</code> with no similarity merge, then
+suppresses matches under the same write lock
+(<code>src/v1_api.rs:2821-2950</code>).</li>
+<li><strong>Fast recall.</strong> <code>recall_with_cancel</code>
+filters expired, type, project, tags, importance and privacy, scores,
+then drops lifecycle-excluded memories before the top-k cut
+(<code>src/memory_store.rs:6732-6860</code>,
+<code>:7273-7278</code>).</li>
+<li><strong>Fused recall.</strong> MCP <code>recall</code> defaults to
+fast plus deep plus semantic, fused by
+<code>engine::rrf::rrf_fuse_three</code>
+(<code>src/server.rs:2237-2280</code>). MCP <code>recall_enhanced</code>
+fuses the same arms and adds association expansion
+(<code>src/server.rs:1020-1110</code>), as REST
+<code>/v1/memories/enrich</code> does.</li>
+<li><strong>Lifecycle.</strong> <code>/v1/memories/lifecycle</code>
+checks visibility, applies the op and flushes
+<code>lifecycle.json</code> (<code>src/v1_api.rs:7042-7088</code>).</li>
+<li><strong>Delete.</strong> <code>forget</code> deletes through
+persistence, removes the memory from the candidate index and cache, and
+removes its graph edges
+(<code>src/memory_store.rs:7606-7655</code>).</li>
+<li><strong>Correct.</strong> <code>correct_memory</code> rewrites one
+record with a reason, sets <code>source</code> to
+<code>corrected: …</code>, and queues re-encoding
+(<code>src/memory_store.rs:10506-10534</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Memory</code> carries <code>id</code>, <code>content</code>,
+<code>memory_type</code>, <code>project</code>, <code>tags</code>,
+<code>importance</code> (1 to 10), <code>ttl_days</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>last_accessed</code>, <code>source</code>,
+<code>source_ids</code>, an optional <code>confidence</code>, the
+engine's nine-value vector and bagua class, <code>privacy_level</code>,
+<code>session_id</code>, <code>user_id</code>, <code>event_id</code>,
+typed <code>entities</code>, <code>version</code> and
+<code>version_history</code> (<code>src/memory_types.rs:251-353</code>).
+<code>confidence</code> and <code>information_gain</code> are optional
+floats.</p>
+<p>Scope is three fields and one rule. <code>Global</code> is visible to
+every context; <code>User</code> needs a matching <code>user_id</code>;
+<code>Session</code> needs a matching <code>session_id</code>, and the
+owner as well when the record has one
+(<code>src/memory_store.rs:1778-1816</code>). <code>project</code> is a
+separate optional filter the caller supplies.</p>
+<p>Time is <code>created_at</code>, which a writer may set to the source
+event's time, and <code>updated_at</code>, which every content change
+overwrites (<code>src/memory_write.rs:102-104</code>,
+<code>src/memory_types.rs:580-593</code>). When a source time is given,
+the ingest time is not kept. The lifecycle row carries its own
+<code>updated_at_ms</code> and hit counters.</p>
+<p>Correction history is the last five <code>MemoryVersion</code>
+entries on the record, each with content, time and an optional reason;
+the sixth correction drops the oldest
+(<code>src/memory_types.rs:580-608</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The fast arm tokenizes CJK text into bigrams and ASCII into words and
+weights by TF-IDF. It can widen the query with words from the eight most
+active memories in the private state machine, which score only when a
+candidate shares no word with the original query
+(<code>src/memory_store.rs:6750-6800</code>). Lifecycle decay, a 30-day
+half-life multiplier floored at 0.2, is off unless
+<code>LRC_LIFECYCLE_DECAY=1</code> (<code>src/lifecycle.rs:45-53</code>,
+<code>:181-195</code>).</p>
+<p>The semantic arm takes every unexpired, visible memory matching the
+filters and asks the semantic service for the nearest vectors
+(<code>src/memory_store.rs:6647-6703</code>). Its filter is the fast
+arm's minus the lifecycle check. The fused paths run it on the original
+query while the lexical arms use an LLM-enriched one, and drop the deep
+arm's weight to zero when semantic results exist
+(<code>src/server.rs:1056-1080</code>).</p>
+<p>Association expansion adds memories linked to the fused seeds by
+shared event, entity, artifact and graph edge, filtered for expiry and
+privacy (<code>src/memory_store.rs:9064</code>,
+<code>:9155-9185</code>). Results carry the arm each hit came from and a
+score breakdown.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and hold the store's write lock. A single
+<code>remember</code> scans similarity candidates through an index and
+persists through the journal. The consolidate endpoint encodes outside
+the lock in three phases and abandons the write when encoding outruns
+its budget, so a timed-out client does not leave a write behind
+(<code>src/v1_api.rs:2868-2893</code>).</p>
+<p>A memory is retrievable by the fast and deep arms on commit. It
+reaches the semantic arm when the background index encodes it;
+<code>/v1/index/wait</code> lets a caller that needs read-your-writes
+block on that (<code>src/v1_api.rs:2726-2746</code>).</p>
+<p><code>parse_forget_intent</code> accepts a trigger at the start of a
+body of at most 60 characters, Chinese or English. It rejects stative
+uses such as "忘记带钥匙了" and requires a target of at least two
+characters (<code>src/memory_write.rs:226-334</code>). The matching
+memories are suppressed, not deleted, and only within the same
+<code>user_id</code> and, when given, project
+(<code>src/memory_store.rs:7455-7499</code>). The check runs on
+consolidate only; the same sentence sent to MCP <code>remember</code> is
+stored as a memory.</p>
+<p>The PreCompact hook posts a transcript to
+<code>/v1/context/distill</code>, which scores sentences by decision,
+negation and conclusion words, and then posts the result to
+<code>/v1/context/migrate</code>. No person sees the distilled items
+between the two calls
+(<code>integrations/hooks/claude-code/pre-compact.sh</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write path blocks on encoding but not on an LLM. The
+consolidation loop wakes every 300 seconds and clusters new memories
+into synthesis memories; the regulator runs every 30 minutes
+(<code>src/server.rs:5544-5554</code>). Journal compaction rewrites the
+whole base file when the journal reaches 64 MB, which the code estimates
+at about twice a day under its production load
+(<code>src/persistence/json.rs:195-203</code>). Session-start injection
+is bounded by the hook's <code>limit</code> on
+<code>/v1/memories/recent</code>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP tool list declares <code>remember</code>,
+<code>batch_remember</code>, <code>recall</code>,
+<code>recall_enhanced</code>, <code>list_memories</code>,
+<code>update_memory</code>, <code>correct_memory</code>,
+<code>forget</code>, <code>archive</code>, <code>associations</code>,
+<code>association_graph</code>, <code>memory_stats</code>,
+<code>system_health</code>, <code>search_code</code> and
+<code>codebase_stats</code> (<code>src/server.rs:465-899</code>). The
+agent holds <code>forget</code>, <code>update_memory</code> and
+<code>correct_memory</code>, and the <code>forget</code> description
+asks it to delete memories when a module or file is deleted
+(<code>src/server.rs:671-683</code>). The lifecycle operations are not
+on the MCP surface, the CLI or the desktop UI; they are a REST route
+only.</p>
+<p>Every MCP handler builds its privacy scope from <code>user_id</code>
+and <code>session_id</code> arguments through
+<code>crate::privacy::scope_from_args</code>. Every by-id operation
+checks visibility first and answers not-found for an invisible id
+(<code>src/server.rs:2966-3025</code>).</p>
+<p><code>integrations/rules/</code> carries rule files for Cursor, Trae
+and <code>AGENTS.md</code> that tell the agent when to recall and when
+to remember.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="where-the-exclusion-holds-and-where-it-does-not">Where the
+exclusion holds and where it does not</h3>
+<p><code>lifecycle_allows</code> is called on the fast arm, the deep arm
+and inside <code>suppress_matching_memories</code>
+(<code>src/memory_store.rs:6260</code>, <code>:7276</code>,
+<code>:7475</code>). <code>semantic_recall</code> and
+<code>expand_associations</code> do not call it. The release build
+enables the semantic arm, and MCP <code>recall</code> and REST enrich
+fuse it by default. A suppressed or superseded memory close to the query
+in vector space can therefore be returned. <code>list_memories</code>
+does not filter lifecycle state either, which suits a management
+view.</p>
+<h3 id="a-new-memory-can-inherit-an-exclusion">A new memory can inherit
+an exclusion</h3>
+<p><code>scan_candidates</code>, which finds the merge target for a
+single <code>remember</code>, filters expiry, privacy and project and
+not lifecycle state (<code>src/memory_store.rs:2018-2072</code>). The
+merge keeps the existing record's id and overwrites its content
+(<code>src/memory_store.rs:5182-5215</code>), and the lifecycle row is
+keyed on that id. A new memory whose word set overlaps a suppressed or
+superseded one by 0.5 or more therefore becomes that record, and is
+excluded from the fast and deep arms with it. A corrected value written
+as a new memory can vanish this way. I did not run it; this is read from
+the code.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — awarded on the lifecycle
+state. It is stored, moved by a reachable REST route and by forget
+instructions, and read as a filter on two of three arms.
+<code>Superseded</code> is the case the rubric asks for: on record, not
+served. The semantic arm is the gap.</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on
+<code>user_id</code>, <code>session_id</code> and
+<code>privacy_level</code> through <code>is_visible</code>, applied on
+all three arms, list, associations and by-id lookups. Without
+<code>LRC_API_TOKEN</code> a request with no scope sees everything, and
+the README says the multi-tenant mode is one token with self-reported
+users.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>tombstone</code></strong> — withheld. The forget
+instruction is keyed on text, but it suppresses the rows that exist at
+that moment and leaves no record. A later batch write of the same text
+is a new <code>Active</code> memory, since the batch path skips
+similarity merge (<code>src/v1_api.rs:2800-2810</code>). Journal delete
+markers are keyed on id and dropped at compaction.</li>
+<li><strong><code>bitemporal</code></strong> — withheld.
+<code>created_at</code> can hold event time, but it replaces ingest time
+rather than sitting beside it, and <code>updated_at</code> is
+overwritten.</li>
+<li><strong><code>audit_log</code></strong> — withheld.
+<code>AuditTrail</code>, which the README calls a hash-chained
+<code>audit.jsonl</code>, is defined in the private engine
+(<code>src/memory_store.rs:47</code>), so its append-only property
+cannot be read. In the public tree, <code>forget</code>,
+<code>update_memory</code>, <code>correct_memory</code> and
+<code>remember</code> record no event. The recorded events are GC
+deletes, quarantine, purge, archive, synthesis, retrieval and regulator
+changes.</li>
+<li><strong><code>human_review</code></strong> — withheld. No state
+holds a memory for a person, and the hook runs distill and migrate back
+to back.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>Garbage collection.</strong> <code>regulate</code> sets
+<code>gc_pending</code>, and <code>run_gc_if_pending</code> deletes
+whatever the private collector selects. The public tree has no caller of
+<code>run_gc_if_pending</code>; whether the engine calls it cannot be
+checked.</li>
+<li><strong>Derived privacy.</strong> <code>inherit_privacy</code> gives
+a synthesis memory the strictest scope of its sources and returns
+<code>None</code> for sources spanning users or sessions, which the
+caller treats as "do not write" (<code>src/privacy.rs:242-285</code>,
+<code>src/memory_store.rs:4060-4075</code>).</li>
+<li><strong>Forget-instruction scope.</strong> Matching requires an
+exact <code>user_id</code> match, <code>None</code> included, so an
+instruction with no owner suppresses every unowned memory containing the
+text (<code>src/memory_store.rs:7478-7480</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The crate has 785 test functions in <code>src/</code> and
+<code>tests/</code>; 31 in <code>tests/mtr_feasibility.rs</code> are
+<code>#[ignore]</code>d probes against a local corpus. The desktop shell
+adds 92. The eight <code>[[test]]</code> targets in
+<code>Cargo.toml</code> point into <code>core/lrc-algo/tests/</code>
+(<code>Cargo.toml:135-165</code>). CI checks out the submodule with
+<code>secrets.CORE_REPO_TOKEN</code> and runs <code>cargo test</code>
+with and without <code>ml</code>
+(<code>.github/workflows/ci.yml:36-39</code>, <code>:229-251</code>).
+The crate does not compile without the private submodule
+(<code>src/lib.rs:278-283</code>), so none of its tests can be built
+from the public checkout. I ran none of it.</p>
+<p><code>negative_eval</code> rests on two populated cases in
+<code>src/memory_store_tests.rs</code>:</p>
+<ul>
+<li><code>suppressed_and_superseded_memories_are_excluded_from_recall</code>
+(<code>:7547-7586</code>) stores three memories, suppresses one and
+supersedes one, and asserts that <code>recall</code> returns the kept
+memory and neither excluded one.</li>
+<li><code>forget_instruction_suppresses_matching_memories_end_to_end</code>
+(<code>:7595-7622</code>) asserts the suppressed memory is absent and an
+unrelated one present.</li>
+</ul>
+<p>Both call <code>recall</code>, the fast arm. No case covers
+<code>semantic_recall</code>, the fused default or association
+expansion, which is where section 9 finds the gap.</p>
+<p>The HTTP cross-user scope test queries as <code>user-B</code> with a
+different project from the writer's
+(<code>src/v1_api_tests.rs:5498-5506</code>). The project filter alone
+returns zero, so that assertion passes with the user predicate removed.
+The unit test of <code>is_visible</code> does vary one key at a time
+(<code>src/memory_store_tests.rs:34-94</code>).</p>
+<p><code>docs/BENCHMARK_v0.10.3.md</code> reports LongMemEval-S
+retrieval on a non-ML build: Session Recall@10 92.24% and Turn Recall@10
+83.19% over 232 of the first 250 instances. Both recompute from its
+three shard rows, as 214/232 and 193/232. The harness
+<code>lrc_fair_eval_v3.py</code> and the shard logs are on a local
+<code>G:\</code> drive and are not committed. The ML build was not
+measured, because encoding at write time took 404 seconds per instance.
+No paper is associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep a forget instruction out of the store.</strong> An
+instruction to forget X contains X; storing it re-asserts what it
+withdraws. Detect it, act on it, and drop it.</li>
+<li><strong>Keep lifecycle state outside the record.</strong> A small
+separate file means a retrieval hit never rewrites the store, and an
+older binary that drops unknown fields on rewrite cannot erase a
+suppression.</li>
+<li><strong>Derive a summary's scope from its sources, or refuse
+it.</strong> Take the strictest intersection, and treat "spans two
+owners" as no summary at all.</li>
+<li><strong>Answer not-found for an invisible id.</strong> A by-id
+delete or correction that checks visibility first leaks nothing through
+its response.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A status filter on some arms of a fusion.</strong> Put the
+exclusion in the candidate filter every arm shares, or after fusion, and
+test the fused path rather than one arm.</li>
+<li><strong>Merging into an excluded record.</strong> A dedup scan that
+ignores status hands new content an old record's exclusion.</li>
+<li><strong>A scope test whose two sides differ in more than the
+scope.</strong> Change one key per assertion, or the test cannot fail
+for the reason it names.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants a local, offline memory shared by
+several coding tools, installs a binary, and is content to read JSON
+files when something looks wrong. It does not suit anyone who needs to
+audit or change how memories are ranked, fused, synthesized or
+collected, since that code is not available to build. Walk away if
+forgetting must hold on every read path. Walk away also if several users
+share one instance, since isolation rests on a self-reported user id
+under one token.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>engine::rrf</code> or <code>engine::navigation</code>
+drops lifecycle-excluded memories after fusion; the public tree shows no
+such call.</li>
+<li>What the private collector selects for deletion, and whether
+anything calls <code>run_gc_if_pending</code>.</li>
+<li>Whether <code>AuditTrail</code> is append-only on disk and what its
+hash chain covers.</li>
+<li>Whether merging a new memory into a suppressed record is
+intended.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Store and lifecycle: <code>src/memory_store.rs</code>,
+<code>src/lifecycle.rs</code>, <code>src/memory_types.rs</code>,
+<code>src/memory_store_types.rs</code>,
+<code>src/memory_store_cache.rs</code></li>
+<li>Write path: <code>src/memory_write.rs</code>,
+<code>src/context_distill.rs</code>,
+<code>src/consolidation.rs</code></li>
+<li>Scope: <code>src/privacy.rs</code></li>
+<li>Persistence: <code>src/persistence/json.rs</code>,
+<code>src/persistence/mod.rs</code></li>
+<li>Retrieval: <code>src/semantic_index.rs</code>,
+<code>src/graph_store.rs</code></li>
+<li>API, MCP and CLI: <code>src/v1_api.rs</code>,
+<code>src/server.rs</code>, <code>src/bin/server.rs</code>,
+<code>src/bin/lrc.rs</code></li>
+<li>Integrations: <code>integrations/hooks/claude-code/</code>,
+<code>integrations/rules/</code></li>
+<li>Tests: <code>src/memory_store_tests.rs</code>,
+<code>src/v1_api_tests.rs</code>, <code>src/lifecycle.rs</code></li>
+<li>Licence and build: <code>LICENSE</code>, <code>LICENSE_CODE</code>,
+<code>Cargo.toml</code>, <code>src/lib.rs</code>,
+<code>.gitmodules</code>, <code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git</code>. Every absence below is scoped to the public
+tree; <code>core/lrc-algo</code> was not readable.</p>
+<ul>
+<li><strong>The lifecycle filter has three call sites.</strong>
+<code>git grep -n 'lifecycle_allows(' -- src</code> matches
+<code>src/memory_store.rs:6260</code>, <code>:7276</code>,
+<code>:7475</code> and the definition at <code>:7516</code>; none is
+inside <code>semantic_recall</code> (<code>:6647-6703</code>) or
+<code>expand_associations</code> (<code>:9064</code>).</li>
+<li><strong>The forget instruction is parsed on consolidate
+only.</strong> <code>git grep -n 'parse_forget_intent(' -- src</code>
+matches <code>src/v1_api.rs:2830</code> beside the definition and its
+tests in <code>src/memory_write.rs</code>.</li>
+<li><strong>The lifecycle route has no in-tree client.</strong>
+<code>git grep -n 'memories/lifecycle' -- .</code> matches
+<code>CHANGELOG.md:388</code> and <code>src/v1_api.rs</code> only.</li>
+<li><strong>No MCP handler records an audit event.</strong>
+<code>git grep -n -E 'record_audit|queue_audit' -- src/server.rs</code>
+returns nothing; the same pattern over <code>src/v1_api.rs</code>
+matches lines 3770 and 7959, and line 4221 writes
+<code>AssociationConfirmed</code> directly.</li>
+<li><strong>No caller of the GC runner.</strong>
+<code>git grep -n 'run_gc_if_pending' -- .</code> matches the definition
+at <code>src/memory_store.rs:4760</code> and a comment at
+<code>:4550</code>.</li>
+<li><strong>No validity-time field.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_until|valid_at|invalid_at|event_time|occurred_at' -- src</code>
+returns nothing;
+<code>git grep -c 'source_timestamp' -- src/memory_write.rs</code>
+counts 3.</li>
+<li><strong>No review state.</strong>
+<code>git grep -n -i -E 'approve|approval|pending_review|needs_review' -- src</code>
+matches one fixture sentence at
+<code>src/memory_store_tests.rs:6248</code>.</li>
+<li><strong>Lifecycle persists on the JSON backend only.</strong>
+<code>git grep -n 'fn save_lifecycle' -- src</code> matches
+<code>src/persistence/json.rs:590</code> and the no-op default at
+<code>src/persistence/mod.rs:276</code>.</li>
+<li><strong>The engine is not in the public history.</strong>
+<code>git log --oneline -- src/engine</code> returns nothing;
+<code>git log --oneline -- .gitmodules</code> returns
+<code>78863f3</code>, dated 30 October 2026.</li>
+<li><strong>The benchmark harness is not committed.</strong>
+<code>git ls-files | grep -i -E 'lrc_fair_eval|longmemeval|run_v0103'</code>
+returns nothing; <code>git ls-files docs</code> lists
+<code>docs/BENCHMARK_v0.10.3.md</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|citation' -- . ':!*.lock' ':!desktop/package-lock.json'</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/zhibaiYingChuan/LRC/commit/3ae886a84578e47981d7e29d2d377c212825e946"><code class="commit-id" title="3ae886a84578e47981d7e29d2d377c212825e946">3ae886a8…</code></a>
+— first reading, from a full clone of <code>main</code> four commits
+past <code>v0.11.0</code>, scoped to the public tree: store, lifecycle,
+privacy, write, persistence, MCP, REST, CLI, hooks and their tests. The
+submodule <code>core/lrc-algo</code>, pinned at
+<code class="commit-id" title="7ceba1d548721d6cc7aa6fd316431fdedd5a7ae1">7ceba1d5…</code>, returns 404 and
+was not read; submodules were not initialised. Screened first: a
+committed pre-commit hook, inert unless <code>core.hooksPath</code>
+points at it; the submodule; two <code>build.rs</code> files; six
+manifests inside the seven-day cooldown. Nothing was installed, built or
+run. Three marks: <code>trust_state</code>, <code>scope_enforced</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

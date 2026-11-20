@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 828 reports.**
+**This page covers all 829 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7602,3 +7602,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: GPL-3.0-only with an AGPL-3.0 portion, release v0.13.3, 2,485 commits from 11 June to 20 November 2026; 5,221 XCTest and 2,817 Rust test functions in CI with a skip guard, not run here; the GBrain keyword metrics recompute from committed raw files and the hybrid headline's raw files were not committed. Four marks: `tombstone`, `trust_state`, `human_review` and `negative_eval`.
 - Study when: an assistant learns about one person from their own speech and typing, and deleting a source has to take back what it taught.
 - Do not copy when: you need memory for a team or several users, contradiction handling, or a record of when a fact was true.
+
+### [`lrc`](../systems/lrc/)
+
+- Best idea: **a forget instruction acts and is never stored.** A short "forget X" sent to the consolidate endpoint suppresses the existing memories containing X within the same owner and project, and is kept out of the store, because its own text would match X on the next recall.
+- Biggest risk: **the exclusion holds on two of three arms.** `lifecycle_allows` runs on the TF-IDF and geometric arms; `semantic_recall` and association expansion do not call it, and the release build fuses the semantic arm by default.
+- Second risk: a new memory whose words overlap a suppressed one by half or more is merged into that record and inherits its exclusion; the engine that encodes, fuses, synthesizes, collects and audits is a private submodule, so none of that can be read and the crate cannot be built.
+- Most reusable component: `LifecycleTable` in `src/lifecycle.rs` with `lifecycle_allows` and `suppress_matching_memories` in `src/memory_store.rs`; `parse_forget_intent` in `src/memory_write.rs`; `inherit_privacy` in `src/privacy.rs`.
+- Maturity impression: Apache-2.0 public layer and a withheld, non-commercial engine; release v0.11.0; 81,076 lines of Rust in `src/`, 333 commits from 30 May to 20 November 2026; 785 test functions that CI runs with the private submodule checked out, not run here; the LongMemEval-S figures recompute from their shard rows, and the harness and logs are not committed. Three marks: `trust_state`, `scope_enforced` and `negative_eval`.
+- Study when: you want a forget command that cannot re-assert its own target, or lifecycle state kept beside the store rather than in it.
+- Do not copy when: you fuse several retrieval arms, unless the exclusion sits in the filter they all share.

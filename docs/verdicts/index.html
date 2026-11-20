@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 828 reports.</strong></p>
+<p><strong>This page covers all 829 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34155,6 +34155,42 @@ speech and typing, and deleting a source has to take back what it
 taught.</li>
 <li>Do not copy when: you need memory for a team or several users,
 contradiction handling, or a record of when a fact was true.</li>
+</ul>
+<h3 id="lrc"><a href="../systems/lrc/"><code>lrc</code></a></h3>
+<ul>
+<li>Best idea: <strong>a forget instruction acts and is never
+stored.</strong> A short "forget X" sent to the consolidate endpoint
+suppresses the existing memories containing X within the same owner and
+project, and is kept out of the store, because its own text would match
+X on the next recall.</li>
+<li>Biggest risk: <strong>the exclusion holds on two of three
+arms.</strong> <code>lifecycle_allows</code> runs on the TF-IDF and
+geometric arms; <code>semantic_recall</code> and association expansion
+do not call it, and the release build fuses the semantic arm by
+default.</li>
+<li>Second risk: a new memory whose words overlap a suppressed one by
+half or more is merged into that record and inherits its exclusion; the
+engine that encodes, fuses, synthesizes, collects and audits is a
+private submodule, so none of that can be read and the crate cannot be
+built.</li>
+<li>Most reusable component: <code>LifecycleTable</code> in
+<code>src/lifecycle.rs</code> with <code>lifecycle_allows</code> and
+<code>suppress_matching_memories</code> in
+<code>src/memory_store.rs</code>; <code>parse_forget_intent</code> in
+<code>src/memory_write.rs</code>; <code>inherit_privacy</code> in
+<code>src/privacy.rs</code>.</li>
+<li>Maturity impression: Apache-2.0 public layer and a withheld,
+non-commercial engine; release v0.11.0; 81,076 lines of Rust in
+<code>src/</code>, 333 commits from 30 May to 20 November 2026; 785 test
+functions that CI runs with the private submodule checked out, not run
+here; the LongMemEval-S figures recompute from their shard rows, and the
+harness and logs are not committed. Three marks:
+<code>trust_state</code>, <code>scope_enforced</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: you want a forget command that cannot re-assert its own
+target, or lifecycle state kept beside the store rather than in it.</li>
+<li>Do not copy when: you fuse several retrieval arms, unless the
+exclusion sits in the filter they all share.</li>
 </ul>
         </article>
       </div>

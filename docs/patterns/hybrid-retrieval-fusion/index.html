@@ -528,6 +528,19 @@ multiple-choice options are appended to the BM25 query, so a
 distractor's words pull up chunks that mention the wrong answer.
 <strong>Make one arm fail on purpose, and assert the fusion
 recovers.</strong></p>
+<p><strong><a href="../../systems/lrc/">LRC</a> applies its privacy
+filter on every arm and its lifecycle filter on two of three.</strong>
+<code>is_visible</code> runs in the TF-IDF, geometric and
+sentence-vector arms alike, while <code>lifecycle_allows</code>, which
+drops <code>Superseded</code> and <code>Suppressed</code> memories
+before the top-k cut, is called by the first two and not by
+<code>semantic_recall</code> (<code>src/memory_store.rs:6260</code>,
+<code>:7276</code>, <code>:6647-6703</code>). The release build fuses
+all three by default, so a memory a user asked to forget can return
+through the vector arm. Its negative test calls the TF-IDF arm alone
+(<code>src/memory_store_tests.rs:7547-7586</code>). <strong>Put the
+exclusion in the filter every arm shares, and assert it against the
+fused result.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exact identifiers, paraphrases, dates, negation, and typo

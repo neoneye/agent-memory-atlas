@@ -127,7 +127,7 @@ belief.</p>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
 recurs across the corpus. 81 systems of
-828 carry the mark, and <a
+829 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -292,7 +292,7 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>81 systems of
-828 in the atlas carry the mark.</strong> The
+829 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -1971,6 +1971,19 @@ replaces, so a value corrected by editing can return. And the ledger
 expires after 180 days and goes with <em>Forget everything</em>. A
 reworded value passes the exact hash, though the near-duplicate check
 against current claims does not apply to tombstones.</p>
+<p><strong><a href="../../systems/lrc/">LRC</a> keys a forget on the
+value and spends it once.</strong> A short "forget X" sent to its
+consolidate endpoint suppresses every existing memory containing X
+within the same owner and project, and the instruction is deliberately
+not stored, since its text would match X
+(<code>src/v1_api.rs:2821-2839</code>,
+<code>src/memory_store.rs:7455-7499</code>). Nothing records X
+afterwards. The batch path that receives the instruction skips
+similarity merge, so the same text written later is a new active memory.
+The single-write path does merge, into the suppressed record, which
+hides the new text by accident rather than by refusal. <strong>A
+value-keyed forget needs a durable record the writers read, not a
+one-time sweep.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,
