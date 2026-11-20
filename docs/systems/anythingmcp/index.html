@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted MCP gateway that
+turns business APIs into tools and keeps a Postgres company memory,
+admin-approved skills and a knowledge graph for every client.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AnythingMCP — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted MCP gateway
+that turns business APIs into tools and keeps a Postgres company memory,
+admin-approved skills and a knowledge graph for every client.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AnythingMCP — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted MCP gateway
+that turns business APIs into tools and keeps a Postgres company memory,
+admin-approved skills and a knowledge graph for every client.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AnythingMCP — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AnythingMCP",
+      "description": "A self-hosted MCP gateway that turns business APIs into tools and keeps a Postgres company memory, admin-approved skills and a knowledge graph for every client.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Company memory behind an MCP gateway</p>
+          <h1>AnythingMCP</h1>
+          <p class="document-deck">A self-hosted MCP gateway that turns
+business APIs into tools and keeps a Postgres company memory,
+admin-approved skills and a knowledge graph for every client.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/HelpCode-ai/anythingmcp">
+              <span>Source</span>
+              <strong>HelpCode-ai/anythingmcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/HelpCode-ai/anythingmcp/commit/88266c5001567fe07f4929d0d7e85209e70b3a86" title="88266c5001567fe07f4929d0d7e85209e70b3a86">
+              <span>Analyzed revision</span>
+              <code>88266c50…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/HelpCode-ai--anythingmcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>HelpCode-ai--anythingmcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0-only
+in LICENSE and every package.json, except any directory named ee/, which
+is under the AnythingMCP Commercial License; memory runs only behind an
+Enterprise key checked in ee/</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>133,009
+lines of non-test TypeScript in packages/backend/src across 473 files;
+the memory, skill and folder services are 2,942 of them, and ee/ holds
+10,008</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,823
+commits from 28 February to 20 November 2026; release v0.55.7; the
+memory module dates from 19 October and learning projects from 15
+November 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,340
+spec files under packages/backend/src; CI runs the backend jest suite
+against Postgres 17 on push and pull request; the memory service's 30
+cases use a mocked Prisma; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AnythingMCP is a self-hosted NestJS gateway from helpcode.ai that
+turns REST, SOAP, GraphQL, SQL and other MCP sources into tools for AI
+clients. Beside the gateway it keeps what the README calls a company
+brain. Workspace memory holds facts, preferences and notes in Postgres.
+Workspace skills are rules composed into each MCP server's instructions.
+A knowledge graph records how connectors' entities relate. Every memory
+and skill read filters by organization, owner and role-limited
+folder.</p>
+<p>What is notable is where the review gate sits. An AI client's
+<code>memory_save</code> to the company scope lands <code>pending</code>
+by default and stays out of every read until an admin or editor approves
+it, on a route that refuses MCP-scoped keys. Skills a model writes wait
+the same way. A skill an admin dismisses keeps its normalised title and
+instruction as keys the generators check, so the same rule is not
+proposed again.</p>
+<p>What is weak is around the edges of that gate. An item the agent
+wrote is served back as a note <em>saved by people</em>. No memory
+creation, edit, approval or deletion writes an event. The memory search
+path is tested only against a mocked Prisma, so its raw SQL never runs
+in a test. Learning projects put the confirm verb on the agent's own
+tools.</p>
+<p><strong>Licence.</strong> The memory this report is about returns
+nothing without an Enterprise key. <code>MemoryService.accessFor</code>
+calls <code>EditionService.hasMemory</code>
+(<code>packages/backend/src/ee/licensing/edition.service.ts:219-221</code>),
+and that file is under the AnythingMCP Commercial License, whose list of
+things a user may not do includes <em>"Remove, bypass, or alter any
+license-checking or feature-gating mechanism in the EE Code"</em>.
+Learning projects sit entirely in <code>ee/</code>, where the grant is
+to view, audit and contribute back. The README also caps the AGPL
+Community edition at <em>"up to 3 active users"</em>. The CLA (§2) lets
+helpcode.ai <em>"re-license your Contributions under any license
+terms"</em>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Three stores hold claims that can turn out to be false, and each has
+its own state field.</p>
+<p>A <strong>memory item</strong> is a fact, preference or note with a
+<code>scope</code>. A personal item belongs to one member, is
+<code>active</code> on write and is readable only by its owner, admins
+included. A company item written from an AI client is
+<code>pending</code> unless the workspace switched to automatic, and
+becomes <code>active</code> or <code>rejected</code> only through a
+curator's review
+(<code>packages/backend/src/memory/memory.service.ts:564-567</code>,
+<code>:650-671</code>). A rejected row is kept and never served. Nothing
+else ends a memory: personal items are hard-deleted by
+<code>memory_forget</code>, company items by a curator, and no item
+expires.</p>
+<p>A <strong>workspace skill</strong> is a rule with a title, a <em>when
+to use</em> line and an instruction. It is <code>pending</code>,
+<code>applied</code> or <code>dismissed</code>, and only applied skills
+reach a model
+(<code>packages/backend/src/knowledge-graph/kg-skill.service.ts:105-109</code>).
+Applying a merge proposal dismisses the skills it replaces, which keeps
+them with their history. A dismissed skill keeps working after it is
+dismissed: its keys stop the generators filing the same rule again.</p>
+<p>A <strong>knowledge-graph edge</strong> says two entities on two
+connectors are linked. It is <code>suggested</code>, <code>active</code>
+or <code>rejected</code>, only <code>active</code> edges are served over
+MCP, and the observed and LLM writers leave a rejected edge as it is
+(<code>packages/backend/src/knowledge-graph/kg-observational.service.ts:665-668</code>,
+<code>packages/backend/src/knowledge-graph/kg-llm.service.ts:229-230</code>).</p>
+<p>Learning lessons (<code>ee/</code>) add a fourth: <code>draft</code>,
+<code>confirmed</code>, <code>rejected</code> or
+<code>superseded</code>, confirmed by the member's own AI client.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — company memory waits for a curator and a dismissed skill blocks its own regeneration; the agent holds neither verb</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: company memory waits for a curator and a dismissed skill blocks its own regeneration; the agent holds neither verb
+flowchart TD
+  A[&quot;memory_save,&lt;br/&gt;scope organization,&lt;br/&gt;from an AI client&quot;] --&gt; M{&quot;workspace&lt;br/&gt;write mode&quot;}
+  M --&gt;|&quot;approval, default&quot;| P[&quot;memory item&lt;br/&gt;pending&quot;]
+  M --&gt;|&quot;auto&quot;| ACT[&quot;memory item&lt;br/&gt;active&quot;]
+  P --&gt; R{&quot;admin or editor,&lt;br/&gt;dashboard route;&lt;br/&gt;MCP keys refused&quot;}
+  R --&gt;|&quot;approve&quot;| ACT
+  R --&gt;|&quot;reject&quot;| REJ[&quot;rejected:&lt;br/&gt;row kept,&lt;br/&gt;never served&quot;]
+  ACT --&gt; READ[&quot;memory_search and&lt;br/&gt;kg_how_to_obtain:&lt;br/&gt;active, own org,&lt;br/&gt;visible folders&quot;]
+  REJ -.-&gt;|&quot;same text saved:&lt;br/&gt;new pending row&quot;| P
+  READ ~~~ G
+  G[&quot;skill generators:&lt;br/&gt;captured intents,&lt;br/&gt;fixed errors&quot;] --&gt; K{&quot;title or instruction&lt;br/&gt;key matches an&lt;br/&gt;applied or dismissed&lt;br/&gt;skill?&quot;}
+  K --&gt;|&quot;yes&quot;| DROP[&quot;draft dropped&quot;]
+  K --&gt;|&quot;no&quot;| SP[&quot;skill pending&quot;]
+  SP --&gt; AD{&quot;admin under&lt;br/&gt;AI Skills&quot;}
+  AD --&gt;|&quot;apply&quot;| SA[&quot;applied: in server&lt;br/&gt;instructions and&lt;br/&gt;skill_get&quot;]
+  AD --&gt;|&quot;dismiss&quot;| SD[&quot;dismissed:&lt;br/&gt;keys kept&quot;]
+  SD -.-&gt; K</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The backend is a NestJS service over PostgreSQL through Prisma, with
+Redis for sessions, rate limits and queues, and a Next.js dashboard.
+Memory, skills, learning and the graph are tables in the same database
+as connectors, users and the tool-call log. Memory search uses Postgres
+full text with the <code>simple</code> configuration, so no embedding
+provider is needed. An LLM is needed only for graph enrichment, skill
+generation from intents and skill consolidation, all opt-in per
+workspace.</p>
+<p>Each MCP server has its own endpoint
+(<code>/mcp/&lt;serverId&gt;</code>), and the built-in memory, skill,
+graph and learning tools are registered there per caller. The management
+API under <code>/api</code> is guarded by
+<code>JwtOrManagementKeyGuard</code>, which accepts a dashboard session
+or a management-scoped key and refuses a key whose scope is
+<code>MCP</code>
+(<code>packages/backend/src/auth/jwt-or-management-key.guard.ts:78</code>).
+The <code>amcp</code> CLI drives the same API with a management key.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The quick start is a Docker Compose file with Postgres and Redis and
+two generated secrets. Everything runs locally except the optional LLM.
+The memory tools and page appear only with an Enterprise licence key, on
+Cloud or self-hosted; without one, stored memory is kept and admins can
+still erase a member's personal memory
+(<code>packages/backend/src/memory/memory.service.ts:673-693</code>).
+The store is ordinary Postgres rows and readable with SQL. An opt-in
+row-level-security script exists, and its table list does not include
+<code>memory_items</code>
+(<code>packages/backend/prisma/rls/enable-rls.sql:23-29</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Save.</strong> <code>memory_save</code>
+(<code>packages/backend/src/mcp-server/mcp-endpoint.controller.ts:2942-3035</code>)
+re-reads the caller's access per call when sessions are long-lived, then
+<code>MemoryService.save</code> checks the level, refuses secrets and
+override phrasing, enforces the caps and sets <code>pending</code> for a
+company item in approval mode
+(<code>packages/backend/src/memory/memory.service.ts:508-598</code>).
+The source (<code>via: 'mcp'</code>, server id, API key name) is stored
+on the row.</li>
+<li><strong>Search.</strong> <code>MemoryService.search</code> builds
+one Prisma predicate, runs the same predicate as raw SQL for ranked
+full-text ids, then refetches those ids through the Prisma predicate,
+falling back to a substring match
+(<code>packages/backend/src/memory/memory.service.ts:321-412</code>).
+<code>memoryAsText</code> wraps the hits in markers with a
+data-not-instructions header
+(<code>packages/backend/src/mcp-server/mcp-endpoint.controller.ts:3344-3373</code>).</li>
+<li><strong>Facts in the graph answer.</strong>
+<code>kg_how_to_obtain</code> adds active items whose <code>about</code>
+names a matched entity
+(<code>packages/backend/src/mcp-server/mcp-endpoint.controller.ts:2469-2485</code>,
+<code>packages/backend/src/memory/memory.service.ts:419-439</code>).</li>
+<li><strong>Review.</strong>
+<code>POST /api/memory/items/:id/approve</code> and
+<code>/reject</code>, <code>ADMIN</code> or <code>EDITOR</code>
+(<code>packages/backend/src/memory/memory.controller.ts:254-266</code>).</li>
+<li><strong>Skill proposals.</strong> <code>generateForServer</code> and
+<code>applyConnectorResult</code> send captured intents to an LLM and
+file drafts through <code>insertSkill</code>;
+<code>proposeFromErrors</code> turns failed-then-fixed calls into drafts
+without a model
+(<code>packages/backend/src/knowledge-graph/kg-skill.service.ts:426-649</code>).
+<code>skills_save_to_workspace</code> files a skill the agent found as
+<code>pending</code>
+(<code>packages/backend/src/mcp-server/mcp-endpoint.controller.ts:2627-2714</code>).</li>
+<li><strong>Skill review and delivery.</strong> Apply and dismiss are
+<code>ADMIN</code> routes
+(<code>packages/backend/src/knowledge-graph/kg.controller.ts:312-324</code>);
+<code>activeSkillsText</code>, <code>listForCaller</code> and
+<code>getForCaller</code> read through <code>visibleWhere</code>
+(<code>packages/backend/src/knowledge-graph/kg-skill.service.ts:99-121</code>,
+<code>:848-868</code>).</li>
+<li><strong>Learning.</strong> <code>learning_record</code>,
+<code>learning_review</code> and <code>learning_confirm</code> are
+registered for the project's member
+(<code>packages/backend/src/ee/learning/learning-tools.ts:97-264</code>);
+<code>LearningService.confirm</code> publishes when the project's mode
+is <code>confirmed</code>
+(<code>packages/backend/src/ee/learning/learning.service.ts:980-986</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryItem</code> carries <code>organizationId</code>,
+<code>scope</code>, <code>ownerUserId</code> (personal only),
+<code>kind</code>, <code>content</code>, <code>tags</code>,
+<code>status</code>, <code>source</code> as JSON, <code>about</code> (a
+normalised graph entity name), <code>folderId</code> (company only),
+<code>createdByUserId</code>, <code>approvedByUserId</code>,
+<code>approvedAt</code>, <code>createdAt</code>, <code>updatedAt</code>,
+and a generated <code>search_vector</code>
+(<code>packages/backend/prisma/schema.prisma:1905-1937</code>). There is
+no version chain, no supersession link and no validity time; an edit
+overwrites <code>content</code>.</p>
+<p><code>KgSkillSuggestion</code> carries scope
+(<code>connectorId</code> or <code>mcpServerId</code>),
+<code>status</code>, <code>source</code> (<code>manual</code>,
+<code>llm</code>, <code>finder</code>, <code>consolidation</code>,
+<code>errors</code>, <code>agent</code>, <code>learning</code>),
+<code>replaces</code> for a merge, <code>version</code>,
+<code>audienceUserId</code> for a learning draft, and a folder
+(<code>packages/backend/prisma/schema.prisma:1650-1722</code>). An edit
+to the text writes the previous content to <code>KgSkillVersion</code>
+with the editor (<code>:1840-1856</code>); a status change does not.</p>
+<p><code>KnowledgeFolder</code> is one tree per workspace shared by
+company memory and skills, with <code>roleIds</code> limiting a folder
+and everything below it (<code>:1943-1968</code>).
+<code>LearningLesson</code> is unique on
+<code>(topicId, textHash)</code>, so the same lesson said twice is one
+row with a count (<code>:1809-1837</code>). <code>KgEdge</code> is
+unique on <code>(organization, source, target, kind)</code> with
+<code>status</code>, <code>isManual</code>, <code>confidence</code> and
+first and last seen times (<code>:1599-1630</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Memory retrieval is a tool call, not injection.
+<code>anyWordQuery</code> turns up to 12 words into a prefix OR query so
+a partial word matches, ranked by <code>ts_rank</code> and then recency
+(<code>packages/backend/src/memory/memory.service.ts:98-103</code>,
+<code>:362-382</code>). When full text finds nothing, a case-insensitive
+substring match runs, and an empty query returns the newest items. A
+result is at most 50 items of up to 2,000 characters each, so one call
+can return about 100,000 characters.</p>
+<p>The predicate is stated twice and the second one wins. The raw SQL
+repeats the organization, status, owner, folder and <code>about</code>
+conditions, and the ids it returns are refetched through the Prisma
+predicate (<code>:383-390</code>). A drift in the SQL can drop hits; it
+cannot add one.</p>
+<p>Skills are injected. On initialize, <code>activeSkillsText</code>
+composes applied skills into the server's instructions inline up to
+6,000 characters, then switches to an index the model opens with
+<code>skill_get</code>
+(<code>packages/backend/src/knowledge-graph/kg-skill.service.ts:25-40</code>).
+The text sits in the MCP server's instructions, so a skill change alters
+a prefix a provider may have cached.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is synchronous and the item is searchable when the call
+returns, or when a curator approves it. There is no extraction from
+conversation: the model decides what to save and writes it in its own
+words, with tool descriptions asking for one idea per item and the
+user's consent before a company save. No deduplication runs, so saving
+the same sentence twice stores two rows. <code>cleanContent</code>
+refuses credential shapes and override phrasing in five languages, a
+heuristic the code calls defence in depth
+(<code>packages/backend/src/memory/memory.service.ts:105-129</code>,
+<code>:715-732</code>).</p>
+<p>Skill proposals are the background path. With intent capture on, a
+tool call carries a short <code>_intent</code> the model writes, stored
+on the tool-call log
+(<code>packages/backend/prisma/schema.prisma:870</code>). An opt-in
+cloud cron or an admin request sends up to 200 intents to an LLM, which
+drafts at most six skills, and each run replaces its own pending drafts
+(<code>packages/backend/src/knowledge-graph/kg-skill.service.ts:542-611</code>).
+The fixed-error path needs no model and may apply a pattern seen three
+times when an admin turned auto-apply on (<code>:494</code>,
+<code>:508</code>). Neither pass rewrites memory items.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>On a per-server endpoint a caller with memory access gets
+<code>memory_search</code>; from <em>Personal</em> up,
+<code>memory_save</code> and <code>memory_forget</code>; from
+<em>Contribute</em>, a <code>scope</code> argument on save
+(<code>packages/backend/src/mcp-server/mcp-endpoint.controller.ts:2848-3071</code>).
+Company memory has no edit or delete tool; <code>memory_forget</code>
+deletes only the caller's own personal items. <code>skills_list</code>,
+<code>skill_get</code> and <code>kg_how_to_obtain</code> read, and
+<code>skills_save_to_workspace</code> proposes. Memory tools are absent
+from the shared <code>/mcp</code> endpoint.</p>
+<p>A learning-project member also gets <code>learning_record</code>,
+<code>learning_review</code> and <code>learning_confirm</code>, with
+reminders appended to write-tool results
+(<code>packages/backend/src/ee/learning/learning-tools.ts:42-71</code>).
+The model is expected to record a correction when the user makes one and
+to read lessons back for confirmation.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="who-can-clear-the-queue">Who can clear the queue</h3>
+<p>The approve and reject routes need a dashboard session or a
+management-scoped key held by an admin or editor. The MCP endpoint
+registers no approve verb, and the guard refuses an MCP-scoped key on
+<code>/api</code>. <code>review</code> stamps the authenticated user as
+approver. It does not check that the item is pending or that the
+approver differs from the creator, so a curator approves a proposal
+their own AI client made, in the dashboard
+(<code>packages/backend/src/memory/memory.service.ts:650-671</code>).</p>
+<p>The <code>amcp api</code> command calls the same routes with a
+management key, and its README offers that <em>"for a person or for a
+connected AI agent"</em>. An agent given a shell and an admin's
+management key can approve; that is a general credential, not a verb on
+the agent's tool surface.</p>
+<h3 id="what-the-agent-is-told-about-what-it-reads">What the agent is
+told about what it reads</h3>
+<p><code>memory_save</code> from an AI client stores
+<code>via: 'mcp'</code> on the row, and the text returned to the next
+model omits it. <code>memoryAsText</code> and the facts note describe
+every item as written or saved <em>by people</em>
+(<code>packages/backend/src/mcp-server/mcp-endpoint.controller.ts:3363-3368</code>,
+<code>:2483-2485</code>). A personal item one session's model saved
+reads to the next session's model as something a person wrote.</p>
+<h3 id="what-a-deletion-leaves">What a deletion leaves</h3>
+<p><code>memory_forget</code> and the dashboard delete remove the row.
+No event records the deletion of an item, and nothing stops the same
+text being saved again. Rejected company items are kept and count toward
+the 20,000-item workspace cap
+(<code>packages/backend/src/memory/memory.service.ts:541-557</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code></strong> — awarded on the skill
+generators. <code>knownSkills</code> collects the <code>skillKey</code>
+of the title and the instruction of every applied and dismissed skill in
+the scope, and <code>insertSkill</code> drops a model draft that matches
+either
+(<code>packages/backend/src/knowledge-graph/kg-skill.service.ts:376-415</code>,
+<code>:619-632</code>). <code>proposeFromErrors</code> skips a dismissed
+title, and its titles are derived from the tool and the pattern, not
+written by a model (<code>:481-500</code>). The key is exact after case,
+accent and punctuation folding, so a paraphrase passes. The read takes
+the newest 1,000 rows by <code>updatedAt</code>, so in a large scope the
+oldest dismissals drop out. Deleting a dismissed skill deletes the key.
+Manual creation and <code>skills_save_to_workspace</code> do not check
+it. The memory store has no equivalent.</li>
+<li><strong><code>trust_state</code></strong> — awarded. Company memory
+is <code>pending</code>, <code>active</code> or <code>rejected</code>
+with only <code>active</code> served; skills are <code>pending</code>,
+<code>applied</code> or <code>dismissed</code> with only
+<code>applied</code> served; edges are <code>suggested</code>,
+<code>active</code> or <code>rejected</code> with only
+<code>active</code> served over MCP
+(<code>packages/backend/src/knowledge-graph/kg.service.ts:540-541</code>,
+<code>:655-661</code>).</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on
+organization, personal owner and folder roles in every memory read, and
+organization, server or connector, folder and audience in every skill
+read.</li>
+<li><strong><code>human_review</code></strong> — awarded on company
+memory and skill suggestions: the producer is the AI client, the queue
+is filled on its default path, the read path consults the state, and the
+verb is off its surface. Learning lessons fail the test.
+<code>learning_confirm</code> is an MCP tool whose description asks the
+model to <em>"never confirm on their behalf"</em>, and in publish mode
+<code>confirmed</code> its call publishes the topic to everyone
+(<code>packages/backend/src/ee/learning/learning-tools.ts:221-263</code>,
+<code>packages/backend/src/ee/learning/learning.service.ts:980-986</code>).
+The default mode is <code>manual</code>, where an admin or editor
+publishes.</li>
+<li><strong><code>negative_eval</code></strong> — awarded on the
+learning database test; see section 10.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Memory carries
+<code>createdAt</code>, <code>updatedAt</code> and
+<code>approvedAt</code>; edges carry first and last seen. All are record
+time.</li>
+<li><strong><code>audit_log</code></strong> — withheld. The security
+event log records memory access, settings and erasure, folder access
+changes and learning project events
+(<code>packages/backend/src/memory/memory.service.ts:240</code>,
+<code>:299</code>, <code>:682</code>). A memory item's creation, edit,
+approval, rejection and deletion write none, and the built-in memory
+tools do not pass through the tool-call log, which
+<code>dynamic-mcp-tools.ts</code> writes for connector tools. Skill
+versions keep prior text and skip status changes.</li>
+</ul>
+<h3 id="near-misses-in-the-lesson-and-edge-stores">Near-misses in the
+lesson and edge stores</h3>
+<p>A rejected lesson keeps its row under the same
+<code>(topicId, textHash)</code>, and <code>record</code> sets it back
+to <code>draft</code> when the lesson is reported again, with the
+comment <em>"brought back if it had been set aside"</em>
+(<code>packages/backend/src/ee/learning/learning.service.ts:791-803</code>).
+The key a tombstone needs is there, and the writer reverses it. A
+rejected graph edge holds against the observed and LLM writers.
+Rejecting through <code>updateEdge</code> does not mark the edge manual,
+though, and the static rebuild deletes static edges it did not rewrite,
+so a rejected static edge the extractor stops producing is swept with
+its status
+(<code>packages/backend/src/knowledge-graph/kg.service.ts:442-450</code>,
+<code>packages/backend/src/knowledge-graph/kg-static.service.ts:298-305</code>).</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The backend has 1,340 spec files, and CI runs the jest suite with
+Postgres 17 and Redis as services on push and pull request to
+<code>main</code> (<code>.github/workflows/ci.yml:3-8</code>,
+<code>:53-68</code>, <code>:149-151</code>). I ran none of it.</p>
+<p><code>negative_eval</code> rests on
+<code>packages/backend/src/ee/learning/learning.database.spec.ts</code>,
+which runs the services against a real database:</p>
+<ul>
+<li><code>:98-124</code> records a lesson, asserts the expert is served
+the draft, and asserts a colleague and a caller with no user are served
+nothing.</li>
+<li><code>:134-156</code> confirms one lesson, records an unconfirmed
+one, publishes, and asserts the colleague's skill body contains the
+confirmed hinge and not the unconfirmed screws, while the expert's draft
+contains both.</li>
+<li><code>:244</code> asserts a member holding a limited folder's role
+is not served another member's draft.</li>
+</ul>
+<p>The memory service has 30 cases in
+<code>packages/backend/src/memory/memory.service.spec.ts</code>, built
+on a hand-written Prisma stand-in whose <code>$queryRaw</code> returns
+what the test sets (<code>:14-34</code>). The scope and folder cases
+assert the <code>where</code> object passed to <code>findMany</code>
+(<code>:189-204</code>, <code>:291-301</code>). They hold the shape of
+the predicate and never execute the raw SQL, and no test retrieves from
+populated memory. The skill dedupe is tested with a control: a dismissed
+and an applied skill block two drafts and a third is filed
+(<code>packages/backend/src/knowledge-graph/kg-skill.service.spec.ts:644-657</code>).</p>
+<p>No benchmark or retrieval-quality harness is committed.
+<code>CITATION.cff</code> cites the software, and no paper is associated
+with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the approve verb behind a credential scope the agent's
+key cannot hold.</strong> A key minted for tool calls is refused on the
+management API, so the queue's drain is unreachable from the producer
+without a second grant.</li>
+<li><strong>Refetch raw-SQL hits through the typed predicate.</strong>
+Ranking in SQL and filtering again by id means a drift in the
+hand-written query loses results rather than leaking them.</li>
+<li><strong>Keep dismissed suggestions as keys the generator
+reads.</strong> Normalise title and instruction, block a draft that
+matches, and test it with one draft that should still pass.</li>
+<li><strong>Let a rejection outrank later evidence.</strong> The edge
+writers leave a rejected link alone however many times it is observed
+again.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Labelling model-written memory as human.</strong> If the row
+knows it came from an AI client, the text the next model reads should
+say so.</li>
+<li><strong>A confirm verb on the learner's own tool list.</strong> A
+tool description asking the model not to confirm for the user is a
+request, and here the call publishes.</li>
+<li><strong>A rejection that re-recording undoes.</strong> A unique hash
+that already identifies the rejected lesson can refuse it instead of
+reviving it.</li>
+<li><strong>Testing a read path against a mock of the store.</strong>
+Asserting a <code>where</code> object proves the code built one; it does
+not prove Postgres returns the right rows.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a company that already wants its staff's AI clients to
+reach internal systems through one governed endpoint, and wants a
+shared, role-limited notebook and rule set beside the tools. The memory
+is a small part of a large product, so adopting it means running the
+gateway and buying the Enterprise edition. A team that wants a memory
+library, extraction from conversation, or semantic recall should walk
+away; one that needs a full history of who changed what in memory will
+not find one here.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether a self-hosted deployment may remove the
+<code>hasMemory</code> call from the AGPL memory module, given the
+commercial licence on the gate it calls.</li>
+<li>Whether <code>via: 'mcp'</code> is meant to reach the model's text,
+given the data-not-instructions framing.</li>
+<li>How often Cloud workspaces switch company memory to
+<code>auto</code>, which removes the queue.</li>
+<li>Whether the learning <code>confirmed</code> mode is meant to publish
+on the agent's call alone.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory: <code>packages/backend/src/memory/memory.service.ts</code>,
+<code>packages/backend/src/memory/memory.controller.ts</code>,
+<code>packages/backend/prisma/migrations/20261019180000_workspace_memory/migration.sql</code></li>
+<li>Skills:
+<code>packages/backend/src/knowledge-graph/kg-skill.service.ts</code>,
+<code>packages/backend/src/knowledge-graph/error-fix.ts</code>,
+<code>packages/backend/src/knowledge-graph/kg.controller.ts</code></li>
+<li>Graph:
+<code>packages/backend/src/knowledge-graph/kg.service.ts</code>,
+<code>packages/backend/src/knowledge-graph/kg-observational.service.ts</code>,
+<code>packages/backend/src/knowledge-graph/kg-llm.service.ts</code>,
+<code>packages/backend/src/knowledge-graph/kg-static.service.ts</code></li>
+<li>Folders:
+<code>packages/backend/src/knowledge-folders/knowledge-folders.service.ts</code></li>
+<li>Learning (<code>ee/</code>):
+<code>packages/backend/src/ee/learning/learning.service.ts</code>,
+<code>packages/backend/src/ee/learning/learning-tools.ts</code></li>
+<li>MCP surface and auth:
+<code>packages/backend/src/mcp-server/mcp-endpoint.controller.ts</code>,
+<code>packages/backend/src/auth/jwt-or-management-key.guard.ts</code>,
+<code>packages/backend/src/ee/licensing/edition.service.ts</code></li>
+<li>Schema: <code>packages/backend/prisma/schema.prisma</code>,
+<code>packages/backend/prisma/rls/enable-rls.sql</code></li>
+<li>Tests:
+<code>packages/backend/src/memory/memory.service.spec.ts</code>,
+<code>packages/backend/src/knowledge-graph/kg-skill.service.spec.ts</code>,
+<code>packages/backend/src/ee/learning/learning.database.spec.ts</code>,
+<code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|validFrom|validTo|valid_until|validUntil|as_of|asOf|occurred_at|occurredAt' -- packages/backend/prisma/schema.prisma</code>
+matches only <code>sessionsValidFrom</code>, a token cutover on the
+user, at lines 157 and 167;
+<code>git grep -n -E 'approvedAt|firstSeenAt' -- packages/backend/prisma/schema.prisma</code>
+matches lines 1588, 1619 and 1926.</li>
+<li><strong>Memory writes three security events, none per item.</strong>
+<code>git grep -n -E 'securityEvents\.log' -- packages/backend/src/memory</code>
+matches <code>memory.service.ts:240</code>, <code>:299</code> and
+<code>:682</code> (settings, access, erasure) and three spec lines.</li>
+<li><strong>Built-in memory tools are not in the tool-call log.</strong>
+<code>git grep -n 'logInvocation' -- packages/backend/src/mcp-server/mcp-endpoint.controller.ts packages/backend/src/memory</code>
+returns nothing;
+<code>git grep -c 'logInvocation' -- packages/backend/src/mcp-server/dynamic-mcp-tools.ts</code>
+counts 5.</li>
+<li><strong>Save does not consult rejected content.</strong>
+<code>git grep -n 'rejected' -- packages/backend/src/memory/memory.service.ts</code>
+matches only the list filter at 463 and the review write at 668.</li>
+<li><strong>Review verbs are reached only from controllers.</strong>
+<code>git grep -n -E 'memory\.review\(|skills\.apply\(|kgSkills\.apply\(|skills\.dismiss\(|kg\.updateEdge\(' -- packages/backend/src</code>
+matches <code>memory.controller.ts:258</code>, <code>:265</code> and
+<code>kg.controller.ts:316</code>, <code>:323</code>, <code>:538</code>,
+besides spec files.</li>
+<li><strong>Memory and graph tests never open a database.</strong>
+<code>git grep -n -E '\$connect|new PrismaService' -- packages/backend/src/memory packages/backend/src/knowledge-graph</code>
+returns nothing; the same pattern over
+<code>packages/backend/src/ee/learning</code> matches
+<code>learning.database.spec.ts:14</code> and <code>:49</code>.</li>
+<li><strong>The row-level-security script omits memory.</strong>
+<code>git grep -n 'memory_items' -- packages/backend/prisma/rls</code>
+returns nothing;
+<code>git grep -c 'kg_skill_suggestions' -- packages/backend/prisma/rls</code>
+counts one line in each of the two scripts.</li>
+<li><strong>Only memory records an approver.</strong>
+<code>git grep -n -E 'appliedBy|approvedBy|dismissedBy|reviewedBy' -- packages/backend/prisma/schema.prisma</code>
+matches line 1925 alone.</li>
+<li><strong>Only the generators read skill keys.</strong>
+<code>git grep -n 'skillKey(' -- packages/backend/src/knowledge-graph/kg-skill.service.ts</code>
+matches the definition at 233, <code>knownSkills</code> at 403-404 and
+<code>insertSkill</code> at 628-629; <code>create</code> at 1082 does
+not call it.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex' -- README.md CITATION.cff</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/HelpCode-ai/anythingmcp/commit/88266c5001567fe07f4929d0d7e85209e70b3a86"><code class="commit-id" title="88266c5001567fe07f4929d0d7e85209e70b3a86">88266c50…</code></a>
+— first reading, from a full clone of <code>main</code> at release
+<code>v0.55.7</code>, scoped to workspace memory, workspace skills,
+knowledge folders, the knowledge graph's edge writers and readers,
+learning projects, the MCP tool registration and the management-API
+guard, with their tests; the connector catalogue was not read. Screened
+first: one auto-run surface, <code>server.json</code>, an MCP manifest
+that acts only if a harness installs it; two build-time execution
+points, a <code>conftest.py</code> and an npm
+<code>prepublishOnly</code>; seven manifests inside the seven-day
+cooldown; nine unpinned surfaces; <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> treated as data. AGPL-3.0 with commercially
+licensed <code>ee/</code> directories, no rider against analysis.
+Nothing installed, built or run. Five marks: <code>tombstone</code>,
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>human_review</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

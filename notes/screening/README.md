@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 834 of 835 screened at the report's current pin.**
+**Progress: 835 of 836 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 393 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 382 |
-| Repositories with build-time execution (`EXEC`) | 601 |
+| Repositories with an auto-run surface (`RUNS`) | 394 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 383 |
+| Repositories with build-time execution (`EXEC`) | 602 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -59,6 +59,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`alphaonedev-ai-memory`](../../content/systems/alphaonedev-ai-memory.md) | `.claude/settings.json`, `hooks/`, `server.json` |
 | [`altk-evolve`](../../content/systems/altk-evolve.md) | `.claude-plugin/`, `platform-integrations/claude/plugins/evolve-lite/.claude-plugin/plugin.json`, `platform-integrations/claw-code/plugins/evolve-lite/.claude-plugin/plugin.json`, `platform-integrations/claw-code/plugins/evolve-lite/hooks/` |
 | [`anything-llm`](../../content/systems/anything-llm.md) | `.devcontainer/devcontainer.json`, `.gitmodules`, `.vscode/settings.json`, `.vscode/tasks.json` |
+| [`anythingmcp`](../../content/systems/anythingmcp.md) | `server.json` |
 | [`archeus`](../../content/systems/archeus.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json` |
 | [`areev`](../../content/systems/areev.md) | `.githooks/` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |

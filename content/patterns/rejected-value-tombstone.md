@@ -1102,6 +1102,8 @@ a change event keyed on its id, and the same sentence can be written again.
 
 **[LMC-5](../../systems/lmc-5/) blocks a re-asserted value by accident, and blocks the correction with it.** `memories.content_hash` is unique over title, content and fact key, and `add_memory` returns any existing row with that hash before it supersedes the current row for the key (`src/lmc5/store.py:865-886`). A value once superseded therefore cannot be written again under its key: the write lands on the superseded row, reports `created: false`, and the newer value stays current. It is the value-keyed refusal [MGI-Mind](../../systems/mgi-mind/) builds deliberately, with nothing recording that the value was rejected, so it refuses a legitimate reversal as readily as a stale re-extraction, and a one-word change to the title walks past it.
 
+**[AnythingMCP](../../systems/anythingmcp/) keeps a dismissed skill as the key its generators check.** `knownSkills` collects a case-, accent- and punctuation-folded key of the title and of the instruction of every applied and dismissed skill in a scope, and `insertSkill` drops a model draft matching either; the fixed-error generator skips a dismissed title outright. The record is the dismissed row, so deleting it deletes the refusal, the read takes the newest 1,000 rows by `updatedAt`, a paraphrase passes, and manual creation and the agent's `skills_save_to_workspace` never consult it. The same repository carries the near-miss beside it: a learning lesson is unique on its text hash, and re-recording a rejected one sets it back to draft, so the key that would refuse the value is the one the writer uses to revive it.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

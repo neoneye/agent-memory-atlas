@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 835 reports.**
+**This page covers all 836 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7672,3 +7672,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0-or-later, version 0.3.0; 5,311 lines of Python in `src/lmc5` and 7,052, 5,296 and 418 in three `extras/` packages; 82 commits from 31 May to 19 November 2026; 160 pytest functions in CI, not run here; no paper and no published benchmark score. One mark: `negative_eval`.
 - Study when: you want a small local store whose every read path shares one status predicate, with a test that proves it.
 - Do not copy when: facts must be correctable back to an earlier value, or automatic writes need a review step that someone can complete.
+
+### [`anythingmcp`](../systems/anythingmcp/)
+
+- Best idea: **the queue's drain is on a key scope the producer cannot hold.** An AI client's company-memory save lands `pending` by default and is served nowhere until an admin or editor approves it on an `/api` route, and the guard on that route refuses any key minted with the `MCP` scope; no MCP tool approves.
+- Biggest risk: **the agent's words come back as a person's.** `memory_save` records `via: 'mcp'` on the row, and the text the next model reads calls every item a note saved by people; no creation, edit, approval or deletion of a memory item writes an event.
+- Second risk: learning projects register `learning_confirm` on the member's own MCP surface and publish on it in `confirmed` mode, and re-recording a rejected lesson sets it back to draft; the memory search path is tested only against a mocked Prisma.
+- Most reusable component: `knownSkills` and `insertSkill` in `packages/backend/src/knowledge-graph/kg-skill.service.ts`, which block a model draft whose normalised title or instruction matches an applied or dismissed skill, and the refetch of raw-SQL hits through the typed predicate in `MemoryService.search`.
+- Maturity impression: AGPL-3.0 with commercially licensed `ee/` directories, release v0.55.7; 133,009 lines of non-test TypeScript in the backend, 1,823 commits from 28 February to 20 November 2026; 1,340 spec files run in CI against Postgres 17, not run here; memory requires an Enterprise key. Five marks: `tombstone`, `trust_state`, `scope_enforced`, `human_review` and `negative_eval`.
+- Study when: staff use several AI clients against internal systems and you want shared, role-limited notes and rules that a curator admits.
+- Do not copy when: you need a memory library, extraction from conversation, semantic recall, or a history of who changed which memory.

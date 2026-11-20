@@ -536,6 +536,7 @@ page_kind: comparison
 - [`percolate`](../systems/percolate/)
 - [`resimind`](../systems/resimind/)
 - [`lmc-5`](../systems/lmc-5/)
+- [`anythingmcp`](../systems/anythingmcp/)
 
 ## Repos Inspected
 
@@ -1376,12 +1377,13 @@ page_kind: comparison
 - [Percolation-Labs/percolate](https://github.com/Percolation-Labs/percolate) at [`2bb9b3bd6b6ca5ec19a9718fe751d0ffe024ba7b`](https://github.com/Percolation-Labs/percolate/commit/2bb9b3bd6b6ca5ec19a9718fe751d0ffe024ba7b) — read only, from a full clone of `main` at extension version 0.2.45, scoped to the graph memory in `specs/world-model-ingestion/graph.sql` and `specs/ai-query-layer/schema.sql`, its writers from text, uploads and conversations, its row policies, dream and the judgement queue, the MCP memory tools in `core/`, and their SQL tests; the workflow engine, research claims and clue walk read only where they touch those paths. No auto-run, build-time execution or unpinned surface; four manifests inside the seven-day cooldown and an uninstalled pre-push hook. Nothing was installed, built or run; the memory eval's hit@1 and recall@5 were recomputed from its committed ranked file. MIT, with CC BY-SA 4.0 BEAM-derived sample data.
 - [1105216375-alt/resimind](https://github.com/1105216375-alt/resimind) at [`4055d9c8a065b687c4b13b04f3094d6c14545db4`](https://github.com/1105216375-alt/resimind/commit/4055d9c8a065b687c4b13b04f3094d6c14545db4) — read only, from a full clone of `main` at release v0.16.0, scoped to the knowledge library, the learning loops, rule retrieval and application, route memory, the formal lemma memory, the JSON-lines and MCP surfaces, their tests and the knowledge-growth evidence; the planning, bridge and ChinaTravel experiments were not read. One auto-run surface, `server.json`, an MCP manifest declaring a start command that acts only if a harness installs it; one unpinned surface, `pyproject.toml` with no lockfile; `AGENTS.md` read as data. Nothing was installed, built or run. MIT; the ChinaTravel evaluation data stays CC BY 4.0
 - [wuxuyun0606-collab/lmc-5](https://github.com/wuxuyun0606-collab/lmc-5) at [`01b321bf5a89a9d5d7e70fd9dbeefc515d156a10`](https://github.com/wuxuyun0606-collab/lmc-5/commit/01b321bf5a89a9d5d7e70fd9dbeefc515d156a10) — read only, from a clone of `main` at version 0.3.0, covering the SQLite core in full, the PostgreSQL toolkit's schema, hooks, recall adapters and writers, the AML Add/Search path, and their tests. No auto-run surface; two build-time execution points, `setup.py` and a Makefile; `pyproject.toml` inside the seven-day cooldown with no lockfile, and floating ranges in `extras/aml/requirements.txt`. Nothing was installed, built or run. AGPL-3.0-or-later from 0.3.0 with a commercial option by written agreement; MIT through v0.2.0
+- [HelpCode-ai/anythingmcp](https://github.com/HelpCode-ai/anythingmcp) at [`88266c5001567fe07f4929d0d7e85209e70b3a86`](https://github.com/HelpCode-ai/anythingmcp/commit/88266c5001567fe07f4929d0d7e85209e70b3a86) — read only, from a full clone of `main` at release `v0.55.7`, scoped to workspace memory, workspace skills, knowledge folders, the knowledge graph's edge writers and readers, learning projects, the MCP tool registration and the management-API guard, with their tests; the connector catalogue was not read. One auto-run surface, `server.json`, an MCP manifest; two build-time execution points, a `conftest.py` and an npm `prepublishOnly`; seven manifests inside the seven-day cooldown. Nothing was installed, built or run. AGPL-3.0-only, except `ee/` directories under the AnythingMCP Commercial License
 
 ## What the licences actually say
 
 A licence is an operational caveat, not a memory mechanism, so it lives in the
 appendix — but a reader deciding whether they can *use* something needs it.
-"Publicly readable source" is not "open source": **twenty-five carry a licence
+"Publicly readable source" is not "open source": **twenty-six carry a licence
 that is not open source**, each named in its own report and collected here.
 
 | Licence | Systems |
@@ -1392,6 +1394,7 @@ that is not open source**, each named in its own report and collected here.
 | Conditional MIT — three added conditions, revocable at the author's discretion | [Z-Waif](../systems/z-waif/) (a 2% royalty on gross income above $100,000 lifetime; an "ethical treatment" clause *"DEFINED AT SugarcaneDefender's SOLE DESCRECION"*; and — the one that constrains the memory itself — no collection or storage of "user logs, character configurations, or other user data" without consent obtained through terms the user "MUST ACCEPT UPON OPENING" the software) |
 | Conditional BSD — branding may not be altered above fifty users | [Open WebUI](../systems/open-webui/) (the "Open WebUI License": BSD-3 plus a fourth clause making removal of the branding "a material breach" in any deployment reaching fifty end users in a rolling thirty days, absent a written permission or an enterprise licence) |
 | Commercial source-available — read, evaluate and fork to contribute; a subscription to run; no redistribution or reuse | [QualityLayer](../systems/qualitylayer/) (its own licence, under German law; the public tree is a deliberate projection and most of it is encrypted) |
+| AGPL core with a commercial `ee/` directory — the open code is AGPL, and the feature that holds memory runs only behind an Enterprise key | [AnythingMCP](../systems/anythingmcp/) (the AnythingMCP Commercial License covers every `ee/` directory, where the key check and the whole learning layer live) |
 | All rights reserved with a research-use grant — run to reproduce one preprint, and nothing else | [Aura](../systems/aura/) (the grant was added on 9 November 2026; no copying, products, derivative works or model training) |
 | All rights reserved with a run-as-distributed grant — read the source and run the plugin as shipped, nothing else | [Spookling Memory](../systems/spookling-memory/) (no copying, modification or redistribution without written permission; `package.json` says UNLICENSED) |
 | All rights reserved — publicly readable, no grant at all | [Nova AI](../systems/nova-ai/) (*"Viewable, Not Reusable"*), [OptMem](../systems/optmem/), [7layermem](../systems/7layermem/) (whose README asserts MIT with no licence file under it), [SESA](../systems/sesa/) (no licence file, which defaults to this), [Master Agent System](../systems/master-agent-system/) (no licence file at the root, beside vendored packages that carry their own), [Sol0mon](../systems/sol0mon/) (no licence file, and a README saying none has been selected) and [Vanilla RAG Memory](../systems/vanilla-rag-memory/) (no licence file, and no licence statement in the README or `pyproject.toml`) |
@@ -1399,9 +1402,9 @@ that is not open source**, each named in its own report and collected here.
 Two things this table is not. It is **not a complete licence taxonomy of the
 corpus**: it collects what the reports happened to record, and a report is
 written about mechanisms, so a permissive licence usually goes unmentioned. The
-rest have not each been checked — the honest claim is that twenty-five are known
+rest have not each been checked — the honest claim is that twenty-six are known
 non-open-source and the others are unrecorded, not that the others are MIT. And
-it is **not a reason to skip those twenty-five**: every mechanism in this atlas is
+it is **not a reason to skip those twenty-six**: every mechanism in this atlas is
 described so it can be re-implemented rather than copied, which is the only way a
 restrictively licensed system can be read usefully. What changes is what you may
 do with the code afterwards, and that is worth knowing before you open the file

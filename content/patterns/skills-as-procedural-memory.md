@@ -89,6 +89,16 @@ adds a loading mechanism.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [Voyager](../../systems/voyager/) — the clearest implementation: a skill is written only when a critic reading environment state says the run succeeded, and retrieved skills compose as code.
+- [Hermes Agent](../../systems/hermes-agent/) — the same idea without the gate, and the better context strategy: names in the prompt, bodies on demand.
+- [MuscleMemory](../../systems/musclememory/) — the outcome gate carried to coding agents, with the generality check this page asks for: approval plus re-execution in later sessions.
+- [SESA](../../systems/sesa/) — the pruning question answered with a trained reward, and what that costs.
+- [Neo4j Agent Memory](../../systems/neo4j-agent-memory/) — the half a success gate leaves out: failures are stored by default.
+
+### Every instance
+
 [Voyager](../../systems/voyager/) is the clearest implementation. Its `SkillManager` stores JavaScript functions written by the agent, indexed by an LLM-generated description; the write happens only inside `if info["success"]:`, where success comes from a critic that inspects environment state. Retrieved skills are injected as callable functions, so the library composes. It also shows the failure modes: unbounded concatenation of every skill into the JavaScript preamble sent to the environment on every step (the model prompt is capped at five retrieved skills), retrieval with no score threshold, versions written to disk with no lineage, no failure memory, and one hardcoded exclusion standing in for a memory-worthiness policy.
 
 [Hermes Agent](../../systems/hermes-agent/) applies the same idea without the gate. Skills are Markdown files the agent creates and edits through `skill_manage`, with provenance and usage tracked separately; only names and descriptions occupy prompt space and bodies load on demand — a better context strategy than Voyager's — but nothing verifies a skill before it becomes durable.
@@ -195,6 +205,8 @@ It also ships the test this page asks for. `test_an_unrelated_query_gets_nothing
 [Cindy](../../systems/cindy/) holds a one-off approach back until it recurs. The nightly routine puts a skill draft first seen in an owner conversation into a candidate list that no prompt loads, promotes it only when a later night cites a new occurrence as evidence or a person presses promote, and drops it for good when a person declines (`apps/desktop/src/main/maker-ipc/botNightlyLearning.ts:532-575`, `:634-647`). The gate is recurrence, not execution: a promoted skill has been seen twice and never run against an outcome, and the teammate's own `save_teammate_skill` tool writes skills directly when the owner asks.
 
 [dsh-superagent](../../systems/dsh-superagent/) keeps team skills as configuration a person writes, and versions it. Skills, team sections and overrides of built-in parts save together as one immutable numbered snapshot with its predecessor, timestamp and origin, and a rollback is a new revision (`src/app/versions.ts:18-29`, `src/app/prompts.ts:202-215`). Every model request registers the current revision's skills and appends that revision to the Session's own record, which gates which old revisions a worker may read (`src/app/sessions.ts:329-338`). Nothing distils a skill from the work: the only writers are the panel and the main Session's `orchestrator_prompts_save`, and the second is gated by its tool description alone, so the router that reads untrusted messages can rewrite the skills every Session loads.
+
+[AnythingMCP](../../systems/anythingmcp/) learns workspace skills from four sources and gates three of them. An LLM drafts rules from the short intents a model attaches to tool calls, a model-free pass turns failed-then-fixed calls into argument-format rules, and the agent can propose a skill it found through a finder connector; all three land `pending` until an admin applies them, and only applied skills are composed into a server's instructions or served by `skill_get`. The fourth, learning projects, renders a member's confirmed lessons into a skill, and the member's own AI client holds the `learning_confirm` tool, which publishes to everyone when the project's mode is `confirmed`. Fixed-error rules seen three times may also apply on their own when an admin turns that on, on counted evidence rather than a model's confidence.
 
 ## Tests to require
 
