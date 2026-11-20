@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 823 reports.**
+**This page covers all 824 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7552,3 +7552,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, release v0.1.0; 93,402 lines of engine Python, 40 commits from 3 to 18 November 2026; 2,717 unit tests that CI does not run and I did not run; the LongMemEval records recompute exactly to the claimed 418/500, for a run dated before this repository's first commit. Four marks: `bitemporal`, `scope_enforced`, `audit_log` and `negative_eval`.
 - Study when: a vector store and a graph sit beside a relational store of record, and derived statements must stop being served when their source does.
 - Do not copy when: deletion must be complete and provable, or a person must review what is stored.
+
+### [`typegraph`](../systems/typegraph/)
+
+- Best idea: **retraction recomputes support instead of deleting.** A source flag flips, support is recomputed as a least fixpoint over AND-justifications, and only the facts the source reaches that lose every firing justification are closed — as soft deletes that keep their edges, so `unRetract` is exact — with `died`, `survivedVia` and `unaffected` returned from the one set the close pass wrote.
+- Biggest risk: **belief is enforced only where the caller asks.** A write that derives a fact from an already-retracted source, or a plain update of the retracted flag, leaves a live fact that `getById` and search return and `holding()` omits, unless the transaction calls `assertHolds`.
+- Second risk: a belief close and a domain delete are the same `deleted_at` and the same recorded `delete`, with no actor or reason kept; `hardDelete`, documented for erasure, leaves the entity's earlier rows in the recorded relations.
+- Most reusable component: `runTransition` and `closingFactRows` in `packages/typegraph/src/provenance/transition.ts`, with `computeSupportSnapshot` in `src/provenance/support.ts` and `assertFactsHold` in `src/provenance/holds.ts`.
+- Maturity impression: MIT, release 0.75.0; 284,569 lines of TypeScript in `packages/typegraph/src`, 590 commits from 8 February to 20 November 2026; about 10,200 test cases across SQLite, libSQL, PGlite and PostgreSQL lanes in CI, not run here; no memory evaluation, and the benchmarks measure graph-query performance. Three marks: `bitemporal`, `audit_log` and `negative_eval`.
+- Study when: agents write conclusions into shared state, and a source turning out wrong must withdraw exactly the conclusions that rested on it and leave the rest.
+- Do not copy when: you want memory an agent can call, per-user isolation from the library, or erasure that reaches history.

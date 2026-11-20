@@ -275,6 +275,8 @@ date *"never decides which of two contradicting edges the graph retires"*
 
 [Spookling Memory](../../systems/spookling-memory/) puts the interval rules in the schema and rebuilds the table from a log. `CHECK` constraints hold both intervals, a partial unique index allows one open value per key, and triggers refuse every update but a single close of `superseded_at` (`server/spookling_memory/core/facts.py:15-32`). `Facts.at` and `Facts.in_force` read valid time among rows current in record time, and recall shows the rows in force on the date it resolves from the question (`:116-124`). Record time is the turn's log timestamp, stamped on arrival by the hooks and taken from the caller by `memory_ingest`; the time the server judged the tag is kept on the decision and read by no fact query. The table is a fold of the judgement log, so a rebuild reproduces both axes.
 
+[TypeGraph](../../systems/typegraph/) is the library form of both clocks. Every node and edge write takes a caller-stated `validFrom` and `validTo` and stamps the write instant only when no lower bound is given (`packages/typegraph/src/utils/date.ts:545-555`); `history: true` copies each committed row into recorded relations at a per-graph revision that stays distinct when commits share a millisecond, and `store.asOf(T).asOfRecorded(anchor)` composes the two reads (`tests/backends/integration/recorded-time.ts:2575-2596`). Recorded views answer point reads and traversal and refuse `find`, search and vector predicates, because those indexes hold only the present. A hard delete closes the recorded interval without removing earlier rows, so erasure does not reach history short of clearing the graph.
+
 ## A third clock
 
 Two clocks answer *what was true* and *what did we believe*. The temporal

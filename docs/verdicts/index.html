@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 823 reports.</strong></p>
+<p><strong>This page covers all 824 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -33971,6 +33971,45 @@ of record, and derived statements must stop being served when their
 source does.</li>
 <li>Do not copy when: deletion must be complete and provable, or a
 person must review what is stored.</li>
+</ul>
+<h3 id="typegraph"><a
+href="../systems/typegraph/"><code>typegraph</code></a></h3>
+<ul>
+<li>Best idea: <strong>retraction recomputes support instead of
+deleting.</strong> A source flag flips, support is recomputed as a least
+fixpoint over AND-justifications, and only the facts the source reaches
+that lose every firing justification are closed — as soft deletes that
+keep their edges, so <code>unRetract</code> is exact — with
+<code>died</code>, <code>survivedVia</code> and <code>unaffected</code>
+returned from the one set the close pass wrote.</li>
+<li>Biggest risk: <strong>belief is enforced only where the caller
+asks.</strong> A write that derives a fact from an already-retracted
+source, or a plain update of the retracted flag, leaves a live fact that
+<code>getById</code> and search return and <code>holding()</code> omits,
+unless the transaction calls <code>assertHolds</code>.</li>
+<li>Second risk: a belief close and a domain delete are the same
+<code>deleted_at</code> and the same recorded <code>delete</code>, with
+no actor or reason kept; <code>hardDelete</code>, documented for
+erasure, leaves the entity's earlier rows in the recorded
+relations.</li>
+<li>Most reusable component: <code>runTransition</code> and
+<code>closingFactRows</code> in
+<code>packages/typegraph/src/provenance/transition.ts</code>, with
+<code>computeSupportSnapshot</code> in
+<code>src/provenance/support.ts</code> and <code>assertFactsHold</code>
+in <code>src/provenance/holds.ts</code>.</li>
+<li>Maturity impression: MIT, release 0.75.0; 284,569 lines of
+TypeScript in <code>packages/typegraph/src</code>, 590 commits from 8
+February to 20 November 2026; about 10,200 test cases across SQLite,
+libSQL, PGlite and PostgreSQL lanes in CI, not run here; no memory
+evaluation, and the benchmarks measure graph-query performance. Three
+marks: <code>bitemporal</code>, <code>audit_log</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: agents write conclusions into shared state, and a source
+turning out wrong must withdraw exactly the conclusions that rested on
+it and leave the rest.</li>
+<li>Do not copy when: you want memory an agent can call, per-user
+isolation from the library, or erasure that reaches history.</li>
 </ul>
         </article>
       </div>

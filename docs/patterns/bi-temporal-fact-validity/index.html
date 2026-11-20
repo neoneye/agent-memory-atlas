@@ -585,6 +585,21 @@ taken from the caller by <code>memory_ingest</code>; the time the server
 judged the tag is kept on the decision and read by no fact query. The
 table is a fold of the judgement log, so a rebuild reproduces both
 axes.</p>
+<p><a href="../../systems/typegraph/">TypeGraph</a> is the library form
+of both clocks. Every node and edge write takes a caller-stated
+<code>validFrom</code> and <code>validTo</code> and stamps the write
+instant only when no lower bound is given
+(<code>packages/typegraph/src/utils/date.ts:545-555</code>);
+<code>history: true</code> copies each committed row into recorded
+relations at a per-graph revision that stays distinct when commits share
+a millisecond, and <code>store.asOf(T).asOfRecorded(anchor)</code>
+composes the two reads
+(<code>tests/backends/integration/recorded-time.ts:2575-2596</code>).
+Recorded views answer point reads and traversal and refuse
+<code>find</code>, search and vector predicates, because those indexes
+hold only the present. A hard delete closes the recorded interval
+without removing earlier rows, so erasure does not reach history short
+of clearing the graph.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

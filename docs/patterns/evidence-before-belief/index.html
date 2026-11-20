@@ -585,6 +585,24 @@ adds the one reference the model may not write, the clean checkout's
 commit. What the gate establishes is that the cited things exist and
 belong to the node; whether the lesson follows from them is left to the
 specialist, and the lesson is believed at once.</p>
+<p><a href="../../systems/typegraph/">TypeGraph</a> makes belief a
+function of retained support rather than a stored verdict. Its
+provenance subpath keeps each derivation as a justification node with
+<code>premiseOf</code> edges from sources or facts, and a fact is
+believed only while some justification has every premise supported,
+computed as a least fixpoint
+(<code>packages/typegraph/src/provenance/support.ts:189-273</code>).
+Withdrawing evidence is then <code>retract(source)</code>, which closes
+exactly the reachable facts that lose every firing justification, keeps
+their edges so the inverse is exact, and returns <code>died</code> and
+<code>survivedVia</code> from the set the close pass wrote
+(<code>src/provenance/transition.ts:110-120</code>,
+<code>:231-297</code>). The gap is on the way in: support is checked at
+commit only by <code>assertHolds</code>, so a write that derives a fact
+from an already-retracted source commits live and is withheld only from
+<code>holding()</code> — a test worth requiring of any instance: derive
+from a withdrawn source, assert the fact is refused or unbelieved on
+every read.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store the event before starting asynchronous extraction.</li>
