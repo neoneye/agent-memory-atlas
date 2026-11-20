@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 836 reports.</strong></p>
+<p><strong>This page covers all 837 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34446,6 +34446,47 @@ admits.</li>
 <li>Do not copy when: you need a memory library, extraction from
 conversation, semantic recall, or a history of who changed which
 memory.</li>
+</ul>
+<h3 id="ibex-harness"><a
+href="../systems/ibex-harness/"><code>ibex-harness</code></a></h3>
+<ul>
+<li>Best idea: <strong>fence extraction against the source session, not
+only the memory.</strong> Every extracted write carries the session's
+<code>lifecycle_revision</code>, the write transaction re-checks it, and
+forget bumps it in the same transaction as the tombstone, so a job
+holding the old revision cannot recreate what was just erased; the
+tombstone itself scrubs content, erases labels, feedback, relationships
+and escalations, and records the cache addresses a worker must prove
+empty.</li>
+<li>Biggest risk: <strong>detection with no disposition.</strong> Two
+open-ended memories on one subject always overlap, so the conflict stage
+writes a <code>pending</code> escalation, leaves both active, and the
+read path drops whichever ranks lower; the insert counter is labelled
+<em>"no consumer yet"</em> and no statement in the tree updates the
+table.</li>
+<li>Second risk: quarantine is documented as awaiting human review and
+no route releases it, and a low-confidence PII quarantine keeps the
+unredacted text; forget randomises <code>content_hash</code>, so the
+forgotten value can be written again by any path.</li>
+<li>Most reusable component: the forget transaction in
+<code>services/memory/app/lifecycle.py</code> with the revision-bumping
+trigger in
+<code>infra/migrations/postgres/000045_memory_lifecycle.up.sql</code>,
+and the predicate-inside-the-ANN search in
+<code>services/memory/app/vectorstore/pgvector_store.py</code>.</li>
+<li>Maturity impression: MIT, release v0.1.10; about 25,400 non-test
+lines in the memory subsystem out of 200,134 in the repository; 856
+commits from 30 May to 20 November 2026; 1,000 memory-service tests with
+the integration and isolation suites on pgvector in CI, not run here;
+the ranking benchmark uses designed embeddings and a stub reranker and
+says so. Five marks: <code>trust_state</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: many tenants share one memory service and you must prove
+isolation, erasure and a lifecycle record to someone else.</li>
+<li>Do not copy when: users correct the agent often, since an updated
+fact without a stated end date never supersedes the old one and nothing
+resolves the escalation.</li>
 </ul>
         </article>
       </div>

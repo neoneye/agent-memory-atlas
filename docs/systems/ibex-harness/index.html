@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted multi-tenant memory
+service behind an OpenAI-compatible proxy and an MCP server, with
+quarantine, temporal supersession, conflict escalation and
+revision-fenced forget.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="IBEX
+Harness — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted multi-tenant
+memory service behind an OpenAI-compatible proxy and an MCP server, with
+quarantine, temporal supersession, conflict escalation and
+revision-fenced forget.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="IBEX
+Harness — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted multi-tenant
+memory service behind an OpenAI-compatible proxy and an MCP server, with
+quarantine, temporal supersession, conflict escalation and
+revision-fenced forget.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>IBEX Harness — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "IBEX Harness",
+      "description": "A self-hosted multi-tenant memory service behind an OpenAI-compatible proxy and an MCP server, with quarantine, temporal supersession, conflict escalation and revision-fenced forget.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Conflicts suppressed, never resolved</p>
+          <h1>IBEX Harness</h1>
+          <p class="document-deck">A self-hosted multi-tenant memory
+service behind an OpenAI-compatible proxy and an MCP server, with
+quarantine, temporal supersession, conflict escalation and
+revision-fenced forget.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Rick1330/ibex-harness">
+              <span>Source</span>
+              <strong>Rick1330/ibex-harness</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Rick1330/ibex-harness/commit/ce41c6f495c664b59e8c6763941b1bbd66a40294" title="ce41c6f495c664b59e8c6763941b1bbd66a40294">
+              <span>Analyzed revision</span>
+              <code>ce41c6f4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Rick1330--ibex-harness" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Rick1330--ibex-harness</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE; contributions under a DCO sign-off; vendored console icons
+MIT; the embedding and spaCy models are downloaded at first start, not
+in the tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>About
+25,400 non-test lines of Python and SQL in the memory subsystem (memory
+service 12,827, MCP memory server 3,146, context service 4,631, worker
+extraction and erasure 3,527, nineteen migrations 1,267) out of 200,134
+non-test lines in the repository</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>856
+commits from 30 May to 20 November 2026, 615 of them by the leading
+author; release v0.1.10 on 17 November 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,000
+pytest functions in the memory service (857 unit, 143 integration), 209
+in the MCP memory server, 303 in the context service and 722 in the
+worker; CI runs the memory integration suite against pgvector when
+memory paths change and the security-isolation suite on every push to
+main and nightly; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>IBEX Harness is a self-hosted platform that sits between an agent and
+its model provider. An OpenAI-compatible proxy resolves tenant and
+agent, asks a context service for memories, and injects them. When a
+session ends, a Celery worker has an LLM extract memories from its turns
+and posts them to a FastAPI memory service on PostgreSQL and pgvector.
+An MCP server gives the agent search, write, feedback and lineage tools
+over the same service.</p>
+<p>What is notable is the write path's discipline. Every write, from any
+source, passes one pipeline: an injection heuristic, Presidio PII
+handling, exact and near dedup, and a temporal conflict stage that
+compares validity intervals. A newer same-subject memory whose interval
+does not overlap supersedes the old one in the same transaction. Forget
+is revision-fenced, scrubs the content, erases every child row, fences
+the source session against in-flight extraction, and hands the other
+stores to an erasure worker that must prove absence.</p>
+<p>What is weak is everything that waits for a person. A contradiction
+between two open-ended memories becomes a <code>pending</code>
+escalation that nothing in the tree resolves; both stay active and the
+read path keeps whichever ranks higher. Quarantined memories are
+documented as awaiting human review, and no route releases one. Forget
+destroys the hash a refusal would key on, so the same value can be
+written again.</p>
+<p><strong>Scope of this report.</strong> The memory subsystem is the
+memory service (<code>services/memory/</code>), the MCP memory server
+(<code>services/mcp-memory/</code>), the context assembly service
+(<code>services/context/</code>), the worker's extraction and erasure
+code (<code>services/worker/app/extraction/</code>,
+<code>app/tasks/extraction.py</code>,
+<code>app/tasks/lifecycle_erasure/</code>) and nineteen PostgreSQL
+migrations: about 25,400 of the repository's 200,134 non-test lines,
+roughly 13%. The proxy's injection and enqueue calls and the operator
+API's memory routes were read where they touch memory. Auth, billing,
+the evidence plane, directives, the console and the site were not.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code>, and no
+manifest in the tree names another; contributions are under a DCO
+sign-off (<code>CONTRIBUTING.md:68-80</code>). The console's vendored
+provider icons are MIT and say so
+(<code>services/console/app/assets/brands/NOTICE.md</code>). The models
+the supported profile runs are not in the tree: <code>make v1-up</code>
+pulls <code>BAAI/bge-m3</code> into a volume
+(<code>infra/compose/v1-single-node/compose.yml:514</code>,
+<code>:538</code>) and the PII stage loads spaCy's
+<code>en_core_web_md</code>, each under its publisher's terms.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one row of text in <code>ibex_core.memories</code> scoped
+to an organization and an agent. It carries up to five category labels,
+a confidence, a world-time interval
+<code>[valid_from, valid_until)</code>, a
+<code>lifecycle_revision</code> advanced by a trigger on every lifecycle
+change, and a terminal <code>tombstoned</code> flag
+(<code>infra/migrations/postgres/000014_create_memories_temporal.up.sql:6-70</code>,
+<code>000045_memory_lifecycle.up.sql:3-6</code>,
+<code>:41-80</code>).</p>
+<p><code>status</code> is the epistemic field. It holds
+<code>active</code>, <code>quarantined</code>, <code>superseded</code>
+or <code>deleted</code>; the CHECK also allows <code>merged_into</code>
+and <code>archived</code>, and nothing writes either. Every read filters
+<code>status = 'active'</code>, a validity window that contains now, and
+<code>tombstoned = FALSE</code>, so a row is believed only while all
+three hold.</p>
+<p>A row becomes <code>quarantined</code> at write time when the
+injection heuristic matches or Presidio finds PII below the redaction
+confidence (<code>services/memory/app/pipeline/stages.py:67-118</code>,
+<code>services/memory/app/pii/service.py:75-84</code>). It becomes
+<code>superseded</code> when a newer memory arrives with the same spaCy
+subject key, a cosine above 0.92 and an interval that starts after the
+old one ends
+(<code>services/memory/app/conflict/service.py:71-109</code>). When the
+intervals overlap, which they always do for two open-ended memories, the
+stage writes a <code>pending</code> row in
+<code>memory_conflict_escalations</code> and leaves both active
+(<code>services/memory/app/conflict/service.py:125-145</code>).</p>
+<p>A row dies by forget, which tombstones it in place, or by
+organization purge, which deletes it. There is no edit, no merge, no
+decay and no expiry event.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every writer passes one pipeline; an overlapping contradiction becomes a pending escalation nothing resolves, and quarantine has no exit</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every writer passes one pipeline; an overlapping contradiction becomes a pending escalation nothing resolves, and quarantine has no exit
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    EX[&quot;session end:&lt;br/&gt;LLM extraction&quot;]
+    MCP[&quot;MCP write_memory:&lt;br/&gt;agent tool&quot;]
+    API[&quot;POST /v1/memories&quot;]
+    EX ~~~ MCP ~~~ API
+  end
+  writers --&gt; GATE{&quot;injection rule or&lt;br/&gt;low-confidence PII?&quot;}
+  GATE --&gt;|&quot;yes&quot;| Q[&quot;quarantined:&lt;br/&gt;never embedded,&lt;br/&gt;no release path&quot;]
+  GATE --&gt;|&quot;no&quot;| DUP{&quot;same hash&lt;br/&gt;already active?&quot;}
+  DUP --&gt;|&quot;yes&quot;| BUMP[&quot;409; the old row&#39;s&lt;br/&gt;retrieval_count + 1&quot;]
+  DUP --&gt;|&quot;no&quot;| NEAR{&quot;cosine above 0.92&lt;br/&gt;to an active row?&quot;}
+  NEAR --&gt;|&quot;no&quot;| ACT[&quot;active: served while&lt;br/&gt;valid now&quot;]
+  NEAR --&gt;|&quot;yes&quot;| SEQ{&quot;same subject, newer,&lt;br/&gt;intervals disjoint?&quot;}
+  SEQ --&gt;|&quot;yes&quot;| SUP[&quot;old row superseded,&lt;br/&gt;valid_until closed&quot;]
+  SEQ --&gt;|&quot;overlap&quot;| ESC[&quot;both stay active;&lt;br/&gt;pending escalation&lt;br/&gt;with no consumer&quot;]
+  SUP --&gt; ACT
+  ESC --&gt; COL[&quot;read: lower-ranked&lt;br/&gt;side dropped&quot;]
+  ACT --&gt; FG[&quot;forget: tombstone,&lt;br/&gt;content and hash&lt;br/&gt;scrubbed&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The supported deployment is the <code>v1-single-node</code> Docker
+Compose profile, with thirteen long-running services: PostgreSQL with
+pgvector, Redis, MinIO, the auth service, the Go proxy, the operator
+API, the memory service, an embedder in front of a CPU
+text-embeddings-inference container serving <code>BAAI/bge-m3</code>,
+the worker, the context service, the console and a Caddy edge
+(<code>infra/compose/v1-single-node/compose.yml</code>). The proxy, the
+operator API, the context service and the console share the edge
+container's network namespace, so the context service's gRPC listens on
+loopback (<code>compose.yml:366-373</code>, <code>:623-630</code>). The
+MCP memory server is not in that profile; it runs from the development
+stack or as a stdio process
+(<code>services/mcp-memory/app/stdio_main.py</code>).</p>
+<p>The memory service is the only writer of memory rows. The worker
+writes through its HTTP API with a service token
+(<code>services/worker/app/extraction/memory_writer.py:83-128</code>),
+and so does the MCP server
+(<code>services/mcp-memory/app/tools.py:220-258</code>). Every
+transaction switches to <code>ibex_app</code> and sets the org GUC
+before touching a table, because the policy is
+<code>FORCE ROW LEVEL SECURITY</code> and a superuser login would bypass
+it
+(<code>services/memory/app/vectorstore/pgvector_store.py:195-202</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing stores without PostgreSQL, and nothing becomes
+vector-searchable without the embedder; Redis is optional and only feeds
+the hot path. An LLM key is needed for extraction (OpenAI or vLLM) and
+not for an explicit write. The install is
+<code>make v1-secrets &amp;&amp; make v1-up</code> plus a bootstrap
+token. The store is ordinary SQL and repairable by hand, though
+row-level security and column-scoped grants mean a repair has to run as
+the owning role.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> The proxy's session-terminate handler
+posts the buffered turns to the worker's
+<code>/internal/extraction/enqueue</code>
+(<code>services/proxy/internal/http/session_terminate.go:427-436</code>).
+The task reads the session's <code>last_extracted_turn</code> and
+<code>lifecycle_revision</code>, sends the unprocessed turns to one
+batch extraction call, and posts each memory with
+<code>expected_session_revision</code>
+(<code>services/worker/app/extraction/batch.py:266-274</code>,
+<code>:278-316</code>).</li>
+<li><strong>Write pipeline.</strong> <code>build_write_pipeline</code>
+chains validate, injection, PII, exact dedup, embed, near dedup and
+conflict (<code>services/memory/app/write/factory.py:35-82</code>).
+<code>MemoryWriteOrchestrator</code> persists inside one transaction
+that locks the organization, re-checks the source session's revision,
+inserts the row and labels, applies supersession and escalations, and
+writes a lifecycle event
+(<code>services/memory/app/write/orchestrator.py:181-211</code>).</li>
+<li><strong>After commit.</strong> The Redis object cache, the hot
+sorted set and the vector upsert run after commit and only log on
+failure
+(<code>services/memory/app/write/after_commit.py:28-61</code>).</li>
+<li><strong>Retrieval.</strong>
+<code>MemoryReadRepository.find_similar</code> runs the HNSW search and,
+with hybrid off, a full-text fallback, hydrates with the status and
+validity predicates, ranks, and collapses conflict pairs
+(<code>services/memory/app/read/repository.py:190-216</code>).</li>
+<li><strong>Context.</strong> The context service fans out to a
+directive lookup, the hot route and a search, dedupes, drops conflict
+pairs, packs under a token budget and formats a nonce-delimited block
+(<code>services/context/app/pipeline.py:21-38</code>,
+<code>services/context/app/formatter.py:1-13</code>); the proxy places
+it as the first system message
+(<code>services/proxy/internal/http/chat_context_assemble.go:159</code>).</li>
+<li><strong>Forget.</strong> <code>POST /v1/memories/{id}/forget</code>
+with an agent-scoped token and an expected revision
+(<code>services/memory/app/routers/memories.py:168-227</code>) runs
+<code>forget_memory_session</code>
+(<code>services/memory/app/lifecycle.py:335-367</code>).</li>
+<li><strong>Erasure.</strong> The worker claims <code>forgotten</code>,
+<code>purged</code> and <code>expired</code> outbox rows and writes a
+receipt per store
+(<code>services/worker/app/tasks/lifecycle_erasure/</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> holds content, a SHA-256
+<code>content_hash</code> of the post-PII text with a partial unique
+index on <code>(org_id, agent_id, content_hash)</code> among active rows
+(<code>000018_memories_content_hash_unique_active.up.sql:7-9</code>),
+the scalar category a trigger keeps equal to the highest-confidence
+label, <code>confidence</code>, <code>usefulness_score</code>,
+<code>retrieval_count</code>, <code>source</code>, PII flags, a JSON
+<code>metadata</code>, the embedding with its model id, and the temporal
+and lifecycle columns.</p>
+<p><code>source</code> is always written as <code>user_provided</code>,
+including for extraction writes
+(<code>services/memory/app/write/persist.py:112</code>); the MCP tool
+marks its writes with <code>metadata.mcp_source = "mcp_explicit"</code>
+instead. <code>visibility</code>, <code>pinned</code> and
+<code>tags</code> are packed into <code>metadata</code>
+(<code>services/memory/app/write/persist.py:36-42</code>).</p>
+<p><code>memory_relationships</code> allows six edge types and only
+<code>supersedes</code> is written; the module that reads conflicts says
+<code>insert_relationship</code> <em>"has no production caller"</em>
+(<code>services/memory/app/read/conflicts.py:3-8</code>).
+<code>memory_conflict_escalations</code> carries <code>pending</code>,
+<code>resolved</code> or <code>dismissed</code>,
+<code>resolved_at</code> and <code>resolved_by</code>
+(<code>000019_create_memory_conflict_escalations.up.sql:5-37</code>).</p>
+<p>The temporal columns are <code>valid_from</code> and
+<code>valid_until</code> for world time and <code>observed_at</code>,
+<code>created_at</code> and <code>updated_at</code> for record time.
+<code>observed_at</code> has no writer; it is the insert clock.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The vector search filters by org, agent, active status, tombstone,
+expiry and the validity window inside the ANN select, ahead of
+<code>LIMIT</code>, so a filtered row does not consume a slot
+(<code>services/memory/app/vectorstore/pgvector_store.py:27-51</code>).
+The full-text query applies the same predicates to a generated
+<code>tsvector</code>
+(<code>services/memory/app/read/full_text.py:15-34</code>). Hybrid RRF
+and a cross-encoder rerank are implemented and default off
+(<code>services/memory/app/config.py:268-283</code>).</p>
+<p>Hydration re-applies every predicate and attaches the set of pending
+escalation ids per row
+(<code>services/memory/app/read/repository.py:45-77</code>). Composite
+scoring weights relevance 0.40, recency 0.25, usefulness 0.20,
+confidence 0.10 and access frequency 0.05, with a category-dependent
+half-life (<code>services/memory/app/scoring/composite.py</code>). A
+regex guard then drops rows whose content still matches structured PII
+patterns (<code>services/memory/app/read/pii_guard.py:18-37</code>).</p>
+<p><code>collapse_conflict_pairs</code> keeps the first hit of each
+pending escalation and drops the rest
+(<code>services/memory/app/read/conflicts.py:38-55</code>). The decision
+is rank order: of two contradicting open-ended memories, the one with
+the higher composite score is served and the other is withheld, and
+nothing in the returned page says a conflict was suppressed.
+<code>IBEX_MEMORY_CONFLICT_SUPPRESSION_ENABLED</code> turns this off for
+search; the context service collapses independently
+(<code>services/memory/app/config.py:259-267</code>).</p>
+<p>Context assembly asks for 20 hot and 10 cold hits by default
+(<code>services/context/app/retrieval.py:110-111</code>), packs them
+under the model's usable budget, and frames them as data with a
+per-assembly nonce. The block goes first among system messages
+(<code>packages/injection/injector.go:15-17</code>), so any change in it
+changes the head of the prompt.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous through the memory service. The pipeline
+embeds before the transaction and the vector is written after it, so a
+committed memory is full-text searchable at once and vector searchable
+once the after-commit upsert lands; if the upsert fails the row stays
+active without an embedding.</p>
+<p>Extraction happens once per terminated session, in the background,
+with one batch LLM call over the unprocessed turns
+(<code>services/worker/app/extraction/prompt_v2.py:52-72</code>). The
+agent never blocks on it. A memory from a session is retrievable after
+the session ends, the task is dequeued, the model answers and the HTTP
+write commits. No background pass rereads or rewrites the store.</p>
+<p>The prompt asks the model to set <code>valid_until</code> for
+time-bounded facts and to <em>"Omit valid_from to let the caller default
+it to the turn timestamp"</em>
+(<code>services/worker/app/extraction/prompt_v2.py:40-46</code>). The
+worker forwards the field only when the model sets it
+(<code>services/worker/app/extraction/memory_writer.py:124-127</code>),
+and the orchestrator fills a missing one with the write clock
+(<code>services/memory/app/write/orchestrator.py:97-101</code>). Turns
+carry no timestamp, so the default is processing time.</p>
+<p>That default also disables a branch. <code>ConflictStage</code>
+escalates with reason <code>missing_validity</code> only when
+<code>ctx.valid_from is None</code>
+(<code>services/memory/app/pipeline/stages.py:222-223</code>,
+<code>:250-270</code>), and the orchestrator never passes
+<code>None</code>.</p>
+<p>Exact dedup returns 409 and increments the existing row's
+<code>retrieval_count</code>, which feeds the access-frequency term in
+ranking
+(<code>services/memory/app/write/orchestrator.py:276-300</code>). Near
+dedup only selects conflict candidates; a near-duplicate that is not a
+conflict is stored beside the original.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Injection is automatic: the proxy calls <code>AssembleContext</code>
+on every chat request and falls back to a directive-only prompt when
+assembly fails
+(<code>services/proxy/internal/http/chat_context_assemble.go:95-160</code>).</p>
+<p>The MCP server registers four tools: <code>search_memory</code>,
+<code>write_memory</code>, <code>record_feedback</code> and
+<code>get_memory_lineage</code>
+(<code>services/mcp-memory/mcp_tools.json</code>). No forget, resolve or
+release verb is on it. An agent-scoped token cannot name another agent
+(<code>services/mcp-memory/app/tools.py:168-176</code>); search and
+write check through the auth service that the agent is active, and
+feedback and lineage do so for an agent-scoped token.</p>
+<p>Forget is HTTP-only and needs an agent-scoped token with
+<code>memory:write</code>
+(<code>services/memory/app/routers/memory_write_authz.py:37-44</code>).
+The operator API's memory routes are two <code>GET</code>s
+(<code>services/api/app/routers/operator_memories.py:32</code>,
+<code>:58</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-review-that-nothing-performs">The review that nothing
+performs</h3>
+<p>Two states wait for a resolver that is not in the tree.</p>
+<ul>
+<li><strong>Conflict escalations.</strong> The default classifier
+returns <code>ESCALATE_PENDING</code> for every overlap, and
+<code>_escalate</code> converts a <code>SUPERSEDES</code> from any
+classifier into <code>ESCALATE_PENDING</code> as well
+(<code>services/memory/app/conflict/classifier.py:26-43</code>,
+<code>services/memory/app/conflict/service.py:133-134</code>). The
+insert counter is labelled <em>"no consumer yet"</em>
+(<code>services/memory/app/write/metrics.py:12-15</code>). No statement
+in <code>services/</code> or <code>packages/</code> updates the table,
+and the integration test that shows a <code>resolved</code> escalation
+stops suppressing inserts the <code>resolved</code> row directly in SQL
+(<code>services/memory/tests/integration/test_conflict_collapse.py:37-58</code>).</li>
+<li><strong>Quarantine.</strong> The injection classifier's docstring
+says <em>"Human review is the resolution path"</em>
+(<code>services/memory/app/injection/classifier.py:15</code>), and
+<code>engineering/SECURITY.md:301-307</code> lists accept, redact,
+delete and mark-safe for a review UI. Every
+<code>status = 'active'</code> in <code>services/memory/app</code> is a
+filter, not an assignment. A low-confidence PII quarantine stores the
+unredacted text (<code>services/memory/app/pii/service.py:75-84</code>),
+and it stays in the table until forget or purge.</li>
+</ul>
+<h3 id="what-forget-erases-and-what-it-does-not-stop">What forget
+erases, and what it does not stop</h3>
+<p><code>_TOMBSTONE_SQL</code> sets <code>status = 'deleted'</code>,
+<code>tombstoned = TRUE</code>, content <code>'[forgotten]'</code> and a
+random <code>content_hash</code>, clears the embedding, and refuses
+unless the caller's expected revision is current
+(<code>services/memory/app/lifecycle.py:150-177</code>). The same
+transaction deletes the row's labels, feedback, relationships and
+escalations, scrubs the stored idempotent response, records cache
+addresses, bumps the source session's revision and writes a
+<code>forgotten</code> event (<code>:181-207</code>,
+<code>:335-367</code>). A trigger makes the tombstone terminal
+(<code>000045_memory_lifecycle.up.sql:47-49</code>). The session bump
+makes an extraction job holding the old revision fail its next write
+with <code>ExtractionLifecycleConflict</code>, which is outside the
+task's <code>autoretry_for</code>
+(<code>services/worker/app/extraction/provider.py:21-22</code>,
+<code>services/worker/app/tasks/extraction.py:69-77</code>), so that
+job's remaining turns are not extracted.</p>
+<p>Nothing is keyed on the forgotten value. An MCP write, a later
+session or the HTTP API can store the same text again, and exact dedup
+cannot match the tombstone because its hash was randomised.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — awarded on
+<code>status</code>. Quarantined, superseded and deleted rows are
+excluded by every read query, and both producers sit on the write
+pipeline every writer uses.</li>
+<li><strong><code>bitemporal</code></strong> — awarded.
+<code>valid_from</code> and <code>valid_until</code> are world time,
+stated by the extraction model or an HTTP caller, kept beside the insert
+clock, filtered on every read and compared by the conflict stage. Three
+limits: a missing <code>valid_from</code> is the write clock;
+supersession sets
+<code>valid_until = LEAST(COALESCE(valid_until, now), now)</code>, so a
+stated end in the future is overwritten with the record time
+(<code>services/memory/app/conflict/persist.py:111-123</code>); and
+there is no as-of read.</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on
+<code>org_id</code> and <code>agent_id</code> predicates in every read
+query plus a forced RLS policy on <code>org_id</code>. The
+<code>visibility</code> field (<code>agent</code>, <code>org</code>,
+<code>session</code>) is accepted, stored in <code>metadata</code>,
+returned, and never read, so <code>org</code> visibility shares
+nothing.</li>
+<li><strong><code>audit_log</code></strong> — awarded on
+<code>memory_lifecycle_outbox</code>: one row per memory revision,
+written in the mutation's transaction, unique on
+<code>(org_id, memory_id, revision)</code>. <code>ibex_app</code> holds
+<code>INSERT</code> and column-scoped <code>UPDATE</code> on delivery
+columns only, no migration grants <code>DELETE</code> on it, and the
+table has no foreign key, so purge events outlive the organization row
+(<code>000045_memory_lifecycle.up.sql:82-120</code>,
+<code>000078_memory_cache_erasure.up.sql:72-73</code>). It records no
+actor and no content. <code>content_updated</code> has one producer,
+<code>update_memory_pii_flags</code>, which only tests call, and
+<code>expired</code> has none.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>human_review</code></strong> — withheld. Both waiting
+states are written on the product path and read on the read path, and
+nothing drains either.</li>
+<li><strong><code>tombstone</code></strong> — withheld. The
+<code>tombstoned</code> flag is keyed on the record, and forget
+deliberately destroys the value a refusal would need.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>The context service trusts its caller.</strong> Its README
+states that <em>"a token holder can still assert any principal"</em>;
+tenant isolation there is a property of the proxy
+(<code>services/context/README.md</code>, <em>Claim boundary</em>).</li>
+<li><strong>Extraction provenance is flattened.</strong> Every row
+carries <code>source = 'user_provided'</code>, so an LLM-extracted
+memory and one a person typed through the API are indistinguishable
+except for the MCP metadata tag.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The memory service has 857 unit and 143 integration tests. CI's
+<code>memory-integration</code> job runs the integration suite against a
+pinned pgvector 16 image when memory paths change
+(<code>.github/workflows/ci.yml:2146-2193</code>), and
+<code>memory-security-integration</code> runs on every push to
+<code>main</code> and nightly (<code>:2306-2362</code>), refusing to run
+with fewer than 12 collected isolation tests
+(<code>infra/scripts/memory-security-integration-test-ci.sh:34-37</code>).
+The integration fixtures skip when Postgres is unreachable, and the
+count guard does not see a runtime skip. I ran none of it.</p>
+<p><code>negative_eval</code> rests on four populated cases, each with a
+positive control in the same assertion block:</p>
+<ul>
+<li><code>test_find_similar_excludes_quarantined_and_deleted</code>
+returns exactly the active row from a corpus of active, quarantined and
+deleted rows on one topic
+(<code>services/memory/tests/integration/test_find_similar.py:140-193</code>).</li>
+<li><code>test_superseded_memory_never_enters_the_page</code> gives the
+superseded row confidence 0.99 against its successor's 0.4 and the same
+embedding; the successor is returned and the superseded row is not
+(<code>services/memory/tests/integration/test_conflict_collapse.py:152-198</code>).</li>
+<li><code>test_injection_write_is_quarantined_and_never_retrieved</code>
+writes through the production pipeline, then gives the quarantined row
+the active row's embedding so the exclusion depends on the status
+filter, on vector and hybrid
+(<code>services/memory/tests/integration/test_injection_quarantine.py:150-200</code>).</li>
+<li><code>test_memory_iso_1_5_hnsw_no_cross_org_leakage</code> stores
+one vector in two organizations and asserts the other's row is absent
+and the caller's present at <code>ef_search</code> 10, 40 and 100
+(<code>services/memory/tests/integration/security/test_memory_iso_1_isolation.py:169-206</code>).</li>
+</ul>
+<p>No test asserts that a forgotten value stays out after it is written
+again, which section 9 shows it does not.</p>
+<p>The ranking benchmark's committed baseline reports nDCG@10 of 0.496
+dense-only, 0.829 hybrid and 0.964 with rerank over 150 queries
+(<code>benchmarks/memory/ranking_quality/baseline-modes.json</code>).
+The embeddings are designed profiles and the reranker is a
+lexical-overlap stub, and the file's own notes say the numbers
+<em>"measure the pipeline's plumbing, not a model's ranking
+quality."</em> The extraction gate's <code>gpt-4o-mini</code> baseline
+is 1.0 on every metric, from cassettes the file calls
+<em>"oracle-aligned"</em>
+(<code>services/worker/eval/gold_set/v1/baseline_results.json</code>),
+so it measures parsing and matching. No paper is associated with the
+project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Fence extraction against the session, not just the
+memory.</strong> Carry the source session's revision into every
+extracted write and bump it on forget, so an in-flight job cannot
+recreate what was just erased.</li>
+<li><strong>Put every predicate inside the ANN select.</strong> Status,
+tombstone, validity and tenant ahead of <code>LIMIT</code> keep a
+filtered row from spending a result slot.</li>
+<li><strong>Record where the copies are in the forget
+transaction.</strong> Cache addresses and store refs written beside the
+tombstone let a worker prove erasure after the request dies.</li>
+<li><strong>Make the exclusion test depend on the filter.</strong> Give
+the excluded row the control row's embedding, so a missing vector cannot
+pass the test.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A disposition table with no disposer.</strong> An escalation
+nobody resolves turns a detected contradiction into a ranking tiebreak
+the user never sees.</li>
+<li><strong>A review state with no exit.</strong> Quarantine that only
+forget can leave holds the riskiest content longest, and
+unredacted.</li>
+<li><strong>Erasure that discards the refusal's key.</strong> Keep a
+salted hash of a forgotten value if the product must not relearn
+it.</li>
+<li><strong>A default that disables its own fallback.</strong> Filling
+<code>valid_from</code> before the stage that escalates on its absence
+made that branch dead.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team running agents for many tenants on its own
+infrastructure, where isolation, erasure evidence and an auditable
+lifecycle matter more than recall quality. It costs thirteen services
+and an operator who knows PostgreSQL roles. Walk away if your users
+correct the agent often: an updated fact without a stated end date never
+supersedes the old one, and nothing turns the resulting escalation into
+a decision.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether a consumer for <code>memory_conflict_escalations</code> and
+a quarantine review route are planned, and whether either would be
+reachable from the MCP server.</li>
+<li>Whether the turn timestamp the extraction prompt promises was meant
+to come from the proxy's buffer.</li>
+<li>How often two open-ended memories about one subject clear the 0.92
+cosine floor with <code>bge-m3</code>, which decides how many
+contradictions reach the escalation table at all.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema:
+<code>infra/migrations/postgres/000014_create_memories_temporal.up.sql</code>,
+<code>000016_create_memory_relationships.up.sql</code>,
+<code>000017_memory_schema_v2_expand.up.sql</code>,
+<code>000019_create_memory_conflict_escalations.up.sql</code>,
+<code>000045_memory_lifecycle.up.sql</code>,
+<code>000074_memory_lifecycle_erasure_state.up.sql</code>,
+<code>000078_memory_cache_erasure.up.sql</code></li>
+<li>Write: <code>services/memory/app/write/factory.py</code>,
+<code>write/orchestrator.py</code>, <code>write/persist.py</code>,
+<code>write/after_commit.py</code>, <code>pipeline/stages.py</code>,
+<code>injection/classifier.py</code>, <code>pii/service.py</code>,
+<code>dedup/</code></li>
+<li>Conflict: <code>services/memory/app/conflict/service.py</code>,
+<code>conflict/classifier.py</code>, <code>conflict/persist.py</code>,
+<code>read/conflicts.py</code></li>
+<li>Lifecycle: <code>services/memory/app/lifecycle.py</code>,
+<code>services/memory/app/routers/memories.py</code>,
+<code>services/worker/app/tasks/lifecycle_erasure/</code></li>
+<li>Read:
+<code>services/memory/app/vectorstore/pgvector_store.py</code>,
+<code>read/repository.py</code>, <code>read/full_text.py</code>,
+<code>read/hot_cache.py</code>, <code>scoring/composite.py</code></li>
+<li>Extraction:
+<code>services/worker/app/extraction/prompt_v2.py</code>,
+<code>extraction/batch.py</code>,
+<code>extraction/memory_writer.py</code>,
+<code>services/proxy/internal/http/session_terminate.go</code></li>
+<li>Context and MCP: <code>services/context/app/</code>,
+<code>services/proxy/internal/http/chat_context_assemble.go</code>,
+<code>services/mcp-memory/app/tools.py</code>,
+<code>services/mcp-memory/mcp_tools.json</code></li>
+<li>Tests:
+<code>services/memory/tests/integration/test_find_similar.py</code>,
+<code>test_conflict_collapse.py</code>,
+<code>test_injection_quarantine.py</code>,
+<code>test_lifecycle_fences.py</code>,
+<code>security/test_memory_iso_1_isolation.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No statement resolves an escalation.</strong>
+<code>git grep -n -E 'UPDATE ibex_core\.memory_conflict_escalations' -- services packages</code>
+returns nothing;
+<code>git grep -n -E 'INSERT INTO ibex_core\.memory_conflict_escalations' -- services/memory/app</code>
+matches <code>services/memory/app/write/persist.py:215</code>.</li>
+<li><strong>No path sets a memory active after insert.</strong>
+<code>git grep -n -E 'status[[:space:]]*=[[:space:]]*.active.' -- services/memory/app</code>
+matches nine lines: eight <code>AND status = 'active'</code> filters and
+the <code>status="active"</code> a new write's PII result carries at
+<code>services/memory/app/pii/service.py:96</code>.</li>
+<li><strong>The operator memory API is read-only.</strong>
+<code>git grep -n -E '@router\.(post|put|patch|delete)' -- services/api/app/routers/operator_memories.py</code>
+returns nothing;
+<code>git grep -c -E '@router\.get' -- services/api/app/routers/operator_memories.py</code>
+counts 2.</li>
+<li><strong><code>content_updated</code> and <code>expired</code> have
+no product producer.</strong>
+<code>git grep -n 'update_memory_pii_flags(' -- services ':!services/memory/tests'</code>
+matches only the definition at
+<code>services/memory/app/pii/persist.py:30</code>;
+<code>git grep -n -E 'event_type="expired"' -- services</code> returns
+nothing, and
+<code>git grep -n -E 'event_type="superseded"' -- services</code>
+matches <code>services/memory/app/conflict/persist.py:168</code>.</li>
+<li><strong><code>insert_relationship</code> has no production
+caller.</strong>
+<code>git grep -n 'insert_relationship(' -- services ':!services/memory/tests'</code>
+matches only its definition at
+<code>services/memory/app/conflict/persist.py:182</code>.</li>
+<li><strong><code>visibility</code> is never read.</strong>
+<code>git grep -n visibility -- services/memory/app/read services/memory/app/vectorstore services/context/app</code>
+returns nothing;
+<code>git grep -n visibility -- services/memory/app/write/persist.py</code>
+matches lines 38 and 49.</li>
+<li><strong>The write path reads the tombstone only to skip it.</strong>
+<code>git grep -n -i tombstone -- services/memory/app/dedup services/memory/app/pipeline services/worker/app/extraction</code>
+matches the two <code>AND tombstoned = FALSE</code> predicates at
+<code>services/memory/app/dedup/persist.py:45</code> and
+<code>:88</code>.</li>
+<li><strong><code>merged_into</code> and <code>archived</code> have no
+writer.</strong>
+<code>git grep -n -E "'merged_into'|'archived'" -- services packages</code>
+matches two lines in an auth test about agents;
+<code>git grep -n -E "'superseded'" -- services/memory/app</code>
+matches the writer at
+<code>services/memory/app/conflict/persist.py:112</code>.</li>
+<li><strong>No product code deletes outbox rows.</strong>
+<code>git grep -n -E 'DELETE FROM ibex_core\.memory_lifecycle_outbox' -- services packages infra ':!*/tests/*'</code>
+returns nothing; without the exclusion it matches three test
+fixtures.</li>
+<li><strong>Nothing supplies a turn timestamp as
+<code>valid_from</code>.</strong>
+<code>git grep -n -E 'valid_from' -- services/worker/app services/proxy services/mcp-memory/app</code>
+matches only the extraction prompt, schema and
+<code>memory_writer.py:124-125</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|CITATION' -- README.md</code>
+returns nothing, and the tree has no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-20</strong> — <a
+href="https://github.com/Rick1330/ibex-harness/commit/ce41c6f495c664b59e8c6763941b1bbd66a40294"><code class="commit-id" title="ce41c6f495c664b59e8c6763941b1bbd66a40294">ce41c6f4…</code></a>
+— first reading, from a full clone of <code>main</code> 68 commits after
+release <code>v0.1.10</code>, scoped to the memory service, the MCP
+memory server, the context service, the worker's extraction and erasure
+code, the memory migrations and their tests, and the proxy and operator
+API where they touch memory. Screened first: agent-context bundles under
+<code>.cursor/rules/</code>,
+<code>.github/copilot-instructions.md</code> and <code>.opencode/</code>
+that act only if a harness opens the directory, read as data; twelve
+build-time execution points, eleven <code>conftest.py</code> files and a
+Makefile; manifests and lockfiles changed inside the seven-day cooldown.
+MIT, no rider. Nothing installed, built or run. Five marks:
+<code>trust_state</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -346,6 +346,8 @@ wired: the row changes status and the losing edge is still served
 
 [dsh-engram](../../systems/dsh-engram/) detects at write time and resolves only in a person's panel. A save between cosine 0.88 and 0.92 of an active neighbour that the band's rules do not merge, including a near-restatement that differs in a number, is written active with a `contradicts` edge to up to three neighbours; an optional external judge can confirm or drop each edge first. The governance view lists the pairs, and a person dismisses one into a `related` edge or forgets the loser, with a `governance` or `forget` row in `op_log`. Until then both claims serve every search and the profile, so the edge is a queue that holds nothing back, and the agent has no verb to drain it.
 
+[IBEX Harness](../../systems/ibex-harness/) builds the disposition table and no disposer. Its conflict stage compares validity intervals: a newer same-subject memory whose interval starts after the old one ends supersedes it in the write transaction, and any overlap becomes a `pending` row in `memory_conflict_escalations` with `resolved`, `dismissed`, `resolved_at` and `resolved_by` columns waiting. Two open-ended memories always overlap, the default classifier escalates every overlap, and the insert counter is labelled *"no consumer yet"*; no statement in `services/` or `packages/` updates the table. Both memories stay active, and the read path drops the lower-ranked side of each pending escalation, so the disposition the schema reserves for a person is made by composite score and never recorded (`services/memory/app/conflict/service.py:125-145`, `services/memory/app/read/conflicts.py:38-55`).
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 835 of 836 screened at the report's current pin.**
+**Progress: 836 of 837 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 394 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 383 |
-| Repositories with build-time execution (`EXEC`) | 602 |
+| Repositories with an auto-run surface (`RUNS`) | 395 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 384 |
+| Repositories with build-time execution (`EXEC`) | 603 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -183,6 +183,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`honcho`](../../content/systems/honcho.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`huqan`](../../content/systems/huqan.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md` |
 | [`iai-pme`](../../content/systems/iai-pme.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
+| [`ibex-harness`](../../content/systems/ibex-harness.md) | `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/` |
 | [`inite-brain`](../../content/systems/inite-brain.md) | `.claude-plugin/`, `plugins/inite-brain/.claude-plugin/plugin.json`, `plugins/inite-brain/.mcp.json`, `plugins/inite-brain/hooks/`, `plugins/inite-brain/hooks/hooks.json`, `server.json` |
 | [`inspeximus`](../../content/systems/inspeximus.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`joplin`](../../content/systems/joplin.md) | `.envrc`, `.vscode/settings.json` |

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 836 reports.**
+**This page covers all 837 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7682,3 +7682,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0 with commercially licensed `ee/` directories, release v0.55.7; 133,009 lines of non-test TypeScript in the backend, 1,823 commits from 28 February to 20 November 2026; 1,340 spec files run in CI against Postgres 17, not run here; memory requires an Enterprise key. Five marks: `tombstone`, `trust_state`, `scope_enforced`, `human_review` and `negative_eval`.
 - Study when: staff use several AI clients against internal systems and you want shared, role-limited notes and rules that a curator admits.
 - Do not copy when: you need a memory library, extraction from conversation, semantic recall, or a history of who changed which memory.
+
+### [`ibex-harness`](../systems/ibex-harness/)
+
+- Best idea: **fence extraction against the source session, not only the memory.** Every extracted write carries the session's `lifecycle_revision`, the write transaction re-checks it, and forget bumps it in the same transaction as the tombstone, so a job holding the old revision cannot recreate what was just erased; the tombstone itself scrubs content, erases labels, feedback, relationships and escalations, and records the cache addresses a worker must prove empty.
+- Biggest risk: **detection with no disposition.** Two open-ended memories on one subject always overlap, so the conflict stage writes a `pending` escalation, leaves both active, and the read path drops whichever ranks lower; the insert counter is labelled *"no consumer yet"* and no statement in the tree updates the table.
+- Second risk: quarantine is documented as awaiting human review and no route releases it, and a low-confidence PII quarantine keeps the unredacted text; forget randomises `content_hash`, so the forgotten value can be written again by any path.
+- Most reusable component: the forget transaction in `services/memory/app/lifecycle.py` with the revision-bumping trigger in `infra/migrations/postgres/000045_memory_lifecycle.up.sql`, and the predicate-inside-the-ANN search in `services/memory/app/vectorstore/pgvector_store.py`.
+- Maturity impression: MIT, release v0.1.10; about 25,400 non-test lines in the memory subsystem out of 200,134 in the repository; 856 commits from 30 May to 20 November 2026; 1,000 memory-service tests with the integration and isolation suites on pgvector in CI, not run here; the ranking benchmark uses designed embeddings and a stub reranker and says so. Five marks: `trust_state`, `bitemporal`, `scope_enforced`, `audit_log` and `negative_eval`.
+- Study when: many tenants share one memory service and you must prove isolation, erasure and a lifecycle record to someone else.
+- Do not copy when: users correct the agent often, since an updated fact without a stated end date never supersedes the old one and nothing resolves the escalation.

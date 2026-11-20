@@ -127,7 +127,7 @@ belief.</p>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
 recurs across the corpus. 83 systems of
-836 carry the mark, and <a
+837 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -292,7 +292,7 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>83 systems of
-836 in the atlas carry the mark.</strong> The
+837 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -2039,6 +2039,19 @@ repository carries the near-miss beside it: a learning lesson is unique
 on its text hash, and re-recording a rejected one sets it back to draft,
 so the key that would refuse the value is the one the writer uses to
 revive it.</p>
+<p><a href="../../systems/ibex-harness/">IBEX Harness</a> shows erasure
+and a value tombstone pulling in opposite directions. Its forget sets a
+terminal <code>tombstoned</code> flag a trigger refuses to clear,
+replaces the content with <code>'[forgotten]'</code> and the
+<code>content_hash</code> with a random value, deletes every child row,
+and bumps the source session's revision so an in-flight extraction from
+that session cannot write again
+(<code>services/memory/app/lifecycle.py:150-213</code>). That fence
+covers one session's queued work; the value itself is gone, so exact
+dedup cannot match it and a later session, an MCP
+<code>write_memory</code> call or the HTTP API stores it again. A
+product that must both erase and not relearn needs a keyed hash of the
+forgotten value kept apart from the content.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

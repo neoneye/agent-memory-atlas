@@ -1104,6 +1104,8 @@ a change event keyed on its id, and the same sentence can be written again.
 
 **[AnythingMCP](../../systems/anythingmcp/) keeps a dismissed skill as the key its generators check.** `knownSkills` collects a case-, accent- and punctuation-folded key of the title and of the instruction of every applied and dismissed skill in a scope, and `insertSkill` drops a model draft matching either; the fixed-error generator skips a dismissed title outright. The record is the dismissed row, so deleting it deletes the refusal, the read takes the newest 1,000 rows by `updatedAt`, a paraphrase passes, and manual creation and the agent's `skills_save_to_workspace` never consult it. The same repository carries the near-miss beside it: a learning lesson is unique on its text hash, and re-recording a rejected one sets it back to draft, so the key that would refuse the value is the one the writer uses to revive it.
 
+[IBEX Harness](../../systems/ibex-harness/) shows erasure and a value tombstone pulling in opposite directions. Its forget sets a terminal `tombstoned` flag a trigger refuses to clear, replaces the content with `'[forgotten]'` and the `content_hash` with a random value, deletes every child row, and bumps the source session's revision so an in-flight extraction from that session cannot write again (`services/memory/app/lifecycle.py:150-213`). That fence covers one session's queued work; the value itself is gone, so exact dedup cannot match it and a later session, an MCP `write_memory` call or the HTTP API stores it again. A product that must both erase and not relearn needs a keyed hash of the forgotten value kept apart from the content.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

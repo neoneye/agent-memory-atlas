@@ -686,6 +686,22 @@ governance view lists the pairs, and a person dismisses one into a
 <code>op_log</code>. Until then both claims serve every search and the
 profile, so the edge is a queue that holds nothing back, and the agent
 has no verb to drain it.</p>
+<p><a href="../../systems/ibex-harness/">IBEX Harness</a> builds the
+disposition table and no disposer. Its conflict stage compares validity
+intervals: a newer same-subject memory whose interval starts after the
+old one ends supersedes it in the write transaction, and any overlap
+becomes a <code>pending</code> row in
+<code>memory_conflict_escalations</code> with <code>resolved</code>,
+<code>dismissed</code>, <code>resolved_at</code> and
+<code>resolved_by</code> columns waiting. Two open-ended memories always
+overlap, the default classifier escalates every overlap, and the insert
+counter is labelled <em>"no consumer yet"</em>; no statement in
+<code>services/</code> or <code>packages/</code> updates the table. Both
+memories stay active, and the read path drops the lower-ranked side of
+each pending escalation, so the disposition the schema reserves for a
+person is made by composite score and never recorded
+(<code>services/memory/app/conflict/service.py:125-145</code>,
+<code>services/memory/app/read/conflicts.py:38-55</code>).</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert
