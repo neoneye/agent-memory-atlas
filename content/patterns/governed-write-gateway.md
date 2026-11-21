@@ -69,6 +69,16 @@ caller is ceremony.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [RainBox](../../systems/rainbox/) — the reference: one locked path running dedupe, tombstone checks, conflict detection and actor trust in a single transaction, with an atomic correction beside it.
+- [OpenSRE](../../systems/opensre/) — a small complete instance, and the lesson that the policy inside the gate matters more than the gate: every check after the model's proposal is deterministic.
+- [Aura](../../systems/aura/) — a gateway that fails closed on both an unwired and a raising governance call, beside a legacy second write path that can degrade open.
+- [Osiris](../../systems/osiris/) — exclusivity stated as the contract, and the system's own housekeeping writing around it.
+- [ruflo](../../systems/ruflo/) — the read-side half of the threat a write gateway answers.
+
+### Every instance
+
 [RainBox](../../systems/rainbox/) is the reference: `record_belief` is the
 single path, taken under a Postgres advisory lock, running dedupe, tombstone
 checks, lattice-aware conflict detection, and actor-based trust in one
@@ -303,6 +313,8 @@ runtime's own rules, does not.
 [Pluribus](../../systems/pluribus/) puts its strongest gate on one of four write paths. The deterministic harmful-advice screen that stores safety-negating advice as `quarantined` has one caller, the inline formation behind `record_experience`. `memory_create`, `memory_promote` and `curation_materialize` reach `memory.Service.Create` without it, and under the shipped hive defaults a governing constraint written through `memory_create` lands active at authority 4, above the enforcement binding floor of 3. A screen placed inside the shared `Create` would have covered every path at the same cost.
 
 [Browsentic](../../systems/browsentic/) implements the gateway as a location rather than a status. The producing agent's only write verb stages into `.staging/<uuid>/`; the loader never reads dot-prefixed entries, so an unreviewed map is not merely unused but never opened; and the commit is a rename that only a frame from the paired extension's panel can trigger (`src/daemon/daemon.ts:491-499`). The agent side is closed structurally rather than by prompt: the mapping run's tool gate admits seventeen read actions and no page code (`src/daemon/agent/mapping.ts:21-60`), each agent CLI but Antigravity is spawned with its own file and shell tools denied, and page navigation refuses non-http(s) URLs, so the panel is out of reach. The limit is that the gate is per path: recordings reach the prompt through another door, with no review.
+
+[Senrelay (ContextCore)](../../systems/contextcore/) has the gateway, `reconcile_long_term_memory`, which runs regex admission, a tombstone check and a comparison with active memories that ends in a no-op, a supersession or a pending conflict. Its tool surface shows how a gateway is bypassed by its own callers. MCP `save_memory` sets any authoritative origin an agent claims to none and passes `is_user_correction=False`; `auto_summarize_memory`, on the same surface and into the same function, copies the agent's `origin_authority` and `user_confirmed` through, and a claimed confirmation supersedes a protected decision without a conflict. `edit_memory` calls the update path directly, which checks tombstones and skips admission and contradiction detection. One gateway with per-door trust rules is two policies.
 
 ## Tests to require
 

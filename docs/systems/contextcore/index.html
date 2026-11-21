@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local macOS app and loopback
+service that captures six coding agents' sessions, relays them between
+agents, and keeps quote-linked, governed project memories in SQLite.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Senrelay
+(ContextCore) — Agent Memory Atlas">
+    <meta property="og:description" content="A local macOS app and
+loopback service that captures six coding agents' sessions, relays them
+between agents, and keeps quote-linked, governed project memories in
+SQLite.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Senrelay
+(ContextCore) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local macOS app and
+loopback service that captures six coding agents' sessions, relays them
+between agents, and keeps quote-linked, governed project memories in
+SQLite.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Senrelay (ContextCore) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Senrelay (ContextCore)",
+      "description": "A local macOS app and loopback service that captures six coding agents' sessions, relays them between agents, and keeps quote-linked, governed project memories in SQLite.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Cross-agent relay over governed project
+memory</p>
+          <h1>Senrelay (ContextCore)</h1>
+          <p class="document-deck">A local macOS app and loopback
+service that captures six coding agents' sessions, relays them between
+agents, and keeps quote-linked, governed project memories in SQLite.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/qingsongcui/ContextCore">
+              <span>Source</span>
+              <strong>qingsongcui/ContextCore</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/qingsongcui/ContextCore/commit/e4376e2da8245395cd9016fd5f184dfd576d46d8" title="e4376e2da8245395cd9016fd5f184dfd576d46d8">
+              <span>Analyzed revision</span>
+              <code>e4376e2d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/qingsongcui--ContextCore" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>qingsongcui--ContextCore</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE and app/backend/LICENSE, which are identical; pyproject.toml
+agrees</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>49,523
+lines of Python in app/backend/app across 113 files; 12,116 lines in the
+React workbench; a Swift AppKit shell</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>38
+commits from 11 to 20 November 2026, all by one author, the first an
+initial public release; the pin is four commits past tag
+v1.0.0-beta.4</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,322
+pytest functions in 130 files and 41,449 lines, plus 201 Vitest cases;
+CI runs both on push and pull request; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Senrelay (ContextCore) is a local macOS developer workbench. A
+FastAPI and SQLite service on <code>127.0.0.1</code>, a React workbench
+and an AppKit shell read the session histories of six coding agents —
+Codex, Claude Code, Cursor, Antigravity, Oh My Pi and OpenCode. One
+agent can resume another's conversation through a
+<code>/contextcore</code> command. Every connected agent reads and
+writes long-term project memories and short-term working tasks over
+MCP.</p>
+<p>What is notable is the write gate. An agent write passes a regex
+admission classifier, then a tombstone check keyed on the normalized
+claim, then a comparison against active memories that ends in a no-op, a
+supersession or a pending conflict for a person. Deleting a memory
+records hashes of every version's claim. Every writer and reader
+consults them, so a deleted value is not re-extracted under another
+category or with different whitespace.</p>
+<p>What is weak is where the gate has a side door. The agent holds
+<code>resolve_conflict</code>, so the conflict queue is advisory.
+<code>save_memory</code> strips an agent's claimed authority;
+<code>auto_summarize_memory</code> passes <code>user_confirmed</code>
+and <code>origin_authority</code> through, and a claimed confirmation
+supersedes a protected decision without a conflict.
+<code>assemble_context</code> ranks across every project.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code> and
+<code>app/backend/LICENSE</code>, which are identical, and
+<code>app/backend/pyproject.toml</code> agrees. Nothing restricts use.
+The copyright line names <code>AI理享派</code>, not the author
+<code>CITATION.cff</code> names. <code>THIRD_PARTY_NOTICES.md</code> is
+nine lines and lists no dependency. The macOS release bundles a Python
+runtime that is not in the tree, so its notices cannot be checked here.
+The optional embedding model,
+<code>intfloat/multilingual-e5-small</code>, is recorded as MIT in
+<code>app/backend/app/services/semantic_service.py:26-36</code> and is
+downloaded only on consent.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row in <code>contents</code> with
+<code>kind = 'memory'</code>, one of six categories
+(<code>preference</code>, <code>background</code>,
+<code>decision</code>, <code>task</code>, <code>lesson</code>,
+<code>knowledge</code>), a project id or none for global, a version, an
+<code>origin_authority</code>, optional <code>applicability</code>
+conditions, and sources with quotes
+(<code>app/backend/app/database.py:361-383</code>,
+<code>:416-426</code>). Imported documents share the table as
+<code>kind = 'document'</code>. Working tasks are a second tier in their
+own table: a goal, completed steps, failed attempts, one-off constraints
+and an <code>execution_mode</code> of <code>discussion_only</code> or
+<code>approved</code>
+(<code>app/backend/app/services/working_memory_service.py:76-140</code>).
+Raw conversations are a third store, and memories outlive them.</p>
+<p>A candidate becomes a belief through
+<code>reconcile_long_term_memory</code>, whose own docstring names its
+outcomes: <code>ROUTE_TO_WORKING_TASK</code>, <code>REJECTED</code>,
+<code>DROP_TOMBSTONED</code>, <code>NOOP</code>, <code>SUPERSEDE</code>,
+<code>OPEN_CONFLICT</code>, <code>ADD</code>
+(<code>app/backend/app/services/content_service.py:1126-1378</code>).
+Gate 0 is <code>classify_write_candidate</code>. For an agent write
+without an authoritative origin it rejects unconfirmed proposals,
+unverified guesses, raw tool output and session-filler summaries. It
+routes "this time only" constraints to the active working task
+(<code>app/backend/app/services/governance_guardrails.py:334-444</code>).</p>
+<p>Then the tombstone check runs, then a comparison against the 100 most
+recently updated active memories in the same scope. An equivalent claim
+attaches its source to the existing row. A contradiction opens a pending
+conflict when either side is a decision or preference, or the origin is
+not authoritative; otherwise it supersedes. A user correction supersedes
+directly (<code>content_service.py:1263-1294</code>).</p>
+<p>An active memory stops being one three ways. Supersession sets
+<code>historical</code> and <code>superseded_by_id</code>;
+<code>mark_outdated</code> sets <code>outdated</code> with a reason and
+stops injection (<code>content_service.py:887-932</code>); deletion
+removes the row and writes tombstones (<code>:1381-1461</code>). Every
+retrieval path selects <code>status = 'active'</code>;
+<code>read_memory</code> by id returns any status. Once active, a memory
+is treated as true. Decisions, preferences and pinned rules form a
+protected tier that is injected ahead of ranked results.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an agent write passes admission, the tombstone check and a comparison with active memories; contradictions wait as conflicts the agent can resolve, and deletion feeds the tombstone check</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an agent write passes admission, the tombstone check and a comparison with active memories; contradictions wait as conflicts the agent can resolve, and deletion feeds the tombstone check
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    W1[&quot;MCP save_memory:&lt;br/&gt;claimed authority&lt;br/&gt;stripped&quot;]
+    W2[&quot;auto_summarize_memory&lt;br/&gt;and hook payloads:&lt;br/&gt;claims passed through&quot;]
+    W3[&quot;background distill&lt;br/&gt;via Oh My Pi,&lt;br/&gt;opt-in&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  writers --&gt; G0{&quot;Gate 0: proposal,&lt;br/&gt;guess, tool log or&lt;br/&gt;one-off constraint?&quot;}
+  G0 --&gt;|&quot;one-off&quot;| WT[&quot;working task&lt;br/&gt;temp_constraints&quot;]
+  G0 --&gt;|&quot;rejected&quot;| RJ[&quot;nothing written&quot;]
+  G0 --&gt;|&quot;allowed&quot;| TB{&quot;claim hash&lt;br/&gt;tombstoned?&quot;}
+  TB --&gt;|&quot;yes&quot;| DR[&quot;dropped&quot;]
+  TB --&gt;|&quot;no&quot;| CMP{&quot;compared with 100&lt;br/&gt;newest active&lt;br/&gt;in scope&quot;}
+  CMP --&gt;|&quot;equivalent&quot;| NO[&quot;no-op, source&lt;br/&gt;attached&quot;]
+  CMP --&gt;|&quot;contradiction&quot;| CF[&quot;conflict pending;&lt;br/&gt;agent holds&lt;br/&gt;resolve_conflict&quot;]
+  CMP --&gt;|&quot;new, or claimed&lt;br/&gt;user correction&quot;| ACT[&quot;active: served&lt;br/&gt;by every read&quot;]
+  CF --&gt;|&quot;replace or merge&quot;| ACT
+  ACT --&gt; HI[&quot;historical:&lt;br/&gt;superseded&quot;]
+  ACT --&gt; OU[&quot;outdated: retired,&lt;br/&gt;no tombstone&quot;]
+  ACT --&gt; DEL[&quot;deleted: hashes of&lt;br/&gt;every version kept&quot;]
+  DEL -.-&gt; TB</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The service is one Python process (<code>contextcore serve</code>) on
+<code>127.0.0.1:8420</code>, started by a LaunchAgent or the macOS app,
+with a single SQLite database in WAL mode. A background loop syncs the
+authorized history directories of each host, backfills the relay index,
+and runs queued distillation every 5 to 30 seconds
+(<code>app/backend/app/main.py:28-97</code>). The browser workbench uses
+a session cookie and CSRF. MCP at <code>/mcp</code> and the hook
+endpoint require a per-host bearer token, which sets the authenticated
+agent for the call
+(<code>app/backend/app/security.py:137-150</code>).</p>
+<p>Lexical search runs on an FTS5 table rebuilt incrementally from
+active rows on each search
+(<code>app/backend/app/services/retrieval_service.py:60</code>,
+<code>:200-238</code>). Semantic search is off by default; when enabled
+it scans 384-dimension <code>multilingual-e5-small</code> vectors stored
+in the same database
+(<code>app/backend/app/services/semantic_service.py:26-36</code>,
+<code>:47</code>, <code>:639</code>). Background distillation runs only
+through the Oh My Pi CLI, and only after the user authorizes compute in
+Settings
+(<code>app/backend/app/services/distillation_service.py:728-741</code>).</p>
+<p><code>senrelay.com</code> is the vendor's static site, built from
+<code>website/</code>. Nothing in <code>app/</code> calls it, and the
+backend's outbound hosts are provider presets, model and wheel
+downloads, and GitHub. All memory work happens in the local service.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The supported build is Apple Silicon macOS 14 or later, as an
+ad-hoc-signed app that bundles its own Python. From source the service
+needs Python 3.11 with SQLite <code>blobopen</code>, and Node 24 for the
+workbench. No API key is needed to store anything: capture, admission,
+tombstones and lexical search are local and deterministic, and only
+distillation, handoff pages and relation extraction use a model. SQLite
+is readable by hand, and <code>contextcore backup</code> takes an online
+snapshot.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> Host adapters read each agent's
+transcripts; the hook endpoint upserts a conversation, runs regex
+extraction over the new messages, and passes the result with any
+<code>memories</code> in the payload to
+<code>auto_summarize_memory</code>
+(<code>app/backend/app/routers/connections.py:416-452</code>).</li>
+<li><strong>Agent write.</strong> <code>save_memory</code> resolves a
+project from <code>project_id</code> or <code>cwd</code>, refuses to
+fall back to global, routes <code>category = 'task'</code> to a working
+task, drops any authoritative origin the caller claims, and calls
+<code>reconcile_long_term_memory</code> with
+<code>is_user_correction=False</code>
+(<code>app/backend/app/mcp_server.py:798-889</code>).</li>
+<li><strong>Agent summary.</strong> <code>auto_summarize_memory</code>
+copies each supplied item's <code>origin_authority</code> and
+<code>user_confirmed</code> into the candidate
+(<code>distillation_service.py:1618-1638</code>);
+<code>_apply_agent_supplied_summary</code> passes them on, with
+<code>is_user_correction=bool(mem.get("user_confirmed"))</code>
+(<code>:1275-1295</code>).</li>
+<li><strong>Background distillation.</strong> The worker snapshots the
+conversation and the project's active decisions, invokes the model with
+a JSON contract, re-checks source revision and authorization, and
+applies the result through <code>apply_distilled_memories</code>
+(<code>:769-897</code>). That function requires each quote to be a
+substring of the cited message and requires a user message for a
+decision or preference (<code>:217-725</code>).</li>
+<li><strong>Retrieval.</strong> <code>search</code>,
+<code>assemble_context</code> and <code>bootstrap_working_memory</code>
+in <code>retrieval_service.py</code>, wrapped by the MCP tools of the
+same names.</li>
+<li><strong>Correction and deletion.</strong>
+<code>update_content</code>, <code>mark_outdated</code>,
+<code>correct_content</code>, <code>restore_version</code>,
+<code>delete_content</code> and <code>_tombstone_content_history</code>
+in <code>content_service.py</code>; conflict resolution in
+<code>app/backend/app/services/conflict_service.py:61-271</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>contents</code> carries <code>status</code> (CHECK
+<code>active | outdated | historical</code>), <code>version</code>,
+<code>content_hash</code>, <code>canonical_key</code>,
+<code>origin_authority</code>, <code>superseded_by_id</code>,
+<code>outdated_at</code>, <code>outdated_reason</code>,
+<code>promoted_from_task_id</code> and <code>applicability</code>.
+<code>content_versions</code> keeps every body by version.
+<code>content_identity_history</code> records each content hash a row
+has held, maintained by triggers. <code>content_sources</code> links a
+memory to a conversation or document with the quote and a
+<code>deleted</code> flag
+(<code>app/backend/app/database.py:361-426</code>).</p>
+<p><code>tombstones</code> is keyed
+<code>UNIQUE(entity_type, dedupe_key)</code> with the project, the actor
+and a reason (<code>:529-538</code>). A memory deletion writes five
+kinds of key: the raw content hash, the whitespace-normalized hash, a
+canonical key over the category and the normalized title and claim, a
+category-agnostic key, and a claim-only key for claims of 12 or more
+normalized characters
+(<code>app/backend/app/services/governance_guardrails.py:152-189</code>).
+Normalization strips category prefixes, filler such as "please always"
+or 请务必, and punctuation, and reads only the first 1,024 characters of
+the body.</p>
+<p>Scope is <code>contents.project_id</code>; a global memory has none.
+Every key includes the project id or <code>global</code>, so a value
+deleted in one project is not blocked in another.
+<code>origin_authority</code> takes one of six valid values, of which
+<code>user_explicit</code>, <code>user_confirmed</code> and
+<code>verified_outcome</code> are authoritative
+(<code>governance_guardrails.py:11-18</code>). <code>conflicts</code>
+holds the proposed payload as JSON with <code>pending</code> or
+<code>resolved</code> and a resolution. There is one clock per row:
+<code>created_at</code>, <code>updated_at</code> and
+<code>outdated_at</code> are record times.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>search</code> ranks FTS5 BM25 hits, or LIKE matches when FTS5
+is unavailable, and converts rank to <code>1/(60 + rank + 1)</code>. It
+adds 0.012 for the requested project and 0.02 for decisions, tasks and
+preferences on an empty query, then sums in semantic ranks the same way
+(<code>retrieval_service.py:357-436</code>). It does not filter by
+project, and it reports <code>"scope": "global"</code>. Each candidate
+is re-read through <code>_valid_content</code>, which requires
+<code>status = 'active'</code>, the indexed version and no matching
+tombstone (<code>:99-152</code>).</p>
+<p><code>search_memory</code> keeps only hits in the requested project
+and re-selects them with <code>c.project_id = ?</code> and
+<code>c.status = 'active'</code>. Without a project it returns every
+project (<code>app/backend/app/mcp_server.py:351-460</code>).</p>
+<p><code>bootstrap_working_memory</code> is the session-start read. Its
+constraint layer selects active decisions, preferences and pinned rules
+where <code>project_id = ? OR project_id IS NULL</code>, and it adds
+active working tasks, pending conflicts and relevant lessons from the
+same project or global (<code>retrieval_service.py:1206-1226</code>,
+<code>:1300-1360</code>).</p>
+<p><code>assemble_context</code> takes the protected tier with the same
+project-or-global predicate (<code>:660-674</code>). Its ranked tier
+then walks <code>search</code> results, applying category quotas (task
+4, background 3, lesson 3, knowledge 6, decision 4, preference 4) and
+per-epoch deduplication, and degrades each entry from full text to
+passage to a pointer to fit the budget (<code>:709-757</code>). Nothing
+in that loop compares the hit's project with the requested one. A
+lesson, decision or note from another project that matches the query
+enters the pack at full text, behind the protected tier. The relay path
+calls <code>assemble_context</code> too
+(<code>app/backend/app/services/handoff_service.py:3749-3755</code>).
+Retrieval is tool-mediated: hooks return
+<code>"context_type": "none"</code>, and the installed skills tell the
+agent to bootstrap.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous SQLite transactions under
+<code>BEGIN IMMEDIATE</code>, and no model runs on the agent's write
+path. Admission is regular expressions over Chinese and English
+phrasing, and equivalence and contradiction are character-bigram Jaccard
+thresholds plus two checks. One is a negation-polarity check; the other
+is a table of mutually exclusive tools (npm, pnpm, yarn, bun; SQLite,
+Postgres and others) (<code>governance_guardrails.py:104-113</code>,
+<code>:506-608</code>). A memory written through MCP or a hook is
+searchable at once, since <code>search</code> refreshes the index before
+it ranks.</p>
+<p>Background distillation is the exception. It runs after 30 seconds of
+idle time, only with compute authorized, and it fences the model call.
+It commits an invoked marker first, re-checks the conversation's content
+hash and the authorization afterwards, and discards a result whose
+source changed (<code>distillation_service.py:811-890</code>). The
+model's output must name a category, title and content
+(<code>app/backend/app/transport.py:1120-1131</code>); any
+<code>origin_authority</code> it adds reaches
+<code>classify_write_candidate</code> as a hint when the quote did not
+establish user confirmation
+(<code>distillation_service.py:386-399</code>). No background pass
+rewrites the store; <code>consolidate_memories</code> merges duplicates
+on request from the workbench
+(<code>app/backend/app/routers/content.py:109</code>).</p>
+<p>Per call, <code>assemble_context</code> defaults to 24,000 tokens
+over MCP and 2,000 in the service settings, estimated from UTF-8 bytes.
+The pack is a tool result, so it does not sit in the host's system
+prompt.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One-Click Connect writes each host's MCP entry, a bearer token, a
+skill or slash command, and lifecycle hooks
+(<code>app/backend/app/integrations/installer.py</code>). The hooks
+report events and inject nothing. The MCP contract names the tools the
+agent holds, among them <code>save_memory</code>,
+<code>edit_memory</code>, <code>delete_memory</code>,
+<code>resolve_conflict</code>, <code>auto_summarize_memory</code>,
+<code>assemble_context</code> and the relay tools
+(<code>app/backend/app/integrations/constants.py:43-67</code>).
+<code>mark_memory_outdated</code>, <code>upsert_working_task</code>,
+<code>promote_task_lesson</code> and
+<code>bootstrap_working_memory</code> are registered beside them in
+<code>app/backend/app/mcp_server.py</code>.</p>
+<p>The relay is the product's centre. <code>/contextcore</code> lists
+recent conversations from every host as short briefs, and a numbered
+reply loads bounded context with <code>must_not_execute=true</code> and
+a transcript cursor the receiving agent pages through
+<code>read_conversation_messages</code>. A working task in
+<code>discussion_only</code> keeps <code>must_not_execute</code> set
+even when the user attaches an instruction
+(<code>retrieval_service.py:605-624</code>). The design notes in
+<code>AGENTS.md</code> say all projects and authorized agents share
+memory with no per-item approval, which matches the flat token
+model.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="who-resolves-a-conflict">Who resolves a conflict</h3>
+<p>A contradiction of a decision or preference waits in
+<code>conflicts</code>, outside <code>contents</code>, and the workbench
+shows a count badge until it is resolved. The same resolution is an MCP
+tool. <code>resolve_conflict</code> asks only for
+<code>confirmed=True</code> and records the calling agent as actor
+(<code>app/backend/app/mcp_server.py:1302-1322</code>), and the service
+applies <code>keep</code>, <code>replace</code>, <code>both</code> or
+<code>merge</code> with no check on who called
+(<code>app/backend/app/services/conflict_service.py:61-271</code>). A
+<code>keep</code> resolution leaves the proposal on the resolved
+conflict row. Background distillation reads those rows and does not
+reopen a proposal already resolved against the same memory
+(<code>app/backend/app/services/distillation_service.py:118-126</code>).
+The reconciler that <code>save_memory</code> and agent summaries reach
+inserts a new conflict without that check
+(<code>content_service.py:1092-1123</code>).</p>
+<h3 id="two-write-doors-with-different-rules">Two write doors with
+different rules</h3>
+<p><code>save_memory</code> sets any <code>user_explicit</code>,
+<code>user_confirmed</code> or <code>verified_outcome</code> origin to
+<code>None</code> and passes <code>is_user_correction=False</code>; the
+comment above the code says why
+(<code>app/backend/app/mcp_server.py:864-884</code>).
+<code>auto_summarize_memory</code> is on the same MCP surface and
+accepts a list of memories whose <code>origin_authority</code> and
+<code>user_confirmed</code> it copies through
+(<code>distillation_service.py:1618-1638</code>,
+<code>:1275-1295</code>). Two consequences follow:</p>
+<ul>
+<li>With <code>user_confirmed: true</code>, a contradiction supersedes
+the active memory directly, whatever its category
+(<code>content_service.py:1282-1283</code>).</li>
+<li>With an authoritative <code>origin_authority</code>, the proposal
+and guess filters do not run
+(<code>governance_guardrails.py:419-435</code>).
+<code>_agent_summary_eligible</code> still refuses suggestion stances
+and a narrower set of unconfirmed phrasings
+(<code>distillation_service.py:1247-1272</code>).</li>
+</ul>
+<p>A test asserts the first path's acceptance as intended: an
+agent-supplied decision with <code>user_confirmed: True</code> and no
+quote is saved
+(<code>app/backend/tests/test_relay_memory_management.py:979-995</code>).</p>
+<h3 id="other-gaps">Other gaps</h3>
+<ul>
+<li><strong><code>edit_memory</code></strong> calls
+<code>update_content</code> directly. That checks tombstones and
+versions and runs neither admission nor contradiction detection
+(<code>app/backend/app/mcp_server.py:769-791</code>,
+<code>content_service.py:715-884</code>).</li>
+<li><strong>An outdated memory is not a tombstone.</strong>
+Reconciliation compares only against active rows, so an agent
+re-asserting a retired rule adds it again.</li>
+<li><strong>A tombstone binds the user too.</strong>
+<code>create_content</code> raises 410 on a deleted value from the
+workbench as well (<code>content_service.py:625-626</code>), and no path
+deletes a memory tombstone; the only tombstone deletions target
+conversations.</li>
+<li><strong>Raw transcripts</strong> keep pasted secrets by design, per
+<code>README.md</code>; exports and audit rows strip managed
+secrets.</li>
+</ul>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code></strong> — awarded. The keys are on
+the value, the writer runs on every deletion from the workbench or MCP,
+and every write path consults them, including import, version restore
+and relation creation.</li>
+<li><strong><code>trust_state</code></strong> — awarded on
+<code>contents.status</code>. <code>outdated</code> and
+<code>historical</code> are excluded from every retrieval path, and a
+pending conflict's proposal is never in <code>contents</code>.
+<code>origin_authority</code> is not the state: it changes which gate
+rules apply at write and filters nothing.</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on
+<code>project_id</code> in bootstrap and <code>search_memory</code>. The
+project is a caller argument or derived from the working directory, and
+the ranked tier of <code>assemble_context</code> is the gap.</li>
+<li><strong><code>audit_log</code></strong> — awarded. Every content
+mutation inserts actor, action and target in its own transaction. Rows
+carry no prior value; prior bodies sit in <code>content_versions</code>
+and go when the memory is deleted.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>human_review</code></strong> — withheld. The conflict
+queue is real and the workbench is a person's surface, but
+<code>resolve_conflict</code> is a registered MCP tool, and the agent
+that proposed a contradiction can clear it.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Validity is
+expressed as <code>applicability</code> conditions such as module or
+version, not as time; every timestamp is record time.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The backend suite has 1,322 pytest functions in 130 files; the
+frontend has 201 Vitest cases. CI runs both on push and pull request,
+plus an opt-in 100,000-row usage benchmark in its own step
+(<code>.github/workflows/ci.yml:3-81</code>).
+<code>docs/evidence.md</code> reports 1,678 backend tests passing on 17
+November 2026, which counts parametrized cases. I ran none of it.</p>
+<p><code>negative_eval</code> rests on two populated cases:</p>
+<ul>
+<li><code>app/backend/tests/test_memory_quality_gold.py:41-82</code>
+supersedes a PostgreSQL decision with a user-quoted SQLite one through
+the distillation path and asserts the assembled pack contains SQLite and
+not PostgreSQL, and that the old row is <code>historical</code>.</li>
+<li><code>app/backend/tests/test_retrieval_distill_guardrails.py:205-336</code>
+seeds a global preference, a project-A decision and a project-B canary,
+and asserts bootstrap returns the first two and not the third.</li>
+</ul>
+<p>The tombstone tests delete a decision and re-submit it as a
+preference with extra spaces among five other items, then assert nothing
+was saved and only the control preference is active
+(<code>test_retrieval_distill_guardrails.py:637-715</code>). Others
+refuse re-import, version restore and relation creation for a deleted
+body
+(<code>app/backend/tests/test_deleted_content_history.py:112-148</code>).</p>
+<p>The cross-project test for assembled context asserts only about the
+protected tier
+(<code>app/backend/tests/test_memory_quality_gold.py:130-133</code>).
+Read against section 6, the ranked tier of that same pack would carry
+the other project's decision. No test covers
+<code>resolve_conflict</code> from an agent, or
+<code>auto_summarize_memory</code> superseding a protected decision.
+<code>CITATION.cff</code> is a software citation; there is no paper, and
+no retrieval benchmark is in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Tombstone the claim, not the row.</strong> Hash the
+normalized claim several ways — raw, whitespace-folded,
+category-agnostic, title-free — for the current body and every version,
+and check the set in every writer, importer and restore path.</li>
+<li><strong>Make the admission gate deterministic.</strong> Regexes for
+proposals, guesses and tool logs, and a route that sends "this time
+only" to the task instead of the long-term store, cost nothing per write
+and need no model.</li>
+<li><strong>Hold contradictions outside the store.</strong> A proposal
+that contradicts a decision lives in a conflicts table, so no read path
+can serve it by accident.</li>
+<li><strong>Strip claimed authority at the tool boundary.</strong>
+<code>save_memory</code> treats every origin an agent asserts as
+unverified.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two write tools with different trust rules.</strong> If one
+strips claimed authority, every tool that reaches the same reconciler
+must, including the batch summary path and the hook payload.</li>
+<li><strong>The adjudication verb on the agent's tool list.</strong> A
+conflict queue the proposer can resolve is a log of disagreements, not a
+review.</li>
+<li><strong>A project boost where a filter belongs.</strong> If
+session-start reads isolate by project, the on-demand context pack
+should apply the same predicate.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer on one Mac who moves between several coding
+agents and wants each to pick up where another stopped, with project
+rules that survive the switch. The governance is unusually careful for
+that shape, and it is local and free of model calls on the write path.
+Walk away if you need multi-device sync, a team store, or isolation
+between agents. Every connected agent reads every project, and the
+conflict queue is the agents' to clear. Expect to maintain six host
+integrations whose transcript formats change underneath them.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>auto_summarize_memory</code> is meant to honour an
+agent's <code>user_confirmed</code> while <code>save_memory</code>
+refuses the equivalent claim.</li>
+<li>Whether the cross-project ranked tier of
+<code>assemble_context</code> is the intended reading of the
+shared-memory design, given that bootstrap isolates by project.</li>
+<li>Whether <code>resolve_conflict</code> is meant to stay in the MCP
+contract.</li>
+<li>How the six host adapters behave against live transcript formats;
+the support matrix in <code>docs/support-matrix.md</code> separates
+verified from claimed.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>app/backend/app/database.py</code>,
+<code>app/backend/app/models.py</code>,
+<code>app/backend/app/services/working_memory_service.py</code></li>
+<li>Governance:
+<code>app/backend/app/services/governance_guardrails.py</code>,
+<code>app/backend/app/services/content_service.py</code>,
+<code>app/backend/app/services/conflict_service.py</code></li>
+<li>Distillation and summaries:
+<code>app/backend/app/services/distillation_service.py</code>,
+<code>app/backend/app/transport.py</code></li>
+<li>Retrieval:
+<code>app/backend/app/services/retrieval_service.py</code>,
+<code>app/backend/app/services/semantic_service.py</code></li>
+<li>MCP and auth: <code>app/backend/app/mcp_server.py</code>,
+<code>app/backend/app/security.py</code>,
+<code>app/backend/app/integrations/constants.py</code></li>
+<li>Capture: <code>app/backend/app/routers/connections.py</code>,
+<code>app/backend/app/adapters/</code></li>
+<li>Tests: <code>app/backend/tests/test_memory_quality_gold.py</code>,
+<code>app/backend/tests/test_retrieval_distill_guardrails.py</code>,
+<code>app/backend/tests/test_deleted_content_history.py</code>,
+<code>app/backend/tests/test_decision_replacement.py</code>,
+<code>app/backend/tests/test_relay_memory_management.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No validity-time field on memories.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_until|valid_at|as_of|event_time' -- app/backend/app/services/content_service.py app/backend/app/database.py app/backend/app/models.py</code>
+returns nothing;
+<code>git grep -c 'outdated_at' -- app/backend/app/database.py</code>
+counts 3.</li>
+<li><strong>Conflict resolution checks no caller.</strong>
+<code>git grep -n -E 'authenticated_agent|ALLOWED_TARGET_AGENTS|is_agent' -- app/backend/app/services/conflict_service.py</code>
+returns nothing;
+<code>git grep -c 'authenticated_agent' -- app/backend/app/mcp_server.py</code>
+counts 11.</li>
+<li><strong>A kept conflict records no tombstone.</strong>
+<code>git grep -n -i 'tombstone' -- app/backend/app/services/conflict_service.py</code>
+returns nothing; the same search counts 27 in
+<code>content_service.py</code>.</li>
+<li><strong>Only the distillation path consults resolved
+conflicts.</strong>
+<code>git grep -n "status = 'resolved'" -- app/backend/app/services</code>
+matches the read at <code>distillation_service.py:119</code> and the
+resolving <code>UPDATE</code> at <code>conflict_service.py:268</code>;
+<code>git grep -n "FROM conflicts" -- app/backend/app/services/content_service.py</code>
+matches only the read-back of the row just inserted at line 1122.</li>
+<li><strong>Marking outdated writes no tombstone.</strong>
+<code>sed -n 887,932p app/backend/app/services/content_service.py | grep -c -i tombstone</code>
+prints 0; <code>sed -n 1381,1417p</code> of the same file prints 3.</li>
+<li><strong>The ranked tier of <code>assemble_context</code> has no
+project predicate.</strong>
+<code>sed -n 713,757p app/backend/app/services/retrieval_service.py | grep -c project_id</code>
+prints 0; <code>sed -n 660,674p</code> of the same file prints 1.</li>
+<li><strong>The summary path never consults the authoritative-origin
+set.</strong>
+<code>git grep -n 'AUTHORITATIVE_ORIGINS' -- app/backend/app/services/distillation_service.py</code>
+returns nothing; the same search matches
+<code>app/backend/app/mcp_server.py:868</code>.</li>
+<li><strong>The audit table's only deletion is for draft
+handoffs.</strong>
+<code>git grep -n -E 'DELETE FROM audit_logs|UPDATE audit_logs' -- app</code>
+matches <code>app/backend/app/services/handoff_service.py:3413</code>
+and one test.</li>
+<li><strong>No hosted memory service.</strong>
+<code>git grep -n -i 'senrelay\.com' -- app</code> returns nothing;
+<code>git grep -c -i 'senrelay\.com' -- README.md</code> counts 2.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org'</code>
+returns nothing; <code>git grep -c 'cff-version' -- CITATION.cff</code>
+counts 1.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/qingsongcui/ContextCore/commit/e4376e2da8245395cd9016fd5f184dfd576d46d8"><code class="commit-id" title="e4376e2da8245395cd9016fd5f184dfd576d46d8">e4376e2d…</code></a>
+— first reading, from a full clone of <code>main</code> four commits
+past <code>v1.0.0-beta.4</code>, scoped to the backend's content,
+governance, distillation, retrieval, conflict, tombstone, audit and MCP
+paths and their tests; the host adapters, provider management, usage
+accounting and the frontend were read only where they write what those
+paths read. Screened first: <code>server.json</code> declares an MCP
+start command; four dependency files changed inside the seven-day
+cooldown; <code>tests/conftest.py</code> executes on collection;
+<code>requirements-test.txt</code> and
+<code>app/frontend/package.json</code> float; <code>AGENTS.md</code> was
+read as data. MIT, no rider. Nothing installed, built or run. Five
+marks: <code>tombstone</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

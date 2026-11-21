@@ -1110,6 +1110,8 @@ a change event keyed on its id, and the same sentence can be written again.
 
 [Walrus Memory](../../systems/walrus-memory/) names a record-keyed table `memory_tombstones` and uses it well for what it is: `forget` tombstones the deleted rows and every non-terminal job in the namespace in one transaction, and every insert path refuses a row whose job id is tombstoned, so a worker finishing after the forget cannot land the memory. It is not this pattern, and the code says so in the other direction. Forget NULLs the idempotency key on purpose so that analyzing the same text again is a new write, and restore re-indexes the same blob under a fresh uuid, which the id-keyed tombstone cannot see.
 
+[Senrelay (ContextCore)](../../systems/contextcore/) tombstones on deletion and keys the record five ways: the raw content hash, a whitespace-folded hash, a canonical key over category, normalized title and claim, a category-agnostic key, and a title-free claim key for claims of 12 or more normalized characters. It writes them for the current body and for every stored version. Create, update, the agent reconciler, background distillation, agent summaries, document import, version restore, relation creation and every retrieval read consult the set, and a test re-submits a deleted decision as a preference with extra spaces and asserts nothing is saved. Two limits are instructive. Every key includes the project id, so a value deleted in one project is not blocked in another. And no path removes a memory tombstone, so a person who deletes a rule cannot later re-create it in the same words from the workbench either.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

@@ -180,6 +180,25 @@ policy, not as code.</p>
 <p><strong>Skip it if</strong> there is exactly one writer. A gateway in
 front of a single caller is ceremony.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<h3 id="read-these-first">Read these first</h3>
+<ul>
+<li><a href="../../systems/rainbox/">RainBox</a> — the reference: one
+locked path running dedupe, tombstone checks, conflict detection and
+actor trust in a single transaction, with an atomic correction beside
+it.</li>
+<li><a href="../../systems/opensre/">OpenSRE</a> — a small complete
+instance, and the lesson that the policy inside the gate matters more
+than the gate: every check after the model's proposal is
+deterministic.</li>
+<li><a href="../../systems/aura/">Aura</a> — a gateway that fails closed
+on both an unwired and a raising governance call, beside a legacy second
+write path that can degrade open.</li>
+<li><a href="../../systems/osiris/">Osiris</a> — exclusivity stated as
+the contract, and the system's own housekeeping writing around it.</li>
+<li><a href="../../systems/ruflo/">ruflo</a> — the read-side half of the
+threat a write gateway answers.</li>
+</ul>
+<h3 id="every-instance">Every instance</h3>
 <p><a href="../../systems/rainbox/">RainBox</a> is the reference:
 <code>record_belief</code> is the single path, taken under a Postgres
 advisory lock, running dedupe, tombstone checks, lattice-aware conflict
@@ -520,6 +539,20 @@ Antigravity is spawned with its own file and shell tools denied, and
 page navigation refuses non-http(s) URLs, so the panel is out of reach.
 The limit is that the gate is per path: recordings reach the prompt
 through another door, with no review.</p>
+<p><a href="../../systems/contextcore/">Senrelay (ContextCore)</a> has
+the gateway, <code>reconcile_long_term_memory</code>, which runs regex
+admission, a tombstone check and a comparison with active memories that
+ends in a no-op, a supersession or a pending conflict. Its tool surface
+shows how a gateway is bypassed by its own callers. MCP
+<code>save_memory</code> sets any authoritative origin an agent claims
+to none and passes <code>is_user_correction=False</code>;
+<code>auto_summarize_memory</code>, on the same surface and into the
+same function, copies the agent's <code>origin_authority</code> and
+<code>user_confirmed</code> through, and a claimed confirmation
+supersedes a protected decision without a conflict.
+<code>edit_memory</code> calls the update path directly, which checks
+tombstones and skips admission and contradiction detection. One gateway
+with per-door trust rules is two policies.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exercise every adapter against the same invariant suite.</li>

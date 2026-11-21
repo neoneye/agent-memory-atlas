@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 845 reports.**
+**This page covers all 846 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7772,3 +7772,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, release 1.6.6 published as squashed releases from a private canonical repository; 70,501 lines of Python in `src/live_mem` plus 23,121 vendored; 4,641 Python test functions run in eight CI shards, not run here; no benchmark or paper. Two marks: `scope_enforced` and `negative_eval`.
 - Study when: several agents share one project and you want a Markdown handbook a model keeps current, with the model's plan checked for form and completeness before anything is deleted.
 - Do not copy when: a forgotten value must stay forgotten, or you need agents writing to a space replicated across two instances.
+
+### [`contextcore`](../systems/contextcore/)
+
+- Best idea: **a deleted memory is refused by its claim, not its row.** Deletion records raw, whitespace-folded, canonical, category-agnostic and title-free hashes of the body and of every version, and every writer, importer, restore path and retrieval read consults them, so a deleted rule does not come back as a preference with different spacing.
+- Biggest risk: **the gate trusts what one of its doors is told.** `save_memory` strips an agent's claimed authority; `auto_summarize_memory` on the same MCP surface passes `user_confirmed` and `origin_authority` through, and a claimed confirmation supersedes a protected decision without opening a conflict.
+- Second risk: the agent holds `resolve_conflict`, so the conflict queue is advisory; `edit_memory` skips admission and contradiction checks; `assemble_context` filters only its protected tier by project, so its ranked tier carries other projects' memories.
+- Most reusable component: `classify_write_candidate`, the canonical key functions and `record_memory_tombstones` in `app/backend/app/services/governance_guardrails.py`, with `reconcile_long_term_memory` in `app/backend/app/services/content_service.py`.
+- Maturity impression: MIT, four commits past `v1.0.0-beta.4`; 49,523 lines of Python in `app/backend/app`, 38 commits from 11 to 20 November 2026 by one author, the first an initial public release; 1,322 pytest functions and 201 Vitest cases in CI, not run here; no paper and no retrieval benchmark. Five marks: `tombstone`, `trust_state`, `scope_enforced`, `audit_log` and `negative_eval`.
+- Study when: several coding agents share one developer's project memory, and a deleted or contradicted rule must not come back through the next extraction.
+- Do not copy when: agents must be isolated from each other or from other projects, or a person must sign off each contradiction.
