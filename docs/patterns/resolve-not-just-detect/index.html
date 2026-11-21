@@ -704,6 +704,17 @@ each pending escalation, so the disposition the schema reserves for a
 person is made by composite score and never recorded
 (<code>services/memory/app/conflict/service.py:125-145</code>,
 <code>services/memory/app/read/conflicts.py:38-55</code>).</p>
+<p><a href="../../systems/tomc/">TOMC Memory</a> detects on every read
+and resolves by handing the evidence over. When a later line matching a
+change vocabulary names a record's key or value, the record is typed
+<code>STATE?</code> and that line is packed under it, so the reader sees
+the doubt and its cause together
+(<code>src/tomc/strategies/latest.py:293-332</code>,
+<code>:386-391</code>). Nothing is recorded: the flag is recomputed from
+the text on every recall, no disposition can be stored, and the only way
+to settle it is to append a line the parser reads as a plain assignment.
+That fails requirements 4 and 5 by construction, and holds requirement
+3: the flagged value is still served, beside its cause.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert

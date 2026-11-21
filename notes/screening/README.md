@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 840 of 841 screened at the report's current pin.**
+**Progress: 841 of 842 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 398 |
+| Repositories with an auto-run surface (`RUNS`) | 399 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 385 |
-| Repositories with build-time execution (`EXEC`) | 605 |
+| Repositories with build-time execution (`EXEC`) | 606 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -394,6 +394,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`token-optimizer`](../../content/systems/token-optimizer.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`token-savior`](../../content/systems/token-savior.md) | `hooks/`, `server.json` |
 | [`tokenmizer`](../../content/systems/tokenmizer.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.mcp.json`, `server.json` |
+| [`tomc`](../../content/systems/tomc.md) | `.claude-plugin/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/.mcp.json` |
 | [`tracedecay`](../../content/systems/tracedecay.md) | `.githooks/`, `.gitmodules`, `server.json` |
 | [`tree-ring-memory`](../../content/systems/tree-ring-memory.md) | `.claude-plugin/`, `plugins/tree-ring-memory/.claude-plugin/plugin.json`, `plugins/tree-ring-memory/hooks/`, `plugins/tree-ring-memory/hooks/claude-hooks.json` |
 | [`trilium`](../../content/systems/trilium.md) | `.envrc`, `.mcp.json`, `.vscode/settings.json` |

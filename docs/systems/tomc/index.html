@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local MCP server and Python
+library that saves named notebooks in SQLite and compiles them per task,
+putting each changed key's latest value first.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="TOMC
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A local MCP server and
+Python library that saves named notebooks in SQLite and compiles them
+per task, putting each changed key's latest value first.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TOMC
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local MCP server and
+Python library that saves named notebooks in SQLite and compiles them
+per task, putting each changed key's latest value first.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>TOMC Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "TOMC Memory",
+      "description": "A local MCP server and Python library that saves named notebooks in SQLite and compiles them per task, putting each changed key's latest value first.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Latest value compiled at recall</p>
+          <h1>TOMC Memory</h1>
+          <p class="document-deck">A local MCP server and Python library
+that saves named notebooks in SQLite and compiles them per task, putting
+each changed key's latest value first.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ZipengWu365/TOMC">
+              <span>Source</span>
+              <strong>ZipengWu365/TOMC</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ZipengWu365/TOMC/commit/6595de4f50a0506347fb439b2fc8839fe1f73ad3" title="6595de4f50a0506347fb439b2fc8839fe1f73ad3">
+              <span>Analyzed revision</span>
+              <code>6595de4f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ZipengWu365--TOMC" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ZipengWu365--TOMC</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE and plugins/claude-code/LICENSE, matching pyproject.toml,
+plugin.json and CITATION.cff</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>21,343
+lines of Python in src/tomc across 74 files, 7,957 of them the Qt
+desktop companion; plugins/claude-code is a generated copy of the
+package</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>146
+commits from 6 October to 20 November 2026, the last human one on 4
+November and 41 by a traffic bot; release v0.3.1</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>680
+pytest functions in 66 files and 15,456 lines; CI runs them and the
+offline make reproduce checks on Ubuntu and macOS under Python 3.10 and
+3.12; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>TOMC Memory is a local, CPU-only context preparer with a small
+notebook store, from Zipeng Wu. A stdio MCP server, a Claude Code plugin
+and a Codex skill let an assistant save text to a named notebook in one
+SQLite file and recall it in a later chat, compiled for the task it is
+asked. The same compiler shrinks pasted history on demand.</p>
+<p>What is notable is where belief is computed. Nothing is extracted at
+write time: the notebook keeps the user's text verbatim. At recall a
+deterministic parser reads <code>key = value</code> and
+<code>key: value</code> lines in order, so the last assignment wins, and
+a later line announcing a change marks the value <code>STATE?</code> and
+travels with it. No model is called anywhere on that path, and the
+published stale-value benchmark recomputes exactly from its committed
+rows.</p>
+<p>What is weak is that the guarantee depends on wording. The typed
+compile runs only when the task reads as a state question, superseded
+raw lines are not excluded from the evidence, and
+<code>forget_memory</code> matches saved contexts by the exact name a
+recall was given.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code> and
+<code>plugins/claude-code/LICENSE</code>, agreeing with
+<code>pyproject.toml</code>, <code>plugin.json</code> and
+<code>CITATION.cff</code>. The grant covers the code and not the
+evidence behind the paper's numbers: <code>DATA_PROVENANCE.md</code>
+says the evidence dataset and the full paper repository <em>are not
+mirrored</em>, so the BEAM results for 100K to 1M arrive as aggregates,
+and the 10M follow-up as per-question scores with answer hashes. The
+same file says the copied manuscript figures keep the marks of the
+providers they name, which the project does not relicense.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>notebook entry</strong>: whatever text or
+message list the agent was told to keep, stored exactly as given, in
+arrival order under a name (<code>src/tomc/store.py:82-99</code>). There
+is no fact table. A belief exists only for the duration of a recall, as
+a compiled record over the whole notebook.</p>
+<p>The compiler segments the notebook into source lines with ids such as
+<code>u12</code> and asks a rule router what the task wants. A task
+containing <code>current</code>, <code>latest</code>,
+<code>final value</code>, a trailing <code>now</code> or a Chinese
+equivalent routes to STATE (<code>src/tomc/routing.py:12-15</code>,
+<code>:26</code>). STATE executes every parsed <code>SET</code> and
+<code>COPY</code> operation in line order, so the newest assignment of a
+key is the value (<code>src/tomc/_vendor/reference.py:155-169</code>).
+<code>B copies A</code> takes A's value at that point and unions both
+lines' sources.</p>
+<p>Doubt is computed, not stored. <code>refine_records</code> collects
+unparsed lines that match a change vocabulary (<code>switched</code>,
+<code>scratch that</code>, <code>no longer</code>, <code>改成</code> and
+several dozen more), and attaches the latest one after a record's last
+source that names its key or value. An undo after that key's last
+change, or a switch naming a new value when the task asks about this
+key, also counts. The record becomes <code>STATE?</code> with
+<code>(later: uN)</code> in its value, and line <code>uN</code> is
+packed under it (<code>src/tomc/strategies/latest.py:62-71</code>,
+<code>:293-332</code>, <code>:386-391</code>).</p>
+<p>A memory stops existing only when its whole notebook is forgotten or
+everything is erased. There is no per-entry delete, no edit and no
+status. A correction is another appended line, and whether it wins
+depends on the parser reading it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a notebook keeps text verbatim; belief is compiled per recall, and a change line puts a value in doubt instead of replacing it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a notebook keeps text verbatim; belief is compiled per recall, and a change line puts a value in doubt instead of replacing it
+flowchart TD
+  W[&quot;remember_memory:&lt;br/&gt;text appended verbatim&lt;br/&gt;under a notebook name&quot;]
+  W --&gt; NB[&quot;entries rows,&lt;br/&gt;one name, in order&quot;]
+  NB --&gt; RC[&quot;recall_memory&lt;br/&gt;(name, task):&lt;br/&gt;WHERE name = resolved&quot;]
+  RC --&gt; RT{&quot;task wording&lt;br/&gt;routes to STATE?&quot;}
+  RT --&gt;|&quot;no&quot;| BM[&quot;BM25 lines with a&lt;br/&gt;recency reserve;&lt;br/&gt;no typed records&quot;]
+  RT --&gt;|&quot;yes&quot;| EX[&quot;execute SET and COPY&lt;br/&gt;in line order:&lt;br/&gt;last assignment wins&quot;]
+  EX --&gt; CH{&quot;a later change line&lt;br/&gt;names the key&lt;br/&gt;or the value?&quot;}
+  CH --&gt;|&quot;no&quot;| ST[&quot;[STATE] key = value&lt;br/&gt;with source ids&quot;]
+  CH --&gt;|&quot;yes&quot;| SQ[&quot;[STATE?] value&lt;br/&gt;(later: uN)&lt;br/&gt;plus line uN&quot;]
+  ST --&gt; PK[&quot;pack: 42% records,&lt;br/&gt;rest BM25 raw lines,&lt;br/&gt;older lines not excluded&quot;]
+  SQ --&gt; PK
+  PK --&gt; OUT[&quot;memory returned as&lt;br/&gt;untrusted evidence&quot;]
+  BM --&gt; OUT
+  NB --&gt; FG[&quot;forget_memory:&lt;br/&gt;whole notebook deleted&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The package is pure Python with no required dependencies; the MCP
+server needs the <code>mcp</code> extra pinned at 1.30.0
+(<code>pyproject.toml:13-17</code>). Everything lives in one SQLite
+file, <code>~/.tomc/memory.sqlite3</code> or
+<code>TOMC_MEMORY_PATH</code>, created owner-only and opened with
+<code>secure_delete=ON</code> (<code>src/tomc/store.py:18-24</code>,
+<code>src/tomc/privacy.py:114-147</code>). Clients that point at the
+same path share it.</p>
+<p>The MCP server runs over stdio only and exits when its parent dies
+(<code>src/tomc/mcp_server.py:623-674</code>). At start a daemon thread
+prunes saved contexts past the retention limit and redacts once any
+saved before redaction existed
+(<code>src/tomc/context_library.py:115-136</code>). The Claude Code
+plugin is a manifest and an <code>.mcp.json</code> that runs
+<code>uv run --locked</code> on a vendored copy of the package; it
+registers no hooks (<code>plugins/claude-code/.mcp.json</code>).</p>
+<p>Two other surfaces share the database. A Qt desktop companion, about
+8,000 lines, shows usage, a pet and the saved-context library. An
+optional Windows request gateway points Codex and Claude Code at
+<code>127.0.0.1</code> and replaces eligible old history in their
+requests. It saves each prepared request as a context snapshot while
+<em>Save context records</em> is on, which is the default
+(<code>src/tomc/request_gateway.py:352-360</code>,
+<code>src/tomc/session_store.py:153</code>). That gateway is
+context-window management of the live session, and this report reads it
+only where it writes the snapshot table.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run besides the client: no service, no GPU, no API
+key. Install is a Claude Code marketplace command or a pip install from
+a clone. The store is ordinary SQLite and a notebook's payload is JSON a
+person can read and repair.</p>
+<p>The clone is 272 MB and the code is a small part of it. Launch videos
+and GIFs under <code>launch/media/</code> are 83 MB, the companion's pet
+images under <code>src/tomc/data/</code> 27 MB, <code>assets/</code> 11
+MB, and the pack holds 125 MB of history.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>remember_memory</code> calls
+<code>MemoryStore.remember</code>, which parses the content as text,
+JSON or JSONL messages, takes <code>BEGIN IMMEDIATE</code>, resolves the
+name and inserts one row unless the notebook's last row is
+byte-identical (<code>src/tomc/mcp_server.py:451-464</code>,
+<code>src/tomc/store.py:82-99</code>).</li>
+<li><strong>Name resolution.</strong> <code>_name</code> strips and
+NFC-normalises; <code>_resolve</code> scans every stored name and
+returns an exact match, else the oldest case-insensitive one
+(<code>src/tomc/store.py:49-76</code>).</li>
+<li><strong>Recall.</strong> <code>recall</code> reads the resolved
+notebook's rows in id order and hands the messages to
+<code>prepare_context</code> with <code>adaptive=False</code>
+(<code>src/tomc/store.py:101-118</code>).</li>
+<li><strong>Budget and route.</strong> Without a budget, 80% of a
+notebook up to 10K estimated tokens is kept, sliding to 60% at 1M, floor
+1,024, so only a notebook under 1,024 tokens comes back whole
+(<code>src/tomc/easy.py:35-51</code>, <code>:116-117</code>).
+<code>hybrid_route</code> picks <code>tomc_raw</code> for typed or
+explain-style tasks and BM25 for the rest
+(<code>src/tomc/routing.py:48-56</code>).</li>
+<li><strong>Compile.</strong> <code>TOMCStrategy.compress</code> runs
+the kernel uncapped, then <code>refine_records</code> puts the asked
+keys first, caps at 96 rows and flags doubt
+(<code>src/tomc/strategies/typed.py:31-47</code>,
+<code>src/tomc/strategies/latest.py:335-393</code>).</li>
+<li><strong>Pack.</strong> Records take 42% of the budget, BM25-ranked
+raw lines the rest, with later lines first on a tie for state tasks
+(<code>src/tomc/strategies/typed.py:71</code>,
+<code>:97-112</code>).</li>
+<li><strong>Forget.</strong> <code>forget</code> deletes the notebook's
+rows, then <code>delete_notebook</code> deletes saved contexts whose
+payload <code>notebook_name</code> equals the resolved name, then
+vacuums (<code>src/tomc/store.py:128-139</code>,
+<code>src/tomc/context_library.py:367-386</code>).</li>
+<li><strong>Erase.</strong> <code>erase_all</code> empties eight text
+tables and keeps paused sessions' off switches and numeric totals
+(<code>src/tomc/privacy.py:169-220</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>entries</code> has four columns: <code>id</code>,
+<code>name</code>, <code>payload</code> and <code>created</code>
+(<code>src/tomc/store.py:36</code>). The payload is a JSON list of
+messages with role and content. <code>created</code> is read only to
+report a notebook's last update; ordering uses <code>id</code>. There is
+no type, status, confidence, source or validity column.</p>
+<p>Typed records exist in memory during a compile. A <code>Record</code>
+has a type, one of <code>STATE</code>, <code>PATH</code>,
+<code>EDGE</code> and <code>COUNT</code> or a doubt variant such as
+<code>STATE?</code>, plus a key, a value and the source line ids it came
+from (<code>src/tomc/_vendor/reference.py:48-58</code>). A
+<code>COPY</code> from an unset key yields the literal value
+<code>&lt;UNKNOWN&gt;</code>.</p>
+<p>Saved contexts are a second store.
+<code>tomc_context_snapshots</code> holds the compiled memory and task,
+never the input, with host, session, notebook name, compiler version and
+a SHA-256 over the canonical payload
+(<code>src/tomc/context_library.py:21-36</code>, <code>:146-161</code>).
+Notebook text is stored unredacted, which <code>SECURITY.md:43</code>
+says is deliberate; snapshot text is redacted for common credential
+shapes before it is saved
+(<code>src/tomc/context_library.py:236</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is lexical and deterministic. The kernel's evidence
+selection is an MMR-style greedy pick over token overlap, exact
+identifiers and an operation bonus for lines with <code>=</code>,
+<code>changed</code> or <code>copies</code>, expanded by one neighbour
+(<code>src/tomc/_vendor/reference.py:90-126</code>). Raw lines are
+ranked by Okapi BM25 with <code>k1=1.5, b=0.75</code> behind a 12%
+budget reserve for the latest lines naming a task word and 4% for the
+latest change lines
+(<code>src/tomc/strategies/baselines.py:21-22</code>,
+<code>:25-50</code>, <code>:109-115</code>).</p>
+<p>The latest-value behaviour is a property of the STATE route. A task
+phrased <em>"which framework do we use?"</em> has no state keyword,
+routes to BM25, and returns both the old and the new assignment lines
+ranked by overlap, with the recency reserve as the only bias toward the
+newer one (<code>src/tomc/routing.py:31-56</code>).</p>
+<p>On the STATE route the raw half does not exclude superseded lines.
+Only the change lines already shown under a <code>STATE?</code> record
+are removed from the raw candidates
+(<code>src/tomc/strategies/typed.py:105</code>), so
+<code>framework = Flask</code> can be packed as <code>[RAW u40]</code>
+below <code>[STATE] framework = Litestar &lt;src:u97&gt;</code>. The
+source ids let a reader tell which is newer.</p>
+<p>The result is capped per host: 50,000 characters for Claude and
+20,000 otherwise, or <code>TOMC_MCP_MAX_CHARS</code>, and the budget
+shrinks until the rendered memory fits
+(<code>src/tomc/mcp_server.py:27-37</code>,
+<code>src/tomc/easy.py:112-131</code>). A repeat
+<code>prepare_context</code> with <code>since_delivery_id</code> sends
+only the changed records, tracked in process memory.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen only through <code>remember_memory</code>, and only
+<code>MemoryStore.remember</code> inserts into <code>entries</code>
+(<code>src/tomc/store.py:98</code>). The tool description and the server
+instructions tell the model to save only when the user asks
+(<code>src/tomc/mcp_server.py:165-167</code>). Nothing checks that; a
+model that calls the tool unprompted writes a notebook.</p>
+<p>There is no extraction, deduplication beyond an immediate identical
+retry, consolidation, contradiction handling or redaction on the write.
+Agent-written text and user text are indistinguishable once stored,
+apart from the role field in a message list.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write is one synchronous SQLite insert and the entry is
+recallable at once. Recall re-reads and re-compiles the whole notebook
+every time, so its cost grows with the notebook; no background pass
+touches notebooks. Injection is bounded by the budget and the per-host
+character cap, and arrives as a tool result rather than in a system
+prompt, so it does not disturb a provider's prefix cache.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers twelve tools: <code>try_tomc</code>,
+<code>prepare_context</code>, <code>remember_memory</code>,
+<code>recall_memory</code>, <code>list_memories</code>,
+<code>forget_memory</code>, <code>erase_all_memory</code>,
+<code>get_status</code>, <code>get_usage_stats</code>,
+<code>list_contexts</code>, <code>get_context</code> and
+<code>make_handoff</code> (<code>src/tomc/mcp_server.py:175-188</code>).
+Unknown arguments are rejected by rebuilding each tool's argument model
+with <code>extra="forbid"</code> (<code>:246-264</code>).</p>
+<p>The model has full agency over notebooks: it chooses the name,
+writes, recalls and forgets. <code>erase_all_memory</code> requires the
+literal <code>confirm="ERASE ALL"</code>, which guards against a slip
+and not against the model (<code>:582-599</code>). Optional session
+hooks register a host and session id so a paused conversation can refuse
+preparation; they never read the transcript
+(<code>src/tomc/session_hook.py:1-6</code>).</p>
+<p>Adapting it to another agent means pointing any MCP client at
+<code>tomc mcp</code>; the Python API is
+<code>prepare_context(history, task)</code> with no dependencies.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-a-forget-reaches">What a forget reaches</h3>
+<p><code>forget_memory</code> deletes saved contexts only where the
+snapshot's <code>notebook_name</code> equals the resolved stored name
+(<code>src/tomc/context_library.py:376</code>).
+<code>recall_memory</code> records the name exactly as the caller typed
+it (<code>src/tomc/mcp_server.py:479</code>). A recall of
+<code>PROJ</code> or <code>proj </code> over the notebook
+<code>proj</code>, with saving on, stores a compiled copy of that
+notebook that <code>forget("proj")</code> does not delete. It survives
+until the 30-day prune. Both forget tests use the stored spelling
+(<code>tests/test_mcp.py:97</code>,
+<code>tests/test_privacy.py:194</code>). This is a reading of the code;
+I did not run it.</p>
+<h3 id="what-the-read-paths-filter">What the read paths filter</h3>
+<ul>
+<li><strong>Recall</strong> filters <code>entries</code> on the resolved
+name, and nothing else reads entry content
+(<code>src/tomc/store.py:111-113</code>).</li>
+<li><strong>Saved contexts</strong> are listed and read by id with no
+notebook or session predicate
+(<code>src/tomc/context_library.py:392-418</code>). With the gateway on,
+they hold compressed conversations from every host session.</li>
+</ul>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code></strong> — awarded on the
+notebook name. It is a stored key on each entry and the predicate on
+every content read. It is a convenience boundary: the caller picks it,
+<code>list_memories</code> shows every name, and no principal stands
+behind it.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>trust_state</code></strong> — withheld.
+<code>STATE?</code> is recomputed on every recall from the text and is
+never stored, and it labels a value rather than withholding it.</li>
+<li><strong><code>tombstone</code></strong> — withheld. Forget deletes
+rows; nothing records a rejected value, and the same text can be saved
+again.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Precedence is
+line order, and the only times are <code>created</code> and
+<code>created_utc</code>, both record time.</li>
+<li><strong><code>audit_log</code></strong> — withheld.
+<code>preparation_receipts</code> logs preparations, not mutations, and
+no table records a remember or forget
+(<code>src/tomc/preparation_log.py:33-52</code>).</li>
+<li><strong><code>human_review</code></strong> — withheld. Nothing
+waits; the agent's own tool writes the entry, and the desktop library
+edits saved contexts after the fact.</li>
+</ul>
+<h3 id="injection-and-privacy">Injection and privacy</h3>
+<p>Every result tells the model to treat memory as untrusted evidence,
+and handoff prompts repeat it
+(<code>src/tomc/mcp_server.py:99-100</code>,
+<code>src/tomc/context_library.py:37-41</code>). A notebook holding an
+instruction is recalled with it. Deletion vacuums the file under
+<code>secure_delete</code>, and a test reads the raw bytes after a
+forget to confirm the text is gone
+(<code>tests/test_privacy.py:186-197</code>).</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 680 pytest functions in 66 files. CI runs them, ruff, a
+security scan and <code>make reproduce</code> on Ubuntu and macOS under
+Python 3.10 and 3.12, and checks that <code>make reproduce</code>
+rewrites no tracked file (<code>.github/workflows/ci.yml:2-28</code>). I
+ran none of it.</p>
+<p><code>negative_eval</code> rests on two populated cases:</p>
+<ul>
+<li><code>tests/test_easy.py:85-100</code> saves <code>work</code> and
+<code>other</code>, recalls <code>work</code> after a restart, and
+asserts <code>drink = water</code> is in the prompt and
+<code>private other</code> is not. The same result carries the positive
+and the negative.</li>
+<li><code>tests/test_mcp.py:58-75</code> does the same through a real
+stdio server in a new process: <code>unverified</code> from
+<code>parser</code> present, <code>secret</code> from <code>other</code>
+absent. The file skips without <code>mcp</code>; CI installs it.</li>
+</ul>
+<p>The latest-value regressions use <code>assert_latest</code>, which
+requires the newest value in the memory and every included
+<code>STATE</code> row for the key to contain it
+(<code>tests/test_latest_value_regressions.py:62-66</code>). The second
+half passes when no <code>STATE</code> row exists and does not inspect
+raw lines.</p>
+<p>Two headline numbers recompute from committed artifacts. I read them
+with my own script under <code>python3 -I</code>, outside the tree:</p>
+<ul>
+<li><strong>Stale values.</strong>
+<code>benchmarks/stale/results_after.json</code> holds 864 rows, 144 per
+budget. Pass counts are 122/144 at 10%, 127/144 at 20%, 141/144 at 40%
+and 144/144 from 60% and the default, matching the README's 85% and
+100%. No row has an unflagged stale record; every failure is a missing
+latest value.</li>
+<li><strong>BEAM.</strong> In
+<code>benchmarks/current_paper/beam_comparisons.csv</code>, TOMC's mean
+is higher in 18/18 reader-baseline cells at 500K and at 1M and in 17/18
+at 100K, the loss being Flash against <code>light</code> by 2.8 points.
+In <code>benchmarks/beam_10m_20261010/paired_scores_10m.csv</code>,
+3,596 valid pairs give 18/18 at 10M. That is the README's 54/54 and
+17/18.</li>
+</ul>
+<p>The BEAM scores are LLM-judged, under a different protocol at 10M,
+and measure compressed long-history QA rather than the notebook store.
+The stale-value suite was written alongside the fixes, as the README
+says. The paper, <em>Task-Oriented Memory Compilation</em>, is named in
+<code>CITATION.cff</code> with no arXiv id, and the README says it is
+not public; I found no public copy.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep the text, compile the belief.</strong> Store what the
+user said verbatim and derive the value at read time with a
+deterministic pass. A parser fix then improves every old notebook
+without a migration.</li>
+<li><strong>Ship the doubt with its cause.</strong> When a later line
+may have changed a value, emit the value flagged and the line beside it,
+so the reader resolves it with the evidence in hand.</li>
+<li><strong>Recompute the headline in CI.</strong> Commit the per-row
+results and fail the build when <code>make reproduce</code> disagrees
+with them or rewrites a tracked file.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A guarantee gated on phrasing.</strong> If latest-value
+precedence needs the word <code>current</code> in the task, a
+differently worded question gets plain retrieval.</li>
+<li><strong>Deleting derivatives by a raw label.</strong> Key derived
+copies on the canonical identity the store resolves, not on the string
+the caller typed.</li>
+<li><strong>A negative half that passes empty.</strong> Pair
+<code>all(...)</code> over the stale rows with an assertion that at
+least one row exists.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who wants a few project notebooks shared across
+Claude Code and Codex on one machine, with nothing to run and no model
+cost. It is a context preparer first, and the notebook is a log it
+re-reads. Walk away if you need per-fact correction, deletion of one
+wrong entry, several users, or memory that the system itself decides to
+keep.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>recall_memory</code> is meant to record the resolved
+notebook name on saved contexts, so that forget reaches them.</li>
+<li>Whether the STATE route is meant to cover tasks without a state
+keyword, given that notebooks are recalled for whatever the next task
+is.</li>
+<li>What the paper's ablation of the compilation step shows at 10M; the
+follow-up README says it was still running on 10 October 2026.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Notebooks: <code>src/tomc/store.py</code>,
+<code>src/tomc/privacy.py</code></li>
+<li>Compiler: <code>src/tomc/easy.py</code>,
+<code>src/tomc/compiler.py</code>, <code>src/tomc/routing.py</code>,
+<code>src/tomc/_vendor/reference.py</code>,
+<code>src/tomc/strategies/typed.py</code>,
+<code>src/tomc/strategies/latest.py</code>,
+<code>src/tomc/strategies/baselines.py</code></li>
+<li>Saved contexts: <code>src/tomc/context_library.py</code>,
+<code>src/tomc/request_gateway.py</code></li>
+<li>MCP and hooks: <code>src/tomc/mcp_server.py</code>,
+<code>src/tomc/session_hook.py</code>,
+<code>src/tomc/session_store.py</code>,
+<code>plugins/claude-code/.mcp.json</code>,
+<code>plugins/codex/skills/tomc-memory/SKILL.md</code></li>
+<li>Tests: <code>tests/test_easy.py</code>,
+<code>tests/test_mcp.py</code>, <code>tests/test_privacy.py</code>,
+<code>tests/test_latest_value_regressions.py</code></li>
+<li>Benchmarks: <code>benchmarks/stale/</code>,
+<code>benchmarks/current_paper/</code>,
+<code>benchmarks/beam_10m_20261010/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No vector arm.</strong>
+<code>git grep -n -i -E 'embedding|cosine|faiss|sentence_transformers' -- src/tomc</code>
+returns nothing;
+<code>git grep -c -i 'bm25' -- src/tomc/strategies/baselines.py</code>
+counts 8.</li>
+<li><strong>No model call on the memory path.</strong>
+<code>git grep -n -E 'adapters\.reader|APIReader' -- src scripts</code>
+matches the class definition and <code>scripts/replicate.py</code>
+only.</li>
+<li><strong>One writer of notebooks.</strong>
+<code>git grep -n -E 'INSERT INTO entries' -- src</code> matches
+<code>src/tomc/store.py:98</code>;
+<code>git grep -n -E 'MemoryStore\(' -- src</code> matches
+<code>src/tomc/mcp_server.py:272</code> only.</li>
+<li><strong>No per-entry delete.</strong>
+<code>git grep -n -E 'DELETE FROM entries|DELETE FROM \{table\}' -- src</code>
+matches the whole-notebook delete at <code>src/tomc/store.py:135</code>
+and the erase loop at <code>src/tomc/privacy.py:199</code>.</li>
+<li><strong>Notebook text is not redacted.</strong>
+<code>git grep -n 'redact' -- src/tomc/store.py</code> returns nothing;
+<code>git grep -c 'redact(' -- src/tomc/context_library.py</code> counts
+6.</li>
+<li><strong>Saved-context reads carry no notebook predicate.</strong>
+<code>git grep -n 'notebook_name' -- src/tomc/context_library.py</code>
+matches the field list, validation, <code>save</code> and
+<code>delete_notebook</code> only.</li>
+<li><strong>No mutation log.</strong>
+<code>git grep -n -i -E 'audit|mutation|event_log' -- src/tomc/store.py src/tomc/context_library.py</code>
+matches one docstring at
+<code>src/tomc/context_library.py:140</code>.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -w -i -E 'valid_from|valid_to|valid_at|valid_until|as_of|event_time' -- src/tomc</code>
+returns nothing;
+<code>git grep -n -w -E 'created_utc' -- src/tomc/context_library.py</code>
+matches.</li>
+<li><strong>Forget tests use the stored spelling.</strong>
+<code>git grep -n -E 'deleted_snapshots' -- tests</code> matches
+<code>tests/test_mcp.py:97</code> and
+<code>tests/test_privacy.py:194</code>, both recalling under the name
+the notebook was saved with.</li>
+<li><strong>No published paper.</strong>
+<code>git grep -n -i -E 'arxiv\.org/abs' -- CITATION.cff README.md docs/readers_and_agents.md</code>
+returns nothing, while
+<code>git grep -n -i 'arxiv' -- CITATION.cff</code> matches the line
+saying an identifier will be added. A web search for the exact title
+found no copy on 21 November 2026.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/ZipengWu365/TOMC/commit/6595de4f50a0506347fb439b2fc8839fe1f73ad3"><code class="commit-id" title="6595de4f50a0506347fb439b2fc8839fe1f73ad3">6595de4f…</code></a>
+— first reading, from a full clone of <code>main</code> after release
+v0.3.1, scoped to the notebook store, the compiler, the saved-context
+library, the MCP server and their tests and benchmarks; the gateway and
+desktop companion were read only where they write the shared database.
+Screened first: three auto-run surfaces, the Claude Code marketplace
+manifest, <code>plugin.json</code> and <code>.mcp.json</code>, acting
+only if a harness installs the plugin; three build-time execution
+points, a Makefile and two <code>setup.py</code> modules; one unpinned
+surface, <code>pyproject.toml</code>. MIT, no rider. Nothing installed,
+built or run; two benchmark tables recomputed from committed files with
+my own script. Two marks: <code>scope_enforced</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

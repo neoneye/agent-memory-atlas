@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 841 reports.**
+**This page covers all 842 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7732,3 +7732,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: BSD-3-Clause; 5,489 lines of TypeScript and JavaScript in `packages/`, 111 commits from 16 August to 5 November 2026; 186 vitest cases in CI, not run here; no eval, benchmark or result committed. No marks.
 - Study when: you want an `AGENTS.md`-style memory that the agent grows into specs, guides and a codebase map, injected deterministically across several harnesses.
 - Do not copy when: memory must be correctable on the record, scoped by a key, or kept out of the model's reach, since every guarantee here is the model following a prompt.
+
+### [`tomc`](../systems/tomc/)
+
+- Best idea: **keep the text, compile the belief.** Notebooks store what the user said verbatim; at recall a deterministic parser executes `key = value` and `B copies A` lines in order, and a later line announcing a change marks the value `STATE?` and travels with it, so the doubt reaches the reader with its cause.
+- Biggest risk: **the latest-value guarantee depends on how the task is worded.** Only a task containing `current`, `latest`, `final value`, a trailing `now` or a Chinese equivalent routes to the state compile; any other question gets BM25 lines with a small recency reserve, old and new assignments alike.
+- Second risk: on the state route the raw half does not exclude superseded lines, so an older `key = value` line can be packed beside the latest record; and `forget_memory` deletes saved contexts by the exact name a recall was given, so a case variant survives until the 30-day prune.
+- Most reusable component: `StateLines` and `refine_records` in `src/tomc/strategies/latest.py`, over the vendored kernel in `src/tomc/_vendor/reference.py`.
+- Maturity impression: MIT, release v0.3.1; 21,343 lines of Python in `src/tomc`, 7,957 of them a Qt companion; 146 commits from 6 October to 20 November 2026; 680 pytest functions and `make reproduce` in CI, not run here; the stale-value and BEAM headlines recompute from committed rows, and the paper is not public. Two marks: `scope_enforced` and `negative_eval`.
+- Study when: you want correction by appending, with precedence decided by a parser you can read rather than an extractor you must trust.
+- Do not copy when: you need per-fact correction or deletion, several users, or latest-value behaviour that does not depend on the question's wording.

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 841 reports.</strong></p>
+<p><strong>This page covers all 842 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34634,6 +34634,43 @@ deterministically across several harnesses.</li>
 <li>Do not copy when: memory must be correctable on the record, scoped
 by a key, or kept out of the model's reach, since every guarantee here
 is the model following a prompt.</li>
+</ul>
+<h3 id="tomc"><a href="../systems/tomc/"><code>tomc</code></a></h3>
+<ul>
+<li>Best idea: <strong>keep the text, compile the belief.</strong>
+Notebooks store what the user said verbatim; at recall a deterministic
+parser executes <code>key = value</code> and <code>B copies A</code>
+lines in order, and a later line announcing a change marks the value
+<code>STATE?</code> and travels with it, so the doubt reaches the reader
+with its cause.</li>
+<li>Biggest risk: <strong>the latest-value guarantee depends on how the
+task is worded.</strong> Only a task containing <code>current</code>,
+<code>latest</code>, <code>final value</code>, a trailing
+<code>now</code> or a Chinese equivalent routes to the state compile;
+any other question gets BM25 lines with a small recency reserve, old and
+new assignments alike.</li>
+<li>Second risk: on the state route the raw half does not exclude
+superseded lines, so an older <code>key = value</code> line can be
+packed beside the latest record; and <code>forget_memory</code> deletes
+saved contexts by the exact name a recall was given, so a case variant
+survives until the 30-day prune.</li>
+<li>Most reusable component: <code>StateLines</code> and
+<code>refine_records</code> in
+<code>src/tomc/strategies/latest.py</code>, over the vendored kernel in
+<code>src/tomc/_vendor/reference.py</code>.</li>
+<li>Maturity impression: MIT, release v0.3.1; 21,343 lines of Python in
+<code>src/tomc</code>, 7,957 of them a Qt companion; 146 commits from 6
+October to 20 November 2026; 680 pytest functions and
+<code>make reproduce</code> in CI, not run here; the stale-value and
+BEAM headlines recompute from committed rows, and the paper is not
+public. Two marks: <code>scope_enforced</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: you want correction by appending, with precedence
+decided by a parser you can read rather than an extractor you must
+trust.</li>
+<li>Do not copy when: you need per-fact correction or deletion, several
+users, or latest-value behaviour that does not depend on the question's
+wording.</li>
 </ul>
         </article>
       </div>

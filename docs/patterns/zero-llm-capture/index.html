@@ -551,6 +551,20 @@ block is relabelled as a quotation, so a copy cannot be read as a fresh
 instruction. The cost of capturing at the transport shows on deletion:
 the client resends the whole history on every request, so a forgotten
 conversation is captured again by the next one.</p>
+<p><a href="../../systems/tomc/">TOMC Memory</a> has no model on either
+side of the store. <code>remember_memory</code> appends the text
+verbatim, and recall compiles the notebook with a rule router, a
+<code>key = value</code> parser executed in line order, and BM25 over
+the rest (<code>src/tomc/store.py:82-99</code>,
+<code>src/tomc/strategies/latest.py:162-257</code>). Its distinguishing
+move is to defer interpretation rather than skip it: because nothing is
+extracted at write time, a parser fix applies to every notebook already
+saved, and the stale-value benchmark that measured one such fix
+recomputes from its committed rows. The cost is the one a deterministic
+reader carries everywhere: the latest-value compile runs only when the
+task contains a state keyword, so a question worded another way gets
+lexical retrieval over old and new assignments alike
+(<code>src/tomc/routing.py:12-15</code>, <code>:48-56</code>).</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>

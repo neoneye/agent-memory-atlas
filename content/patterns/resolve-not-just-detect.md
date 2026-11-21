@@ -350,6 +350,8 @@ wired: the row changes status and the losing edge is still served
 
 [IBEX Harness](../../systems/ibex-harness/) builds the disposition table and no disposer. Its conflict stage compares validity intervals: a newer same-subject memory whose interval starts after the old one ends supersedes it in the write transaction, and any overlap becomes a `pending` row in `memory_conflict_escalations` with `resolved`, `dismissed`, `resolved_at` and `resolved_by` columns waiting. Two open-ended memories always overlap, the default classifier escalates every overlap, and the insert counter is labelled *"no consumer yet"*; no statement in `services/` or `packages/` updates the table. Both memories stay active, and the read path drops the lower-ranked side of each pending escalation, so the disposition the schema reserves for a person is made by composite score and never recorded (`services/memory/app/conflict/service.py:125-145`, `services/memory/app/read/conflicts.py:38-55`).
 
+[TOMC Memory](../../systems/tomc/) detects on every read and resolves by handing the evidence over. When a later line matching a change vocabulary names a record's key or value, the record is typed `STATE?` and that line is packed under it, so the reader sees the doubt and its cause together (`src/tomc/strategies/latest.py:293-332`, `:386-391`). Nothing is recorded: the flag is recomputed from the text on every recall, no disposition can be stored, and the only way to settle it is to append a line the parser reads as a plain assignment. That fails requirements 4 and 5 by construction, and holds requirement 3: the flagged value is still served, beside its cause.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval
