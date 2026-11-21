@@ -19192,6 +19192,59 @@ the toolkit's and the extension's manifests inside the seven-day
 cooldown; three unpinned surfaces, one of them with a lockfile beside
 it; <code>AGENTS.md</code> treated as data. Nothing was installed, built
 or run.</li>
+<li><strong><code>caura-ai/caura-long-run-fleet</code> was examined and
+has no report: it is a scripted demonstration of <a
+href="../systems/caura/">Caura</a>, and the store, the recall filter,
+the contradiction detector and the status transitions it shows all run
+in that service.</strong> MIT (caura-ai, 2026), 1,215 lines of Python in
+<code>simulate.py</code>, six scripts and one test file, three OpenClaw
+agent definitions in Markdown, 14 commits between 1 June and 22 October
+2026, read at <a
+href="https://github.com/caura-ai/caura-long-run-fleet/commit/95bd39f5383859f238d639d9c4113574e4c78924"><code class="commit-id" title="95bd39f5383859f238d639d9c4113574e4c78924">95bd39f5…</code></a>.
+<code>openclaw.json</code> gives the agents one MCP server, Caura at
+<code>localhost:8000/mcp</code> (<code>openclaw.json:20-28</code>), and
+<code>simulate.py</code> runs a fourteen-day scenario by sending each
+agent a fixed prompt through the <code>openclaw</code> CLI
+(<code>simulate.py:164-210</code>): sourcing writes a $299 price on days
+1 to 8 and $349 from day 9, verification moves the newest active memory
+to <code>confirmed</code>, and synthesis recalls under Caura's default
+status filter and writes a brief. Every memory operation is a
+<code>caura_write</code>, <code>caura_recall</code> or
+<code>caura_manage</code> call named in a prompt; the tree holds no
+store, no recall code and no rule for what supersedes what. Two details
+matter before the demo is read as evidence of contradiction handling.
+From day 9 the verifier's <code>CONFLICT DETECTED</code> note is
+dictated word for word by its prompt, statuses included
+(<code>simulate.py:125-128</code>, <code>:318</code>), so the note shows
+the agent complied, not that anything was detected. And the wait before
+synthesis takes the new memory's id by regex from the sourcing agent's
+prose reply, polls <code>GET /memories/{memory_id}/contradictions</code>
+for up to 60 seconds, and on no id, no id that resolves, or a timeout
+logs a warning and lets synthesis run anyway
+(<code>simulate.py:220-299</code>, <code>:350-357</code>). The committed
+results are eight PNG screenshots of OpenClaw chats from the first
+commit, under the MemClaw name; <code>day_10_verification.png</code>,
+stamped 17 May 2026, shows a Day 10 brief reporting zero suppressed
+outdated memories, and <code>contradiction_response.png</code> shows a
+day-13 reversion to $299 that no committed prompt writes. The one live
+check, <code>scripts/cross_agent_smoke.py</code>, writes a unique marker
+as one agent and asserts a second agent in the same fleet recalls it
+(<code>scripts/cross_agent_smoke.py:109-147</code>); it is off by
+default, refuses non-loopback hosts, and has no absent case. CI matches
+the documented HTTP routes by regex against Caura's source at
+<code class="commit-id" title="5155a0a7194be899b379ce662f5fccbb57476251">5155a0a7…</code>
+(<code>scripts/check_oss_contract.py:14</code>,
+<code>.github/workflows/validate.yml:32-39</code>). Searches run at this
+pin with <code>git grep</code>:
+<code>-n -i -E "sqlite|postgres|pgvector|embedding|vector|chromadb|faiss|redis|insert into|create table" -- '*.py' '*.json' '*.yml' '*.txt'</code>
+(nothing; control
+<code>-n -i -E "sqlite|caura_manage" -- '*.py' '*.md'</code>, three
+lines); <code>-n -E "open\(|write_text|\.write\(" -- '*.py'</code> (one,
+a test writing a temporary <code>.env</code>);
+<code>-n -i -E "arxiv|bibtex|@article|@misc|doi\.org|CITATION"</code>
+(nothing). Screened before reading: no auto-run, build-time or unpinned
+surface; the agents' <code>AGENTS.md</code> and <code>SOUL.md</code>
+were treated as data; nothing was installed, built or run.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
