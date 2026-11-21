@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 838 reports.**
+**This page covers all 839 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7702,3 +7702,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, release v0.1.4; 16,060 lines of Go outside tests and the benchmark harness, 34 commits from 27 September to 20 November 2026 by one author; 338 test functions with the Postgres integration suite in CI, not run here; the public benchmark file is a partial LoCoMo run without committed per-question records. Five marks: `tombstone`, `trust_state`, `scope_enforced`, `human_review` and `negative_eval`.
 - Study when: one person runs several coding agents on the same repositories and wants shared decisions, handoffs and session history, with extraction a person reviews.
 - Do not copy when: several people or tenants share the server, or the agents writing to it are untrusted.
+
+### [`dna-memory`](../systems/dna-memory/)
+
+- Best idea: **the editable file is the truth and the index is a projection.** Each memory is a Markdown page a person can open in Obsidian; SQLite is rebuilt from the pages by content hash, and a write plus every page it supersedes is staged, installed and rolled back as one unit.
+- Biggest risk: **the review queue has no reviewer.** Proposals from agent markers and regex matches over transcript lines are called reviewable, and daily maintenance writes every one that passes a type, emptiness and credential check; nothing lets a person admit or refuse one, and the guide lists the daily job for a scheduler.
+- Second risk: recall ignores the project, session and client stored on every page; the duplicate check reads active pages only, so a superseded or deleted value proposed again is written anew.
+- Most reusable component: `MemoryService.remember` and `_install_memory_files` in `scripts/memory_service.py`, with `reindex_markdown` in `scripts/markdown_memory.py`.
+- Maturity impression: Apache-2.0 in `LICENSE`, MIT in `README_EN.md`; 13,130 lines of Python in `scripts/`, 3,377 of them the maintained path, beside an earlier SQLite system still in the tree; 34 commits from 3 July to 19 November 2026; 130 pytest functions in CI, not run here; no benchmark. No marks.
+- Study when: several coding clients on one machine should share a small, hand-editable set of conclusions.
+- Do not copy when: memory must be separated by project or client, or a person must approve what an extractor proposes.

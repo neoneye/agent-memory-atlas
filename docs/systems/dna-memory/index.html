@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local MCP server that gives
+Codex, Claude Code, Claude Desktop and Hermes one Markdown vault of
+typed conclusions, with SQLite as a rebuildable index.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="DNA Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A local MCP server that
+gives Codex, Claude Code, Claude Desktop and Hermes one Markdown vault
+of typed conclusions, with SQLite as a rebuildable index.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DNA
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local MCP server that
+gives Codex, Claude Code, Claude Desktop and Hermes one Markdown vault
+of typed conclusions, with SQLite as a rebuildable index.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>DNA Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "DNA Memory",
+      "description": "A local MCP server that gives Codex, Claude Code, Claude Desktop and Hermes one Markdown vault of typed conclusions, with SQLite as a rebuildable index.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Reviewable proposals no one reviews</p>
+          <h1>DNA Memory</h1>
+          <p class="document-deck">A local MCP server that gives Codex,
+Claude Code, Claude Desktop and Hermes one Markdown vault of typed
+conclusions, with SQLite as a rebuildable index.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/AIPMAndy/dna-memory">
+              <span>Source</span>
+              <strong>AIPMAndy/dna-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/AIPMAndy/dna-memory/commit/f135344d7d6f90f1be73e209cd0c6a7083f328ea" title="f135344d7d6f90f1be73e209cd0c6a7083f328ea">
+              <span>Analyzed revision</span>
+              <code>f135344d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/AIPMAndy--dna-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>AIPMAndy--dna-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE and README.md; README_EN.md states MIT; no package
+manifest</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>13,130
+lines of Python in scripts/ across 61 files; the maintained Markdown and
+MCP path is 3,377 of them in 20 modules, and most of the rest is the
+earlier SQLite system</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>34
+commits from 3 July to 19 November 2026, 32 from the owner's GitHub
+account; tags v3.1.0 and v3.1.1 are in the history, v3.0.0 is not an
+ancestor of the pin</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>130
+pytest functions in 25 files and 3,159 lines; CI runs pytest, compileall
+and a public-safety scan on push and pull request on Python 3.11; I ran
+none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>DNA Memory is a local MCP server that gives Codex, Claude Code,
+Claude Desktop and Hermes one long-term store. The store is a directory
+of Markdown pages in an Obsidian-style vault, each holding one short
+typed conclusion, with an SQLite table derived from them for search. A
+bundled skill tells every client to recall before history-dependent work
+and to write back only verified conclusions.</p>
+<p>What is notable is the write discipline on the truth store. A write
+that also replaces older pages stages every file, installs them,
+reindexes, and on any failure restores every file and the index
+(<code>scripts/memory_service.py:212-259</code>). Replacement happens
+only through exact memory ids, never by inference from type or project,
+and the replaced page is kept with <code>status: superseded</code>.</p>
+<p>What is weak is the path the documentation calls review. Hooks and
+importers queue proposals, from markers an agent emits and from regex
+matches over transcript lines. Daily maintenance writes each one as an
+active memory after checking its type, that it is non-empty, and three
+credential patterns (<code>scripts/memory_operations.py:26-61</code>).
+Nothing in the tree reviews a proposal. Recall is a substring match that
+ignores the project, session and client stored on every page.</p>
+<p><strong>Licence.</strong> <code>README_EN.md:277</code> tells the
+English reader the project is <em>MIT</em>, while <code>LICENSE</code>
+is the Apache License 2.0 and <code>README.md:371</code> says
+Apache-2.0. The file in the tree governs, so the English README
+misstates the patent grant and notice duties a reader inherits. There is
+no package manifest to break the tie.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one conclusion: a Markdown page whose frontmatter carries
+an <code>id</code>, one of eight <code>type</code> values, a
+<code>status</code>, a <code>confidence</code> word, an
+<code>importance</code> float, <code>clients</code>,
+<code>source_refs</code>, <code>supersedes</code> and
+<code>superseded_by</code>, and whose first paragraph is the summary
+(<code>scripts/markdown_memory.py:14-17</code>, <code>:28-83</code>).
+Transcripts are never stored; importers keep paths, hashes and
+offsets.</p>
+<p>There are two layers of state. A <strong>candidate</strong> is a row
+in <code>candidate_events</code>, <code>pending</code> until daily
+maintenance marks it <code>crystallized</code>,
+<code>deduplicated</code>, <code>rejected</code>,
+<code>superseded</code> or <code>expired</code>
+(<code>scripts/memory_operations.py:26-92</code>). A
+<strong>memory</strong> is a page whose status the parser accepts as
+<code>active</code>, <code>superseded</code>, <code>archived</code> or
+<code>rejected</code> (<code>scripts/markdown_memory.py:42</code>).
+Recall serves <code>active</code> only
+(<code>scripts/memory_service.py:304</code>).</p>
+<p>A memory becomes active in one of two ways. An agent calls
+<code>memory_remember</code>, which writes an active page in the same
+call. Or a proposal waits in the queue until the next daily run, which
+writes it if the format check passes. Both land on
+<code>MemoryService.remember</code>, which first returns an existing
+active page with the same <code>source_hash</code>, or with the same
+type and the same summary after NFKC normalisation, whitespace
+collapsing and case folding
+(<code>scripts/memory_service.py:41-60</code>,
+<code>:97-112</code>).</p>
+<p>A memory stops being served in two ways. A later write names its id
+in <code>supersedes</code>, and the old page is rewritten with
+<code>status: superseded</code> and a <code>superseded_by</code> pointer
+(<code>:82-89</code>). Or a person deletes the file, and the next
+reindex removes the row
+(<code>scripts/unified_memory.py:170-179</code>). No code writes
+<code>archived</code> or <code>rejected</code> onto a page; a person
+can, by editing the frontmatter, and recall then skips it.</p>
+<p>Neither exit is remembered as a value. The duplicate check reads
+active rows only, so the same text proposed again after supersession or
+deletion is a new active memory.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two doors into active memory, one of them a queue drained by a format check, and two ways out that keep no record of the value</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two doors into active memory, one of them a queue drained by a format check, and two ways out that keep no record of the value
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    MR[&quot;memory_remember:&lt;br/&gt;agent MCP tool&quot;]
+    HK[&quot;hook and importers:&lt;br/&gt;DNA_MEMORY_PROPOSAL&lt;br/&gt;markers&quot;]
+    AX[&quot;native auto-extract:&lt;br/&gt;regex over user and&lt;br/&gt;assistant lines&quot;]
+    MR ~~~ HK ~~~ AX
+  end
+  writers --&gt; Q[&quot;candidate_events&lt;br/&gt;pending, or direct&lt;br/&gt;for memory_remember&quot;]
+  Q --&gt; D{&quot;daily: type known,&lt;br/&gt;summary non-empty,&lt;br/&gt;no credential match?&quot;}
+  D --&gt;|&quot;no&quot;| RJ[&quot;event rejected;&lt;br/&gt;row deleted&lt;br/&gt;7 days later&quot;]
+  D --&gt;|&quot;yes&quot;| DUP{&quot;same type and&lt;br/&gt;normalised summary&lt;br/&gt;already active?&quot;}
+  DUP --&gt;|&quot;yes&quot;| MRG[&quot;provenance merged&lt;br/&gt;into that page&quot;]
+  DUP --&gt;|&quot;no&quot;| ACT[&quot;Markdown page,&lt;br/&gt;status active&quot;]
+  ACT --&gt; RC[&quot;recall: LIKE on&lt;br/&gt;summary, active only&quot;]
+  ACT --&gt; SUP[&quot;id named in a&lt;br/&gt;later supersedes&quot;]
+  ACT --&gt; DEL[&quot;person deletes&lt;br/&gt;the page file&quot;]
+  SUP --&gt; SS[&quot;status superseded,&lt;br/&gt;page kept&quot;]
+  DEL --&gt; RI[&quot;reindex drops&lt;br/&gt;the index row&quot;]
+  SS --&gt; AGAIN[&quot;same text proposed&lt;br/&gt;again: new active page&quot;]
+  RI --&gt; AGAIN</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The maintained system is a set of Python scripts with one runtime
+dependency for the store, PyYAML, and the <code>mcp</code> package for
+the server (<code>requirements.txt</code>,
+<code>requirements-mcp.txt</code>). Each client launches its own stdio
+server, <code>scripts/memory_mcp.py</code>, pointed at one profile JSON
+naming the vault, the managed subdirectory, the database file, and
+backup and skill paths (<code>scripts/config.py:11-27</code>,
+<code>:54-82</code>). Nothing else runs.</p>
+<p>Persistence is two places. Markdown pages under
+<code>&lt;knowledge_root&gt;/&lt;managed_memory_dir&gt;</code> are the
+truth. One SQLite file holds <code>memory_index</code>,
+<code>memory_links</code>, <code>memory_feedback</code>,
+<code>memory_recall_events</code>, <code>candidate_events</code> and
+<code>import_checkpoints</code>
+(<code>scripts/unified_memory.py:23-85</code>,
+<code>scripts/candidate_events.py:16-45</code>). Only
+<code>memory_index</code> is rebuildable from Markdown; the feedback
+that ranks recall and the pending proposal queue exist only in
+SQLite.</p>
+<p>Capture runs outside the server.
+<code>scripts/client_event_hook.py</code> is meant to be appended to
+Claude Code's <code>SessionStart</code>, <code>Stop</code> and
+<code>SessionEnd</code> hooks
+(<code>docs/mcp-and-client-adapters.md:93-98</code>). The native
+importers read Codex, Claude Code, Claude Desktop and Hermes histories.
+The documentation suggests LaunchAgent or cron labels for the importers
+and for daily, weekly and monthly maintenance
+(<code>:250-258</code>).</p>
+<p>The earlier system is still in the tree and still reachable.
+<code>dna remember</code> routes to <code>scripts/evolve.py</code>,
+which writes a separate SQLite database under the checkout's
+<code>memory/</code> directory with short-term and long-term flags,
+weight decay and FTS5, then runs <code>sync_to_claude.py</code>
+(<code>dna:32-44</code>, <code>scripts/evolve.py:22-24</code>).
+<code>scripts/semantic_search.py</code> adds an OpenAI-embedding search
+over a JSON file, reached from <code>scripts/cli.py</code> and
+<code>scripts/api.py</code>. <code>SKILL.md</code> says these are not
+the recommended integration path. This report covers them only where
+they touch the maintained store.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li>Nothing has to run besides the client: a local directory and a
+SQLite file.</li>
+<li>Fully local and offline; no API key is needed to store or
+recall.</li>
+<li>Install is a clone, a virtualenv with
+<code>requirements-mcp.txt</code>, a copied profile, and one
+<code>mcp add</code> per client.</li>
+<li>The store is human-readable and repairable by hand: a page is YAML
+and a paragraph, and <code>memory_reindex</code> rebuilds the index from
+whatever the vault holds.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Direct write.</strong> <code>memory_remember</code> packs
+its arguments into a proposal and calls
+<code>MemoryService.remember</code>
+(<code>scripts/memory_mcp.py:47-67</code>). That rejects an unknown
+type, an empty summary or a policy match, deduplicates, and checks every
+<code>supersedes</code> target is an active, Markdown-managed page
+inside the managed root. It then installs the new page and the rewritten
+old ones together (<code>scripts/memory_service.py:33-95</code>,
+<code>:163-203</code>).</li>
+<li><strong>Marker capture.</strong> <code>extract_proposals</code>
+takes up to three <code>DNA_MEMORY_PROPOSAL {json}</code> markers with a
+known type, a summary under 800 characters, a policy pass and valid
+confidence and importance
+(<code>scripts/bounded_proposals.py:11-50</code>). The Claude hook reads
+them from <code>last_assistant_message</code> or, on older clients, from
+the transcript's last 64 KB
+(<code>scripts/client_event_hook.py:41-64</code>). The Codex and Hermes
+importers read assistant messages.</li>
+<li><strong>Automatic extraction.</strong>
+<code>extract_automatic_proposals</code> splits the last twelve user and
+assistant messages of a native session into at most twelve units each,
+drops units matching eighteen noise patterns or the credential policy,
+and classifies the rest. A user line matching <code>remember</code>,
+<code>always</code>, <code>never</code> or <code>by default</code> is a
+<code>preference</code> at confidence <code>high</code>; an assistant
+line naming a concrete subject with <code>fixed</code>,
+<code>merged</code> or <code>completed</code> is usually a
+<code>project_state</code>
+(<code>scripts/native_auto_extract.py:17-21</code>,
+<code>:268-326</code>). Three proposals per session at most
+(<code>:390-395</code>).</li>
+<li><strong>Queue.</strong> <code>CandidateEventQueue.enqueue</code>
+inserts with <code>INSERT OR IGNORE</code> on a deterministic event id,
+nulls an excerpt that fails policy, and caps pending non-proposal events
+at <code>max_candidate_events</code>
+(<code>scripts/candidate_events.py:48-75</code>).</li>
+<li><strong>Crystallize.</strong> <code>MemoryOperations.daily</code>
+reads every pending <code>memory_proposal</code>, rejects a bad type,
+empty summary or policy match, and calls <code>remember</code> on the
+rest. It then compacts Codex turn pointers, expires other pending events
+after 30 days, and deletes terminal events 7 days after processing
+(<code>scripts/memory_operations.py:18-96</code>).</li>
+<li><strong>Recall.</strong> <code>MemoryService.recall</code> splits
+the query into Unicode word terms, matches any term by
+<code>LIKE</code>, ranks, and logs a hashed query, client, session and
+result count (<code>scripts/memory_service.py:272-334</code>).</li>
+<li><strong>Reindex.</strong> <code>reindex_markdown</code> walks every
+<code>*.md</code> under the vault root and parses those tagged
+<code>memory</code> with a supported type and status. It skips any page
+failing policy, upserts changed rows by content hash, and deletes rows
+whose file is gone
+(<code>scripts/markdown_memory.py:86-102</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory_index</code> mirrors the frontmatter: id, path, type,
+status, summary, content hash, source hash and refs, supersedes and
+superseded_by, confidence, importance, sensitivity, clients, project
+path, session id, created, updated, expires, <code>recall_count</code>,
+<code>last_recalled_at</code>, <code>legacy_id</code> and
+<code>source_kind</code> (<code>scripts/unified_memory.py:28-51</code>,
+<code>:86-106</code>). <code>sensitivity</code> and
+<code>expires_at</code> are copied from the page and read by
+nothing.</p>
+<p>Scope fields are provenance. <code>project_path</code>,
+<code>session_id</code> and <code>clients</code> are written on every
+page and merged on a duplicate
+(<code>scripts/memory_service.py:125-144</code>); no query in the
+service filters on any of them. Every client sharing a profile reads
+every memory.</p>
+<p>Correction is a chain of ids. <code>supersedes</code> is a list on
+the new page and <code>superseded_by</code> a single id on each old one;
+both are restored from Markdown on reindex
+(<code>tests/test_markdown_memory.py:60-87</code>).
+<code>memory_links</code> is created and never written.</p>
+<p>Opening the store on a database that holds the earlier system's
+<code>memory</code> table copies each row into <code>memory_index</code>
+as <code>source_kind = 'legacy_cache'</code>, status defaulting to
+<code>active</code> (<code>scripts/unified_memory.py:113-131</code>).
+Recall does not filter <code>source_kind</code>, so those rows are
+served. <code>supersedes</code> refuses them as not Markdown-managed
+(<code>scripts/memory_service.py:175-178</code>), and reindex never
+removes them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is lexical and tool-mediated. Each distinct word term becomes
+a <code>lower(summary) LIKE '%term%'</code> disjunct over active rows.
+Rows are ordered by how many terms they hit, then net feedback
+(<code>useful</code> +1, <code>misleading</code> −1, any other string
+0), then confidence word, importance and update time, capped at 20
+(<code>scripts/memory_service.py:272-315</code>). There is no stemming,
+no vector arm and no scope predicate.</p>
+<p>Feedback ranks and never excludes. A memory marked misleading many
+times is still returned for any query it matches, below rows with the
+same hit count. <code>feedback</code> accepts any non-empty
+<code>outcome</code> string (<code>:354-368</code>).</p>
+<p>Context assembly is the agent's job. The bundled skill asks for one
+to four <code>memory_recall</code> calls, deduplication by id, and at
+most five memories and about 2,000 tokens injected
+(<code>skills/dna-memory-loop/SKILL.md:18-24</code>). Nothing in the
+server enforces the budget; each call returns up to 20 summaries.</p>
+<p><code>memory_get</code> returns a row of any status, so an agent can
+follow a <code>superseded_by</code> chain
+(<code>scripts/memory_service.py:336-340</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The direct write is synchronous and model-free: validate,
+deduplicate, stage, install, reindex, all inside the MCP call. A page is
+recallable when the call returns. Each install calls
+<code>reindex_markdown</code> on the whole vault root, not the managed
+directory (<code>scripts/memory_service.py:233</code>). Every write
+therefore re-reads and re-hashes every Markdown file in the vault, so
+its cost scales with the user's notes rather than with memory.</p>
+<p>Proposals wait for the next daily run. With the documented daily
+schedule the lag is up to a day; without one, a proposal waits until
+someone runs <code>dna memory maintain daily</code>. The run rewrites
+nothing it did not create.</p>
+<p>Deduplication is exact after normalisation and scoped to active rows
+of the same type. A duplicate's new source refs and clients are merged
+into the existing page, and the page is rewritten
+(<code>scripts/memory_service.py:125-144</code>).</p>
+<p>There is no delete. A person removes the page; the database keeps the
+<code>memory_feedback</code> rows for that id and, for up to 7 days, the
+<code>crystallized</code> event that produced it.</p>
+<p>Writes are not serialised across clients. Four clients run four
+server processes on one vault and one database, and the duplicate check
+and the file install are separate steps with no lock. Two clients
+writing the same summary at once can both create pages.</p>
+<p>Noise filtering is regex. <code>inspect_content</code> rejects a PEM
+private-key header, <code>sk-</code>, <code>ghp-</code> and
+<code>xox?-</code> tokens, <code>password=</code>-style pairs, and a
+5,000-character base64-like block
+(<code>scripts/policy.py:22-35</code>). The automatic extractor's
+exclusion list is longer and was built from real backtest false
+positives (<code>tests/test_native_auto_extract.py:304-332</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>No model call on any path; writes block only on file I/O and the
+vault walk.</li>
+<li>Proposal lag is one maintenance run.</li>
+<li>The vault walk on every write is the one whole-store pass; daily
+touches the queue only, and monthly reindexes once more.</li>
+<li>Injection is up to 20 summaries per call, placed wherever the client
+puts tool results.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The server registers seven tools: <code>memory_recall</code>,
+<code>memory_get</code>, <code>memory_remember</code>,
+<code>memory_feedback</code>, <code>memory_close_session</code>,
+<code>memory_status</code> and <code>memory_reindex</code>
+(<code>scripts/memory_mcp.py:26-108</code>). The model holds every verb,
+including the direct write, whose docstring calls it <em>"Write a
+reviewed memory proposal"</em> (<code>:55</code>); nothing reviews
+it.</p>
+<p><code>memory_close_session</code> queues a
+<code>session_closed</code> pointer, and nothing reads it except the
+value metrics (<code>scripts/memory_service.py:370-385</code>,
+<code>scripts/memory_value.py:188-212</code>). Otherwise the session
+boundary is handled by the Claude hook and the importers, which capture
+after the fact.</p>
+<p>Adapting it to another agent means a stdio MCP entry and, optionally,
+an importer for that client's history format. The skill file is the
+behavioural contract, and it is prose.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-reviewable-means-here">What "reviewable" means here</h3>
+<p>The README describes stored proposals as reviewable, and
+<code>memory value</code> counts pending ones as
+<code>reviewable_proposals</code> (<code>README_EN.md:20-22</code>,
+<code>scripts/memory_value.py:197-199</code>). The client guide asks an
+operator to label each candidate in a backtest database true positive,
+false capture or ambiguous with a <code>sqlite3</code> query, and to
+look at the production candidates again before running daily
+(<code>docs/mcp-and-client-adapters.md:192-210</code>). It also lists
+<code>io.dna-memory.daily</code> among the scheduler labels
+(<code>:250-258</code>).</p>
+<p>The code has no approve or reject operation on a proposal. Daily
+writes every pending proposal that passes the format check. A scheduled
+daily run therefore crystallizes whatever the extractor queued, which is
+the outcome <code>SECURITY.md</code> warns against: <em>"Never
+automatically promote candidates solely by increasing a confidence
+number"</em> (<code>SECURITY.md:30-32</code>). The test for this path is
+named <code>test_only_reviewed_safe_proposals_crystallize</code>; it
+queues one proposal and asserts it crystallizes
+(<code>tests/test_memory_operations.py:23-51</code>).</p>
+<p>The skill and README also promise a capacity check before
+crystallization (<code>skills/dna-memory-loop/SKILL.md:56-57</code>,
+<code>README_EN.md:220-221</code>). <code>capacity_status</code> is
+called only for <code>status</code> and <code>reindex</code>; the
+<code>maintain</code> branch returns before it
+(<code>scripts/memory_cli.py:53-60</code>).</p>
+<h3 id="what-reaches-the-extractor">What reaches the extractor</h3>
+<p>The automatic extractor reads any record whose role or type is
+<code>user</code> or <code>assistant</code>, and <code>_text</code>
+descends into any <code>text</code>, <code>content</code>,
+<code>message</code> or <code>output</code> key
+(<code>scripts/native_auto_extract.py:143-186</code>). A user-role
+record carrying tool output is read as the user speaking, and a user
+line containing <code>always</code> becomes a high-confidence
+preference. The one guard for this shape is a prefix match on
+<code>search results for query:</code> (<code>:58-63</code>), and its
+test fixture is a user-role web search result
+(<code>tests/test_native_auto_extract.py:298</code>). Whether a given
+client stores tool results as user records is a property of that
+client's format, not of this tree.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — withheld. The page
+status has four values and recall serves only <code>active</code>, but
+<code>superseded</code> is versioning, and <code>archived</code> and
+<code>rejected</code> are accepted from a hand-edited page with no
+writer in the tree. The candidate queue's <code>pending</code> is a
+write buffer the format check drains, and no read path consults it.</li>
+<li><strong><code>tombstone</code></strong> — withheld. A rejected
+proposal's row is keyed on its event id and deleted 7 days later; a
+superseded page is keyed on its id. The duplicate check reads active
+rows only (<code>scripts/memory_service.py:103-112</code>).</li>
+<li><strong><code>bitemporal</code></strong> — withheld.
+<code>created</code> and <code>updated</code> are write clocks;
+<code>expires</code> is stored and read by nothing.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld.
+<code>project_path</code>, <code>session_id</code> and
+<code>clients</code> are stored on every page and filtered by no
+query.</li>
+<li><strong><code>audit_log</code></strong> — withheld.
+<code>memory_recall_events</code> and <code>memory_feedback</code>
+record reads and feedback, not mutations; <code>candidate_events</code>
+rows are deleted after 7 days; a supersede rewrites the old page in
+place. The earlier system's <code>operations</code> table logs
+<code>forget</code> and <code>dedupe</code> as counts, and
+<code>memory_manager.py</code> deletes and updates without writing to it
+(<code>scripts/evolve.py:318-331</code>, <code>:498-506</code>,
+<code>scripts/memory_manager.py:108-113</code>).</li>
+<li><strong><code>human_review</code></strong> — withheld. The queue has
+no verb a person uses to admit or refuse a proposal, and the agent holds
+a direct write that bypasses it.</li>
+<li><strong><code>negative_eval</code></strong> — withheld; see section
+10.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>A rebuild loses ranking.</strong> Deleting the database,
+which the README calls disposable, rebuilds <code>memory_index</code>
+from Markdown and drops all feedback and every pending proposal.</li>
+<li><strong>Legacy rows are served and cannot be retired</strong>
+through the MCP surface, if the profile points at a database holding the
+earlier table.</li>
+<li><strong>Recalled text is data.</strong> The skill tells the model
+not to treat recalled text as instructions
+(<code>SKILL.md:17-18</code>); the server returns it unlabelled.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 130 pytest functions in 25 files, and CI runs it with
+<code>compileall</code> and <code>check_public_safety.py</code> on every
+push and pull request (<code>.github/workflows/ci.yml</code>). I ran
+none of it.</p>
+<p>The service tests cover what section 2 describes. They check
+immediate recall after a write, <code>source_hash</code> idempotency,
+normalised deduplication with provenance merge, and supersede of several
+pages. They check refusal of an invalid, archived or legacy target, the
+vault unchanged after an invalid one, and rollback of every file and the
+index when an install or a reindex fails
+(<code>tests/test_memory_service.py:21-308</code>).</p>
+<p><code>negative_eval</code> is withheld on the one recall-exclusion
+assertion.
+<code>test_remember_supersedes_multiple_active_memories_and_hides_them_from_recall</code>
+supersedes two pages and asserts
+<code>recall("obsolete unique") == []</code>
+(<code>tests/test_memory_service.py:156-177</code>). The only other page
+is <code>current verified state</code>, which matches neither term, so a
+recall returning nothing also passes. Querying a term the replacement
+shares, and asserting the replacement alone comes back, would make the
+case populated.</p>
+<p>The extraction tests are the most specific in the suite. They pin all
+eight types, eight type-specific negative cases, and twenty-three false
+positives from a real backtest
+(<code>tests/test_native_auto_extract.py:273-332</code>). They assert
+what is queued, not what recall returns.</p>
+<p>No benchmark result is committed and the README states no score. Its
+one number is an operator threshold: re-extract only when manual
+sampling finds at most 10% false positives
+(<code>README_EN.md:234-235</code>). No paper is associated with the
+project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Markdown as truth, the index as a projection.</strong> Keep
+the human-editable file authoritative and rebuild search state from it,
+with a content hash per page so an unchanged page is not rewritten.</li>
+<li><strong>One install for a write and its replacements.</strong> Stage
+every file, back up every target, swap, reindex, and restore all of them
+on any failure.</li>
+<li><strong>Replacement by exact id only.</strong> Refuse a supersede
+whose target is missing, inactive or outside the managed root, and never
+infer one from type.</li>
+<li><strong>Pointers, not transcripts.</strong> Store source path,
+offset and hash from native histories, and cap proposals per
+session.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A review queue whose only drain is a format check.</strong>
+If proposals are called reviewable, the step that admits them must be
+one a person takes, and a scheduled job must not be able to take
+it.</li>
+<li><strong>Extracting user intent from every user-role record.</strong>
+Tool output stored as a user turn turns <code>always</code> in a web
+page into the user's preference; decide by record kind, not by role
+string.</li>
+<li><strong>Dedup against live rows only.</strong> A superseded or
+deleted value then has no standing against the next extraction of the
+same text.</li>
+<li><strong>Ranking state outside the rebuildable truth.</strong>
+Feedback that steers recall should survive the rebuild the design
+advertises.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who uses several coding clients on one machine
+and wants them to share a small set of conclusions they can open in
+Obsidian and fix by hand. It costs nothing to run and nothing to stop
+running. It does not suit anyone who needs memory separated by project
+or by client, since the stored keys do nothing. Nor does it suit anyone
+who would schedule daily maintenance expecting a review step. Treat the
+automatic importers as off until you have read what they would
+queue.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the daily schedule is meant to run unattended, given the
+manual labelling procedure the client guide describes for
+re-extraction.</li>
+<li>Which client formats deliver tool results as user-role records to
+<code>_record_message</code>; running the importer against real
+histories would show it.</li>
+<li>Why the Apache licence's appendix notice names <em>KnowMe
+Contributors</em>, a related project
+(<code>scripts/knowme_link.py</code>), rather than this repository's
+author.</li>
+<li>Whether <code>archived</code>, <code>rejected</code> and
+<code>expires</code> are meant to gain writers.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Store and schema: <code>scripts/markdown_memory.py</code>,
+<code>scripts/unified_memory.py</code>,
+<code>scripts/config.py</code></li>
+<li>Write and recall: <code>scripts/memory_service.py</code>,
+<code>scripts/policy.py</code></li>
+<li>Queue and maintenance: <code>scripts/candidate_events.py</code>,
+<code>scripts/memory_operations.py</code>,
+<code>scripts/memory_cli.py</code>,
+<code>scripts/memory_value.py</code></li>
+<li>Capture: <code>scripts/bounded_proposals.py</code>,
+<code>scripts/client_event_hook.py</code>,
+<code>scripts/native_auto_extract.py</code>,
+<code>scripts/import_native_history.py</code>,
+<code>scripts/import_codex_rollouts.py</code>,
+<code>scripts/import_hermes_sessions.py</code></li>
+<li>MCP and skill: <code>scripts/memory_mcp.py</code>,
+<code>skills/dna-memory-loop/SKILL.md</code>, <code>SKILL.md</code></li>
+<li>Earlier system: <code>dna</code>, <code>dna.py</code>,
+<code>scripts/evolve.py</code>, <code>scripts/memory_manager.py</code>,
+<code>scripts/semantic_search.py</code>,
+<code>scripts/sync_to_claude.py</code></li>
+<li>Tests: <code>tests/test_memory_service.py</code>,
+<code>tests/test_memory_operations.py</code>,
+<code>tests/test_native_auto_extract.py</code>,
+<code>tests/test_markdown_memory.py</code>,
+<code>tests/test_memory_mcp.py</code>,
+<code>tests/test_unified_memory.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No query filters a scope field.</strong>
+<code>git grep -n -E 'project_path|clients' -- scripts/memory_service.py</code>
+matches only the page metadata at lines 71 and 76, the duplicate merge
+at 133-139, the selected columns at 293 and 307, decoding at 345 and
+<code>close_session</code> at 370 and 381;
+<code>git grep -n -E "WHERE m\.status='active'" -- scripts/memory_service.py</code>
+matches line 304.</li>
+<li><strong>No writer of <code>archived</code> or <code>rejected</code>
+on a page.</strong>
+<code>git grep -n -E '(archived|rejected)' -- scripts/markdown_memory.py scripts/memory_service.py scripts/unified_memory.py scripts/memory_mcp.py</code>
+matches the accepted-status set at
+<code>scripts/markdown_memory.py:42</code> and two error messages at
+<code>scripts/memory_service.py:40</code> and <code>:361</code>.</li>
+<li><strong>No approve or reject verb on proposals.</strong>
+<code>git grep -n -i -E 'approve|reject_proposal|review_proposal|def review' -- scripts/memory_service.py scripts/memory_operations.py scripts/memory_cli.py scripts/memory_mcp.py scripts/candidate_events.py dna dna.py</code>
+returns nothing;
+<code>git grep -n -i -E 'approve|promote' -- scripts</code> matches the
+earlier system's <code>auto_promote</code> in
+<code>scripts/evolve.py</code>.</li>
+<li><strong>Daily maintenance never checks capacity.</strong>
+<code>git grep -n capacity_status -- scripts</code> matches its
+definition at <code>scripts/policy.py:38</code> and three calls in
+<code>scripts/memory_cli.py</code> at 60, 72 and 87, all after the
+<code>maintain</code> branch returns at 59.</li>
+<li><strong><code>expires</code> and <code>sensitivity</code> are never
+read.</strong> <code>git grep -n -E 'expires' -- scripts</code> and
+<code>git grep -n -w sensitivity -- scripts</code> match only the parser
+and the schema and upsert in
+<code>scripts/unified_memory.py</code>.</li>
+<li><strong><code>memory_links</code> is never written.</strong>
+<code>git grep -n memory_links -- scripts</code> matches only its
+<code>CREATE TABLE</code> at
+<code>scripts/unified_memory.py:54</code>.</li>
+<li><strong>No delete on the maintained path.</strong>
+<code>git grep -n -i -E 'delete|unlink|forget' -- scripts/memory_service.py scripts/memory_mcp.py</code>
+matches only temp-file and backup cleanup at lines 242-259.</li>
+<li><strong>The earlier manager's delete writes no operation
+row.</strong>
+<code>git grep -n -E 'INSERT INTO operations|log_operation' -- scripts/memory_manager.py</code>
+returns nothing;
+<code>git grep -c -E 'log_operation\(' -- scripts/evolve.py</code>
+counts 10.</li>
+<li><strong>No tool-result handling in the extractor.</strong>
+<code>git grep -n -E 'tool_result|tool_use'</code> returns nothing;
+<code>git grep -n response_item -- scripts/native_auto_extract.py</code>
+matches line 167.</li>
+<li><strong>No benchmark artifact.</strong>
+<code>git ls-files | grep -i -E 'bench|eval|result|fixture'</code>
+returns nothing; <code>git ls-files | grep -c '^tests/'</code> counts
+25.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|citation|doi\.org'</code> returns
+nothing; <code>git grep -n -i -w license -- README.md</code> matches
+lines 8, 369 and 371.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/AIPMAndy/dna-memory/commit/f135344d7d6f90f1be73e209cd0c6a7083f328ea"><code class="commit-id" title="f135344d7d6f90f1be73e209cd0c6a7083f328ea">f135344d…</code></a>
+— first reading, from a full clone of <code>main</code>, scoped to the
+maintained Markdown store, SQLite index, MCP server, proposal queue,
+maintenance, capture paths and their tests; the earlier SQLite system
+was read where it shares the store or is still routed by
+<code>dna</code>. Screened first: no auto-run or build-time execution
+surface; three unpinned dependency surfaces,
+<code>requirements.txt</code>, <code>requirements-mcp.txt</code> and
+<code>requirements-dev.txt</code>, all ranged. Apache-2.0 in
+<code>LICENSE</code>, MIT in <code>README_EN.md</code>, no rider.
+Nothing installed, built or run. No marks.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

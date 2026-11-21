@@ -229,6 +229,8 @@ In [marm-memory](../../systems/marm-memory/) the bundled console is not the seco
 
 **[Agora](../../systems/agora/) is the absence of the surface, in a system that has one for everything else.** Its only memory is the summary a coding agent's CLI returns at the end of each run, which a fresh conversation inherits when the native session is dropped. The session and run APIs omit it and no route edits or clears it, so the one thing a person cannot see in a platform built to let them watch and steer agents is what a restarted agent will believe about its own work. Its only visible copy is the first line, used as a commit subject (`agora-host/src/review.ts:222-233`). **Memory that steers a later run belongs on the screen where the run is steered.**
 
+**[DNA Memory](../../systems/dna-memory/)** makes the editor the truth store. Each memory is a Markdown page in an Obsidian-style vault and SQLite is an index rebuilt from the pages, so an edit, a deleted file or a frontmatter status of `archived` or `rejected` takes effect at the next reindex, and recall serves only `active`. Two things sit outside the editable layer. Recall feedback and the pending proposal queue exist only in SQLite, so the rebuild the README advertises drops both. And a deletion holds only until the next extraction of the same text: the duplicate check reads active pages, so the importers' next match writes the deleted conclusion as a new page. The write side is careful, since a write and every page it supersedes install and roll back together.
+
 ## Tests to write first
 
 - Edit a unit, then run the automatic pass, and assert the edit survives.

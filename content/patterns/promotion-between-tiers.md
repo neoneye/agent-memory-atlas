@@ -236,6 +236,8 @@ never surfaces. Promotion succeeded; usefulness did not follow.
 
 [Mind](../../systems/mind/) ships the simplest computable rule on this page and records none of its reasons. Tier 1 holds 25 and tier 2 holds 50 non-pinned memories per space; every non-pinned `memory_read` promotes the memory one tier, and a write or promotion into a full tier demotes the unpinned row with the oldest `COALESCE(last_accessed_at, created_at)` (`src/store/repositories/memory-repository.ts:126-169`, `:571-590`). Nothing is ever evicted to deletion, and tier never enters the search score. The one input is a read, which also serves inspection, so the protocol has to tell the model to pass `noPromote: true` when it only looks; no row records why a memory moved, and access promotion leaves `changed_at` untouched.
 
+[DNA Memory](../../systems/dna-memory/) has the two tiers, and the move between them is a format check. Proposals from agent-emitted markers and from regex classification of transcript lines wait in `candidate_events` as `pending`, and the README, the value metrics and the client guide all call them reviewable. The daily maintenance job that drains the queue promotes every pending proposal whose type is known, whose summary is non-empty and which matches none of three credential patterns. No operation lets a person admit or refuse one, and the guide lists the daily job among its scheduler labels. The test covering the move is named for reviewed proposals and queues one that nobody reviewed. Confidence, importance and source refs travel with each promoted memory, and none of them gates the move, so the long-term store is whatever the extractor matched.
+
 ## Tests to require
 
 - State the rule, then compute it by hand for ten promoted records and ten that
