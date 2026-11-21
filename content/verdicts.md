@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 847 reports.**
+**This page covers all 848 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7792,3 +7792,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 10,962 lines of Python across `veritasgraph/`, `studio_api/` and `veritasgraph_mcp/`, 313 commits from 3 February to 11 November 2026; 135 pytest functions and 78 Playwright cases against a live Studio, none run here, with no test on the audit chain, snapshots or merges. One mark: `audit_log`.
 - Study when: several local processes must share one graph file and every change has to leave a transactional record.
 - Do not copy when: memory must be corrected or erased one fact at a time, or users of one agent must not see each other's turns.
+
+### [`memory-cpp`](../systems/memory-cpp/)
+
+- Best idea: **a cache prefix built without the task.** `durable_stable_prefix` retrieves durable kinds with a fixed query and sorts and deduplicates each section, and a test asserts that two different tasks give the same blake3 hash and that neither task's text appears in the prefix.
+- Biggest risk: **the safety stages report and do not filter.** Freshness proofs are computed for `prove`, `audit-stale` and the lockfile, never with a span hash; `negative.json` is hashed into the lock and read by no pack path; the write firewall has one caller, a CLI command. The pack is built without any of them.
+- Second risk: the read-only MCP server's `memory_add_candidate` writes an active memory at its default confidence of 0.8; MCP timeline and graph read every workspace when the argument is omitted; the HTTP API answers any origin with no authentication.
+- Most reusable component: the version snapshot table and the status filter in `crates/memory-core/src/storage.rs` and `crates/memory-core/src/engine.rs`, and `durable_stable_prefix` in `crates/memory-cli/src/main.rs`.
+- Maturity impression: MIT; 38,018 lines of Rust, 21,976 of them in one `main.rs`; 50 commits from 18 May to 2 November 2026, 20 on 25 June alone; 135 Rust test functions run in CI on three platforms, not run here; the CAMC-Bench table has no committed result file and its negative-memory arm drops fixtures by their labels. Four marks: `trust_state`, `scope_enforced`, `audit_log` and `negative_eval`.
+- Study when: you want a local single-binary store of repository facts with a status field that recall respects and a snapshot on every mutation.
+- Do not copy when: you need the context pack itself to exclude stale, rejected or out-of-scope material, or an agent's writes to wait for a person.

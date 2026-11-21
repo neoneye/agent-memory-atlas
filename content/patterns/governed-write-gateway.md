@@ -316,6 +316,8 @@ runtime's own rules, does not.
 
 [Senrelay (ContextCore)](../../systems/contextcore/) has the gateway, `reconcile_long_term_memory`, which runs regex admission, a tombstone check and a comparison with active memories that ends in a no-op, a supersession or a pending conflict. Its tool surface shows how a gateway is bypassed by its own callers. MCP `save_memory` sets any authoritative origin an agent claims to none and passes `is_user_correction=False`; `auto_summarize_memory`, on the same surface and into the same function, copies the agent's `origin_authority` and `user_confirmed` through, and a claimed confirmation supersedes a protected decision without a conflict. `edit_memory` calls the update path directly, which checks tombstones and skips admission and contradiction detection. One gateway with per-door trust rules is two policies.
 
+[memory.cpp](../../systems/memory-cpp/) is the divergence this page opens with, inside one engine. `remember` refuses secret-like content and applies reject policies; `remember_candidate` adds the inbox queue and the manual-review policy; `restore_snapshot` and `import_persona` call `persist_memory` directly, pass neither check and write no version row (`crates/memory-core/src/engine.rs:63-164`, `:751-767`, `:865-879`). The write firewall, `screen_write`, sits on no write path at all. The MCP candidate tool its docs call non-mutating queues only below a 0.55 confidence the agent may set and defaults to 0.8, so on the read-only server an agent's writes land `active`.
+
 ## Tests to require
 
 - Exercise every adapter against the same invariant suite.

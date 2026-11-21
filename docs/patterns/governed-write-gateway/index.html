@@ -553,6 +553,19 @@ supersedes a protected decision without a conflict.
 <code>edit_memory</code> calls the update path directly, which checks
 tombstones and skips admission and contradiction detection. One gateway
 with per-door trust rules is two policies.</p>
+<p><a href="../../systems/memory-cpp/">memory.cpp</a> is the divergence
+this page opens with, inside one engine. <code>remember</code> refuses
+secret-like content and applies reject policies;
+<code>remember_candidate</code> adds the inbox queue and the
+manual-review policy; <code>restore_snapshot</code> and
+<code>import_persona</code> call <code>persist_memory</code> directly,
+pass neither check and write no version row
+(<code>crates/memory-core/src/engine.rs:63-164</code>,
+<code>:751-767</code>, <code>:865-879</code>). The write firewall,
+<code>screen_write</code>, sits on no write path at all. The MCP
+candidate tool its docs call non-mutating queues only below a 0.55
+confidence the agent may set and defaults to 0.8, so on the read-only
+server an agent's writes land <code>active</code>.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exercise every adapter against the same invariant suite.</li>

@@ -268,6 +268,8 @@ falls under the KV-cache scope boundary in the
 
 - **[Tobs (DeepSeekBot)](../../systems/deepseekbot/)** — the frozen pair with its delivery path for change. `SOUL.md` and `MEMORY.md` are rendered once per Session, recorded with it, and refreshed only after compaction and only if the files changed; each section is headed with its share of a per-Bot character limit and truncated past it with a note asking the Bot to consolidate. A mid-Session edit, whoever made it, becomes one `memory-change` Inbox notice listing paths and never bodies. The cost sits with Claude Code and Codex engines, whose `memory_write` leaves an uncommitted file the next notice reports.
 
+- **[memory.cpp](../../systems/memory-cpp/)** — the prefix computed and not shipped. `durable_stable_prefix` builds a task-free block from a fixed query over durable kinds, sorted and deduplicated, and a test asserts two tasks hash it identically and that neither task's text is in it. The pack that `memory compile` prints is rendered separately and carries the task on its third line, above every memory, and `memory pack` writes a `Generated at:` timestamp above that (`crates/memory-cli/src/main.rs:10526-10597`, `:10642-10643`, `:10725`). The stable prefix leaves the tool only as a field of the JSON output, so the hash the README demonstrates describes bytes no provider receives first.
+
 ## The same constraint, one layer down
 
 Everything above is about where a *memory system* puts its recall block. The same

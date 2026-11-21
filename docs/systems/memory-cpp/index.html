@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust CLI and MCP server that
+stores repository facts in a local SQLite vault and compiles them into
+token-budgeted context packs for coding agents.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="memory.cpp — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust CLI and MCP server
+that stores repository facts in a local SQLite vault and compiles them
+into token-budgeted context packs for coding agents.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="memory.cpp — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust CLI and MCP server
+that stores repository facts in a local SQLite vault and compiles them
+into token-budgeted context packs for coding agents.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>memory.cpp — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "memory.cpp",
+      "description": "A Rust CLI and MCP server that stores repository facts in a local SQLite vault and compiles them into token-budgeted context packs for coding agents.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Proofs and exclusions the pack never
+reads</p>
+          <h1>memory.cpp</h1>
+          <p class="document-deck">A Rust CLI and MCP server that stores
+repository facts in a local SQLite vault and compiles them into
+token-budgeted context packs for coding agents.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/KirtiRamchandani/memory.cpp">
+              <span>Source</span>
+              <strong>KirtiRamchandani/memory.cpp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/KirtiRamchandani/memory.cpp/commit/08785a5536113a1cd6b5ee424afb9a75d788fef5" title="08785a5536113a1cd6b5ee424afb9a75d788fef5">
+              <span>Analyzed revision</span>
+              <code>08785a55…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/KirtiRamchandani--memory.cpp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>KirtiRamchandani--memory.cpp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE and the workspace Cargo.toml, which agree; the three crates
+inherit it</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>38,018
+lines of Rust in 45 files: 21,976 in the CLI's main.rs, 2,235 in its
+compiler commands, 13,524 in memory-core and 283 in the C API; no C++ in
+the tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>50
+commits from 18 May to 2 November 2026, 49 by one author and 20 of them
+on 25 June 2026; the last commit is a dependabot bump to
+Cargo.lock</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>135
+Rust test functions, 83 in memory-core modules, 12 in its integration
+file and 40 in the CLI; CI runs them on Linux, macOS and Windows; I ran
+none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>memory.cpp is a Rust workspace, not C++: a CLI that keeps typed
+repository memories in a local SQLite vault and compiles them into a
+context pack for a coding agent, with an MCP server, an HTTP API, an
+OpenAI-compatible proxy and a C API over the same engine. What holds up
+is the plain memory layer: a status field that recall filters, a scope
+predicate with a populated test, insert-only version snapshots, and a
+task-independent stable prefix whose blake3 hash a test pins across
+tasks. What is weak is the compiler the README leads with. Its freshness
+proofs, negative memory and write firewall run in report commands and
+the lockfile, and none of them decides what enters the pack.</p>
+<p>The README calls the packs <em>"freshness-proven, security-filtered,
+cache-stable"</em>. The freshness proof is never handed a span hash, so
+its content check is always skipped, and a memory with no source anchor
+proves fresh. No pack-building path calls it
+(<code>crates/memory-cli/src/compiler_commands.rs:333-370</code>). The
+security filter is two substring lists, one at write and one at compile,
+and the write firewall the README describes has one caller, a CLI
+command that screens text typed into it. The pack that
+<code>memory compile</code> prints carries the task on its third line,
+above every memory, so its first bytes change with every task.</p>
+<p>The CAMC-Bench table in the README is a transcription; no result file
+is committed. Its reduction column recomputes from its token column, and
+its stale, contradiction and secret counts recompute from the fixture
+corpus. The arm labelled <em>negative memory</em> drops fixtures by
+their own <code>is_secret</code> and <code>is_distractor</code> flags
+rather than through the negative-memory store
+(<code>crates/memory-core/src/bench.rs:348-356</code>).</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code>
+(<em>"Copyright (c) 2026 memory.cpp contributors"</em>) and the
+workspace <code>Cargo.toml</code>, which agree; the three crates inherit
+the workspace licence. No file in the tree carries other terms, and
+nothing restricts use.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row with one of eleven kinds, a scope, the stored
+content, a heuristic summary, an importance and a confidence. Status,
+tags, the source anchor, <code>human_confirmed</code> and a
+contradiction count live inside <code>metadata_json</code> under a
+<code>memory_cpp</code> key
+(<code>crates/memory-core/src/types.rs:730-757</code>). A memory written
+through <code>remember</code> is <code>active</code> at once and is
+served as true; nothing verifies it first.</p>
+<p>Status has seven values and one consumer that matters.
+<code>is_recallable</code> admits <code>active</code>,
+<code>archived</code> and <code>ephemeral</code>, and every recall skips
+the rest (<code>crates/memory-core/src/types.rs:95-97</code>,
+<code>crates/memory-core/src/storage.rs:454-456</code>). A memory stops
+being served in four ways: <code>patch</code> marks it
+<code>superseded</code> and links its replacement, <code>forget</code>
+marks it <code>forgotten</code>, <code>sleep</code> supersedes exact
+duplicates, and <code>contradictions resolve</code> supersedes the loser
+of a detected pair
+(<code>crates/memory-core/src/engine.rs:476-518</code>,
+<code>:553-555</code>, <code>:347-351</code>,
+<code>crates/memory-cli/src/compiler_commands.rs:1653-1667</code>).</p>
+<p><code>gc --apply</code> and <code>memory edit --status</code> write
+<code>pending_review</code>; <code>quarantine approve</code> returns
+such a memory to <code>active</code> and <code>quarantine reject</code>
+marks it <code>forgotten</code>
+(<code>crates/memory-cli/src/compiler_commands.rs:1582-1599</code>,
+<code>crates/memory-cli/src/main.rs:13307-13352</code>). An inbox
+candidate is not a memory at all. It is a row in
+<code>memory_inbox</code> that becomes one only when
+<code>approve_inbox_item</code> calls <code>remember</code>
+(<code>crates/memory-cli/src/main.rs:5671-5726</code>).</p>
+<p>The freshness verdict is derived, not stored. <code>prove</code>
+computes <code>fresh</code>, <code>stale</code> or
+<code>unverifiable</code> on each call from the source file, the line
+count, commit reachability, expiry, the contradiction count and a
+reliability threshold, and nothing writes the result back to the row
+(<code>crates/memory-core/src/freshness.rs:122-323</code>). A memory
+dies only through the C API's <code>memory_engine_delete</code> or
+<code>memory privacy purge</code>, which removes the whole
+directory.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every writer reaches the same active row unless the candidate path queues it; status filters recall, while the compiled pack reads inactive rows and never consults negative memory or proofs</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every writer reaches the same active row unless the candidate path queues it; status filters recall, while the compiled pack reads inactive rows and never consults negative memory or proofs
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    W1[&quot;MCP memory_add_candidate:&lt;br/&gt;confidence 0.8 default&quot;]
+    W2[&quot;proxy, extract, watch:&lt;br/&gt;pending below 0.8&quot;]
+    W3[&quot;CLI remember, HTTP POST,&lt;br/&gt;MCP memory_add&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  writers --&gt; SEC{&quot;content matches a&lt;br/&gt;secret substring?&quot;}
+  SEC --&gt;|&quot;yes&quot;| REF[&quot;refused, or queued&lt;br/&gt;on the candidate path&quot;]
+  SEC --&gt;|&quot;no&quot;| GATE{&quot;candidate path, and&lt;br/&gt;confidence below 0.55,&lt;br/&gt;pending, or manual policy?&quot;}
+  GATE --&gt;|&quot;yes&quot;| INB[&quot;memory_inbox&lt;br/&gt;pending&quot;]
+  INB --&gt; APP[&quot;person runs&lt;br/&gt;inbox approve at CLI&quot;]
+  APP --&gt; ACT
+  GATE --&gt;|&quot;no&quot;| ACT[&quot;memories row,&lt;br/&gt;status active&quot;]
+  ACT --&gt; CH[&quot;patch, sleep dedupe,&lt;br/&gt;resolve, quarantine,&lt;br/&gt;forget, edit&quot;]
+  CH --&gt; ST[&quot;superseded, forgotten&lt;br/&gt;or pending_review&quot;]
+  ST --&gt;|&quot;filtered out&quot;| RC[&quot;recall, MCP search&lt;br/&gt;and context&quot;]
+  ST --&gt; CMP[&quot;compile: pending_review&lt;br/&gt;served, superseded&lt;br/&gt;summary listed&quot;]
+  CMP ~~~ NEG
+  NEG[&quot;negative.json and&lt;br/&gt;freshness proofs:&lt;br/&gt;reports and lock only&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three crates. <code>memory-core</code> holds the engine, the SQLite
+store, the embedders and the compiler modules; <code>memory-cli</code>
+is one binary whose <code>main.rs</code> carries the command surface,
+the MCP server, the HTTP API and the proxy; <code>memory-capi</code>
+exports a C ABI declared in <code>include/memory_cpp.h</code>. The only
+C in the tree is that header and <code>examples/c/basic.c</code>.</p>
+<p>Storage is one bundled SQLite file in WAL mode behind a single
+<code>Mutex&lt;Connection&gt;</code>, with ten tables created on open
+(<code>crates/memory-core/src/storage.rs:51-191</code>). Beside it sit
+<code>negative.json</code>, <code>context.lock</code>,
+<code>ledger.jsonl</code>, <code>audit/mcp-access.jsonl</code> and
+generated packs
+(<code>crates/memory-cli/src/compiler_commands.rs:154-161</code>,
+<code>:1182-1196</code>,
+<code>crates/memory-cli/src/main.rs:20274-20284</code>).</p>
+<p>The default embedder is not a model. <code>HashEmbedder</code> hashes
+unigrams and bigrams with blake3 into 384 dimensions and normalises the
+vector (<code>crates/memory-core/src/embedding/hash.rs:39-55</code>).
+Ollama and OpenAI-compatible embedders are optional over
+<code>ureq</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run. <code>cargo build -p memory-cli</code> produces
+the binary; no API key is needed to store or recall, and the default
+path makes no network call. <code>memory serve</code> binds
+127.0.0.1:7331, <code>memory mcp</code> speaks stdio, and
+<code>memory proxy</code> forwards chat completions to an upstream, by
+default Ollama on localhost
+(<code>crates/memory-cli/src/main.rs:552-572</code>). The store opens in
+any SQLite client, though status and tags are inside a JSON column
+rather than columns of their own.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>remember</code> refuses on
+<code>detect_sensitive_data</code>, applies a <code>Reject</code> or
+<code>NeverStore</code> policy, builds the row, persists it with its
+embedding and entities, and appends a <code>create</code> version and a
+<code>remember</code> event
+(<code>crates/memory-core/src/engine.rs:63-95</code>).</li>
+<li><strong>Candidate write.</strong> <code>remember_candidate</code>
+queues to <code>memory_inbox</code> when the content is sensitive, the
+confidence is below a 0.55 floor, the status is
+<code>pending_review</code> or the policy is <code>ManualReview</code>,
+and otherwise calls <code>remember</code>
+(<code>crates/memory-core/src/engine.rs:97-164</code>).</li>
+<li><strong>Recall.</strong> <code>recall</code> embeds the query, scans
+the scope in <code>SqliteStore::search</code>, ranks, truncates, bumps
+access counts and appends a <code>recall</code> event carrying the
+retrieved rows
+(<code>crates/memory-core/src/engine.rs:170-248</code>).</li>
+<li><strong>Compile.</strong> <code>build_ai_context_report</code> runs
+a 48-result search with <code>include_inactive(true)</code> plus a
+<code>mistake</code>-tagged search, filters, and renders the pack;
+<code>durable_stable_prefix</code> runs a separate fixed-query search
+for the prefix (<code>crates/memory-cli/src/main.rs:10259-10502</code>,
+<code>:10526-10597</code>).</li>
+<li><strong>Correct.</strong> <code>patch</code>,
+<code>update_status</code>, <code>forget</code>,
+<code>edit_memory</code>, <code>restore_memory</code>
+(<code>crates/memory-core/src/engine.rs:476-648</code>).</li>
+<li><strong>Lock.</strong> <code>build_lock_and_ledger</code> lowers
+<code>retrieve_candidates</code> into IR, computes a proof per included
+memory and counts the results, and hashes <code>negative.json</code>
+into a version string
+(<code>crates/memory-cli/src/compiler_commands.rs:1199-1303</code>).</li>
+<li><strong>MCP.</strong> <code>call_mcp_tool</code> and
+<code>read_mcp_resource</code>
+(<code>crates/memory-cli/src/main.rs:19080-19308</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> holds the row with <code>scope</code>,
+<code>kind</code>, <code>importance</code>, three timestamps, an access
+count and the embedding blob
+(<code>crates/memory-core/src/storage.rs:57-71</code>).
+<code>memory_versions</code> holds a full JSON snapshot per mutation
+with an <code>action</code>; <code>memory_events</code> holds a typed
+event per write and per recall; <code>memory_relations</code> holds
+<code>changed_to</code> edges from <code>patch</code>
+(<code>:95-130</code>). <code>memory_conflicts</code> records pairs
+<code>sleep</code> flags, with <code>status</code> <code>open</code> and
+no writer that closes them
+(<code>crates/memory-core/src/engine.rs:358-374</code>).</p>
+<p>Provenance is a <code>MemorySource</code> with file, line, commit,
+conversation and message ids, <code>created_by</code> and a reliability
+float, all optional and all caller-supplied
+(<code>crates/memory-core/src/types.rs:153-165</code>). Temporal fields
+are <code>created_at</code>, <code>updated_at</code>,
+<code>last_accessed_at</code>, <code>last_verified_at</code> and
+<code>expires_at</code>. <code>created_at</code> can be set by the
+caller, which backdates the record rather than recording a validity
+interval.</p>
+<p>Scope is one string per row. Workspaces are rows in
+<code>workspaces</code>, and a workspace whose category is
+<code>global</code> is merged into every scoped recall by default
+(<code>crates/memory-core/src/storage.rs:407-420</code>,
+<code>:1212-1221</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>SqliteStore::search</code> filters by scope and kind in SQL,
+then walks every remaining row in Rust. It skips unrecallable status,
+expired rows, missing tags and a dimension mismatch, deserialises each
+embedding, and keeps the best <code>pool_size</code> by replacement
+(<code>crates/memory-core/src/storage.rs:396-510</code>). Cost grows
+with the scope, not with the result.</p>
+<p>The ranker weighs similarity 0.35, keyword overlap 0.20, entity
+overlap 0.15, importance 0.15, recency 0.10 and confidence 0.05, less a
+redundancy and a sensitivity penalty
+(<code>crates/memory-core/src/ranker.rs:17-30</code>).
+<code>min_score</code> defaults to 0.0, so any scored row in scope can
+fill the limit (<code>crates/memory-core/src/types.rs:379</code>).</p>
+<p>The compiler is a second reader over the same search. It sorts
+<code>mistake</code>-tagged rows first, then skips secret-like and
+injection-like text, rows <code>is_memory_stale_or_blocked</code>
+matches, duplicates and anything past the budget unless it is a hard
+rule (<code>crates/memory-cli/src/main.rs:10288-10382</code>).
+<code>is_memory_stale_or_blocked</code> names <code>superseded</code>,
+<code>contradicted</code> and <code>forgotten</code>, and the search
+above it asked for inactive rows, so <code>pending_review</code> and
+<code>archived</code> rows reach the pack (<code>:10195-10204</code>,
+<code>:10278</code>).</p>
+<p>A blocked row does not vanish. Its summary and id go into
+<code>stale_summary</code>, and <code>render_compiled_prompt</code>
+prints up to eight of them under <em>Stale/contradicted context
+summary</em> (<code>:10344-10351</code>, <code>:10656</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and make no model call. A memory is
+retrievable as soon as <code>remember</code> returns. Extraction from
+repository files, git history, traces and proxied responses is keyword
+matching with fixed confidences: a proxied sentence containing
+<em>decision</em> scores 0.7, <em>prefer</em> 0.68, others 0.62
+(<code>crates/memory-cli/src/main.rs:20050-20120</code>).</p>
+<p><code>detect_sensitive_data</code> lower-cases the content and
+refuses on <code>api_key</code>, <code>-----begin</code>,
+<code>password</code>, <code>secret</code>, <code>ssn</code> or
+<code>aadhaar</code>, and on <code>sk-</code> or <code>ghp_</code> in
+the original text
+(<code>crates/memory-core/src/engine.rs:1155-1177</code>). The
+<code>sk-</code> check matches inside <em>task-</em> and <em>risk-</em>,
+so a memory saying a prefix is <em>task-independent</em> is refused as
+an authentication token.</p>
+<p>The compile path uses a different list,
+<code>detect_sensitive_reason</code>, which matches <code>secret=</code>
+and <code>password=</code> rather than the bare words
+(<code>crates/memory-cli/src/main.rs:20388-20405</code>).
+<code>restore_snapshot</code> and <code>import_persona</code> call
+<code>persist_memory</code> directly and pass neither check
+(<code>crates/memory-core/src/engine.rs:751-767</code>,
+<code>:865-879</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing runs in the background. <code>sleep</code> reads every memory
+in a scope, supersedes exact duplicates, records adjacent-pair
+conflicts, multiplies the importance of any memory untouched for 30 days
+and never accessed by 0.85 and rewrites it, then writes a compaction
+summary (<code>crates/memory-core/src/engine.rs:331-402</code>). Its
+cost is linear in the scope and it is run by hand.</p>
+<p>The pack's budget defaults to 1,500 estimated tokens at four
+characters a token, and MCP <code>memory_context</code> to 1,200. The
+compiled prompt opens with a header line and then the <code>Task:</code>
+line (<code>crates/memory-cli/src/main.rs:10642-10643</code>), and
+<code>memory pack</code> adds a <code>Generated at:</code> timestamp
+above that (<code>:10725</code>). A provider prefix cache keyed on the
+pack therefore misses on every new task and on every pack run.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server's default surface is <code>memory_search</code>,
+<code>memory_context</code>, <code>memory_timeline</code>,
+<code>memory_explain</code>, <code>memory_graph</code>,
+<code>memory_map</code> and <code>memory_add_candidate</code>.
+<code>memory_add</code>, <code>memory_update</code>,
+<code>memory_forget</code> and <code>memory_compact</code> appear only
+with <code>--allow-writes</code>
+(<code>crates/memory-cli/src/main.rs:19310-19452</code>). MCP
+<code>memory_context</code> is the engine's plain recall context; it
+does not run the compiler, so it applies no injection or duplicate
+filter, and only the MCP output redaction stands between a secret-like
+row and the client.</p>
+<p>The compiled pack reaches an agent three ways.
+<code>memory compile</code> prints it,
+<code>memory pack --for codex</code> or <code>--for gemini</code>
+upserts it between markers in <code>AGENTS.md</code> or
+<code>GEMINI.md</code>, and the MCP resource
+<code>memory://pack/latest</code> returns it for a fixed task,
+<code>repo context</code>
+(<code>crates/memory-cli/src/main.rs:10699-10745</code>,
+<code>:19265-19268</code>).</p>
+<p>The proxy injects recalled context into each upstream chat request
+and, with learning on, turns sentences in the response into candidates.
+Every proxied candidate scores below 0.8, so each one is
+<code>pending_review</code> and goes to the inbox
+(<code>:20111-20115</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-the-freshness-claim-covers">What the freshness claim
+covers</h3>
+<ul>
+<li><strong>The span hash is never checked.</strong>
+<code>prove_memory</code>, the only caller of <code>prove</code>, passes
+<code>stored_span_hash: None</code>, and no writer stores a span hash,
+so <code>source_hash_matches</code> is always <code>skipped</code>
+(<code>crates/memory-cli/src/compiler_commands.rs:361</code>).</li>
+<li><strong>An unanchored memory proves fresh.</strong> With no source
+file, the applicable checks are expiry, which passes when none is set,
+the contradiction count and a 0.4 reliability floor against a 0.6
+default (<code>crates/memory-core/src/freshness.rs:225-241</code>,
+<code>:287-307</code>).</li>
+<li><strong>No pack path consults a proof.</strong>
+<code>prove_memory</code> is called by <code>prove</code>,
+<code>audit-stale</code>, <code>invariants verify</code> and the
+lockfile. The lock counts <code>proofs_failed</code> and keeps the
+memory in <code>memory_ids</code>
+(<code>crates/memory-cli/src/compiler_commands.rs:1233-1248</code>).</li>
+</ul>
+<h3 id="what-the-security-filter-covers">What the security filter
+covers</h3>
+<p><code>negative.json</code> is read by <code>negative explain</code>,
+<code>explain-exclusions</code> and the lockfile, which hashes it
+(<code>crates/memory-cli/src/compiler_commands.rs:463</code>,
+<code>:1250-1251</code>). Neither <code>build_ai_context_report</code>
+nor the IR reads it, so a file or memory id added with
+<code>memory negative add</code> still enters the pack.
+<code>screen_write</code>, the write firewall, is called by
+<code>memory write-firewall</code> and by its own tests and benchmark
+(<code>crates/memory-cli/src/compiler_commands.rs:971-1005</code>).</p>
+<p>Injection markers are dropped at compile and by <code>gc</code>
+quarantine, and they are not checked at write. MCP
+<code>memory_search</code> and <code>memory_context</code> return them.
+MCP output passes through <code>redact_json_value</code>, which replaces
+any string matching <code>detect_sensitive_reason</code>
+(<code>crates/memory-cli/src/main.rs:19230-19235</code>).</p>
+<h3 id="what-the-scope-covers">What the scope covers</h3>
+<ul>
+<li><strong>MCP timeline and graph.</strong> With no
+<code>workspace</code> argument both pass <code>None</code> and read
+every scope, even when the server is pinned to one
+(<code>crates/memory-cli/src/main.rs:19160-19208</code>). Each
+<code>recall</code> event stores the retrieved rows, content included,
+so the timeline returns other workspaces' memories
+(<code>crates/memory-core/src/engine.rs:234-245</code>).</li>
+<li><strong>MCP resources.</strong> <code>memory://status</code>,
+<code>memory://rules</code>, <code>memory://mistakes</code> and
+<code>memory://profile</code> build <code>RecallQuery::new</code> with
+no scope (<code>crates/memory-cli/src/main.rs:19252-19305</code>).</li>
+<li><strong>MCP writes by id.</strong> <code>memory_forget</code> and
+<code>memory_update</code> take an id and check no workspace
+(<code>:19141-19159</code>).</li>
+<li><strong>HTTP.</strong> <code>handle_api_request</code> reads no
+header, takes the scope from the request, and every response carries
+<code>Access-Control-Allow-Origin: *</code>, OPTIONS included
+(<code>:18767-18773</code>, <code>:18887-18892</code>,
+<code>:19970-19982</code>). While <code>memory serve</code> runs, any
+page the user opens can write and read the vault.</li>
+</ul>
+<h3 id="what-a-forget-removes">What a forget removes</h3>
+<p><code>forget</code> keeps the row with its content. Every earlier
+snapshot stays in <code>memory_versions</code>, and every
+<code>recall</code> event that returned the memory keeps it in
+<code>data_json</code>. The C API's delete removes the row and leaves
+both (<code>crates/memory-core/src/storage.rs:264-268</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — awarded on
+<code>status</code>. Recall and both MCP read tools drop
+<code>superseded</code>, <code>contradicted</code>,
+<code>forgotten</code> and <code>pending_review</code>, and patch,
+dedupe, resolve, forget, quarantine reject and <code>gc --apply</code>
+produce them. The compile path serves <code>pending_review</code>.</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on the
+<code>scope IN</code> predicate in <code>SqliteStore::search</code>,
+which MCP search and context fill from the pinned workspace. The gaps
+are the four above.</li>
+<li><strong><code>audit_log</code></strong> — awarded on
+<code>memory_versions</code> and <code>memory_events</code>, which no
+statement updates or deletes. Snapshot restore, persona import, decay
+and C API deletes write no version.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>human_review</code></strong> — withheld. The inbox is
+drained only at the CLI, and no MCP tool approves. But
+<code>memory_add_candidate</code>, the one write the read-only server
+grants, leaves confidence at the 0.8 default unless the agent sets one.
+That clears the 0.55 floor, so the call writes an <code>active</code>
+memory (<code>crates/memory-cli/src/main.rs:19590-19611</code>,
+<code>crates/memory-core/src/engine.rs:118-163</code>).
+<code>docs/mcp.md:35</code> says the tool <em>"does not directly mutate
+durable memory"</em>.</li>
+<li><strong><code>tombstone</code></strong> — withheld.
+<code>negative.json</code> is keyed on a path or a memory id and read by
+no writer; rejected inbox rows are read by nothing on the candidate
+path.</li>
+<li><strong><code>bitemporal</code></strong> — withheld.
+<code>created_at</code> can be backdated and <code>expires_at</code> is
+a TTL; no field records when a fact was true.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The tree has 135 <code>#[test]</code> functions. CI runs
+<code>cargo test --workspace</code> on Linux, macOS and Windows, then
+the smoke scripts and <code>memory test --file memory.tests.yaml</code>
+(<code>.github/workflows/ci.yml:24-36</code>). I ran none of it.</p>
+<p><code>negative_eval</code> rests on
+<code>scope_filter_keeps_projects_separate</code>, which stores one
+memory in each of two scopes, queries one, and asserts exactly one hit
+from that scope (<code>crates/memory-core/tests/engine.rs:32-49</code>).
+With <code>min_score</code> at 0.0 the other memory is returned unless
+the predicate removes it.
+<code>includes_global_workspace_memories_by_default</code> asserts the
+global memory present, then absent with
+<code>include_global(false)</code> (<code>:175-203</code>).</p>
+<p>Three suites cannot fail on what they name.
+<code>memory.tests.yaml</code> declares four tests with no
+<code>must_include</code> or <code>must_not_include</code> line, so each
+passes on any pack. The fallback smoke passes when
+<code>compiled_tokens &lt;= raw_tokens.max(compiled_tokens)</code>,
+which is always true
+(<code>crates/memory-cli/src/main.rs:13638-13644</code>). The bench
+tests assert that full CAMC leaks no secret, which the label-based drop
+guarantees (<code>crates/memory-core/src/bench.rs:534-555</code>).</p>
+<p><code>inference_report_excludes_stale_and_reduces_tokens</code>
+asserts that a superseded memory's summary is in
+<code>stale_summary</code>, which is printed into the pack
+(<code>crates/memory-cli/src/main.rs:21565-21568</code>). No test
+asserts a <code>pending_review</code> memory out of the pack, a
+negative-memory target out of the pack, or a scope boundary on the MCP
+timeline.</p>
+<h3 id="camc-bench">CAMC-Bench</h3>
+<p>No result file is committed. The table appears in
+<code>README.md</code>, <code>BENCHMARKS.md</code>,
+<code>docs/paper/camc.tex</code> and <code>assets/camc-bench.svg</code>;
+<code>examples/bench-sample.json</code> is labelled
+<em>illustrative</em>. From the table itself, each reduction recomputes
+from its token column against the 638 raw: 266 gives 58.3% and 233 gives
+63.5%. From the fixtures, three superseded rows and one secret across
+three tasks give the 9, 9 and 3 of the raw row
+(<code>crates/memory-core/src/bench.rs:47-80</code>). I did not
+recompute the token counts, which need the tokenizer run.</p>
+<p>What the arms measure is narrower than their names. <em>No freshness
+proofs</em> re-admits rows the IR excluded by fixture status, and
+<code>prove</code> is not called. <em>Negative memory</em> removes every
+fixture flagged <code>is_distractor</code> or <code>is_secret</code>
+(<code>crates/memory-core/src/bench.rs:313-325</code>,
+<code>:348-356</code>). <em>No canonical prefix</em> selects the same
+266 tokens and only reports zero cacheable.</p>
+<p>The compile path's own detector would not have caught the bench's
+secret, <code>AWS_SECRET_ACCESS_KEY=AKIA…</code>:
+<code>detect_sensitive_reason</code> looks for <code>secret=</code>,
+<code>api_key</code> and seven others, none of which it contains.</p>
+<h3 id="dogfood-figures">Dogfood figures</h3>
+<p><code>BENCHMARKS.md</code> reports 854 compiled tokens against 5,307
+raw for the first of three tasks. Raw is a quarter of the summed lengths
+of content, summary, metadata and embedding
+(<code>crates/memory-core/src/storage.rs:1073</code>), and each
+embedding is 1,536 bytes at the default 384 dimensions. With the twelve
+facts <code>scripts/benchmark.py</code> seeds, the vectors alone would
+account for up to 4,608 tokens; the raw figure is 5,307. One of those
+facts contains <em>secrets</em>, which <code>remember</code> refuses
+(<code>scripts/benchmark.py:72</code>).</p>
+<h3 id="paper">Paper</h3>
+<p><code>docs/paper/camc.tex</code> is an in-tree LaTeX draft,
+<em>"Draft --- 2026"</em>, authored as memory.cpp and added on 25 June
+2026; I found no arXiv identifier. It says a memory <em>"must prove
+validity"</em> including that <em>"its span hash matches"</em> before it
+enters a pack, and that the benchmark runs the production
+negative-memory path. The code does neither.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Build the cacheable prefix from a task-free query.</strong>
+The stable prefix comes from a fixed retrieval over durable kinds,
+sorted and deduplicated, and a test asserts two tasks produce the same
+hash and that neither task's text appears in it.</li>
+<li><strong>Snapshot on every mutation, in its own table.</strong> A
+full JSON snapshot per action, keyed on the memory id with no foreign
+key, survives the row's deletion and makes restore a read.</li>
+<li><strong>Name what was dropped.</strong> The compiler keeps counts
+and ids for every exclusion reason, which makes the filter auditable
+even where it is wrong.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A safety stage that only reports.</strong> Proofs, negative
+memory and a write firewall that feed <code>explain</code> commands and
+a lockfile, beside a pack built without them, read as protection and
+give none. Put the check in the function that builds the output, and
+test the output.</li>
+<li><strong>A review gate decided by the caller's own number.</strong> A
+candidate tool whose queueing depends on a confidence the agent
+supplies, with a default above the floor, is a direct write.</li>
+<li><strong>An ablation arm that reads the oracle.</strong> Removing
+items by their ground-truth labels measures the labels.</li>
+<li><strong>A wildcard CORS header on a local write API.</strong>
+Loopback binding stops other hosts, not the browser on the same
+one.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants a local, single-binary vault of
+repository facts and is willing to drive it from the CLI, and who would
+use the recall layer and read the compiler's output as a draft. It does
+not suit anyone who needs the pack to be safe by construction: the
+guarantees in the README are not where the pack is built. A 22,000-line
+<code>main.rs</code> written mostly in one day of June 2026 is a
+maintenance cost to price before adopting it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>memory_add_candidate</code> is meant to write directly
+above the floor, given <code>docs/mcp.md</code> says it does not mutate
+durable memory and ADR 0002 prefers it to direct mutation.</li>
+<li>Whether the compiled pack is meant to be assembled from
+<code>stable_prefix</code> and <code>fresh_suffix</code>, which the JSON
+output carries separately, rather than from
+<code>render_compiled_prompt</code>.</li>
+<li>Whether negative memory was meant to feed
+<code>build_ai_context_report</code> or the IR, since the lockfile
+already records its version.</li>
+<li>What the token counts of the CAMC-Bench table are on a run of the
+pinned binary.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>crates/memory-core/src/storage.rs</code>,
+<code>crates/memory-core/src/types.rs</code>,
+<code>crates/memory-core/src/vector.rs</code></li>
+<li>Write and correction:
+<code>crates/memory-core/src/engine.rs</code></li>
+<li>Retrieval: <code>crates/memory-core/src/storage.rs</code>,
+<code>crates/memory-core/src/ranker.rs</code>,
+<code>crates/memory-core/src/embedding/hash.rs</code></li>
+<li>Compiler: <code>crates/memory-cli/src/main.rs</code>
+(<code>build_ai_context_report</code>,
+<code>durable_stable_prefix</code>,
+<code>render_compiled_prompt</code>),
+<code>crates/memory-cli/src/compiler_commands.rs</code>,
+<code>crates/memory-core/src/ir.rs</code>,
+<code>crates/memory-core/src/freshness.rs</code>,
+<code>crates/memory-core/src/negative.rs</code>,
+<code>crates/memory-core/src/poison.rs</code></li>
+<li>MCP, HTTP, proxy: <code>crates/memory-cli/src/main.rs</code>
+(<code>call_mcp_tool</code>, <code>read_mcp_resource</code>,
+<code>mcp_tools</code>, <code>mcp_workspace</code>,
+<code>handle_api_request</code>, <code>proxy_candidates</code>)</li>
+<li>C API: <code>crates/memory-capi/src/lib.rs</code>,
+<code>include/memory_cpp.h</code></li>
+<li>Tests and benchmark:
+<code>crates/memory-core/tests/engine.rs</code>,
+<code>crates/memory-core/src/bench.rs</code>,
+<code>memory.tests.yaml</code>, <code>.github/workflows/ci.yml</code>,
+<code>scripts/benchmark.py</code>, <code>BENCHMARKS.md</code>,
+<code>docs/paper/camc.tex</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>The write firewall has one product caller.</strong>
+<code>git grep -n 'screen_write(' -- crates</code> matches
+<code>crates/memory-cli/src/compiler_commands.rs:984</code> and four
+lines of <code>crates/memory-core/src/poison.rs</code>, its definition,
+benchmark and tests.</li>
+<li><strong>Negative memory is read by reports and the lock.</strong>
+<code>git grep -n 'load_negative_store(' -- crates</code> matches the
+definition at <code>compiler_commands.rs:163</code> and lines 199, 212,
+222, 269, 300, 463 and 1250; none is in <code>main.rs</code> or
+<code>ir.rs</code>.</li>
+<li><strong>No span hash is stored.</strong>
+<code>git grep -n 'stored_span_hash' -- crates</code> matches the field
+and its reader in <code>freshness.rs</code>, the test fixture at
+<code>freshness.rs:336</code>, and
+<code>compiler_commands.rs:361</code>, which passes
+<code>None</code>.</li>
+<li><strong>Proofs feed no pack.</strong>
+<code>git grep -n 'prove_memory(' -- crates</code> matches the
+definition at line 333 and callers at 382, 429, 1240 and 1798 of
+<code>compiler_commands.rs</code>.</li>
+<li><strong>The version and event tables are never updated or
+deleted.</strong>
+<code>git grep -n -i -E 'DELETE FROM|UPDATE memory_events|UPDATE memory_versions' -- crates</code>
+matches <code>storage.rs:266</code> and <code>:315</code>, on
+<code>memories</code> and <code>memory_entities</code>; the first is the
+positive control.</li>
+<li><strong>Hard delete is C-API only.</strong>
+<code>git grep -n -E 'engine\.delete\(|\.delete\(&amp;' -- crates</code>
+matches <code>crates/memory-capi/src/lib.rs:183</code>.</li>
+<li><strong>No MCP approve verb.</strong>
+<code>git grep -n -E '"memory_(approve|review|inbox|quarantine)' -- crates</code>
+returns nothing; the control
+<code>git grep -n -E '"memory_(add_candidate|forget)" =&gt;' -- crates</code>
+matches <code>main.rs:19091</code> and <code>:19153</code>.</li>
+<li><strong>The candidate path reads no rejected inbox row.</strong>
+<code>git grep -n -E 'list_inbox\(|\.inbox\(' -- crates/memory-core/src/engine.rs</code>
+matches only the wrapper at line 902.</li>
+<li><strong>No validity-time field.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_at|valid_until|event_time|occurred_at' -- crates</code>
+returns nothing; the control
+<code>git grep -c 'last_verified_at' -- crates/memory-core/src/types.rs</code>
+counts 7.</li>
+<li><strong>The HTTP API reads no header.</strong>
+<code>git grep -n -E '\.headers\(\)' -- crates</code> returns nothing;
+the control
+<code>git grep -n -E 'request\.url\(\)' -- crates/memory-cli/src/main.rs</code>
+matches three lines.</li>
+<li><strong>The committed suite asserts nothing.</strong>
+<code>grep -c -E 'must_(not_)?include' memory.tests.yaml</code> counts
+0; the control <code>git grep -n 'must_not_include' -- crates</code>
+matches <code>main.rs:13627</code>.</li>
+<li><strong>No committed benchmark result.</strong>
+<code>git ls-files | grep -i -E 'bench|result'</code> lists
+<code>BENCHMARKS.md</code>, two copies of <code>camc-bench.svg</code>,
+the criterion bench, <code>bench.rs</code>,
+<code>examples/bench-sample.json</code> and three scripts.</li>
+<li><strong>No arXiv identifier.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org'</code>
+returns nothing and <code>git ls-files | grep -i citation</code> lists
+nothing; the control
+<code>git grep -n 'begin{abstract}' -- docs/paper/camc.tex</code>
+matches line 19.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/KirtiRamchandani/memory.cpp/commit/08785a5536113a1cd6b5ee424afb9a75d788fef5"><code class="commit-id" title="08785a5536113a1cd6b5ee424afb9a75d788fef5">08785a55…</code></a>
+— first reading, from a clone of <code>main</code>. Read the engine,
+store, types, freshness, negative-memory, IR, bench and firewall modules
+in full, and in the CLI the compiler, MCP, HTTP, proxy, inbox,
+quarantine and lock paths with their tests; the map, git, terminal and
+dev commands only where they write memories. Screened first: no auto-run
+surface, no build-time execution, no unpinned surface, nothing inside
+the cooldown; one lockfile, <code>Cargo.lock</code>, unchanged for 19
+days. MIT, no rider. Nothing installed, built or run. Four marks:
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

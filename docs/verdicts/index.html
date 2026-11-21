@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 847 reports.</strong></p>
+<p><strong>This page covers all 848 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34858,6 +34858,44 @@ or merges. One mark: <code>audit_log</code>.</li>
 every change has to leave a transactional record.</li>
 <li>Do not copy when: memory must be corrected or erased one fact at a
 time, or users of one agent must not see each other's turns.</li>
+</ul>
+<h3 id="memory-cpp"><a
+href="../systems/memory-cpp/"><code>memory-cpp</code></a></h3>
+<ul>
+<li>Best idea: <strong>a cache prefix built without the task.</strong>
+<code>durable_stable_prefix</code> retrieves durable kinds with a fixed
+query and sorts and deduplicates each section, and a test asserts that
+two different tasks give the same blake3 hash and that neither task's
+text appears in the prefix.</li>
+<li>Biggest risk: <strong>the safety stages report and do not
+filter.</strong> Freshness proofs are computed for <code>prove</code>,
+<code>audit-stale</code> and the lockfile, never with a span hash;
+<code>negative.json</code> is hashed into the lock and read by no pack
+path; the write firewall has one caller, a CLI command. The pack is
+built without any of them.</li>
+<li>Second risk: the read-only MCP server's
+<code>memory_add_candidate</code> writes an active memory at its default
+confidence of 0.8; MCP timeline and graph read every workspace when the
+argument is omitted; the HTTP API answers any origin with no
+authentication.</li>
+<li>Most reusable component: the version snapshot table and the status
+filter in <code>crates/memory-core/src/storage.rs</code> and
+<code>crates/memory-core/src/engine.rs</code>, and
+<code>durable_stable_prefix</code> in
+<code>crates/memory-cli/src/main.rs</code>.</li>
+<li>Maturity impression: MIT; 38,018 lines of Rust, 21,976 of them in
+one <code>main.rs</code>; 50 commits from 18 May to 2 November 2026, 20
+on 25 June alone; 135 Rust test functions run in CI on three platforms,
+not run here; the CAMC-Bench table has no committed result file and its
+negative-memory arm drops fixtures by their labels. Four marks:
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code>.</li>
+<li>Study when: you want a local single-binary store of repository facts
+with a status field that recall respects and a snapshot on every
+mutation.</li>
+<li>Do not copy when: you need the context pack itself to exclude stale,
+rejected or out-of-scope material, or an agent's writes to wait for a
+person.</li>
 </ul>
         </article>
       </div>
