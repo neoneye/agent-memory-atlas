@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An on-prem GraphRAG and agent
+framework whose Studio, MCP server and CLI share one SQLite knowledge
+graph under a hash-chained audit log.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="VeritasGraph — Agent Memory Atlas">
+    <meta property="og:description" content="An on-prem GraphRAG and
+agent framework whose Studio, MCP server and CLI share one SQLite
+knowledge graph under a hash-chained audit log.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="VeritasGraph — Agent Memory Atlas">
+    <meta name="twitter:description" content="An on-prem GraphRAG and
+agent framework whose Studio, MCP server and CLI share one SQLite
+knowledge graph under a hash-chained audit log.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>VeritasGraph — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "VeritasGraph",
+      "description": "An on-prem GraphRAG and agent framework whose Studio, MCP server and CLI share one SQLite knowledge graph under a hash-chained audit log.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An audit chain around a graph that cannot
+forget one fact</p>
+          <h1>VeritasGraph</h1>
+          <p class="document-deck">An on-prem GraphRAG and agent
+framework whose Studio, MCP server and CLI share one SQLite knowledge
+graph under a hash-chained audit log.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/bibinprathap/VeritasGraph">
+              <span>Source</span>
+              <strong>bibinprathap/VeritasGraph</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/bibinprathap/VeritasGraph/commit/68552fdd06dd43bc19e1ded5ff6b72b57c4a100f" title="68552fdd06dd43bc19e1ded5ff6b72b57c4a100f">
+              <span>Analyzed revision</span>
+              <code>68552fdd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/bibinprathap--VeritasGraph" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>bibinprathap--VeritasGraph</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE and pyproject.toml; the veritas-reason subtree keeps its own
+MIT notice naming Hawksight AI</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>10,962
+lines of Python in veritasgraph/, studio_api/ and veritasgraph_mcp/
+across 79 files, 2,049 of them the structured-data layer; the monorepo
+also holds veritas-reason (1,048 files), medkg-signal-reference (8,086
+files) and 97 compiled .pyc files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>313
+commits on restored-main from 3 February to 11 November 2026, 311 under
+three spellings of the author's name and 2 by Copilot</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>135
+pytest functions in 14 files, 26 of them browser cases CI skips; 78
+Playwright cases against a live Studio and Ollama, with a committed run
+of the first four suites dated 8 November 2026; I ran
+none</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>VeritasGraph is an on-prem GraphRAG and agent framework. A local
+model extracts entities and relationships from document chunks into one
+SQLite graph that the Studio web app, a stdio MCP server and a CLI
+share. An agent writes through the MCP tools
+<code>veritasgraph_ingest_document</code> and
+<code>veritasgraph_import_graph</code>, and reads back through
+<code>veritasgraph_query</code>,
+<code>veritasgraph_search_entities</code> and
+<code>veritasgraph_get_entity</code>. What is notable is the governance
+ledger. Every graph mutation appends a SHA-256-chained
+<code>audit_event</code> row in the transaction that makes it, and
+destructive operations snapshot the graph first. Each answer is stored
+as a receipt naming the graph version it read. What is weak is
+correction. No route deletes one fact, a re-ingested correction wins
+only if its description is longer, and the provenance rank that protects
+curated content is a label the writer chooses.</p>
+<p><strong>Governance sits on the vocabulary, not on the facts.</strong>
+Entity types, predicates and glossary terms carry <code>proposed</code>,
+<code>certified</code> or <code>deprecated</code>. Entities and
+relationships carry no status at all, and retrieval reads neither status
+nor provenance (<code>studio_api/graphrag_engine.py:1317-1397</code>).
+Governed mode answers when one certified term appears anywhere in the
+question (<code>veritasgraph/answerability.py:47</code>). The coverage
+ratio computed two lines earlier is reported and never consulted.</p>
+<p><strong>The Studio cannot start from this checkout.</strong>
+<code>studio_api/main.py:32</code>, <code>:35</code> and
+<code>:38</code> import <code>routes.ontology</code>,
+<code>routes.structured</code> and <code>security</code>, and
+<code>orchestrator.py:32</code> imports <code>netguard</code>.
+<code>.gitignore:135</code> ignores <code>studio_api/*</code>, so none
+of the four was ever committed. Three survive only as setuptools output
+under <code>build/lib/studio_api/</code>;
+<code>routes/structured.py</code> is nowhere. The bearer-token roles and
+the only callers of the certify and deprecate writer are in those files.
+The MCP server and the CLI's compile, import and export commands import
+nothing missing.</p>
+<p><strong>This report covers <code>veritasgraph/</code>,
+<code>studio_api/</code> and <code>veritasgraph_mcp/</code>.</strong>
+The monorepo's other trees hold no agent write path.
+<code>veritas-reason/</code> is a renamed copy of the <a
+href="../semantica/">Semantica</a> code base: its <code>LICENSE</code>
+keeps Hawksight AI's copyright, and a name substitution turned
+<code>cluster_semantically</code> into
+<code>cluster_veritasreasonlly</code>. <code>clinical-kg</code>,
+<code>floorplan-kg</code>, <code>MedTrust Agent</code>,
+<code>municipality-incident-chatbot</code> and
+<code>medkg-signal-reference</code> are document or prediction
+applications.</p>
+<p><strong>Licence.</strong> The MIT grant covers a source tree that
+withholds four modules the Studio imports, because
+<code>.gitignore:135</code> ignores <code>studio_api/*</code>.
+<code>security.py</code>, <code>netguard.py</code>,
+<code>routes/ontology.py</code> and <code>routes/structured.py</code>
+are absent; the first three exist only as build output under
+<code>build/lib/</code> and in the committed
+<code>veritasgraph_mcp.egg-info/SOURCES.txt</code>. Permission to modify
+the Studio's role checks is permission to modify code the repository
+does not contain. <code>veritas-reason/</code> is another project's code
+under its own MIT notice, naming Hawksight AI, while the root
+<code>LICENSE</code> names Bibin Prathap for the whole tree.
+<code>medkg-signal-reference/data/</code> bundles 8,002 PhysioNet
+Challenge 2012 files and eICU demo tables that its own README calls
+ODC-BY 1.0, with no licence file beside them.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a graph row. An entity is keyed by its
+whitespace-collapsed, lower-cased name, so two different things with one
+name are one entity
+(<code>studio_api/graphrag_engine.py:598-617</code>). A relationship is
+keyed by its ordered pair of entity ids, so a second statement about the
+same pair folds into the first edge instead of adding one
+(<code>:644-653</code>, <code>:668-691</code>). Each row keeps the list
+of source chunk ids it came from, which is what makes a citation
+checkable.</p>
+<p><strong>A fact is never believed or doubted; it is ranked.</strong>
+<code>source_type</code> is <code>curated</code>, <code>extracted</code>
+or <code>inferred</code>, ranked 3, 2 and 1 (<code>:175</code>). On a
+merge, higher rank overwrites the type and description; at equal rank
+the longer description wins (<code>:624-640</code>,
+<code>:675-689</code>). Nothing on the read path consults the rank. So a
+correction ingested from a revised document replaces the old description
+only when it is longer, and otherwise adds its chunk id to the
+<code>sources</code> list beside the claim it contradicts.</p>
+<p><strong>A fact stops being one in three ways, none of them aimed at
+that fact.</strong> <code>merge_entities</code> folds one entity into
+another and keeps the dropped name as an alias
+(<code>:1223-1284</code>). <code>clear</code> empties the graph after a
+snapshot (<code>:1133-1154</code>). <code>restore</code> swaps the whole
+graph for a snapshot (<code>:1167-1191</code>). There is no verb that
+removes one entity, one relationship or one document.</p>
+<p><strong>The vocabulary has the state machine the facts lack.</strong>
+Types, predicates and terms carry a <code>CHECK</code>-constrained
+status (<code>veritasgraph/store/migrations.py:72-73</code>,
+<code>:90-91</code>, <code>:107-108</code>). Every upsert resets it to
+<code>proposed</code>, whatever it was
+(<code>veritasgraph/ontology/__init__.py:253</code>, <code>:291</code>,
+<code>:324</code>), and <code>Ontology.set_status</code> is the only
+writer of <code>certified</code> or <code>deprecated</code>
+(<code>:369-387</code>). <code>match_terms</code> skips deprecated terms
+(<code>:204</code>); extraction maps onto certified types and predicates
+only (<code>:116-141</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — agents write facts with a provenance label they choose; facts reach the model with no status filter; the certified vocabulary gates only whether governed mode answers; correction acts on the whole graph or on an entity pair, never on one fact</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: agents write facts with a provenance label they choose; facts reach the model with no status filter; the certified vocabulary gates only whether governed mode answers; correction acts on the whole graph or on an entity pair, never on one fact
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    MI[&quot;MCP ingest_document:&lt;br/&gt;write tier by default,&lt;br/&gt;no auth on stdio&quot;]
+    MP[&quot;MCP import_graph:&lt;br/&gt;source_type defaults&lt;br/&gt;to curated&quot;]
+    RE[&quot;REST ingest, import,&lt;br/&gt;merge: roles live in&lt;br/&gt;an uncommitted module&quot;]
+    MI ~~~ MP ~~~ RE
+  end
+  writers --&gt; UP[&quot;upsert by normalised&lt;br/&gt;name and entity pair;&lt;br/&gt;higher rank or longer&lt;br/&gt;description wins&quot;]
+  UP --&gt; TX[&quot;one SQLite transaction:&lt;br/&gt;rows plus one&lt;br/&gt;audit_event row&quot;]
+  TX --&gt; SEED[&quot;seeds: name or word&lt;br/&gt;prefix match, plus&lt;br/&gt;entities of any term&lt;br/&gt;not deprecated&quot;]
+  SEED --&gt; BFS[&quot;two hops, 25 nodes;&lt;br/&gt;no status or&lt;br/&gt;source_type filter&quot;]
+  BFS --&gt; GOV{&quot;governed mode:&lt;br/&gt;a certified term&lt;br/&gt;in the question?&quot;}
+  GOV --&gt;|&quot;no&quot;| AB[&quot;abstain;&lt;br/&gt;receipt stored&quot;]
+  GOV --&gt;|&quot;yes, or exploratory&quot;| ANS[&quot;model answers;&lt;br/&gt;cited ids checked&lt;br/&gt;against retrieved&quot;]
+  ANS --&gt; RC[&quot;receipt: ids and&lt;br/&gt;graph version,&lt;br/&gt;not the text read&quot;]
+  TX --&gt;|&quot;later&quot;| FIX[&quot;correction: merge,&lt;br/&gt;whole-graph clear,&lt;br/&gt;snapshot restore;&lt;br/&gt;no single-fact delete&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three entry points share one engine. <code>GraphRAGEngine</code>
+keeps the graph in process dicts as a read cache over
+<code>SqliteGraphStore</code>, re-syncing when another process has
+bumped <code>graph_version</code> and reloading fully when
+<code>epoch</code> changes
+(<code>studio_api/graphrag_engine.py:451-480</code>). Writes take
+<code>BEGIN IMMEDIATE</code>, so one process writes at a time across
+Studio, MCP and CLI, and readers never block
+(<code>veritasgraph/store/sqlite.py:58-98</code>). Each write stamps its
+rows with the new version, and deletions leave a row in a table named
+<code>tombstone</code> so other caches can drop them
+(<code>veritasgraph/store/migrations.py:56-63</code>,
+<code>veritasgraph/store/sqlite.py:267-277</code>).</p>
+<p>Model calls go to Ollama at <code>OLLAMA_HOST</code>, or to an
+OpenAI-compatible endpoint when <code>VG_GRAPHRAG_CHAT=openai</code>
+(<code>studio_api/graphrag_engine.py:562-581</code>). The optional
+structured-data layer under <code>veritasgraph/structured/</code>
+governs a semantic catalogue of an external database in Postgres with
+pgvector; it holds no agent memory and this report does not read it
+further.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The MCP path needs Python, <code>httpx</code> and a local model:
+<code>python -m veritasgraph_mcp</code> with
+<code>VERITASGRAPH_MCP_MODE</code> set, and the store is created on
+first use under <code>STUDIO_DATA_DIR</code>. It runs fully offline. The
+Studio path needs FastAPI and, from this checkout, the four missing
+modules named in section 1. The store is readable by hand: every row's
+full JSON sits in a <code>body</code> column, and snapshots are
+zlib-compressed JSON (<code>veritasgraph/governance.py:98-120</code>).
+The Studio turn buffer is a plain JSON file
+(<code>studio_api/store.py:396-417</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Ingest.</strong> <code>GraphRAGEngine.ingest</code> chunks
+the text, applies the PII policy per chunk, runs
+<code>extract_chunk</code> on every chunk before taking the write lock,
+then merges all chunks and appends one <code>graph.ingest</code> audit
+row in a single transaction
+(<code>studio_api/graphrag_engine.py:827-884</code>).
+<code>merge_chunk</code> maps raw types and predicates onto certified
+vocabulary and records unmapped ones as <code>proposed</code> entries
+with <code>INSERT OR IGNORE</code> (<code>:730-825</code>,
+<code>veritasgraph/ontology/__init__.py:389-408</code>).</li>
+<li><strong>Import.</strong> <code>import_graph</code> adapts Graphify,
+Understand-Anything, AI Atlas or generic node and edge JSON, tags every
+row with the caller's <code>source_type</code>, snapshots first under
+<code>overwrite</code>, and audits (<code>:889-1067</code>).</li>
+<li><strong>Retrieve and answer.</strong> <code>retrieve</code> seeds,
+expands and gathers sources (<code>:1377-1397</code>);
+<code>query</code> runs the governed gate, builds the prompt, checks
+cited ids against retrieved ones and stores a receipt
+(<code>:1464-1613</code>).</li>
+<li><strong>Correct.</strong> <code>merge_entities</code>
+(<code>:1223-1284</code>), <code>clear</code> (<code>:1133-1154</code>),
+<code>restore</code> (<code>:1167-1191</code>), <code>update_rows</code>
+for compile normalisation (<code>:1286-1312</code>).</li>
+<li><strong>Compile.</strong> <code>run_compile</code> takes a
+<code>job_lock</code> row, runs six stages and writes suggestions keyed
+by a fingerprint (<code>veritasgraph/compile.py:296-330</code>);
+<code>resolve_suggestion</code> applies an accepted merge or term
+(<code>:89-122</code>).</li>
+<li><strong>Agent turns.</strong> <code>Orchestrator</code> recalls the
+last <code>memory_turns</code> (default 6) turns before the model call
+and appends the user and assistant turns after it
+(<code>studio_api/orchestrator.py:592-603</code>, <code>:675</code>,
+<code>:698-700</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+<th>Status or time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>source</code>, <code>entity</code>,
+<code>relationship</code></td>
+<td>JSON bodies with <code>sources</code>, <code>source_type</code>,
+<code>origin</code>, <code>pii_flags</code></td>
+<td><code>row_version</code> only</td>
+</tr>
+<tr>
+<td><code>tombstone</code></td>
+<td>kind and id of a deleted row</td>
+<td><code>row_version</code>, for cache sync</td>
+</tr>
+<tr>
+<td><code>entity_type</code>, <code>predicate</code>,
+<code>term</code></td>
+<td>vocabulary, synonyms, term-entity links</td>
+<td><code>status</code>, <code>updated_at</code></td>
+</tr>
+<tr>
+<td><code>suggestion</code></td>
+<td>compile output, unique <code>fingerprint</code></td>
+<td><code>open</code>, <code>accepted</code>, <code>rejected</code></td>
+</tr>
+<tr>
+<td><code>audit_event</code></td>
+<td>actor, action, target, detail</td>
+<td><code>seq</code>, <code>ts</code>, <code>prev_hash</code>,
+<code>hash</code></td>
+</tr>
+<tr>
+<td><code>snapshot</code></td>
+<td>compressed graph and term links</td>
+<td>retention 20 by default</td>
+</tr>
+<tr>
+<td><code>answer_log</code>, <code>feedback</code></td>
+<td>question, answer, evidence ids, rating</td>
+<td><code>ts</code>, <code>graph_version</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>The schema is in
+<code>veritasgraph/store/migrations.py:17-213</code>. Sources carry
+<code>created_at</code>; no row carries a validity time.
+<code>actor</code> is a role plus a token fingerprint on REST
+(<code>build/lib/studio_api/security.py:157</code>) and
+<code>mcp:stdio</code> on the MCP server
+(<code>veritasgraph_mcp/tools.py:38</code>). No graph table has a user,
+tenant, project or agent column.</p>
+<p>The Studio turn buffer is <code>_agent_memory</code>, a dict of lists
+keyed by agent id and capped at 50 turns, each holding
+<code>role</code>, <code>content</code> and <code>at</code>
+(<code>studio_api/store.py:132-148</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Seeding is lexical. An entity is a seed when its full name appears in
+the question as a phrase, or when a question word of more than three
+letters starts a word of its name. It is also a seed when linked to a
+matched glossary term
+(<code>studio_api/graphrag_engine.py:1317-1338</code>,
+<code>veritasgraph/text.py:26-28</code>). Term matching includes
+<code>proposed</code> terms and skips only <code>deprecated</code> ones
+(<code>veritasgraph/ontology/__init__.py:197-210</code>). Expansion is
+breadth-first to depth 2 and 25 nodes, in dictionary insertion order, so
+when the cap bites the earliest-written entities win
+(<code>studio_api/graphrag_engine.py:1350-1375</code>).</p>
+<p>Every chunk behind every retrieved node and edge goes into the prompt
+with no token bound on the <code>/graphrag/query</code> and MCP paths
+(<code>:1534-1544</code>). The Studio orchestrator budgets the same
+context to <code>context_budget</code>, default 600 tokens, before the
+model call (<code>studio_api/orchestrator.py:616-631</code>).</p>
+<p>The citation check is exact: ids of the <code>doc_xxx#n</code> shape
+in the answer are compared to the retrieved set, and the answer is
+<code>grounded</code> when it cites at least one retrieved source and
+nothing else (<code>studio_api/graphrag_engine.py:1562-1572</code>). In
+governed mode an ungrounded answer is replaced by a refusal
+(<code>:1601-1609</code>). The check proves a cited id was retrieved,
+not that the sentence beside it is supported.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are hot-path and blocking. An MCP <code>ingest_document</code>
+call returns after one model call per chunk and one transaction; the
+facts are retrievable at commit. Extraction runs outside the lock, so a
+slow model blocks only its own caller
+(<code>studio_api/graphrag_engine.py:835-847</code>). Nothing
+deduplicates beyond the name and entity-pair keys. Agent-generated facts
+are handled exactly like document facts: an agent's ingest is extracted,
+and an agent's import is stored as given with the
+<code>source_type</code> it names.</p>
+<p><strong>The provenance rank protects nothing an agent cannot
+claim.</strong> <code>handle_import_graph</code> passes
+<code>args.get("source_type", "curated")</code>
+(<code>veritasgraph_mcp/tools.py:307</code>), and the tool schema says
+the default is curated (<code>:628</code>). Under
+<code>merge_strategy="overwrite"</code> an MCP client replaces any
+entity's type and description
+(<code>studio_api/graphrag_engine.py:627-635</code>). The write is
+audited with the strategy and counts, not the values replaced
+(<code>:1033-1047</code>); the snapshot taken first holds them.</p>
+<p>The compile pass reads the whole graph each run to compute degrees
+and name groups, with no model call
+(<code>veritasgraph/compile.py:136-280</code>). The Studio turn buffer
+rewrites <code>workspace.json</code> whole on each append, twice per
+turn (<code>studio_api/store.py:132-138</code>,
+<code>:396-417</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write blocks for the extraction calls and one SQLite transaction.
+No background pass calls a model. On the read path the MCP and REST
+query inject every chunk behind up to 25 nodes and their edges,
+unbounded; the Studio pipeline caps it at its token budget and prepends
+up to six raw turns.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server exposes three tiers chosen by
+<code>VERITASGRAPH_MCP_MODE</code>, default <code>write</code>
+(<code>veritasgraph_mcp/tools.py:41-43</code>). <code>read</code> lists
+14 tools; <code>write</code> adds <code>ingest_document</code>,
+<code>import_graph</code> and <code>propose_term</code>
+(<code>:612</code>, <code>:636</code>, <code>:655</code>);
+<code>admin</code> adds <code>clear_graph</code> (<code>:662</code>). A
+tool above the tier is reported as unknown. The stdio server
+authenticates nobody; the tier is the whole boundary. Through the
+Studio's HTTP bridge the tier is lowered to the caller's role
+(<code>studio_api/routes/mcp.py:75-76</code>).</p>
+<p>The server instructions tell the agent to call
+<code>check_answerable</code> before a factual answer and to treat
+<code>grounded=false</code> as unverified
+(<code>veritasgraph_mcp/tools.py:730-737</code>). No tool merges
+entities, resolves a suggestion, restores a snapshot, or certifies and
+deprecates; those are REST routes. An agent cannot remove what it wrote
+except by clearing the graph.</p>
+<p><code>propose_term</code> calls <code>Ontology.upsert_term</code>
+(<code>veritasgraph_mcp/tools.py:269-295</code>), whose conflict clause
+sets <code>status = 'proposed'</code> on an existing term
+(<code>veritasgraph/ontology/__init__.py:320-328</code>). An MCP client
+can therefore demote a certified term by re-proposing it, rewrite its
+definition, relink it to other entities, and return a deprecated term to
+<code>proposed</code>, where <code>match_terms</code> seeds retrieval
+from it again.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-governed-mode-enforces">What governed mode enforces</h3>
+<p><code>check_answerable</code> returns <code>answerable</code> when at
+least one entity seed exists and, in governed mode, at least one matched
+term is certified (<code>veritasgraph/answerability.py:47</code>). A
+question naming one certified term and five unknown words passes. After
+the gate, retrieval runs as in exploratory mode, seeding from proposed
+terms too. The README's "answers only when certified terms cover the
+question" is, in code, "when one certified term is present".</p>
+<h3 id="what-the-audit-chain-proves">What the audit chain proves</h3>
+<p><code>_event_hash</code> is SHA-256 over the previous hash and the
+row's fields with no key
+(<code>veritasgraph/governance.py:33-35</code>), and
+<code>verify_audit</code> recomputes the chain from genesis
+(<code>:76-85</code>). It detects an edit to one row by someone who does
+not recompute the rest. Anyone who can write the database file can
+rewrite a row and every hash after it, and the head is not exported
+anywhere. <code>propose_term</code> writes the term and the audit row in
+two transactions (<code>veritasgraph_mcp/tools.py:285-294</code>). The
+Studio turn buffer and workspace resources write no audit row.</p>
+<h3 id="deletion-and-erasure">Deletion and erasure</h3>
+<p><code>clear</code> keeps the whole graph in a snapshot
+(<code>studio_api/graphrag_engine.py:1147-1150</code>), retained until
+20 newer snapshots push it out
+(<code>veritasgraph/governance.py:114-119</code>).
+<code>answer_log</code> keeps every question and answer, and the audit
+detail keeps document titles, with no delete path for either. PII
+handling tags, redacts or rejects at ingest and redacts on read for
+roles below the reveal role (<code>veritasgraph/pii.py:98</code>,
+<code>:134</code>, <code>:141</code>); under the default
+<code>tag</code> policy the text is stored in full.</p>
+<h3 id="shared-turn-memory">Shared turn memory</h3>
+<p><code>POST /playground/chat</code> is a viewer route
+(<code>build/lib/studio_api/security.py:37-43</code>), and the turn
+buffer is keyed by agent id alone. Every caller of an agent with
+<code>use_memory</code> reads the last six turns of every other caller
+of that agent.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>audit_log</code></strong> — awarded on
+<code>audit_event</code>. One INSERT per graph mutation, in the same
+transaction, reached from the MCP stdio server; the only SQL on the
+table is that INSERT. The limits are the two above: counts rather than
+values, and an unkeyed chain.</li>
+<li><strong><code>trust_state</code></strong> — withheld. Facts have no
+status. The vocabulary status filters term matching and gates governed
+answers, but nothing in the source tree calls <code>set_status</code>:
+its only callers are in
+<code>build/lib/studio_api/routes/ontology.py:153-182</code>, whose
+source is ignored. From this checkout every term stays
+<code>proposed</code>.</li>
+<li><strong><code>human_review</code></strong> — withheld. A term an
+agent proposes is matched and seeds retrieval while it waits, so
+certification gates one mode, not admission. The certify route is
+admin-only in the build copy, and the agent can undo a deprecation
+through <code>propose_term</code>. Suggestions wait for an editor, but
+they are compiler output, not agent writes.</li>
+<li><strong><code>tombstone</code></strong> — withheld. The
+<code>tombstone</code> table is a delete-sync marker. Suggestion
+fingerprints are keyed on entity ids
+(<code>veritasgraph/compile.py:207</code>, <code>:230</code>), so they
+stop a question recurring, not a value. A deprecated type survives
+<code>record_proposals</code> because of <code>INSERT OR IGNORE</code>,
+the closest thing here, but with no certified vocabulary the raw type
+still reaches the entity.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. No graph
+row carries a scope key; one SQLite file per deployment is a physical
+partition. Roles gate verbs.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Sources carry
+<code>created_at</code>; nothing carries a validity time.</li>
+<li><strong><code>negative_eval</code></strong> — withheld; see section
+10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI runs <code>pytest studio_api/tests tests -m "not ollama"</code>
+and ignores the browser file
+(<code>.github/workflows/ci.yml:41-45</code>). The <code>client</code>
+fixtures import <code>studio_api.main</code>
+(<code>studio_api/tests/test_studio_api.py:27</code>), which imports the
+uncommitted modules, so on a fresh checkout every test using the app
+client should fail at setup. I ran none of it.</p>
+<p>The Python suite covers graph import adapters and merge strategies,
+including that a curated description survives an extracted import
+(<code>studio_api/tests/test_graph_import.py:128-160</code>), and the
+MCP tiers (<code>tests/test_mcp_modes.py:40-54</code>). No test calls
+<code>record_audit</code>, <code>verify_audit</code>, a snapshot,
+<code>restore</code>, <code>merge_entities</code> or
+<code>resolve_suggestion</code>.</p>
+<p>The Playwright suites under
+<code>tests/studio-e2e/tests/integration/</code> drive a live Studio and
+Ollama. <code>s06-ontology.spec.ts</code> checks that editors cannot
+certify, that MCP cannot, and that governed mode abstains before a term
+is certified and answers after (<code>:27-49</code>,
+<code>:89-132</code>). The committed
+<code>tests/studio-e2e/test-results/integration.json</code>, dated 8
+November 2026, covers suites s01 to s04: 32 passed, 1 skipped.</p>
+<p><strong><code>negative_eval</code> is withheld.</strong> The closest
+case is <code>s03-citations.spec.ts:75-82</code>: on a populated graph,
+"What is the capital of France?" must retrieve nothing. That asserts an
+empty result for an unrelated question, which a retriever returning
+nothing would also pass; it is an abstention test.
+<code>test_pipeline_redacts_pii_input</code> asserts an email is absent
+from the model input
+(<code>studio_api/tests/test_studio_api.py:369-382</code>), which is the
+input guardrail, not retrieval.</p>
+<p><strong>Paper.</strong> The README cites an ICASF 2025 paper by
+bibtex with no DOI or arXiv id (<code>README.md:664-671</code>). The
+committed PDF with that title opens as a slide deck; I read its first
+three pages, which are title and motivation slides. No evaluation result
+for the graph is committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Audit in the same transaction as the write.</strong>
+Appending the audit row inside the transaction that changes the rows
+means a crash cannot leave a change without its record or a record
+without its change.</li>
+<li><strong>Snapshot before anything destructive.</strong> Clear,
+overwrite import and restore all snapshot first, and restore snapshots
+the graph it replaces.</li>
+<li><strong>Version stamps for cross-process caches.</strong> A
+monotonic <code>graph_version</code> on every written row, a deletion
+table keyed by version and an <code>epoch</code> for full reloads let
+several processes share one SQLite file with cheap incremental
+sync.</li>
+<li><strong>Store the answer receipt.</strong> Recording the question,
+cited ids, retrieved ids and graph version per answer makes "what did it
+read" a lookup.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A provenance rank the writer sets.</strong> If precedence
+protects curated content, the label has to come from the channel, not
+from an argument with <code>curated</code> as its default.</li>
+<li><strong>An upsert that resets review state.</strong> Re-proposing an
+entry should not demote it or revive a deprecation; key the reset on a
+changed definition and refuse it for deprecated entries.</li>
+<li><strong>One edge per entity pair.</strong> Two different statements
+about the same pair need two rows, or a correction lands as a
+description-length contest.</li>
+<li><strong>An unkeyed hash chain called tamper-evident.</strong>
+Without a key or an exported head, the chain detects accidents, not an
+operator.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one team running a local model over its own documents that
+wants citations it can check and a record of who changed the graph. It
+does not suit memory that has to be corrected or forgotten one fact at a
+time, since the only removals are a merge or a whole-graph clear. Nor
+does it suit multi-user agent memory, since nothing scopes rows and the
+Studio's turn buffer is shared per agent. Anyone adopting the Studio
+from source has to write the role and certification modules first.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>studio_api/security.py</code>,
+<code>netguard.py</code> and the two route modules match the
+<code>build/lib/</code> copies, and whether the published wheel ships
+them.</li>
+<li>Whether <code>routes/structured.py</code> exists anywhere outside
+the author's tree.</li>
+<li>Whether the one-edge-per-pair key is intended, given that predicates
+are typed.</li>
+<li>Whether governed mode is meant to use the coverage ratio it
+computes.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>veritasgraph/store/sqlite.py</code>,
+<code>veritasgraph/store/migrations.py</code>,
+<code>veritasgraph/store/migrate_json.py</code></li>
+<li>Write path: <code>studio_api/graphrag_engine.py</code>
+(<code>ingest</code>, <code>merge_chunk</code>,
+<code>import_graph</code>, <code>_upsert_entity</code>,
+<code>_upsert_relationship</code>)</li>
+<li>Retrieval: <code>studio_api/graphrag_engine.py</code>
+(<code>_seed_entities</code>, <code>_expand</code>,
+<code>retrieve</code>, <code>query</code>),
+<code>veritasgraph/answerability.py</code>,
+<code>veritasgraph/text.py</code></li>
+<li>Governance: <code>veritasgraph/governance.py</code>,
+<code>veritasgraph/compile.py</code>,
+<code>veritasgraph/ontology/__init__.py</code>,
+<code>veritasgraph/pii.py</code></li>
+<li>Agent turns: <code>studio_api/store.py</code>,
+<code>studio_api/orchestrator.py</code>,
+<code>studio_api/routes/playground.py</code></li>
+<li>MCP and API: <code>veritasgraph_mcp/tools.py</code>,
+<code>veritasgraph_mcp/server.py</code>,
+<code>studio_api/routes/graphrag.py</code>,
+<code>studio_api/routes/mcp.py</code>, <code>studio_api/main.py</code>,
+<code>veritasgraph/cli.py</code></li>
+<li>Build copies of the missing modules:
+<code>build/lib/studio_api/security.py</code>,
+<code>build/lib/studio_api/routes/ontology.py</code>,
+<code>build/lib/studio_api/netguard.py</code></li>
+<li>Tests: <code>studio_api/tests/test_graph_import.py</code>,
+<code>studio_api/tests/test_studio_api.py</code>,
+<code>tests/test_mcp_modes.py</code>,
+<code>tests/studio-e2e/tests/integration/s03-citations.spec.ts</code>,
+<code>tests/studio-e2e/tests/integration/s06-ontology.spec.ts</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git</code>.</p>
+<ul>
+<li><strong>The Studio's role and route modules are not
+tracked.</strong>
+<code>git ls-files studio_api/security.py studio_api/netguard.py studio_api/routes/ontology.py studio_api/routes/structured.py</code>
+returns nothing; the same command with a <code>build/lib/</code> prefix
+lists the first three, and
+<code>git check-ignore -v studio_api/security.py</code> names
+<code>.gitignore:135</code>.</li>
+<li><strong>Nothing in the source tree calls
+<code>set_status</code>.</strong>
+<code>git grep -n 'set_status(' -- veritasgraph studio_api veritasgraph_mcp</code>
+matches only the definition at
+<code>veritasgraph/ontology/__init__.py:369</code>;
+<code>git grep -n 'set_status(' -- build</code> matches the route at
+<code>build/lib/studio_api/routes/ontology.py:169</code>.</li>
+<li><strong>The audit table is only inserted into.</strong>
+<code>git grep -n -E '(UPDATE|DELETE FROM)[[:space:]]+audit_event'</code>
+returns nothing;
+<code>git grep -n -E 'INSERT INTO[[:space:]]+audit_event' -- veritasgraph</code>
+matches <code>veritasgraph/governance.py:55</code>.</li>
+<li><strong>No route deletes one fact.</strong>
+<code>git grep -n -E '@[a-z_]+\.delete\(' -- studio_api/routes</code>
+matches three routes: the whole graph, an agent's turn buffer and a
+Studio resource.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_until|valid_at|event_time|occurred_at' -- veritasgraph studio_api veritasgraph_mcp</code>
+returns nothing; the same pattern counts 16 lines in
+<code>veritas-reason/veritasreason/kg/temporal_model.py</code>.</li>
+<li><strong>No scope key on graph tables or tools.</strong>
+<code>git grep -n -i -E 'tenant|user_id|workspace_id|project_id|namespace' -- veritasgraph/store veritasgraph/governance.py veritasgraph/ontology veritasgraph/compile.py studio_api/graphrag_engine.py veritasgraph_mcp/tools.py</code>
+returns nothing; the same pattern counts 12 lines in
+<code>veritas-reason/veritasreason/context/agent_memory.py</code>.</li>
+<li><strong>Retrieval reads neither status nor provenance.</strong>
+<code>sed -n 1317,1397p studio_api/graphrag_engine.py | grep -c -E 'source_type|status'</code>
+prints 0;
+<code>sed -n 586,642p studio_api/graphrag_engine.py | grep -c source_type</code>
+prints 5.</li>
+<li><strong>No test covers the audit chain or snapshots.</strong>
+<code>git grep -n -i -E 'verify_audit|audit/verify|record_audit|list_snapshots|restore' -- studio_api/tests tests</code>
+returns nothing;
+<code>git grep -c -E 'verify_audit|record_audit' -- veritasgraph/governance.py</code>
+counts 3.</li>
+<li><strong>No MCP tool corrects a fact.</strong>
+<code>git grep -n -E 'set_status|merge_entities|resolve_suggestion|restore' -- veritasgraph_mcp/tools.py</code>
+returns nothing;
+<code>git grep -n -E 'clear\(' -- veritasgraph_mcp/tools.py</code>
+matches line 324.</li>
+<li><strong>No arXiv id or DOI.</strong>
+<code>git grep -n -i -E 'arxiv|doi\.org|doi:' -- README.md</code>
+returns nothing; <code>git grep -n -i 'bibtex' -- README.md</code>
+matches line 664.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/bibinprathap/VeritasGraph/commit/68552fdd06dd43bc19e1ded5ff6b72b57c4a100f"><code class="commit-id" title="68552fdd06dd43bc19e1ded5ff6b72b57c4a100f">68552fdd…</code></a>
+— first reading, from a full clone of the default branch
+<code>restored-main</code>, scoped to <code>veritasgraph/</code>,
+<code>studio_api/</code> and <code>veritasgraph_mcp/</code>. That branch
+rewrites <code>master</code>: 38/39 of <code>master</code>'s commits
+reappear with the same tree and author time, past the first three under
+new hashes, and the 19 that GitHub had signed lose their signatures.
+Screened first: four auto-run entries
+(<code>.vscode/settings.json</code> and the veritas-reason Claude plugin
+manifest, hooks directory and <code>hooks.json</code>, whose hooks
+syntax-check edited files and print warnings); nine
+<code>conftest.py</code> build-time execution points; sixteen unpinned
+surfaces; nothing inside the cooldown. MIT, no rider. Nothing installed,
+built or run. One mark: <code>audit_log</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

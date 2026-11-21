@@ -1082,6 +1082,21 @@ the model. Coverage is the weak side: a capture failure is a warning
 while the mutation stands, a turn records only the HEAD it ended on, the
 hidden refs sit in a repository the model's Shell can rewrite, and
 erasing a Bot leaves rows naming content that no longer exists.</p>
+<p><a href="../../systems/veritasgraph/">VeritasGraph</a> puts the audit
+row inside the write. <code>record_audit</code> joins the SQLite
+transaction of every ingest, import, clear, snapshot, restore, merge and
+compile write, so a change and its record commit or roll back together,
+and the only SQL touching <code>audit_event</code> is its INSERT
+(<code>veritasgraph/governance.py:41-60</code>,
+<code>studio_api/graphrag_engine.py:860-871</code>,
+<code>:1278-1283</code>). Each row's hash covers the previous one, and
+<code>GET /graphrag/audit/verify</code> recomputes the chain and names
+the row where it breaks. Three limits. The hash takes no key and the
+head is exported nowhere, so an operator who rewrites a row can rewrite
+every later hash. A row holds ids and counts, not the values a merge or
+an overwrite import replaced; the snapshot taken first holds those. And
+no committed test calls <code>record_audit</code> or
+<code>verify_audit</code>.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

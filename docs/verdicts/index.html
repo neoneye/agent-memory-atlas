@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 846 reports.</strong></p>
+<p><strong>This page covers all 847 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34822,6 +34822,42 @@ memory, and a deleted or contradicted rule must not come back through
 the next extraction.</li>
 <li>Do not copy when: agents must be isolated from each other or from
 other projects, or a person must sign off each contradiction.</li>
+</ul>
+<h3 id="veritasgraph"><a
+href="../systems/veritasgraph/"><code>veritasgraph</code></a></h3>
+<ul>
+<li>Best idea: <strong>the audit row commits with the change.</strong>
+<code>record_audit</code> runs inside the SQLite transaction of every
+ingest, import, clear, snapshot, restore, merge and compile write, each
+row chaining the previous row's SHA-256, and clear, overwrite import and
+restore snapshot the graph before they touch it.</li>
+<li>Biggest risk: <strong>nothing can be forgotten one fact at a
+time.</strong> The only removals are an entity merge, a whole-graph
+clear that keeps the graph in a snapshot, and a snapshot restore; a
+re-ingested correction replaces a description only when it is longer,
+because one edge holds every statement about an entity pair.</li>
+<li>Second risk: provenance and review state are writable by the agent.
+MCP <code>import_graph</code> labels writes <code>curated</code> by
+default and can overwrite, and <code>propose_term</code> resets a
+certified or deprecated term to <code>proposed</code>; governed mode
+needs one certified term anywhere in the question, and the Studio's role
+and certify modules are not in the tree.</li>
+<li>Most reusable component: the cross-process store in
+<code>veritasgraph/store/sqlite.py</code>, with
+<code>graph_version</code> stamps, a deletion table and an
+<code>epoch</code> for full reloads, and <code>record_audit</code> with
+<code>verify_audit</code> in
+<code>veritasgraph/governance.py</code>.</li>
+<li>Maturity impression: MIT; 10,962 lines of Python across
+<code>veritasgraph/</code>, <code>studio_api/</code> and
+<code>veritasgraph_mcp/</code>, 313 commits from 3 February to 11
+November 2026; 135 pytest functions and 78 Playwright cases against a
+live Studio, none run here, with no test on the audit chain, snapshots
+or merges. One mark: <code>audit_log</code>.</li>
+<li>Study when: several local processes must share one graph file and
+every change has to leave a transactional record.</li>
+<li>Do not copy when: memory must be corrected or erased one fact at a
+time, or users of one agent must not see each other's turns.</li>
 </ul>
         </article>
       </div>

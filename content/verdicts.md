@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 846 reports.**
+**This page covers all 847 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7782,3 +7782,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, four commits past `v1.0.0-beta.4`; 49,523 lines of Python in `app/backend/app`, 38 commits from 11 to 20 November 2026 by one author, the first an initial public release; 1,322 pytest functions and 201 Vitest cases in CI, not run here; no paper and no retrieval benchmark. Five marks: `tombstone`, `trust_state`, `scope_enforced`, `audit_log` and `negative_eval`.
 - Study when: several coding agents share one developer's project memory, and a deleted or contradicted rule must not come back through the next extraction.
 - Do not copy when: agents must be isolated from each other or from other projects, or a person must sign off each contradiction.
+
+### [`veritasgraph`](../systems/veritasgraph/)
+
+- Best idea: **the audit row commits with the change.** `record_audit` runs inside the SQLite transaction of every ingest, import, clear, snapshot, restore, merge and compile write, each row chaining the previous row's SHA-256, and clear, overwrite import and restore snapshot the graph before they touch it.
+- Biggest risk: **nothing can be forgotten one fact at a time.** The only removals are an entity merge, a whole-graph clear that keeps the graph in a snapshot, and a snapshot restore; a re-ingested correction replaces a description only when it is longer, because one edge holds every statement about an entity pair.
+- Second risk: provenance and review state are writable by the agent. MCP `import_graph` labels writes `curated` by default and can overwrite, and `propose_term` resets a certified or deprecated term to `proposed`; governed mode needs one certified term anywhere in the question, and the Studio's role and certify modules are not in the tree.
+- Most reusable component: the cross-process store in `veritasgraph/store/sqlite.py`, with `graph_version` stamps, a deletion table and an `epoch` for full reloads, and `record_audit` with `verify_audit` in `veritasgraph/governance.py`.
+- Maturity impression: MIT; 10,962 lines of Python across `veritasgraph/`, `studio_api/` and `veritasgraph_mcp/`, 313 commits from 3 February to 11 November 2026; 135 pytest functions and 78 Playwright cases against a live Studio, none run here, with no test on the audit chain, snapshots or merges. One mark: `audit_log`.
+- Study when: several local processes must share one graph file and every change has to leave a transactional record.
+- Do not copy when: memory must be corrected or erased one fact at a time, or users of one agent must not see each other's turns.

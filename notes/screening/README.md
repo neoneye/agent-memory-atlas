@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 845 of 846 screened at the report's current pin.**
+**Progress: 846 of 847 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 401 |
+| Repositories with an auto-run surface (`RUNS`) | 402 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 387 |
-| Repositories with build-time execution (`EXEC`) | 610 |
+| Repositories with build-time execution (`EXEC`) | 611 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -409,6 +409,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`velesdb`](../../content/systems/velesdb.md) | `.githooks/`, `server.json`, `smithery.yaml` |
 | [`veracium`](../../content/systems/veracium.md) | `server.json` |
 | [`verimem`](../../content/systems/verimem.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.claude/hooks/`, `.githooks/`, `hooks/`, `server.json` |
+| [`veritasgraph`](../../content/systems/veritasgraph.md) | `.vscode/settings.json`, `veritas-reason/plugins/.claude-plugin/plugin.json`, `veritas-reason/plugins/hooks/`, `veritas-reason/plugins/hooks/hooks.json` |
 | [`vestige`](../../content/systems/vestige.md) | `hooks/`, `server.json` |
 | [`vibe-cognition`](../../content/systems/vibe-cognition.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`vision-memory-mcp`](../../content/systems/vision-memory-mcp.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `server.json` |

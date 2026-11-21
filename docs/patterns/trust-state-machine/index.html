@@ -879,6 +879,21 @@ supplies the type: a statement about the user typed
 superseding an approved preference with another type retires it in the
 same transaction. The extractor's writes wait under the default policy
 whatever their type, which makes the agent's own path the open one.</p>
+<p><a href="../../systems/veritasgraph/">VeritasGraph</a> puts the state
+machine on its vocabulary and resets it on every write. Glossary terms,
+types and predicates carry <code>proposed</code>, <code>certified</code>
+or <code>deprecated</code> under a <code>CHECK</code> constraint; term
+matching skips deprecated terms and governed mode needs a certified one
+in the question (<code>veritasgraph/ontology/__init__.py:197-210</code>,
+<code>veritasgraph/answerability.py:47</code>). Every upsert sets
+<code>status = 'proposed'</code> whatever the row held
+(<code>veritasgraph/ontology/__init__.py:253</code>, <code>:291</code>,
+<code>:324</code>), and the MCP <code>propose_term</code> tool is an
+upsert, so an agent can demote a certified term or return a deprecated
+one to matching. The facts themselves carry no status, and the only
+callers of the certify and deprecate writer sit in a route module that
+is gitignored and survives only as build output, so no
+<code>trust_state</code> mark follows.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>
