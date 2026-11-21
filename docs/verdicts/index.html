@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 842 reports.</strong></p>
+<p><strong>This page covers all 843 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34671,6 +34671,44 @@ trust.</li>
 <li>Do not copy when: you need per-fact correction or deletion, several
 users, or latest-value behaviour that does not depend on the question's
 wording.</li>
+</ul>
+<h3 id="praxis"><a
+href="../systems/praxis/"><code>praxis</code></a></h3>
+<ul>
+<li>Best idea: <strong>every graph mutation is a change set holding the
+whole row before and after.</strong> Apply, promote, deprecate, rollback
+and dedupe merge each open one, and rollback compares each item's
+<code>after_json</code> with the current row and refuses without
+<code>--force</code> when anything moved since.</li>
+<li>Biggest risk: <strong>the belief state lives on the layer the agent
+does not read.</strong> <code>praxis search</code> returns chunks, the
+chunk and source rows never carry a graph status, and deprecating or
+rolling back a source leaves its text in the results at full
+priority.</li>
+<li>Second risk: deprecation is keyed on a node id derived from the
+source title, and <code>upsert_node</code> writes status on conflict, so
+the next ingest of that title resets it to provisional; a resolved
+conflict reopens as a new record on the next scan;
+<code>review resolve</code> on a relationship candidate changes only the
+review item.</li>
+<li>Most reusable component: <code>audited_upsert</code>,
+<code>change_change_set_object_statuses</code> and
+<code>rollback_change_set</code> in
+<code>src/praxis/commands/graph_audit.py</code>, and the plan, confirm,
+quarantine and receipt sequence in
+<code>src/praxis/agency/lifecycle.py</code>.</li>
+<li>Maturity impression: MIT, pyproject at 0.3.0; 23,184 lines of Python
+in <code>src/praxis</code>, 51 commits from 11 May to 3 November 2026;
+70 unittest methods driving the CLI, run in CI on Python 3.9 and 3.12,
+not run here; no committed eval result and no paper. Four marks:
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code>.</li>
+<li>Study when: you want a local, inspectable document corpus with
+source trails and reversible graph edits that a person can audit and
+roll back from a shell.</li>
+<li>Do not copy when: a rejected source must stop appearing in answers,
+several clients' data must stay apart in search, or memory has to come
+from conversations.</li>
 </ul>
         </article>
       </div>

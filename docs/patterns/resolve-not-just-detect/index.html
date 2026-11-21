@@ -715,6 +715,25 @@ the text on every recall, no disposition can be stored, and the only way
 to settle it is to append a line the parser reads as a plain assignment.
 That fails requirements 4 and 5 by construction, and holds requirement
 3: the flagged value is still served, beside its cause.</p>
+<p><a href="../../systems/praxis/">Praxis</a> meets the first four
+requirements and turns the fifth around. Findings are typed
+<code>duplicate_source</code>, <code>duplicate_content</code>,
+<code>duplicate_entity</code> or <code>contradiction</code>, open ones
+stay retrievable with a priority penalty, and
+<code>conflicts resolve</code> takes <code>resolved</code>,
+<code>suppressed</code>, <code>false_positive</code> or
+<code>acknowledged</code> with a free-text resolution and no actor
+(<code>src/praxis/commands/conflicts.py:94-117</code>). The write path
+does consult the resolution: <code>insert_conflict</code> reads the
+existing record and, finding it resolved, opens a new conflict with
+<code>previous_conflict_id</code>
+(<code>src/praxis/commands/conflict_ledger.py:209-214</code>). Scans run
+on every apply and promote, so a <code>keep_both</code> decision on a
+duplicate reopens the next time its change set is promoted, and the
+suite asserts that it does
+(<code>tests/test_release_hardening.py:589-623</code>). Only the dedupe
+merge acts on the graph, and <code>dedupe split</code> reopens the
+conflict it closed.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert

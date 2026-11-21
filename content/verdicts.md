@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 842 reports.**
+**This page covers all 843 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7742,3 +7742,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, release v0.3.1; 21,343 lines of Python in `src/tomc`, 7,957 of them a Qt companion; 146 commits from 6 October to 20 November 2026; 680 pytest functions and `make reproduce` in CI, not run here; the stale-value and BEAM headlines recompute from committed rows, and the paper is not public. Two marks: `scope_enforced` and `negative_eval`.
 - Study when: you want correction by appending, with precedence decided by a parser you can read rather than an extractor you must trust.
 - Do not copy when: you need per-fact correction or deletion, several users, or latest-value behaviour that does not depend on the question's wording.
+
+### [`praxis`](../systems/praxis/)
+
+- Best idea: **every graph mutation is a change set holding the whole row before and after.** Apply, promote, deprecate, rollback and dedupe merge each open one, and rollback compares each item's `after_json` with the current row and refuses without `--force` when anything moved since.
+- Biggest risk: **the belief state lives on the layer the agent does not read.** `praxis search` returns chunks, the chunk and source rows never carry a graph status, and deprecating or rolling back a source leaves its text in the results at full priority.
+- Second risk: deprecation is keyed on a node id derived from the source title, and `upsert_node` writes status on conflict, so the next ingest of that title resets it to provisional; a resolved conflict reopens as a new record on the next scan; `review resolve` on a relationship candidate changes only the review item.
+- Most reusable component: `audited_upsert`, `change_change_set_object_statuses` and `rollback_change_set` in `src/praxis/commands/graph_audit.py`, and the plan, confirm, quarantine and receipt sequence in `src/praxis/agency/lifecycle.py`.
+- Maturity impression: MIT, pyproject at 0.3.0; 23,184 lines of Python in `src/praxis`, 51 commits from 11 May to 3 November 2026; 70 unittest methods driving the CLI, run in CI on Python 3.9 and 3.12, not run here; no committed eval result and no paper. Four marks: `trust_state`, `scope_enforced`, `audit_log` and `negative_eval`.
+- Study when: you want a local, inspectable document corpus with source trails and reversible graph edits that a person can audit and roll back from a shell.
+- Do not copy when: a rejected source must stop appearing in answers, several clients' data must stay apart in search, or memory has to come from conversations.

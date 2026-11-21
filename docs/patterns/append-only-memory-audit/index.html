@@ -1052,6 +1052,23 @@ discontinuities without recomputing a digest, so an edited
 <code>broken_links == 0</code> only on clean ledgers. And there is no
 erasure at all: no code path removes or redacts an event, so the
 deletion obligation this page names is not met.</p>
+<p><a href="../../systems/praxis/">Praxis</a> records every SkillGraph
+mutation as a change set whose items hold the object's whole row as
+<code>before_json</code> and <code>after_json</code>. Apply, promote,
+deprecate, rollback and dedupe merge each open their own set, items are
+<code>INSERT OR IGNORE</code>, and no code deletes one
+(<code>src/praxis/commands/graph_audit.py:161-258</code>,
+<code>:308-374</code>). The log is also the undo:
+<code>rollback_change_set</code> compares each item's
+<code>after_json</code> with the current row and refuses without
+<code>--force</code> when an object moved since, then writes the
+rollback as a change set of its own (<code>:385-458</code>). Three
+limits. <code>praxis init-graph</code> re-upserts the seed graph through
+the same writer with no change set; rollback and conflict scans update
+the set header's status and metadata in place; and the chunk index the
+agent searches sits outside the log. A client delete does not reach the
+items either, so a client's evidence that was ingested into the graph
+keeps its node text there.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

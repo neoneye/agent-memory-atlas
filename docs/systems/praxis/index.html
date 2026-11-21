@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first Python CLI giving
+agents shared organizational memory: sources captured into SQLite as
+chunks, embeddings and a SkillGraph with audited promote, deprecate and
+rollback.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Praxis — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first Python CLI
+giving agents shared organizational memory: sources captured into SQLite
+as chunks, embeddings and a SkillGraph with audited promote, deprecate
+and rollback.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Praxis — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first Python CLI
+giving agents shared organizational memory: sources captured into SQLite
+as chunks, embeddings and a SkillGraph with audited promote, deprecate
+and rollback.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Praxis — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Praxis",
+      "description": "A local-first Python CLI giving agents shared organizational memory: sources captured into SQLite as chunks, embeddings and a SkillGraph with audited promote, deprecate and rollback.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Audited graph memory beside a chunk
+index</p>
+          <h1>Praxis</h1>
+          <p class="document-deck">A local-first Python CLI giving
+agents shared organizational memory: sources captured into SQLite as
+chunks, embeddings and a SkillGraph with audited promote, deprecate and
+rollback.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/sparkplug604/praxis">
+              <span>Source</span>
+              <strong>sparkplug604/praxis</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/sparkplug604/praxis/commit/9a10de4fffbe679cdb9ed7af2e199c590d10ef5a" title="9a10de4fffbe679cdb9ed7af2e199c590d10ef5a">
+              <span>Analyzed revision</span>
+              <code>9a10de4f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/sparkplug604--praxis" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>sparkplug604--praxis</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE, pyproject.toml and CITATION.cff; the bundled Stack Overflow
+survey excerpt is ODbL 1.0 and DbCL 1.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>23,184
+lines of Python in src/praxis across 129 files; 2,894 in tests/;
+scripts/ holds thin wrappers</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>51
+commits from 11 May to 3 November 2026 under three author names, none
+between 17 June and 3 November; pyproject at 0.3.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>70
+unittest methods in 7 files, most driving the CLI in a subprocess
+against a temporary workspace; CI runs them on Python 3.9 and 3.12 on
+push to main and on pull requests; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Praxis is a local-first Python package and CLI that captures
+documents, notes, web pages and connector queries into SQLite, then
+serves them to an agent as ranked, source-linked context. It keeps two
+kinds of memory side by side: a chunk index for search, and a SkillGraph
+of nodes, edges and evidence whose rows carry a lifecycle status. Every
+graph mutation is recorded as a change set with before and after JSON
+per object, and rollback refuses to overwrite an object that moved
+since. Nothing in the write path calls a language model. What is weak is
+the join between the two kinds. Hybrid search returns chunks, and no
+chunk read consults graph status. Deprecating or rolling back a source
+removes its graph hints and leaves its text in the results. Ingesting a
+source with the same title again resets a deprecated node to
+provisional.</p>
+<p>The Reach and Agency layers add per-client evidence cards read
+through a client filter, and a client delete that is planned, confirmed,
+quarantined and receipted. The filter covers only the Reach files. Core
+search, where an evidence card can be copied, has no client key at
+all.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code>,
+<code>pyproject.toml</code> and <code>CITATION.cff</code>, which agree;
+the copyright line names "Praxis contributors" rather than a person or
+entity. The one component under other terms ships inside the installed
+package: <code>pyproject.toml</code> lists
+<code>demo_data/stackoverflow_developer_survey/*</code> as package data,
+and that excerpt is derived from Stack Overflow survey data under
+<em>ODbL 1.0 for the survey database; DbCL 1.0 for database
+contents</em>, with attribution required
+(<code>src/praxis/demo_data/stackoverflow_developer_survey/source_manifest.json:40-45</code>).
+The README beside it asks redistributors to preserve those terms.
+<code>LICENSE</code> does not mention it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A source becomes memory in three forms. Its text is captured to disk
+with a content hash and registered in <code>source_registry</code>. Its
+files are later chunked into <code>semantic_chunks</code> with FTS5 rows
+and embeddings. And <code>praxis ingest</code> turns it into a
+SkillGraph proposal: one node named after the source, evidence pointing
+at the capture, and <code>relates_to</code> edges to a fixed list of ten
+concepts matched by keyword
+(<code>src/praxis/commands/propose_graph_update.py:15-26</code>,
+<code>:84-122</code>). Only the third form has a belief state.</p>
+<p>A graph object's <code>status</code> moves through five values.
+Ingest writes <code>provisional</code>. <code>promote</code> sets every
+object in a change set to <code>active</code>, and
+<code>deprecate</code> to <code>deprecated</code>
+(<code>src/praxis/commands/change_graph_status.py:14-19</code>).
+Rollback restores each object's prior row or, for an object the change
+set created, sets <code>reverted</code>
+(<code>src/praxis/commands/graph_audit.py:432-440</code>). A dedupe
+merge sets the duplicate to <code>merged</code>. Graph reads keep
+<code>active</code> and <code>provisional</code> and drop the rest
+(<code>src/praxis/commands/graph_audit.py:15</code>).</p>
+<p>The provisional stage is a default rather than a gate. Provisional
+rows are served by every graph read beside active ones, and
+<code>praxis propose --graph-status active</code> followed by
+<code>praxis apply</code> writes active rows directly
+(<code>src/praxis/commands/propose_graph_update.py:238</code>). A node
+stops being believed by being deprecated, rolled back or merged. That
+decision is keyed on the node id, and the id is derived from the source
+title (<code>:146</code>), so the next ingest of a source with that
+title writes <code>provisional</code> over <code>deprecated</code>.</p>
+<p>Memory is user- or agent-driven through the CLI. Nothing runs in the
+background, and nothing extracts from a conversation.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a graph object is believed while active or provisional; deprecate, rollback and merge withhold it from graph reads, and re-ingest by title restores it, while the source's chunks never read the status</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a graph object is believed while active or provisional; deprecate, rollback and merge withhold it from graph reads, and re-ingest by title restores it, while the source&#39;s chunks never read the status
+flowchart TD
+  W[&quot;praxis ingest:&lt;br/&gt;capture, propose,&lt;br/&gt;auto-apply&quot;] --&gt; P[&quot;provisional&quot;]
+  P --&gt;|&quot;promote&quot;| A[&quot;active&quot;]
+  P --&gt; R{&quot;status active&lt;br/&gt;or provisional?&quot;}
+  A --&gt; R
+  R --&gt;|&quot;yes&quot;| G[&quot;graph search, hints,&lt;br/&gt;export, entity links&quot;]
+  A --&gt;|&quot;deprecate&quot;| D[&quot;deprecated&quot;]
+  A --&gt;|&quot;rollback&quot;| V[&quot;reverted, or the&lt;br/&gt;prior row restored&quot;]
+  D --&gt; X[&quot;withheld from&lt;br/&gt;every graph read&quot;]
+  V --&gt; X
+  D -.-&gt;|&quot;same title&lt;br/&gt;ingested again&quot;| P
+  X ~~~ C
+  C[&quot;the source&#39;s chunks&lt;br/&gt;in the vector index&quot;] --&gt; H[&quot;hybrid hits rank them;&lt;br/&gt;no graph status read&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Praxis is a Python package with a <code>praxis</code> entry point
+whose dispatcher runs one of 39 command scripts with <code>runpy</code>
+(<code>src/praxis/cli.py:15-55</code>, <code>:58-93</code>). State lives
+under <code>workspace/</code> in the checkout, or under a root named by
+<code>PRAXIS_ROOT</code> (<code>src/praxis/paths.py:17-36</code>,
+<code>:72-85</code>):</p>
+<ul>
+<li><code>kg/skill_graph.sqlite</code> — the graph, the source registry
+and captures, proposals, change sets, claim records and the conflict
+ledger (<code>bootstrap/kg/schema.sql</code>).</li>
+<li><code>vectors/semantic_index.sqlite</code> — documents, chunks, the
+FTS5 table, embeddings, retrieval logs, and the entity and
+relationship-evidence tables
+(<code>src/praxis/commands/vector_common.py:59-143</code>).</li>
+<li><code>db/praxis.sqlite</code> — a seeded research library of
+sources, patterns and failure modes that <code>export-skill-refs</code>
+writes into skill reference files.</li>
+<li><code>reach/</code> and <code>agency/</code> — evidence cards, query
+manifests, context packs and client capsules as JSON and Markdown;
+<code>governance/governance.sqlite</code> and <code>authority/</code>
+hold policy receipts and authority anchors.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>python3 -m pip install -e .</code> and
+<code>praxis bootstrap</code> initialize the stores, chunk, embed with
+the local hash model and run the doctor
+(<code>src/praxis/cli.py:96-110</code>). No service runs and no key is
+needed: the default embedding is a 384-dimension hashed bag of features
+(<code>src/praxis/commands/vector_common.py:618</code>), and OpenAI
+embeddings are opt-in. Optional extras pull PDF, OCR, speech-to-text and
+Google connector libraries. The stores are plain SQLite and the captures
+plain files, so a person can read and repair them by hand, and the
+change-set log makes a bad graph edit reversible without that.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture and ingest.</strong> <code>ingest_source.main</code>
+calls <code>capture_source</code>, then
+<code>build_graph_proposal</code> with
+<code>proposal_status="auto_proposed"</code> and
+<code>graph_status="provisional"</code>, then
+<code>apply_proposal</code> in <code>auto</code> mode
+(<code>src/praxis/commands/ingest_source.py:31-58</code>). A
+<code>high</code> risk level refuses without
+<code>--allow-high-risk</code>
+(<code>src/praxis/commands/apply_graph_update.py:40-42</code>).</li>
+<li><strong>Apply.</strong> <code>apply_proposal</code> opens a change
+set, runs <code>audited_upsert</code> for each evidence row, node and
+edge, marks the proposal applied, copies it to
+<code>research/applied/</code>, and runs a conflict scan on the change
+set
+(<code>src/praxis/commands/apply_graph_update.py:62-125</code>).</li>
+<li><strong>Lifecycle.</strong>
+<code>change_change_set_object_statuses</code> opens a new change set
+and logs a <code>status:</code> item per object
+(<code>src/praxis/commands/graph_audit.py:283-374</code>).
+<code>rollback_change_set</code> checks every item's
+<code>after_json</code> against the current row, refuses on any mismatch
+without <code>--force</code>, and writes its own change set
+(<code>:385-458</code>).</li>
+<li><strong>Index.</strong> <code>chunk_sources.default_files</code>
+collects capture files, exports, notes, source JSON and watchlists from
+disk (<code>src/praxis/commands/chunk_sources.py:83-110</code>);
+<code>index_vectors</code> embeds pending chunks.</li>
+<li><strong>Search.</strong> <code>hybrid_search.main</code> takes graph
+hints, vector hits and FTS5 hits, fuses them, rescores by context
+priority and logs the query
+(<code>src/praxis/commands/hybrid_search.py:448-472</code>).</li>
+<li><strong>Conflicts.</strong> <code>scan_change_set</code> runs source
+dedupe, entity dedupe and claim contradiction scans, and
+<code>insert_conflict</code> writes typed records
+(<code>src/praxis/commands/conflict_ledger.py:192-249</code>,
+<code>:513-541</code>).</li>
+<li><strong>Client deletion.</strong> <code>delete_client</code> follows
+a delete plan, quarantines files, and deletes the client's Reach source
+rows and chunks
+(<code>src/praxis/agency/lifecycle_artifacts.py:229-266</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The SkillGraph has <code>nodes</code>, <code>edges</code>,
+<code>evidence</code>, <code>aliases</code> and tags, each row with a
+text <code>confidence</code> and a <code>status</code>
+(<code>bootstrap/kg/schema.sql:3-48</code>). A source's confidence is
+derived from its credibility score and is <code>low</code> or
+<code>medium</code>, never <code>high</code>
+(<code>src/praxis/commands/propose_graph_update.py:64-70</code>).
+<code>graph_change_sets</code> carries action, mode, actor, source,
+capture and proposal ids, a status and <code>reverted_at</code>;
+<code>graph_change_items</code> carries object type and id, operation,
+and the full row as <code>before_json</code> and <code>after_json</code>
+(<code>bootstrap/kg/schema.sql:106-131</code>).</p>
+<p><code>claim_records</code> derives a subject key and a polarity from
+node summaries by word lists, and <code>conflict_records</code> plus
+<code>conflict_items</code> hold typed findings:
+<code>duplicate_source</code>, <code>duplicate_content</code>,
+<code>duplicate_entity</code> and <code>contradiction</code>
+(<code>src/praxis/commands/conflict_ledger.py:17-80</code>,
+<code>:371-437</code>).</p>
+<p>The vector database holds chunks with <code>source_id</code>,
+<code>capture_id</code>, <code>graph_node_ids_json</code>, a
+<code>confidence</code> and a <code>status</code> that no code sets to
+anything but its <code>active</code> default. Entity mentions,
+resolution candidates, evidence annotations and relation candidates
+carry <code>candidate</code>, <code>accepted</code> and
+<code>needs_review</code> states. Reach evidence cards are JSON with
+<code>client_id</code>, <code>query_id</code>, <code>fresh_at</code>,
+metrics, per-metric lineage, conflicts, a confidence score and a
+redaction status (<code>src/praxis/reach/evidence.py:20-48</code>).</p>
+<p>Time is record time throughout. <code>fresh_at</code> on an evidence
+card is the clock at creation
+(<code>src/praxis/reach/evidence.py:209</code>). A query's reporting
+window is kept in its <code>params</code>, and
+<code>latest_evidence</code> selects by client and query and sorts by
+<code>fresh_at</code> (<code>:310-318</code>), so nothing reads the
+window as a validity period.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>praxis search</code> returns chunks. Vector hits score cosine
+similarity over every embedding with <code>status = 'active'</code> for
+the model, in Python
+(<code>src/praxis/commands/semantic_search.py:40-60</code>). Keyword
+hits take the FTS5 BM25 order and convert rank to <code>1/(i+1)</code>
+(<code>:63-84</code>). Graph hints are nodes whose name, summary or
+alias matches the query with <code>LIKE</code>, filtered to live
+statuses (<code>src/praxis/commands/hybrid_search.py:34-81</code>). The
+fusion weights default to 0.45 vector, 0.45 keyword and 0.10 graph, plus
+0.15 for entity links when <code>--entity-aware</code> is set
+(<code>:424-428</code>).</p>
+<p>Context priority then rescores each hit as
+<code>0.55 relevance + 0.15 trust + 0.10 freshness + 0.10 graph + 0.10 status − conflict penalty</code>,
+with the penalty capped at 0.55
+(<code>src/praxis/context_priority.py:129-151</code>,
+<code>:193-200</code>). The status term reads the chunk's and the source
+registry's <code>status</code> columns (<code>:166-170</code>).
+<code>STATUS_SCORES</code> gives <code>deprecated</code>,
+<code>reverted</code> and <code>merged</code> 0.0 (<code>:18-31</code>),
+but those are graph values: chunks are only ever <code>active</code>,
+and source rows only <code>active</code> or
+<code>stale_pending_refresh</code>. A chunk of a deprecated source keeps
+its full priority.</p>
+<p><code>praxis graph</code> searches and traverses the SkillGraph, with
+<code>neighbors</code> and an undirected <code>path</code> search, all
+filtered to live statuses unless <code>--include-inactive</code> is
+given (<code>src/praxis/commands/search_skill_graph.py:32-49</code>,
+<code>:93-117</code>, <code>:172-189</code>). Relationship queries read
+<code>accepted_graph_edges</code> with <code>status = 'accepted'</code>
+by default
+(<code>src/praxis/relationship_evidence/query.py:28-40</code>), and
+entity-aware search uses only accepted mention links
+(<code>src/praxis/entities/storage.py:424</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous CLI runs. <code>ingest</code> captures,
+proposes and applies in one process, and the graph change is visible to
+the next graph read. Text becomes searchable only after
+<code>praxis chunk</code> and <code>praxis embed</code> run; ingest does
+not call them. No background pass rewrites the store.
+<code>praxis refresh --mark-stale</code> sets sources past their
+freshness window to <code>stale_pending_refresh</code> when someone runs
+it.</p>
+<p>Extraction is deterministic. Concept edges come from substring
+matches on a fixed keyword table, entities and relations from pattern
+extractors scored against an ontology, and claim polarity from word
+lists. Relation candidates below 0.70 confidence, outside the ontology
+or in conflict with a single-valued predicate become
+<code>needs_review</code> with a review item; the rest are written as
+accepted edges
+(<code>src/praxis/relationship_evidence/promotion.py:39-96</code>).</p>
+<p><code>upsert_node</code> replaces every column, status included, on
+an id conflict
+(<code>src/praxis/commands/init_skill_graph.py:56-95</code>,
+<code>:75</code>), and <code>apply_proposal</code> does not read the
+current status first. A re-ingest by the same title therefore moves a
+deprecated or promoted node to <code>provisional</code>, and the change
+item records it as an <code>update</code>.
+<code>praxis init-graph</code> re-upserts the seed graph through the
+same function with no change set (<code>:341-362</code>).</p>
+<p><code>praxis add-note</code> writes a Markdown note and refuses
+bodies containing <code>sk-</code>, <code>api key</code>,
+<code>password=</code> or <code>secret=</code>
+(<code>src/praxis/commands/add_memory_note.py:62-63</code>). Its
+<code>--status</code> defaults to <code>reviewed</code> and is written
+into the note's text, where nothing reads it (<code>:58</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent's surface is the CLI. No MCP server, hook or tool registry
+is in the tree; <code>adapters/</code> holds Markdown design notes, and
+the Codex note lists the commands an exported skill should expose,
+rollback among them (<code>adapters/agents/codex/README.md</code>). An
+agent that can run <code>praxis</code> can ingest, promote, deprecate,
+roll back, resolve conflicts and merge duplicates. Every mutating graph
+verb takes <code>--actor</code>, a free string defaulting to
+<code>praxis</code> and recorded without a check
+(<code>src/praxis/commands/change_graph_status.py:28</code>).</p>
+<p><code>export-graph</code> and <code>export-skill-refs</code> write
+Markdown into a skill folder. The graph export is filtered to live
+statuses, so provisional rows from an auto-ingest reach exported skills;
+<code>--fail-on-open-conflicts</code> refuses the export while any
+conflict is open
+(<code>src/praxis/commands/export_skill_graph.py:38-48</code>,
+<code>:197-203</code>). Context reaches the model only when the agent
+runs a search or reads an export.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-deprecation-reaches">What deprecation reaches</h3>
+<p>Deprecate, rollback and merge withhold an object from graph search,
+graph hints, export and entity resolution. They do not reach the chunk
+index: <code>semantic_search.py</code> and <code>chunk_sources.py</code>
+never read graph status, and chunks are rebuilt from the capture files
+on disk, which deprecation leaves in place. A source a reviewer rejected
+stays retrievable as text at full priority. For a Core source, only
+removing its capture files and re-chunking takes it out; the Agency
+delete does that for Reach evidence.</p>
+<h3 id="conflict-resolution">Conflict resolution</h3>
+<p><code>conflicts resolve</code> sets a status and a free-text
+resolution with no actor
+(<code>src/praxis/commands/conflicts.py:94-117</code>). The next scan of
+the same items reads that record and opens a new conflict with
+<code>previous_conflict_id</code> instead of respecting it
+(<code>src/praxis/commands/conflict_ledger.py:209-214</code>), and scans
+run on every apply and promote. A <code>keep_both</code> decision on a
+duplicate therefore reopens the next time the change set is promoted.
+The suite asserts this behaviour
+(<code>tests/test_release_hardening.py:589-623</code>).</p>
+<h3 id="client-deletion">Client deletion</h3>
+<p>The Agency delete is guarded at each step: a delete plan, an exact
+<code>--confirm-client</code>, a typed <code>DELETE</code>, a quarantine
+directory and a receipt, and a separate <code>PURGE</code> to empty the
+quarantine (<code>tests/test_reach_agency.py:1050-1156</code>). It
+deletes the client's <code>source_registry</code> rows and chunks,
+matched by parsing the source id
+(<code>src/praxis/agency/lifecycle_artifacts.py:198-202</code>,
+<code>:229-266</code>). It does not touch <code>nodes</code>,
+<code>evidence</code> or <code>graph_change_items</code>. If a client's
+evidence was ingested into the graph, its node summary survives the
+delete in the node row and in the change items' JSON.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code></strong> — awarded on graph
+<code>status</code>. <code>deprecated</code>, <code>reverted</code> and
+<code>merged</code> are excluded from every graph read, and the value
+moves only through promote, deprecate, rollback and merge. Two limits:
+<code>provisional</code> is served beside <code>active</code>, and the
+chunk index never reads the field.</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on
+<code>client_id</code> in Reach evidence cards, applied by
+<code>list_evidence</code> and <code>latest_evidence</code>, which every
+context pack reads. The client is a CLI argument the caller chooses,
+<code>reach evidence list</code> without <code>--client</code> returns
+every client, and Core chunks, the graph and conflicts have no client
+key.</li>
+<li><strong><code>audit_log</code></strong> — awarded on change sets and
+items: before and after JSON per object, inserted and never deleted. The
+seed re-upsert in <code>init-graph</code> writes outside it, rollback
+and conflict scans update the set header in place, and conflict
+resolutions are not logged.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>tombstone</code></strong> — withheld. Deprecation is
+keyed on the node id and the next ingest overwrites it; a resolved
+conflict reopens as a recurrence; a suppressed relationship review item
+is keyed on the candidate.</li>
+<li><strong><code>human_review</code></strong> — withheld. Ingest is
+served at once as provisional, and promote is a CLI verb the producing
+caller holds with an unverified <code>--actor</code>. Relationship
+candidates do wait in <code>needs_review</code>, but
+<code>review resolve</code> changes only the review item. The one path
+that accepts them is <code>promote --status needs_review</code>, which
+re-runs the same checks with a caller-set
+<code>--min-confidence</code>.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Every timestamp
+is record time.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 70 <code>unittest</code> methods. Most drive the CLI in
+a subprocess against a temporary workspace built from the bootstrap
+files, and CI runs them on Python 3.9 and 3.12
+(<code>.github/workflows/ci.yml:1-34</code>). No test skips itself. I
+ran none of it.</p>
+<p><code>negative_eval</code> rests on two committed cases:</p>
+<ul>
+<li><code>tests/test_reach_agency.py:1050-1156</code> creates two
+clients, runs a query for each, deletes one through the plan, and
+asserts the evidence list contains the surviving client's card and not
+the deleted client's (<code>:1127-1129</code>).</li>
+<li><code>tests/test_release_hardening.py:459-482</code> ingests a
+source, finds it with a graph query as <code>provisional</code> and then
+as <code>active</code>, deprecates the change set, asserts the same
+query returns no node, and finds it with <code>--include-inactive</code>
+as <code>deprecated</code>. The negative result is empty; the earlier
+positives on the same query are what keep it from passing on a broken
+search.</li>
+</ul>
+<p>Rollback has a refusal test and a forced-rollback test
+(<code>:484-502</code>), dedupe merge and split are covered
+(<code>:684-711</code>), and context priority is checked to penalise a
+stale or conflicted row (<code>:419-447</code>). No test asserts that a
+deprecated source's chunks leave <code>praxis search</code>, which
+section 9 shows they do not, or that a re-ingest preserves
+<code>deprecated</code>.</p>
+<p><code>praxis eval</code> runs a handful of hard-coded queries with
+expected substrings
+(<code>src/praxis/commands/eval_retrieval.py</code>); no result is
+committed. No paper is associated with the project;
+<code>CITATION.cff</code> cites the repository as software.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Log the whole row before and after.</strong> A change item
+holding both JSON snapshots makes rollback a replay and lets the
+rollback check whether the object moved since. Praxis refuses rather
+than guesses when it has.</li>
+<li><strong>Make the lifecycle verbs change sets too.</strong> Promote
+and deprecate record themselves the way apply does, so "who downgraded
+this" has the same answer shape as "who wrote this".</li>
+<li><strong>Plan, confirm, quarantine, receipt.</strong> A destructive
+client delete that writes a plan first, needs the exact name and a typed
+word, moves files to quarantine and leaves a receipt is cheap to build
+and hard to fire by accident.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A rejection keyed on a derived id.</strong> If the id comes
+from the title and the writer upserts status, the next ingest undoes the
+reviewer. Read the current status in the writer, or key the rejection on
+the content.</li>
+<li><strong>Belief state on the layer the agent does not read.</strong>
+If retrieval returns chunks, a status on graph nodes has to reach the
+chunks, as a filter or at least as a score, or deprecation is cosmetic
+for search.</li>
+<li><strong>A review queue whose resolution moves nothing.</strong>
+Resolving a review item should accept or reject the candidate it names,
+or the queue only grows.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Praxis suits one person or a small team that wants a local,
+inspectable corpus of documents and research, with source trails and
+reversible graph edits, and is willing to drive it from a shell. It
+needs no service, no key and no GPU. It does not suit conversational
+memory: nothing extracts from a session or keeps a user profile. Walk
+away if several clients' data must stay apart in search, since only the
+Reach files carry a client key. Walk away too if a rejected source must
+stop appearing in answers, because the chunk index does not know it was
+rejected.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the chunk index is meant to follow graph status, given that
+the README lists active and deprecated status among the ranking
+signals.</li>
+<li>Whether re-ingest is meant to reset a deprecated or promoted node to
+provisional.</li>
+<li>What <code>review resolve</code> on a relationship review item is
+meant to do to the candidate.</li>
+<li>How the adapters will expose the CLI to an agent, and whether
+promote and deprecate will be on that surface.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Graph and audit: <code>bootstrap/kg/schema.sql</code>,
+<code>src/praxis/commands/graph_audit.py</code>,
+<code>src/praxis/commands/init_skill_graph.py</code>,
+<code>src/praxis/commands/apply_graph_update.py</code>,
+<code>src/praxis/commands/change_graph_status.py</code>,
+<code>src/praxis/commands/rollback_graph_change.py</code></li>
+<li>Write path: <code>src/praxis/commands/ingest_source.py</code>,
+<code>src/praxis/commands/research_source.py</code>,
+<code>src/praxis/commands/propose_graph_update.py</code>,
+<code>src/praxis/commands/add_memory_note.py</code></li>
+<li>Index and retrieval:
+<code>src/praxis/commands/chunk_sources.py</code>,
+<code>src/praxis/commands/vector_common.py</code>,
+<code>src/praxis/commands/semantic_search.py</code>,
+<code>src/praxis/commands/hybrid_search.py</code>,
+<code>src/praxis/context_priority.py</code>,
+<code>src/praxis/commands/search_skill_graph.py</code></li>
+<li>Conflicts and dedupe:
+<code>src/praxis/commands/conflict_ledger.py</code>,
+<code>src/praxis/commands/conflicts.py</code>,
+<code>src/praxis/commands/dedupe.py</code></li>
+<li>Entities and relationships: <code>src/praxis/entities/</code>,
+<code>src/praxis/relationship_evidence/</code></li>
+<li>Reach and Agency: <code>src/praxis/reach/evidence.py</code>,
+<code>src/praxis/reach/context.py</code>,
+<code>src/praxis/commands/reach.py</code>,
+<code>src/praxis/agency/lifecycle.py</code>,
+<code>src/praxis/agency/lifecycle_artifacts.py</code></li>
+<li>Governance: <code>src/praxis/governance/storage.py</code>,
+<code>src/praxis/governance/policy.py</code></li>
+<li>Tests: <code>tests/test_release_hardening.py</code>,
+<code>tests/test_reach_agency.py</code>,
+<code>tests/test_relationship_evidence.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No MCP surface.</strong>
+<code>git grep -n -i -E 'mcp|fastmcp|modelcontextprotocol' -- src pyproject.toml</code>
+returns nothing;
+<code>git grep -c -i 'openai' -- src/praxis/commands/vector_common.py</code>
+counts 9.</li>
+<li><strong>Nothing deletes from the change log.</strong>
+<code>git grep -n -E 'DELETE FROM graph_change' -- src</code> returns
+nothing;
+<code>git grep -c -E 'DELETE FROM semantic_chunks' -- src/praxis/commands/chunk_sources.py</code>
+counts 4.</li>
+<li><strong>Chunk reads carry no graph status.</strong>
+<code>git grep -n -E 'LIVE_STATUSES|live_status_clause' -- src/praxis/commands/semantic_search.py src/praxis/commands/chunk_sources.py</code>
+and <code>git grep -n -E 'UPDATE semantic_chunks' -- src</code> return
+nothing; the first pattern over
+<code>src/praxis/commands/hybrid_search.py</code> matches lines 17 and
+49.</li>
+<li><strong>Source rows never take a graph status.</strong>
+<code>git grep -n -E 'UPDATE source_registry' -- src</code> matches
+<code>src/praxis/commands/refresh_stale_sources.py:85</code>, which
+writes <code>stale_pending_refresh</code>, and
+<code>src/praxis/commands/research_common.py:194</code>, which writes
+the current capture and check time.</li>
+<li><strong>No validity-time field.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_until|valid_at|as_of|event_time|occurred_at' -- src bootstrap</code>
+returns nothing;
+<code>git grep -c 'fresh_at' -- src/praxis/reach/evidence.py</code>
+counts 8.</li>
+<li><strong>Review resolution does not move a candidate.</strong>
+<code>git grep -n -E 'set_candidate_status\(' -- src</code> matches only
+<code>src/praxis/relationship_evidence/promotion.py:65</code>,
+<code>:88</code> and the definition at
+<code>src/praxis/relationship_evidence/storage.py:209</code>.</li>
+<li><strong>Core search has no client key.</strong>
+<code>git grep -n -i 'client' -- src/praxis/commands/hybrid_search.py src/praxis/commands/semantic_search.py src/praxis/commands/search_skill_graph.py</code>
+returns nothing;
+<code>git grep -c 'client_id' -- src/praxis/reach/evidence.py</code>
+counts 10.</li>
+<li><strong>Client deletion leaves the graph.</strong>
+<code>git grep -n -E 'DELETE FROM (nodes|edges|evidence|graph_change_items)' -- src</code>
+returns nothing;
+<code>git grep -n -E 'DELETE FROM source_registry' -- src</code> matches
+<code>src/praxis/agency/lifecycle_artifacts.py:237</code>.</li>
+<li><strong>No actor check.</strong>
+<code>git grep -n -E 'isatty|getpass|getuser' -- src</code> returns
+nothing;
+<code>git grep -n -E 'add_argument\("--actor"' -- src/praxis/commands</code>
+matches the apply, status-change and dedupe parsers among others.</li>
+<li><strong>No paper, no rename.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article' -- README.md docs CITATION.cff</code>
+and <code>git grep -n -i 'renamed' -- README.md CHANGELOG.md docs</code>
+return nothing;
+<code>git grep -c -i 'arxiv' -- bootstrap/db/schema.sql</code> counts
+1.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/sparkplug604/praxis/commit/9a10de4fffbe679cdb9ed7af2e199c590d10ef5a"><code class="commit-id" title="9a10de4fffbe679cdb9ed7af2e199c590d10ef5a">9a10de4f…</code></a>
+— first reading, from a clone of <code>main</code>, covering the
+SkillGraph write, audit and lifecycle paths, chunking and hybrid search,
+the conflict ledger, relationship evidence, the Reach evidence and
+Agency deletion paths, and their tests; intake converters and live
+connectors were read only where they write what those paths read.
+Screened first: no auto-run surface; three build-time execution points,
+<code>setup.py</code>, <code>scripts/setup.py</code> and
+<code>src/praxis/commands/setup.py</code>; one unpinned surface,
+<code>pyproject.toml</code> with no lockfile. MIT, no rider. Nothing
+installed, built or run. Four marks: <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
