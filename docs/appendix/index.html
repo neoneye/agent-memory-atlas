@@ -19439,6 +19439,75 @@ unpinned dependency surfaces, the root <code>package.json</code> with a
 lockfile and the <code>packages/core</code> and
 <code>packages/dsh</code> manifests with none beside them; nothing was
 installed, built or run.</li>
+<li><strong><a
+href="https://arxiv.org/abs/2510.22732"><code>arXiv:2510.22732</code></a>
+was examined and has no report: it releases no code, and its memory is a
+transition table seeded by exploring the evaluation websites before the
+run, with no stated rule for when a recorded transition stops being
+true.</strong> <em>WebATLAS: An LLM Agent with Experience-Driven Memory
+and Action Simulation</em> (Jiali Cheng, University of Massachusetts
+Lowell, during an internship at Amazon; Anjishnu Kumar, Roshan Lal,
+Rishi Rajasekaran, Hani Ramezani, Omar Zia Khan, Oleg Rokhlenko, Sunny
+Chiu-Webster and Gang Hua, Amazon Alexa AI; Hadi Amiri, University of
+Massachusetts Lowell; v1 26 October 2025, v2 19 December 2025, cs.LG,
+NeurIPS 2025 Workshop on Language Agents and World Models) is a WebArena
+web agent built on AgentOccam with Claude-4 Sonnet. A planner writes
+subgoals, an actor proposes candidate actions, and a critic scores each
+candidate against memory before one is executed. The memory has three
+layers. Working memory is the episode's context. The <em>cognitive
+map</em> is a set of <code>(o, a, o′)</code> tuples, each stored with
+the raw next observation and an LLM summary of what changed and which
+actions appeared. Semantic memory holds per-site rules such as date
+formats and irreversible states. Retrieval from the map is an exact
+lookup: <code>M(o_t, a)</code> returns the stored next observation, and
+an unexplored pair returns <em>"a generic-placeholder observation"</em>
+(§3.3). Look-ahead (§3.4) chains these lookups <code>D</code> steps deep
+for each candidate and weights a simulated trajectory by the product of
+<code>1 − U(s, a)</code> over its steps, a transition uncertainty the
+paper does not define further. The map and semantic memory are seeded
+before evaluation by explorer subagents in the evaluation environment
+itself, the five WebArena sites, with no task reward, and are
+<em>"optionally updated online"</em>. What to retain, update or forget
+is <em>"delegated to the memory agent"</em> (§3.5), with no rule given.
+In memory terms, a stored transition is a claim about how a site
+behaves, and the paper presents it as the safe choice. It argues that
+retrieved outcomes beat imagined ones because they are <em>"real
+observations that are much more trustworthy"</em>. But a retrieved
+observation is a past one. The only place the method notices a stale
+transition is the replanning trigger, Eq. 6, which fires when the
+observed state diverges from the expected one by more than ε. The paper
+does not say whether that divergence rewrites, supersedes or keeps the
+map entry. Its own future-work list asks for stress tests that include
+<em>"UI drift"</em>. The abstract's <em>"unseen web environments"</em>
+means sites the model was not fine-tuned on; the memory has explored
+them. Table 1, WebArena-Lite (165 tasks), average with the multi-site
+tasks: WebATLAS 63.0%, Plan-and-Act 53.9%, AgentOccam rerun on Claude-4
+Sonnet 47.9%. Table 2's ablation from the same base: the map with raw
+HTML 44.8%, the map with summaries 57.4%, the high-level planner alone
+50.9%, all components 63.0%. The base row agrees with Table 1 on the
+47.9% headline but not per site; Reddit, for one, is 63.2 in Table 1 and
+68.4 in Table 2. No result reports seeds, repeated runs, exploration
+cost or the size of the seeded map. Search, 21 November 2026. The
+extracted text, 5,239 words, contains <code>github</code> zero times,
+and its four <code>gitlab</code> matches are the WebArena site. It has
+no code or data availability statement, and the abstract page links no
+project page. <code>gh search repos</code> for the exact title returns
+nothing, and for <code>WebATLAS</code> returns unrelated projects of the
+same name. The first author's account, <code>chengjiali</code>, holds no
+repository for it, and the bibliography on that account's homepage
+repository does not list the paper. The <code>amazon-science</code>
+organisation's listing has <code>AgentOccam</code>, the base agent, last
+pushed on 28 January 2025, and nothing for WebATLAS. OpenReview holds
+ACL ARR 2026 May and August submissions under the title <em>WebATLAS:
+Actor-Critic Task-Completion with Look-ahead Action Simulation</em>,
+with no code field. A code search for the id finds reading lists and
+digests. With a release, two things would be read first. One is what Eq.
+6 does to the map entry it contradicts: overwritten, kept beside the new
+observation, or left. The other is how <code>U(s, a)</code> is computed,
+and whether it ages with the observation, which is the gap <a
+href="../patterns/bi-temporal-fact-validity/">bi-temporal fact
+validity</a> and <a href="../patterns/evidence-before-belief/">evidence
+before belief</a> address.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a

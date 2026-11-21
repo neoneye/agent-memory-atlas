@@ -534,6 +534,19 @@ gated evolution ([arXiv:2611.22299](https://arxiv.org/abs/2611.22299), v1).
   Stage 3 gate keeps of a rejected edit, and whether it compares against the
   seed or the incumbent.
 
+**WebATLAS** — a WebArena agent whose critic looks candidate actions up in a
+cognitive map of `(o, a, o′)` transitions seeded by exploration
+([arXiv:2510.22732](https://arxiv.org/abs/2510.22732), v2).
+- Examined 2026-11-21; bullet opening "[`arXiv:2510.22732`](https://arxiv.org/abs/2510.22732) was examined and
+  has no report: it releases no code".
+- Missing: code, the explorer prompts and the seeded maps.
+- Monitor: the arXiv page, [chengjiali](https://github.com/chengjiali), the
+  `amazon-science` listing (which has `AgentOccam`, the base agent). Not the
+  unrelated repositories named WebAtlas that a name search returns.
+- Status 2026-11-21: v2, two ACL ARR 2026 submissions on OpenReview with no
+  code field. If released: read what the replanning trigger does to the map
+  entry it contradicts, and how the transition uncertainty is computed.
+
 ### Closed or hosted memory components
 
 These were excluded, or reported with a gap, because the memory is behind a
