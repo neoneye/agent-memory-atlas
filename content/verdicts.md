@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 839 reports.**
+**This page covers all 840 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7712,3 +7712,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 in `LICENSE`, MIT in `README_EN.md`; 13,130 lines of Python in `scripts/`, 3,377 of them the maintained path, beside an earlier SQLite system still in the tree; 34 commits from 3 July to 19 November 2026; 130 pytest functions in CI, not run here; no benchmark. No marks.
 - Study when: several coding clients on one machine should share a small, hand-editable set of conclusions.
 - Do not copy when: memory must be separated by project or client, or a person must approve what an extractor proposes.
+
+### [`walrus-memory`](../systems/walrus-memory/)
+
+- Best idea: **revocation rotates the encryption identity.** Every Seal key id ends in the owner and an `access_counter_version`; removing a delegate or freezing the account bumps it, `seal_approve` refuses a counter above the current one, and `seal_encrypt_fence` re-checks it in the transaction that transfers the Blob to the user, so a removed key reads nothing written after its removal.
+- Biggest risk: **forget lives only in the index.** `POST /api/forget` deletes one namespace's pgvector rows and leaves the Walrus blob, the Sui object and the job row's ciphertext and embedding; restore lists the owner's blobs on chain and re-indexes them under a new uuid without reading `memory_tombstones`, and the MCP plugin's session-start guidance tells the agent to run `memwal_restore` when recall returns nothing.
+- Second risk: no memory is ever superseded, since the extraction prompt forbids it and the consolidator is a placeholder; namespace names and agent ids are public attributes on chain, and Seal lets any delegate of an account decrypt every namespace.
+- Most reusable component: the access counter and its fence in `services/contract/sources/account.move`, and `delete_by_namespace` in `services/server/src/storage/db.rs`, which fences in-flight jobs by id in the forget transaction.
+- Maturity impression: Apache-2.0, beta by its own README; 73,800 lines of Rust in the relayer and 1,946 commits from 19 December 2025 to 13 November 2026; 1,068 Rust tests run in CI against pgvector and Redis, not run here; no benchmark result committed. Two marks: `scope_enforced` and `negative_eval`.
+- Study when: memory has to be owned by its user, portable across relayers, and unreadable by a revoked key.
+- Do not copy when: a user must be able to correct a memory or have it erased on request.

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 839 reports.</strong></p>
+<p><strong>This page covers all 840 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34564,6 +34564,42 @@ No marks.</li>
 small, hand-editable set of conclusions.</li>
 <li>Do not copy when: memory must be separated by project or client, or
 a person must approve what an extractor proposes.</li>
+</ul>
+<h3 id="walrus-memory"><a
+href="../systems/walrus-memory/"><code>walrus-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>revocation rotates the encryption
+identity.</strong> Every Seal key id ends in the owner and an
+<code>access_counter_version</code>; removing a delegate or freezing the
+account bumps it, <code>seal_approve</code> refuses a counter above the
+current one, and <code>seal_encrypt_fence</code> re-checks it in the
+transaction that transfers the Blob to the user, so a removed key reads
+nothing written after its removal.</li>
+<li>Biggest risk: <strong>forget lives only in the index.</strong>
+<code>POST /api/forget</code> deletes one namespace's pgvector rows and
+leaves the Walrus blob, the Sui object and the job row's ciphertext and
+embedding; restore lists the owner's blobs on chain and re-indexes them
+under a new uuid without reading <code>memory_tombstones</code>, and the
+MCP plugin's session-start guidance tells the agent to run
+<code>memwal_restore</code> when recall returns nothing.</li>
+<li>Second risk: no memory is ever superseded, since the extraction
+prompt forbids it and the consolidator is a placeholder; namespace names
+and agent ids are public attributes on chain, and Seal lets any delegate
+of an account decrypt every namespace.</li>
+<li>Most reusable component: the access counter and its fence in
+<code>services/contract/sources/account.move</code>, and
+<code>delete_by_namespace</code> in
+<code>services/server/src/storage/db.rs</code>, which fences in-flight
+jobs by id in the forget transaction.</li>
+<li>Maturity impression: Apache-2.0, beta by its own README; 73,800
+lines of Rust in the relayer and 1,946 commits from 19 December 2025 to
+13 November 2026; 1,068 Rust tests run in CI against pgvector and Redis,
+not run here; no benchmark result committed. Two marks:
+<code>scope_enforced</code> and <code>negative_eval</code>.</li>
+<li>Study when: memory has to be owned by its user, portable across
+relayers, and unreadable by a revoked key.</li>
+<li>Do not copy when: a user must be able to correct a memory or have it
+erased on request.</li>
 </ul>
         </article>
       </div>

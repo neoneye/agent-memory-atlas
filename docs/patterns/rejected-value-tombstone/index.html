@@ -127,7 +127,7 @@ belief.</p>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
 recurs across the corpus. 84 systems of
-839 carry the mark, and <a
+840 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -292,7 +292,7 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>84 systems of
-839 in the atlas carry the mark.</strong> The
+840 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -2070,6 +2070,16 @@ exact-match only, <code>export --active</code> drops it, and the agent's
 <code>remember</code> path checks active and proposed rows and never
 deleted ones, so an agent re-asserting the rejected value stores it,
 active at once unless it is typed as a preference.</p>
+<p><a href="../../systems/walrus-memory/">Walrus Memory</a> names a
+record-keyed table <code>memory_tombstones</code> and uses it well for
+what it is: <code>forget</code> tombstones the deleted rows and every
+non-terminal job in the namespace in one transaction, and every insert
+path refuses a row whose job id is tombstoned, so a worker finishing
+after the forget cannot land the memory. It is not this pattern, and the
+code says so in the other direction. Forget NULLs the idempotency key on
+purpose so that analyzing the same text again is a new write, and
+restore re-indexes the same blob under a fresh uuid, which the id-keyed
+tombstone cannot see.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

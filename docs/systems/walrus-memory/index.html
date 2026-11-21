@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Mysten Labs' hosted agent memory:
+a Rust relayer that Seal-encrypts each memory into a Walrus blob owned
+on Sui and indexes its embedding in pgvector.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Walrus
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="Mysten Labs' hosted agent
+memory: a Rust relayer that Seal-encrypts each memory into a Walrus blob
+owned on Sui and indexes its embedding in pgvector.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Walrus
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="Mysten Labs' hosted agent
+memory: a Rust relayer that Seal-encrypts each memory into a Walrus blob
+owned on Sui and indexes its embedding in pgvector.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Walrus Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Walrus Memory",
+      "description": "Mysten Labs' hosted agent memory: a Rust relayer that Seal-encrypts each memory into a Walrus blob owned on Sui and indexes its embedding in pgvector.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Encrypted blobs under a disposable
+index</p>
+          <h1>Walrus Memory</h1>
+          <p class="document-deck">Mysten Labs' hosted agent memory: a
+Rust relayer that Seal-encrypts each memory into a Walrus blob owned on
+Sui and indexes its embedding in pgvector.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MystenLabs/walrus-memory">
+              <span>Source</span>
+              <strong>MystenLabs/walrus-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MystenLabs/walrus-memory/commit/856fb01793fdb4301cc1b1a9c8673c4c55595f08" title="856fb01793fdb4301cc1b1a9c8673c4c55595f08">
+              <span>Analyzed revision</span>
+              <code>856fb017…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/MystenLabs--walrus-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>MystenLabs--walrus-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in the root LICENSE and every npm manifest; the Python SDK's pyproject
+declares MIT, a licence no file in the tree contains</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>73,800
+lines of Rust in the relayer across 56 files, inline tests included;
+15,028 of TypeScript in its sidecar and MCP server; 1,293 of Move; SDKs,
+an MCP connector and five apps besides</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,946
+commits from 19 December 2025 to 13 November 2026 on dev, 689 of them by
+the leading author; 67 tags, the TypeScript SDK at 0.1.14</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,068
+Rust test functions in the relayer, 108 Move, 515 sidecar, 367 SDK, 332
+MCP connector and 421 Python; CI runs the relayer's suite against
+pgvector and Redis on push and pull request; I ran none of
+it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Walrus Memory is Mysten Labs' agent memory service. A Rust relayer
+embeds a memory with an OpenAI-compatible model, encrypts it with Seal,
+uploads the ciphertext to Walrus, and transfers the resulting Blob
+object on Sui to the user's address. Each memory also gets a pgvector
+row in the relayer's Postgres. Recall searches that index by owner and
+namespace, downloads the matching blobs, and decrypts them. A TypeScript
+and a Python SDK, Vercel AI SDK middleware, an MCP server with OAuth, a
+stdio MCP connector with Claude Code, Codex and Cursor hooks, and an
+OpenClaw plugin all reach the same relayer.</p>
+<p>The access-control design is the notable part. The Move contract
+mixes a counter into every Seal identity and bumps it whenever a
+delegate is removed or the account is frozen, so a removed key cannot
+fetch the key for anything written afterwards. A memory reaches the
+user's wallet only in a transaction that re-checks that counter. Forget
+fences in-flight remember jobs in the same transaction that drops the
+index rows, so a finishing worker cannot write them back.</p>
+<p>The weak part is what forget means. It deletes index rows for one
+namespace, and the documentation says outright that restore can re-index
+them, since the blob and its on-chain object remain. The session-start
+guidance tells the agent to run <code>memwal_restore</code> whenever
+recall returns nothing for a namespace it has used. The remember job row
+keeps the ciphertext and the embedding. Nothing supersedes or corrects a
+memory: the extraction prompt forbids it and the consolidator module is
+an empty placeholder.</p>
+<p><strong>Licence.</strong> The Python SDK declares a licence the tree
+does not contain.
+<code>packages/python-sdk-memwal/pyproject.toml:10</code> sets
+<code>license = "MIT"</code>, with an MIT classifier at line 19. The
+only licence text in the repository is the root Apache-2.0
+<code>LICENSE</code>, and the package directory has no licence file of
+its own, so the published package metadata and the repository grant
+different terms. Every npm manifest (<code>packages/sdk</code>,
+<code>packages/mcp</code> and its three plugin manifests,
+<code>packages/openclaw-memory-memwal</code>) says Apache-2.0 and agrees
+with the root file. <code>apps/chatbot/LICENSE</code> is Vercel's
+Apache-2.0 notice for the template that app is built from. There is no
+rider against analysis.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a piece of text. <code>remember</code> stores it whole,
+and <code>analyze</code> has an LLM split a passage into atomic facts,
+each tagged <code>vital</code>, <code>standard</code> or
+<code>trivial</code>
+(<code>services/server/src/services/prompts/extract.txt</code>). The
+bucket becomes an importance float, 0.9, 0.5 or 0.2, used only for
+ranking (<code>services/server/src/services/extractor.rs:38-42</code>,
+<code>services/server/migrations/009_importance_signal.sql</code>).
+Nothing marks a memory as a candidate, a verified fact or a retracted
+one. Everything in the index is served.</p>
+<p>A memory is never revised. The extraction prompt says <em>"Do NOT
+edit, merge, or supersede existing memories — only emit what is new in
+the input"</em> (<code>extract.txt:10</code>), so "I moved from Hanoi to
+Da Nang" becomes a new fact beside "User lives in Hanoi", and both are
+recalled. The consolidator module that would mark a
+<code>valid_until</code> is a doc comment with no code
+(<code>services/server/src/services/consolidator.rs:1-20</code>). Its
+header says duplicates collide because the same plaintext gives the same
+ciphertext and blob id. <code>analyze.rs:63</code> says the opposite,
+that Seal encryption is not deterministic. Deduplication actually runs
+on a SHA-256 of owner, namespace and text on the job row
+(<code>services/server/src/routes/remember.rs:1472-1481</code>).</p>
+<p>A memory stops being served in three ways, and only one of them
+removes it:</p>
+<ul>
+<li><strong>Forget</strong> (<code>POST /api/forget</code>) hard-deletes
+every index row in one namespace and records each memory id in
+<code>memory_tombstones</code> for 30 days
+(<code>services/server/src/storage/db.rs:3424-3468</code>,
+<code>:52</code>). The blob, its Sui object and the job row stay.
+Restore lists the owner's blobs on chain and re-indexes any whose blob
+id has no row, under a new uuid, without reading the tombstone table
+(<code>services/server/src/routes/admin.rs:1014-1073</code>,
+<code>:1367</code>).</li>
+<li><strong>Lease end.</strong> A blob is stored for a fixed number of
+Walrus epochs. When an aggregator returns 404, recall or restore deletes
+that blob's rows
+(<code>services/server/src/engine/walrus_seal.rs:102-106</code>).
+Nothing in the tree extends a lease.</li>
+<li><strong>Security delete</strong> removes Walrus Blob objects on
+chain. It covers only blobs tracked in the old-V1 database, behind two
+flags, and the owner signs the transaction
+(<code>docs/api/security-delete.md</code>).</li>
+</ul>
+<p>The owner holds each Blob object, registered as deletable
+(<code>services/server/scripts/sidecar/routes/walrus-upload-journal.ts:1137-1146</code>),
+so the owner can delete one from a Sui wallet outside this tree. No
+relayer route does that for a memory written on the current path.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — forget drops the index row and leaves the blob it was built from; restore lists the owner's blobs on chain and indexes them again</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: forget drops the index row and leaves the blob it was built from; restore lists the owner&#39;s blobs on chain and indexes them again
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    SDK[&quot;SDK, middleware:&lt;br/&gt;remember, analyze&quot;]
+    MCP[&quot;MCP tools:&lt;br/&gt;remember, analyze&quot;]
+    SDK ~~~ MCP
+  end
+  writers --&gt; PREP[&quot;relayer embeds and&lt;br/&gt;Seal-encrypts; job row&lt;br/&gt;keeps both&quot;]
+  PREP --&gt; BLOB[&quot;Walrus blob, deletable;&lt;br/&gt;Sui Blob object owned&lt;br/&gt;by the user, public&lt;br/&gt;memwal_* attributes&quot;]
+  BLOB --&gt; IDX[&quot;vector_entries row:&lt;br/&gt;owner, namespace,&lt;br/&gt;embedding, blob id&quot;]
+  IDX --&gt; REC[&quot;recall: owner and&lt;br/&gt;namespace predicate,&lt;br/&gt;decrypt via Seal&quot;]
+  REC ~~~ FG
+  IDX --&gt; FG[&quot;POST /api/forget:&lt;br/&gt;delete one&lt;br/&gt;namespace&#39;s rows&quot;]
+  FG --&gt; TS[&quot;memory_tombstones:&lt;br/&gt;keyed on memory id,&lt;br/&gt;swept after 30 days&quot;]
+  TS ~~~ RS
+  FG --&gt; RS[&quot;memwal_restore:&lt;br/&gt;list owner&#39;s blobs&lt;br/&gt;on chain&quot;]
+  RS --&gt;|&quot;new uuid;&lt;br/&gt;tombstones not read&quot;| IDX
+  BLOB --&gt; EXP[&quot;lease ends: next&lt;br/&gt;404 drops the row&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Four processes and several external services. The relayer
+(<code>services/server/src</code>, axum) verifies Ed25519-signed
+requests, runs remember, recall, analyze, ask, restore and forget,
+queues wallet jobs in Postgres with Apalis, and serves OAuth for MCP. A
+Node sidecar (<code>services/server/scripts</code>), reachable only from
+the relayer with a shared secret, does Seal encryption and decryption,
+Walrus uploads, and the metadata-and-transfer transactions signed by the
+server's wallets, and hosts the MCP server the relayer proxies at
+<code>/api/mcp</code>. A Rust indexer reads <code>AccountCreated</code>
+events from Sui checkpoints into an <code>accounts</code> table
+(<code>services/indexer</code>). A React dashboard runs in the owner's
+browser and signs account and delegate-key transactions there
+(<code>apps/app</code>). <code>docs/architecture/README.md</code> lists
+the same containers and is consistent with the routes I read.</p>
+<p>Standing it up needs PostgreSQL with pgvector, Redis, a Sui fullnode,
+Walrus aggregators and an upload relay or publisher, Seal key servers,
+an OpenAI-compatible gateway for embeddings and extraction, and server
+wallets funded with SUI for gas and WAL for storage. Enoki is optional
+for sponsorship and zkLogin. Auth fails closed when Redis is down.
+Nothing runs offline, and every write costs the operator a Walrus
+storage payment and a Sui transaction. The relayer is self-hostable
+(<code>docs/relayer/self-hosting.md</code>); the documented default is a
+relayer Mysten runs.</p>
+<p>Postgres is the only copy of jobs, OAuth state, quotas and owner
+tokens. The documentation calls the vector index a rebuildable cache,
+and restore is the rebuild. A <code>BENCHMARK_MODE</code> swaps the
+storage engine for a plaintext column with no Seal, Walrus or Sui
+(<code>services/server/migrations/008_benchmark_plaintext.sql</code>,
+<code>services/server/src/routes/analyze.rs:8-14</code>); it is off by
+default.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Remember.</strong> <code>routes::remember</code> inserts a
+<code>remember_jobs</code> row keyed by the content dedupe hash and
+returns 202 (<code>services/server/src/routes/remember.rs:862</code>). A
+spawned task summarises text over the embedder's limit, embeds the
+original or the summary, encrypts the original, reserves storage quota,
+and persists the ciphertext and embedding on the job row before handing
+off to a wallet (<code>remember.rs:240-326</code>). The wallet job
+uploads, stamps metadata, transfers the Blob, and only then inserts the
+index row (<code>services/server/src/jobs.rs:1691-1711</code>).</li>
+<li><strong>Analyze.</strong> <code>routes::analyze</code> recalls up to
+ten related memories as dedup context, calls the extractor, then embeds,
+encrypts and enqueues one job per fact. A fact whose text matches a live
+job with a different bucket updates that row's importance instead of
+writing again
+(<code>services/server/src/routes/analyze.rs:32-96</code>).</li>
+<li><strong>Blob metadata.</strong> The register transaction carries
+<code>memwal_namespace</code>, <code>memwal_owner</code>,
+<code>memwal_package_id</code> and <code>memwal_job_id</code>, and the
+transfer transaction adds <code>memwal_agent_id</code>
+(<code>walrus-upload-journal.ts:1137-1146</code>,
+<code>services/server/scripts/sidecar/blob-metadata.ts:169-198</code>).
+These are public attributes on a Sui object, readable by anyone who
+knows the owner's address.</li>
+<li><strong>Recall.</strong> <code>search_similar</code> runs the cosine
+query under <code>owner = $2 AND namespace = $3</code>, widens the
+window when duplicate blob ids crowd it, and returns hits that the
+engine hydrates through a Redis ciphertext cache, Walrus aggregators and
+batched Seal decryption
+(<code>services/server/src/storage/db.rs:210-242</code>,
+<code>:3213-3247</code>,
+<code>services/server/src/engine/walrus_seal.rs</code>).</li>
+<li><strong>Forget.</strong> <code>delete_by_namespace</code> takes a
+namespace advisory lock, deletes and tombstones the rows in one CTE,
+fails every non-terminal job in the namespace with tombstones for their
+ids, releases their quota reservations, and NULLs the idempotency keys
+so the same text can be written again
+(<code>db.rs:3424-3571</code>).</li>
+<li><strong>Restore.</strong> <code>routes::restore</code> asks the
+sidecar for the owner's Blob objects filtered by namespace and package,
+subtracts blob ids already indexed or negative-cached, downloads,
+decrypts, re-embeds, and inserts new rows at importance 0.5 in one
+transaction
+(<code>services/server/src/routes/admin.rs:953-1417</code>).</li>
+<li><strong>Security delete.</strong> Challenge, verify, list, prepare,
+submit and cancel routes over the legacy database's
+<code>delete_blobs_tracking</code>; finalize deletes and tombstones the
+index rows for the deleted blobs
+(<code>services/server/src/storage/security_delete_store.rs:692-718</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>vector_entries</code> is the index: <code>id</code>,
+<code>owner</code>, <code>namespace</code>, <code>blob_id</code>, a
+1,536-dimension <code>embedding</code> under HNSW,
+<code>created_at</code>, <code>updated_at</code>,
+<code>importance</code>, <code>blob_size_bytes</code>,
+<code>agent_id</code>, <code>package_id</code>, and
+<code>end_epoch</code> with <code>expires_at</code> for the storage
+lease (<code>services/server/migrations/001_init.sql</code>,
+<code>002</code>, <code>009</code>, <code>014</code>, <code>017</code>).
+The memory text is not in Postgres outside benchmark mode; it is the
+Seal ciphertext on Walrus. The embedding is stored in the clear.</p>
+<p><code>remember_jobs</code> carries the pipeline state,
+<code>pending</code>, <code>running</code>, <code>uploaded</code>,
+<code>done</code> or <code>failed</code>, plus the idempotency key, the
+request fingerprint, the upload journal and the preparation payload:
+<code>preparation_encrypted_b64</code> and
+<code>preparation_vector</code>
+(<code>migrations/005_remember_jobs.sql</code>,
+<code>012_remember_write_idempotency.sql</code>).
+<code>memory_tombstones</code> holds <code>memory_id</code>,
+<code>owner</code>, <code>namespace</code>, <code>blob_id</code> and
+<code>deleted_at</code>
+(<code>migrations/020_read_api_followups.sql:11-17</code>). It serves
+two readers: the owner read API lists deletions from it for Console
+sync, and every job and insert path checks it by job id so a forgotten
+job cannot land
+(<code>services/server/src/routes/memory_read.rs:548-585</code>,
+<code>db.rs:3029-3035</code>).</p>
+<p>On chain, <code>MemWalAccount</code> holds the owner, up to a fixed
+number of delegate keys, an active flag, an admin quarantine flag, and
+<code>access_counter_version</code>
+(<code>services/contract/sources/account.move:141-175</code>).
+<code>seal_approve</code> grants decryption to the owner or any listed
+delegate for any identity whose suffix is the owner and a counter not
+past the current one (<code>account.move:1105-1129</code>). The
+namespace is not part of the identity check, so every delegate of an
+account can decrypt every namespace.</p>
+<p>There is no validity time. <code>created_at</code> and
+<code>updated_at</code> are record time, and <code>expires_at</code> is
+the storage lease. The extractor writes event dates into the fact text,
+as in <em>"User went hiking on Friday, 19 May 2023 (2023-05-19)"</em>
+(<code>extract.txt</code>), and no field carries them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is one vector arm. The query embedding is cached in Redis
+on API base, model and query text
+(<code>services/server/src/routes/recall.rs:23-69</code>). The cosine
+search is filtered by owner and namespace. When the security-delete
+table is present, it also excludes blobs in <code>deleting</code>,
+<code>deleted</code> or <code>deleted_external</code>
+(<code>db.rs:231-242</code>). Hits are de-duplicated by blob id,
+optionally re-ranked by <code>CompositeRanker</code> on distance,
+recency and importance, which short-circuits at default weights, and
+hydrated (<code>recall.rs:72-120</code>). A hit whose blob is gone is
+dropped and its row deleted. The recall SQL does not read
+<code>expires_at</code>, so the lease takes effect only at the 404.</p>
+<p>The AI SDK middleware recalls on the last user message, keeps up to
+five hits above a relevance of 0.3, and injects them as nonce-delimited
+user data while the trust policy stays in a system message
+(<code>packages/sdk/src/ai/middleware.ts:186-188</code>,
+<code>:255-283</code>, <code>:404-432</code>). <code>ask</code> recalls
+and passes memories to the model as JSON-encoded untrusted context
+(<code>services/server/src/routes/admin.rs:33</code>).</p>
+<p>Over-recall is the failure the design invites. Without supersession,
+an old fact and its correction are both near the query, and the ranker
+can weight recency but cannot exclude the older one.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are deferred. <code>remember</code> returns a job id at once.
+The memory becomes recallable after embedding, encryption, the Walrus
+upload, and the metadata-and-transfer transaction; the handler's own
+comment puts the index insert <em>"minutes later"</em>
+(<code>remember.rs:288-293</code>). <code>analyze</code> blocks on the
+LLM extraction call before it returns the per-fact job ids. The
+TypeScript SDK offers <code>waitForRememberJob</code> and the MCP server
+a status tool. No background pass rewrites the store. The periodic work
+is the tombstone sweep (<code>main.rs:3051</code>), stale-job failure,
+expiry metadata refresh and the account indexer.</p>
+<p>The write path has two filters. The MCP sidecar runs every free-text
+input through a shape-based credential redactor before it reaches the
+SDK (<code>services/server/scripts/mcp/tools/redaction.ts</code>), and
+the extraction prompt treats the input as untrusted data. The redactor's
+header gives its reason: <em>"Walrus storage is append-only and
+immutable: a secret that reaches it cannot be deleted"</em>
+(<code>redaction.ts:7-10</code>). Blobs are registered deletable, so the
+storage layer can delete them; the relayer offers no way to do it for a
+current memory.</p>
+<p>Deletion is per namespace only. There is no per-memory delete route
+on the relayer. The TypeScript SDK exposes restore and no forget; the
+Python SDK wraps both
+(<code>packages/python-sdk-memwal/memwal/client.py:1292</code>). The
+forget handler's doc comment describes it as used by the benchmark
+harness for inter-run cleanup, <em>"also a general admin op"</em>
+(<code>admin.rs:50-62</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Every remember costs one embedding call, a Seal encryption, a Walrus
+upload paid in WAL, and a Sui transaction paid in SUI, from the
+operator's wallets. Analyze adds one LLM extraction call and one
+related-memory recall per input. Recall costs one embedding (cached),
+one pgvector query, and a Walrus download and Seal decryption per hit.
+The middleware injects at most five memories per turn into a user
+message, after the system prompt.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The relayer-hosted MCP server registers <code>memwal_remember</code>,
+<code>memwal_remember_status</code>, <code>memwal_remember_bulk</code>,
+<code>memwal_analyze</code> and <code>memwal_restore</code> under the
+write scope, and <code>memwal_recall</code>, a namespaces tool and a
+health tool under the read scope
+(<code>services/server/scripts/mcp/tools/index.ts:19-40</code>). There
+is no forget tool. The stdio connector <code>packages/mcp</code> bridges
+a client to that endpoint, and its plugin registers SessionStart,
+UserPromptSubmit and PostToolUse hooks that inject guidance and make no
+network calls (<code>packages/mcp/plugin/hooks/hooks.json</code>).
+Automatic saving is off until the user turns it on from a terminal.</p>
+<p>The SessionStart guidance includes <em>"If memwal_recall unexpectedly
+returns nothing for a namespace you've used before, run memwal_restore
+to rebuild the index from Walrus"</em>
+(<code>packages/mcp/plugin/scripts/on_session_start.mjs:21</code>). The
+restore tool's description says the same
+(<code>restore.ts:89-94</code>). After a forget, recall for that
+namespace returns nothing, and the agent holds the tool that brings it
+back.</p>
+<p>The OpenClaw plugin recalls before prompt build and captures at agent
+end (<code>packages/openclaw-memory-memwal/src/index.ts:7</code>). The
+Vercel AI SDK middleware recalls before each call and analyzes the user
+message after it, in the background.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-remains-after-forget">What remains after forget</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>What</th>
+<th>Where</th>
+<th>Retrievable by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The ciphertext</td>
+<td>Walrus, until the lease ends</td>
+<td>anyone with the blob id; decryptable by the owner and every current
+delegate</td>
+</tr>
+<tr>
+<td>The Blob object and its <code>memwal_namespace</code>,
+<code>memwal_owner</code>, <code>memwal_agent_id</code> attributes</td>
+<td>Sui</td>
+<td>anyone</td>
+</tr>
+<tr>
+<td>Ciphertext and embedding</td>
+<td><code>remember_jobs.preparation_*</code> and the Apalis job
+payload</td>
+<td>the operator</td>
+</tr>
+<tr>
+<td>Memory id, namespace, blob id</td>
+<td><code>memory_tombstones</code>, for 30 days</td>
+<td>the owner read API</td>
+</tr>
+<tr>
+<td>Ciphertext</td>
+<td>Redis blob cache, until its TTL</td>
+<td>the relayer</td>
+</tr>
+<tr>
+<td>The memory itself</td>
+<td>the index again</td>
+<td>the owner or any delegate, by calling restore</td>
+</tr>
+</tbody>
+</table></div>
+<p>The forget handler's comment and the API reference both say the blobs
+persist and restore can re-index them (<code>admin.rs:50-62</code>,
+<code>docs/relayer/api-reference.md:604-606</code>). The job row is the
+part neither mentions. The preparation columns are written at
+<code>remember.rs:310-326</code>, and no production path sets them back
+to NULL. The embedding is unencrypted, so a forgotten memory's vector
+stays in the operator's database.</p>
+<h3 id="delegate-removal">Delegate removal</h3>
+<p>Removing a delegate or freezing an account bumps
+<code>access_counter_version</code>. <code>seal_approve</code> refuses
+any counter above the current one, and <code>seal_encrypt_fence</code>
+aborts a write whose ciphertext uses a stale counter, in the same
+transaction that transfers the Blob
+(<code>account.move:1105-1150</code>,
+<code>blob-metadata.ts:122</code>). A sidecar configured to allow the
+legacy <code>v1</code> Seal ABI skips the fence for those writes. The
+contract states the limit itself: the rotation is <em>"Forward-only by
+design"</em>, and everything written before it stays readable by any
+delegate authorised then (<code>account.move:169-173</code>).</p>
+<h3 id="who-can-read-which-namespace">Who can read which namespace</h3>
+<p>The relayer filters every read by the owner it derived from the
+signature. The namespace is whatever the caller names. Seal does not
+check it, so any delegate key of an account can recall, restore or
+decrypt any of that account's namespaces. Namespaces separate one
+owner's apps by convention.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code></strong> — awarded on the owner
+predicate in recall, restore discovery, stats and the owner read API,
+with the owner from <code>AuthInfo</code>
+(<code>auth.rs:414-420</code>). The namespace predicate is on the same
+queries, and the caller supplies it.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>tombstone</code></strong> — withheld.
+<code>memory_tombstones</code> is keyed on the memory id and fences
+in-flight jobs and drives Console sync. Forget NULLs the idempotency key
+on purpose so a re-analyze of the same text is a new write
+(<code>analyze.rs:36-38</code>), and restore inserts under a new
+uuid.</li>
+<li><strong><code>trust_state</code></strong> — withheld. Importance is
+a ranking float. Job status is pipeline state, and the security-delete
+states describe the blob's deletion, not whether the memory is
+believed.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Event dates
+live in the fact text; the columns are record time and the storage
+lease.</li>
+<li><strong><code>audit_log</code></strong> — withheld. Sui records
+every Blob registration and transfer, but forget, importance changes and
+lease drops happen only in Postgres. <code>memory_tombstones</code> is
+swept after 30 days, and <code>remember_jobs</code> is updated in place.
+<code>deletion_batch_members</code> in the legacy database keeps claim
+lineage for security deletion, and its rows are updated as claims
+resolve.</li>
+<li><strong><code>human_review</code></strong> — withheld. Nothing waits
+for approval. The dashboard browses memories and runs security
+delete.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li>The recall filter for pending security deletes probes the relayer's
+own database for <code>delete_blobs_tracking</code>
+(<code>db.rs:2884-2912</code>), while the legacy migrations that create
+it run against <code>LEGACY_DB_URL</code>
+(<code>services/server/src/storage/legacy_db.rs</code>). Unless both
+URLs name one database, the filter stays off, and a deleted blob drops
+out of recall only when its download fails.</li>
+<li>Namespace names are public. A namespace such as <code>health</code>
+or a client's name is written as a plaintext attribute on a Sui
+object.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The relayer has 1,068 Rust test functions, 278 of them
+<code>tokio::test</code>, inline in the modules. CI runs
+<code>cargo test --bins</code> with pgvector 17 and Redis as services on
+every push and pull request to <code>main</code>, <code>staging</code>
+and <code>dev</code> (<code>.github/workflows/test.yml:536-592</code>).
+The database tests return early without <code>DATABASE_URL</code>, and
+the CI job sets it. Move has 108 tests, the sidecar 515, the SDK 367,
+the MCP connector 332, and Python 421 across the SDK, the server's
+end-to-end scripts and the benchmark harness. I ran none of it.</p>
+<p><code>negative_eval</code> rests on two populated cases in
+<code>services/server/src/storage/db.rs</code>:</p>
+<ul>
+<li><code>search_similar_hides_memories_claimed_by_a_pending_security_delete</code>
+(<code>:2252-2352</code>) inserts two rows with identical embeddings,
+cycles one blob's tracking state through all six values, and asserts the
+exact recall set for each: both rows for <code>deletable</code>,
+<code>not_owner</code> and <code>expired</code>, only the live row for
+<code>deleting</code>, <code>deleted</code> and
+<code>deleted_external</code>.</li>
+<li><code>forget_then_immediate_recall_returns_nothing</code>
+(<code>:2361-2422</code>) forgets one namespace of two, asserts the
+forgotten one returns nothing on the next read, and asserts the kept one
+still returns <code>blob-keep</code>.</li>
+</ul>
+<p>No test asserts that a forgotten memory stays out after restore, and
+the API reference documents the opposite: restore re-indexes forgotten
+blobs.</p>
+<p><code>services/server/benchmarks</code> is a LoCoMo and LongMemEval
+harness with an LLM judge, comparing ranker presets against pure cosine.
+Its results directory is gitignored, and <code>reference_scores/</code>
+holds other systems' published numbers, citing the LongMemEval paper and
+<a href="https://arxiv.org/abs/2504.19413">arXiv:2504.19413</a>. No
+result for Walrus Memory is committed. No paper describes Walrus Memory
+itself.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Rotate the encryption identity on revocation.</strong> Mix a
+counter into the key id, bump it on every removal and freeze, refuse key
+requests above the current value, and re-check it in the transaction
+that persists the ciphertext. A removed key then reads nothing written
+after its removal.</li>
+<li><strong>Fence in-flight writes in the forget transaction.</strong>
+Fail every pending job in the scope and tombstone its id in the same
+transaction that drops the rows, so a worker that finishes later cannot
+write the memory back.</li>
+<li><strong>Redact before an immutable write.</strong> A credential
+filter belongs in front of storage that cannot be cleaned afterwards,
+with model-facing rules as a second layer rather than the only one.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A forget that lives only in the projection.</strong> If the
+index is rebuilt from a durable store, the decision to forget has to be
+in the rebuild's input, keyed on what the rebuild reads, or the rebuild
+undoes it. Here restore matches by blob id and the tombstone is keyed on
+a memory id restore never sees.</li>
+<li><strong>Telling the agent to restore on an empty result.</strong> An
+empty recall after a forget is the correct answer; guidance that treats
+it as data loss turns the user's deletion into a recovery step.</li>
+<li><strong>Public metadata beside encrypted content.</strong> Namespace
+and agent attributes on a public object say who stores what about which
+subject, whatever the ciphertext protects.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a builder who wants memory a user owns and can carry
+between relayers, with encryption the operator cannot quietly widen, and
+who accepts paying for a Sui transaction and Walrus storage on every
+write. It suits append-mostly memory: preferences, notes, research
+trails. Walk away if memory must be correctable or erasable on request.
+No memory can be edited or superseded, deletion is per namespace and
+reversible by design, and what is erasable depends on a lease or on the
+owner deleting objects from a wallet. Walk away too if the deployment
+cannot run a Sui and Walrus stack and fund its wallets.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>LEGACY_DB_URL</code> and <code>DATABASE_URL</code>
+name one database in the hosted deployment, which decides whether recall
+hides blobs pending security delete.</li>
+<li>Whether Apalis job rows, which carry ciphertext and embedding, are
+pruned by anything outside this tree.</li>
+<li>Whether forget is meant to survive restore; the API reference treats
+re-indexing as a feature, and the MCP guidance invokes it on an empty
+recall.</li>
+<li>What Walrus storage nodes and aggregators keep after a deletable
+blob is deleted on chain; that is beyond this repository.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema:
+<code>services/server/migrations/001_init.sql</code> to
+<code>027</code>, <code>services/server/migrations_legacy/</code>,
+<code>services/server/src/storage/db.rs</code>,
+<code>services/server/src/storage/legacy_db.rs</code></li>
+<li>Write path: <code>services/server/src/routes/remember.rs</code>,
+<code>services/server/src/routes/analyze.rs</code>,
+<code>services/server/src/jobs.rs</code>,
+<code>services/server/src/services/extractor.rs</code>,
+<code>services/server/src/services/prompts/extract.txt</code>,
+<code>services/server/scripts/sidecar/routes/walrus-upload-journal.ts</code>,
+<code>services/server/scripts/sidecar/blob-metadata.ts</code></li>
+<li>Retrieval: <code>services/server/src/routes/recall.rs</code>,
+<code>services/server/src/engine/walrus_seal.rs</code>,
+<code>services/server/src/services/ranker.rs</code></li>
+<li>Deletion and restore:
+<code>services/server/src/routes/admin.rs</code>,
+<code>services/server/src/routes/security_delete.rs</code>,
+<code>services/server/src/storage/security_delete_store.rs</code>,
+<code>docs/api/security-delete.md</code></li>
+<li>Access control: <code>services/contract/sources/account.move</code>,
+<code>services/server/src/auth.rs</code></li>
+<li>Agent integration: <code>services/server/scripts/mcp/tools/</code>,
+<code>packages/mcp/plugin/</code>,
+<code>packages/sdk/src/ai/middleware.ts</code>,
+<code>packages/openclaw-memory-memwal/src/</code></li>
+<li>Tests: <code>services/server/src/storage/db.rs</code> (inline),
+<code>.github/workflows/test.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Restore does not read the tombstone table.</strong>
+<code>git grep -n memory_tombstones -- services/server/src/routes/admin.rs</code>
+returns nothing;
+<code>git grep -c memory_tombstones -- services/server/src/routes/analyze.rs</code>
+counts 2.</li>
+<li><strong>No forget tool on MCP.</strong>
+<code>git grep -n -i forget -- services/server/scripts/mcp packages/mcp/src</code>
+matches only a test-hook comment at
+<code>services/server/scripts/mcp/tools/remember-bulk.ts:58</code>;
+<code>git grep -c memwal_restore -- services/server/scripts/mcp/tools/restore.ts</code>
+counts 4.</li>
+<li><strong>The TypeScript SDK has no forget call.</strong>
+<code>git grep -n -i forget -- packages/sdk/src</code> matches three
+fire-and-forget comments in <code>ai/middleware.ts</code> and
+<code>forget(blobId)</code> on the mock client at
+<code>mock.ts:647</code>;
+<code>git grep -c 'def forget' -- packages/python-sdk-memwal/memwal/client.py</code>
+counts 4.</li>
+<li><strong>No production path clears the preparation payload.</strong>
+<code>git grep -n -E 'preparation_(vector|encrypted_b64)[[:space:]]*=[[:space:]]*NULL' -- .</code>
+returns nothing;
+<code>git grep -n -E 'preparation_encrypted_b64 = ' -- services/server/src</code>
+matches <code>routes/remember.rs:316</code>, three test lines in the
+same file, and a test at <code>storage/db.rs:5889</code>.</li>
+<li><strong>Blob deletion is built only for security delete.</strong>
+<code>git grep -n build_delete_tx -- services/server/src</code> matches
+<code>sui/tx_build.rs</code>, <code>routes/security_delete.rs</code>,
+<code>jobs_security_delete.rs</code>,
+<code>sui/input_freshness.rs</code> tests and a comment in
+<code>sui/mod.rs</code>.</li>
+<li><strong>Recall does not read the lease.</strong>
+<code>git grep -n expires_at -- services/server/src/routes/recall.rs services/server/src/engine/walrus_seal.rs</code>
+returns nothing;
+<code>git grep -c expires_at -- services/server/src/routes/memory_read.rs</code>
+counts 14.</li>
+<li><strong>No validity-time field.</strong>
+<code>git grep -n -w -i -E 'valid_from|valid_until|valid_to' -- services/server/src services/server/migrations</code>
+matches only
+<code>services/server/src/services/consolidator.rs:16</code>, a comment;
+<code>git grep -n -w -c expires_at -- services/server/migrations/017_memory_expiry_columns.sql</code>
+counts 2.</li>
+<li><strong>No review or belief status in the schema.</strong>
+<code>git grep -n -i -E 'approved|verified|candidate|rejected' -- services/server/migrations</code>
+matches three comments, in <code>011_mcp_oauth.sql:39</code> and
+<code>020_read_api_followups.sql:3</code> and <code>:25</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex' -- README.md SKILL.md docs</code>
+returns nothing and no <code>CITATION.cff</code> is tracked;
+<code>git grep -l -i arxiv -- services/server/benchmarks</code> lists
+the LongMemEval adapter and the two reference-score files.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/MystenLabs/walrus-memory/commit/856fb01793fdb4301cc1b1a9c8673c4c55595f08"><code class="commit-id" title="856fb01793fdb4301cc1b1a9c8673c4c55595f08">856fb017…</code></a>
+— first reading, from a full clone of <code>dev</code>, scoped to the
+relayer's remember, analyze, recall, forget, restore and security-delete
+paths, the schema, the Move account contract, the sidecar's upload and
+metadata code, the MCP tools and plugin hooks, and their tests; the apps
+were read only for delete paths. Screened first: five auto-run surfaces,
+a Claude Code plugin marketplace manifest at the root and the plugin
+under <code>packages/mcp/plugin</code> with Claude Code, Codex and
+Cursor hooks; two build-time execution points, an npm
+<code>prepublishOnly</code> and a Makefile; 14 unpinned surfaces;
+nothing inside the cooldown. Apache-2.0 at the root, MIT declared for
+the Python SDK; no rider. Nothing installed, built or run. Two marks:
+<code>scope_enforced</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

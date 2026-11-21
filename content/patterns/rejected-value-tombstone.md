@@ -1108,6 +1108,8 @@ a change event keyed on its id, and the same sentence can be written again.
 
 **[Kenfold](../../systems/kenfold/) keeps the rejected row and reads it by value, from one writer.** `Reject` and `forget` set a memory `deleted` and leave its generated `content_key`, which folds case, every Unicode space and trailing punctuation, and `SeenContent` returns any row in the scope with that key in any status; the extractor skips a candidate it finds (`internal/store/extraction.go:142-161`, `internal/extract/worker.go:139-147`). A worker test re-extracts a rejected codebase memory beside three new ones and counts it skipped. The record is the rejected row itself, so the refusal is exact-match only, `export --active` drops it, and the agent's `remember` path checks active and proposed rows and never deleted ones, so an agent re-asserting the rejected value stores it, active at once unless it is typed as a preference.
 
+[Walrus Memory](../../systems/walrus-memory/) names a record-keyed table `memory_tombstones` and uses it well for what it is: `forget` tombstones the deleted rows and every non-terminal job in the namespace in one transaction, and every insert path refuses a row whose job id is tombstoned, so a worker finishing after the forget cannot land the memory. It is not this pattern, and the code says so in the other direction. Forget NULLs the idempotency key on purpose so that analyzing the same text again is a new write, and restore re-indexes the same blob under a fresh uuid, which the id-keyed tombstone cannot see.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

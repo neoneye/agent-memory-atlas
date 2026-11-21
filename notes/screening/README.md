@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 838 of 839 screened at the report's current pin.**
+**Progress: 839 of 840 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 396 |
+| Repositories with an auto-run surface (`RUNS`) | 397 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 385 |
-| Repositories with build-time execution (`EXEC`) | 603 |
+| Repositories with build-time execution (`EXEC`) | 604 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -411,6 +411,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`vllm-semantic-router`](../../content/systems/vllm-semantic-router.md) | `.github/copilot-instructions.md` |
 | [`vortx-emem`](../../content/systems/vortx-emem.md) | `.claude-plugin/`, `.gitmodules`, `plugins/emem/.claude-plugin/plugin.json`, `plugins/emem/.mcp.json`, `server.json` |
 | [`waggle`](../../content/systems/waggle.md) | `.mcp.json`, `server.json`, `smithery.yaml` |
+| [`walrus-memory`](../../content/systems/walrus-memory.md) | `.claude-plugin/`, `packages/mcp/plugin/.claude-plugin/plugin.json`, `packages/mcp/plugin/.mcp.json`, `packages/mcp/plugin/hooks/`, `packages/mcp/plugin/hooks/hooks.json` |
 | [`wenlan`](../../content/systems/wenlan.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`willder`](../../content/systems/willder.md) | `hooks/` |
 | [`windie-sandbox`](../../content/systems/windie-sandbox.md) | `.gitmodules` |

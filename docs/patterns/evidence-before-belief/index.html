@@ -660,6 +660,20 @@ the candidate again under the current verifiers, so a forged
 the evidence itself: the references are strings, and the guarantee is
 exactly as strong as the verifier, which the module says in its first
 lines.</p>
+<p><a href="../../systems/walrus-memory/">Walrus Memory</a> is the
+rebuild rule at the scale of a whole service. Its documentation calls
+the pgvector index a cache and Walrus the source of truth, and
+<code>restore</code> regenerates the index from the owner's Blob objects
+on Sui, so the derived store is honestly disposable. Forget is a
+decision about that projection only: <code>delete_by_namespace</code>
+deletes the rows and writes <code>memory_tombstones</code> keyed on the
+memory id, while restore matches on blob id, mints a new uuid and never
+reads the tombstone table. The API reference documents the re-index as
+intended, and the MCP plugin's session-start guidance tells the agent to
+run <code>memwal_restore</code> whenever recall for a used namespace
+comes back empty, which is exactly the state a forget leaves. The test
+this page asks for, apply a correction and then run the regeneration,
+fails here by design.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store the event before starting asynchronous extraction.</li>
