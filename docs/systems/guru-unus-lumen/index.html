@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Android agent app whose
+in-process Rust engine stores model-written facts in an encrypted vault,
+searched by BM25 with a binary-signature boost.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="GURU — Agent Memory Atlas">
+    <meta property="og:description" content="An Android agent app whose
+in-process Rust engine stores model-written facts in an encrypted vault,
+searched by BM25 with a binary-signature boost.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GURU — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Android agent app whose
+in-process Rust engine stores model-written facts in an encrypted vault,
+searched by BM25 with a binary-signature boost.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>GURU — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "GURU",
+      "description": "An Android agent app whose in-process Rust engine stores model-written facts in an encrypted vault, searched by BM25 with a binary-signature boost.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A phone agent's encrypted Rust brain</p>
+          <h1>GURU</h1>
+          <p class="document-deck">An Android agent app whose in-process
+Rust engine stores model-written facts in an encrypted vault, searched
+by BM25 with a binary-signature boost.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/GuruProduction/GURUbyUnusLumen">
+              <span>Source</span>
+              <strong>GuruProduction/GURUbyUnusLumen</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/GuruProduction/GURUbyUnusLumen/commit/366208c8799d39cd5ec3921dd85a3d418e93810b" title="366208c8799d39cd5ec3921dd85a3d418e93810b">
+              <span>Analyzed revision</span>
+              <code>366208c8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/GuruProduction--GURUbyUnusLumen" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>GuruProduction--GURUbyUnusLumen</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0-or-later,
+unmodified GNU text in LICENSE; NOTICE.md reserves the GURU and Unus
+Lumen marks and lists bundled third-party binaries under their own
+licences</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>33,771
+lines of Rust in 64 files under GURUbeta-FULL/cerebrum; 238,131 lines of
+Kotlin in 1,364 non-test files; a 4,331-line TypeScript test
+harness</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>416
+commits from 29 April to 21 November 2026; release tag
+v3.85</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>545
+Rust test functions and 2,308 Kotlin @Test methods; no CI workflow,
+since .github holds only FUNDING.yml; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>GURU is an Android app that gives a language model a Linux userland
+and several hundred device and network tools. Its memory, Cerebrum, is a
+Rust engine linked into the app over JNI. Facts are prose rows filed
+under a domain, topic and subtopic and keyed by the SHA-256 of their
+text, held in one in-process state that is sealed into an encrypted
+vault file on each save. The model writes facts through tools, a
+background pass extracts more from conversations, and every send injects
+BM25 hits into the system message.</p>
+<p>What is notable is the read path's handling of retirement. A deleted
+or merged-away memory keeps its bytes, and one predicate hides it from
+search, listing and retrieval alike, with a populated test that proves
+it for merges. The event trail keeps the text of every write. The search
+code records, in a committed eval and the comments beside the fusion,
+that the paper's binary signatures could not separate relevant from
+unrelated text, and demotes them to a booster.</p>
+<p>What is weak is nearly everything the README calls biological.
+Strength, decay and the buffer, episodic and semantic layers are
+computed and never read by ranking or filtering. The Kotlin conversion
+of a search hit hard-codes the category and source, so an agent reading
+its own facts gets nothing and the category filter on text search for
+facts matches nothing. Deleted text comes back the next time extraction
+finds it. The brain the app ships is a committed <code>.so</code> that
+no Gradle file builds, and it predates the Rust source at this pin.</p>
+<p><strong>Licence.</strong> The brain that ships is object code
+committed at
+<code>GURUbeta-FULL/app/src/main/jniLibs/arm64-v8a/libcerebrum_android.so</code>,
+and no Gradle file builds it (section 3). Three commits touch
+<code>cerebrum/</code> after that file last changed, and the JSON key
+<code>superseded</code>, which one of them added, does not occur in the
+binary, so the source beside the binary at this pin is not the source it
+was built from. <code>LICENSE</code> is the unmodified GNU AGPL 3.0
+text, with no section 7 additions; <code>NOTICE.md</code> reserves the
+names and logo and lists each bundled binary's licence. The prompts that
+decide what extraction keeps are fetched from
+<code>api.unuslumen.com</code>, which the README calls closed
+source.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a sentence the brain was told to keep. There is no
+candidate state: whatever a tool, the extraction pass or a thought cycle
+sends is live the moment the curate frame returns. Its identity is its
+text, so the same sentence written twice is one row, and an edited
+sentence is a different row.</p>
+<p>The row has a lifecycle of <code>Active</code>,
+<code>Hibernated</code> or <code>Archived</code>
+(<code>GURUbeta-FULL/cerebrum/cerebrum-curate/src/lib.rs:53-57</code>).
+<code>Hibernated</code> has no producer outside a unit test.
+<code>Archived</code> is what a delete writes (<code>lib.rs:640</code>),
+and <code>is_retired</code> is the single read-side test for it
+(<code>GURUbeta-FULL/cerebrum/cerebrum-server/src/handler.rs:116-121</code>).
+A belief stops being served only when someone deletes it, an edit
+archives its old wording, or consolidation folds it into an exact
+duplicate.</p>
+<p>Beside the lifecycle sits a decay record per memory: a layer, a
+strength, an access count and an <code>archived</code> flag of its own
+(<code>GURUbeta-FULL/cerebrum/cerebrum-decay/src/lib.rs:62-73</code>).
+Search strengthens every hit by 0.1 and consolidation promotes on access
+counts. Nothing that decides what is retrieved reads any of it (section
+6), so a memory's layer describes its history and has no bearing on
+whether it is believed.</p>
+<p>A deletion is not a refusal. A later Upsert of the same text lands on
+the same id and replaces the archived row with an active one
+(<code>lib.rs:560-570</code>). The deletion record is keyed on the
+value, and the writer never consults it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every writer upserts by content hash straight to live; delete archives, and the same text written again comes back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every writer upserts by content hash straight to live; delete archives, and the same text written again comes back
+flowchart TD
+  subgraph writers[&quot;Writers, no review&quot;]
+    direction TB
+    T[&quot;model tools:&lt;br/&gt;addMemoryFact,&lt;br/&gt;cortexRecord, rememberThis&quot;]
+    H[&quot;15-minute extraction&lt;br/&gt;over new conversations&quot;]
+    C[&quot;thought cycle with&lt;br/&gt;MEMORY output&quot;]
+    T ~~~ H ~~~ C
+  end
+  writers --&gt; U[&quot;Upsert, id =&lt;br/&gt;sha256 of the text&quot;]
+  U --&gt; L[&quot;row Active;&lt;br/&gt;memory.created event&lt;br/&gt;with the full text&quot;]
+  L --&gt; S[&quot;each send: BM25 hits&lt;br/&gt;into the system message&quot;]
+  S --&gt; K[&quot;Kotlin hit: category&lt;br/&gt;&#39;memory&#39;, source&lt;br/&gt;&#39;cerebrum&#39; constants&quot;]
+  K --&gt; A[&quot;agent own-only scope:&lt;br/&gt;matches nothing&quot;]
+  L --&gt; D[&quot;delete or edit:&lt;br/&gt;row Archived,&lt;br/&gt;memory.deleted event&quot;]
+  D --&gt; R[&quot;hidden from search,&lt;br/&gt;list and retrieve&quot;]
+  R --&gt; X[&quot;same text extracted&lt;br/&gt;again: Upsert makes&lt;br/&gt;it Active&quot;]
+  X --&gt; L
+  L --&gt; Y[&quot;consolidation: decay,&lt;br/&gt;layers, exact dedup;&lt;br/&gt;read path ignores them&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The app is a Gradle multi-module Kotlin build.
+<code>cerebrum-android</code> is a <code>cdylib</code> that holds one
+<code>CerebrumState</code> per process behind a Tokio mutex and exposes
+six JNI functions; Kotlin sends hex-encoded frames through
+<code>cerebrumExecute</code>
+(<code>GURUbeta-FULL/cerebrum/cerebrum-android/src/lib.rs:1-20</code>).
+The protocol has eight request types and the app dispatches six: CURATE,
+RETRIEVE, SEARCH, GRAPH_TRAVERSE, CONSOLIDATE and LIST
+(<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/brain/cerebrum/CerebrumBrainApi.kt:686-692</code>).
+QUERY and PREFETCH are defined and never sent.</p>
+<p>Every engine lives in that struct: the context tree, a BM25 index, a
+256-bit signature index, a dynamic wavelet matrix, decay, a four-view
+graph, dream, episodic, prefetch, a TF-IDF embedding fallback, an
+experience index and the event store among them
+(<code>GURUbeta-FULL/cerebrum/cerebrum-server/src/state.rs:34-94</code>).
+Every save rewrites all of it as a new vault generation: Argon2id at 256
+MiB for the key, XChaCha20-Poly1305 per record, temp file, fsync and
+rename
+(<code>GURUbeta-FULL/cerebrum/cerebrum-crypto/src/header.rs:33-36</code>,
+<code>GURUbeta-FULL/cerebrum/cerebrum-crypto/src/vault.rs:192-229</code>).
+A curate or consolidate frame arms a save 10 seconds after the last
+write, and a 5-minute tick catches the rest
+(<code>cerebrum-android/src/lib.rs:336-339</code>,
+<code>:665</code>).</p>
+<p>Room holds the rest: conversations, messages, tool results, project
+facts, notes to self and an injection ledger. A one-shot migration moved
+four Room memory tables into the brain. A second Kotlin memory stack
+sits beside it, with its own decay, dream and query engines and a
+seven-day half-life
+(<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/brain/DecayEngine.kt:34</code>).
+Nothing constructs those engines; the only brain class the DI graph
+builds is <code>BrainService</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing external is needed to store or recall: no network, no key, no
+model for search. Extraction needs a model, and the app expects Ollama
+on the LAN or a cloud key. The store is not repairable by hand; it is
+ciphertext under a passphrase sealed in the Android Keystore.</p>
+<p>The brain binary is not built from this tree. No Gradle file names
+Cargo or Cerebrum, and <code>cerebrum-android/README.md</code> gives the
+step as a manual <code>cp</code> of a release build into
+<code>jniLibs/arm64-v8a</code>. Only that ABI carries it, so an x86_64
+emulator build has no brain. The binary last changed in commit
+<code>971848e</code>, dated 1 November 2026; <code>4a11883</code>,
+<code>3ea8aa0</code> and <code>a847e65</code>, dated 18 and 19 November,
+change <code>cerebrum/</code> afterwards. The JSON key
+<code>superseded</code> that <code>a847e65</code> added to the update
+event does not occur in the binary, while <code>memory.deleted</code>
+and <code>total_live</code> do. I read that as the shipped brain
+predating at least that commit.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Tool write.</strong> <code>addMemoryFact</code> normalises
+the category against a fixed vocabulary;
+<code>CerebrumBrainApi.storeFact</code> refuses JSON-shaped bodies and
+sends one Upsert whose id is SHA-256 over the text and its length
+(<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/tools/MemoryToolExecutor.kt:82-117</code>,
+<code>CerebrumBrainApi.kt:79-85</code>, <code>:271-304</code>).
+<code>cortexRecord</code> sends the same op with the caller's hierarchy,
+rationale and relation ids (<code>:331-369</code>).</li>
+<li><strong>Edit.</strong> <code>updateMemoryFact</code> upserts the new
+text under its new id, then deletes the old id best-effort
+(<code>MemoryToolExecutor.kt:217-258</code>). The brain's Update op,
+which records the superseded text, is never sent.</li>
+<li><strong>Curate.</strong> <code>handle_curate</code> validates and
+applies the batch to the tree atomically, writes a WAL record per op,
+then runs a pipeline per op: tokenise, signature, wavelet matrix, BM25,
+decay <code>Buffer</code>, event, cross-references, temporal and
+semantic edges, episode, embeddings, hot cache
+(<code>handler.rs:249-359</code>, <code>:509-671</code>).</li>
+<li><strong>Delete.</strong> The executor re-inserts the row as
+<code>Archived</code> (<code>cerebrum-curate/src/lib.rs:636-648</code>);
+<code>retire_memory</code> removes it from the indexes and the graph and
+archives its decay row (<code>handler.rs:798-804</code>).</li>
+<li><strong>Recall.</strong> <code>ContextBuilder.buildPreamble</code>
+runs a 20-hit brain search plus Room LIKE lanes for messages and tool
+results and records what it injected; the send path appends the preamble
+to the system message
+(<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/memory/ContextBuilder.kt:94-186</code>,
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/repository/AiRepositoryImpl.kt:1008-1014</code>).</li>
+<li><strong>Extraction.</strong> <code>HiveMindWorker</code> runs every
+15 minutes over conversations created after the newest marker, keeps
+facts the model scores at 0.7 or above, drops literal and model-judged
+duplicates, and persists the rest
+(<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/memory/HiveMindWorker.kt:123</code>,
+<code>:187</code>, <code>:332</code>).</li>
+<li><strong>Consolidation.</strong> <code>DreamWorker</code> daily and
+<code>DecayWorker</code> every 12 hours both send CONSOLIDATE
+(<code>brain/BrainScheduler.kt:39</code>, <code>:54</code>), which runs
+<code>handle_consolidate</code>
+(<code>handler.rs:1576-1815</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The brain's row is a <code>ContextEntry</code>: id, domain, topic,
+subtopic, content, relations, a <code>Provenance</code> of source
+string, confidence and timestamp, a rationale, <code>created_at</code>,
+<code>updated_at</code> and the lifecycle. The wire has no confidence
+field, so the client packs it into the provenance string as
+<code>source|confidence=0.9000</code> and the server parses it back out
+(<code>handler.rs:375-395</code>). <code>storeFact</code> files a fact's
+category as its domain and records <code>guru storeFact:</code> plus the
+category as its rationale.</p>
+<p>There is no scope key. An agent's own facts go under the domain
+<code>agent.</code> plus its slug, with provenance <code>agent=</code>
+plus the slug
+(<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/agents/AgentMemoryService.kt:177-192</code>,
+<code>:219</code>). Bookkeeping lives beside ordinary facts: thread
+summaries and the extraction pass's "hive processed conversation marker"
+rows are facts, and the pass finds the latest marker by a top-1 BM25
+search that nothing orders by time
+(<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/memory/MemoryRepositoryImpl.kt:338-365</code>).</p>
+<p>Project facts are a separate store: a Room <code>project_facts</code>
+table with a <code>project_id</code> column, written by the
+<code>add_project_fact</code> tool and read by project id
+(<code>GURUbeta-FULL/core/database/src/main/java/com/unuslumen/app/database/dao/ProjectFactDao.kt:20</code>).
+Notes to self are a Room table with an <code>enabled</code> flag and
+keyword triggers, hard-deleted on request.</p>
+<p>Time is record time only: <code>created_at</code> and
+<code>modified_at</code> on the core entry and a timestamp on each
+event. No field says when a fact held.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Search is BM25 first. <code>handle_search</code> takes three times
+the limit from the lexical index, then a signature lane at Hamming
+radius 110 over both the signature index and the wavelet matrix, and
+fuses them by reciprocal rank with k = 60
+(<code>handler.rs:1397-1455</code>). The signature lane may only promote
+what BM25 found; <code>fused.retain</code> drops anything it proposed
+alone. The comments give the reason: in
+<code>cerebrum-signatures/tests/radius_eval.rs</code> unrelated pairs
+reached 82 bits and relevant ones 134, so no radius separated them.</p>
+<p>A retired id is skipped before the body is built
+(<code>handler.rs:1482</code>). When nothing matches, a substring scan
+over non-archived rows is the fallback. The returned score is the fused
+score divided by the top hit's.</p>
+<p>Nothing in <code>handle_search</code> reads decay strength, layer,
+confidence or the decay <code>archived</code> flag. Its only decay call
+is <code>access</code>, which strengthens each hit
+(<code>handler.rs:1492</code>). A memory that decay archives for being
+weak and unvisited for 90 days is still returned by every search,
+because its tree row is still <code>Active</code>.</p>
+<p>The Kotlin side then discards what the brain knows.
+<code>BrainService.search</code> builds each hit with
+<code>category = "memory"</code>, <code>layer = "BUFFER"</code> and
+<code>source = "cerebrum"</code> as constants, and
+<code>confidence</code> set to the search score
+(<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/brain/BrainService.kt:43-65</code>,
+<code>:329</code>). The preamble prints those fields, so every injected
+line reads <code>Memory [memory] (confidence: N%, layer: BUFFER)</code>
+whatever the row holds (<code>ContextBuilder.kt:146</code>).</p>
+<p>Two filters downstream break on those constants.
+<code>searchMemoryFacts</code> with a query and a category keeps hits
+whose category matches it, and <code>memory</code> is not in the
+vocabulary, so every valid category returns nothing
+(<code>MemoryRepositoryImpl.kt:222-225</code>). The agent filter is in
+section 8.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous frames under the brain's mutex. A tool call
+returns once the curate pipeline has run, and the row is searchable at
+once; it reaches disk within about 10 seconds. No write asks a model
+except extraction, which runs off the turn. Every save re-encrypts the
+whole state, so its cost grows with the store rather than with the
+change.</p>
+<p>An Upsert of existing text resets the row's decay to a fresh
+<code>Buffer</code> entry with strength 1.0 and no accesses, because the
+add pipeline inserts a new decay record
+(<code>handler.rs:539-542</code>,
+<code>cerebrum-decay/src/lib.rs:76-88</code>). A repeat save undoes any
+promotion the fact had earned.</p>
+<p>Consolidation decays strength by layer, with a one-hour half-life for
+<code>Buffer</code>, 30 days for <code>Episodic</code> and none for
+<code>Semantic</code> (<code>cerebrum-decay/src/lib.rs:48-49</code>,
+<code>:154</code>). It promotes a buffer entry with any access and an
+episodic entry with three, and archives entries below 0.01 that nobody
+touched for 90 days (<code>:180</code>, <code>:197</code>,
+<code>:206-219</code>). Duplicate detection is exact text after
+whitespace and case folding (<code>handler.rs:1067-1069</code>,
+<code>:1620</code>). The dream engine's prune and semantic-upgrade
+results are not applied (<code>handler.rs:1793</code>). The README's
+seven-day half-life is the constant of the unconstructed Kotlin
+engine.</p>
+<p>Extraction writes whatever the model returns at confidence 0.7 or
+above. Its duplicate check reads the brain's live listing, which
+excludes archived rows, so a fact a person deleted is new to it. When
+the model words it the same way, it is upserted back to active under the
+same id.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The main conversation holds nine memory tools — search, add, update,
+delete and list facts, search conversations, read a thread, search
+everything and walk the graph — plus <code>cortexRecord</code>
+(<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/tools/MemoryToolDefinitions.kt:52-89</code>).
+The model also gets a preamble on every send without asking. Notes to
+self are a second injection lane: the model writes keyword-triggered
+notes, and each send injects every enabled note whose keyword appears as
+a whole word in the user's message
+(<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/notestoself/NotesToSelfEngine.kt:22-48</code>).</p>
+<p>Sub-agents read memory once, before their first prompt:
+<code>AgentRuntime</code> calls <code>AgentMemoryService.search</code>
+with the job text and appends the permitted hits
+(<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/agents/AgentRuntime.kt:658-669</code>).
+The filter keeps a hit when its category is in the agent's set, or the
+set is empty, and either shared reads are granted or the hit's source
+names the agent (<code>AgentMemoryService.kt:115-119</code>). The source
+is always <code>cerebrum</code> and the category always
+<code>memory</code>, so an agent on the default own-only scope is handed
+nothing, and one with shared reads is handed everything.
+<code>rememberThis</code> tells the agent its next job will be given the
+fact; under the default scope it will not be.</p>
+<p><code>ownFacts</code>, which lists the agent's domain through the
+LIST frame's working domain filter, has no caller
+(<code>AgentMemoryService.kt:204-216</code>). The unit test of the scope
+filter passes because its fixture supplies
+<code>source = "agent=researcher"</code>, a value the production
+conversion never emits
+(<code>GURUbeta-FULL/portal/data/src/test/java/com/unuslumen/app/data/agents/AgentMemoryServiceTest.kt:135-162</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-a-delete-does">What a delete does</h3>
+<p>A delete hides the row from search, list, retrieve and, through the
+Kotlin resolver, from graph walks. The text stays in three places: the
+archived tree row, the archived decay row and the
+<code>memory.created</code> event, which has no removal path. Nothing in
+the tree erases a memory from the vault.</p>
+<p>The "brain backup" tools snapshot, verify and restore the Room
+database file
+(<code>GURUbeta-FULL/core/database/src/main/java/com/unuslumen/app/database/snapshot/DatabaseSnapshotEngine.kt:59</code>).
+The facts live in the Cerebrum vault, which the snapshot path does not
+name, so a snapshot restored onto a new phone carries chat history and
+no facts.</p>
+<h3 id="what-reaches-the-model">What reaches the model</h3>
+<p>Every send injects up to 20 brain hits, 15 message matches and 3 tool
+results into the system message, ahead of the notes to self. The block
+varies with the query, so it sits where a provider's prefix cache cannot
+reuse it. Nothing filters by confidence, and the confidence printed is
+the search score. Extraction trusts the model's score of its own output,
+and a fact taken from a web page the model read lands like any
+other.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>audit_log</code></strong> — awarded on the event
+store. Every Upsert appends <code>memory.created</code> with the full
+text, every Delete appends <code>memory.deleted</code>, and
+consolidation appends <code>memory.consolidated</code>
+(<code>handler.rs:545-554</code>, <code>:885-887</code>,
+<code>:1112-1119</code>). The store is a <code>Vec</code> with no
+removal and is sealed into each vault generation
+(<code>GURUbeta-FULL/cerebrum/cerebrum-events/src/lib.rs:59-76</code>,
+<code>GURUbeta-FULL/cerebrum/cerebrum-server/src/persistence.rs:215-220</code>).
+The app's edit is a create plus a delete with no link between them, the
+delete event carries no text or reason, a consolidation event names a
+count rather than the ids it consumed, and no app surface reads the
+trail.</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on project
+facts, which a project agent reads by <code>project_id</code>
+(<code>ProjectFactDao.kt:20</code>,
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/ProjectAgentRepositoryImpl.kt:237</code>,
+<code>:395</code>). The write takes <code>projectId</code> from the
+model's arguments. The brain has no scope at all.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>tombstone</code></strong> — withheld. The archived row
+is keyed on the hash of the deleted text, which is the right key, and
+Upsert replaces it without reading its lifecycle.</li>
+<li><strong><code>trust_state</code></strong> — withheld.
+<code>Archived</code> is deletion, <code>Hibernated</code> has no
+producer, and confidence is a float no read filters on.</li>
+<li><strong><code>human_review</code></strong> — withheld. Every writer
+lands live. Thought-cycle proposals wait as insights a person can
+acknowledge, but acknowledging writes a timestamp and promotes nothing,
+and <code>acknowledgeInsight</code> is also a model tool.
+<code>writeOwn</code> is a permission on an agent, not a review of what
+it writes.</li>
+<li><strong><code>bitemporal</code></strong> — withheld; record time
+only.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The Rust workspace has 545 test functions and the Kotlin modules
+2,308 <code>@Test</code> methods. There is no CI;
+<code>ARCHITECTURE.md</code> says a merge is gated on a local build. I
+ran none of it.</p>
+<p><code>negative_eval</code> rests on
+<code>GURUbeta-FULL/cerebrum/cerebrum-server/tests/merge_retirement.rs:113-213</code>.
+Two memories are added and found by search and by a graph walk, and a
+Merge folds them. The test then asserts neither source comes back from
+search or the walk, that the merged record does come back from a search
+on the same terms, and that both sources' content survives in archived
+decay rows. It drives the real SEARCH and GRAPH_TRAVERSE frames, so a
+decoder returning nothing would fail the positive half. The Android app
+never sends a Merge, and whether the shipped binary contains commit
+<code>3ea8aa0</code>, which added this test and its fix, is not settled
+by its strings.</p>
+<p>Other suites are thinner where it matters.
+<code>fact_identity.rs</code> asserts a deleted memory is absent from
+search over a store holding only that memory, which passes on an empty
+result. <code>retrieval_quality.rs</code> asserts unrelated queries
+return no hits from a seeded corpus. <code>version_history.rs</code>
+covers the superseded text on an Update the app does not send. The agent
+scope test is green on a fixture the producer never makes (section
+8).</p>
+<p>The signature code cites <em>Hippocampus: An Efficient and Scalable
+Memory Module for Agentic AI</em> (<a
+href="https://arxiv.org/abs/2602.13594">arXiv:2602.13594</a>, 14
+February 2026). Its abstract proposes binary signatures for semantic
+search and a Dynamic Wavelet Matrix co-indexing them with token streams,
+evaluated on LoCoMo and LongMemEval. The tree implements both
+structures, and <code>radius_eval.rs</code> is a committed measurement
+that the signatures alone do not separate relevant text. No LoCoMo or
+LongMemEval harness or result is committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A shared retirement predicate.</strong> Decide "is this
+memory gone" in a single function and call it from search, list and
+retrieve, so they cannot disagree about a delete.</li>
+<li><strong>Measure the cheap semantic lane before trusting it.</strong>
+A committed eval of relevant against unrelated distances is what
+justified demoting the signatures to a booster, and the comment beside
+the fusion cites it.</li>
+<li><strong>Put the replaced text in the update event.</strong> An event
+carrying <code>superseded</code> beside <code>text</code> lets the trail
+rebuild both the present and the history.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Mapping a rich reply onto constants at the
+boundary.</strong> A conversion that writes
+<code>category = "memory"</code> and <code>source = "cerebrum"</code>
+turns every downstream filter on those fields into a constant
+answer.</li>
+<li><strong>Decay that nothing reads.</strong> Strength and layers that
+never reach ranking or filtering cost a background pass and change
+nothing the user sees.</li>
+<li><strong>A content-addressed id without a tombstone check.</strong>
+Keying rows on the text is half of a tombstone; the writer has to
+consult the archived row too.</li>
+<li><strong>Shipping a hand-copied binary beside its source.</strong> If
+the build does not produce the artefact, the source in the tree stops
+describing the product.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a single-user phone companion whose memory is an encrypted
+file the owner never sees, and it suits someone who wants that and
+accepts that the model decides what is kept. It does not suit anyone who
+needs a delete to stick, agents with private memory, or a backup that
+carries facts. Read it for the retirement predicate and the signature
+measurement; reuse neither the decay engine nor the agent-scope layer
+without rewiring the conversion that feeds them.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Which commit the shipped <code>libcerebrum_android.so</code> was
+built from, and whether it contains the merge-retirement fix the
+negative test covers.</li>
+<li>Whether the server-authored extraction and dedup prompts differ from
+the offline fallback in <code>HivePromptFetcher</code>, since they
+decide what becomes a fact.</li>
+<li>Whether the agent tool picker can grant
+<code>searchMemoryFacts</code> to a sub-agent, which would read the
+whole brain past its memory scope.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Brain state and frames:
+<code>GURUbeta-FULL/cerebrum/cerebrum-server/src/state.rs</code>,
+<code>GURUbeta-FULL/cerebrum/cerebrum-server/src/lib.rs</code>,
+<code>GURUbeta-FULL/cerebrum/cerebrum-server/src/handler.rs</code></li>
+<li>Tree, lifecycle and curate executor:
+<code>GURUbeta-FULL/cerebrum/cerebrum-curate/src/lib.rs</code></li>
+<li>Decay:
+<code>GURUbeta-FULL/cerebrum/cerebrum-decay/src/lib.rs</code></li>
+<li>Events:
+<code>GURUbeta-FULL/cerebrum/cerebrum-events/src/lib.rs</code></li>
+<li>Vault and persistence:
+<code>GURUbeta-FULL/cerebrum/cerebrum-crypto/src/vault.rs</code>,
+<code>GURUbeta-FULL/cerebrum/cerebrum-crypto/src/header.rs</code>,
+<code>GURUbeta-FULL/cerebrum/cerebrum-server/src/persistence.rs</code></li>
+<li>JNI host:
+<code>GURUbeta-FULL/cerebrum/cerebrum-android/src/lib.rs</code>,
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/brain/cerebrum/CerebrumHost.kt</code>,
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/brain/cerebrum/CerebrumBrainApi.kt</code></li>
+<li>Kotlin memory:
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/brain/BrainService.kt</code>,
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/memory/MemoryRepositoryImpl.kt</code>,
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/memory/ContextBuilder.kt</code>,
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/memory/HiveMindWorker.kt</code>,
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/agents/AgentMemoryService.kt</code></li>
+<li>Tools:
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/tools/MemoryToolDefinitions.kt</code>,
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/tools/MemoryToolExecutor.kt</code>,
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/tools/MemoryWriteToolDefinitions.kt</code>,
+<code>GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/tools/ProjectToolExecutor.kt</code></li>
+<li>Tests:
+<code>GURUbeta-FULL/cerebrum/cerebrum-server/tests/merge_retirement.rs</code>,
+<code>GURUbeta-FULL/cerebrum/cerebrum-server/tests/fact_identity.rs</code>,
+<code>GURUbeta-FULL/cerebrum/cerebrum-server/tests/version_history.rs</code>,
+<code>GURUbeta-FULL/cerebrum/cerebrum-signatures/tests/radius_eval.rs</code>,
+<code>GURUbeta-FULL/portal/data/src/test/java/com/unuslumen/app/data/agents/AgentMemoryServiceTest.kt</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>The app sends only Upsert and Delete.</strong>
+<code>git grep -n -E '\\"(Update|Merge|Add)\\"' -- '*.kt'</code> returns
+nothing; <code>git grep -n -E '\\"(Upsert|Delete)\\"' -- '*.kt'</code>
+matches four lines outside tests.</li>
+<li><strong>QUERY and PREFETCH are never dispatched.</strong>
+<code>git grep -n -E 'FRAME_QUERY|FRAME_PREFETCH' -- '*.kt'</code>
+matches only the <code>const val</code> lines;
+<code>git grep -n 'dispatchOrNull(FRAME_SEARCH' -- '*.kt'</code> matches
+one call.</li>
+<li><strong>The Kotlin decay, dream and curation engines are never
+constructed.</strong>
+<code>git grep -n -E '(DecayEngine|DreamEngine|CurationEngine|BrainService)\(' -- '*.kt'</code>
+outside tests and class headers matches only
+<code>single { BrainService(get(), get&lt;Context&gt;()) }</code> at
+<code>AiDataModule.kt:236</code>.</li>
+<li><strong><code>ownFacts</code> has no production caller.</strong>
+<code>git grep -n '\.ownFacts(' -- '*.kt'</code> matches one line, in
+<code>AgentMemoryServiceTest.kt</code>.</li>
+<li><strong><code>memory</code> is not a category.</strong>
+<code>git grep -n '"memory"' -- GURUbeta-FULL/portal/domain/src/main/java/com/unuslumen/app/domain/memory/MemoryCategories.kt</code>
+returns nothing; <code>git grep -c '"knowledge"'</code> on the same file
+counts 3.</li>
+<li><strong>No app surface reads the event trail.</strong>
+<code>git grep -n -E 'history_for|previous_content' -- '*.rs' '*.kt'</code>
+outside <code>cerebrum-events/src/lib.rs</code> and <code>tests/</code>
+returns nothing; the same pattern counts 3 in
+<code>cerebrum-server/tests/version_history.rs</code>.</li>
+<li><strong><code>Hibernated</code> has no producer.</strong>
+<code>git grep -n 'EntryLifecycle::Hibernated' -- '*.rs'</code> matches
+two lines inside the unit-test module of
+<code>cerebrum-curate/src/lib.rs</code> and the restore parser at
+<code>cerebrum-server/src/persistence.rs:1168</code>.</li>
+<li><strong>The snapshot path does not name the vault.</strong>
+<code>git grep -n -i -E 'vault|cerebrum' -- GURUbeta-FULL/core/database/src/main/java/com/unuslumen/app/database/snapshot GURUbeta-FULL/portal/data/src/main/java/com/unuslumen/app/data/tools/backup</code>
+matches only a comment about <code>CredentialVault</code> at
+<code>DatabaseSnapshotFormat.kt:30</code>;
+<code>git grep -c -i 'vault'</code> on
+<code>brain/cerebrum/CerebrumBoot.kt</code> counts 5.</li>
+<li><strong>No Gradle file builds the brain.</strong>
+<code>git grep -n -i -E 'cargo|cerebrum' -- '*.gradle.kts' '*.gradle'</code>
+returns nothing;
+<code>git grep -c -i -E 'jniLibs|ndk' -- '*.gradle.kts'</code> counts 5
+in <code>GURUbeta-FULL/app/build.gradle.kts</code>.</li>
+<li><strong>The shipped binary lacks a later key.</strong>
+<code>LC_ALL=C grep -c -a -F 'superseded' GURUbeta-FULL/app/src/main/jniLibs/arm64-v8a/libcerebrum_android.so</code>
+counts 0; the same command counts 1 for <code>memory.deleted</code> and
+for <code>total_live</code>.
+<code>git log --since=2026-11-01T10:07 -- GURUbeta-FULL/cerebrum/</code>
+lists <code>a847e65</code>, <code>3ea8aa0</code>, <code>4a11883</code>
+and <code>971848e</code>, the last being the binary's own commit.</li>
+<li><strong>No validity-time field.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_until|valid_at|occurred_at|event_time' -- '*.rs'</code>
+returns nothing;
+<code>git grep -n -E 'created_at|modified_at' -- GURUbeta-FULL/cerebrum/cerebrum-core/src/lib.rs</code>
+matches lines 210 and 211.</li>
+<li><strong>No LoCoMo or LongMemEval harness.</strong>
+<code>git grep -n -i -E 'locomo|longmemeval' -- '*.rs' '*.kt' '*.ts' '*.md'</code>
+returns nothing; <code>git grep -n -i 'arxiv' -- '*.rs'</code> matches
+five lines.</li>
+<li><strong>Acknowledging an insight writes no fact.</strong>
+<code>git grep -n -E 'persistFacts|storeFact|storeRecord' -- GURUbeta-FULL/thoughts/data/src/main/java/com/unuslumen/app/thoughts/data/thoughts/ThoughtCycleRepositoryImpl.kt</code>
+matches only line 534, in the <code>MEMORY</code> output branch;
+<code>acknowledgeInsight</code> at line 273 calls
+<code>insightDao.acknowledge</code> alone.</li>
+<li><strong>No CI.</strong> <code>git ls-files .github</code> lists only
+<code>.github/FUNDING.yml</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/GuruProduction/GURUbyUnusLumen/commit/366208c8799d39cd5ec3921dd85a3d418e93810b"><code class="commit-id" title="366208c8799d39cd5ec3921dd85a3d418e93810b">366208c8…</code></a>
+— first reading, from a full clone of <code>main</code>, scoped to the
+Cerebrum server, curate, decay, events and vault crates, the JNI host,
+and the Kotlin memory, agent-memory, extraction, project-fact,
+notes-to-self and thought-cycle paths with their tests; the other Rust
+crates and the founder documents were not read for the mechanism.
+Screened first: one auto-run surface, an LFS filter on
+<code>*.tflite</code> in <code>.gitattributes</code>; one unpinned
+surface, <code>factory/package.json</code>, with three floating ranges
+and a lockfile; an inert <code>scripts/hooks/pre-commit</code>; nothing
+inside the cooldown. No LFS object was fetched. AGPL-3.0-or-later, no
+rider. Nothing installed, built or run. Three marks:
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 850 reports.**
+**This page covers all 851 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7822,3 +7822,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, release mcp-v3.0.3; 401,485 lines of Python in `mcp/src`, 1,349 commits from 21 March to 18 November 2026; 8,293 test functions run at task closeout rather than in CI, not run here; one committed benchmark case of three Codex runs per arm that records cost only. Three marks: `trust_state`, `audit_log` and `negative_eval`.
 - Study when: agents change a large codebase and the rules that make an edit safe live in files they never open.
 - Do not copy when: you want memory of a user or a conversation, or your changes do not go through a task workflow the gate can see.
+
+### [`guru-unus-lumen`](../systems/guru-unus-lumen/)
+
+- Best idea: **one predicate decides whether a memory is gone.** `is_retired` is called by search, list and retrieve, a deleted or merged-away row keeps its bytes under `Archived`, and `merge_retirement.rs` proves the sources leave search and the graph walk while the merged record stays findable.
+- Biggest risk: **the biological model is computed and never read.** Search ranks on BM25 and signature distance and calls decay only to strengthen hits; layers, strength and decay archival change nothing that is retrieved, and the README's seven-day half-life belongs to a Kotlin engine nothing constructs.
+- Second risk: `BrainService.search` hard-codes `category = "memory"` and `source = "cerebrum"`, so an agent on the default own-only scope is handed none of its facts and text search with a category returns nothing; a deleted fact is upserted back to active when extraction words it the same way; the shipped `libcerebrum_android.so` is a committed binary that lacks a JSON key the source at the pin writes.
+- Most reusable component: `is_retired` and `retire_memory` in `cerebrum-server/src/handler.rs`, with the search fusion beside them and the distance measurement in `cerebrum-signatures/tests/radius_eval.rs`.
+- Maturity impression: AGPL-3.0-or-later, release tag v3.85; 33,771 lines of Rust and 238,131 lines of Kotlin, 416 commits from 29 April to 21 November 2026; 545 Rust test functions and 2,308 Kotlin `@Test` methods with no CI, not run here; no LoCoMo or LongMemEval harness for the cited paper. Three marks: `scope_enforced`, `audit_log` and `negative_eval`.
+- Study when: you want a single-file encrypted on-device memory, or a worked case of demoting a hashed-signature lane after measuring it.
+- Do not copy when: deletes must stick, agents need private memory, or a backup has to carry the facts.

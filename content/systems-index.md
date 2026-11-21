@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **850 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **851 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -328,6 +328,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/graymatter/"><span class="az-id">GrayMatter</span><span class="az-what">Single-binary Go memory with its README gated on a live benchmark</span><code class="az-repo">angelnicolasc/graymatter</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/grok-build/"><span class="az-id">Grok Build</span><span class="az-what">A dream that deletes what it read</span><code class="az-repo">xai-org/grok-build</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/growmos/"><span class="az-id">growmos</span><span class="az-what">A stop hook that will not let the session end</span><code class="az-repo">codician-team/growmos</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/guru-unus-lumen/"><span class="az-id">GURU</span><span class="az-what">A phone agent&#x27;s encrypted Rust brain</span><code class="az-repo">GuruProduction/GURUbyUnusLumen</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>
 
 ## H

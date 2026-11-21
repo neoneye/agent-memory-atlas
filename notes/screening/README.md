@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 849 of 850 screened at the report's current pin.**
+**Progress: 850 of 851 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 403 |
+| Repositories with an auto-run surface (`RUNS`) | 404 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 388 |
 | Repositories with build-time execution (`EXEC`) | 613 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
@@ -176,6 +176,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`graqle`](../../content/systems/graqle.md) | `.claude-plugin/`, `plugins/claude-code/graqle/.claude-plugin/plugin.json`, `plugins/claude-code/graqle/hooks/`, `plugins/claude-code/graqle/hooks/hooks.json`, `server.json` |
 | [`graymatter`](../../content/systems/graymatter.md) | `.mcp.json`, `server.json`, `smithery.yaml` |
 | [`growmos`](../../content/systems/growmos.md) | `.claude/settings.json`, `.mcp.json`, `server.json` |
+| [`guru-unus-lumen`](../../content/systems/guru-unus-lumen.md) | `.gitattributes` |
 | [`headroom`](../../content/systems/headroom.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `plugins/headroom-agent-hooks/.claude-plugin/plugin.json`, `plugins/headroom-agent-hooks/hooks/`, `plugins/headroom-agent-hooks/hooks/hooks.json`, `server.json` |
 | [`hermes-agent`](../../content/systems/hermes-agent.md) | `.envrc` |
 | [`hermes-fleet-memory`](../../content/systems/hermes-fleet-memory.md) | `.cursorrules` |

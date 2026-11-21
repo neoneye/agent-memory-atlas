@@ -1114,6 +1114,8 @@ a change event keyed on its id, and the same sentence can be written again.
 
 [IronRAG](../../systems/ironrag/) is the deliberate opposite, and its reason is a good one for a mirror. Deleting a document soft-deletes the row and releases its external key, because the active-only unique index otherwise held the key for a projection left behind, *"and a periodic connector loses the same pages on every pass"* (`apps/api/tests/it/document_external_key_reclaim.rs:1-16`). Every suppression in the tree is keyed on a document, a revision or a session. So an agent that deletes a connector-synced page has removed one copy, and nothing stops the next ingest of the same key or the same text from creating a new document.
 
+**[GURU](../../systems/guru-unus-lumen/) has the right key and no check.** Facts are identified by the SHA-256 of their text, and a delete keeps the row in place as `Archived`, so the record of the deletion is keyed on the deleted value. The curate executor's Upsert replaces whatever row holds that id without reading its lifecycle, and the 15-minute extraction pass dedups against the live listing, which excludes archived rows, so a fact a person deleted is written back to active the next time the model words it the same way (`cerebrum-curate/src/lib.rs`, `HiveMindWorker.kt`). Half of a tombstone is free with content addressing; the other half is a read in the writer.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

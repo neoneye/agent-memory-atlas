@@ -815,6 +815,20 @@ nothing separates that from whether the memory is true. <strong>A decay
 model whose reads write needs a read path that does not, for the UI and
 for tests; this one has it as <code>recall(touch=False)</code> and the
 context block does not use it.</strong></p>
+<p><strong><a href="../../systems/guru-unus-lumen/">GURU</a> runs the
+whole biological cycle and lets none of it reach a result.</strong> Each
+memory carries a layer, a strength and an access count; search adds 0.1
+to every hit, a daily and a 12-hour consolidation halve buffer strength
+hourly and episodic strength monthly, promote on access counts, and
+archive entries below 0.01 that nobody touched for 90 days
+(<code>cerebrum-decay/src/lib.rs</code>). <code>handle_search</code>
+ranks on BM25 and signature distance, and its only decay call is the
+strengthening <code>access</code>, so an entry decay has archived is
+still returned because its tree row stays active. A repeat save of the
+same text also resets the decay record to a fresh buffer entry, undoing
+earned promotion. The case to cite when decay exists to be shown rather
+than used: wire the state into the ranker or the filter, or do not pay
+for the pass.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>
