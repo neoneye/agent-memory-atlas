@@ -822,20 +822,26 @@ document names, the orphaned text stays readable through
 <p><a href="../../systems/artex/">ARTEX</a> derives the state from
 evidence that can be withdrawn. A lesson built from a triaged finding
 holds one evidence row per finding or retest. When a person changes the
-finding's disposition, the call that writes the verdict runs the
-extraction after it commits: that finding's rows on lessons of the
-opposite kind are marked <code>withdrawn_at</code>, a lesson with no
-live row is set to <code>retired</code>, and the selection query
-excludes retired rows (<code>db/notification.go:509-514</code>,
-<code>db/lessons.go:269-349</code>, <code>:380</code>); a committed test
+finding's disposition, the transaction that writes the verdict runs the
+extraction: that finding's rows on lessons of the opposite kind are
+marked <code>withdrawn_at</code>, a lesson with no live row is set to
+<code>retired</code>, and the selection query excludes retired rows
+(<code>db/notification.go:503-520</code>,
+<code>db/lessons.go:337-417</code>, <code>:448</code>); a committed test
 walks confirmed, false positive, confirmed and fails if the retired
-lesson is selected. The withdrawn row stays, so a retired lesson names
-what it rested on, but it holds one timestamp that a restoration clears,
-and <code>adopted</code>, the third value, has no writer. The verdict on
-the finding itself is a second state: <code>prove_goal</code> refuses a
+lesson is selected. A restored support is a new row, so a retired lesson
+names what it rested on and when each support was lost;
+<code>adopted</code>, the third value, has no writer. The verdict on the
+finding itself is a second state: <code>prove_goal</code> refuses a
 finding marked <code>false_positive</code>, <code>duplicate</code> or
-<code>ignored</code>, at the moment of proof, and nothing reopens a goal
-met before the verdict (<code>agent/tools.go:1425-1430</code>).</p>
+<code>ignored</code>, and writing one of those statuses sets a goal the
+finding had proved back to <code>open</code> unless another valid proof
+remains (<code>agent/tools.go:1448-1453</code>,
+<code>db/notification.go:590-625</code>). A fact carries a third,
+computed by the server from the intent's recorded activity:
+<code>unverified</code> is refused as proof, and a fact the agent
+declares <code>operator_input</code> skips the check
+(<code>agent/tools.go:1702-1729</code>).</p>
 <p><strong><a href="../../systems/lucid/">LUCID</a> builds the
 decorrelated verifier this page's Tradeoffs ask for, and spends it as a
 label.</strong> Its answer-free score reads the episode's own execution

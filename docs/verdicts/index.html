@@ -33454,31 +33454,33 @@ to eight source tasks; its agents read their facts, findings and
 finished intents tagged as inherited, a deleted source disappears on the
 next read, and writes cannot cross because every mutation carries the
 receiver's exploration id.</li>
-<li>Second idea: a lesson's support is one evidence row per finding or
-retest, withdrawn where the verdict is written. A changed disposition
-runs the extraction after it commits, marks that finding's rows
-withdrawn on the opposite kind of lesson, and retires a lesson with no
-live row; the withdrawn row stays, so the lesson names what it rested
-on.</li>
+<li>Second idea: a verdict's consequences commit with it. One
+transaction writes the disposition, marks that finding's evidence rows
+withdrawn on the opposite kind of lesson, retires a lesson with no live
+row, and reopens a goal the finding had proved unless another valid
+proof remains; a restored support is a new row, so each withdrawal keeps
+its timestamp.</li>
 <li>Biggest risk: the planner writes the rows its reads are scoped by.
 <code>add_task_scope</code> accepts a company, domain or range, the
 scoped asset query and the lesson selection follow every row of the task
 whoever wrote it, and the guard is a prompt rule.</li>
-<li>Second risk: lessons and goals at the edges. Lessons of tasks
+<li>Second risk: lessons and facts at the edges. Lessons of tasks
 declared by domain alone, of deleted companies and from before company
-scoping share one pool that every company-less task reads; a goal met on
-a finding stays met when the finding is later ruled a false positive;
-and <code>risk_accepted</code> proves a goal while its lesson says not
-to re-report. Injection is off by default.</li>
+scoping share one pool that every company-less task reads; a fact the
+agent declares <code>operator_input</code> skips the server's provenance
+check and can prove a goal; and <code>risk_accepted</code> proves a
+goal, by stated decision, while its lesson says not to re-report.
+Injection is off by default.</li>
 <li>Most reusable component: <code>db/exploration_sources.go</code> with
 <code>db/exploration_sources_test.go</code>, and the nonce-framed data
 envelope in <code>agent/data_envelope.go</code>.</li>
-<li>Maturity impression: 182,038 lines of Go, 1,655 test functions run
-in CI against PostgreSQL, 1,259 commits in under four months across an
-original author and a fork's maintainer, at the v0.7.0 release. Lessons
-are 606 lines with twenty-nine tests, including the order, the company
-boundary, the withdrawal and the refusal of a false-positive finding as
-goal proof. AGPL-3.0 with use restrictions added in the README.</li>
+<li>Maturity impression: 183,548 lines of Go, 1,668 test functions run
+in CI against PostgreSQL, 1,284 commits in under four months across an
+original author and a fork's maintainer, 25 commits past v0.7.0. Lessons
+are 689 lines with thirty-one tests, including the order, the company
+boundary, the withdrawal history, the rollback and the reopening of a
+goal whose proof was overturned. AGPL-3.0 with use restrictions added in
+the README.</li>
 <li>Study when: several agent tasks must share what earlier ones learned
 without one task being able to write into another, or a derived lesson
 must lose its support when its source is overturned.</li>
