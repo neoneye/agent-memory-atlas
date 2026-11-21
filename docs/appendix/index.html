@@ -19245,6 +19245,82 @@ a test writing a temporary <code>.env</code>);
 (nothing). Screened before reading: no auto-run, build-time or unpinned
 surface; the agents' <code>AGENTS.md</code> and <code>SOUL.md</code>
 were treated as data; nothing was installed, built or run.</li>
+<li><strong><code>MemTensor/MemOS-Cloud-OpenClaw-Plugin</code> was
+examined and has no report: both plugins in it forward each turn to the
+hosted MemOS Cloud API, where storage and extraction run, and nothing in
+the tree corrects or deletes a stored memory.</strong> Read at <a
+href="https://github.com/MemTensor/MemOS-Cloud-OpenClaw-Plugin/commit/d9af5a2b41b1ef53df0e59ea547af9fa068ea7d8"><code class="commit-id" title="d9af5a2b41b1ef53df0e59ea547af9fa068ea7d8">d9af5a2b…</code></a>,
+333 commits between 2 February and 29 October 2026, a pnpm monorepo of
+about 7,200 lines of JavaScript and TypeScript outside the tests, with
+249 test cases in 24 files. The licence is split: the root,
+<code>packages/openclaw</code> and <code>packages/dsh</code> each carry
+the same Apache-2.0 text with its copyright line left as the template,
+while both published manifests declare MIT
+(<code>packages/openclaw/package.json:43</code>,
+<code>packages/dsh/package.json:55</code>). The OpenClaw plugin
+registers recall on <code>before_prompt_build</code>, or
+<code>before_agent_start</code> on older hosts
+(<code>packages/openclaw/index.js:879-883</code>), and capture on
+<code>agent_end</code> (<code>index.js:885</code>); they reach the
+service through <code>searchMemory</code> and <code>addMessage</code>,
+two <code>POST</code>s to <code>/search/memory</code> and
+<code>/add/message</code>
+(<code>packages/openclaw/lib/memos-cloud-api.js:439-452</code>) under a
+default base of <code>https://memos.memtensor.cn/api/openmem/v1</code>
+(<code>memos-cloud-api.js:8</code>). The DeepSeek Harness plugin does
+the same through the shared core client
+(<code>packages/core/src/memos-client.ts:119-124</code>, called at
+<code>packages/dsh/src/lifecycle.ts:218</code> and <code>:244</code>).
+No other memory endpoint is called: nothing deletes, corrects or gives
+feedback on a stored memory. What the plugins keep for themselves lives
+in the process. A capture deduplication set holds the newest 1,000
+SHA-256 keys (<code>index.js:31-32</code>, <code>:458-507</code>), under
+a comment saying it is an in-process cache that server idempotency would
+have to replace across restarts (<code>index.js:30</code>); per-session
+conversation counters are a <code>Map</code> (<code>index.js:33</code>,
+<code>:83-93</code>), and DSH's processed turns a <code>WeakMap</code>
+per session (<code>packages/dsh/src/lifecycle.ts:95</code>,
+<code>:258-267</code>). The files written are host configuration, DSH
+settings backups, a telemetry id and an update-check timestamp, none
+read back as memory. The rest is per-turn shaping before the call or
+after it: heartbeat and command turns are not captured
+(<code>index.js:885-900</code>), OpenClaw's injected prefixes are
+stripped from queries and user messages
+(<code>memos-cloud-api.js:416-430</code>), and an optional model filter
+keeps only the returned candidates it marks <code>keep</code>, failing
+open by default (<code>index.js:691-718</code>). Agent isolation is an
+<code>agent_id</code> the plugin sends; whether it is enforced is the
+server's business. <strong>The hosted behaviour cannot be read off the
+open engine.</strong> Nothing in this tree says MemOS Cloud runs <a
+href="../systems/memos/">MemOS</a>. At the atlas's MemOS pin, <a
+href="https://github.com/MemTensor/MemOS/commit/de8069428a9247bfa7a3d35f59a9b39fa8f231d2"><code class="commit-id" title="de8069428a9247bfa7a3d35f59a9b39fa8f231d2">de806942…</code></a>,
+the open server's router serves <code>/product/search</code> and
+<code>/product/add</code>
+(<code>src/memos/api/routers/server_router.py:68</code>,
+<code>:112</code>, <code>:128</code>), not the paths this plugin calls,
+and that repository's plugin comparison says that for the cloud plugin
+<em>"Memory processing, retrieval, and evolution are handled by the
+cloud service"</em>
+(<code>docs/en/openclaw/plugin_compare.md:24</code>). The MemOS report
+describes a self-hosted engine, not the service this plugin calls.
+Searches at this pin, lockfile excluded:
+<code>git grep -n -i -E "delete_memory|deleteMemory|/delete|forget|erase|purge|tombstone"</code>
+(nothing; the positive control <code>git grep -c "/add/message"</code>
+hits twelve files, among them the core client and
+<code>memos-cloud-api.js</code>);
+<code>git grep -n -E "writeFile|appendFile|mkdir|sqlite|localStorage"</code>
+over <code>packages/*/src</code>,
+<code>packages/openclaw/index.js</code> and
+<code>packages/openclaw/lib</code> (only the configuration, telemetry
+and update-check writers);
+<code>git grep -n -i -E "arxiv|bibtex|@article|doi\.org|CITATION"</code>
+(nothing, so no paper). The MemOS router and comparison page were read
+through the GitHub contents API at that pin; MemOS was not cloned.
+Screened before reading: no auto-run or build-time surface, and three
+unpinned dependency surfaces, the root <code>package.json</code> with a
+lockfile and the <code>packages/core</code> and
+<code>packages/dsh</code> manifests with none beside them; nothing was
+installed, built or run.</li>
 <li><strong>Five published claims about <a
 href="../systems/bitterbot-desktop/">BitterBot Desktop</a> were wrong at
 <a
