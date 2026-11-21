@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A plugin set for six coding-agent
+harnesses that injects agent-maintained Markdown instructions, catalogs
+and codebase indexes into every session, with no retrieval engine.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Operator
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A plugin set for six
+coding-agent harnesses that injects agent-maintained Markdown
+instructions, catalogs and codebase indexes into every session, with no
+retrieval engine.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Operator
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A plugin set for six
+coding-agent harnesses that injects agent-maintained Markdown
+instructions, catalogs and codebase indexes into every session, with no
+retrieval engine.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Operator Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Operator Memory",
+      "description": "A plugin set for six coding-agent harnesses that injects agent-maintained Markdown instructions, catalogs and codebase indexes into every session, with no retrieval engine.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A brain the agent keeps itself</p>
+          <h1>Operator Memory</h1>
+          <p class="document-deck">A plugin set for six coding-agent
+harnesses that injects agent-maintained Markdown instructions, catalogs
+and codebase indexes into every session, with no retrieval engine.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/aerovato/operator-memory">
+              <span>Source</span>
+              <strong>aerovato/operator-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/aerovato/operator-memory/commit/93c3fce64f0a72adeb89fa868600eb418548ec07" title="93c3fce64f0a72adeb89fa868600eb418548ec07">
+              <span>Analyzed revision</span>
+              <code>93c3fce6…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/aerovato--operator-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>aerovato--operator-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>BSD-3-Clause,
+in LICENSE, the root package.json and every adapter and helper package
+manifest</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>5,489
+lines of TypeScript and JavaScript in 79 source files under packages/;
+the two preamble prompt versions are 352 of them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>111
+commits from 16 August to 5 November 2026, all but one under two author
+names; Claude Code plugin 0.2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>186
+vitest cases (each test.each counted once) in 34 files and 4,654 lines;
+CI runs format, lint, typecheck and the suite on push and pull request;
+I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Operator Memory is a set of plugins from Aerovato Research that gives
+a coding agent a "brain" of Markdown on disk. Shared core code renders
+one preamble per session from three directories. That preamble carries
+fixed guidance, standing instructions, catalogs of what the brain holds
+and a map of the codebase. Adapters for Claude Code, Codex, OpenCode,
+Pi, DeepSeek Harness and Kiro inject it. The agent reads deeper
+documents and writes new ones with its ordinary file tools.</p>
+<p>What is notable is how little the code does and how deliberately.
+There is no extractor, no search index, no embedding and no background
+pass. The code loads a fixed set of files, renders them in a stable
+order, and injects the result once so the prefix stays cacheable
+(<code>packages/core/src/preamble.ts:25-102</code>). If any partition
+fails to load, it injects no memory at all and tells the agent to repair
+the load first (<code>:28-33</code>).</p>
+<p>What is weak is that everything memory-shaped beyond loading is a
+sentence addressed to the model. Placement, the rule that shared
+documents never cite private ones, when to write and when to delete are
+prompt rules in about 200 lines of fixed guidance. Nothing in the code
+checks any of them, except one lint the agent must choose to run.</p>
+<p><strong>Licence.</strong> No issue found. <code>LICENSE</code> is the
+BSD 3-Clause text with a 2026 copyright to Kevin Liao at Aerovato
+Research. The root <code>package.json</code>, the seven adapter and
+helper package manifests and the Claude Code <code>plugin.json</code>
+all say <code>BSD-3-Clause</code>. <code>packages/core</code> is marked
+<code>private</code> and carries no licence field, so it falls under the
+root <code>LICENSE</code>. <code>CONTRIBUTING.md</code> sets a working
+rule for maintainers and no contributor licence terms.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a Markdown document the agent wrote. It is not extracted,
+scored or indexed by the system. The preamble tells the model <em>"You
+own the brain"</em> and to <em>"add to it and maintain it without
+waiting for the user"</em>
+(<code>packages/core/src/prompts/preamble-v1.ts:13</code>). A belief is
+formed when the model decides something is durable and writes it to a
+spec, guide, plan or instruction file. It reaches later sessions when
+the document is reachable from something injected: an
+<code>operator.md</code>, a root <code>catalog.md</code> entry or the
+main index.</p>
+<p>There are three kinds of document, and they are trusted differently
+by position, not by state. Instruction files are injected in full and
+merged by authority: private project over user over shared project
+(<code>preamble.ts:140-158</code>). Catalogs and the main index are
+injected in full as maps. Freeform documents are never injected; the
+model opens them when a catalog's <code>Read If</code> line matches its
+task, and the guidance calls specs <em>"system truth the code cannot
+own"</em> (<code>preamble-v1.ts:64</code>).</p>
+<p>A belief stops being one when the model rewrites or deletes it. The
+tenets say <em>"rewrite its canonical home in the present tense"</em>
+and <em>"state what is true now"</em> (<code>preamble-v1.ts:194</code>),
+and v2.0 adds <em>"delete obsolete documentation"</em>
+(<code>preamble-v2.ts:126</code>). There is no superseded state and no
+record of the old value. In the shared partition git keeps it. In the
+private partition nothing does, because the helper puts
+<code>.operator/</code> in the user's global git excludes
+(<code>packages/helper/src/git.ts:7</code>, <code>:91-105</code>).</p>
+<p>The write policy is itself versioned and assigned by machine. About
+80% of machines get guidance v1.1 and 20% get v2.0, from a SHA-256 of
+the OS machine identifier
+(<code>packages/core/src/preamble-rollout.ts:11-24</code>). The two
+differ on memory admission. v1.1 writes the user partition
+<em>"only"</em> when the user explicitly asks
+(<code>preamble-v1.ts:73</code>). v2.0 writes it when the user asks to
+remember, lists <em>"inferred preferences"</em> as user content, and
+also forbids inferring traits from incidental behaviour
+(<code>preamble-v2.ts:50</code>, <code>:60</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the code only loads and injects; every write, correction and deletion is the model following prose rules, and a load failure injects nothing</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the code only loads and injects; every write, correction and deletion is the model following prose rules, and a load failure injects nothing
+flowchart TD
+  S[&quot;session or process&lt;br/&gt;starts&quot;] --&gt; L{&quot;all three partitions&lt;br/&gt;load cleanly?&quot;}
+  L --&gt;|&quot;no&quot;| D[&quot;diagnostic only:&lt;br/&gt;no memory injected,&lt;br/&gt;agent told to repair&quot;]
+  L --&gt;|&quot;yes&quot;| P[&quot;preamble: guidance,&lt;br/&gt;operator.md x3,&lt;br/&gt;root catalogs,&lt;br/&gt;main index bodies,&lt;br/&gt;index listing&quot;]
+  P --&gt; C[&quot;held for the session&lt;br/&gt;or the whole process&quot;]
+  C --&gt; R[&quot;model opens freeform&lt;br/&gt;docs when a Read If&lt;br/&gt;line matches&quot;]
+  R --&gt; W[&quot;model edits Markdown&lt;br/&gt;with its own file tools;&lt;br/&gt;no gateway, no check&quot;]
+  W --&gt; F[&quot;file on disk,&lt;br/&gt;visible from the&lt;br/&gt;next render&quot;]
+  F --&gt; X[&quot;correction: rewrite&lt;br/&gt;in present tense or&lt;br/&gt;delete; no old value&quot;]
+  X --&gt; G{&quot;which partition?&quot;}
+  G --&gt;|&quot;shared&quot;| H[&quot;git history only&quot;]
+  G --&gt;|&quot;private&quot;| N[&quot;globally git-ignored:&lt;br/&gt;no history&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The system is a Bun monorepo of thin harness adapters around two
+shared pieces. <code>@aerovato/operator-core</code> loads the partitions
+and renders the preamble
+(<code>packages/core/src/memory/load.ts:41-65</code>,
+<code>packages/core/src/preamble.ts</code>).
+<code>@aerovato/operator-helper</code> is a global npm CLI. It seeds
+core files, prints the setup guides the agent follows, lints indexes,
+installs adapters, and runs <code>operator-helper preamble</code> for
+adapters that cannot import core
+(<code>packages/helper/src/cli.ts:57-129</code>).</p>
+<p>Persistence is three directories. <code>.operator/</code> is the
+private project partition, <code>.operator-shared/</code> is the shared
+one committed with the repository, and <code>~/.operator/user/</code> is
+the user partition, whose parent is created with mode <code>0700</code>
+(<code>packages/helper/src/filesystem.ts:64-73</code>). Each holds
+<code>operator.md</code>, <code>catalog.md</code> and, for projects, an
+<code>index/</code> tree. Everything else is freeform.</p>
+<p>The adapters differ in how they reach the model:</p>
+<ul>
+<li><strong>Claude Code</strong> — an in-process mod, not command hooks.
+<code>hooks/hooks.json</code> names one module,
+<code>./register.js</code>
+(<code>packages/claude-code/hooks/hooks.json:1-4</code>). It runs the
+helper through <code>$.process.run</code>, appends the text as a
+session-scoped section on <code>prompt.compose</code>, and prepends it
+to subagent prompts on <code>agent.spawn</code>
+(<code>packages/claude-code/src/register.ts:5-44</code>).</li>
+<li><strong>Codex</strong> — <code>SessionStart</code> and
+<code>SubagentStart</code> command hooks that spawn the helper
+(<code>packages/codex/hooks/hooks.json:4-31</code>,
+<code>packages/codex/src/hook.ts:36-48</code>).</li>
+<li><strong>OpenCode V2, Pi, DeepSeek Harness</strong> — import core
+directly and push the text into the system prompt, a synthetic first
+message, or the first system-prompt section
+(<code>packages/opencode-v2/src/index.ts:40-65</code>,
+<code>packages/pi/src/index.ts:21-47</code>,
+<code>packages/deepseek/src/index.ts:20-32</code>).</li>
+<li><strong>Kiro</strong> — a <code>SessionStart</code> command hook and
+an always-included steering file written by the helper
+(<code>packages/helper/src/templates/kiro.ts:6-29</code>).</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing runs between sessions. Adoption is a global npm install of
+the helper, an <code>operator-helper install</code> call naming the
+harness, and two setup conversations, <code>/operator:user-init</code>
+and <code>/operator:project-init</code>. No API key, model
+configuration, database or network service is needed to store anything;
+the model the harness already uses does all writing. The store is plain
+Markdown a person can read and repair by hand, and
+<code>operator-helper memory check</code> reports which partition fails
+to load
+(<code>packages/helper/src/commands/memory/check.ts:6-30</code>).</p>
+<p><code>project init</code> writes <code>.operator/</code> into the
+user's global git excludes file, resolved from
+<code>core.excludesFile</code> or <code>~/.config/git/ignore</code>
+(<code>packages/helper/src/git.ts:67-105</code>). That hides a directory
+of that name in every repository on the machine, not only this one.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Load.</strong> <code>loadMemorySnapshot</code> resolves the
+three roots and loads them in parallel
+(<code>packages/core/src/memory/load.ts:46-64</code>). A project
+partition reads <code>operator.md</code>, <code>catalog.md</code> and
+every <code>.md</code> file under <code>index/</code>, recursively and
+sorted (<code>packages/core/src/memory/project.ts:87-135</code>). The
+user partition reads only <code>operator.md</code> and
+<code>catalog.md</code>
+(<code>packages/core/src/memory/user.ts:54-76</code>). A missing file is
+<code>null</code>; an unreadable one is an error for the partition.</li>
+<li><strong>Frontmatter.</strong> Each index file must carry non-empty
+string <code>description</code> and <code>read_if</code>
+(<code>packages/core/src/memory/frontmatter.ts:17-56</code>). An invalid
+one stays in the listing with a repair instruction in place of its
+metadata (<code>preamble.ts:207-216</code>).</li>
+<li><strong>Render.</strong> <code>renderPreamble</code> chooses the
+guidance version and returns the diagnostic alone if any partition
+failed. Otherwise it emits guidance, instructions, the user catalog,
+project catalogs, the index listing with main bodies, the tenets and
+then setup warnings
+(<code>packages/core/src/preamble.ts:25-102</code>).</li>
+<li><strong>Inject.</strong> One call per adapter, cached as described
+in section 8.</li>
+<li><strong>Write.</strong> No code path. The model writes with the
+harness's tools under the guidance in
+<code>packages/core/src/prompts/preamble-v1.ts:66-181</code> or
+<code>preamble-v2.ts:43-140</code>. The helper writes only seed files
+when they are missing
+(<code>packages/helper/src/filesystem.ts:82-96</code>,
+<code>packages/helper/src/commands/project/init.ts:16-114</code>).</li>
+<li><strong>Lint.</strong> <code>operator-helper index lint</code>
+checks index frontmatter, main-index titles and whether a shared index
+mentions <code>.operator/</code>
+(<code>packages/helper/src/lint.ts:24-67</code>). It reads only
+<code>index/</code> trees.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The schema is a directory convention. The only typed fields in code
+are an index file's <code>description</code> and <code>read_if</code>
+(<code>frontmatter.ts:7-10</code>). Catalog entries carry
+<code>Description</code> and <code>Read If</code> lines by template, not
+by parser (<code>packages/core/src/templates/catalog.ts</code>). No
+document has an id, author, timestamp, status, confidence or source.</p>
+<p>Scope is the directory a document sits in. Instructions from all
+three partitions are concatenated least to most authoritative, so a
+conflict is resolved by the model reading the later one, not by a merge
+(<code>preamble.ts:140-158</code>). The user partition is injected into
+every project. Episodic and semantic material are not separated: a spec,
+a guide, a plan and a personal style rule are all freeform files told
+apart by folder name and catalog text.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval in the code. The preamble is the whole
+automatic read. It includes the bodies of up to three
+<code>operator.md</code> files, up to three root catalogs and up to two
+main indexes, plus one line pair per index file
+(<code>preamble.ts:161-249</code>). The bodies of subindexes and
+freeform documents never enter it; the model reaches them with its own
+read tools by following a catalog or index entry. The architecture
+document states the position directly: <em>"Nothing is ranked, guessed,
+or retrieved by similarity"</em>
+(<code>docs/architecture.md:3</code>).</p>
+<p>Two failure modes follow. Nothing bounds the preamble: every injected
+file is included whole, and no truncation exists in core or the adapters
+(Recorded searches). This repository's own shared partition injects
+19,455 bytes of instructions, catalog and main index before the
+guidance. And under-recall is the model's choice: a document whose
+catalog entry is missing or whose <code>Read If</code> line does not
+match is invisible to every later session.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is the model calling the harness's file tools during
+ordinary work. The guidance asks it to record contracts, invariants,
+decisions and lessons the code cannot show, and not to restate
+implementation (<code>preamble-v1.ts:66-69</code>,
+<code>:145-181</code>). It also asks for one canonical home per fact,
+splitting and consolidating documents, and keeping the catalog in sync.
+No code checks any of this, deduplicates, or filters what the model
+writes.</p>
+<p>Correction overwrites. A changed contract is rewritten in place and
+an obsolete document deleted (<code>preamble-v2.ts:126</code>,
+<code>:150</code>). No extractor reads transcripts, so nothing in the
+system re-derives a value a person removed. Only the model can re-assert
+it, from the code or the conversation.</p>
+<p>The setup guides are the one place a person decides content before it
+lands. <code>project init</code> prints a seven-phase guide that has the
+agent ask which material is shared, which existing
+<code>AGENTS.md</code>, <code>CLAUDE.md</code> or <code>specs/</code>
+content to migrate, and to confirm a summary
+(<code>packages/helper/src/templates/project/setup.ts:61-159</code>).
+These are instructions to the model; the helper itself only creates
+missing seed files.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Writes do not block on anything but the file write. A memory is on
+disk at once and reaches the preamble at the next render: the next
+session on OpenCode, Pi, DeepSeek and Kiro, and the next Claude Code
+process, since that adapter renders once per process. No background pass
+exists. The read cost is the whole preamble on every model call,
+unbounded, placed so it stays byte-identical for the session.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Injection is automatic and held fixed. The shared spec asks for a
+contribution <em>"rendered once and held immutable for the session so
+its prefix remains cacheable"</em>
+(<code>.operator-shared/specs/preamble.md:5</code>). Claude Code
+memoises the first render, and any failure, at module scope for the
+process (<code>packages/claude-code/src/register.ts:3</code>,
+<code>:20-23</code>). Its harness guide says <code>/clear</code>,
+<code>/resume</code> and <code>/branch</code> do not refresh it
+(<code>docs/harnesses/claude-code.md:33</code>). OpenCode V2 caches per
+session id, Pi per session until <code>session_shutdown</code>, and
+DeepSeek per agent
+(<code>packages/opencode-v2/src/preamble.ts:21-26</code>,
+<code>packages/pi/src/index.ts:55-61</code>,
+<code>packages/deepseek/src/index.ts:20-25</code>).</p>
+<p>Codex is the stated exception. It renders afresh on
+<code>startup</code>, <code>clear</code> and <code>compact</code>, skips
+<code>resume</code> and <code>fork</code> because history already holds
+the preamble, and renders again for each delegated subagent
+(<code>packages/codex/src/hook.ts:10</code>, <code>:38</code>). A helper
+failure returns <code>continue: false</code>, which stops a Codex
+session from starting (<code>:13-16</code>,
+<code>.operator-shared/specs/codex/implementation.md:16-20</code>).</p>
+<p>The model has no memory tool. Its only verbs are its file tools and
+three user-invoked skills, <code>/operator:user-init</code>,
+<code>/operator:project-init</code> and <code>/operator:index</code>,
+each marked <code>disable-model-invocation: true</code>
+(<code>packages/claude-code/skills/project-init/SKILL.md:1-4</code>).
+Subagents in Claude Code receive the preamble by prompt rewrite on
+<code>agent.spawn</code>, which the parent's transcript does not show
+(<code>register.ts:41-44</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="load-failure-is-all-or-nothing">Load failure is
+all-or-nothing</h3>
+<p>If any partition returns an error, the preamble contains the guidance
+and an <code>operator-diagnostic</code> block and nothing else: no
+instructions, catalogs, tenets or warnings
+(<code>preamble.ts:28-33</code>, <code>:110-137</code>). The diagnostic
+tells the agent to repair only the reported failures, preserve content,
+and ask before deleting. After repair, the user starts a new session. An
+unreadable index file or an obstructed path therefore withholds the
+user's instructions too. The spec makes the trade explicit: no partial
+memory is injected
+(<code>.operator-shared/specs/preamble.md:38</code>).</p>
+<h3 id="what-the-injected-text-is-trusted-to-do">What the injected text
+is trusted to do</h3>
+<p>Every injected document is presented as instruction or truth. A
+repository's <code>.operator-shared/operator.md</code>, catalog and main
+index are committed files. A person who clones a repository and runs a
+harness with Operator installed gets them in the system prompt and in
+every subagent prompt. No confirmation step exists in Operator's code.
+Whether the harness's own folder-trust prompt runs first is outside this
+tree. The authority order puts the user's private and global
+instructions above shared ones, which settles stated conflicts and not
+instructions the user never contradicted.</p>
+<h3 id="the-rules-that-are-only-prose">The rules that are only
+prose</h3>
+<ul>
+<li><strong>Private must not leak into Shared.</strong> Stated at
+<code>preamble-v1.ts:76</code> and <code>preamble-v2.ts:51</code>;
+checked only for <code>index/</code> files by <code>index lint</code>,
+which the agent runs on request
+(<code>packages/helper/src/lint.ts:46-52</code>).</li>
+<li><strong>Project facts stay out of the user partition.</strong>
+Stated at <code>preamble-v1.ts:73</code> and
+<code>preamble-v2.ts:50</code>; the user partition is a directory the
+model can write like any other.</li>
+<li><strong>Do not change user-authored documents.</strong> v2.0 asks
+the model to mark them and leave them alone
+(<code>preamble-v2.ts:119</code>); nothing records who wrote a
+file.</li>
+</ul>
+<h3 id="the-projects-own-brain">The project's own brain</h3>
+<p>This repository runs Operator on itself, and its shared instructions
+show the failure the design accepts.
+<code>.operator-shared/operator.md:5</code> says the MVP <em>"supports
+OpenCode and Pi"</em>, while the README lists seven harness rows and the
+file's own package list never names the Claude Code adapter. The brain
+goes stale when the model forgets to update it, as
+<code>docs/architecture.md</code> says under <em>Failure Is
+Visible</em>.</p>
+<h3 id="marks">Marks</h3>
+<p>All seven were considered; none is awarded.</p>
+<ul>
+<li><strong><code>tombstone</code></strong> — withheld. Nothing records
+a rejected value. The guidance erases the old text on correction. The
+failure a tombstone guards against, re-extraction, has no producer here,
+because nothing extracts.</li>
+<li><strong><code>trust_state</code></strong> — withheld. No document
+carries a status, and the code reads no field that could exclude one
+(Recorded searches).</li>
+<li><strong><code>bitemporal</code></strong> — withheld. No time is
+stored on a document; the <code>Last Updated</code> lines in this
+project's own specs are hand-written prose.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. The three
+partitions are directories (<code>load.ts:46-48</code>), a physical
+partition with no key on a document and no predicate on a read. The user
+partition is read in every project.</li>
+<li><strong><code>audit_log</code></strong> — withheld. No mutation
+record exists. The shared partition has git history; the private
+partition is globally git-ignored.</li>
+<li><strong><code>human_review</code></strong> — withheld. No document
+waits for anyone. The setup guides' questions are instructions to the
+model, and the model writes every document directly.</li>
+<li><strong><code>negative_eval</code></strong> — withheld, a near miss.
+<code>packages/core/src/preamble.test.ts:166-211</code> asserts subindex
+bodies are absent from a preamble that contains the main index, and
+<code>:314-351</code> asserts a loaded partition's content is absent
+when another fails. Both are populated. Both assert the shape of an
+assembled preamble, not that wrong, stale or out-of-scope material stays
+out of a recall.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 186 vitest cases in 34 files. CI runs format, lint,
+typecheck and tests with a frozen lockfile on push and pull request
+(<code>.github/workflows/ci.yml</code>, <code>scripts/check.sh</code>).
+I ran none of it. The core tests pin render order and byte stability
+(<code>packages/core/src/preamble.test.ts:65-164</code>), loader
+behaviour on missing, malformed and obstructed files
+(<code>packages/core/src/memory/load.test.ts:29-240</code>), and the
+80/20 version assignment
+(<code>packages/core/src/preamble-rollout.test.ts</code>). The adapter
+tests check caching and failure. For Claude Code that includes one
+helper run shared by a concurrent compose and spawn
+(<code>packages/claude-code/test/register.test.ts:44-61</code>). For
+Codex it includes which session sources inject
+(<code>packages/codex/test/hook.test.ts:17-58</code>).</p>
+<p>Nothing tests the thing the product claims, that sessions document
+their work and later sessions use it. No eval, benchmark or result is
+committed. The README's <em>"Looking for benchmarks?"</em> link goes to
+an issue comment. In it the project's author, on 4 October 2026, says
+the existing memory benchmarks test RAG recall and that a long-horizon
+task benchmark has not been run for lack of resources. No paper is
+associated with the project; the argument is in
+<code>docs/comparison.md</code> and a linked blog post.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Fail closed on a partial load.</strong> If one memory source
+cannot be read, inject none and say why. A preamble missing the user's
+instructions but carrying the shared ones is worse than a repair
+prompt.</li>
+<li><strong>Inject maps, not bodies.</strong> Put instruction files, a
+catalog with a "read if" condition per entry, and a codebase index into
+the prefix; leave documents on disk for the model to open. It is a
+retrieval policy with no retriever, and it keeps the prefix stable.</li>
+<li><strong>Render once per session and keep the bytes.</strong> One
+coalesced render shared by the main thread and subagents, with a test
+for the shared bytes, is cheap insurance for the prompt cache.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Write policy that exists only as guidance.</strong> A
+boundary such as "shared never references private" belongs in a check
+the write path runs, not a lint the model may invoke.</li>
+<li><strong>Erasing on correction.</strong> Rewriting in present tense
+keeps documents clean and leaves no answer to "what did we believe
+before"; keep the prior text somewhere other than an optional git
+history.</li>
+<li><strong>An unbounded always-on preamble.</strong> Cap each injected
+file, or the map grows until it crowds out the work it is meant to
+orient.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single developer or a small team who already keep
+<code>AGENTS.md</code> or <code>CLAUDE.md</code> files and want the
+agent to grow them into a structured, versioned set of specs and maps.
+The cost is only tokens and the discipline of reviewing what the agent
+writes. Walk away if memory must be correctable on the record, scoped
+per tenant, or kept out of a model's reach: every guarantee here is the
+model's compliance with a prompt. Walk away too if you cannot afford a
+preamble that grows with the documentation.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How large the preamble gets on a long-running project, and whether
+the maintainers intend a cap; nothing in the tree measures it.</li>
+<li>Whether the 80/20 rollout of v1.1 and v2.0 guidance is evaluated
+anywhere, and what decides the winner; no collection path exists in the
+tree, and the spec says the machine identifier is never
+transmitted.</li>
+<li>Whether Claude Code's folder-trust prompt runs before the mod's
+<code>prompt.compose</code> hook in an untrusted clone, which decides
+how far a committed <code>.operator-shared/operator.md</code>
+reaches.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Loading: <code>packages/core/src/memory/load.ts</code>,
+<code>packages/core/src/memory/project.ts</code>,
+<code>packages/core/src/memory/user.ts</code>,
+<code>packages/core/src/memory/common.ts</code>,
+<code>packages/core/src/memory/frontmatter.ts</code></li>
+<li>Rendering: <code>packages/core/src/preamble.ts</code>,
+<code>packages/core/src/preamble-rollout.ts</code>,
+<code>packages/core/src/prompts/preamble-v1.ts</code>,
+<code>packages/core/src/prompts/preamble-v2.ts</code>,
+<code>packages/core/src/templates/</code></li>
+<li>Helper: <code>packages/helper/src/cli.ts</code>,
+<code>packages/helper/src/git.ts</code>,
+<code>packages/helper/src/lint.ts</code>,
+<code>packages/helper/src/filesystem.ts</code>,
+<code>packages/helper/src/commands/project/init.ts</code>,
+<code>packages/helper/src/templates/project/setup.ts</code></li>
+<li>Adapters: <code>packages/claude-code/src/register.ts</code>,
+<code>packages/claude-code/hooks/hooks.json</code>,
+<code>packages/codex/src/hook.ts</code>,
+<code>packages/codex/hooks/hooks.json</code>,
+<code>packages/opencode-v2/src/index.ts</code>,
+<code>packages/opencode-v2/src/preamble.ts</code>,
+<code>packages/pi/src/index.ts</code>,
+<code>packages/deepseek/src/index.ts</code>,
+<code>packages/helper/src/templates/kiro.ts</code></li>
+<li>Specs: <code>.operator-shared/specs/preamble.md</code>,
+<code>.operator-shared/specs/codex/implementation.md</code>,
+<code>docs/architecture.md</code>,
+<code>docs/harnesses/claude-code.md</code></li>
+<li>Tests: <code>packages/core/src/preamble.test.ts</code>,
+<code>packages/core/src/memory/load.test.ts</code>,
+<code>packages/claude-code/test/register.test.ts</code>,
+<code>packages/codex/test/hook.test.ts</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No size cap on injected memory.</strong>
+<code>git grep -n -i -E 'truncat|maxBytes|max_bytes|MAX_|slice\(0' -- packages/core packages/claude-code packages/codex/src packages/opencode-v2/src packages/pi/src packages/deepseek/src</code>
+returns nothing; the same pattern over <code>packages/helper/src</code>
+matches <code>commands/install/codex.ts:125</code>.</li>
+<li><strong>No retrieval engine.</strong>
+<code>git grep -n -i -E 'embedding|vector|bm25|fts5|sqlite' -- packages</code>
+returns nothing; the same pattern with <code>-c</code> over
+<code>README.md</code> counts 1.</li>
+<li><strong>No runtime memory writer.</strong>
+<code>git grep -n -E 'writeFile|writeText|unlink|rename\(' -- packages/core/src/memory packages/core/src/preamble.ts packages/claude-code/src packages/codex/src packages/opencode-v2/src packages/pi/src packages/deepseek/src</code>
+matches only <code>packages/core/src/memory/load.test.ts:221</code>, a
+test fixture; with <code>-c</code> over
+<code>packages/helper/src/filesystem.ts</code> it counts 4.</li>
+<li><strong>No status, time or confidence field.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|created_at|updated_at|timestamp|confidence|trust' -- packages/core/src ':!*.test.ts'</code>
+returns nothing; the same pattern over
+<code>packages/pi/src/index.ts</code> matches the message
+<code>timestamp</code> at line 79.</li>
+<li><strong>No tombstone or supersession in code.</strong>
+<code>git grep -n -i -E 'tombstone|supersed' -- packages ':!*.md'</code>
+matches only the setup guide's prose at
+<code>packages/helper/src/templates/project/setup.ts:111</code> and
+<code>:121</code>.</li>
+<li><strong>The private-path check is the index lint alone.</strong>
+<code>git grep -n -F 'includes(".operator/")' -- packages</code> matches
+<code>packages/helper/src/lint.ts:46</code> and the two global-ignore
+checks at <code>packages/helper/src/git.ts:88</code> and
+<code>:97</code>.</li>
+<li><strong>The Claude Code plugin registers no command hooks.</strong>
+<code>git grep -n -E 'SessionStart|PostToolUse|"Stop"' -- packages/claude-code</code>
+returns nothing; with <code>-c</code> over
+<code>packages/codex/hooks/hooks.json</code> it counts 1.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|CITATION|doi\.org'</code>
+matches only the word "citation" in
+<code>.operator-shared/index/harnesses/deepseek-harness/runtime.md:56</code>;
+the tree has no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/aerovato/operator-memory/commit/93c3fce64f0a72adeb89fa868600eb418548ec07"><code class="commit-id" title="93c3fce64f0a72adeb89fa868600eb418548ec07">93c3fce6…</code></a>
+— first reading, of the core loader and renderer, both guidance
+versions, the helper CLI and templates, every adapter and its tests, and
+the project's own shared partition. Screened first: five auto-run
+surfaces, a Claude Code marketplace manifest, the
+<code>packages/claude-code</code> plugin manifest and its
+<code>hooks/hooks.json</code> (one in-process module,
+<code>register.js</code>), and two committed <code>.githooks</code>; one
+build-time execution point, the <code>prepare</code> script setting
+<code>core.hooksPath</code>; four unpinned surfaces with
+<code>bun.lock</code> present; nothing inside the cooldown.
+BSD-3-Clause, no rider. Nothing installed, built or run. No marks.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

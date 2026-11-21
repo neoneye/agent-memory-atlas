@@ -231,6 +231,8 @@ In [marm-memory](../../systems/marm-memory/) the bundled console is not the seco
 
 **[DNA Memory](../../systems/dna-memory/)** makes the editor the truth store. Each memory is a Markdown page in an Obsidian-style vault and SQLite is an index rebuilt from the pages, so an edit, a deleted file or a frontmatter status of `archived` or `rejected` takes effect at the next reindex, and recall serves only `active`. Two things sit outside the editable layer. Recall feedback and the pending proposal queue exist only in SQLite, so the rebuild the README advertises drops both. And a deletion holds only until the next extraction of the same text: the duplicate check reads active pages, so the importers' next match writes the deleted conclusion as a new page. The write side is careful, since a write and every page it supersedes install and roll back together.
 
+**[Operator Memory](../../systems/operator-memory/)** is the case where the editor and the automatic path are the same verbs. The store is Markdown in three directories, the model writes it with the harness's ordinary file tools, and a person edits the same files; there is no other write path to override an edit. What the pattern needs and this lacks is the person's edit holding against the model's next one. v2.0 guidance asks the model to mark user-authored documents and *"not change without user intent"*, nothing records who wrote a file, and the private partition sits in the global git excludes, so a person's edit the model later rewrites has no undo.
+
 ## Tests to write first
 
 - Edit a unit, then run the automatic pass, and assert the edit survives.

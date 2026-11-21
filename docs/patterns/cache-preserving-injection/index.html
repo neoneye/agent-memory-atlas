@@ -424,6 +424,23 @@ returns the same stable banner with a one-line marker and no memories
 rather than re-injecting. The invariant block sits ahead of the variable
 one, and per-turn recall arrives through the prompt-submit hook and the
 MCP tools instead of being woven into the system prompt.</p>
+<ul>
+<li><strong><a href="../../systems/operator-memory/">Operator
+Memory</a></strong> — the frozen preamble as a cross-harness contract.
+Its shared spec asks every adapter for a contribution <em>"rendered once
+and held immutable for the session so its prefix remains
+cacheable"</em>, and the adapters meet it differently: Claude Code
+memoises one render per process and shares it between
+<code>prompt.compose</code> and <code>agent.spawn</code>, with a test
+that a concurrent compose and spawn run the helper once
+(<code>packages/claude-code/test/register.test.ts:44-61</code>);
+OpenCode V2, Pi and DeepSeek cache per session or agent. Codex is the
+recorded exception, re-rendering at compaction and for each subagent
+because it cannot restore context at the head. The cost is the Nuum
+boundary at process scope: an edit made in a Claude Code session reaches
+the prompt only after a restart, and nothing caps the size of what is
+frozen.</li>
+</ul>
 <h2 id="the-same-constraint-one-layer-down">The same constraint, one
 layer down</h2>
 <p>Everything above is about where a <em>memory system</em> puts its

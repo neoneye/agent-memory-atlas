@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 840 reports.**
+**This page covers all 841 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7722,3 +7722,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, beta by its own README; 73,800 lines of Rust in the relayer and 1,946 commits from 19 December 2025 to 13 November 2026; 1,068 Rust tests run in CI against pgvector and Redis, not run here; no benchmark result committed. Two marks: `scope_enforced` and `negative_eval`.
 - Study when: memory has to be owned by its user, portable across relayers, and unreadable by a revoked key.
 - Do not copy when: a user must be able to correct a memory or have it erased on request.
+
+### [`operator-memory`](../systems/operator-memory/)
+
+- Best idea: **inject maps, not memories, and inject nothing on a partial load.** The session preamble carries instruction files, catalogs whose entries name when to read each document, and a codebase index, rendered once and held byte-stable; if any of the three partitions fails to load, no memory is injected and the agent is told to repair it first.
+- Biggest risk: **every memory rule is a sentence to the model.** Placement, the private-never-in-shared boundary, when to write the user partition and when to delete are prompt guidance; the one check, an index lint, reads only `index/` trees and runs when the agent invokes it.
+- Second risk: correction rewrites in place and leaves no residue, with the private partition in the user's global git excludes; nothing bounds the injected size; a cloned repository's `.operator-shared/operator.md` enters the system prompt and every subagent prompt.
+- Most reusable component: `renderPreamble` and the loaders in `packages/core/src/preamble.ts` and `packages/core/src/memory/`, with the Claude Code mod in `packages/claude-code/src/register.ts`.
+- Maturity impression: BSD-3-Clause; 5,489 lines of TypeScript and JavaScript in `packages/`, 111 commits from 16 August to 5 November 2026; 186 vitest cases in CI, not run here; no eval, benchmark or result committed. No marks.
+- Study when: you want an `AGENTS.md`-style memory that the agent grows into specs, guides and a codebase map, injected deterministically across several harnesses.
+- Do not copy when: memory must be correctable on the record, scoped by a key, or kept out of the model's reach, since every guarantee here is the model following a prompt.

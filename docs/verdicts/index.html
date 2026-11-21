@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 840 reports.</strong></p>
+<p><strong>This page covers all 841 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34600,6 +34600,40 @@ not run here; no benchmark result committed. Two marks:
 relayers, and unreadable by a revoked key.</li>
 <li>Do not copy when: a user must be able to correct a memory or have it
 erased on request.</li>
+</ul>
+<h3 id="operator-memory"><a
+href="../systems/operator-memory/"><code>operator-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>inject maps, not memories, and inject nothing on
+a partial load.</strong> The session preamble carries instruction files,
+catalogs whose entries name when to read each document, and a codebase
+index, rendered once and held byte-stable; if any of the three
+partitions fails to load, no memory is injected and the agent is told to
+repair it first.</li>
+<li>Biggest risk: <strong>every memory rule is a sentence to the
+model.</strong> Placement, the private-never-in-shared boundary, when to
+write the user partition and when to delete are prompt guidance; the one
+check, an index lint, reads only <code>index/</code> trees and runs when
+the agent invokes it.</li>
+<li>Second risk: correction rewrites in place and leaves no residue,
+with the private partition in the user's global git excludes; nothing
+bounds the injected size; a cloned repository's
+<code>.operator-shared/operator.md</code> enters the system prompt and
+every subagent prompt.</li>
+<li>Most reusable component: <code>renderPreamble</code> and the loaders
+in <code>packages/core/src/preamble.ts</code> and
+<code>packages/core/src/memory/</code>, with the Claude Code mod in
+<code>packages/claude-code/src/register.ts</code>.</li>
+<li>Maturity impression: BSD-3-Clause; 5,489 lines of TypeScript and
+JavaScript in <code>packages/</code>, 111 commits from 16 August to 5
+November 2026; 186 vitest cases in CI, not run here; no eval, benchmark
+or result committed. No marks.</li>
+<li>Study when: you want an <code>AGENTS.md</code>-style memory that the
+agent grows into specs, guides and a codebase map, injected
+deterministically across several harnesses.</li>
+<li>Do not copy when: memory must be correctable on the record, scoped
+by a key, or kept out of the model's reach, since every guarantee here
+is the model following a prompt.</li>
 </ul>
         </article>
       </div>

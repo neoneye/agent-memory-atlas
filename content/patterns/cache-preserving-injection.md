@@ -264,6 +264,8 @@ falls under the KV-cache scope boundary in the
 
 [Signet AI](../../systems/signetai/) splits the session-start payload rather than the memory design. Its session-start handler returns a short stable banner separately from a dynamic context block, with identity files selected by preset and budgeted per file. A second session-start for the same session hits a dedupe guard and returns the same stable banner with a one-line marker and no memories rather than re-injecting. The invariant block sits ahead of the variable one, and per-turn recall arrives through the prompt-submit hook and the MCP tools instead of being woven into the system prompt.
 
+- **[Operator Memory](../../systems/operator-memory/)** — the frozen preamble as a cross-harness contract. Its shared spec asks every adapter for a contribution *"rendered once and held immutable for the session so its prefix remains cacheable"*, and the adapters meet it differently: Claude Code memoises one render per process and shares it between `prompt.compose` and `agent.spawn`, with a test that a concurrent compose and spawn run the helper once (`packages/claude-code/test/register.test.ts:44-61`); OpenCode V2, Pi and DeepSeek cache per session or agent. Codex is the recorded exception, re-rendering at compaction and for each subagent because it cannot restore context at the head. The cost is the Nuum boundary at process scope: an edit made in a Claude Code session reaches the prompt only after a restart, and nothing caps the size of what is frozen.
+
 ## The same constraint, one layer down
 
 Everything above is about where a *memory system* puts its recall block. The same
