@@ -7403,13 +7403,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`artex`](../systems/artex/)
 
 - Best idea: explicit, one-hop, live task inheritance. A task names up to eight source tasks; its agents read their facts, findings and finished intents tagged as inherited, a deleted source disappears on the next read, and writes cannot cross because every mutation carries the receiver's exploration id.
-- Second idea: a lesson's support is one evidence row per finding or retest. A reversed disposition deletes that finding's rows from the opposite kind of lesson, a lesson with none left is `retired`, and the selection excludes retired rows.
-- Biggest risk: a person's false-positive verdict does not gate what the agents do. It is a label on `list_findings`, the related-task overview and `node_detail`; the finding list injected into every planner round omits it, and `prove_goal` accepts the finding as proof.
-- Second risk: lessons leak and linger at the edges. A task declared by domain alone has no company, so its lessons are served to every task; retraction runs only when the task ends again or one route is called, which no interface does; and it deletes the evidence rows that said what a lesson rested on. Injection is off by default.
+- Second idea: a lesson's support is one evidence row per finding or retest, withdrawn where the verdict is written. A changed disposition runs the extraction after it commits, marks that finding's rows withdrawn on the opposite kind of lesson, and retires a lesson with no live row; the withdrawn row stays, so the lesson names what it rested on.
+- Biggest risk: the planner writes the rows its reads are scoped by. `add_task_scope` accepts a company, domain or range, the scoped asset query and the lesson selection follow every row of the task whoever wrote it, and the guard is a prompt rule.
+- Second risk: lessons and goals at the edges. Lessons of tasks declared by domain alone, of deleted companies and from before company scoping share one pool that every company-less task reads; a goal met on a finding stays met when the finding is later ruled a false positive; and `risk_accepted` proves a goal while its lesson says not to re-report. Injection is off by default.
 - Most reusable component: `db/exploration_sources.go` with `db/exploration_sources_test.go`, and the nonce-framed data envelope in `agent/data_envelope.go`.
-- Maturity impression: 146,850 lines of Go, 1,372 test functions run in CI against PostgreSQL, 1,033 commits in under four months across an original author and a fork's maintainer. Lessons are 519 lines with nineteen tests, including the order, the company boundary and the retraction. AGPL-3.0 with use restrictions added in the README.
+- Maturity impression: 182,038 lines of Go, 1,655 test functions run in CI against PostgreSQL, 1,259 commits in under four months across an original author and a fork's maintainer, at the v0.7.0 release. Lessons are 606 lines with twenty-nine tests, including the order, the company boundary, the withdrawal and the refusal of a false-positive finding as goal proof. AGPL-3.0 with use restrictions added in the README.
 - Study when: several agent tasks must share what earlier ones learned without one task being able to write into another, or a derived lesson must lose its support when its source is overturned.
-- Do not copy when: a person's rejection of a finding must stop the agents from building on it, or lessons must stay inside one engagement that is declared by domain.
+- Do not copy when: the agent must not be able to widen its own read scope, or lessons must stay inside one engagement that is declared by domain.
 
 ### [`llm-memory-morditux`](../systems/llm-memory-morditux/)
 

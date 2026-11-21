@@ -3258,37 +3258,40 @@ rest; lessons are one SQL query filtered by company, category and
 status, capped at eight rows with no cursor</td>
 <td>Agent tools write assets, facts, findings and coverage; a person
 sets a finding's disposition over an authenticated route; lessons are
-extracted by rule when a task ends or when one route is called, with no
-model call</td>
+extracted by rule when a disposition changes, a retest completes or the
+task ends, with no model call</td>
 <td>Asset upserts overwrite scalars and union arrays with no history;
 facts are append-only; cold regions are folded into digests that keep
-their members; a lesson is retired when a reversed disposition retracts
-its last evidence row, and has no edit or delete path</td>
-<td>A task reads assets inside its declared scope and graph nodes of
-itself plus at most eight direct source tasks; a lesson is served to
-tasks of its company and category, and to every task when its source
-task had no company. One operator, no tenants</td>
+their members; a changed disposition marks a lesson's evidence row
+withdrawn and retires the lesson at zero live rows; a lesson has no edit
+or delete path</td>
+<td>A task reads assets inside its scope rows and graph nodes of itself
+plus at most eight direct source tasks; a lesson is served to tasks of
+its company and category, and a company-less lesson to every
+company-less task. The planner can add scope rows to its own task. One
+operator, no tenants</td>
 <td>A Go server with an embedded web UI; planner, worker, retester and
 platform agents on an external agent SDK; lessons framed in the nonce
 envelope and appended to the planner and worker system prompts when an
 environment flag is set</td>
 <td>A compaction pass folds settled graph regions into model-written
-digests; lesson extraction runs when a task reaches a terminal
-status</td>
+digests; lesson extraction runs after a disposition change, a completed
+retest and a terminal task status</td>
 <td>A finding's disposition is set by a person, gates which lesson is
-built, and is copied onto the node the agents read as a label; a lesson
-is <code>candidate</code> or <code>retired</code> and the selection
+built, is copied onto the node the agents read, and is refused as goal
+proof when false positive, duplicate or ignored; a lesson is
+<code>candidate</code> or <code>retired</code> and the selection
 excludes retired rows; a fact carries a declared confidence and source
 that one tool refuses on</td>
 <td>Explicit one-hop task inheritance that is read-only by construction
 and tested negatively, a nonce-framed envelope for stored text
 re-entering prompts, digests that hide and never delete, evidence bound
-to captured traffic, and lessons that lose their support when the
-verdict behind them is reversed</td>
-<td>A false-positive verdict is absent from the planner's round overview
-and unchecked by goal proof; a lesson from a task with no company is
-served to every task; retraction waits for an extraction no interface
-triggers and deletes the evidence rows it withdraws; no lesson can be
+to captured traffic, and lessons whose support is withdrawn in the same
+call that reverses the verdict behind them</td>
+<td>The planner holds a tool that writes the scope rows its own asset
+and lesson reads follow; lessons of tasks declared by domain alone form
+one pool shared by every such task; a goal met on a finding stays met
+when the finding is later ruled a false positive; no lesson can be
 edited or deleted</td>
 </tr>
 <tr>

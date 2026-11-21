@@ -33455,33 +33455,36 @@ finished intents tagged as inherited, a deleted source disappears on the
 next read, and writes cannot cross because every mutation carries the
 receiver's exploration id.</li>
 <li>Second idea: a lesson's support is one evidence row per finding or
-retest. A reversed disposition deletes that finding's rows from the
-opposite kind of lesson, a lesson with none left is
-<code>retired</code>, and the selection excludes retired rows.</li>
-<li>Biggest risk: a person's false-positive verdict does not gate what
-the agents do. It is a label on <code>list_findings</code>, the
-related-task overview and <code>node_detail</code>; the finding list
-injected into every planner round omits it, and <code>prove_goal</code>
-accepts the finding as proof.</li>
-<li>Second risk: lessons leak and linger at the edges. A task declared
-by domain alone has no company, so its lessons are served to every task;
-retraction runs only when the task ends again or one route is called,
-which no interface does; and it deletes the evidence rows that said what
-a lesson rested on. Injection is off by default.</li>
+retest, withdrawn where the verdict is written. A changed disposition
+runs the extraction after it commits, marks that finding's rows
+withdrawn on the opposite kind of lesson, and retires a lesson with no
+live row; the withdrawn row stays, so the lesson names what it rested
+on.</li>
+<li>Biggest risk: the planner writes the rows its reads are scoped by.
+<code>add_task_scope</code> accepts a company, domain or range, the
+scoped asset query and the lesson selection follow every row of the task
+whoever wrote it, and the guard is a prompt rule.</li>
+<li>Second risk: lessons and goals at the edges. Lessons of tasks
+declared by domain alone, of deleted companies and from before company
+scoping share one pool that every company-less task reads; a goal met on
+a finding stays met when the finding is later ruled a false positive;
+and <code>risk_accepted</code> proves a goal while its lesson says not
+to re-report. Injection is off by default.</li>
 <li>Most reusable component: <code>db/exploration_sources.go</code> with
 <code>db/exploration_sources_test.go</code>, and the nonce-framed data
 envelope in <code>agent/data_envelope.go</code>.</li>
-<li>Maturity impression: 146,850 lines of Go, 1,372 test functions run
-in CI against PostgreSQL, 1,033 commits in under four months across an
-original author and a fork's maintainer. Lessons are 519 lines with
-nineteen tests, including the order, the company boundary and the
-retraction. AGPL-3.0 with use restrictions added in the README.</li>
+<li>Maturity impression: 182,038 lines of Go, 1,655 test functions run
+in CI against PostgreSQL, 1,259 commits in under four months across an
+original author and a fork's maintainer, at the v0.7.0 release. Lessons
+are 606 lines with twenty-nine tests, including the order, the company
+boundary, the withdrawal and the refusal of a false-positive finding as
+goal proof. AGPL-3.0 with use restrictions added in the README.</li>
 <li>Study when: several agent tasks must share what earlier ones learned
 without one task being able to write into another, or a derived lesson
 must lose its support when its source is overturned.</li>
-<li>Do not copy when: a person's rejection of a finding must stop the
-agents from building on it, or lessons must stay inside one engagement
-that is declared by domain.</li>
+<li>Do not copy when: the agent must not be able to widen its own read
+scope, or lessons must stay inside one engagement that is declared by
+domain.</li>
 </ul>
 <h3 id="llm-memory-morditux"><a
 href="../systems/llm-memory-morditux/"><code>llm-memory-morditux</code></a></h3>
