@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted MCP memory service:
+agents append notes, an LLM edits them into a Markdown bank, and an
+embedded Neo4j and Qdrant graph indexes it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Hivemind
+(Lesur) — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted MCP memory
+service: agents append notes, an LLM edits them into a Markdown bank,
+and an embedded Neo4j and Qdrant graph indexes it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hivemind
+(Lesur) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted MCP memory
+service: agents append notes, an LLM edits them into a Markdown bank,
+and an embedded Neo4j and Qdrant graph indexes it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Hivemind (Lesur) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Hivemind (Lesur)",
+      "description": "A self-hosted MCP memory service: agents append notes, an LLM edits them into a Markdown bank, and an embedded Neo4j and Qdrant graph indexes it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Notes, an LLM-edited bank, a derived
+graph</p>
+          <h1>Hivemind (Lesur)</h1>
+          <p class="document-deck">A self-hosted MCP memory service:
+agents append notes, an LLM edits them into a Markdown bank, and an
+embedded Neo4j and Qdrant graph indexes it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Lesur-ai/hivemind">
+              <span>Source</span>
+              <strong>Lesur-ai/hivemind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Lesur-ai/hivemind/commit/6b05533bdf71bf2dfeb6a50281050608e6630df3" title="6b05533bdf71bf2dfeb6a50281050608e6630df3">
+              <span>Analyzed revision</span>
+              <code>6b05533b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Lesur-ai--hivemind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Lesur-ai--hivemind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0,
+in LICENSE and in the vendored services/graph-memory/LICENSE, which
+agree; bundled fonts are OFL-1.1 and the Go CLI's YAML dependency is MIT
+and Apache-2.0 by file</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>70,501
+lines of Python in src/live_mem across 87 files and 8,539 in
+src/hivemind_inference; 23,121 vendored in services/graph-memory; a
+9,041-line Go ingestion CLI</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>25
+commits from 21 July to 8 November 2026, published as squashed releases
+up to v1.6.6 from a private canonical repository</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>4,641
+Python test functions in 220 files and 144,733 lines, 110 Go tests,
+Playwright and Node suites; CI runs the Python suite in eight shards on
+push and pull request; I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Hivemind, from Lesur-ai, is a self-hosted MCP service that gives
+several coding agents one project memory per <code>space_id</code>, in
+three tiers. <code>short</code> is append-only Markdown notes in S3, one
+object per note, with the author taken from the token. <code>mid</code>
+is a set of Markdown bank files that an LLM edits from those notes,
+section by section, deleting each note it consumes. <code>long</code> is
+a vendored Graph Memory service on Neo4j and Qdrant that indexes the
+bank, uploaded documents and pre-compaction bank snapshots.</p>
+<p>What is notable is the consolidation contract. Every note in a batch
+must be attributed to an edit or discarded with one of four closed
+reasons, or the batch is refused. Destructive bank operations take a
+verified snapshot and read their writes back. Long memory filters its
+graph and vector reads by the space's memory id, and its vector search
+admits only documents whose ingestion succeeded, which a populated test
+checks.</p>
+<p>What is weak is correction. There is no status and no tombstone: a
+fact leaves the bank when the model deletes its line, while the
+compaction snapshot that held it is kept, cannot be deleted through the
+backup tool, and is returned by <code>long_query</code> as archive
+evidence. In a space prepared for Project Mesh, every ordinary write
+refuses, because nothing outside unsafe recovery acquires the write
+lease.</p>
+<p><strong>Licence.</strong> Apache-2.0, in <code>LICENSE</code> and in
+the vendored <code>services/graph-memory/LICENSE</code>, which agree;
+<code>pyproject.toml</code> carries no licence field. The grant is
+clean, and what the public tree withholds is its history and its design
+record. ADR-0023 in <code>docs/ARCHITECTURE_CONTRACTS.md</code> makes
+this repository <em>"a fresh-history release artifact staged from an
+exact source SHA"</em> of a private canonical one, so each commit is a
+squashed release. ADR-0001 names <code>docs/adr/README.md</code> as the
+canonical ADR registry, and no <code>docs/adr/</code> directory is in
+the tree. The seven bundled WOFF2 fonts are OFL-1.1, and
+<code>THIRD_PARTY_NOTICES.md</code> points to each upstream
+<code>OFL.txt</code> rather than including it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory starts as a <strong>note</strong>: an agent's claim, in one
+of seven categories (<code>observation</code>, <code>decision</code>,
+<code>todo</code>, <code>insight</code>, <code>question</code>,
+<code>progress</code>, <code>issue</code>), written under the token's
+<code>client_name</code> (<code>src/live_mem/core/live.py:43-51</code>,
+<code>:120</code>). A note is pending until a consolidation job reads
+it. The job hands the rules, the previous synthesis, the notes and the
+current bank to a chat model. The model returns edit operations per
+file, each citing the notes it represents, and a
+<code>discarded_notes</code> list with a reason from
+<code>already_in_bank</code>, <code>superseded</code>,
+<code>obsolete</code> or <code>no_bank_value</code>
+(<code>src/live_mem/core/consolidator.py:268-270</code>). After the
+edits land, every consumed note is deleted, integrated or discarded
+alike (<code>:6508-6545</code>).</p>
+<p>The <strong>bank line</strong> is then the belief. It carries no
+status, no source pointer and no confidence; it is prose in a Markdown
+section. The prompt asks the model to end any deduction with
+<code>[inferred]</code> and to write <em>"DEPRECATED — verify"</em>
+where a replacement is uncertain (<code>:3821-3842</code>). Nothing
+reads either marker outside the optional validation pass described in
+section 9.</p>
+<p>A bank line stops being believed in two ways. When a note supersedes
+it, the prompt has the model write the dated outcome into the history
+file, cite the note, and delete the old line in the same plan
+(<code>:3821-3828</code>). When a file grows past its threshold,
+compaction summarises it. Both leave the earlier text somewhere: in the
+history file by instruction, and in the full-space snapshot compaction
+takes first, which a worker indexes into long memory.</p>
+<p>Long memory holds no beliefs of its own. Its contract, ADR-0010,
+calls it derived and non-authoritative. It answers search with the
+current bank mirror, uploaded documents and those archived snapshots
+interleaved, each passage labelled with its capture time and source.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a note becomes a bank line only through a plan that accounts for every note; the line dies by deletion, and the snapshot that held it lives on in long memory</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a note becomes a bank line only through a plan that accounts for every note; the line dies by deletion, and the snapshot that held it lives on in long memory
+flowchart TD
+  N[&quot;short_note: one S3&lt;br/&gt;object per note,&lt;br/&gt;agent from token&quot;] --&gt; Q[&quot;mid_consolidate:&lt;br/&gt;job on in-memory&lt;br/&gt;per-space queue&quot;]
+  Q --&gt; L[&quot;LLM plan: section&lt;br/&gt;edits and a&lt;br/&gt;disposition per note&quot;]
+  L --&gt; V{&quot;every note integrated&lt;br/&gt;or discarded with&lt;br/&gt;a closed reason?&quot;}
+  V --&gt;|&quot;no&quot;| R[&quot;one correction,&lt;br/&gt;then batch refused;&lt;br/&gt;notes kept&quot;]
+  V --&gt;|&quot;yes&quot;| B[&quot;bank edited and read&lt;br/&gt;back; consumed&lt;br/&gt;notes deleted&quot;]
+  B --&gt; S[&quot;superseding note:&lt;br/&gt;outcome to history,&lt;br/&gt;old line deleted&quot;]
+  B --&gt; C[&quot;file over threshold:&lt;br/&gt;automatic compaction&quot;]
+  B --&gt; PU[&quot;long_push mirrors&lt;br/&gt;bank into graph&quot;]
+  C --&gt; P[&quot;full-space snapshot&lt;br/&gt;kept; backup tool&lt;br/&gt;refuses to delete it&quot;]
+  P --&gt; AR[&quot;archive worker&lt;br/&gt;indexes snapshot&lt;br/&gt;into long memory&quot;]
+  AR --&gt; LQ[&quot;long_query: mirror&lt;br/&gt;and archive&lt;br/&gt;interleaved&quot;]
+  PU --&gt; LQ</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The Compose file runs five long-lived containers: a Caddy WAF with
+the OWASP CRS, the Hivemind server, the vendored Graph Memory service,
+Neo4j 5.26 community and Qdrant 1.16.2, plus MinIO under the
+<code>dev</code> profile (<code>docker-compose.yml:37-304</code>).
+Hivemind is Python 3.14 on the MCP Python SDK 2.3.0, serving Streamable
+HTTP at <code>/mcp</code>; it keeps every byte of short and mid memory
+in an S3-compatible bucket through boto3. Graph Memory is vendored from
+<code>cloud-temple/graph-memory</code> at <code>ae9afb0b</code>, with
+Hivemind's modifications listed in <code>THIRD_PARTY_NOTICES.md</code>,
+and Hivemind calls it as an MCP client.</p>
+<p><code>short</code> needs no model. <code>mid</code> needs a chat
+model, and <code>long</code> needs a chat model for extraction and an
+embedding model, both configured as provider profiles in
+<code>src/hivemind_inference/</code>. Project Mesh pairs two instances,
+each with its own Ed25519 identity and public HTTPS URL, through a
+signed one-time invitation.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>An operator stands up the five containers, an S3 bucket and two model
+endpoints; <code>scripts/configure_dev_env.py</code> writes a local
+<code>.env</code> and the development profile brings up MinIO. Short
+notes work offline with no key. Consolidation and long memory stop
+without a reachable provider, and nothing is stored to them in that
+case. The store is human-readable: notes and bank files are Markdown
+objects under <code>{space}/live/</code> and <code>{space}/bank/</code>,
+and the admin portal at <code>/admin</code> shows them. The long tier is
+not repairable by hand in the same way, since its state is spread across
+Neo4j, Qdrant and retained S3 text.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>live_note</code>, aliased
+<code>short_note</code>, checks the token's space allowlist and write
+permission, refuses unless the space routes direct-local, and
+<code>LiveService.write_note</code> builds
+<code>{timestamp}_{agent}_{category}_{uuid8}.md</code> and issues one
+PUT (<code>src/live_mem/tools/live.py:90-123</code>,
+<code>src/live_mem/core/live.py:134</code>, <code>:178-179</code>).</li>
+<li><strong>Consolidate.</strong> <code>bank_consolidate</code> defaults
+the agent to the caller, needs <code>manage</code> for all agents or
+another agent, refuses a shared route, and enqueues
+(<code>src/live_mem/tools/bank.py:451-504</code>). The worker runs
+<code>ConsolidatorService.consolidate</code>
+(<code>src/live_mem/core/consolidator.py:4125</code>), validates the
+plan's form and dispositions (<code>:1038-1090</code>,
+<code>:1239</code>), applies it, deletes the consumed notes
+(<code>:5101</code>) and overwrites <code>_synthesis.md</code>
+(<code>:6685</code>).</li>
+<li><strong>Compact.</strong> After a successful consolidation,
+<code>compact_after_consolidation</code> calls the compactor for files
+above <code>bank_file_max_size</code>, 35,000 bytes by default
+(<code>src/live_mem/core/mid_automation.py:26</code>,
+<code>src/live_mem/config.py:252-258</code>).</li>
+<li><strong>Project to long.</strong> <code>long_push</code> deletes and
+re-ingests each bank file as a Graph Memory document, skipping
+<code>activeContext.md</code> and <code>progress.md</code> unless
+<code>include_volatile</code> is set with <code>manage</code>
+(<code>src/live_mem/core/graph_bridge.py:1426-1440</code>,
+<code>src/live_mem/config.py:274</code>). Compaction snapshots become
+pending records the archive worker ingests
+(<code>src/live_mem/core/mid_archive.py:18-24</code>).</li>
+<li><strong>Query long.</strong> <code>long_query</code> checks access
+and calls <code>_query_with_archives</code>, which queries the space's
+memory and then its archive memory and interleaves the two
+(<code>src/live_mem/core/graph_bridge.py:2345-2409</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Everything for a space lives under one S3 prefix:
+<code>_meta.json</code>, <code>_rules.md</code>,
+<code>_synthesis.md</code>, <code>live/</code> for notes,
+<code>bank/</code> for bank files, <code>_mid_archive_pending/</code>
+for archive work, and <code>_hivemind/</code> for Mesh state. Full-space
+backups, compaction snapshots included, sit outside it under
+<code>_backups/{space_id}/{timestamp}/</code>; tokens are SHA-256 hashes
+in <code>_system/tokens.json</code>
+(<code>src/live_mem/core/tokens.py:41</code>).</p>
+<p>A note's front matter holds <code>timestamp</code>,
+<code>agent</code>, <code>category</code>, <code>tags</code> and
+<code>space_id</code>, followed by up to 100,000 characters of body
+(<code>src/live_mem/core/live.py:39</code>, <code>:140-147</code>). A
+bank file is free Markdown whose structure is set by the space's rules;
+the standard template names six files, <code>projectbrief.md</code>,
+<code>productContext.md</code>, <code>activeContext.md</code>,
+<code>systemPatterns.md</code>, <code>techContext.md</code> and
+<code>progress.md</code>.</p>
+<p>In Graph Memory, <code>Document</code>, <code>Entity</code> and
+<code>TemporalOccurrence</code> nodes carry <code>memory_id</code>,
+derived from the space as <code>hm-</code> plus a sanitised prefix and a
+BLAKE2b digest (<code>src/live_mem/core/memory_id.py:68</code>). A
+document's <code>ingestion_status</code> runs <code>running</code>,
+<code>succeeded</code>, <code>deprecated</code>; a replacement is
+ingested beside the old version and swapped in one transaction
+(<code>services/graph-memory/src/mcp_memory/core/graph.py:1223-1262</code>).
+Archive passages carry <code>preimage_id</code>, <code>bank_path</code>,
+<code>captured_at</code>, the source SHA and
+<code>ingested_at</code>.</p>
+<p>The <code>_hivemind/</code> subtree is a protocol store: membership,
+term, write token, bank version pointer, queue, acks, staged commits,
+per-note tombstones, origin sidecars, watermarks and an append-only
+event journal (<code>src/live_mem/core/hivemind/layout.py</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is tool-mediated; nothing is injected automatically.
+<code>short_read</code> lists every object under <code>live/</code>,
+parses them, filters by category, agent and a <code>since</code>
+timestamp, and returns the newest first, at most 500
+(<code>src/live_mem/core/live.py:231</code>, <code>:40</code>).
+<code>short_search</code> is a case-insensitive substring test over note
+bodies (<code>:311</code>). Both scan the whole prefix on every call.
+<code>mid_read_all</code> returns every bank file; the templates have
+the agent call it at session start, so a fresh session reads up to six
+files at an advisory 35,000 bytes each.</p>
+<p><code>long_query</code> runs Graph Memory's
+<code>memory_query</code>. It tokenises the query, drops French stop
+words, and searches entities through a Lucene full-text index filtered
+by <code>memory_id</code>, falling back to <code>CONTAINS</code>
+(<code>services/graph-memory/src/mcp_memory/core/graph.py:2132-2307</code>).
+It expands each hit to its documents, relations and neighbours, then
+runs Qdrant chunk search restricted to the memory's succeeded documents
+(<code>services/graph-memory/src/mcp_memory/server.py:1614-1625</code>).
+A query naming an issue reference such as <code>#17</code> also runs an
+exact-text search under the same filters, so the reference survives a
+dense top eight that misses it.</p>
+<p>The vector arm filters on <code>ingestion_status</code>; the entity
+arm does not. An entity mentioned only by a running or cleanup-pending
+document is returned with that document listed and its status labelled
+(<code>graph.py:2330-2385</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A note write is one synchronous PUT, retrievable at once.
+Consolidation is caller-triggered and deferred: a write token queues it,
+about once a minute per space at most, on an in-memory queue whose
+acknowledgement says <code>in_memory_best_effort</code>, so a restart
+loses queued jobs but not notes
+(<code>src/live_mem/config.py:229</code>,
+<code>src/live_mem/core/consolidation_queue.py:3-10</code>,
+<code>:33</code>). One job takes up to 200 notes in batches. The lag
+before a fact is in the bank is the time until someone calls
+<code>mid_consolidate</code>, plus the job.</p>
+<p>The model never returns a whole existing file; it returns
+<code>replace_section</code>, <code>append_to_section</code>,
+<code>prepend_to_section</code>, <code>add_section</code> and
+<code>delete_section</code> operations, or a justified
+<code>rewrite</code>. The code holds the form: H1 headings and file
+paths are owned by the code, a duplicate heading is refused, and a plan
+whose dispositions leave a note unclassified gets one corrective
+completion and then fails closed with its notes kept
+(<code>src/live_mem/core/consolidator.py:1038-1090</code>,
+<code>:1650</code>). Nothing deterministic checks content against the
+notes unless validation is turned on.</p>
+<p>A storage failure mid-batch can leave earlier writes applied; normal
+consolidation has no batch-wide rollback. Compaction is the exception:
+it prepares every candidate, persists a verified full-space backup,
+writes, reads back and rolls back within bounds. The archive worker
+resumes after restarts and pauses a capture after three
+<code>invalid_output</code> cycles
+(<code>src/live_mem/core/mid_archive.py:18-24</code>). No pass rewrites
+the whole store; compaction touches only files above the threshold.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Discovery advertises 17 tools to a read token, 20 to write and 24 to
+manage. Operator tools such as <code>mid_write</code>,
+<code>mid_delete</code>, <code>bank_compact</code> and
+<code>backup_restore</code> stay registered and callable by exact name,
+with their own permission checks (<code>docs/TOOL_EXPOSURE.md</code>). A
+routine agent holds <code>read,write</code>: it can note, read,
+consolidate its own notes and push to long memory. <code>manage</code>
+adds direct bank writes and deletes, compaction apply and document
+ingestion.</p>
+<p>The integration is instructions, not hooks.
+<code>CLAUDE_CODE_INTEGRATION.md</code> and
+<code>docs/AGENT_MEMORY_SETUP.md</code> give a <code>CLAUDE.md</code> or
+<code>AGENTS.md</code> block telling the agent to read the bank at
+session start, write notes during work, and call
+<code>mid_consolidate</code> at most once after the user validates,
+without polling. Any MCP client that holds a token can use it, and one
+token per agent is what keeps note authorship meaningful.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-a-correction-leaves-behind">What a correction leaves
+behind</h3>
+<p>A superseded fact is removed from the current-context file by the
+model, on the strength of a note. It survives in the history file by
+instruction, and in every compaction snapshot taken while it stood.
+<code>backup_delete</code> refuses a compaction snapshot by its
+namespace alone (<code>src/live_mem/core/backup.py:1447-1470</code>),
+the README states that snapshots have no automatic purge, and the
+archive worker keeps the raw source after indexing it.
+<code>long_query</code> then returns those passages beside current ones,
+labelled with <code>captured_at</code>. The README tells consumers to
+read current MID for current state (<code>README.md:430</code>); the
+read path does not.</p>
+<p><code>space_delete</code> removes the <code>{space}/</code> prefix
+(<code>src/live_mem/core/space.py:1436</code>). The backups under
+<code>_backups/{space_id}/</code> and the space's Graph Memory
+namespaces are outside it, and no Hivemind path calls Graph Memory's
+<code>memory_delete</code>.</p>
+<h3 id="project-mesh-at-this-commit">Project Mesh at this commit</h3>
+<p>Once a space is prepared for Mesh, its route is <code>STAGED</code>.
+<code>short_note</code> and <code>mid_consolidate</code> then refuse
+with <code>StagedWriteNotImplemented</code>
+(<code>src/live_mem/tools/live.py:120-123</code>,
+<code>src/live_mem/tools/bank.py:488-493</code>), and a test pins the
+note refusal (<code>tests/test_writesink_routing.py:229-241</code>). The
+staged bank sink is built only when the local node already holds the
+write token, and the registry says so: <em>"the chosen fail-closed
+deferral of the lease ACQUISITION ceremony"</em>
+(<code>src/live_mem/core/engines/__init__.py:288-329</code>).
+<code>LeaseRuntime.acquire</code> has no caller outside its own module
+and the tests, and the only other writer of a held token is
+unsafe-recovery restore
+(<code>src/live_mem/core/backup.py:848-858</code>). A paired space is
+therefore readable and, for agents, not writable.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code></strong> — awarded on long
+memory. Neo4j entity, context and document reads match
+<code>memory_id</code>; Qdrant search adds a <code>memory_id</code>
+payload filter and refuses a returned payload carrying another id
+(<code>services/graph-memory/src/mcp_memory/core/vector_store.py:341-353</code>,
+<code>:700-704</code>). The id comes from the space binding, not the
+caller. Short and mid memory are an S3 prefix per space, a physical
+partition.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>tombstone</code></strong> — withheld. Mesh tombstones
+are keyed on <code>note_id</code> so a consumed note is not replicated
+back, a record key
+(<code>src/live_mem/core/hivemind/layout.py:213-216</code>); a discarded
+note is deleted and its reason logged.</li>
+<li><strong><code>trust_state</code></strong> — withheld. A bank line
+has no status. <code>[inferred]</code> and <em>"DEPRECATED —
+verify"</em> are prose the prompt requests, and no read excludes on
+them. <code>ingestion_status</code> is pipeline progress, not
+belief.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Temporal
+occurrences extracted from documents are off by default
+(<code>TEMPORAL_OCCURRENCE_EXTRACTION</code>), describe events in a
+source's text, and no read filters on them.</li>
+<li><strong><code>audit_log</code></strong> — withheld. The append-only
+journal under <code>_hivemind/events/</code> records
+<code>BANK_COMMITTED</code> only on the Mesh commit path, which no agent
+reaches; direct-local writes record counters in <code>_meta.json</code>,
+and the admin audit is an in-memory ring of console and auth events
+(<code>src/live_mem/core/audit_ring.py:1-14</code>).</li>
+<li><strong><code>human_review</code></strong> — withheld. Consolidation
+writes the bank with no queue, and automatic compaction applies without
+review by default (<code>src/live_mem/config.py:252</code>). A
+<code>manage</code> holder editing a bank file is authoring after the
+fact, and <code>bank_compact</code>'s dry run is a flag the caller
+clears.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>Validation is opt-in and advisory.</strong> With
+<code>consolidation_validation_enabled</code> set, a regex pass counts
+added lines carrying a number, date, version or status word that appears
+in no batch note; it logs and reports the count and does not block
+(<code>src/live_mem/config.py:243</code>,
+<code>src/live_mem/core/consolidator.py:4972-4979</code>).</li>
+<li><strong>Notes are prompt input.</strong> Note bodies enter the
+consolidation prompt with their metadata; the anti-invention rules are
+requests to the model, and the deterministic checks are on
+structure.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The tree has 4,641 Python test functions across 220 files, 110 Go
+tests, and Playwright and Node suites for the portal. CI installs the
+locked development dependencies, including <code>qdrant-client</code>
+and <code>neo4j</code>, and runs the whole Python collection in eight
+shards on push and pull request (<code>.github/workflows/ci.yml</code>).
+I ran none of it. Most cases use fakes from <code>tests/fakes/</code>;
+the Qdrant suite uses <code>qdrant-client</code> against a local on-disk
+collection.</p>
+<p><code>negative_eval</code> rests on two cases in
+<code>tests/test_p13_qdrant_vector_store.py</code>:</p>
+<ul>
+<li><code>:1092-1111</code> stores nine similar passages and one
+answering <code>#17</code>, shows the query ranks the answer first with
+its document active, then repeats the query with that document left out
+of the active set and asserts eight results, none of them the
+answer.</li>
+<li><code>:1078-1089</code> stores one passage, asserts the unrestricted
+search returns it, and asserts an empty active set returns nothing.</li>
+</ul>
+<p>Both test the vector store's admission filter. No case drives
+<code>long_query</code> with two spaces' material and asserts the other
+space's passage absent, and none asserts that a deprecated document's
+entities stay out of entity search.</p>
+<p>The consolidation suite is extensive on form: disposition accounting,
+H1 preservation, structured output, compaction rollback and the staged
+refusals. No committed evaluation measures whether a consolidated bank
+is faithful to its notes, and no benchmark result is in the tree. No
+paper describes the system; the French README cites a 2025 survey of
+multi-agent collaboration as framing.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the model account for every input.</strong> Require
+each note to appear in an edit's source list or in a discard list with a
+closed reason, refuse any plan that leaves one out, and delete only what
+was accounted for.</li>
+<li><strong>Edit by section, own the skeleton in code.</strong> Let the
+model return section operations against headings, keep titles and file
+paths out of its reach, and read every write back.</li>
+<li><strong>Snapshot before a lossy rewrite.</strong> Compaction
+persists a verified copy of the space before it summarises, which makes
+a bad summary recoverable.</li>
+<li><strong>Carry the scope key on both stores.</strong> A graph
+predicate and a vector payload filter on the same id, with a
+returned-payload ownership check, close the gap a single-store filter
+leaves.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Correction by deletion beside a permanent archive.</strong>
+If superseded text is kept for recovery, keep it out of the default read
+path or mark it superseded there; a capture date is not a status.</li>
+<li><strong>A filter on one retrieval arm.</strong> Admission by
+document status belongs on the entity arm as well as the vector
+arm.</li>
+<li><strong>A shared mode whose write path has no lease
+producer.</strong> Ship the acquisition with the commit gate, or do not
+let a space enter the mode.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a small team running several coding agents against one
+project, who want a shared handbook the agents keep current and can
+afford five containers and two model endpoints. The bank stays legible
+and editable, and its quality is the consolidation model's. Walk away if
+you need to say <em>"forget this"</em> and mean it, since snapshots and
+long-memory archives keep what the bank dropped. Walk away too if you
+came for Project Mesh, which at this commit replicates a space that
+agents then cannot write.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether lease acquisition for shared spaces exists in the private
+canonical repository and is withheld from this release, or is not yet
+built.</li>
+<li>What retention the maintainers intend for compaction snapshots and
+archive passages, since the README names direct storage maintenance as
+the only route.</li>
+<li>How faithful consolidated banks are in practice; this needs runs
+against a real provider, which the repository does not publish.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Short tier: <code>src/live_mem/core/live.py</code>,
+<code>src/live_mem/tools/live.py</code>,
+<code>src/live_mem/core/gc.py</code></li>
+<li>Mid tier: <code>src/live_mem/core/consolidator.py</code>,
+<code>src/live_mem/core/consolidation_queue.py</code>,
+<code>src/live_mem/core/consolidation_schema.py</code>,
+<code>src/live_mem/core/mid_automation.py</code>,
+<code>src/live_mem/tools/bank.py</code>,
+<code>RULES/live-mem.standard.memory.bank.md</code></li>
+<li>Long tier: <code>src/live_mem/core/graph_bridge.py</code>,
+<code>src/live_mem/core/mid_archive.py</code>,
+<code>src/live_mem/core/memory_id.py</code>,
+<code>src/live_mem/tools/graph.py</code>,
+<code>services/graph-memory/src/mcp_memory/server.py</code>,
+<code>services/graph-memory/src/mcp_memory/core/graph.py</code>,
+<code>services/graph-memory/src/mcp_memory/core/vector_store.py</code>,
+<code>services/graph-memory/src/mcp_memory/core/ingest_pipeline.py</code></li>
+<li>Routing and Mesh: <code>src/live_mem/core/write_sink.py</code>,
+<code>src/live_mem/core/engines/__init__.py</code>,
+<code>src/live_mem/core/hivemind/lifecycle.py</code>,
+<code>src/live_mem/core/hivemind/lease_runtime.py</code>,
+<code>src/live_mem/core/hivemind/commit_runtime.py</code>,
+<code>src/live_mem/core/hivemind/layout.py</code></li>
+<li>Backup and deletion: <code>src/live_mem/core/backup.py</code>,
+<code>src/live_mem/core/space.py</code></li>
+<li>Access and audit: <code>src/live_mem/auth/context.py</code>,
+<code>src/live_mem/core/tokens.py</code>,
+<code>src/live_mem/core/audit_ring.py</code></li>
+<li>Tests: <code>tests/test_p13_qdrant_vector_store.py</code>,
+<code>tests/test_writesink_routing.py</code>,
+<code>tests/test_normal_consolidation_safety.py</code>,
+<code>tests/test_note_disposition.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No benchmark result.</strong>
+<code>git ls-files | grep -i -E 'bench|result|eval|score' | grep -v '^tests/'</code>
+lists only
+<code>tools/hivemind-ingest/internal/ontology/evaluator.go</code> and
+its test, an ontology evaluator in the ingestion CLI, which also shows
+the pattern can match;
+<code>git ls-files | grep -i -E '[.](csv|jsonl)$'</code> returns
+nothing.</li>
+<li><strong>Nothing outside the lease module acquires the write
+token.</strong> <code>git grep -n -E '\.acquire\(' -- src</code> matches
+only <code>src/live_mem/mesh/replay.py:700</code>, a file lock's own
+<code>__enter__</code>, and <code>src/live_mem/server.py:401</code>, a
+process lock. The definition is at
+<code>src/live_mem/core/hivemind/lease_runtime.py:642</code>, and the
+same pattern counts 34 lines in
+<code>tests/test_hivemind_lease.py</code>.</li>
+<li><strong>Two writers of a held token.</strong>
+<code>git grep -n -E 'state=TokenState\.HELD' -- src</code> matches
+<code>src/live_mem/core/backup.py:849</code>, the unsafe-recovery
+restore, and
+<code>src/live_mem/core/hivemind/lease_runtime.py:920</code>, inside
+acquisition.</li>
+<li><strong>Hivemind never deletes a Graph Memory namespace.</strong>
+<code>git grep -n 'memory_delete' -- src</code> returns nothing;
+<code>git grep -n 'async def memory_delete' -- services/graph-memory/src</code>
+matches <code>server.py:392</code>.</li>
+<li><strong>Space deletion does not reach backups.</strong>
+<code>git grep -n '_backups' -- src/live_mem/core/space.py</code>
+matches only line 762, a comment in <code>list_spaces</code>;
+<code>git grep -c '_backups/' -- src/live_mem/core/backup.py</code>
+counts 9.</li>
+<li><strong>No validity-time field.</strong>
+<code>git grep -n -i -w -E 'valid_from|valid_to|valid_until|valid_at|as_of' -- src services</code>
+returns nothing;
+<code>git grep -c 'TemporalOccurrence' -- services/graph-memory/src/mcp_memory/core/graph.py</code>
+counts 12.</li>
+<li><strong>The entity arm labels document status and does not filter on
+it.</strong>
+<code>git grep -n 'ingestion_status' -- services/graph-memory/src/mcp_memory/core/graph.py</code>
+lists the <code>'succeeded'</code> predicates at lines 1313, 1706 and
+2045 and, between <code>_search_fulltext</code> at 2132 and the end of
+<code>get_entity_context</code>, only line 2385, a returned field.</li>
+<li><strong>The admin audit never touches storage.</strong>
+<code>git grep -n -E 'storage|put_json|\.put\(' -- src/live_mem/core/audit_ring.py</code>
+returns nothing;
+<code>git grep -n 'deque' -- src/live_mem/core/audit_ring.py</code>
+matches lines 22, 68 and 71.</li>
+<li><strong>Nothing reads the inferred marker outside the
+consolidator.</strong>
+<code>git grep -n -E 'inferred' -- src/live_mem/core/live.py src/live_mem/tools src/live_mem/core/graph_bridge.py services/graph-memory/src</code>
+matches only a prompt line in
+<code>services/graph-memory/src/mcp_memory/core/ontology_construction.py:72</code>;
+<code>git grep -c 'inferred' -- src/live_mem/core/consolidator.py</code>
+counts 17.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|citation' -- README.md docs</code>
+matches only a citation-header sentence in
+<code>docs/MIGRATION_LIVE_GRAPH_TO_HIVEMIND.md:542</code>;
+<code>git grep -n -i 'arxiv' -- README.fr.md</code> matches the survey
+link at line 199, and the tree has no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/Lesur-ai/hivemind/commit/6b05533bdf71bf2dfeb6a50281050608e6630df3"><code class="commit-id" title="6b05533bdf71bf2dfeb6a50281050608e6630df3">6b05533b…</code></a>
+— first reading, from a clone of <code>main</code> at release 1.6.6,
+scoped to the short, mid and long tiers, consolidation and compaction,
+the Graph Memory read and ingest paths, write routing, backup and
+deletion, and their tests; Project Mesh pairing and transport were read
+only where they write the token and route the tiers read. Screened
+first: no auto-run surface; one build-time execution point,
+<code>tests/conftest.py</code>; no unpinned surface and nothing inside
+the cooldown. Apache-2.0, no rider. Nothing installed, built or run. Two
+marks: <code>scope_enforced</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

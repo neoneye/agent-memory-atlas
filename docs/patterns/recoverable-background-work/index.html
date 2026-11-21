@@ -505,6 +505,19 @@ outbox. It is called once and logged as non-fatal on failure
 (<code>synap/cloud/agents/ingestion/storage/coordinator.py:1169-1182</code>),
 and the vector arm does no liveness check, so a failed delete leaves the
 superseded text servable with nothing queued to retry it.</p>
+<p><a href="../../systems/hivemind-lesur/">Hivemind (Lesur)</a> keeps
+the input and loses the queue. Notes stay in S3 until a consolidation
+job that accounted for them has applied its edits, so a crash or a
+refused plan costs a rerun and not the notes, while the job queue itself
+is in process memory and its acknowledgement says
+<code>in_memory_best_effort</code>. Compaction persists a verified
+full-space backup before writing and rolls back within bounds; normal
+consolidation has no batch-wide rollback, and a storage failure can
+leave earlier writes of a batch applied. The archive worker that
+projects compaction snapshots into long memory keeps a durable pending
+record, resumes after restart, and pauses a capture after three invalid
+model outputs with its sources retained, waiting for an operator
+retry.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>

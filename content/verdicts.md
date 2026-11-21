@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 844 reports.**
+**This page covers all 845 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7762,3 +7762,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, release v1.7.1; memory is 12,842/600,553 lines of non-test TypeScript, in 5,570 commits from 17 September to 21 November 2026; 247 memory test cases in a 13,223-case vitest suite sharded in CI, not run here. Two marks: `audit_log` and `negative_eval`.
 - Study when: you want always-loaded memory that keeps a provider's prompt cache intact, or a Git-backed store whose history a Host records without claiming authorship.
 - Do not copy when: memory must distinguish what a person stated from what an IM message supplied, or be scoped below one agent.
+
+### [`hivemind-lesur`](../systems/hivemind-lesur/)
+
+- Best idea: **the consolidating model must account for every note.** Each note in a batch is cited by an edit operation or listed in `discarded_notes` with one of `already_in_bank`, `superseded`, `obsolete` or `no_bank_value`; a plan that leaves one out gets one corrective completion and then fails closed with the notes kept, and only accounted notes are deleted.
+- Biggest risk: **a correction is a deleted line beside a permanent archive.** No bank line carries a status; a superseding note makes the model delete the old line, while the full-space compaction snapshot that held it cannot be deleted through the backup tool and is indexed into the archive that `long_query` interleaves with current results.
+- Second risk: in a space prepared for Project Mesh, `short_note` and `mid_consolidate` refuse as staged-not-implemented and the staged bank sink needs a held lease that only unsafe-recovery restore writes; `space_delete` leaves `_backups/` and the Graph Memory namespaces.
+- Most reusable component: the plan validation and disposition accounting in `src/live_mem/core/consolidator.py` (`_normal_note_dispositions`, `_normal_output_schema_failures`) with the section operations at the end of the file.
+- Maturity impression: Apache-2.0, release 1.6.6 published as squashed releases from a private canonical repository; 70,501 lines of Python in `src/live_mem` plus 23,121 vendored; 4,641 Python test functions run in eight CI shards, not run here; no benchmark or paper. Two marks: `scope_enforced` and `negative_eval`.
+- Study when: several agents share one project and you want a Markdown handbook a model keeps current, with the model's plan checked for form and completeness before anything is deleted.
+- Do not copy when: a forgotten value must stay forgotten, or you need agents writing to a space replicated across two instances.
