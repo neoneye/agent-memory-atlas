@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A DeepSeek Harness plugin of bots,
+each owning a Git repository whose working tree is its memory, with two
+files frozen into the session prompt.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Tobs
+(DeepSeekBot) — Agent Memory Atlas">
+    <meta property="og:description" content="A DeepSeek Harness plugin
+of bots, each owning a Git repository whose working tree is its memory,
+with two files frozen into the session prompt.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tobs
+(DeepSeekBot) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A DeepSeek Harness plugin
+of bots, each owning a Git repository whose working tree is its memory,
+with two files frozen into the session prompt.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Tobs (DeepSeekBot) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Tobs (DeepSeekBot)",
+      "description": "A DeepSeek Harness plugin of bots, each owning a Git repository whose working tree is its memory, with two files frozen into the session prompt.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The working tree is the memory</p>
+          <h1>Tobs (DeepSeekBot)</h1>
+          <p class="document-deck">A DeepSeek Harness plugin of bots,
+each owning a Git repository whose working tree is its memory, with two
+files frozen into the session prompt.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/BotHarness/DeepSeekBot">
+              <span>Source</span>
+              <strong>BotHarness/DeepSeekBot</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/BotHarness/DeepSeekBot/commit/72008bde43d41093cda393e3cd2059355d3544fe" title="72008bde43d41093cda393e3cd2059355d3544fe">
+              <span>Analyzed revision</span>
+              <code>72008bde…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/BotHarness--DeepSeekBot" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>BotHarness--DeepSeekBot</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE; a bundled VRM avatar is under VRoid Hub terms, the
+cloudflared wrapper under Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>600,553
+lines of non-test TypeScript in 3,029 files; memory is 6,143 in
+packages/core/src/memory, 1,307 more in core and 5,392 in client
+views</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>5,570
+commits from 17 September to 21 November 2026 under eight author names,
+3,565 under the leading one; release v1.7.1 on 13 November
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>13,223
+vitest cases in 1,864 test files; 247 cases in 40 memory test files; CI
+runs vitest sharded on push, pull request and nightly; I ran none of
+it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Tobs, formerly DeepSeekBot, is a <a
+href="../deepseek-harness/">DeepSeek Harness</a> plugin from BotHarness
+that runs a crew of persistent PersonaBots, each with its own identity,
+chat channels, schedules and IM accounts. Its memory is one ordinary Git
+repository per Bot. The checked-out working tree <em>is</em> the memory,
+the Bot's Orchestrator Session runs with that repository as its working
+directory, and the model reads and writes it with DSH's own file, grep,
+Shell and <code>git</code> tools. There are no memory CRUD tools for the
+native agent.</p>
+<p>What is notable is the discipline around the prompt and around
+history. Only <code>SOUL.md</code> and <code>MEMORY.md</code> enter the
+system prompt, frozen together at a Session's first assembly. A
+mid-Session edit reaches the Bot as a path-only Inbox notice rather than
+a changed prefix. The Host records every observed state as an
+append-only checkpoint and a restore as a new commit, so no state is
+lost to a reset.</p>
+<p>What is weak is everything before a file lands. Nothing filters,
+labels or admits what the model writes from a chat or an IM message, and
+the ledger names no author for those writes. The decision record
+overstates three things the tree does not do.</p>
+<p><strong>Scope of this report.</strong> The repository is a whole
+product: a React client, a mobile app, a VRM companion, browser and
+desktop control, IM bridges, a marketplace and docs. Memory is about 2%
+of its non-test TypeScript, 12,842/600,553 lines. The 2.3 GB history is
+mostly binary evidence: 7,116 PNG, 893 JPEG and 547 WebP revisions and
+115 MP4s, with 3,066 files added under <code>docs/assets/pr/</code> of
+which 649 remain at the pin. This report covers
+<code>packages/core/src/memory/</code>, the memory prompt, tools and
+skill provider, the observation and Inbox wiring in the runtime, and
+their tests.</p>
+<p><strong>Relation to the DSH reports.</strong> Tobs is not a fork of
+DeepSeek Harness; it depends on its <code>@deepseek-ai/dsh-*</code>
+packages at <code>0.2.2-rc.1</code> and installs as a plugin. Its
+decision record says it built its own store because <em>"DSH's memory
+plugins are scoped to a project or Session"</em>
+(<code>docs/decisions/memory.md:14</code>). It hosts none of the DSH
+memory plugins this atlas covers. Its research notes survey several of
+them, <a href="../dsh-mneme/">dsh-mneme</a> among them
+(<code>docs/research/2026-09-21-awesome-dsh-ecosystem-survey.md:72</code>).</p>
+<p><strong>Licence.</strong> The root <code>LICENSE</code> grants MIT,
+and the memory code is under it with nothing unusual. The grant does not
+reach everything shipped beside it:
+<code>packages/vrm-companion/assets/avatar-sample-a.vrm</code>, a 13 MB
+model, is VRoid's AvatarSample_A under its <em>VRoid Hub
+conditions</em>, which <code>packages/vrm-companion/README.md:22</code>
+states is <em>"not under the MIT license"</em>.
+<code>packages/cloudflared/</code> carries Apache-2.0 for the binary it
+fetches, and the mobile module ships WebRTC's licence and patent grant.
+13/15 <code>packages/*/package.json</code> files declare no
+<code>license</code> field, so the published npm packages carry no
+licence metadata. The vendored agent skills under <code>.agents/</code>
+are MIT with their own copyright lines.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is whatever is in the working tree: staged, unstaged and
+untracked files, Markdown or code or images
+(<code>docs/decisions/memory.md:10</code>). By convention
+<code>SOUL.md</code> holds character and standing instructions,
+<code>MEMORY.md</code> is an index of one line per entry plus a few
+facts, and topic files hold detail, with a customer profile as the
+stated model of one. Nothing extracts memory automatically: the
+Orchestrator prompt says <em>"Reading a message never automatically
+writes long-term memory"</em> and <em>"you decide what to persist"</em>
+(<code>packages/core/src/runtime/dsh-bot-agent-adapter.ts:385</code>).</p>
+<p>A thing becomes a belief by being written to a file. There is no
+candidate state, no review and no status: an accepted-commit gate, a
+Markdown-only rule and per-branch admission <em>"were tried and
+dropped"</em> (<code>docs/decisions/memory.md:16</code>). The
+<code>memory_accepted_*</code> table names in the schema are the residue
+of that gate. They now record observations, not admissions.</p>
+<p>A belief stops being one by being edited or deleted in place. The
+Human can also restore an older commit, which writes that tree as a new
+child commit after backing up uncommitted work, or restore a recovery
+checkpoint, which needs a Human confirmation. History is never rewritten
+by the Host, so a superseded belief stays reachable in Git. The model
+can rewrite it with its own Shell.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — anything in the working tree is current memory; the Host observes it around each turn, freezes two files into the prompt, and records each new state without naming an author</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: anything in the working tree is current memory; the Host observes it around each turn, freezes two files into the prompt, and records each new state without naming an author
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    MD[&quot;model: DSH file,&lt;br/&gt;Shell and git tools&quot;]
+    EN[&quot;Claude Code or Codex:&lt;br/&gt;memory_write&quot;]
+    HU[&quot;Human: external&lt;br/&gt;editor or UI save&quot;]
+    MD ~~~ EN ~~~ HU
+  end
+  writers --&gt; WT[&quot;working tree is&lt;br/&gt;current Memory;&lt;br/&gt;no admission step&quot;]
+  WT --&gt; FRZ[&quot;SOUL.md and MEMORY.md&lt;br/&gt;frozen at the Session&#39;s&lt;br/&gt;first prompt, cut at&lt;br/&gt;a character limit&quot;]
+  FRZ --&gt; CMP[&quot;refreshed only at&lt;br/&gt;compaction or in&lt;br/&gt;a new Session&quot;]
+  WT --&gt; OBS[&quot;scanned before and&lt;br/&gt;after each turn:&lt;br/&gt;branch, HEAD, paths&quot;]
+  OBS --&gt; INB[&quot;memory-change notice&lt;br/&gt;to the Inbox:&lt;br/&gt;paths, never bodies&quot;]
+  OBS --&gt; LED[&quot;append-only rows:&lt;br/&gt;new HEAD with its&lt;br/&gt;Source Event; state&lt;br/&gt;checkpoint, no author&quot;]
+  WT --&gt; END[&quot;ends: overwritten,&lt;br/&gt;restored as a new&lt;br/&gt;commit, or erased&lt;br/&gt;with the Bot&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Tobs runs inside the DSH desktop Host as a Cordis plugin; the README
+sends a new user to install DSH first. Memory needs a Git of at least
+2.28. When the system has none, the Human installs a pinned,
+SHA-256-verified portable Git into the Profile with one click
+(<code>packages/core/src/memory/managed-git.ts</code>,
+<code>packages/core/src/memory/managed-git.json</code>). Each Bot's
+repository lives in the Profile, and the registry maps a Bot slug to its
+directory.</p>
+<p>The Host keeps its own state in one SQLite operational database
+shared by every module. The memory module owns
+<code>memory_change_checkpoints</code> (the last observation per Bot),
+<code>memory_accepted_commits</code> and
+<code>memory_accepted_heads</code> (the commit ledger and the last
+recorded HEAD per branch), <code>memory_recovery_checkpoints</code>,
+<code>memory_repair_events</code> and <code>memory_commit_cursors</code>
+(<code>packages/core/src/database/schema-plan.ts:162-198</code>,
+<code>:280-296</code>, <code>:1015-1052</code>,
+<code>:2055-2063</code>).</p>
+<p>Adopting it means adopting DSH and Tobs together. The memory itself
+is the cheapest part to stand up and to repair: plain files in a Git
+repository that any editor opens, synced across machines by a
+<code>git push</code> the Bot performs on request or by a Profile Backup
+(<code>docs/decisions/memory.md:17</code>). A model API is needed to use
+a Bot at all, not to store anything.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Native write.</strong> The Orchestrator writes with DSH's
+file and Shell tools, in a Session whose working directory is the
+repository; nothing in Tobs sits on that path. The prompt lists what it
+may read and write
+(<code>packages/core/src/runtime/dsh-bot-agent-adapter.ts:385</code>).</li>
+<li><strong>Engine write.</strong> For a Subscription Engine, the Host
+contributes <code>memory_list</code>, <code>memory_read</code> and
+<code>memory_write</code>
+(<code>packages/core/src/plugin.ts:2672-2679</code>).
+<code>memory_write</code> checks the path with the jail, caps content at
+256 KiB and calls <code>writeFile</code>; it does not commit
+(<code>packages/core/src/engines/engine-memory-tools.ts:76-100</code>).</li>
+<li><strong>Human save.</strong> <code>saveHuman</code> refuses if HEAD
+moved or the tree is dirty, writes the file, commits it with the subject
+<code>Human Memory edit:</code> and the path, and records the commit
+with <code>actorKind: 'human'</code>
+(<code>packages/core/src/memory/accepted-human.ts:142-227</code>).</li>
+<li><strong>Turn observation.</strong> <code>prepareTurn</code> runs
+before an Orchestrator turn and <code>reconcileTurn</code> after it
+(<code>packages/core/src/runtime/bot-runtime.ts:7289</code>,
+<code>:7437</code>). Reconcile refuses a Source Event the Bot was not
+admitted for, then records a changed HEAD with actor
+<code>botharness-host</code> and the Source Event as cause
+(<code>packages/core/src/memory/accepted-turn.ts:185-277</code>).</li>
+<li><strong>Change notice.</strong> A net change between scans becomes
+one <code>memory-change</code> Source Event and Inbox admission in one
+transaction
+(<code>packages/core/src/runtime/bot-runtime.ts:12495-12525</code>).</li>
+<li><strong>Prompt.</strong> The <code>botharness:persona</code>
+system-prompt section calls <code>personaForSession</code>, which
+returns the Session's recorded snapshot or records one
+(<code>packages/core/src/plugin.ts:5072-5076</code>,
+<code>packages/core/src/memory/service.ts:98-107</code>).
+<code>refreshPersonaAfterCompaction</code> replaces it only if the files
+changed (<code>:109-125</code>).</li>
+<li><strong>Restore.</strong> <code>restoreCommitHuman</code> captures a
+forced checkpoint, commits a backup of uncommitted work, writes the
+target tree as a new commit, and moves the branch with
+<code>update-ref</code> against the expected HEAD
+(<code>packages/core/src/memory/accepted-human.ts:229-327</code>).</li>
+<li><strong>Erasure.</strong> Bot deletion with Memory erasure removes
+the repository directory after an ownership check
+(<code>packages/core/src/bots/deletion.ts:362-376</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The repository has no schema. Paths go through one jail: relative
+only, no NUL, no <code>..</code>, no <code>.git</code> segment, and a
+realpath check that refuses an escape through a symlinked directory
+(<code>packages/core/src/memory/jail.ts:11-37</code>,
+<code>:54-70</code>). Writes through the jail must end in
+<code>.md</code> and avoid dot-directories (<code>:39-52</code>); native
+writes are under DSH's sandbox instead.</p>
+<p>The decision record rules out per-entry scoping: <em>"Memory entries
+have no <code>visibility</code> or <code>owner</code>"</em>
+(<code>docs/decisions/memory.md:53</code>), and the front-matter type
+has neither. The front-matter writer in
+<code>packages/core/src/memory/store.ts:138-164</code> stamps
+<code>summary</code>, <code>updated_at</code>, <code>sources</code> and
+<code>tags</code> and commits once per write. Nothing in
+<code>packages/</code> or <code>apps/</code> reaches it outside the
+service and the tests, so in the running product files carry
+front-matter only when the model writes it.</p>
+<p>A ledger row is
+<code>(bot_slug, sha, parent_sha, actor_kind, actor_id, cause_kind, cause_id, validation_result, accepted_at)</code>,
+with actor kinds <code>agent</code>, <code>human</code> and
+<code>system</code> and causes <code>source-event</code>,
+<code>human-edit</code> and <code>repository-init</code>
+(<code>packages/core/src/database/schema-plan.ts:162-174</code>).
+<code>validation_result</code> is the commit's tree hash and nothing
+more (<code>packages/core/src/memory/accepted-git.ts:158-161</code>). A
+checkpoint row holds branch, HEAD, index-tree and working-tree hashes,
+its hidden ref, an origin of <code>host-observation</code>,
+<code>agent-session</code> or <code>human-command</code>, a cause and a
+time (<code>packages/core/src/database/schema-plan.ts:1036-1050</code>).
+There is one time per row and no validity time anywhere.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is the model's own. It lists, reads and greps its
+repository with DSH's tools and runs <code>git log</code> when the Human
+asks for history
+(<code>packages/core/src/features/memory/prompt.ts:1</code>). There is
+no index, no ranking and no embedding. <code>searchMemoryFiles</code>, a
+ripgrep fixed-string search that skips front-matter lines, is reachable
+only through the unused store
+(<code>packages/core/src/memory/search.ts:98-138</code>).</p>
+<p>What is automatic is the frozen pair.
+<code>renderStandingPrompt</code> emits a Soul section and a Core Memory
+section, each headed with its percentage of a per-Bot character limit,
+defaults 5,000 and 3,000, settable from 500 to 50,000
+(<code>packages/core/src/memory/soul.ts:17-19</code>,
+<code>:105-119</code>). An over-limit file is cut at the limit with a
+note naming its true length and asking the Bot to consolidate
+(<code>:96-103</code>). Limits are in characters, counted as code
+points, because <em>"bytes penalise Chinese"</em>
+(<code>docs/decisions/memory.md:43</code>).</p>
+<p>Assignment Sessions, which do delegated work in a Workspace, get the
+Bot's repository skills through a skill provider. It lists skills from
+the repository and drops any a Workspace project skill of the same name
+shadows
+(<code>packages/core/src/skills/memory-provider.ts:89-107</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous tool calls the model makes, and a written file
+is memory at once for that Session's reads. The frozen pair is the
+exception: an edit to <code>SOUL.md</code> or <code>MEMORY.md</code>
+reaches a new Session or the next compaction, and the running Session
+gets an Inbox notice. Nothing deduplicates, consolidates or summarises
+in the background; consolidation is the model's job when a truncation
+note tells it so.</p>
+<p>The observation scan reads branch, HEAD and fingerprints for at most
+500 changed paths, counting any overflow as a hash and a count rather
+than dropping it
+(<code>packages/core/src/memory/accepted-observation.ts:55</code>). It
+runs at Host start, before each turn and before steering input into a
+running one, so its cost scales with what changed. Per-turn injection is
+bounded by the two limits and sits in the prefix, which by design never
+changes within a Session.</p>
+<p>Concurrency is guarded per Bot: an in-process set refuses a second
+memory operation while one runs, and the ledger write is a
+compare-and-swap on the recorded HEAD
+(<code>packages/core/src/memory/accepted.ts:50-62</code>,
+<code>packages/core/src/memory/accepted-ledger.ts:84-96</code>). A
+branch switch is a tool call that refuses while the branch moved during
+the turn, and the prompt tells the Bot to pause Assignments and stash
+before retrying
+(<code>packages/core/src/features/memory/tools.ts:14-69</code>,
+<code>packages/core/src/memory/accepted-human.ts:83-115</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The native Orchestrator holds two memory tools,
+<code>memory_switch_branch</code> and
+<code>memory_continue_from_commit</code>
+(<code>packages/core/src/features/memory/tools.ts:14-118</code>),
+registered beside its messaging tools
+(<code>packages/core/src/runtime/dsh-bot-agent-adapter.ts:2232</code>).
+Everything else is DSH's general tooling. The prompt says
+<em>"Assignments must never edit Memory"</em>
+(<code>packages/core/src/features/memory/prompt.ts:3</code>), while the
+skill provider gives Assignment Sessions the repository's skill files
+and their directories
+(<code>packages/core/src/skills/memory-provider.ts:51</code>).</p>
+<p>Claude Code or Codex, when a Human routes a Bot's Orchestrator
+through their own subscription, get the three engine tools instead. That
+contradicts the decision record's <em>"There are no model-facing
+<code>memory_*</code> CRUD tools"</em>
+(<code>docs/decisions/memory.md:10</code>), which holds only for the DSH
+agent. Since <code>memory_write</code> does not commit, an
+engine-written file appears as an uncommitted change until something
+commits it.</p>
+<p>Each memory commit made during a turn becomes a Self-Record: a notice
+in the Channel whose message caused it, and an already-handled Inbox
+record, so after compaction the Bot can see why it changed its memory
+(<code>packages/core/src/channels/sqlite-store.notices.ts:46-59</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-the-record-proves">What the record proves</h3>
+<p>The ledger and the checkpoints are deliberate about authorship. A
+turn's commit is recorded with actor <code>botharness-host</code>, not
+the model
+(<code>packages/core/src/memory/accepted-turn.ts:265-277</code>), and
+the decision record says an <code>agent-session</code> checkpoint
+<em>"never claims the Agent wrote every byte"</em>
+(<code>docs/decisions/memory.md:75</code>). The cause is the Source
+Event, so a reader can find the message that preceded a change, and the
+trees let them diff it.</p>
+<p>The record has three gaps. A capture failure is a warning and the
+mutation stands
+(<code>packages/core/src/memory/accepted-observation.ts:526</code>,
+<code>:561</code>). A turn records only the HEAD it ended on, so
+intermediate commits are in Git and not in the ledger. And the hidden
+refs that keep checkpoint trees alive are in the repository the model's
+Shell can rewrite. Erasure deletes the repository and leaves its ledger
+and checkpoint rows, which then name shas and Source Event ids for
+content that no longer exists.</p>
+<h3 id="what-the-model-can-be-told-to-write">What the model can be told
+to write</h3>
+<p>Any text that reaches a turn — a Human DM, a group mention, an IM
+message, an Assignment report — can lead to a write, and nothing between
+the model and the file filters it. Secrets are screened when a Bot is
+shared, not when it remembers: <code>shareDraftFlags</code> runs
+patterns for keys, tokens, emails, phone numbers and private keys over
+each file of a Share Draft
+(<code>packages/core/src/marketplace/share-draft.ts:66-81</code>).
+Nothing in <code>packages/core/src/memory/</code> screens a write, and
+the engine tool's <em>"Never write secrets"</em> is prose
+(<code>packages/core/src/engines/engine-memory-tools.ts:78</code>). A
+Bot uses everything it knows in every chat, by design
+(<code>docs/decisions/memory.md:53</code>), so a fact learned in one
+group is available in the next.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>audit_log</code></strong> — awarded on
+<code>memory_accepted_commits</code> and
+<code>memory_recovery_checkpoints</code>: append-only SQLite tables in
+the Host's own store, written on every observed change, Human edit and
+restore, with actor kind, cause and tree hashes. No statement updates or
+deletes either (Recorded searches). Git history beside them is not the
+evidence.</li>
+<li><strong><code>negative_eval</code></strong> — awarded on the
+memory-skill listing; see section 10.</li>
+<li><strong><code>tombstone</code></strong> — withheld. Nothing records
+a rejected value.</li>
+<li><strong><code>trust_state</code></strong> — withheld. There is no
+status; every working-tree file is current, and the acceptance gate the
+table names describe was removed.</li>
+<li><strong><code>bitemporal</code></strong> — withheld. Front-matter
+<code>updated_at</code> and row times are record time.</li>
+<li><strong><code>scope_enforced</code></strong> — withheld. Isolation
+is one repository per Bot, resolved from Session ownership
+(<code>packages/core/src/memory/service.ts:61-66</code>), a physical
+partition with no key on a record.</li>
+<li><strong><code>human_review</code></strong> — withheld. Restore and
+checkpoint restore wait for a Human, but no memory waits: a write is
+current the moment it lands.</li>
+</ul>
+<h3 id="claims-the-tree-does-not-carry">Claims the tree does not
+carry</h3>
+<p>The decision record cites a TLA+ model of the restore
+compare-and-swap (<code>docs/decisions/memory.md:81</code>);
+<code>verification/</code> holds models for enrollment, harvest, live
+and outbox only. It calls the front-matter writer the CLI and Human save
+path (<code>:110</code>); Human save commits the raw body with no
+front-matter. And the engine tools contradict its no-CRUD-tools
+line.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 13,223 vitest cases in 1,864 files, 247 of them in 40
+memory test files. CI runs vitest in shards on push to
+<code>main</code>, on pull requests and nightly
+(<code>.github/workflows/verify.yml:3-9</code>, <code>:388</code>). I
+ran none of it.</p>
+<p>The memory tests are concrete and adversarial where the design is:
+path escapes by <code>..</code>, <code>.git</code> and symlinked
+directories (<code>packages/core/test/memory-store.test.ts:107</code>,
+<code>:140</code>); the frozen persona and its refresh only on change
+(<code>packages/core/test/memory-service.test.ts:75</code>); checkpoints
+surviving reset, merge, branch moves and a refused restore
+(<code>packages/core/test/memory-recovery.test.ts:25-112</code>); and a
+Human edit on a fetched branch recorded with a human actor
+(<code>packages/core/test/memory-accepted.test.ts:343-365</code>).</p>
+<p><code>negative_eval</code> rests on one populated case. In
+<code>packages/core/test/memory-skill-provider.test.ts:117-150</code>
+two Bots' repositories hold skills. Ada's Assignment listing must be
+exactly the Workspace's <code>deploy</code> and her three unshadowed
+skills, without <code>bob-only</code>; Bob's must include
+<code>bob-only</code> and must not include <code>release-notes</code>.
+Each exclusion has a present control beside it. The Team-mode cases that
+refuse every memory method for another principal
+(<code>packages/core/test/team-bot-memory.test.ts:367-400</code>) assert
+a refusal, not an absence from a result.</p>
+<p>Live-model scenarios run nightly against a DeepSeek model
+(<code>.github/workflows/llm-e2e.yml:7-10</code>). One plants a key in a
+Bot's memory and asserts that the steward Bot flags it, drops it from
+the Share Draft on the Human's answer, and leaves the source repository
+untouched (<code>scripts/e2e-llm-scenarios.mjs:456-540</code>). That
+keeps material out of an export, not out of a read. No committed case
+asserts what the model declines to remember, and no retrieval-quality
+eval or benchmark is committed. The files named <code>*bench*</code>
+time client rendering, desktop frames and a human-attention query. No
+paper is associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Freeze the always-loaded memory per Session.</strong> Read
+the standing files once, record the snapshot with the Session, and
+refresh only at compaction. Deliver mid-Session edits as a notice rather
+than a new prefix.</li>
+<li><strong>Limit standing memory in characters and truncate
+visibly.</strong> A header with the percentage used and a truncation
+note that names the true length turns an overflow into a consolidation
+task.</li>
+<li><strong>Restore as a new commit.</strong> Back up the dirty tree,
+write the old tree as a child, and move the branch with a
+compare-and-swap, so every restore can be undone.</li>
+<li><strong>Record the observer, not a guessed author.</strong>
+Attribute a change to the Host and the event that preceded it when that
+is all you know.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A write path with no admission at all.</strong> When IM and
+group messages reach the same model that writes memory, the files need
+at least a label of where a fact came from.</li>
+<li><strong>Two write tools with different commit semantics.</strong>
+One commits and one leaves a dirty tree, and the ledger only sees the
+first.</li>
+<li><strong>A decision record that cites checks the tree does not
+hold.</strong> A reader takes <em>"enforced by"</em> lines at their
+word.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a person who wants a few long-lived assistant identities
+whose memory they can open in an editor, diff and push to GitHub, and
+who already runs DSH. The memory is cheap to keep and easy to repair by
+hand, and the history is never lost. It does not suit anyone who needs
+memory to be believed selectively. Nothing distinguishes a fact a Human
+stated from one an IM stranger supplied, nothing expires, and no read is
+scoped below the Bot. Walk away too if you do not want the rest of the
+product.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether an Assignment Session's sandbox can write to the Bot's
+repository, given that the prompt forbids it and the skill provider
+exposes its skill directories.</li>
+<li>Whether the restore TLA+ model exists outside this repository.</li>
+<li>Which principal the Host bridge resolves for a
+<code>memory-restore-commit</code> run from the CLI by the steward Bot,
+and so which actor kind its ledger rows carry.</li>
+<li>Whether checkpoint refs are ever pruned; nothing in
+<code>packages/core/src/memory/</code> deletes one.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Repository and Git:
+<code>packages/core/src/memory/repository.ts</code>,
+<code>packages/core/src/memory/git.ts</code>,
+<code>packages/core/src/memory/managed-git.ts</code>,
+<code>packages/core/src/memory/jail.ts</code></li>
+<li>Observation, ledger and recovery:
+<code>packages/core/src/memory/accepted.ts</code>,
+<code>packages/core/src/memory/accepted-observation.ts</code>,
+<code>packages/core/src/memory/accepted-ledger.ts</code>,
+<code>packages/core/src/memory/accepted-turn.ts</code>,
+<code>packages/core/src/memory/accepted-human.ts</code>,
+<code>packages/core/src/memory/recovery.ts</code>,
+<code>packages/core/src/database/schema-plan.ts</code></li>
+<li>Prompt: <code>packages/core/src/memory/soul.ts</code>,
+<code>packages/core/src/memory/service.ts</code>,
+<code>packages/core/src/features/memory/prompt.ts</code>,
+<code>packages/core/src/plugin.ts</code></li>
+<li>Tools and skills:
+<code>packages/core/src/features/memory/tools.ts</code>,
+<code>packages/core/src/engines/engine-memory-tools.ts</code>,
+<code>packages/core/src/skills/memory-provider.ts</code></li>
+<li>Runtime: <code>packages/core/src/runtime/bot-runtime.ts</code>,
+<code>packages/core/src/runtime/dsh-bot-agent-adapter.ts</code>,
+<code>packages/core/src/bots/deletion.ts</code></li>
+<li>Unreached: <code>packages/core/src/memory/store.ts</code>,
+<code>packages/core/src/memory/search.ts</code></li>
+<li>Design: <code>docs/decisions/memory.md</code>,
+<code>GLOSSARY.md</code></li>
+<li>Tests: <code>packages/core/test/memory-*.test.ts</code>,
+<code>packages/core/test/memory-skill-provider.test.ts</code>,
+<code>packages/core/test/team-bot-memory.test.ts</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git</code>.</p>
+<ul>
+<li><strong>Package licence fields.</strong>
+<code>git ls-files | grep -E '^packages/[^/]+/package\.json$'</code>
+lists 15 manifests; reading each one's <code>license</code> key finds it
+absent in 13, <code>MIT</code> in <code>packages/links-cli</code> and
+<code>SEE LICENSE IN README.md</code> in
+<code>packages/vrm-companion</code>, which also shows the read can find
+one.</li>
+<li><strong>No rejected-value record.</strong>
+<code>git grep -n -i -E 'tombstone|rejected' -- packages/core/src/memory</code>
+returns nothing; the same pattern over
+<code>verification/enrollment/Enrollment.tla</code> counts 3.</li>
+<li><strong>No status in front-matter.</strong>
+<code>git grep -n -E 'status|confidence|verified' -- packages/core/src/memory/front-matter.ts</code>
+returns nothing;
+<code>git grep -n -c -E 'summary|updatedAt' -- packages/core/src/memory/front-matter.ts</code>
+counts 14.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -w -i -E 'valid_from|valid_to|validFrom|validTo|valid_at|validAt|valid_until' -- packages/core/src/memory</code>
+returns nothing;
+<code>git grep -n -w 'updatedAt' -- packages/core/src/memory/front-matter.ts</code>
+matches line 5.</li>
+<li><strong>The ledger and checkpoints are never updated or
+deleted.</strong>
+<code>git grep -n -E '(DELETE FROM|UPDATE) +memory_(accepted_commits|recovery_checkpoints)' -- packages</code>
+returns nothing;
+<code>git grep -n -E 'UPDATE +memory_repair_events' -- packages</code>
+matches
+<code>packages/core/src/memory/accepted-repair.ts:182</code>.</li>
+<li><strong>The store has no product caller.</strong>
+<code>git grep -n -E 'storeFor(Session|Agent)' -- packages apps</code>
+matches only <code>packages/core/src/memory/service.ts</code> outside
+tests, and <code>git grep -n 'searchMemoryFiles' -- packages</code>
+matches <code>search.ts</code>, <code>store.ts</code> and
+<code>packages/core/test/memory-search.test.ts</code>.</li>
+<li><strong>No restore model in TLA+.</strong>
+<code>git ls-files '*.tla'</code> lists
+<code>verification/enrollment/Enrollment.tla</code>,
+<code>verification/harvest/Harvest.tla</code>,
+<code>verification/live/Live.tla</code> and
+<code>verification/outbox/Outbox.tla</code>.</li>
+<li><strong>No secret screen on the memory write path.</strong>
+<code>git grep -n -i -E 'secret|credential|redact' -- packages/core/src/memory</code>
+returns nothing; the same pattern over
+<code>packages/core/src/engines/engine-memory-tools.ts</code> matches
+line 78, and over
+<code>packages/core/src/marketplace/share-draft.ts</code> matches the
+Share Draft detectors.</li>
+<li><strong>No per-entry visibility.</strong>
+<code>git grep -n -i -E 'visibility|owner' -- packages/core/src/memory/front-matter.ts</code>
+returns nothing; the same pattern over
+<code>packages/core/src/memory/service.ts</code> matches the
+<code>ownership</code> imports and lookups.</li>
+<li><strong>No checkpoint ref is deleted.</strong>
+<code>git grep -n -E "'-d'|update-ref -d" -- packages/core/src/memory</code>
+matches only
+<code>packages/core/src/memory/accepted-versions.ts:108</code>, a tag
+deletion.</li>
+<li><strong>No DSH memory plugin is a dependency.</strong>
+<code>git grep -l -i -E 'dsh-(engram|mneme|mnemon|auto-memory|layered-memory|superagent|continual-harness)|zzjzzb/ai-memory' -- .</code>
+lists only
+<code>docs/research/2026-09-21-awesome-dsh-ecosystem-survey.md</code>,
+where <code>dsh-mneme</code> appears 3 times.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex' -- README.md README.en.md</code>
+returns nothing, and <code>git ls-files | grep -i -c citation</code>
+counts 0.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/BotHarness/DeepSeekBot/commit/72008bde43d41093cda393e3cd2059355d3544fe"><code class="commit-id" title="72008bde43d41093cda393e3cd2059355d3544fe">72008bde…</code></a>
+— first reading, from a blobless clone of <code>main</code> 1,030
+commits after release <code>v1.7.1</code>, scoped to the memory module,
+its prompt, tools, skill provider and runtime wiring, and their tests.
+Screened first: two auto-run surfaces,
+<code>.claude/settings.json</code> hooks and a vendored skill's
+<code>plugin.json</code>, both inert unless a Claude Code session starts
+in the clone; one build-time execution point, a <code>prepare</code>
+script; 18 unpinned surfaces; eight manifests inside the seven-day
+cooldown; <code>AGENTS.md</code> and <code>CLAUDE.md</code> read as
+data. MIT, no rider. Nothing installed, built or run. Two marks:
+<code>audit_log</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

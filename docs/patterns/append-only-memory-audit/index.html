@@ -1069,6 +1069,19 @@ the set header's status and metadata in place; and the chunk index the
 agent searches sits outside the log. A client delete does not reach the
 items either, so a client's evidence that was ingested into the graph
 keeps its node text there.</p>
+<p><strong><a href="../../systems/deepseekbot/">Tobs (DeepSeekBot)</a>
+records what the Host observed and refuses to guess who wrote
+it.</strong> Its memory is a Git repository the model edits freely, and
+beside it the Host's SQLite store keeps two insert-only tables:
+<code>memory_accepted_commits</code>, one row per new HEAD with actor
+kind, actor id and the Source Event or Human edit that caused it, and
+<code>memory_recovery_checkpoints</code>, one row per changed state with
+branch, HEAD, index-tree and working-tree hashes kept alive under hidden
+refs. A turn's commit is attributed to <code>botharness-host</code>, not
+the model. Coverage is the weak side: a capture failure is a warning
+while the mutation stands, a turn records only the HEAD it ended on, the
+hidden refs sit in a repository the model's Shell can rewrite, and
+erasing a Bot leaves rows naming content that no longer exists.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

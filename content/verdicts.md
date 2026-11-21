@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 843 reports.**
+**This page covers all 844 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7752,3 +7752,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, pyproject at 0.3.0; 23,184 lines of Python in `src/praxis`, 51 commits from 11 May to 3 November 2026; 70 unittest methods driving the CLI, run in CI on Python 3.9 and 3.12, not run here; no committed eval result and no paper. Four marks: `trust_state`, `scope_enforced`, `audit_log` and `negative_eval`.
 - Study when: you want a local, inspectable document corpus with source trails and reversible graph edits that a person can audit and roll back from a shell.
 - Do not copy when: a rejected source must stop appearing in answers, several clients' data must stay apart in search, or memory has to come from conversations.
+
+### [`deepseekbot`](../systems/deepseekbot/)
+
+- Best idea: **the prompt prefix never changes within a Session.** `SOUL.md` and `MEMORY.md` are frozen together at the first prompt assembly, each within a per-Bot character limit and visibly truncated past it, refreshed only at compaction; a mid-Session edit reaches the Bot as an Inbox notice naming paths, never bodies.
+- Biggest risk: **nothing stands between a message and a memory.** The working tree is memory the moment a file lands, the model writes it from Human DMs, groups and IM alike, and no field records where a fact came from.
+- Second risk: a Claude Code or Codex engine's `memory_write` writes without committing, and the decision record cites a TLA+ restore model and a front-matter Human save path that the tree does not hold.
+- Most reusable component: the observation, ledger and recovery modules in `packages/core/src/memory/accepted-observation.ts`, `accepted-ledger.ts` and `recovery.ts`, with restore-as-a-new-commit in `accepted-human.ts`.
+- Maturity impression: MIT, release v1.7.1; memory is 12,842/600,553 lines of non-test TypeScript, in 5,570 commits from 17 September to 21 November 2026; 247 memory test cases in a 13,223-case vitest suite sharded in CI, not run here. Two marks: `audit_log` and `negative_eval`.
+- Study when: you want always-loaded memory that keeps a provider's prompt cache intact, or a Git-backed store whose history a Host records without claiming authorship.
+- Do not copy when: memory must distinguish what a person stated from what an IM message supplied, or be scoped below one agent.

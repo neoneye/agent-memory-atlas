@@ -266,6 +266,8 @@ falls under the KV-cache scope boundary in the
 
 - **[Operator Memory](../../systems/operator-memory/)** — the frozen preamble as a cross-harness contract. Its shared spec asks every adapter for a contribution *"rendered once and held immutable for the session so its prefix remains cacheable"*, and the adapters meet it differently: Claude Code memoises one render per process and shares it between `prompt.compose` and `agent.spawn`, with a test that a concurrent compose and spawn run the helper once (`packages/claude-code/test/register.test.ts:44-61`); OpenCode V2, Pi and DeepSeek cache per session or agent. Codex is the recorded exception, re-rendering at compaction and for each subagent because it cannot restore context at the head. The cost is the Nuum boundary at process scope: an edit made in a Claude Code session reaches the prompt only after a restart, and nothing caps the size of what is frozen.
 
+- **[Tobs (DeepSeekBot)](../../systems/deepseekbot/)** — the frozen pair with its delivery path for change. `SOUL.md` and `MEMORY.md` are rendered once per Session, recorded with it, and refreshed only after compaction and only if the files changed; each section is headed with its share of a per-Bot character limit and truncated past it with a note asking the Bot to consolidate. A mid-Session edit, whoever made it, becomes one `memory-change` Inbox notice listing paths and never bodies. The cost sits with Claude Code and Codex engines, whose `memory_write` leaves an uncommitted file the next notice reports.
+
 ## The same constraint, one layer down
 
 Everything above is about where a *memory system* puts its recall block. The same
