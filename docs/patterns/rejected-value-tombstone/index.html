@@ -126,8 +126,8 @@ belief.</p>
 <blockquote>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
-recurs across the corpus. 83 systems of
-837 carry the mark, and <a
+recurs across the corpus. 84 systems of
+838 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -291,8 +291,8 @@ near-miss, and the argument that the expensive half of the pattern is
 not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
-<p><strong>83 systems of
-837 in the atlas carry the mark.</strong> The
+<p><strong>84 systems of
+838 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -2055,6 +2055,21 @@ dedup cannot match it and a later session, an MCP
 <code>write_memory</code> call or the HTTP API stores it again. A
 product that must both erase and not relearn needs a keyed hash of the
 forgotten value kept apart from the content.</p>
+<p><strong><a href="../../systems/kenfold/">Kenfold</a> keeps the
+rejected row and reads it by value, from one writer.</strong>
+<code>Reject</code> and <code>forget</code> set a memory
+<code>deleted</code> and leave its generated <code>content_key</code>,
+which folds case, every Unicode space and trailing punctuation, and
+<code>SeenContent</code> returns any row in the scope with that key in
+any status; the extractor skips a candidate it finds
+(<code>internal/store/extraction.go:142-161</code>,
+<code>internal/extract/worker.go:139-147</code>). A worker test
+re-extracts a rejected codebase memory beside three new ones and counts
+it skipped. The record is the rejected row itself, so the refusal is
+exact-match only, <code>export --active</code> drops it, and the agent's
+<code>remember</code> path checks active and proposed rows and never
+deleted ones, so an agent re-asserting the rejected value stores it,
+active at once unless it is typed as a preference.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

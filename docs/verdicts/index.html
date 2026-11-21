@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 837 reports.</strong></p>
+<p><strong>This page covers all 838 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34495,6 +34495,43 @@ isolation, erasure and a lifecycle record to someone else.</li>
 <li>Do not copy when: users correct the agent often, since an updated
 fact without a stated end date never supersedes the old one and nothing
 resolves the escalation.</li>
+</ul>
+<h3 id="kenfold"><a
+href="../systems/kenfold/"><code>kenfold</code></a></h3>
+<ul>
+<li>Best idea: <strong>a rejected extraction is refused by its words,
+not its id.</strong> <code>Reject</code> and <code>forget</code> leave
+the row as <code>deleted</code> with a generated, normalised content
+key, and the extractor looks every candidate up by that key in any
+status before storing it, so a statement the owner turned down is not
+proposed again from a later session.</li>
+<li>Biggest risk: <strong>the review gate is the type the agent
+picks.</strong> <code>statusFor</code> proposes only preferences; the
+same sentence typed <code>semantic</code> is active at once, and a
+<code>remember</code> superseding an approved preference with another
+type retires it without review.</li>
+<li>Second risk: the agent's duplicate check reads active and proposed
+rows and never deleted ones, so <code>remember</code> stores a rejected
+value again; <code>forget</code> soft-deletes any id across projects;
+<code>valid_from</code> and <code>valid_to</code> are written only by
+import and read by nothing.</li>
+<li>Most reusable component: <code>SeenContent</code> with the generated
+<code>content_key</code> in <code>internal/store/extraction.go</code>
+and <code>migrations/00009_content_key_whitespace.sql</code>, and the
+quoted-evidence check in <code>internal/extract/extract.go</code>.</li>
+<li>Maturity impression: MIT, release v0.1.4; 16,060 lines of Go outside
+tests and the benchmark harness, 34 commits from 27 September to 20
+November 2026 by one author; 338 test functions with the Postgres
+integration suite in CI, not run here; the public benchmark file is a
+partial LoCoMo run without committed per-question records. Five marks:
+<code>tombstone</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>human_review</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: one person runs several coding agents on the same
+repositories and wants shared decisions, handoffs and session history,
+with extraction a person reviews.</li>
+<li>Do not copy when: several people or tenants share the server, or the
+agents writing to it are untrusted.</li>
 </ul>
         </article>
       </div>

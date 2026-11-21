@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 837 reports.**
+**This page covers all 838 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7692,3 +7692,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, release v0.1.10; about 25,400 non-test lines in the memory subsystem out of 200,134 in the repository; 856 commits from 30 May to 20 November 2026; 1,000 memory-service tests with the integration and isolation suites on pgvector in CI, not run here; the ranking benchmark uses designed embeddings and a stub reranker and says so. Five marks: `trust_state`, `bitemporal`, `scope_enforced`, `audit_log` and `negative_eval`.
 - Study when: many tenants share one memory service and you must prove isolation, erasure and a lifecycle record to someone else.
 - Do not copy when: users correct the agent often, since an updated fact without a stated end date never supersedes the old one and nothing resolves the escalation.
+
+### [`kenfold`](../systems/kenfold/)
+
+- Best idea: **a rejected extraction is refused by its words, not its id.** `Reject` and `forget` leave the row as `deleted` with a generated, normalised content key, and the extractor looks every candidate up by that key in any status before storing it, so a statement the owner turned down is not proposed again from a later session.
+- Biggest risk: **the review gate is the type the agent picks.** `statusFor` proposes only preferences; the same sentence typed `semantic` is active at once, and a `remember` superseding an approved preference with another type retires it without review.
+- Second risk: the agent's duplicate check reads active and proposed rows and never deleted ones, so `remember` stores a rejected value again; `forget` soft-deletes any id across projects; `valid_from` and `valid_to` are written only by import and read by nothing.
+- Most reusable component: `SeenContent` with the generated `content_key` in `internal/store/extraction.go` and `migrations/00009_content_key_whitespace.sql`, and the quoted-evidence check in `internal/extract/extract.go`.
+- Maturity impression: MIT, release v0.1.4; 16,060 lines of Go outside tests and the benchmark harness, 34 commits from 27 September to 20 November 2026 by one author; 338 test functions with the Postgres integration suite in CI, not run here; the public benchmark file is a partial LoCoMo run without committed per-question records. Five marks: `tombstone`, `trust_state`, `scope_enforced`, `human_review` and `negative_eval`.
+- Study when: one person runs several coding agents on the same repositories and wants shared decisions, handoffs and session history, with extraction a person reviews.
+- Do not copy when: several people or tenants share the server, or the agents writing to it are untrusted.

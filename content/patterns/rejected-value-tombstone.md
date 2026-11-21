@@ -1106,6 +1106,8 @@ a change event keyed on its id, and the same sentence can be written again.
 
 [IBEX Harness](../../systems/ibex-harness/) shows erasure and a value tombstone pulling in opposite directions. Its forget sets a terminal `tombstoned` flag a trigger refuses to clear, replaces the content with `'[forgotten]'` and the `content_hash` with a random value, deletes every child row, and bumps the source session's revision so an in-flight extraction from that session cannot write again (`services/memory/app/lifecycle.py:150-213`). That fence covers one session's queued work; the value itself is gone, so exact dedup cannot match it and a later session, an MCP `write_memory` call or the HTTP API stores it again. A product that must both erase and not relearn needs a keyed hash of the forgotten value kept apart from the content.
 
+**[Kenfold](../../systems/kenfold/) keeps the rejected row and reads it by value, from one writer.** `Reject` and `forget` set a memory `deleted` and leave its generated `content_key`, which folds case, every Unicode space and trailing punctuation, and `SeenContent` returns any row in the scope with that key in any status; the extractor skips a candidate it finds (`internal/store/extraction.go:142-161`, `internal/extract/worker.go:139-147`). A worker test re-extracts a rejected codebase memory beside three new ones and counts it skipped. The record is the rejected row itself, so the refusal is exact-match only, `export --active` drops it, and the agent's `remember` path checks active and proposed rows and never deleted ones, so an agent re-asserting the rejected value stores it, active at once unless it is typed as a preference.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

@@ -860,6 +860,21 @@ promotes, rejects or archives one. The only status change the code makes
 is <code>current</code> to <code>superseded</code> on a same-key write,
 so the field records which writer produced a row, and no
 <code>trust_state</code> mark follows from it.</p>
+<p><strong><a href="../../systems/kenfold/">Kenfold</a> withholds
+<code>proposed</code> from every read and lets the writer choose whether
+to enter it.</strong> Search, list, graph expansion and handoffs all
+filter <code>status = 'active'</code>
+(<code>internal/store/store.go:994</code>, <code>:1008</code>,
+<code>internal/store/graph.go:62</code>), and only the owner's CLI and
+loopback dashboard move a row out of <code>proposed</code>, so the
+withholding state holds. Entry is decided by <code>statusFor</code>,
+which proposes a memory only when its type is <code>preference</code>
+(<code>internal/mcpserver/handlers.go:714-721</code>), and the agent
+supplies the type: a statement about the user typed
+<code>semantic</code> is active on arrival, and a <code>remember</code>
+superseding an approved preference with another type retires it in the
+same transaction. The extractor's writes wait under the default policy
+whatever their type, which makes the agent's own path the open one.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

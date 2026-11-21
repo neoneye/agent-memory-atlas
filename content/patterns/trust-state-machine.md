@@ -454,6 +454,8 @@ evidence-derived ladder this page argues for, without the field, so no
 
 [LMC-5](../../systems/lmc-5/) has the withholding state and no transition out of it. Its consolidation and hippocampus passes write every observation with `status = 'review'`, which every SQLite recall arm excludes through one shared predicate (`src/lmc5/consolidation.py:195-207`, `src/lmc5/hippocampus.py:500-513`, `src/lmc5/store.py:263`). The patrol counts the rows waiting for review, and no command, function or SQL statement in the tree promotes, rejects or archives one. The only status change the code makes is `current` to `superseded` on a same-key write, so the field records which writer produced a row, and no `trust_state` mark follows from it.
 
+**[Kenfold](../../systems/kenfold/) withholds `proposed` from every read and lets the writer choose whether to enter it.** Search, list, graph expansion and handoffs all filter `status = 'active'` (`internal/store/store.go:994`, `:1008`, `internal/store/graph.go:62`), and only the owner's CLI and loopback dashboard move a row out of `proposed`, so the withholding state holds. Entry is decided by `statusFor`, which proposes a memory only when its type is `preference` (`internal/mcpserver/handlers.go:714-721`), and the agent supplies the type: a statement about the user typed `semantic` is active on arrival, and a `remember` superseding an approved preference with another type retires it in the same transaction. The extractor's writes wait under the default policy whatever their type, which makes the agent's own path the open one.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

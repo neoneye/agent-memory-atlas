@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Go and PostgreSQL
+memory server that AI agents share over MCP, with typed memories, owner
+review of proposals, and history-keeping supersession.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Kenfold — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Go and
+PostgreSQL memory server that AI agents share over MCP, with typed
+memories, owner review of proposals, and history-keeping supersession.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Kenfold — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Go and
+PostgreSQL memory server that AI agents share over MCP, with typed
+memories, owner review of proposals, and history-keeping supersession.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Kenfold — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Kenfold",
+      "description": "A self-hosted Go and PostgreSQL memory server that AI agents share over MCP, with typed memories, owner review of proposals, and history-keeping supersession.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One store, an owner's review queue</p>
+          <h1>Kenfold</h1>
+          <p class="document-deck">A self-hosted Go and PostgreSQL
+memory server that AI agents share over MCP, with typed memories, owner
+review of proposals, and history-keeping supersession.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jeonjw85/kenfold">
+              <span>Source</span>
+              <strong>jeonjw85/kenfold</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jeonjw85/kenfold/commit/6c030ec44dba19c7e7ead22e531dc40a76d5a61b" title="6c030ec44dba19c7e7ead22e531dc40a76d5a61b">
+              <span>Analyzed revision</span>
+              <code>6c030ec4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jeonjw85--kenfold" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>jeonjw85--kenfold</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE; the README badge agrees</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>16,060
+lines of Go outside tests in 67 files, plus 2,978 in the benchmark
+harness; 393 lines of SQL in nine migrations</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>34
+commits from 27 September to 20 November 2026, all by one author;
+release v0.1.4</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>338
+Go test functions in 87 files and 17,903 lines, 39 of them integration
+tests that need Postgres; CI runs make check against pgvector on
+Postgres 18 on every push and pull request; I ran none of
+it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Kenfold is a self-hosted memory server, written in Go over PostgreSQL
+with pgvector, that several AI clients share over MCP. Claude Code,
+Codex and OpenCode connect with one API key each, and ChatGPT and
+claude.ai through a built-in OAuth server. A memory is a typed statement
+scoped to the user or to a project identified by its normalised git
+remote. Session hooks inject context at session start and write an
+extractive session summary at the end.</p>
+<p>What is notable is the review discipline. An agent's preference, and
+by default every memory a local model extracts from a session summary,
+waits as <code>proposed</code>. No agent-facing read serves it until the
+owner approves it at the CLI or on a dashboard that answers only on
+loopback. A rejected extraction stays in the table as a deleted row, and
+the extractor looks every new candidate up by normalised content in any
+status, so the same statement is not proposed again. Replacement is
+supersession on every path, and consolidation proposes and never
+applies.</p>
+<p>What is weak is where the gate sits. Review is keyed on the type the
+agent chooses, so the same sentence typed <code>semantic</code> is
+active at once. An agent can retire an approved preference by
+superseding it with another type, or <code>forget</code> it by id from
+any project. The agent's own write path never consults the rejected
+rows. <code>valid_from</code> and <code>valid_to</code> exist with a
+range check and no product path writes them.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code>, copyright
+2026 Jeongwan Jeon; the README badge agrees and <code>go.mod</code>
+carries no licence field. No vendored code, model weights or datasets
+are committed. The benchmark harness downloads LoCoMo and LongMemEval at
+run time (<code>internal/bench/dataset.go:22-23</code>), so those
+datasets come under their own terms, and the LoCoMo URL names a branch
+rather than a commit.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one self-contained statement with a type:
+<code>semantic</code>, <code>episodic</code>, <code>project</code>,
+<code>preference</code>, <code>codebase</code> or <code>temporary</code>
+(<code>internal/memory/types.go:15-22</code>). Episodic memories are
+session summaries; temporary ones carry a TTL and hold handoffs. Each
+row records the writing agent, taken from the API key rather than the
+client's claim, and the agent session
+(<code>internal/mcpserver/handlers.go:613-628</code>).</p>
+<p>The state is <code>status</code>: <code>proposed</code>,
+<code>active</code>, <code>superseded</code> or <code>deleted</code>
+(<code>migrations/00001_init.sql:27-29</code>). Only <code>active</code>
+is served. What enters as <code>proposed</code> is decided by type and
+writer: an agent's preference always
+(<code>internal/mcpserver/handlers.go:714-721</code>), and an extracted
+memory unless the owner set <code>KENFOLD_EXTRACT_POLICY=auto</code>,
+which still proposes preferences and anything resembling an existing
+memory (<code>internal/extract/worker.go:174-177</code>). Everything
+else an agent writes is active on arrival.</p>
+<p>A belief stops being served in four ways. A replacement supersedes it
+in the same transaction, or on approval when the replacement is proposed
+(<code>internal/store/store.go:163-172</code>, <code>:295-301</code>).
+<code>forget</code> or a review rejection marks it deleted and writes
+<code>forgotten_by</code> and <code>forget_reason</code> into
+<code>attrs</code> (<code>:311-336</code>,
+<code>internal/store/extraction.go:255-276</code>). An applied
+consolidation supersedes it. A temporary memory expires. Nothing
+hard-deletes a row outside tests.</p>
+<p>The <code>trust</code> column (<code>user</code>, <code>agent</code>,
+<code>external</code>) is a label. Approval sets it to <code>user</code>
+(<code>internal/store/store.go:301</code>); no read ranks or filters on
+it, and no product path writes <code>external</code>. Code references
+add a second, softer signal: a memory whose cited symbol changed or file
+vanished keeps 60% or 5% of its score and is flagged to the agent, and
+is still served (<code>internal/retrieve/retrieve.go:98-99</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the type the agent picks decides whether a write waits for the owner; every agent read serves active rows only, and the extractor checks deleted rows before proposing</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the type the agent picks decides whether a write waits for the owner; every agent read serves active rows only, and the extractor checks deleted rows before proposing
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    AG[&quot;agent: remember&lt;br/&gt;type chosen by agent&quot;]
+    EX[&quot;extractor: model reads&lt;br/&gt;a session summary&quot;]
+    AG ~~~ EX
+  end
+  writers --&gt; SEEN{&quot;extractor only:&lt;br/&gt;same content key&lt;br/&gt;in scope, any status?&quot;}
+  SEEN --&gt;|&quot;yes&quot;| SKIP[&quot;not stored&quot;]
+  SEEN --&gt;|&quot;no, or agent&quot;| TYPE{&quot;preference, or&lt;br/&gt;extracted under&lt;br/&gt;propose policy?&quot;}
+  TYPE --&gt;|&quot;yes&quot;| PROP[&quot;proposed:&lt;br/&gt;served nowhere&quot;]
+  TYPE --&gt;|&quot;no&quot;| ACT[&quot;active:&lt;br/&gt;search, get_context&quot;]
+  PROP --&gt; OWN{&quot;owner at CLI or&lt;br/&gt;loopback dashboard&quot;}
+  OWN --&gt;|&quot;approve&quot;| ACT
+  OWN --&gt;|&quot;reject&quot;| DEL[&quot;deleted row kept&lt;br/&gt;with its content key&quot;]
+  DEL -.-&gt;|&quot;read by&quot;| SEEN
+  ACT --&gt; SUP[&quot;supersede or applied&lt;br/&gt;consolidation:&lt;br/&gt;superseded&quot;]
+  ACT --&gt; FG[&quot;forget, any agent,&lt;br/&gt;any scope: deleted&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Go binary serves MCP at <code>/mcp</code>, a REST API at
+<code>/api/v1</code> for code-reference sync, the dashboard at
+<code>/dashboard/</code>, health probes and, with
+<code>KENFOLD_PUBLIC_URL</code> set, an OAuth 2.1 authorization server.
+The same binary is the CLI, the stdio MCP server and the session hook.
+Postgres 18 with pgvector and <code>pg_trgm</code> holds everything;
+migrations are embedded and run by goose.</p>
+<p>The default <code>make up</code> brings up Postgres and Kenfold with
+full-text search only. <code>make up-embed</code> adds Ollama with
+<code>bge-m3</code> and a llama.cpp reranker, and
+<code>make up-extract</code> adds <code>qwen3.5:4b</code> for
+classification, extraction and consolidation, all on CPU in Docker. Any
+OpenAI-compatible embeddings or chat endpoint can replace them. No
+hosted provider or provider key is needed to store anything.</p>
+<p>Inside <code>serve</code>, extraction checks for settled session
+summaries every minute and consolidation runs every 15 minutes when a
+chat model is configured, and an embedding backfill runs when an
+embedder is (<code>cmd/kenfold/serve.go:47-50</code>,
+<code>:278</code>). The hook keeps a local log under
+<code>~/.local/state/kenfold</code> and spools a summary it could not
+send, bound to the server URL and credential
+(<code>internal/hook/hook.go:312-318</code>).</p>
+<p>Every key and every approved OAuth client can read all memory; the
+README says so (one owner). Ports publish on <code>127.0.0.1</code>, and
+remote access needs a tunnel or TLS proxy. The dashboard refuses proxied
+requests unless <code>KENFOLD_DASHBOARD=remote</code>
+(<code>internal/dashboard/dashboard.go:160</code>). The store is a
+single SQL table with readable rows, repairable by hand, and
+<code>kenfold export</code> writes JSON Lines with history.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Remember.</strong> <code>handlers.remember</code> trims,
+length-checks and secret-scans the content, resolves the scope from the
+project argument, checks a supersedes target is active and in the same
+scope, otherwise returns an existing active or proposed duplicate,
+classifies an untyped memory with the chat model or a scope default, and
+inserts with <code>statusFor(type)</code>
+(<code>internal/mcpserver/handlers.go:98-232</code>).
+<code>CreateIfAbsent</code> takes an advisory lock on scope and content
+key and re-checks under it
+(<code>internal/store/store.go:140-162</code>).</li>
+<li><strong>Session capture.</strong> The hook records prompts, final
+responses and the compaction summary locally, builds an extractive
+summary at session end (<code>internal/hook/format.go:81</code>), and
+sends it as an episodic <code>remember</code>; a later summary of the
+same session supersedes the earlier
+(<code>internal/mcpserver/handlers.go:173-181</code>).</li>
+<li><strong>Extract.</strong> <code>Worker.RunOnce</code> claims the
+oldest settled summary with a lease, asks the model for categorised
+items, and <code>validate</code> drops discard categories, low
+confidence, secrets, evidence not found in the session and evidence
+inside quoted text (<code>internal/extract/extract.go:190-246</code>).
+<code>Worker.store</code> skips a candidate whose content key exists in
+scope in any status, records similar memories, and stores the rest
+proposed (<code>internal/extract/worker.go:132-207</code>).</li>
+<li><strong>Recall and context.</strong> <code>Retriever.Search</code>
+runs the store's fused search, adds graph neighbours when a reranker is
+configured, reranks the top 15, then multiplies by staleness and recency
+(<code>internal/retrieve/retrieve.go:132-210</code>).
+<code>getContext</code> packs preferences, the pending handoff, three
+recent sessions, project rules with stale ones last, and task matches
+into a budget of 2,000 estimated tokens by default
+(<code>internal/mcpserver/handlers.go:420-516</code>).</li>
+<li><strong>Review.</strong> <code>Approve</code>,
+<code>ApproveReplacing</code> and <code>Reject</code>
+(<code>internal/store/store.go:273-307</code>,
+<code>internal/store/extraction.go:203-276</code>), called from
+<code>kenfold memory approve|reject|review</code>
+(<code>cmd/kenfold/review.go</code>) and the dashboard's review routes
+(<code>internal/dashboard/dashboard.go:115-118</code>).</li>
+<li><strong>Consolidate.</strong> <code>ConsolidationPairs</code> finds
+similar active pairs not judged before; <code>Judge</code> asks twice
+with the pair swapped and proposes only when both agree
+(<code>internal/consolidate/consolidate.go:72-98</code>);
+<code>ApplyProposal</code> retires members and links them with
+<code>replaces</code> edges
+(<code>internal/store/consolidation.go:366-428</code>).</li>
+<li><strong>Code references.</strong> File and symbol mentions are
+stored at write time; the hook or <code>kenfold refs sync</code> hashes
+them at <code>HEAD</code> with tree-sitter and posts states to
+<code>/api/v1/refs/check</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memory</code> table carries <code>type</code>,
+<code>scope</code>, <code>content</code>,
+<code>embedding vector(1024)</code> with <code>embedding_model</code>,
+<code>attrs jsonb</code>, provenance (<code>source_agent</code>,
+<code>source_session</code>, <code>evidence_uri</code>,
+<code>trust</code>, <code>confidence</code>), <code>status</code>,
+<code>supersedes</code>, <code>valid_from</code>, <code>valid_to</code>,
+<code>expires_at</code>, a generated <code>content_tsv</code> and
+timestamps (<code>migrations/00001_init.sql:7-45</code>). A generated
+<code>content_key</code> lowercases, collapses every Unicode space and
+strips trailing <code>.</code>, <code>!</code> or <code>。</code>; the
+Go <code>ContentKey</code> mirrors it
+(<code>migrations/00009_content_key_whitespace.sql:14-18</code>,
+<code>internal/store/store.go:223-236</code>).</p>
+<p>Scope is <code>user</code> or
+<code>project:&lt;host/owner/repo&gt;</code>, normalised from any remote
+form and refusing local paths
+(<code>internal/memory/scope.go:21-39</code>). User-scope memories join
+every project's reads. <code>memory_edge</code> holds
+<code>derived_from</code> links from an extracted memory to its summary
+and <code>replaces</code> links from consolidation.
+<code>memory_ref</code> holds each code reference's anchor hash and
+commit and a state of <code>pending</code>, <code>current</code>,
+<code>changed</code>, <code>missing</code> or <code>unresolved</code>
+(<code>migrations/00005_code_refs.sql:15-35</code>).</p>
+<p><code>valid_from</code> and <code>valid_to</code> are commented as
+world validity and range-checked
+(<code>migrations/00001_init.sql:31-42</code>). The insert in
+<code>Create</code> does not name them
+(<code>internal/store/store.go:173-180</code>), and their only writer is
+<code>kenfold import</code>, which copies them from an archive
+(<code>internal/store/archive.go:312-317</code>). No read filters on
+them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The first stage is one SQL statement. Full-text ranks by
+<code>ts_rank</code> over the OR of the query's lexemes in the
+<code>simple</code> configuration, the vector arm ranks by cosine
+distance among rows embedded by the configured model and cut at 0.55,
+and the two are fused by reciprocal rank with k = 60 and normalised so a
+memory first in both scores 1.0
+(<code>internal/store/store.go:985-1027</code>). Both arms filter
+<code>status = 'active'</code>, unexpired, scope in
+<code>{user, scope}</code> and type.</p>
+<p>Graph expansion adds active neighbours one edge from the top eight
+seeds, and siblings extracted from the same summary
+(<code>internal/store/graph.go:38-76</code>). It applies only when the
+reranker scored the pool; without it the neighbours are dropped
+(<code>internal/retrieve/retrieve.go:179-186</code>). A query matching a
+temporal regex in English or Korean decays every memory with a seven-day
+half-life; without one, session summaries lose up to 40% of their score
+over a 30-day half-life when reranked (<code>:345-363</code>).</p>
+<p>The README's recall@5 of 0.96 with the reranker is measured on a
+110-memory, 67-query internal corpus whose holdout was written by a
+second author (<code>internal/retrieve/testdata/RESULTS.md</code>).
+Over-recall is the expected failure: a stale memory is ranked down and
+still returned, and nothing deduplicates a paraphrase at write time
+beyond a <code>similar</code> hint to the agent.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>remember</code> is synchronous. It may block on an embedding
+call bounded at 10 seconds and, for an untyped memory, on classification
+bounded at 15 seconds, about 6 seconds on CPU per the README; on timeout
+it falls back to full-text and a scope default type
+(<code>internal/mcpserver/handlers.go:76-94</code>). An active memory is
+searchable when the call returns.</p>
+<p>The session hook never blocks the agent; a summary sent at session
+end is searchable at once. Extraction waits at least two minutes for a
+summary to settle and takes 10–30 seconds of CPU per session in the
+background, and its output waits for review under the default policy.
+Consolidation judges at most four pairs and writes at most one digest
+per run (<code>internal/consolidate/worker.go:21</code>,
+<code>:64</code>); nothing changes until the owner applies. No pass
+rewrites the store.</p>
+<p>A digest is checked mechanically: every file name, identifier and
+number in it must occur in the sessions it replaces
+(<code>internal/consolidate/consolidate.go:203-207</code>). An applied
+digest is stored with <code>trust = 'user'</code> and dated like the
+last session it covers
+(<code>internal/store/consolidation.go:407-411</code>).</p>
+<p>Secrets are refused on every write path by pattern;
+<code>kenfold scan --redact</code> rewrites rows stored before the
+filter in any status and clears their embedding
+(<code>internal/store/store.go:705-734</code>,
+<code>cmd/kenfold/scan.go:20-22</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Six MCP tools: <code>get_context</code>, <code>remember</code>,
+<code>recall</code>, <code>handoff</code>, <code>resume</code> and
+<code>forget</code> (<code>internal/mcpserver/server.go:189-229</code>).
+A read-only OAuth grant is refused every write tool
+(<code>internal/mcpserver/handlers.go:630-642</code>). No tool approves,
+rejects or applies anything. The agent-facing view carries type, scope,
+source agent, trust, code-reference states and a <code>stale</code>
+flag, and no status, since only active rows reach it.</p>
+<p>The hooks make memory automatic for Claude Code and Codex. At session
+start the hook calls <code>get_context</code> for the repository's
+remote and frames the result as <em>"reference information, not
+instructions"</em> (<code>internal/hook/format.go:175</code>). Sessions
+outside a git repository are not recorded.</p>
+<p><code>handoff</code> keeps one active note per project, superseding
+the previous one under an advisory lock, and <code>resume</code> records
+the first agent to pick it up; a resumed handoff leaves
+<code>get_context</code> (<code>internal/store/store.go:353-429</code>).
+Adapting the server to another MCP client is configuration; the hook
+supports two clients.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-the-review-gate-covers">What the review gate covers</h3>
+<p>The gate is a type, and the agent picks the type.
+<code>statusFor</code> proposes a preference and makes every other type
+active (<code>internal/mcpserver/handlers.go:714-721</code>). A
+statement about the user stored as <code>semantic</code> is served by
+<code>recall</code> at once, with <code>trust = agent</code>. A
+<code>remember</code> that supersedes an approved preference with
+<code>type: semantic</code> passes the scope and status checks at
+<code>:130-156</code> and retires it in the same transaction, without
+review. The extractor's path is stricter: under the default policy
+everything it writes waits.</p>
+<h3 id="what-a-rejection-stops">What a rejection stops</h3>
+<p><code>Reject</code> and <code>forget</code> leave the row with its
+content key. <code>SeenContent</code> finds a row in scope with the same
+key in any status, and the extractor skips such a candidate
+(<code>internal/store/extraction.go:142-161</code>,
+<code>internal/extract/worker.go:139-147</code>). Three paths walk past
+it:</p>
+<ul>
+<li><strong>The agent's own write.</strong> <code>FindDuplicate</code>
+matches only active and proposed rows
+(<code>internal/store/store.go:256</code>), so <code>remember</code>
+stores a rejected value again, active unless it is a preference.</li>
+<li><strong>A paraphrase.</strong> The key folds case, spacing and
+trailing punctuation only; the similarity hints that catch
+near-duplicates read active and proposed rows.</li>
+<li><strong>Migration with <code>--active</code>.</strong> That export
+keeps active and proposed rows and drops deleted ones
+(<code>cmd/kenfold/archive.go:48-50</code>).</li>
+</ul>
+<h3 id="scope">Scope</h3>
+<p>Every agent read carries the scope predicate. It is a convenience for
+the caller, not a boundary against one: the project argument picks the
+scope, every key reads all memory, and <code>forget</code> soft-deletes
+any id with no scope argument
+(<code>internal/mcpserver/handlers.go:278-298</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code></strong> — awarded on the deleted row
+read by content key in the extractor. The refusal reaches extraction and
+not the agent's write path.</li>
+<li><strong><code>trust_state</code></strong> — awarded on
+<code>status</code>. <code>proposed</code> is withheld from every agent
+read; <code>superseded</code> and <code>deleted</code> are history.</li>
+<li><strong><code>scope_enforced</code></strong> — awarded on the scope
+predicate in search, list, graph expansion and handoffs.</li>
+<li><strong><code>human_review</code></strong> — awarded on the proposed
+queue. Only the CLI and the owner-password dashboard approve, and no MCP
+tool or REST route reaches <code>Approve</code>. The type-keyed gate is
+the gap.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>bitemporal</code></strong> — withheld.
+<code>valid_from</code> and <code>valid_to</code> have no product writer
+and no reader; ADR-0001's <em>"facts carry validity time"</em> is a
+column.</li>
+<li><strong><code>audit_log</code></strong> — withheld. Status changes
+are in-place updates, approval records no actor, and the forget actor
+and reason overwrite keys in <code>attrs</code>. The consolidation
+table's <code>decided_by</code> and <code>decided_at</code> live on a
+mutable proposal row. Supersedes pointers and <code>replaces</code>
+edges keep lineage as state.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 338 test functions; 39 integration tests skip without
+<code>KENFOLD_TEST_DATABASE_URL</code>. CI sets it against
+<code>pgvector/pgvector:0.8.6-pg18</code> and runs
+<code>make check</code>, which is
+<code>go test -race -count=1 -p 1 ./...</code> plus vet, build and
+<code>govulncheck</code> (<code>.github/workflows/ci.yaml:19-41</code>,
+<code>Makefile:31-34</code>). I ran none of it.</p>
+<p><code>negative_eval</code> rests on two populated cases:</p>
+<ul>
+<li><code>internal/store/store_integration_test.go:344-375</code> stores
+a project match, a user-wide match, another project's match and an
+expired match for "docker", and asserts the first two are present and
+the last two absent.</li>
+<li><code>cmd/kenfold/e2e_integration_test.go:296-301</code> supersedes
+a decision through MCP and asserts recall returns the new memory and not
+the old.</li>
+</ul>
+<p>The preference check at <code>:313-319</code> asserts an unapproved
+preference is absent from a <code>get_context</code> result that holds
+no other preference, so on its own it would pass on an empty list;
+approval at <code>:320-326</code> is a separate call. The rejected-value
+skip is a write-decision test: a rejected codebase memory is
+re-extracted beside three new candidates and counted skipped
+(<code>internal/extract/worker_integration_test.go:67-72</code>,
+<code>:88-89</code>).</p>
+<p>The model evals need a chat or embedding endpoint and skip in CI.
+Committed results: extraction 11 of 11 dev and 4 of 5 holdout with no
+forbidden extraction; consolidation 12 of 12 pairs with no false retire;
+retrieval as in section 6. Each RESULTS file calls its set small and
+synthetic. The public benchmark file reports a partial raw-LoCoMo run,
+526 judge-correct of the first 1,402 of 1,540 questions (37.52%),
+stopped on unconfirmed API usage, with extracted-LoCoMo and LongMemEval
+unscored (<code>internal/bench/testdata/RESULTS.md</code>). The
+per-question records are not committed, so the table cannot be
+recomputed from the tree. No paper is associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep the rejected row and look it up by value.</strong> A
+generated, normalised content key on the memory table turns every
+deleted row into a refusal the extractor can check with one indexed
+query.</li>
+<li><strong>Ground extraction in a quote, then fence the quote.</strong>
+Require evidence that occurs in the session and reject evidence inside
+quoted spans; the committed eval shows the model proposed injected
+instructions and this check stopped them.</li>
+<li><strong>Ask a pairwise judge twice, swapped.</strong> Propose a
+retirement only when both orders agree on the verdict and the
+survivor.</li>
+<li><strong>Bind identity to the credential.</strong> Record
+<code>source_agent</code> from the key, and fall back to a client's
+self-reported name only when authentication is off.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A review gate keyed on a field the writer chooses.</strong>
+Gate on the writer and the content, or classify on the server, or the
+agent routes around review by picking a type.</li>
+<li><strong>A refusal only one writer reads.</strong> If the agent's
+write path skips the rejected rows, the tombstone stops the extractor
+and not the agent.</li>
+<li><strong>A destructive tool without the read path's scope.</strong>
+<code>forget</code> should carry the same predicate as
+<code>recall</code>.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits one person who runs several coding agents against the same
+repositories and wants them to share decisions and session history on a
+machine they control, with a model on CPU. It assumes Docker, Postgres
+and an owner who reads a review queue. Walk away if several people or
+tenants share a server, since every key reads everything, or if the
+agents are untrusted, since the review gate is advisory for anything an
+agent types as other than a preference.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>remember</code> is meant to accept a
+<code>supersedes</code> target of a different type, which lets an agent
+retire an approved preference.</li>
+<li>Whether the agent's duplicate check should also consult deleted
+rows.</li>
+<li>What the complete LoCoMo and LongMemEval runs show, and whether the
+per-question records behind the partial table will be published.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>migrations/00001_init.sql</code>,
+<code>migrations/00003_dedupe_similarity.sql</code>,
+<code>migrations/00004_extraction.sql</code>,
+<code>migrations/00005_code_refs.sql</code>,
+<code>migrations/00007_consolidation.sql</code>,
+<code>migrations/00009_content_key_whitespace.sql</code></li>
+<li>Domain: <code>internal/memory/types.go</code>,
+<code>internal/memory/scope.go</code></li>
+<li>Store: <code>internal/store/store.go</code>,
+<code>internal/store/extraction.go</code>,
+<code>internal/store/consolidation.go</code>,
+<code>internal/store/graph.go</code>,
+<code>internal/store/archive.go</code></li>
+<li>Retrieval: <code>internal/retrieve/retrieve.go</code>,
+<code>internal/rerank/rerank.go</code></li>
+<li>Write and background: <code>internal/extract/extract.go</code>,
+<code>internal/extract/worker.go</code>,
+<code>internal/consolidate/consolidate.go</code>,
+<code>internal/consolidate/worker.go</code></li>
+<li>Agent surface: <code>internal/mcpserver/server.go</code>,
+<code>internal/mcpserver/handlers.go</code>,
+<code>internal/hook/hook.go</code>,
+<code>internal/hook/format.go</code></li>
+<li>Review: <code>cmd/kenfold/review.go</code>,
+<code>internal/dashboard/dashboard.go</code>,
+<code>internal/dashboard/views.go</code></li>
+<li>Tests: <code>internal/store/store_integration_test.go</code>,
+<code>cmd/kenfold/e2e_integration_test.go</code>,
+<code>internal/extract/worker_integration_test.go</code>,
+<code>internal/store/extraction_integration_test.go</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No review verb on the MCP or REST surface.</strong>
+<code>git grep -n -E 'Approve|Reject|ApplyProposal' -- internal/mcpserver internal/restapi ':!*_test.go'</code>
+returns nothing;
+<code>git grep -n -E 'store\.(Approve|Reject)\(' -- cmd/kenfold/review.go</code>
+matches lines 49, 88 and 177.</li>
+<li><strong>Only the extractor reads deleted rows by content.</strong>
+<code>git grep -n -E 'SeenContent\(' -- ':!*_test.go'</code> matches the
+definition at <code>internal/store/extraction.go:146</code> and one
+caller, <code>internal/extract/worker.go:139</code>.</li>
+<li><strong>Validity time has no product writer or reader.</strong>
+<code>git grep -n -E 'valid_(from|to)' -- 'internal/*.go' 'cmd/*.go' ':!*_test.go'</code>
+matches the column list at <code>internal/store/store.go:972</code>, the
+archive struct and import insert in
+<code>internal/store/archive.go</code>, and the import check at
+<code>cmd/kenfold/archive.go:282</code>;
+<code>git grep -n -E 'INSERT INTO memory' -- ':!*_test.go'</code> lists
+<code>internal/store/store.go:174</code> and <code>:378</code> and
+<code>internal/store/consolidation.go:408</code>, none naming either
+column, beside the import insert at
+<code>internal/store/archive.go:312</code>.</li>
+<li><strong>No mutation log table.</strong>
+<code>git grep -n -i -E 'audit|_event|journal|_log|history' -- migrations</code>
+matches only a comment at
+<code>migrations/00007_consolidation.sql:7</code>;
+<code>git grep -c -i 'superseded' -- migrations/00001_init.sql</code>
+counts 1.</li>
+<li><strong>No hard delete of a memory outside tests.</strong>
+<code>git grep -n -E 'DELETE FROM memory'</code> matches only
+<code>_test.go</code> files.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation\.cff|doi\.org'</code>
+returns nothing; <code>git grep -c -i 'locomo' -- README.md</code>
+counts 5.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/jeonjw85/kenfold/commit/6c030ec44dba19c7e7ead22e531dc40a76d5a61b"><code class="commit-id" title="6c030ec44dba19c7e7ead22e531dc40a76d5a61b">6c030ec4…</code></a>
+— first reading, from a full clone of <code>main</code> at release
+<code>v0.1.4</code>, covering the schema, store, MCP handlers,
+retrieval, extraction, consolidation, review CLI and dashboard routes,
+the session hook and their tests; the OAuth server and benchmark harness
+were read only where they touch memory. Screened first: one auto-run
+surface, <code>server.json</code>, an MCP registry manifest declaring a
+start command; one build-time execution point, the Makefile;
+<code>go.sum</code> present, nothing inside the cooldown. MIT, no rider.
+Nothing installed, built or run. Five marks: <code>tombstone</code>,
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>human_review</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
