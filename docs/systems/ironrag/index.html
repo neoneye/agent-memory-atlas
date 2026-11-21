@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Rust document search
+and grounded-answer service whose libraries agents read, write, revise
+and delete over MCP.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="IronRAG — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Rust document
+search and grounded-answer service whose libraries agents read, write,
+revise and delete over MCP.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="IronRAG — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Rust
+document search and grounded-answer service whose libraries agents read,
+write, revise and delete over MCP.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>IronRAG — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "IronRAG",
+      "description": "A self-hosted Rust document search and grounded-answer service whose libraries agents read, write, revise and delete over MCP.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Document memory agents write over MCP</p>
+          <h1>IronRAG</h1>
+          <p class="document-deck">A self-hosted Rust document search
+and grounded-answer service whose libraries agents read, write, revise
+and delete over MCP.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mlimarenko/IronRAG">
+              <span>Source</span>
+              <strong>mlimarenko/IronRAG</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mlimarenko/IronRAG/commit/e10997a4e45e529a5789acf23e606ccd703a3532" title="e10997a4e45e529a5789acf23e606ccd703a3532">
+              <span>Analyzed revision</span>
+              <code>e10997a4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mlimarenko--IronRAG" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mlimarenko--IronRAG</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE, both Cargo manifests and the connectors' pyproject, which
+agree; bundled fonts are OFL-1.1 and the Wikipedia benchmark corpus is
+CC BY-SA 4.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>442,755
+lines of Rust in apps/api/src across 1,191 files and 97,089 in
+apps/api/tests; 86,574 lines of TypeScript in apps/web/src; 41,334 of
+Python in connectors/</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>60
+commits from 29 March to 13 November 2026, each a squashed release
+export (0.0.1 to 0.6.3) of a private repository, all by the
+licensor</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>4,569
+Rust test functions in apps/api/src and crates/, and 672 in
+apps/api/tests, 630 marked ignored unless PostgreSQL and Redis are up;
+the Makefile runs those with --ignored and no workflow runs any of them;
+I ran none of it</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>IronRAG is a self-hosted document search and grounded-answer service
+in Rust. An Axum API and workers over PostgreSQL with pgvector, Redis
+and a React UI ingest documents into libraries, build chunks,
+embeddings, technical facts and a typed entity graph, and answer with
+citations. For an agent, memory is a library. An MCP client holding a
+write grant creates documents, appends to or replaces one while keeping
+its id, and deletes it. Every client reads back through
+<code>search_documents</code>, <code>read_document</code> and
+<code>grounded_answer</code>, and the server names itself
+<code>ironrag-mcp-memory</code>
+(<code>apps/api/src/interfaces/http/mcp.rs:90</code>).</p>
+<p>What is notable is how a correction lands. A replacement is a new
+revision, and every search statement joins to the document's current
+readable revision and <code>document_state = 'active'</code>, so a
+superseded or deleted text leaves search, read and answer context
+together. Retrieval filters by <code>library_id</code> in every
+statement, with the library set drawn from token grants. Agent writes
+sit on a separate diagnostics MCP mount that the built-in assistant
+never receives.</p>
+<p>What is weak is everything above the document. Nothing records what
+an agent concluded, believed or rejected: a document is
+<code>active</code> or <code>deleted</code>, and a deletion releases its
+external key so the same source can come straight back. The audit of
+agent writes is appended after admission and dropped on failure, and the
+integration suite that proves the read paths runs only by hand.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code>,
+<code>Cargo.toml</code>, <code>apps/api/Cargo.toml</code> and
+<code>connectors/pyproject.toml</code>, which agree. The Wikipedia text
+vendored as a benchmark corpus is CC BY-SA 4.0
+(<code>apps/api/benchmarks/semantic_rerank/corpus.json:7</code>), so a
+copy of that corpus carries share-alike. The public repository is a
+release export of a private one (<code>.public-release.json</code> names
+a source commit and a pipeline), so the history behind each release is
+not inspectable.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The unit is a <strong>document in a library</strong>. It has a stable
+id, an external key unique among active documents, and numbered
+revisions. A revision is admitted, processed by a worker, and published
+as the document's readable revision; only then does it appear anywhere a
+reader looks. Knowledge built from it (chunks, vectors, facts, graph
+evidence) is keyed by revision, so derived state follows the published
+revision rather than the latest write.</p>
+<p>There is no belief layer. A document is never a candidate, never
+verified and never disputed: <code>content_document_state</code> has two
+values, <code>active</code> and <code>deleted</code>
+(<code>apps/api/migrations/0001_init.sql:300-303</code>). What an answer
+claims is checked per execution by a semantic verifier whose report is
+stored with that execution, and nothing about it flows back to the
+stored text.</p>
+<p>A text stops being served in four ways:</p>
+<ul>
+<li><strong>Replace</strong> publishes a new revision under the same id,
+and the old one drops out of every read path.</li>
+<li><strong>Append</strong> adds text to a named base revision,
+producing a new revision.</li>
+<li><strong>A visibility intent</strong> withdraws the current revision
+from every read the moment it is accepted, before its bound replacement
+has been processed.</li>
+<li><strong>Delete</strong> sets <code>document_state = 'deleted'</code>
+and <code>deleted_at</code>, cancels jobs, and frees the external key
+for reuse.</li>
+</ul>
+<p>Agent-written and human-written documents are the same object. The
+append tool's own schema calls it <em>"Good for small incremental
+notes"</em>
+(<code>apps/api/src/interfaces/http/mcp/tools/documents.rs:213</code>),
+which is the closest the tree comes to a note an agent keeps for
+itself.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every writer reaches the same revision pipeline; reads see only the current readable revision of an active document, and a deletion frees the key for the same source to return</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every writer reaches the same revision pipeline; reads see only the current readable revision of an active document, and a deletion frees the key for the same source to return
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    MCPW[&quot;MCP client on the&lt;br/&gt;diagnostics mount&quot;]
+    UI[&quot;UI, REST or&lt;br/&gt;a connector&quot;]
+    MCPW ~~~ UI
+  end
+  writers --&gt; ADM[&quot;mutation admitted:&lt;br/&gt;receipt returned&quot;]
+  ADM --&gt; AUD[&quot;audit_event row&lt;br/&gt;for MCP writes only&quot;]
+  ADM --&gt; ING[&quot;worker: parse, chunk,&lt;br/&gt;event time, embed,&lt;br/&gt;extract graph&quot;]
+  ING --&gt; PUB[&quot;revision published&lt;br/&gt;as readable head&quot;]
+  PUB --&gt; READ[&quot;reads: library_id,&lt;br/&gt;active document,&lt;br/&gt;current revision&quot;]
+  READ --&gt; REP[&quot;replace or append:&lt;br/&gt;new revision&quot;]
+  REP --&gt; ING
+  PUB --&gt; VIS[&quot;visibility intent:&lt;br/&gt;current revision&lt;br/&gt;denied at once&quot;]
+  VIS --&gt; REP
+  PUB --&gt; DEL[&quot;delete: state deleted,&lt;br/&gt;external key freed&quot;]
+  DEL --&gt; BACK[&quot;same key ingested&lt;br/&gt;again: new document&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The deployment is a Docker Compose stack or a Helm chart: PostgreSQL
+with pgvector, Redis, a startup job, the backend, a worker and the
+frontend (<code>docker-compose.yml:288</code>, <code>:334</code>,
+<code>:385</code>, <code>:416</code>, <code>:458</code>,
+<code>:498</code>). PostgreSQL holds content, the knowledge plane, the
+runtime graph, IAM, billing and audit in one schema of 9,345 lines
+(<code>apps/api/migrations/0001_init.sql</code>). Vectors live in
+per-dimension shard tables, because the embedding dimension is a
+property of each library's binding. Source bytes go to a filesystem
+volume or S3
+(<code>apps/api/src/services/content/storage.rs:31-34</code>).</p>
+<p>Nothing works without a model. Ingest needs bindings for text
+extraction, graph extraction and chunk embedding, and answers need query
+compilation, reranking and an answer model; the README lists eight
+binding purposes across OpenAI-compatible providers and Ollama. The
+README also says the API and workers refuse to start without a
+credential master key, which encrypts stored provider credentials.</p>
+<p>The MCP server is Streamable HTTP on <code>/v1/mcp</code> and
+<code>/v1/mcp/diagnostics</code>, with session state in Redis so a
+termination reaches every API replica. The registry holds 35 tools: 15
+on both mounts and 20 only on diagnostics, including every document
+mutation
+(<code>apps/api/src/interfaces/http/mcp/tools.rs:248-467</code>). The
+README says 32.</p>
+<p>Running it means a PostgreSQL with the extensions, Redis, provider
+keys and an ingest queue to watch. The store is inspectable by SQL, and
+the README describes a streaming <code>tar.zst</code> backup and
+restore, but it is not repairable by hand in any practical sense.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Agent write.</strong> <code>create_documents</code>,
+<code>create_document_revision</code> and <code>delete_document</code>
+dispatch from
+<code>apps/api/src/interfaces/http/mcp/tools/documents.rs:586-727</code>
+into <code>services::mcp::mutations</code> and
+<code>management::delete_document</code>
+(<code>apps/api/src/services/mcp/access/documents/management.rs:114-160</code>).
+Each authorizes <code>POLICY_DOCUMENTS_WRITE</code> on the document and
+admits a mutation with <code>request_surface: "mcp"</code>.</li>
+<li><strong>Append.</strong> Requires <code>baseRevisionId</code> and
+non-empty text, rejects replacement fields, and hashes base and text
+into the idempotency key
+(<code>apps/api/src/services/mcp/mutations.rs:141-166</code>).</li>
+<li><strong>Ingest.</strong> The worker prepares chunks and, for each,
+extracts event-time bounds from its text before insert
+(<code>apps/api/src/services/content/service/revision/preparation.rs:319-349</code>).</li>
+<li><strong>Delete.</strong> <code>persist_document_deletion</code>
+takes the library lock, cancels the document's jobs, sets the state,
+rewrites the head with no active revision, enqueues the
+<code>document.deleted</code> webhook and materializes the knowledge
+projection in one transaction
+(<code>apps/api/src/services/content/service/document/deletion.rs:143-298</code>).
+Technical-fact and graph convergence run after commit, and a failure
+there is logged (<code>:98-141</code>).</li>
+<li><strong>Search.</strong> <code>resolve_search_libraries</code>
+authorizes each named library or filters the visible ones by grant
+(<code>apps/api/src/services/mcp/access/documents/resolution.rs:3-35</code>);
+lexical and vector statements filter <code>library_id</code>, active
+state and current revision
+(<code>apps/api/src/infra/postgres/pg_search_store/lexical.rs:82</code>,
+<code>:151-152</code>,
+<code>apps/api/src/infra/postgres/pg_search_store/vector_support.rs:45-63</code>).</li>
+<li><strong>Answer.</strong> The built-in assistant is an agent loop
+over the answer surface only
+(<code>apps/api/src/services/query/agent_loop/state_machine.rs:14</code>).
+<code>grounded_answer</code> compiles the question to a typed IR,
+retrieves with the IR's date range on every chunk lane, and filters the
+assembled bundle again
+(<code>apps/api/src/services/query/execution/retrieve/retrieval_execution.rs:47-51</code>,
+<code>apps/api/src/services/query/execution/answer_pipeline/preflight/mod.rs:113-155</code>).</li>
+<li><strong>Audit.</strong> <code>record_mcp_audit</code> appends
+through the audit service and logs a failure
+(<code>apps/api/src/interfaces/http/mcp/audit.rs:20-47</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>content_document</code> carries workspace, library, external
+key, state, <code>created_by_principal_id</code>,
+<code>created_at</code>, <code>deleted_at</code>, a parent link and a
+revision sequence
+(<code>apps/api/migrations/0001_init.sql:2437-2453</code>).
+<code>content_revision</code> carries the revision number, parent
+revision, source kind (<code>upload</code>, <code>append</code>,
+<code>replace</code>, <code>edit</code>, <code>connector_sync</code> and
+others), checksum, storage key, creator and <code>created_at</code>
+(<code>:2526-2547</code>). <code>content_document_head</code> points at
+the active and readable revisions and the latest mutation
+(<code>:2461-2475</code>). <code>content_mutation</code> records each
+admitted operation with the requester and a state that moves from
+<code>accepted</code> to a terminal value (<code>:2481-2496</code>).</p>
+<p><code>content_chunk</code> carries <code>occurred_at</code> and
+<code>occurred_until</code>, with a check that the end is not before the
+start (<code>:2425-2428</code>). The knowledge plane mirrors documents,
+revisions and chunks with its own state columns, and holds entities,
+relations, evidence and candidates keyed by revision. Entities carry a
+float <code>confidence</code> and an <code>entity_state</code> that
+search filters to <code>active</code>.</p>
+<p>Scope is workspace and library on every row, enforced through
+<code>iam_grant</code> rows naming a principal, a resource kind and id,
+a permission and an optional expiry (<code>:2986-2995</code>). A token
+can be granted a single document, which lets it read that document and
+not search its library.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>search_documents</code> runs a metadata lane, a
+structured-block lane, lexical chunk search over query variants and
+vector chunk search per authorized library, and revalidates its hits
+against each document's current revision; the suite names the case
+<code>search_revalidates_primary_hits_after_all_later_library_awaits</code>.
+<code>list_documents</code> fails with a retry when a source changed
+during the call
+(<code>apps/api/src/services/mcp/access/documents/management.rs:60-76</code>).</p>
+<p><code>grounded_answer</code> is the heavier path. An LLM compiles the
+question into an IR with acts, focus and temporal constraints; lexical,
+vector, graph and technical-fact lanes run; a reranker orders the
+bundle; and a verifier checks the answer against the evidence it was
+given. When the IR resolves a date range, every chunk lane binds it to
+<code>occurred_at</code>, and the bundle is filtered again after
+source-context augmentation. The comment there records why: image chunks
+with no event time were leaking into a dated question through a
+companion path
+(<code>apps/api/src/services/query/execution/answer_pipeline/preflight/mod.rs:438-447</code>).
+<code>search_documents</code> applies no time bounds
+(<code>apps/api/src/services/mcp/access/documents/search.rs:902-903</code>).</p>
+<p>The answer cache folds the library's readable-content fingerprint
+into its key
+(<code>apps/api/src/services/query/result_cache.rs:641</code>), so a
+replacement or deletion changes the key rather than serving a cached
+answer built on the old text.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes do not block on a model. An MCP mutation returns a receipt
+once admitted, and the client polls <code>get_operation</code>; the tool
+description warns that read and search visibility can arrive slightly
+before or after the terminal state
+(<code>apps/api/src/interfaces/http/mcp/tools/documents.rs:273</code>).
+The lag before a document is searchable is the ingest pipeline: parsing,
+chunking, embedding and, for graph-backed answers, LLM graph extraction.
+I did not measure it.</p>
+<p>Event time is extracted, not supplied. Record JSONL rendering takes
+<em>"the earliest value-shaped timestamp found anywhere in the record
+(any depth, under any key)"</em> and writes it into a
+<code>[unit_ordinal=N occurred_at=ISO]</code> header
+(<code>apps/api/src/shared/extraction/record_jsonl/rendering.rs:263-266</code>).
+Chunk preparation then parses <code>occurred_at=</code> tokens out of
+every chunk's text, whatever the source type
+(<code>apps/api/src/services/content/service/revision/preparation.rs:319-331</code>,
+<code>apps/api/src/shared/extraction/record_jsonl/projection.rs:20-26</code>).
+From that code, a document of another type whose text contains the token
+would acquire bounds; I did not run it.</p>
+<p>Deletion is soft at the document and frees the key. The test file
+covering it states the reason: a knowledge projection left holding the
+key made every later ingest of that key fail, <em>"and a periodic
+connector loses the same pages on every pass"</em>
+(<code>apps/api/tests/it/document_external_key_reclaim.rs:1-16</code>).
+That is correct for a mirror. For memory it means a deletion is not a
+refusal. No background pass rewrites the store; graph re-extraction for
+a whole library runs on request
+(<code>apps/api/src/interfaces/http/knowledge.rs:157</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The answer mount at <code>/v1/mcp</code> exposes discovery, search,
+read, graph, runtime trace and web-run reads, plus
+<code>grounded_answer</code>, which the registry calls <em>"a
+durable-side-effect query that must stay on the answer surface"</em>,
+the one mutating tool allowed there
+(<code>apps/api/src/interfaces/http/mcp/tools.rs:178-186</code>). The
+diagnostics mount adds workspace and library administration, document
+create, revise and delete, web crawl submission, ingest job control and
+IAM token management, each visible only when the token's grants allow it
+(<code>:342-465</code>).</p>
+<p>The built-in UI assistant is a tool-using agent over the answer
+surface's tool contract, so it can read and answer and cannot write
+(<code>apps/api/src/services/query/agent_loop/state_machine.rs:8-20</code>).
+An external agent that should maintain a library needs a write grant and
+the diagnostics URL. Conversation history on MCP is supplied by the
+client as <code>conversationTurns</code>
+(<code>apps/api/src/interfaces/http/mcp/tools/grounded/args.rs:39</code>);
+the UI keeps its own conversations in <code>query_conversation</code>
+and <code>query_turn</code>.</p>
+<p>Adapting it for another agent is a configuration step: any Streamable
+HTTP MCP client works, and the MCP guide says a token scoped to one
+library lets the tools infer the library argument
+(<code>docs/en/MCP.md</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-a-correction-reaches">What a correction reaches</h3>
+<p>A replacement leaves every search and read path at once, because each
+statement joins to the document's current revision and the active
+document. The visibility intent goes further. It denies the current
+revision from the moment it is accepted, before the replacement has been
+parsed, and the replacement bound to it must match its metadata and
+bytes exactly
+(<code>apps/api/src/interfaces/http/mcp/tools/documents.rs:251</code>).
+That is a withdrawal for text that must stop being served now. Creating
+an intent is a REST route
+(<code>apps/api/src/interfaces/http/content/revisions.rs:3-45</code>);
+the MCP replace tool can bind to an accepted intent and cannot create
+one.</p>
+<p>Deletion reaches the content plane and the knowledge projection in
+one transaction. The graph and technical facts converge after commit,
+and a failure there is a log line
+(<code>apps/api/src/services/content/service/document/deletion.rs:98-141</code>).</p>
+<h3 id="what-the-audit-holds">What the audit holds</h3>
+<p><code>audit_event</code> has no update or delete anywhere outside
+tests, carries actor, surface, action, request and trace ids, and links
+subjects by workspace, library and document. MCP writes record
+<code>agent.memory.upload</code>, <code>agent.memory.update</code> and
+<code>agent.memory.delete_document</code>. The row is appended after
+admission and outside the mutation's transaction, and a failed append is
+dropped with a warning
+(<code>apps/api/src/interfaces/http/mcp/audit.rs:20-47</code>). The
+delete row is written with no subjects, so the document appears only
+inside its message text
+(<code>apps/api/src/interfaces/http/mcp/tools/documents.rs:704-720</code>).
+REST and UI document mutations write <code>content_mutation</code> rows
+and no audit event.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code></strong> — awarded on
+<code>library_id</code> in every search statement, with libraries
+authorized from grants before a statement runs.</li>
+<li><strong><code>audit_log</code></strong> — awarded on
+<code>audit_event</code> for agent writes, with the best-effort append
+and the REST gap stated above.</li>
+<li><strong><code>bitemporal</code></strong> — awarded on chunk event
+time beside revision record time, hard-filtered by
+<code>grounded_answer</code>. Only record JSONL gets event time, and
+nothing reads the store as of a past record time.</li>
+<li><strong><code>negative_eval</code></strong> — awarded; see section
+10.</li>
+<li><strong><code>trust_state</code></strong> — withheld.
+<code>document_state</code> is a deletion flag,
+<code>entity_state = 'active'</code> is lifecycle, entity
+<code>confidence</code> is a float, and the visibility intent withdraws
+a revision without judging it. No field says a stored text is unverified
+or disputed.</li>
+<li><strong><code>tombstone</code></strong> — withheld. Every refusal is
+keyed on a document, revision or session, and deletion frees the key so
+the same content can return.</li>
+<li><strong><code>human_review</code></strong> — withheld. A written
+revision publishes when its ingest finishes; no state waits for a
+person.</li>
+</ul>
+<h3 id="other-risks">Other risks</h3>
+<ul>
+<li><strong>Injected content</strong> is stored and served like any
+document. A write grant on one library is enough for an agent to change
+what every reader of that library is answered from.</li>
+<li><strong>Event time is a heuristic.</strong> The earliest timestamp
+under any key becomes the record's time, so a birth date or a creation
+date inside a record would outrank the message time.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The tree has 4,569 Rust test functions in <code>apps/api/src</code>
+and <code>crates/</code>, and 672 in <code>apps/api/tests</code>, 630
+marked <code>#[ignore]</code> until PostgreSQL and Redis are available.
+The Makefile lists the required suites and runs them with
+<code>--ignored</code> (<code>Makefile:219</code>,
+<code>:296-299</code>). The only workflow builds and pushes Docker
+images, so no committed automation runs the integration suite. I ran
+none of it.</p>
+<p><code>negative_eval</code> rests on three populated cases:</p>
+<ul>
+<li><code>apps/api/tests/it/canonical_read_visibility.rs:568-899</code>
+publishes A, admits an edit B and a visibility intent, then publishes C.
+Before C, every read the test makes fails or comes back empty, and MCP
+read must not contain A's bytes. After C, MCP read returns C and must
+not contain A, <code>list_chunks</code> holds C and not A, and metadata
+search misses A's file name while C's returns one row.</li>
+<li><code>apps/api/tests/it/mcp_memory_search.rs:1763-1849</code> seeds
+a healthy and a stale document, retires the stale one in the knowledge
+plane by direct SQL, and asserts the healthy one is returned and the
+retired one is not.</li>
+<li><code>apps/api/tests/it/knowledge_search.rs:4370-4390</code>
+searches a document with a superseded and a current revision inside an
+event-time window and asserts exactly the current chunk comes back, with
+the superseded chunk absent.</li>
+</ul>
+<p>The scope tests are rejection-shaped: naming a foreign library fails
+the whole search as unauthorized, and the error body must not carry the
+foreign ids
+(<code>apps/api/tests/it/mcp_memory_search.rs:1615-1650</code>,
+<code>apps/api/tests/it/mcp_memory_permissions.rs:522-570</code>). No
+case searches an allowed library while a foreign one holds a better
+match and asserts it absent.</p>
+<p><code>apps/api/benchmarks/grounded_query/</code> holds 13 suite files
+with required and forbidden answer matchers, a live runner and an
+offline replay of captured MCP exchanges. No result file is committed,
+and no paper is associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Read through one current-revision join.</strong> Put the
+current readable revision and the live-document predicate into every
+statement that serves text, and a correction reaches search, read and
+answer context in the same commit.</li>
+<li><strong>Withdraw before you replace.</strong> An accepted intent
+that denies the current revision immediately, bound to the exact
+replacement, separates "stop serving this" from "here is the new
+text".</li>
+<li><strong>Put agent writes on another mount.</strong> Keep mutation
+tools off the surface the answering agent holds, and pin that with a
+test that fails when a mutating tool appears there.</li>
+<li><strong>Key the answer cache on the content fingerprint.</strong> A
+cached answer then cannot outlive the text it was built from.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Freeing a deleted key with no record of the
+deletion.</strong> It is right for a mirror and wrong for memory: the
+next sync restores what an agent removed.</li>
+<li><strong>An audit appended after the fact and dropped on
+failure.</strong> Write the row in the mutation's transaction, or accept
+that the log can miss writes.</li>
+<li><strong>Event time from the first timestamp-shaped value.</strong>
+Name the field, or record which one was chosen.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a team that wants agents to answer from a shared, governed
+document corpus and occasionally to maintain it, with per-library
+grants, citations and an operator who can stand up PostgreSQL, Redis and
+model bindings. It is infrastructure, not an agent's memory of its own
+work. Walk away if you need an agent to record conclusions, preferences
+or corrections with a status, or a person to approve what an agent wrote
+before others read it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What happens when an append names a base revision that is no longer
+current; the admission keys on it, and I did not trace the conflict
+outcome.</li>
+<li>Whether graph reads still surface a deleted document's entities when
+the post-commit convergence fails.</li>
+<li>Whether a connector-synced page deleted by an agent returns on the
+next poll; the key reclaim suggests it does.</li>
+<li>What the benchmark suites score; no run is committed.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>apps/api/migrations/0001_init.sql</code></li>
+<li>MCP surface: <code>apps/api/src/interfaces/http/mcp.rs</code>,
+<code>apps/api/src/interfaces/http/mcp/tools.rs</code>,
+<code>apps/api/src/interfaces/http/mcp/tools/documents.rs</code>,
+<code>apps/api/src/interfaces/http/mcp/audit.rs</code></li>
+<li>MCP services: <code>apps/api/src/services/mcp/mutations.rs</code>,
+<code>apps/api/src/services/mcp/access/documents/management.rs</code>,
+<code>apps/api/src/services/mcp/access/documents/search.rs</code>,
+<code>apps/api/src/services/mcp/access/documents/resolution.rs</code></li>
+<li>Content lifecycle:
+<code>apps/api/src/services/content/service/document/deletion.rs</code>,
+<code>apps/api/src/services/content/service/revision/preparation.rs</code>,
+<code>apps/api/src/interfaces/http/content/revisions.rs</code></li>
+<li>Event time:
+<code>apps/api/src/shared/extraction/record_jsonl/rendering.rs</code>,
+<code>apps/api/src/shared/extraction/record_jsonl/projection.rs</code>,
+<code>apps/api/src/domains/query_ir.rs</code></li>
+<li>Search:
+<code>apps/api/src/infra/postgres/pg_search_store/lexical.rs</code>,
+<code>apps/api/src/infra/postgres/pg_search_store/vector_support.rs</code>,
+<code>apps/api/src/services/query/execution/retrieve/retrieval_execution.rs</code>,
+<code>apps/api/src/services/query/execution/answer_pipeline/preflight/mod.rs</code>,
+<code>apps/api/src/services/query/result_cache.rs</code></li>
+<li>Audit:
+<code>apps/api/src/infra/repositories/audit_repository.rs</code>,
+<code>apps/api/src/interfaces/http/router_support/audit_event.rs</code></li>
+<li>Agent loop:
+<code>apps/api/src/services/query/agent_loop/state_machine.rs</code></li>
+<li>Tests: <code>apps/api/tests/it/canonical_read_visibility.rs</code>,
+<code>apps/api/tests/it/mcp_memory_search.rs</code>,
+<code>apps/api/tests/it/knowledge_search.rs</code>,
+<code>apps/api/tests/it/mcp_memory_permissions.rs</code>,
+<code>apps/api/tests/it/document_external_key_reclaim.rs</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No product code updates or deletes audit rows.</strong>
+<code>git grep -n -i -E 'delete[[:space:]]+from[[:space:]]+(public\.)?audit_event|truncate.*audit_event|update[[:space:]]+(public\.)?audit_event' -- . ':!apps/api/tests'</code>
+returns nothing; the delete half of the pattern over
+<code>apps/api/tests</code> matches
+<code>apps/api/tests/it/catalog_repository.rs:479</code>.</li>
+<li><strong>REST and UI document mutations write no audit
+event.</strong>
+<code>git grep -n -E '^[[:space:]]*\.audit$|append_event\(|record_rest_audit_event\(' -- apps/api/src/services/content apps/api/src/services/ingest apps/api/src/interfaces/http/content.rs apps/api/src/interfaces/http/content</code>
+returns nothing; the same pattern counts 4 in
+<code>apps/api/src/interfaces/http/catalog/deletion.rs</code> and 2 in
+<code>apps/api/src/interfaces/http/mcp/audit.rs</code>.</li>
+<li><strong>No review or approval state on memory.</strong>
+<code>git grep -n -i -w -E 'approve|approved|approval|pending_review|needs_review|awaiting_review|moderation' -- apps/api/src apps/api/migrations</code>
+matches only an operator-approved policy string, maintenance plan
+approval, an OIDC mock code and graph-summary test fixtures, none on a
+document or revision.</li>
+<li><strong>No value-keyed refusal.</strong>
+<code>git grep -n -i -w -E 'tombstone|rejected_value|blocklist|denylist|suppress(ed|ion)?' -- apps/api/src apps/api/migrations</code>
+matches vector deletion markers, document-head suppression, an IAM
+identity tombstone, MCP session tombstones and provider refusal codes;
+every one is keyed on a record, a revision or a session.</li>
+<li><strong>search_documents passes no time bounds.</strong>
+<code>git grep -n temporal -- apps/api/src/services/mcp/access/documents/search.rs</code>
+matches lines 902 and 903, both <code>None</code>; the vector call in
+that file takes no temporal field.</li>
+<li><strong>No as-of-record-time read.</strong>
+<code>git grep -n -i -E 'as_of|asof|known_at|recorded_before' -- apps/api/src/infra/postgres/pg_search_store apps/api/src/services/query</code>
+returns nothing;
+<code>git grep -c occurred_at -- apps/api/src/infra/postgres/pg_search_store/vector_support.rs</code>
+counts 7.</li>
+<li><strong>No workflow runs the tests.</strong>
+<code>git grep -n -E 'cargo test|make test|make backend' -- .github</code>
+returns nothing;
+<code>git grep -c docker/build-push-action -- .github</code> counts
+1.</li>
+<li><strong>No committed benchmark result.</strong>
+<code>git ls-files | grep -i -E 'results?/|_results?\.json'</code>
+returns nothing;
+<code>git ls-files apps/api/benchmarks | grep -c suite.json</code>
+counts 13.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- README.md docs</code>
+returns nothing, and <code>git ls-files | grep -i citation</code>
+returns nothing;
+<code>git grep -c -i github.com/mlimarenko -- README.md</code> counts
+3.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-21</strong> — <a
+href="https://github.com/mlimarenko/IronRAG/commit/e10997a4e45e529a5789acf23e606ccd703a3532"><code class="commit-id" title="e10997a4e45e529a5789acf23e606ccd703a3532">e10997a4…</code></a>
+— first reading, from a full clone of <code>master</code> at release
+0.6.3, scoped to the MCP surface, the content revision and deletion
+lifecycle, the search statements, event-time extraction, the audit
+writers and their tests; extraction, graph and billing code read only
+where it writes what those paths read. Screened first: no auto-run
+surface; four build-time execution points, the Makefile,
+<code>apps/api/build.rs</code> and two connector
+<code>conftest.py</code> files; one unpinned surface,
+<code>apps/web/package.json</code> with 50 floating ranges under a
+lockfile; nothing inside the cooldown. MIT, no rider. Nothing installed,
+built or run. Four marks: <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

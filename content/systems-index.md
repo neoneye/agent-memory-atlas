@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **848 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **849 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -384,6 +384,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/inspeximus/"><span class="az-id">inspeximus</span><span class="az-what">The value that was corrected is refused when it comes back</span><code class="az-repo">DanceNitra/inspeximus</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/intaris/"><span class="az-id">Intaris</span><span class="az-what">Memory about the agent, not the world</span><code class="az-repo">fpytloun/intaris</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/invalidate/"><span class="az-id">invalidate</span><span class="az-what">Staleness layer</span><code class="az-repo">chopratejas/invalidate</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/ironrag/"><span class="az-id">IronRAG</span><span class="az-what">Document memory agents write over MCP</span><code class="az-repo">mlimarenko/IronRAG</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>
 
 ## J

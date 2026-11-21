@@ -1112,6 +1112,8 @@ a change event keyed on its id, and the same sentence can be written again.
 
 [Senrelay (ContextCore)](../../systems/contextcore/) tombstones on deletion and keys the record five ways: the raw content hash, a whitespace-folded hash, a canonical key over category, normalized title and claim, a category-agnostic key, and a title-free claim key for claims of 12 or more normalized characters. It writes them for the current body and for every stored version. Create, update, the agent reconciler, background distillation, agent summaries, document import, version restore, relation creation and every retrieval read consult the set, and a test re-submits a deleted decision as a preference with extra spaces and asserts nothing is saved. Two limits are instructive. Every key includes the project id, so a value deleted in one project is not blocked in another. And no path removes a memory tombstone, so a person who deletes a rule cannot later re-create it in the same words from the workbench either.
 
+[IronRAG](../../systems/ironrag/) is the deliberate opposite, and its reason is a good one for a mirror. Deleting a document soft-deletes the row and releases its external key, because the active-only unique index otherwise held the key for a projection left behind, *"and a periodic connector loses the same pages on every pass"* (`apps/api/tests/it/document_external_key_reclaim.rs:1-16`). Every suppression in the tree is keyed on a document, a revision or a session. So an agent that deletes a connector-synced page has removed one copy, and nothing stops the next ingest of the same key or the same text from creating a new document.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

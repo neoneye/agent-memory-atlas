@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="The 848
+    <meta name="description" content="The 849
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -13,7 +13,7 @@ here.">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="System
 Families — Agent Memory Atlas">
-    <meta property="og:description" content="The 848
+    <meta property="og:description" content="The 849
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -22,7 +22,7 @@ here.">
     <meta name="twitter:title" content="System
 Families — Agent Memory Atlas">
     <meta name="twitter:description" content="The
-848 systems grouped by eight architectural
+849 systems grouped by eight architectural
 commitments, the categories almost nothing models, and the boundaries of
 what counts as memory here.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
@@ -46,7 +46,7 @@ what counts as memory here.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "System Families",
-      "description": "The 848 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
+      "description": "The 849 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -103,7 +103,7 @@ what counts as memory here.">
         <div class="document-hero-inner">
           <p class="eyebrow">Taxonomy</p>
           <h1>System Families</h1>
-          <p class="document-deck">The 848 systems
+          <p class="document-deck">The 849 systems
 grouped by eight architectural commitments, the categories almost
 nothing models, and the boundaries of what counts as memory here.</p>
                                                 </div>
@@ -120,7 +120,7 @@ nothing models, and the boundaries of what counts as memory here.</p>
           </div>
         </aside>
         <article class="prose" id="article">
-<p>848 systems do not fall into 182 categories. They
+<p>849 systems do not fall into 182 categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -1179,7 +1179,8 @@ href="../systems/anythingmcp/"><code>anythingmcp</code></a>, <a
 href="../systems/ibex-harness/"><code>ibex-harness</code></a>, <a
 href="../systems/kenfold/"><code>kenfold</code></a>, <a
 href="../systems/walrus-memory/"><code>walrus-memory</code></a>, <a
-href="../systems/hivemind-lesur/"><code>hivemind-lesur</code></a></p>
+href="../systems/hivemind-lesur/"><code>hivemind-lesur</code></a>, <a
+href="../systems/ironrag/"><code>ironrag</code></a></p>
 <p><strong>Statewave answers the family's hardest question by refusing
 to ask it at read time.</strong> Apache-2.0, 462 commits from April to
 September 2026 by thirteen authors, 26,041 lines of Python over
@@ -2252,6 +2253,22 @@ compaction snapshot that held it is kept and returned by
 Project Mesh refuses every ordinary write, because nothing outside
 unsafe recovery acquires the write lease. Two marks:
 <code>scope_enforced</code> and <code>negative_eval</code>.</p>
+<p><strong><a href="../systems/ironrag/">IronRAG</a> treats a correction
+as a revision, and every read path sees only the current one.</strong> A
+self-hosted Rust document search and grounded-answer service over
+PostgreSQL with pgvector and Redis, it serves its libraries over MCP as
+<code>ironrag-mcp-memory</code>. An external agent with a write grant
+creates, appends to, replaces and deletes documents on a diagnostics
+mount that the built-in assistant never receives. Every lexical and
+vector statement filters <code>library_id</code>, the active document
+and its current readable revision, so a replacement or a deletion leaves
+search, read and answer context in one commit, and the answer cache is
+keyed on the library's readable-content fingerprint. Chunks rendered
+from JSONL records carry the record's event time, which
+<code>grounded_answer</code> hard-filters by the question's date range.
+Nothing sits above the document: no status and no review, and a deletion
+frees the external key so a later sync can bring the same content
+back.</p>
 <h2 id="agent-runtime-memory">Agent-runtime memory</h2>
 <p><a href="../systems/humans/"><code>humans</code></a>, <a
 href="../systems/letta/"><code>letta</code></a>, <a

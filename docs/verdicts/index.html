@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 848 reports.</strong></p>
+<p><strong>This page covers all 849 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -34896,6 +34896,43 @@ mutation.</li>
 <li>Do not copy when: you need the context pack itself to exclude stale,
 rejected or out-of-scope material, or an agent's writes to wait for a
 person.</li>
+</ul>
+<h3 id="ironrag"><a
+href="../systems/ironrag/"><code>ironrag</code></a></h3>
+<ul>
+<li>Best idea: <strong>every read goes through the current
+revision.</strong> Lexical and vector statements join each chunk to its
+document's current readable revision and
+<code>document_state = 'active'</code> inside the
+<code>library_id</code> predicate, so a replacement, a visibility intent
+or a deletion leaves search, read and answer context together, and the
+answer cache key folds in the library's content fingerprint.</li>
+<li>Biggest risk: <strong>a deletion is not a refusal.</strong> Deleting
+a document releases its external key so a later ingest of the same key
+succeeds, and nothing records what an agent removed, believed or
+rejected; a document is only <code>active</code> or
+<code>deleted</code>.</li>
+<li>Second risk: the audit of agent writes is appended after admission,
+outside the transaction, and dropped on failure; the delete row carries
+no subject; REST and UI document mutations write no audit event; and no
+workflow runs the integration suite.</li>
+<li>Most reusable component: the search statements in
+<code>apps/api/src/infra/postgres/pg_search_store/lexical.rs</code> and
+<code>vector_support.rs</code>, with the answer and diagnostics surface
+split in <code>apps/api/src/interfaces/http/mcp/tools.rs</code>.</li>
+<li>Maturity impression: MIT, release 0.6.3; 442,755 lines of Rust in
+<code>apps/api/src</code>; 60 commits from 29 March to 13 November 2026,
+each a release export of a private repository; 4,569 Rust test functions
+and 672 integration tests, 630 ignored without PostgreSQL and Redis and
+run by no workflow, not run here; no committed benchmark result. Four
+marks: <code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code>.</li>
+<li>Study when: agents answer from a shared document corpus under
+per-library grants and sometimes maintain it, and a correction must
+reach every read path at once.</li>
+<li>Do not copy when: an agent needs to record its own conclusions or
+preferences with a status, or a deleted item must stay deleted across
+syncs.</li>
 </ul>
         </article>
       </div>

@@ -632,6 +632,19 @@ supersession, which selects by <code>created_at</code> or
 carries no <code>said_at</code>, so a file's facts hold from the
 extraction. A test worth requiring of any instance: close a fact, re-run
 the extraction that first asserted it, and assert it stays closed.</p>
+<p><a href="../../systems/ironrag/">IronRAG</a> derives event time from
+content rather than taking it from a writer. Rendering a JSONL record
+picks the earliest value-shaped timestamp under any key and writes it
+into a chunk header, and chunk preparation parses those headers into
+<code>occurred_at</code> and <code>occurred_until</code> beside the
+revision's <code>created_at</code>
+(<code>apps/api/src/shared/extraction/record_jsonl/rendering.rs:263-270</code>,
+<code>apps/api/src/services/content/service/revision/preparation.rs:319-331</code>).
+<code>grounded_answer</code> binds the compiled question's date range to
+that range on every chunk lane and again on the assembled bundle. The
+record clock is the one nothing queries: no read asks what the store
+held at a past record time, and the raw <code>search_documents</code>
+tool passes no bounds at all.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

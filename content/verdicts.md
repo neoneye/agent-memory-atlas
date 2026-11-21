@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 848 reports.**
+**This page covers all 849 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7802,3 +7802,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 38,018 lines of Rust, 21,976 of them in one `main.rs`; 50 commits from 18 May to 2 November 2026, 20 on 25 June alone; 135 Rust test functions run in CI on three platforms, not run here; the CAMC-Bench table has no committed result file and its negative-memory arm drops fixtures by their labels. Four marks: `trust_state`, `scope_enforced`, `audit_log` and `negative_eval`.
 - Study when: you want a local single-binary store of repository facts with a status field that recall respects and a snapshot on every mutation.
 - Do not copy when: you need the context pack itself to exclude stale, rejected or out-of-scope material, or an agent's writes to wait for a person.
+
+### [`ironrag`](../systems/ironrag/)
+
+- Best idea: **every read goes through the current revision.** Lexical and vector statements join each chunk to its document's current readable revision and `document_state = 'active'` inside the `library_id` predicate, so a replacement, a visibility intent or a deletion leaves search, read and answer context together, and the answer cache key folds in the library's content fingerprint.
+- Biggest risk: **a deletion is not a refusal.** Deleting a document releases its external key so a later ingest of the same key succeeds, and nothing records what an agent removed, believed or rejected; a document is only `active` or `deleted`.
+- Second risk: the audit of agent writes is appended after admission, outside the transaction, and dropped on failure; the delete row carries no subject; REST and UI document mutations write no audit event; and no workflow runs the integration suite.
+- Most reusable component: the search statements in `apps/api/src/infra/postgres/pg_search_store/lexical.rs` and `vector_support.rs`, with the answer and diagnostics surface split in `apps/api/src/interfaces/http/mcp/tools.rs`.
+- Maturity impression: MIT, release 0.6.3; 442,755 lines of Rust in `apps/api/src`; 60 commits from 29 March to 13 November 2026, each a release export of a private repository; 4,569 Rust test functions and 672 integration tests, 630 ignored without PostgreSQL and Redis and run by no workflow, not run here; no committed benchmark result. Four marks: `bitemporal`, `scope_enforced`, `audit_log` and `negative_eval`.
+- Study when: agents answer from a shared document corpus under per-library grants and sometimes maintain it, and a correction must reach every read path at once.
+- Do not copy when: an agent needs to record its own conclusions or preferences with a status, or a deleted item must stay deleted across syncs.
