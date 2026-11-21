@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 848 of 849 screened at the report's current pin.**
+**Progress: 849 of 850 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 402 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 387 |
-| Repositories with build-time execution (`EXEC`) | 612 |
+| Repositories with an auto-run surface (`RUNS`) | 403 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 388 |
+| Repositories with build-time execution (`EXEC`) | 613 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -45,6 +45,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`agentmemory-markdown`](../../content/systems/agentmemory-markdown.md) | `.githooks/` |
 | [`agentrecall-x`](../../content/systems/agentrecall-x.md) | `smithery.yaml` |
 | [`agentrt`](../../content/systems/agentrt.md) | `.gitmodules` |
+| [`agents-remember`](../../content/systems/agents-remember.md) | `.githooks/` |
 | [`agno`](../../content/systems/agno.md) | `.cursorrules` |
 | [`agora`](../../content/systems/agora.md) | `.claude-plugin/`, `.opencode/`, `plugins/agora-skills/.claude-plugin/plugin.json` |
 | [`ai-brain-starter`](../../content/systems/ai-brain-starter.md) | `-` |

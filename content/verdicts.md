@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 849 reports.**
+**This page covers all 850 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7812,3 +7812,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, release 0.6.3; 442,755 lines of Rust in `apps/api/src`; 60 commits from 29 March to 13 November 2026, each a release export of a private repository; 4,569 Rust test functions and 672 integration tests, 630 ignored without PostgreSQL and Redis and run by no workflow, not run here; no committed benchmark result. Four marks: `bitemporal`, `scope_enforced`, `audit_log` and `negative_eval`.
 - Study when: agents answer from a shared document corpus under per-library grants and sometimes maintain it, and a correction must reach every read path at once.
 - Do not copy when: an agent needs to record its own conclusions or preferences with a status, or a deleted item must stay deleted across syncs.
+
+### [`agents-remember`](../systems/agents-remember/)
+
+- Best idea: **a claim about code carries the bytes it describes.** Every citation, realization and proof in a card's sidecar records the file's Git blob and a content hash of the cited range; currentness is a function of a memory tree and a code tree, recomputed per read through a zero-context diff, so nothing has to be kept in sync.
+- Biggest risk: **verified means unmoved.** A current anchor proves the cited code did not change, not that the card describes it, and the gate checks only entries at paths the task's own diff changed, so drift from any other commit sits labelled and blocks nothing.
+- Second risk: `knowledge_write` reads no seat binding and checks only that `authorizationRef` is not blank, and the role capsule tells an agent to hand-write a write the writer refused; `proposed` is the default status and is served exactly like `accepted`.
+- Most reusable component: the anchor observation in `application/knowledge_currentness/observe.py` and `state.py`, with the R27.4-record-kept and R22.7-history-frozen validator rules.
+- Maturity impression: MIT, release mcp-v3.0.3; 401,485 lines of Python in `mcp/src`, 1,349 commits from 21 March to 18 November 2026; 8,293 test functions run at task closeout rather than in CI, not run here; one committed benchmark case of three Codex runs per arm that records cost only. Three marks: `trust_state`, `audit_log` and `negative_eval`.
+- Study when: agents change a large codebase and the rules that make an edit safe live in files they never open.
+- Do not copy when: you want memory of a user or a conversation, or your changes do not go through a task workflow the gate can see.

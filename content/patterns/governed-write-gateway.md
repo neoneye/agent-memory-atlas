@@ -318,6 +318,8 @@ runtime's own rules, does not.
 
 [memory.cpp](../../systems/memory-cpp/) is the divergence this page opens with, inside one engine. `remember` refuses secret-like content and applies reject policies; `remember_candidate` adds the inbox queue and the manual-review policy; `restore_snapshot` and `import_persona` call `persist_memory` directly, pass neither check and write no version row (`crates/memory-core/src/engine.rs:63-164`, `:751-767`, `:865-879`). The write firewall, `screen_write`, sits on no write path at all. The MCP candidate tool its docs call non-mutating queues only below a 0.55 confidence the agent may set and defaults to 0.8, so on the read-only server an agent's writes land `active`.
 
+[Agents Remember](../../systems/agents-remember/) has the gateway's checks without its exclusivity. `knowledge_write` is one writer for cards, records and judgment rows: it validates against the exact code and memory trees, refuses in the same run every row the closeout gate would refuse, writes nothing on a refusal and undoes a partial write, and the validator runs again at every commit route with no argument that skips it. What it does not check is who is writing. It reads no seat binding and accepts any non-blank `authorizationRef`, and the role capsule tells an agent whose admitted writes are all refused to make the write by hand, so "only the Curator writes memory" is an instruction and the commit-time validator is the boundary that holds.
+
 ## Tests to require
 
 - Exercise every adapter against the same invariant suite.
