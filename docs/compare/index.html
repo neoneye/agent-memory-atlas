@@ -6331,41 +6331,50 @@ local MCP recall spans projects</td>
 <td>None of its own. The unit is whatever the mounted provider returns —
 a recall payload of instructions, core memories, search results and
 stats — with the host holding the policy that produced it</td>
-<td>No memory store. Postgres holds users, agents, conversations and
-workflows; memory is delegated to a provider, with Mnemory and a null
-backend shipped</td>
-<td><code>recall</code> on the provider, parameterised by search mode,
-instruction mode, TTL and a managed flag, with auto-recall a policy
-switch rather than a call site</td>
-<td><code>remember</code> for turns and <code>add_memory</code> for
-explicit facts, both carrying agent and user identity; auto-remember is
-a policy flag; and a trusted-evidence route that sends a strict pydantic
-body bound to a SHA-256 hash of the exact persisted session event</td>
-<td><code>delete_memory</code> and a separate
-<code>delete_memory_tool</code> on the contract, so the agent-facing
-delete is a distinct method from the host's own</td>
-<td><code>agent_id</code> and <code>user_email</code> on every contract
-method, with the caller's identity taken from a verified JWT subject
-rather than a request header</td>
+<td>No memory store. Postgres holds users, agents, conversations,
+workflows and a <code>remember_queue</code> table of pending provider
+writes whose rows carry identity, event sequence numbers and hashes, and
+no message text; memory is delegated to a provider, with Mnemory and a
+null backend shipped</td>
+<td><code>recall</code> on the provider, parameterised by session id,
+search mode, instruction mode, TTL and a managed flag, with auto-recall
+a policy switch; the caller's identity is read from the turn's runtime
+context, not passed</td>
+<td>Each turn enqueues a <code>remember</code> row that is dispatched
+later from the session event stream; <code>add_memory</code> and the
+agent's tools write explicit facts; and a trusted-evidence route sends a
+strict pydantic body bound to a SHA-256 hash of the exact persisted
+session event, for owners on an allowlist that is empty by default</td>
+<td><code>delete_memory</code> is unconditional and has one caller, the
+bootstrap-identity replacement; <code>delete_memory_tool</code> sends
+the same DELETE under the same identity with an <code>If-Match</code>
+revision when the agent named the memory by alias</td>
+<td>A service JWT per provider request whose subject is the session
+user, with agent id and agent owner in headers; no request is sent
+without an identity. A managed external channel keeps bootstrap memory
+and loses ambient recall, ambient writes and every memory mutation
+tool</td>
 <td>Controller and executors split over a bus — tools, browsers, shells,
 LSPs and MCP servers run wherever the work belongs; memory and
 guardrails are companion services</td>
-<td>Workflows run agent work off the chat path; memory bootstrap,
-auto-recall and auto-remember are per-turn policy rather than background
-passes</td>
+<td>A leased, durable queue drains provider writes with bounded retries,
+rechecks whether memory was disabled since the row was queued, and drops
+the oldest pending ordinary rows past 100</td>
 <td>None on a stored memory. What the host models is the fate of a
-<em>write</em>: a seven-value evidence outcome, a typed rejection
-contract asserting no semantic effects, and an explicit unknown-outcome
-state that disables automatic retry</td>
-<td>A frozen per-turn memory policy carrying a SHA-256 fingerprint over
-backend, flags and instruction text; a memory write bound by hash to the
-exact persisted event that occasioned it; a transport failure classed as
-<em>unknown</em> rather than failed, with retry refused; deletion in the
-contract twice</td>
-<td>Provenance crosses the boundary and belief does not — the provider
-is told who and which event, never how much to trust it — and neither
-the fingerprint nor the evidence hash records what a write changed in
-the store</td>
+write: a seven-value evidence outcome, a typed rejection contract
+asserting no semantic effects, and an <code>ambiguous</code> queue state
+that is terminal for the one route whose replay is not keyed</td>
+<td>A frozen per-turn memory policy whose SHA-256 fingerprint is a cache
+key as well as a label; a memory write bound by hash to the exact
+persisted event that occasioned it; a transport failure classed as
+unknown, retried where the route is keyed and latched where it is not; a
+queue that stores pointers into the event stream instead of message
+text</td>
+<td>Provenance crosses the boundary and belief does not; neither the
+fingerprint nor the queue records what a write changed in the store; a
+full queue deletes the oldest pending ordinary writes; and the
+contract's two deletes carry the same authority, so nothing separates
+the agent's delete from the host's except a revision check</td>
 </tr>
 <tr>
 <td><a

@@ -5544,36 +5544,34 @@ href="../systems/cognis/"><code>cognis</code></a></h3>
 <li>Best idea: <code>fingerprint_policy</code> — a SHA-256 over the
 backend id, the resolved behaviour flags, the options and a hash of the
 instruction text, frozen into a per-turn
-<code>MemoryRuntimePolicy</code> and returned by
-<code>audit_metadata()</code>, so "which memory rules were in force when
-this happened" is a value to compare rather than a configuration to
-reconstruct.</li>
+<code>MemoryRuntimePolicy</code>. The value is stamped on every queued
+write and on the metadata of each guardrails evaluation, and it keys the
+cached prompt prefix, so a policy change discards memory loaded under
+the previous policy.</li>
 <li>Biggest risk: the boundary is asymmetric. Provenance crosses it — a
 SHA-256 binding a memory write to the exact persisted user message at
-its sequence in the session stream — and belief does not: no confidence,
-status or verdict appears on any model in the contract, so a backend
-that models belief has no way to tell the host and the host has no way
-to ask.</li>
-<li>Most reusable component: the write-outcome model. A seven-value
-<code>EvidenceOutcome</code>, a literal-typed rejection asserting
-<code>semantic_effects: "none"</code> with a parser that refuses to read
-an ordinary 422 as one, and an explicit <code>outcome_unknown</code>
-state that disables automatic retry because a transport error means the
-write may have landed. Beside it, a contract with
-<code>delete_memory</code> and <code>delete_memory_tool</code> as
-separate methods and a <code>null</code> backend as the copyable
-template.</li>
-<li>Maturity impression: 365,005 lines of Python under BSL 1.1 with
-7,026 test functions, controller/executor split with Docker images for
-both — and two contract suites that test the edges: a JWT subject that
-cannot be overridden by a request header, and an evidence protocol whose
-fourteen cases are almost all about what must not happen.</li>
+its sequence in the session stream, on a route that is off by default —
+and belief does not: no confidence, status or verdict appears on any
+model in the contract. Second, the durable write queue deletes its
+oldest pending ordinary rows past a depth of 100 with a metric and no
+notice to the session.</li>
+<li>Most reusable component: the write queue's three decisions. A row
+stores event sequence numbers and hashes and the text is re-read from
+the session stream at dispatch; the agent's policy is reread before a
+row is sent, so a write queued before memory was turned off is not sent
+after; and an unknown outcome is retried on the route keyed by event
+hash and latched as a terminal <code>ambiguous</code> state on the route
+that is not.</li>
+<li>Maturity impression: 482,807 lines of Python under BSL 1.1 with
+11,125 test functions and one author. The contract's two deletes reach
+the same endpoint as the same subject and differ by an
+<code>If-Match</code> revision, and the Mnemory contract suite needs a
+running Mnemory, so a pass describes a deployed pair.</li>
 <li>Study when: memory is somebody else's service and your job is
-deciding when it runs, under which policy, and how to prove afterwards
-which policy that was.</li>
+deciding when it runs, under which policy, and what to do when a write
+may or may not have landed.</li>
 <li>Do not copy when: you want memory mechanics — the store is
-elsewhere, and this repository is the seam rather than the
-substance.</li>
+elsewhere, and this repository is the seam.</li>
 </ul>
 <h3 id="intaris"><a
 href="../systems/intaris/"><code>intaris</code></a></h3>
