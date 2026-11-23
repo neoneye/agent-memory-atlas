@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Rust and Tauri agent
+platform whose per-bot memory lives in SQLite with hybrid recall,
+quote-verified writes and an undo journal.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Praxi-Bot — Agent Memory Atlas">
+    <meta property="og:description" content="A local Rust and Tauri
+agent platform whose per-bot memory lives in SQLite with hybrid recall,
+quote-verified writes and an undo journal.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Praxi-Bot — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Rust and Tauri
+agent platform whose per-bot memory lives in SQLite with hybrid recall,
+quote-verified writes and an undo journal.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Praxi-Bot — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Praxi-Bot",
+      "description": "A local Rust and Tauri agent platform whose per-bot memory lives in SQLite with hybrid recall, quote-verified writes and an undo journal.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A save must quote the user's own message,
+and every change is journaled for undo</p>
+          <h1>Praxi-Bot</h1>
+          <p class="document-deck">A local Rust and Tauri agent platform
+whose per-bot memory lives in SQLite with hybrid recall, quote-verified
+writes and an undo journal.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/emreocell/Praxi-Bot">
+              <span>Source</span>
+              <strong>emreocell/Praxi-Bot</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/emreocell/Praxi-Bot/commit/8e51eaf14da3896e62fffd4fe6499b5630f020b9" title="8e51eaf14da3896e62fffd4fe6499b5630f020b9">
+              <span>Analyzed revision</span>
+              <code>8e51eaf1…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-23</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/emreocell--Praxi-Bot" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>emreocell--Praxi-Bot</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE and the workspace manifest; NOTICE credits code adapted from
+vercel-labs/agent-browser under the same licence</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>439,272
+lines of Rust in 768 files, 48,361 of them under tests/ directories;
+83,073 lines of TypeScript outside tests, the generated API schema and
+locale files; crates/memory-store holds 11,147 lines of source and 2,492
+of tests, about a third of the source being conversational memory and
+the rest a document index</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,006
+commits, all in November 2026 from the 7th: 896 under two names of Emre
+Öcel and the rest from other contributors; four alpha tags, the latest
+v0.1.0-alpha.4</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>4,482
+Rust test functions in 492 files, 120 of them in crates/memory-store; 66
+are marked ignore, none in memory-store; ci.yml runs cargo nextest over
+the workspace; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Praxi-Bot is a local agent platform, a Rust daemon with a Tauri
+desktop app and a CLI, whose bots keep long-term memory in one SQLite
+file. Its notable part is the write gate. A fact extracted after a turn
+must carry a quote that is a verbatim span of the exchange, and a fact
+the model saves through its tool must quote the user's own message of
+that turn. Its weak part is correction: a forgotten fact leaves no
+record that stops the next extraction storing it again.</p>
+<p>Memory is on in every <code>bot serve</code> that is not in safe
+mode. Before each top-level turn the loop recalls into an 800-token
+block prepended to the user message, and after each successful turn a
+background task extracts and consolidates with the bot's classifier
+model. The project's FAQ says the daemon does not enable memory.</p>
+<p>Recall fuses BM25 with a nearest-neighbour search, and the embedder
+the product constructs is a feature hash of word tokens, so both arms
+match on shared words. A real embedding model exists behind a cargo
+feature that no application enables.</p>
+<p>Every change writes a journal row with before and after snapshots in
+the same transaction, and the newest change to a memory can be undone.
+Deletion is a flag: the text stays in the row, the journal and any
+backup.</p>
+<p>The licence is Apache-2.0, in <code>LICENSE</code> and the workspace
+manifest.</p>
+<p>Three marks are earned on the conversational store:
+<code>scope_enforced</code> on the user and bot keys,
+<code>audit_log</code> on the journal, and <code>negative_eval</code> on
+recall across bots, users and deletion. Section 9 gives the reason for
+each of the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one <strong>statement about the user, the bot or a
+procedure</strong>, stored with the evidence for it. The row carries a
+kind, the content, a supporting quote, the chat it came from, a trust
+label, an importance from 0 to 1 and a soft-delete flag
+(<code>crates/memory-store/migrations/0001_memory.sql:6-22</code>).</p>
+<p>A statement becomes a memory by one of three routes.</p>
+<ul>
+<li><strong>Extraction.</strong> After a turn, the classifier model
+proposes candidates from the user's messages and the final answer. Code
+rejects a candidate that is empty, looks like a credential, has no
+quote, has a quote that is not a whitespace-normalised span of the
+excerpt, or is a question or hypothetical
+(<code>crates/memory-store/src/pipeline.rs:236-257</code>).</li>
+<li><strong>The save tool.</strong> The model calls
+<code>memory_save</code> with content, kind and quote. The quote must
+appear in a <code>role == "user"</code> message of the current run that
+is not marked untrusted
+(<code>crates/memory-store/src/tools.rs:566-585</code>).</li>
+<li><strong>The owner.</strong> The settings panel and
+<code>POST /v1/memory</code> add a memory directly, and a user
+correction becomes a <code>lesson</code>
+(<code>crates/memory-store/src/manage.rs:105-130</code>).</li>
+</ul>
+<p>Trust is decided by the turn, not by the model alone. An extraction
+is <code>untrusted</code> when the turn was not started by a person,
+used any tool outside the meta category, had child runs, saw another
+bot's replies or was tainted, or when the model flags the candidate
+itself (<code>crates/agent-core/src/memory.rs:162-178</code>,
+<code>crates/memory-store/src/pipeline.rs:152</code>). An untrusted
+memory is recalled like any other and rendered in a separate block
+marked as data.</p>
+<p>A memory stops counting in two ways. A consolidation verdict or a
+user edit rewrites it in place, and a delete sets
+<code>deleted = 1</code> and removes the row from both indexes
+(<code>crates/memory-store/src/store.rs:343-361</code>). A
+<code>valid_until_ms</code> column would expire a row on read, and no
+code writes a value into it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a statement is stored only with a quote that code finds in the source text; consolidation may rewrite or retract a similar row, never a user-trusted one from untrusted content; every change lands with a journal row, and a delete leaves nothing that the next extraction consults</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a statement is stored only with a quote that code finds in the source text; consolidation may rewrite or retract a similar row, never a user-trusted one from untrusted content; every change lands with a journal row, and a delete leaves nothing that the next extraction consults
+flowchart TD
+  subgraph writers[&quot;Three writers&quot;]
+    direction TB
+    W1[&quot;extraction after a turn:&lt;br/&gt;classifier proposes candidates&quot;]
+    W2[&quot;memory_save tool: quote must be&lt;br/&gt;in this turn&#39;s user message&quot;]
+    W3[&quot;owner: settings panel,&lt;br/&gt;REST, correction&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  W1 --&gt; V{&quot;quote a span of&lt;br/&gt;the excerpt? not a&lt;br/&gt;question or secret?&quot;}
+  V --&gt;|&quot;no&quot;| REJ[&quot;rejected,&lt;br/&gt;nothing stored&quot;]
+  V --&gt;|&quot;yes&quot;| SIM[&quot;find five similar&lt;br/&gt;live memories&quot;]
+  SIM --&gt; DEC{&quot;consolidation model:&lt;br/&gt;add, update,&lt;br/&gt;delete or skip&quot;}
+  DEC --&gt;|&quot;update or delete of a&lt;br/&gt;user-trusted row from&lt;br/&gt;untrusted content&quot;| SKIP[&quot;skipped&quot;]
+  DEC --&gt;|&quot;add or update&quot;| ROW[&quot;memories row, FTS5 and&lt;br/&gt;vec0 entry, journal row,&lt;br/&gt;one transaction&quot;]
+  DEC --&gt;|&quot;delete&quot;| DEL[&quot;deleted = 1, unindexed,&lt;br/&gt;journal row keeps the text&quot;]
+  W2 --&gt; ROW
+  W3 --&gt; ROW
+  ROW --&gt; RECALL[&quot;recall: user and bot filter,&lt;br/&gt;BM25 plus hashed-vector KNN,&lt;br/&gt;800 tokens before the user turn&quot;]
+  DEL --&gt; GAP[&quot;deleted rows are invisible to&lt;br/&gt;the similarity search, so the&lt;br/&gt;same fact is added again&quot;]
+  GAP --&gt; SIM
+  ROW ~~~ UNDO[&quot;undo: restore the snapshot,&lt;br/&gt;flag the journal entry&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The memory is a library crate inside the daemon process. Nothing else
+has to run: <code>crates/memory-store</code> owns
+<code>&lt;data_dir&gt;/memory.db</code>, opened in WAL mode behind one
+mutex-guarded connection, with the sqlite-vec extension registered on it
+(<code>crates/memory-store/src/store.rs:117-166</code>). The chat
+history, bots, runs and the general audit log live in a second file,
+<code>bot.db</code>, owned by the <code>storage</code> crate.</p>
+<ul>
+<li><strong><code>store.rs</code>, <code>manage.rs</code></strong> hold
+CRUD, the journal, undo, list and export.</li>
+<li><strong><code>pipeline.rs</code></strong> runs extract, validate,
+consolidate and persist behind a <code>MemoryModel</code> trait;
+<code>crates/agent-core/src/memory.rs</code> implements the trait over
+the provider registry.</li>
+<li><strong><code>recall.rs</code>, <code>render.rs</code></strong> hold
+hybrid retrieval and the prompt block.</li>
+<li><strong><code>tools.rs</code></strong> defines the four
+model-callable tools.</li>
+<li><strong><code>sessions.rs</code></strong> indexes chat messages for
+full-text search.</li>
+<li><strong><code>knowledge/</code></strong> is a separate document
+index, one <code>knowledge.db</code> per bot, about two thirds of the
+crate's source.</li>
+</ul>
+<p><code>bot serve</code> opens the store through
+<code>MemoryConfig::open_default</code>, which constructs
+<code>HashEmbedder::new(384)</code> and enables the hook with an
+800-token budget; <code>--safe</code> skips it
+(<code>apps/cli/src/serve.rs:345-356</code>,
+<code>crates/agent-core/src/config.rs:112-132</code>). No setting turns
+memory off or changes the budget. The vec0 table is created at the
+embedder's dimension, and opening with another dimension is an error, so
+a later move to a real model needs a rebuild of the vector table
+(<code>crates/memory-store/src/store.rs:138-160</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Storage needs no API key and no model download. Extraction and
+consolidation call the bot's <code>classifier</code> model, or its
+<code>executor</code> when none is set, through the ordinary provider
+registry, so a bot on a cloud provider sends each redacted exchange and
+up to five similar memories there after every turn
+(<code>crates/agent-core/src/memory.rs:195-223</code>).</p>
+<p>The owner's surface is the desktop settings panel,
+<code>MemoryCard.tsx</code>, over six REST routes: list, add, edit,
+forget, undo and a recall preview for a bot
+(<code>crates/daemon-api/src/lib.rs:1281-1291</code>). The four mutating
+routes need the owner key and are refused to paired peers.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>enqueue_memory</code> builds an
+<code>Exchange</code> from the run and spawns
+<code>memory::extract</code> on the runtime; the handle is kept so
+shutdown can flush it
+(<code>crates/agent-core/src/agent.rs:2825-2840</code>).
+<code>Exchange::of</code> collects the run's user messages and the final
+text, redacts them and computes <code>untrusted</code>
+(<code>crates/agent-core/src/memory.rs:155-189</code>).</li>
+<li><strong>Pipeline.</strong> <code>Pipeline::ingest</code> calls
+<code>extract</code>, then <code>handle</code> per candidate:
+<code>validate</code>, <code>find_similar</code>,
+<code>consolidate</code> when anything similar exists, then
+<code>add</code>, <code>update_if_trust</code> or <code>delete</code>
+(<code>crates/memory-store/src/pipeline.rs:139-209</code>).</li>
+<li><strong>Recall.</strong> <code>with_recall</code> calls
+<code>store.recall</code> with the run's user and bot and prepends
+<code>render_recall_block</code> to the user message
+(<code>crates/agent-core/src/exec.rs:473-513</code>).
+<code>recall</code> runs <code>gather</code>, boosts, cuts to the budget
+and stamps <code>last_used_ms</code>
+(<code>crates/memory-store/src/recall.rs:96-173</code>,
+<code>:195-277</code>).</li>
+<li><strong>Tools.</strong> <code>tools()</code> builds
+<code>memory_search</code>, <code>session_search</code>,
+<code>memory_save</code> and <code>memory_forget</code>;
+<code>resolve_caller</code> maps the calling bot to its owner
+(<code>crates/memory-store/src/tools.rs:87-219</code>,
+<code>:308-336</code>). <code>with_memory_tools</code> registers them
+(<code>crates/agent-core/src/agent.rs:201</code>,
+<code>apps/cli/src/serve.rs:381</code>).</li>
+<li><strong>Session index.</strong> Each user message and each final
+assistant message is indexed, and an edited turn's messages are removed
+(<code>crates/agent-core/src/agent.rs:2352</code>, <code>:2716</code>,
+<code>:1420</code>).</li>
+<li><strong>Owner routes.</strong>
+<code>crates/daemon-api/src/memory.rs</code> validates content, appends
+a row to the general audit log and calls the store.</li>
+<li><strong>Undo.</strong> <code>MemoryStore::undo</code> restores the
+snapshot of the newest active journal entry for a memory
+(<code>crates/memory-store/src/store.rs:369-415</code>).</li>
+<li><strong>Backup.</strong> <code>memory.db</code> is one of the files
+<code>bot backup</code> copies and restores
+(<code>crates/state-bundle/src/transfer.rs:24</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The row.</strong> <code>memories</code> holds a UUIDv7
+<code>id</code>, <code>user_id</code>, a nullable <code>bot_id</code>,
+<code>kind</code>, <code>content</code>, <code>source_quote</code>,
+<code>source_chat_id</code>, <code>source_message_id</code>,
+<code>trust</code>, <code>importance</code>, <code>created_ms</code>,
+<code>last_used_ms</code>, <code>valid_until_ms</code> and
+<code>deleted</code>, with <code>CHECK</code> constraints on kind and
+trust
+(<code>crates/memory-store/migrations/0001_memory.sql:6-22</code>). The
+ids of users, bots and chats are text with no foreign keys, because
+those rows live in <code>bot.db</code>.</p>
+<p><strong>Scope.</strong> <code>bot_id</code> null means shared across
+the user's bots. Extraction shares <code>profile</code> and
+<code>episodic</code> facts and binds <code>bot</code>,
+<code>procedural</code> and <code>lesson</code> facts to the bot that
+learned them (<code>crates/memory-store/src/pipeline.rs:222-227</code>).
+The save tool binds every kind to the calling bot, so a profile fact
+saved by tool is invisible to the user's other bots while the same fact
+extracted in the background is shared
+(<code>crates/memory-store/src/tools.rs:589</code>).</p>
+<p><strong>Provenance.</strong> <code>source_quote</code> and
+<code>source_chat_id</code> are set on every extracted and tool-saved
+row. Extraction passes no message id, so <code>source_message_id</code>
+is filled only by the save tool
+(<code>crates/agent-core/src/memory.rs:218</code>).</p>
+<p><strong>Time.</strong> <code>created_ms</code> and
+<code>last_used_ms</code> are record times. <code>valid_until_ms</code>
+is an expiry that recall honours and nothing sets: the pipeline writes
+<code>None</code> and the REST layer only returns the field (section
+9).</p>
+<p><strong>The journal.</strong> <code>memory_journal</code> holds the
+memory id, user, operation, <code>before_json</code>,
+<code>after_json</code>, a reason, a time and an <code>undone</code>
+flag (<code>0001_memory.sql:28-39</code>). The snapshots are whole
+serialised memories.</p>
+<p><strong>Session messages.</strong> <code>session_msgs</code> copies
+user and assistant messages from <code>bot.db</code> with their chat id,
+behind a second FTS5 table
+(<code>crates/memory-store/src/sessions.rs</code>). Deleting a chat or a
+bot calls nothing in this crate, so those rows and the bot's memories
+remain.</p>
+<p><strong>The knowledge index</strong> is a different object: sources,
+documents and chunks in one database file per bot, filled by the owner
+adding files, folders or saved pages, searched by the
+<code>knowledge_search</code> tool. Every result is labelled untrusted
+data. It has no scope column, journal or status, and its vector arm runs
+only when the owner configures an embedding provider.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Recall runs before every top-level turn.</strong>
+<code>with_recall</code> skips runs started by an external agent or
+external schedule and skips sub-agents, and otherwise queries with the
+user's message text
+(<code>crates/agent-core/src/exec.rs:475-489</code>). The block goes in
+front of the user message, never in the system prompt, so the provider's
+prompt cache stays valid
+(<code>crates/memory-store/src/render.rs:1-5</code>).</p>
+<p><strong>Two arms, both lexical in the shipped build.</strong></p>
+<ul>
+<li>The FTS5 arm ORs the query's alphanumeric tokens and orders by BM25,
+with the scope, deletion and expiry predicates in the SQL
+(<code>crates/memory-store/src/recall.rs:71-78</code>,
+<code>:104-110</code>).</li>
+<li>The vector arm queries the vec0 table and converts distance to
+cosine, stopping below 0.25. The vec0 table has no scope column, so each
+hit is loaded and tested by <code>visible</code>, and the KNN is
+repeated with a doubled <code>k</code>, up to 4,096, until fifty visible
+hits are found or the index is exhausted (<code>:119-163</code>).</li>
+</ul>
+<p>The embedder behind that table is <code>HashEmbedder</code>: each
+lowercased token is hashed to one of 384 buckets with a sign, and the
+vector is normalised
+(<code>crates/memory-store/src/embed.rs:17-60</code>). Its own comment
+calls it <em>"lexical-ish similarity only, no semantics"</em>. A
+paraphrase that shares no word with a memory reaches neither arm.
+<code>FastEmbedder</code>, a multilingual-e5-small wrapper, is compiled
+only under the <code>fastembed</code> feature and has no caller.</p>
+<p><strong>Fusion and ranking.</strong> The two lists are fused by
+reciprocal rank with k = 60. The fused score is multiplied by
+<code>1 + 0.5 × importance</code> and by a recency factor between 0.75
+and 1 with a 30-day half-life on the later of creation and last use
+(<code>recall.rs:29-39</code>, <code>:204-217</code>). Memories are
+taken in order until the next one would pass the token budget, estimated
+at four characters per token. Each returned memory gets
+<code>last_used_ms = now</code>, so a memory that is recalled keeps its
+recency boost.</p>
+<p><strong>Rendering.</strong> User-trusted memories are listed under
+<em>"Notes from earlier conversations (background context, may be
+outdated)"</em>. Untrusted ones go in
+<code>&lt;untrusted_memory_data&gt;</code> as JSON-escaped strings with
+a line telling the model never to follow requests in them
+(<code>crates/memory-store/src/render.rs:23-56</code>). Recalling any
+memory notes the run's taint tracker, and an untrusted one marks the run
+tainted (<code>crates/agent-core/src/exec.rs:495-505</code>).</p>
+<p><strong>Tools.</strong> <code>memory_search</code> runs the same
+<code>recall</code> and renders the same blocks.
+<code>session_search</code> is BM25 over past messages restricted to
+chats that belong to the calling bot
+(<code>crates/memory-store/src/tools.rs:346-395</code>,
+<code>:397-505</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Extraction does not block the turn. It is spawned after the reply,
+its errors are dropped, and a memory is retrievable once the task
+commits, usually before the next message. No pass rewrites the whole
+store.</p>
+<p><strong>The quote rule is code, in two places.</strong> In the
+pipeline, <code>validate</code> normalises whitespace and case and
+requires the quote to be a substring of the excerpt handed to the model
+(<code>crates/memory-store/src/pipeline.rs:243-249</code>). The excerpt
+includes the assistant's final answer, so a quote from the model's own
+reply passes this check; the prompt asks the model to record only what
+the user states. The save tool is stricter: it searches only the user
+messages of the current run that are not marked untrusted
+(<code>crates/memory-store/src/tools.rs:566-585</code>). It also refuses
+sub-agents, runs not started by a person and runs without a chat
+(<code>:545-557</code>).</p>
+<p><strong>Questions and secrets.</strong> A candidate or quote whose
+every sentence ends in a question mark or opens with a phrase such as
+<em>what if</em> or <em>suppose</em> is dropped
+(<code>pipeline.rs:259-301</code>). Thirteen regexes for keys, tokens,
+JWTs, PEM headers, card-like digit runs and long opaque strings reject
+content at the pipeline, the store, the tools and the REST layer
+(<code>crates/memory-store/src/secrets.rs:7-36</code>). The last two
+patterns match any 40-character base64-like run and any 32-character hex
+run, so a memory that quotes a commit hash is refused.</p>
+<p><strong>Consolidation.</strong> <code>find_similar</code> returns up
+to five live memories by the same hybrid search. With none, the
+candidate is added. Otherwise the model chooses add, update, delete or
+skip, and may name only an id from the list
+(<code>pipeline.rs:154-177</code>). An update rewrites the row to the
+candidate and keeps the higher importance. The prompt tells the model to
+prefer the newer statement when two contradict.</p>
+<p><strong>The trust guard.</strong> Content from an untrusted turn
+cannot update or delete a user-trusted memory, and cannot delete
+anything (<code>pipeline.rs:178-189</code>).
+<code>update_if_trust</code> rechecks the target's trust inside the
+transaction, so an owner edit that lands between the similarity search
+and the write wins
+(<code>crates/memory-store/src/store.rs:297-300</code>). A user edit
+sets trust to <code>user</code>.</p>
+<p><strong>Forgetting.</strong> <code>memory_forget</code> takes an id
+or a query. With a query it deletes the first memory <code>recall</code>
+returns, falling back to a substring match
+(<code>crates/memory-store/src/tools.rs:650-679</code>). Recall order
+includes the importance and recency boost, so the row deleted is the
+best-scoring match and not necessarily the one named. The candidates
+include shared rows, so one bot can forget a profile fact for all of
+them.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Each turn costs one extraction call, plus one consolidation call per
+candidate that has a similar memory. Each recall runs one FTS query and
+one or more KNN queries, then loads every hit by rowid. Because the
+vector table is unscoped, a store shared by many users would repeat the
+KNN up to the 4,096 limit; with one user per daemon it rarely loops.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model sees four tools
+(<code>crates/memory-store/src/tools.rs:39-44</code>). There is no
+update or list tool. All four are in the file-system permission
+category; the two writes are also classed as egress
+(<code>:66-82</code>).</p>
+<p>Under the default autonomy preset, a file-system write from a
+person-started or scheduled run is allowed without a prompt
+(<code>crates/permission-engine/src/modes.rs:110-113</code>). The model
+therefore saves and forgets unprompted on a clean run. A prompt appears
+in ask mode, or once the run is tainted by untrusted content, which is
+what the egress class is for.</p>
+<p>Telegram messages and paired-peer chats reach the daemon as ordinary
+chat turns started by a person, so they recall from and extract into the
+owner's memory for that bot. Memory code does not read the message
+source.</p>
+<p>The injection evals <code>inj-page-poison-memory</code> and
+<code>inj-memory-poison-mail</code> check that a save after untrusted
+content asks for approval. They declare their own fake
+<code>memory_save</code> and do not link the store.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="correction-does-not-hold">Correction does not hold</h3>
+<p>A forgotten memory is a row with <code>deleted = 1</code>, removed
+from the FTS and vector tables
+(<code>crates/memory-store/src/store.rs:343-361</code>,
+<code>:481-485</code>). <code>find_similar</code> reads those indexes,
+so the next extraction that meets the same statement finds nothing
+similar and adds it as new. The user's retraction in one turn is undone
+by a restatement in any later excerpt, including the assistant's own
+reply. Nothing compares a candidate with deleted rows.</p>
+<h3 id="deletion-keeps-the-text">Deletion keeps the text</h3>
+<p>No statement removes a row from <code>memories</code>. The content of
+a forgotten memory stays in the row, in every journal snapshot that
+touched it, and in <code>export_json</code>, which includes deleted rows
+(<code>crates/memory-store/src/manage.rs:83-99</code>).
+<code>bot backup</code> copies the whole file, and a restore with
+<code>--replace</code> swaps it back, so memories forgotten after the
+backup return live.</p>
+<h3 id="the-journal">The journal</h3>
+<p>Every <code>add</code>, <code>update</code> and <code>delete</code>
+inserts its journal row in the transaction that makes the change.
+<code>undo</code> is the exception: it writes the earlier snapshot back,
+re-indexes or unindexes the row, and sets <code>undone = 1</code> on the
+entry (<code>crates/memory-store/src/store.rs:369-415</code>). The
+journal then shows a change that was reversed with no time and no reason
+for the reversal. Only the newest active entry of a memory can be
+undone, which keeps the snapshots consistent.</p>
+<p>The owner routes also append <code>memory.create</code>,
+<code>memory.update</code>, <code>memory.delete</code> and
+<code>memory.undo</code> rows to the general audit log in
+<code>bot.db</code> before calling the store
+(<code>crates/daemon-api/src/memory.rs:286-291</code>,
+<code>:351-357</code>). Extraction and tool writes do not.</p>
+<h3 id="documents-that-disagree-with-the-code">Documents that disagree
+with the code</h3>
+<p><code>docs/guide/faq.md:73-75</code> says the daemon <em>"does not
+enable it yet"</em>, and <code>evals/retrieval/README.md:56</code> says
+the shipped default has memory disabled. <code>bot serve</code> opens
+the store and registers the tools unless <code>--safe</code> is given.
+<code>docs/guide/agent-tools.md:10</code> describes memory as facts the
+user told the bot; background extraction also stores items from
+tool-using turns, labelled untrusted.</p>
+<h3 id="marks">Marks</h3>
+<p>Three are earned, all on the conversational store. None covers the
+knowledge index.</p>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> Rows carry
+<code>user_id</code> and <code>bot_id</code>. The lexical arm filters on
+both in SQL, the vector arm tests every hit with the same rule, and
+<code>list</code> repeats it. The ids come from the run or from the
+calling bot's record. In a default install the daemon has one user, so
+the boundary that does work is between that user's bots.</li>
+<li><strong><code>audit_log</code> — earned.</strong>
+<code>memory_journal</code> is written by the three mutating store
+functions and by nothing else, with snapshots on both sides of each
+change. <code>undo</code> flags an entry instead of appending one.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> A case seeds
+three rows on one term across two bots and two users and requires recall
+for the second bot to return exactly the shared row; a tool-level case
+requires one bot's searches to omit what another's return.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>trust</code> has two values and decides which block a memory is
+rendered in, what an extraction may overwrite, and whether the run is
+tainted. No read excludes a row on it: an untrusted memory is recalled,
+ranked and shown.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> No record of a
+rejected value exists. A deleted row is invisible to the similarity
+search that would have to consult it.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>valid_until_ms</code> is read by recall and written by no code
+path, and no column records when a fact held.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No memory
+waits for a person. The panel edits, forgets and undoes after the write
+has taken effect.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI runs <code>cargo nextest run --workspace</code>
+(<code>.github/workflows/ci.yml:170</code>). I ran nothing from the
+repository.</p>
+<p>What the memory crate's tests cover:</p>
+<ul>
+<li>extraction adding a quoted fact, a duplicate becoming an update, and
+a contradiction rewriting the row with both contents in the journal
+(<code>crates/memory-store/tests/memory.rs:80-150</code>);</li>
+<li>questions, hypotheticals, missing quotes, quotes absent from the
+excerpt and secrets each storing nothing (<code>:154-220</code>);</li>
+<li>an untrusted candidate stored as untrusted and unable to overwrite a
+user memory, including when the owner edits between search and write
+(<code>:222-287</code>);</li>
+<li>recall fusing a lexical and a vector hit, the scope and deletion
+case, and the budget cut (<code>:289-370</code>);</li>
+<li>undo of an update, a delete and an add, a double undo refused, and
+another user refused (<code>:373-437</code>);</li>
+<li>a target row found by <code>find_similar</code> behind sixty rows of
+another user that fill the first KNN (<code>:592-612</code>);</li>
+<li>through the tools, a save accepted with a user quote and refused
+with a quote from a tool output or a secret, and cross-bot isolation of
+memories and sessions
+(<code>crates/memory-store/src/tools.rs:840-957</code>).</li>
+</ul>
+<p>What is not covered:</p>
+<ul>
+<li>No test stores a fact, forgets it and runs extraction on the same
+statement again.</li>
+<li>The forget-by-query case seeds ten near-identical notes, asks to
+forget note 0 and asserts only that the reply contains <em>"Forgot [bot]
+memory"</em>, not which row was deleted
+(<code>crates/memory-store/src/tools.rs:1006-1042</code>).</li>
+<li>No test passes a quote that appears only in the assistant's part of
+an excerpt.</li>
+<li>The post-deletion recall assertions run over an empty result.</li>
+</ul>
+<p><code>crates/memory-store/tests/retrieval_eval.rs</code> and
+<code>retrieval_semantic_eval.rs</code> measure the knowledge index
+against a committed fifteen-file corpus, with a TF-IDF and a one-hot
+fixture embedder in place of a model. They assert recall@5 and MRR
+floors and seven abstention queries that must return nothing. The second
+file's header says it is not a benchmark of a downloaded model. No
+evaluation of conversational recall quality is committed, and the tree
+cites no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A quote the code can find.</strong> Requiring each stored
+fact to carry a span of the source, and checking the span in code, turns
+an extraction prompt's rule into a refusal. Check it against the user's
+turns only, as the save tool does and the pipeline does not.</li>
+<li><strong>Trust from the turn's taint, not from the model.</strong>
+Deriving <code>untrusted</code> from which tools ran, whether child runs
+exist and whether the context was tainted keeps a web page from writing
+first-person facts. Barring untrusted content from rewriting
+user-trusted rows closes the overwrite path.</li>
+<li><strong>A journal row in the writer's transaction, with
+snapshots.</strong> Undo becomes a snapshot restore, and the audit
+cannot lag the store.</li>
+<li><strong>Ids from the run.</strong> The tools take no user or bot
+argument.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A soft delete the deduplicator cannot see.</strong> If
+consolidation searches only live rows, forgetting lasts until the fact
+is restated. Keep the deleted statement where the similarity search
+finds it and refuse a match.</li>
+<li><strong>A hash embedder behind a hybrid-search API.</strong> The
+fused arms agree on shared words and miss the same paraphrases; say
+lexical until a model is wired.</li>
+<li><strong>Forget by best match.</strong> Deleting the top recall hit
+for a free-text query removes a neighbour as readily as the target.
+Return candidates and delete by id.</li>
+<li><strong>An undo that leaves no row.</strong> Append the
+reversal.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single owner running personal bots on one machine who
+wants memory that is cheap to host, inspectable in a settings panel and
+reversible change by change. It is the memory of a large,
+three-week-old, fast-moving platform at an alpha tag, so expect the
+surrounding code to change under it. Walk away if a retraction must
+hold, if stored text must be erasable, or if recall has to find a fact
+phrased differently from the question.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the hash embedder is the intended default or a placeholder
+until the <code>fastembed</code> feature is enabled in a release
+build.</li>
+<li>Whether extraction is meant to accept a quote from the assistant's
+reply.</li>
+<li>Whether a profile fact saved by tool is meant to stay with one bot
+while the same fact extracted in the background is shared.</li>
+<li>What is meant to write <code>valid_until_ms</code>.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Store, journal, undo, list, export:
+<code>crates/memory-store/src/store.rs</code>,
+<code>crates/memory-store/src/manage.rs</code>,
+<code>crates/memory-store/migrations/0001_memory.sql</code></li>
+<li>Extraction and consolidation:
+<code>crates/memory-store/src/pipeline.rs</code>,
+<code>crates/memory-store/prompts/extract.md</code>,
+<code>crates/memory-store/prompts/consolidate.md</code>,
+<code>crates/agent-core/src/memory.rs</code></li>
+<li>Recall and rendering:
+<code>crates/memory-store/src/recall.rs</code>,
+<code>crates/memory-store/src/render.rs</code>,
+<code>crates/memory-store/src/embed.rs</code>,
+<code>crates/agent-core/src/exec.rs</code></li>
+<li>Tools and session search:
+<code>crates/memory-store/src/tools.rs</code>,
+<code>crates/memory-store/src/sessions.rs</code></li>
+<li>Secrets: <code>crates/memory-store/src/secrets.rs</code></li>
+<li>Wiring: <code>apps/cli/src/serve.rs</code>,
+<code>crates/agent-core/src/config.rs</code>,
+<code>crates/agent-core/src/agent.rs</code></li>
+<li>Owner surface: <code>crates/daemon-api/src/memory.rs</code>,
+<code>apps/desktop/ui/src/views/settings/MemoryCard.tsx</code></li>
+<li>Permissions: <code>crates/permission-engine/src/modes.rs</code>,
+<code>crates/permission-engine/src/egress.rs</code></li>
+<li>Backup: <code>crates/state-bundle/src/transfer.rs</code>,
+<code>apps/cli/src/backup_cmd.rs</code></li>
+<li>Knowledge index: <code>crates/memory-store/src/knowledge/</code>,
+<code>crates/daemon-api/src/knowledge.rs</code>,
+<code>crates/builtin-tools/src/knowledge.rs</code></li>
+<li>Tests: <code>crates/memory-store/tests/</code>,
+<code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No hard delete of a memory row.</strong>
+<code>git grep -n -E 'DELETE FROM memories( |")' -- .</code> returns
+nothing; <code>git grep -n 'DELETE FROM memories_fts' -- .</code>
+matches <code>crates/memory-store/src/store.rs:482</code>.</li>
+<li><strong>No value-keyed refusal in the conversational store.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|do_not_remember|suppress' -- crates/memory-store</code>
+returns two lines of <code>tests/knowledge_import_schema.rs</code> about
+an import trigger.</li>
+<li><strong>Nothing writes an expiry.</strong>
+<code>git grep -n -E 'valid_until_ms' -- . ':!crates/memory-store'</code>
+returns UI mock data, the generated schema, the OpenAPI document and a
+response field and its mapping in
+<code>crates/daemon-api/src/memory.rs:92</code> and <code>:198</code>.
+Inside the crate, the assignments are <code>None</code> at
+<code>pipeline.rs:197</code> and <code>types.rs:139</code>, and
+pass-throughs in <code>store.rs</code>.</li>
+<li><strong>The product constructs only the hash embedder.</strong>
+<code>git grep -n -E 'HashEmbedder|FastEmbedder' -- crates apps ':!crates/memory-store'</code>
+returns <code>crates/agent-core/src/config.rs:129</code>,
+<code>crates/daemon-api/src/lib.rs:794</code>, a doc comment and test
+code. <code>git grep -n 'FastEmbedder::new' -- crates apps</code>
+returns nothing.</li>
+<li><strong>No setting disables memory.</strong>
+<code>git grep -n -E 'memory\.enabled|memory_enabled' -- . ':!crates/memory-store'</code>
+returns one doc comment in
+<code>crates/agent-core/src/config.rs</code>.</li>
+<li><strong>No pending or approval state.</strong>
+<code>git grep -n -i -E 'pending|approv|pinned|quarantin' -- crates/memory-store/src/store.rs crates/memory-store/src/manage.rs crates/memory-store/src/pipeline.rs crates/memory-store/src/recall.rs crates/memory-store/migrations crates/daemon-api/src/memory.rs</code>
+returns nothing; the same pattern matches the header comment at
+<code>crates/memory-store/src/tools.rs:15</code>.</li>
+<li><strong>Memory code does not read the message source.</strong>
+<code>git grep -n -E 'message_source' -- crates/agent-core/src/memory.rs crates/memory-store</code>
+returns nothing.</li>
+<li><strong>No permission rule names memory.</strong>
+<code>git grep -n -i memory -- crates/permission-engine</code> returns
+three comments in <code>egress.rs</code>.</li>
+<li><strong>The crate's tests are not ignored.</strong>
+<code>git grep -n '#\[ignore' -- crates/memory-store</code> returns
+nothing.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- . ':!pnpm-lock.yaml' ':!Cargo.lock'</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-23</strong> — <a
+href="https://github.com/emreocell/Praxi-Bot/commit/8e51eaf14da3896e62fffd4fe6499b5630f020b9"><code class="commit-id" title="8e51eaf14da3896e62fffd4fe6499b5630f020b9">8e51eaf1…</code></a>.
+First reading, from a full clone at the head of <code>main</code>.
+Screened first: no auto-run surface, 34 manifests and both lockfiles
+inside the seven-day cooldown, two <code>build.rs</code> files, and
+three <code>package.json</code> files with floating ranges. Prompts,
+docs and skills were read as data. Nothing was installed, built or run.
+Three marks on the conversational store: <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). The shipped
+embedder is a token hash, a forgotten fact can be extracted again, and
+the FAQ says memory is not enabled.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -273,6 +273,8 @@ new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
 
 [Agentic GraphRAG](../../systems/agentic-graphrag/) holds an agent's decisions to the version of each document they read. A decision is refused unless every document support was fetched in the same run with status `ok`, and the support stores the content hash and activation sequence it saw (`agrag/decisions.py:924-976`). The cutover that activates a new version flags every active decision citing that document in the same transaction (`agrag/cypher/documents.py:139-170`), and clearing the flag requires a fresh fetch at the current hash. The built-in agent holds the reaffirm tool, so the check proves the text was read, not that a person judged it.
 
+**[Praxi-Bot](../../systems/praxi-bot/) checks the quote in code, twice, against two different texts.** Each extracted candidate must carry a quote that is a whitespace-normalised span of the excerpt the model was shown, or it is dropped with a reason (`crates/memory-store/src/pipeline.rs:236-257`). The model's own `memory_save` tool is held to a narrower text: the quote must appear in a user message of the current run that is not marked untrusted, never in a tool output or an assistant message (`crates/memory-store/src/tools.rs:566-585`). The background path's excerpt includes the assistant's final answer, so a quote from the model's own reply passes there and would not pass the tool. The quote and source chat are stored on the row.
+
 ### Related: admission gates rather than evidence
 
 These decide what may become a belief — a shared derivation, a confirmation turn,

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 851 reports.**
+**This page covers all 852 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7832,3 +7832,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0-or-later, release tag v3.85; 33,771 lines of Rust and 238,131 lines of Kotlin, 416 commits from 29 April to 21 November 2026; 545 Rust test functions and 2,308 Kotlin `@Test` methods with no CI, not run here; no LoCoMo or LongMemEval harness for the cited paper. Three marks: `scope_enforced`, `audit_log` and `negative_eval`.
 - Study when: you want a single-file encrypted on-device memory, or a worked case of demoting a hashed-signature lane after measuring it.
 - Do not copy when: deletes must stick, agents need private memory, or a backup has to carry the facts.
+
+### [`praxi-bot`](../systems/praxi-bot/)
+- Best idea: **a save that must quote the user.** The model's `memory_save` tool is refused unless its quote appears, whitespace-normalised, in a user message of the current run that is not marked untrusted, and background extraction drops any candidate whose quote is not a span of the excerpt. The rule is code in both places, beside a refusal of questions, hypotheticals and credential-shaped text.
+- Second idea: trust taken from the turn's taint. An extraction is labelled untrusted when the turn used a tool, had child runs, saw another bot's replies or was tainted, and untrusted content can neither rewrite nor retract a user-trusted memory; the check is repeated inside the write transaction.
+- Biggest risk: **forgetting does not hold.** A delete sets a flag and unindexes the row, and consolidation searches only the indexes, so the next extraction that meets the same statement adds it as new. No row is ever removed, so the text stays in the table, the journal snapshots and every backup, and a restore returns forgotten memories.
+- Second risk: the embedder the product constructs is a signed hash of word tokens, so the hybrid recall has two lexical arms and misses paraphrases. `memory_forget` with a query deletes the top recall hit, and its test does not check which row went. The FAQ says the daemon does not enable memory, which `bot serve` does by default.
+- Most reusable component: the quote check in `exec_memory_save`, `crates/memory-store/src/tools.rs:507-605`, and the validation and trust guard in `crates/memory-store/src/pipeline.rs:148-257`.
+- Maturity impression: Apache-2.0; 439,272 lines of Rust and 1,006 commits, all in November 2026, at tag v0.1.0-alpha.4; 4,482 Rust test functions, 120 in the memory crate, run in CI and not run here. Three marks: `scope_enforced`, `audit_log`, `negative_eval`. No evaluation of conversational recall is committed.
+- Study when: you want model-written memory that cannot assert what the user did not say, or a journal with snapshots and undo in the writer's transaction.
+- Do not copy when: a retraction must survive the next extraction, stored text must be erasable, or recall must find a fact phrased differently from the question.

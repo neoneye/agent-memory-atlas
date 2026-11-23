@@ -552,6 +552,7 @@ page_kind: comparison
 - [`ironrag`](../systems/ironrag/)
 - [`agents-remember`](../systems/agents-remember/)
 - [`guru-unus-lumen`](../systems/guru-unus-lumen/)
+- [`praxi-bot`](../systems/praxi-bot/)
 
 ## Repos Inspected
 
@@ -1408,6 +1409,7 @@ page_kind: comparison
 - [mlimarenko/IronRAG](https://github.com/mlimarenko/IronRAG) at [`e10997a4e45e529a5789acf23e606ccd703a3532`](https://github.com/mlimarenko/IronRAG/commit/e10997a4e45e529a5789acf23e606ccd703a3532) — read only, from a full clone of `master` at release 0.6.3, scoped to the MCP surface, the content revision and deletion lifecycle, the search statements, event-time extraction, the audit writers and their tests; extraction, graph and billing code read only where it writes what those paths read. No auto-run surface; four build-time execution points, the Makefile, `apps/api/build.rs` and two connector `conftest.py` files; one unpinned surface, `apps/web/package.json`, under a lockfile. Nothing was installed, built or run. MIT
 - [Foxfire1st/agents-remember](https://github.com/Foxfire1st/agents-remember) at [`e07c10b3a67036b4187dc2d6629a4c093e13242c`](https://github.com/Foxfire1st/agents-remember/commit/e07c10b3a67036b4187dc2d6629a4c093e13242c) — read only, from a clone of `main` at release `mcp-v3.0.3`, scoped to the knowledge records, writer, currentness, index, reads, gate, validator, MCP registration and their tests; the dashboard, canvas and host integration read only where they touch memory. One auto-run surface, committed `.githooks/`; four build-time execution points, two provider `setup.py` files, a `conftest.py` and a dashboard `prepare` script; `mcp/pyproject.toml` and `mcp/uv.lock` inside the cooldown. Nothing was installed, built or run. MIT; the Paseo host it downloads declares no licence in the pinned lockfile
 - [GuruProduction/GURUbyUnusLumen](https://github.com/GuruProduction/GURUbyUnusLumen) at [`366208c8799d39cd5ec3921dd85a3d418e93810b`](https://github.com/GuruProduction/GURUbyUnusLumen/commit/366208c8799d39cd5ec3921dd85a3d418e93810b) — read only, from a full clone of `main`, scoped to the Cerebrum server, curate, decay, events and vault crates, the JNI host, and the Kotlin memory, agent-memory, extraction, project-fact, notes-to-self and thought-cycle paths with their tests. One auto-run surface, an LFS filter on `*.tflite`, no LFS object fetched; one unpinned surface, `factory/package.json`, with a lockfile; an inert `scripts/hooks/pre-commit`. Nothing was installed, built or run. AGPL-3.0-or-later
+- [emreocell/Praxi-Bot](https://github.com/emreocell/Praxi-Bot) at [`8e51eaf14da3896e62fffd4fe6499b5630f020b9`](https://github.com/emreocell/Praxi-Bot/commit/8e51eaf14da3896e62fffd4fe6499b5630f020b9) — read only, from a full clone at the head of `main` on 23 November 2026. No auto-run surface; 34 manifests and both lockfiles inside the seven-day cooldown; two `build.rs` files; three `package.json` files with floating ranges. Prompts, docs and bundled skills read as data. Nothing was installed, built or run, and the 4,482 Rust test functions were not run. Apache-2.0 in `LICENSE` and the workspace manifest.
 
 ## What the licences actually say
 

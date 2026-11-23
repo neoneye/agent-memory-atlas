@@ -465,6 +465,17 @@ above every memory, and <code>memory pack</code> writes a
 leaves the tool only as a field of the JSON output, so the hash the
 README demonstrates describes bytes no provider receives first.</p></li>
 </ul>
+<p><strong><a href="../../systems/praxi-bot/">Praxi-Bot</a> puts
+recalled memory in front of the user message and says why in the module
+header.</strong> <code>render_recall_block</code> builds a block that
+<code>with_recall</code> prepends to the turn's user text, <em>"never
+the system prompt, to keep the prompt cache valid"</em>
+(<code>crates/memory-store/src/lib.rs:9-10</code>,
+<code>crates/agent-core/src/exec.rs:473-513</code>). The block is
+recomputed each top-level turn within an 800-token budget, and untrusted
+memories go in a second, escaped section of the same message. Each
+recall stamps <code>last_used_ms</code> on the rows it returns, which
+feeds the recency boost of the next one.</p>
 <h2 id="the-same-constraint-one-layer-down">The same constraint, one
 layer down</h2>
 <p>Everything above is about where a <em>memory system</em> puts its

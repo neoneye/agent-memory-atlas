@@ -270,6 +270,8 @@ falls under the KV-cache scope boundary in the
 
 - **[memory.cpp](../../systems/memory-cpp/)** — the prefix computed and not shipped. `durable_stable_prefix` builds a task-free block from a fixed query over durable kinds, sorted and deduplicated, and a test asserts two tasks hash it identically and that neither task's text is in it. The pack that `memory compile` prints is rendered separately and carries the task on its third line, above every memory, and `memory pack` writes a `Generated at:` timestamp above that (`crates/memory-cli/src/main.rs:10526-10597`, `:10642-10643`, `:10725`). The stable prefix leaves the tool only as a field of the JSON output, so the hash the README demonstrates describes bytes no provider receives first.
 
+**[Praxi-Bot](../../systems/praxi-bot/) puts recalled memory in front of the user message and says why in the module header.** `render_recall_block` builds a block that `with_recall` prepends to the turn's user text, *"never the system prompt, to keep the prompt cache valid"* (`crates/memory-store/src/lib.rs:9-10`, `crates/agent-core/src/exec.rs:473-513`). The block is recomputed each top-level turn within an 800-token budget, and untrusted memories go in a second, escaped section of the same message. Each recall stamps `last_used_ms` on the rows it returns, which feeds the recency boost of the next one.
+
 ## The same constraint, one layer down
 
 Everything above is about where a *memory system* puts its recall block. The same

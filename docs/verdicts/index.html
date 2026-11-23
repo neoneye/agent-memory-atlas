@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 851 reports.</strong></p>
+<p><strong>This page covers all 852 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35009,6 +35009,51 @@ LongMemEval harness for the cited paper. Three marks:
 worked case of demoting a hashed-signature lane after measuring it.</li>
 <li>Do not copy when: deletes must stick, agents need private memory, or
 a backup has to carry the facts.</li>
+</ul>
+<h3 id="praxi-bot"><a
+href="../systems/praxi-bot/"><code>praxi-bot</code></a></h3>
+<ul>
+<li>Best idea: <strong>a save that must quote the user.</strong> The
+model's <code>memory_save</code> tool is refused unless its quote
+appears, whitespace-normalised, in a user message of the current run
+that is not marked untrusted, and background extraction drops any
+candidate whose quote is not a span of the excerpt. The rule is code in
+both places, beside a refusal of questions, hypotheticals and
+credential-shaped text.</li>
+<li>Second idea: trust taken from the turn's taint. An extraction is
+labelled untrusted when the turn used a tool, had child runs, saw
+another bot's replies or was tainted, and untrusted content can neither
+rewrite nor retract a user-trusted memory; the check is repeated inside
+the write transaction.</li>
+<li>Biggest risk: <strong>forgetting does not hold.</strong> A delete
+sets a flag and unindexes the row, and consolidation searches only the
+indexes, so the next extraction that meets the same statement adds it as
+new. No row is ever removed, so the text stays in the table, the journal
+snapshots and every backup, and a restore returns forgotten
+memories.</li>
+<li>Second risk: the embedder the product constructs is a signed hash of
+word tokens, so the hybrid recall has two lexical arms and misses
+paraphrases. <code>memory_forget</code> with a query deletes the top
+recall hit, and its test does not check which row went. The FAQ says the
+daemon does not enable memory, which <code>bot serve</code> does by
+default.</li>
+<li>Most reusable component: the quote check in
+<code>exec_memory_save</code>,
+<code>crates/memory-store/src/tools.rs:507-605</code>, and the
+validation and trust guard in
+<code>crates/memory-store/src/pipeline.rs:148-257</code>.</li>
+<li>Maturity impression: Apache-2.0; 439,272 lines of Rust and 1,006
+commits, all in November 2026, at tag v0.1.0-alpha.4; 4,482 Rust test
+functions, 120 in the memory crate, run in CI and not run here. Three
+marks: <code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>. No evaluation of conversational recall is
+committed.</li>
+<li>Study when: you want model-written memory that cannot assert what
+the user did not say, or a journal with snapshots and undo in the
+writer's transaction.</li>
+<li>Do not copy when: a retraction must survive the next extraction,
+stored text must be erasable, or recall must find a fact phrased
+differently from the question.</li>
 </ul>
         </article>
       </div>
