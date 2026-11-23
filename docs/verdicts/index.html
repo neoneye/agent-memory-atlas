@@ -32881,46 +32881,50 @@ sessions by design rather than by id.</li>
 <h3 id="openyantra"><a
 href="../systems/openyantra/"><code>openyantra</code></a></h3>
 <ul>
-<li>Best idea: <strong>a quarantine the agent cannot drain.</strong> A
-sheet write matching a confirmed injection, jailbreak, impersonation or
-zero-width pattern is held in its own sheet, out of every other sheet,
-the search index and the context, until a person presses Release in the
-dashboard. No MCP tool, adapter, bot command or CLI verb releases it,
-and the writer refuses writes addressed to the Quarantine sheet.</li>
+<li>Best idea: <strong>a superseded belief that refuses its own
+value.</strong> <code>Superseded_By</code> on the Beliefs sheet drops a
+row from search and every context compiler through one shared predicate,
+and the write gate reads the same rows: an add or update repeating a
+superseded Position or Topic is rejected whatever agent sends it and
+whatever Topic it is filed under, with a <code>rejected</code> row on
+the ledger.</li>
 <li>Second idea: one writer for the workbook that records every outcome.
 <code>LedgerAgent._process</code> saves a <code>written</code> ledger
 row in the same atomic write as the change, and appends
 <code>rejected</code> and <code>conflict</code> rows beside it, so the
 replay check reads a ledger that cannot lag the sheet.</li>
-<li>Biggest risk: <strong>the JSON store sits outside the gate.</strong>
-The MCP <code>memory_*</code> tools and the dashboard write a separate
-JSON store with a secret filter and an injection block and no admission
-filter, quarantine or ledger, and no context reads it. Both file locks
-fall back to a thread lock when <code>portalocker</code> raises, and the
-replay guard relies on the file lock.</li>
-<li>Second risk: search filters superseded beliefs and nothing else, so
-a resolved loop, a Done task and a Cancelled project rank like live
-ones. MCP <code>read_sheet</code>, the HUD's recall and the morning
-brief return a superseded belief. No test sends a write the conflict
-guard refuses. The SQLite engine and the incremental index have no
-producer.</li>
-<li>Most reusable component: the quarantine path,
-<code>_quarantine</code> and <code>release_quarantine</code> in
-<code>openyantra/core.py:1511-1553</code>, with the release route at
-<code>openyantra/yantra_ui.py:238-241</code>.</li>
+<li>Biggest risk: <strong>the dashboard reads a store nothing
+fills.</strong> Its sheet route returns SQLite tables that only
+<code>yantra sync</code> populates, so it shows the last sync's rows, an
+empty ledger, and <em>no quarantined writes</em> over a Quarantine sheet
+that holds them; the Release button is drawn per listed row and never
+appears. No test requests the route.</li>
+<li>Second risk: the git-file mesh imports every teammate belief as
+<code>User-stated</code> at High confidence, compares no signature, and
+re-adds a row deleted locally because it pulls before it pushes. The
+gateway harvests decision phrases from model output into the Session Log
+as <code>System</code> at High confidence, and <code>yantra proxy</code>
+builds it without a workbook. The tombstone's override is a field any
+request can carry.</li>
+<li>Most reusable component: the tombstone check,
+<code>_check_tombstone</code> in
+<code>openyantra/core.py:502-547</code>, beside the predicate it shares
+with every read, <code>is_superseded</code> at
+<code>:189-214</code>.</li>
 <li>Maturity impression: MIT for the software, with the protocol's
-schemas under CC0 1.0 in a separate file; 11,521 lines of Python outside
-tests; 86 commits, 20 March – 10 November 2026, 71 of them from 7 to 10
-November; 96 pytest functions run in CI, not run here. Four marks:
-<code>audit_log</code>, <code>human_review</code>,
-<code>trust_state</code>, <code>negative_eval</code>. The whitepaper's
-validation is review by language models, and no benchmark is
-committed.</li>
-<li>Study when: you want a write gate whose security hold only a person
-can clear, or a memory a person reads and edits in a spreadsheet
-application.</li>
-<li>Do not copy when: a retraction must reach every read path, more than
-one process writes without <code>portalocker</code>, or the agent's own
+schemas under CC0 1.0 in a separate file; 16,420 lines of Python outside
+tests; 101 commits, 20 March – 23 November 2026, 15 of them after 10
+November and carrying the version from 6.2.0 to 7.0.0; 184 pytest
+functions run in CI, not run here. Four marks: <code>audit_log</code>,
+<code>trust_state</code>, <code>tombstone</code>,
+<code>negative_eval</code>. The whitepaper's validation is review by
+language models, and the one committed benchmark times routing.</li>
+<li>Study when: you want a correction that both leaves the read path and
+refuses re-assertion at the write gate, or a memory a person reads and
+edits in a spreadsheet application.</li>
+<li>Do not copy when: a person must see what is held or stored through
+the dashboard, a workbook is shared between people, more than one
+process writes without <code>portalocker</code>, or the agent's own
 memory tools must pass the same gate as everything else.</li>
 </ul>
 <h3 id="noosphere-lite-mcp"><a

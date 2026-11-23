@@ -27354,47 +27354,63 @@ memory tools</td>
 <td>chitrapat.ods, rewritten whole by pandas and odfpy through a
 temporary file and an atomic replace on every write, under a per-path
 re-entrant lock, a thread lock plus an exclusive portalocker lock on a
-sibling lock file; a sanchitta.json write queue; FAISS, BM25 and
-registry files beside it; cognitive_memories.json; a chitrapat.db SQLite
-file whose only written table is a graph of edges</td>
+sibling lock file; a sanchitta.json write queue; FAISS, BM25, registry
+and per-sheet centroid files beside it; cognitive_memories.json and a
+key-tombstone file; a chitrapat.db SQLite file holding inferred graph
+edges and, after yantra sync, a copy of ten sheets; a mesh.jsonl export
+inside a git repository</td>
 <td>A session-context builder filtering projects, loops, goals and tasks
-by status; FAISS over TF-IDF with SVD or MiniLM fused with BM25, then
-importance and recency, dropping superseded beliefs and applying no
-other status filter; substring search on the JSON notes; a six-hop
+by status and, when a caller names a project, projects, tasks and loops
+by a substring of it; FAISS over TF-IDF with SVD or MiniLM fused with
+BM25, then importance and recency, dropping superseded beliefs and
+applying no other status filter; per-sheet centroid routing that picks
+context sections; substring search on the JSON notes; a six-hop
 bidirectional edge walk</td>
-<td>Explicit calls only, from MCP, the dashboard and HUD, the CLI,
-Telegram, mail, an iOS Shortcut endpoint, an Obsidian import, a git
-post-commit hook and three framework adapters; no model on the write
+<td>Explicit calls from MCP, the dashboard and HUD, the CLI, Telegram,
+mail, an iOS Shortcut endpoint, an Obsidian import, a git post-commit
+hook, a menu-bar capture, a git-file mesh import and three framework
+adapters; a local chat gateway that regex-harvests decision phrases from
+user and model text into the Session Log; no model on the write
 path</td>
 <td>Update matches the first column and appends a new row when nothing
 matches; resolve and complete set a status column; supersede fills a
-Superseded_By column; the delete operation has no branch and changes
-nothing; the JSON notes are overwritten by key or hard-deleted</td>
-<td>One workbook per person and no scope key; an Agent column selects
-which configured instructions each agent receives; the JSON notes carry
-an agent name no read filters on</td>
+Superseded_By column, after which an add or update repeating that Topic
+or Position is refused; delete removes every row whose first column
+matches, leaves a ledger row without the content, and has no product
+caller; the JSON notes are overwritten by key or deleted leaving a key
+tombstone the caller can waive</td>
+<td>One workbook per person; an optional project argument filters
+projects, tasks and loops in the session context and is absent by
+default; an Agent column selects which configured instructions each
+agent receives; the JSON notes carry an agent name no read filters
+on</td>
 <td>A hand-rolled sixteen-tool stdio MCP server, a FastAPI dashboard and
-pywebview HUD on 127.0.0.1:7331, a CLI, LangChain, CrewAI and OpenClaw
-adapters, and a setup command writing Claude Desktop and Cursor
+pywebview HUD on 127.0.0.1:7331, an OpenAI-compatible gateway on
+127.0.0.1:7332, a CLI, a menu-bar tracker, LangChain, CrewAI and
+OpenClaw adapters, and a setup command writing Claude Desktop and Cursor
 configs</td>
-<td>None scheduled; Nidra runs on demand, auto-resolves open loops whose
-topic words appear in recent session decisions, writes a summary, and
-adds regex-matched preference phrases to Beliefs at High confidence, one
-topic per phrase, skipping phrases already stored or found in a reverted
-decision, then marks superseded any belief whose text matches a reverted
-decision</td>
-<td>A regex scan can hold a write in quarantine for a person to release;
-Confidence and Source are caller-supplied labels, and the MCP add_task
-and add_project writes are stamped User-stated</td>
+<td>Nidra runs on demand or from a daemon that waits for the workbook to
+sit idle; it auto-resolves open loops whose topic words appear in recent
+session decisions, writes a summary, and adds regex-matched preference
+phrases to Beliefs at High confidence, one topic per phrase, skipping
+phrases already stored or found in a reverted decision, then marks
+superseded any belief whose text matches a reverted decision</td>
+<td>A regex scan can hold a write in quarantine, and the dashboard list
+that carries the Release button reads an SQLite table no code fills;
+Confidence and Source are caller-supplied labels, the MCP add_task and
+add_project writes are stamped User-stated, and a mesh import stamps
+every incoming belief User-stated and High</td>
 <td>One choke point that scans, filters, validates and ledgers every
-sheet write; a quarantine the agent's tools cannot release; a store a
-person can open and read in LibreOffice</td>
-<td>Both file locks fall back to a thread lock when portalocker fails,
-and the replay guard relies on the file lock; the JSON store behind the
-MCP memory tools has a secret filter and an injection block but no
-admission filter or ledger; search ranks resolved loops, Done tasks and
-Cancelled projects like live ones; the SQLite engine and incremental
-index have no producer</td>
+sheet write; a superseded belief that is dropped from every compiled
+context and refuses re-assertion by value; a store a person can open and
+read in LibreOffice</td>
+<td>The dashboard and HUD read SQLite tables only yantra sync fills, so
+held writes, the ledger and current rows do not appear there; both file
+locks fall back to a thread lock when portalocker fails, and the replay
+guard relies on the file lock; a mesh sync re-adds rows deleted locally;
+the yantra proxy command builds its gateway without a workbook; search
+ranks resolved loops, Done tasks and Cancelled projects like live
+ones</td>
 </tr>
 <tr>
 <td><a
@@ -38171,7 +38187,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>85 of 851:</em> <a
+<p><em>86 of 851:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -38220,6 +38236,7 @@ href="../systems/noosphere-lite-mcp/"><code>noosphere-lite-mcp</code></a>,
 href="../systems/omnimem/"><code>omnimem</code></a>, <a
 href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
 <a href="../systems/openmake-llm/"><code>openmake-llm</code></a>, <a
+href="../systems/openyantra/"><code>openyantra</code></a>, <a
 href="../systems/openzync-core/"><code>openzync-core</code></a>, <a
 href="../systems/orbital/"><code>orbital</code></a>, <a
 href="../systems/ownmem/"><code>ownmem</code></a>, <a
@@ -39327,7 +39344,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>107 of 851:</em> <a
+<p><em>106 of 851:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -39402,7 +39419,6 @@ href="../systems/omnimem/"><code>omnimem</code></a>, <a
 href="../systems/one-agent-many-hats/"><code>one-agent-many-hats</code></a>,
 <a href="../systems/openkb/"><code>openkb</code></a>, <a
 href="../systems/openvurp/"><code>openvurp</code></a>, <a
-href="../systems/openyantra/"><code>openyantra</code></a>, <a
 href="../systems/orbital/"><code>orbital</code></a>, <a
 href="../systems/ownmem/"><code>ownmem</code></a>, <a
 href="../systems/particles/"><code>particles</code></a>, <a

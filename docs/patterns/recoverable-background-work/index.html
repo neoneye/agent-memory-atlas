@@ -471,20 +471,20 @@ re-enters.</strong> <code>LedgerAgent.submit</code> appends the request
 to <code>sanchitta.json</code>, processes it, and removes the entry by
 request id in a <code>finally</code> block; the next process to
 construct <code>OpenYantra</code> empties the file and runs whatever is
-in it (<code>openyantra/core.py:344-350</code>, <code>:379-390</code>,
-<code>:690-692</code>). <code>_process</code> skips a request whose id
+in it (<code>openyantra/core.py:369-375</code>, <code>:404-415</code>,
+<code>:777-779</code>). <code>_process</code> skips a request whose id
 the ledger sheet holds, and <code>_commit_and_audit</code> writes the
 row and its ledger entry in one atomic replace, all under an exclusive
-file lock (<code>:396-418</code>, <code>:498-614</code>), so neither a
+file lock (<code>:421-443</code>, <code>:580-701</code>), so neither a
 crash nor a second process can apply a request twice while the lock is
 taken. A rejected or conflicting request logs through
 <code>_write_sheet</code>, which enters the same lock again; the lock is
 one class keyed on the path, with a thread <code>RLock</code> and a
 depth count, so the nested entry reuses the held file lock and the
-request returns (<code>:262-313</code>, <code>:428-436</code>,
-<code>:616-617</code>). When <code>portalocker</code> raises, the class
+request returns (<code>:280-338</code>, <code>:454-467</code>,
+<code>:703-704</code>). When <code>portalocker</code> raises, the class
 logs at debug level and carries on under the thread lock alone
-(<code>:285-296</code>), and the guard against a second process goes
+(<code>:303-321</code>), and the guard against a second process goes
 with it. A replay guard is only as sound as the lock around it.</p>
 <p><a href="../../systems/maximem-synap-core/">Synap Core</a> puts the
 outbox inside the retirement's own transaction and leaves one store

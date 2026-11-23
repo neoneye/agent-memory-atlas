@@ -126,7 +126,7 @@ belief.</p>
 <blockquote>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
-recurs across the corpus. 85 systems of
+recurs across the corpus. 86 systems of
 851 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
@@ -291,7 +291,7 @@ near-miss, and the argument that the expensive half of the pattern is
 not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
-<p><strong>85 systems of
+<p><strong>86 systems of
 851 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -937,6 +937,20 @@ again. The session digest that extraction drafts from the same turns is
 written with no pattern check, so a session whose fact was refused with
 422 can carry the value into search in its digest
 (<code>server/memory/app/session_summary.py:133-244</code>).</p>
+<p><strong><a href="../../systems/openyantra/">OpenYantra</a> uses the
+superseded row as the tombstone and matches it by value at the
+gate.</strong> On every add or update to its Beliefs sheet,
+<code>_check_tombstone</code> reads the sheet and rejects a request
+whose Position or Topic equals a superseded row's, trimmed and
+lowercased, whatever agent sends it and whatever Topic it is filed
+under, and writes the refusal to the ledger
+(<code>openyantra/core.py:459-462</code>, <code>:502-547</code>). The
+consolidator's preference promotion and the git-file mesh import both
+pass through it, and a test re-asserts a superseded Position under
+another Topic and requires the rejection. Four things lift it: an
+override field any request can carry, a <code>delete</code> of the
+superseded row, a paraphrase one character away, and an exception inside
+the check, which admits the write.</p>
 <h3 id="sorted-by-what-actually-stops-the-value">Sorted by what actually
 stops the value</h3>
 <p>The mark covers four different mechanisms. The table sorts the
