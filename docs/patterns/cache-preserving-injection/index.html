@@ -476,6 +476,16 @@ recomputed each top-level turn within an 800-token budget, and untrusted
 memories go in a second, escaped section of the same message. Each
 recall stamps <code>last_used_ms</code> on the rows it returns, which
 feeds the recency boost of the next one.</p>
+<p><strong><a href="../../systems/studio-for-janas/">Studio for
+Janas</a> is the plain counterexample: the recalled facts go in the
+system message.</strong> <code>buildOptions</code> joins the fixed
+prompt, the user's prompt and a block of up to six facts chosen for the
+message being sent
+(<code>src/components/chat/ChatView.tsx:464-472</code>). The first
+message of the request therefore changes whenever the recalled set does.
+The engine behind it is a local <code>janas-server</code> or llama.cpp
+process, so the cost is re-evaluating the conversation from the top;
+nothing in the tree measures it.</p>
 <h2 id="the-same-constraint-one-layer-down">The same constraint, one
 layer down</h2>
 <p>Everything above is about where a <em>memory system</em> puts its

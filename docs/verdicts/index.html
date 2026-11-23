@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 852 reports.</strong></p>
+<p><strong>This page covers all 853 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35054,6 +35054,38 @@ writer's transaction.</li>
 <li>Do not copy when: a retraction must survive the next extraction,
 stored text must be erasable, or recall must find a fact phrased
 differently from the question.</li>
+</ul>
+<h3 id="studio-for-janas"><a
+href="../systems/studio-for-janas/"><code>studio-for-janas</code></a></h3>
+<ul>
+<li>Best idea: <strong>the smallest store that can still be
+corrected.</strong> One JSON array of one-line facts, a save tool the
+chat model calls, and a tab where a person rewrites or deletes any of
+them. <code>save</code>, <code>update</code> and <code>delete</code>
+write the file before swapping the in-memory copy, and a malformed tool
+call returns to the model as a tool result.</li>
+<li>Second idea: recall with no model. The message and each fact are
+hashed into 512-slot bag-of-words vectors with TF-IDF weights in the
+webview, and the top six by cosine go into the system prompt.</li>
+<li>Biggest risk: <strong>a model write that nothing gates.</strong> The
+save runs inside the streaming loop with no approval, in turns that can
+carry fetched web pages and MCP tool output, while an MCP call in the
+same loop waits for the user. A stored fact then reaches the system
+prompt of later chats and agent runs.</li>
+<li>Second risk: an unparseable <code>memory.json</code> loads as an
+empty bank and the next save replaces it. The tokenizer keeps ASCII
+only, so facts in other scripts are never recalled. A deleted fact
+leaves no record. The eviction control changes nothing.</li>
+<li>Most reusable component: <code>MemoryStore</code> in
+<code>src-tauri/src/memory.rs:46-183</code>.</li>
+<li>Maturity impression: GPL-3.0-only; 17 commits by one author between
+10 and 21 November 2026, version 0.1.1; four Rust tests on the bank,
+none on recall, no CI in the tree, none run here. No marks.</li>
+<li>Study when: you want to see how little a chat client needs to
+remember preferences across sessions, and where that floor stops.</li>
+<li>Do not copy when: the model reads content you do not control, users
+write in non-Latin scripts, or a forgotten fact must stay
+forgotten.</li>
 </ul>
         </article>
       </div>

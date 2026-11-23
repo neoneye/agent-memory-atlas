@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 852 reports.**
+**This page covers all 853 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7842,3 +7842,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 439,272 lines of Rust and 1,006 commits, all in November 2026, at tag v0.1.0-alpha.4; 4,482 Rust test functions, 120 in the memory crate, run in CI and not run here. Three marks: `scope_enforced`, `audit_log`, `negative_eval`. No evaluation of conversational recall is committed.
 - Study when: you want model-written memory that cannot assert what the user did not say, or a journal with snapshots and undo in the writer's transaction.
 - Do not copy when: a retraction must survive the next extraction, stored text must be erasable, or recall must find a fact phrased differently from the question.
+
+### [`studio-for-janas`](../systems/studio-for-janas/)
+- Best idea: **the smallest store that can still be corrected.** One JSON array of one-line facts, a save tool the chat model calls, and a tab where a person rewrites or deletes any of them. `save`, `update` and `delete` write the file before swapping the in-memory copy, and a malformed tool call returns to the model as a tool result.
+- Second idea: recall with no model. The message and each fact are hashed into 512-slot bag-of-words vectors with TF-IDF weights in the webview, and the top six by cosine go into the system prompt.
+- Biggest risk: **a model write that nothing gates.** The save runs inside the streaming loop with no approval, in turns that can carry fetched web pages and MCP tool output, while an MCP call in the same loop waits for the user. A stored fact then reaches the system prompt of later chats and agent runs.
+- Second risk: an unparseable `memory.json` loads as an empty bank and the next save replaces it. The tokenizer keeps ASCII only, so facts in other scripts are never recalled. A deleted fact leaves no record. The eviction control changes nothing.
+- Most reusable component: `MemoryStore` in `src-tauri/src/memory.rs:46-183`.
+- Maturity impression: GPL-3.0-only; 17 commits by one author between 10 and 21 November 2026, version 0.1.1; four Rust tests on the bank, none on recall, no CI in the tree, none run here. No marks.
+- Study when: you want to see how little a chat client needs to remember preferences across sessions, and where that floor stops.
+- Do not copy when: the model reads content you do not control, users write in non-Latin scripts, or a forgotten fact must stay forgotten.

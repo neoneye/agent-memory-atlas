@@ -272,6 +272,8 @@ falls under the KV-cache scope boundary in the
 
 **[Praxi-Bot](../../systems/praxi-bot/) puts recalled memory in front of the user message and says why in the module header.** `render_recall_block` builds a block that `with_recall` prepends to the turn's user text, *"never the system prompt, to keep the prompt cache valid"* (`crates/memory-store/src/lib.rs:9-10`, `crates/agent-core/src/exec.rs:473-513`). The block is recomputed each top-level turn within an 800-token budget, and untrusted memories go in a second, escaped section of the same message. Each recall stamps `last_used_ms` on the rows it returns, which feeds the recency boost of the next one.
 
+**[Studio for Janas](../../systems/studio-for-janas/) is the plain counterexample: the recalled facts go in the system message.** `buildOptions` joins the fixed prompt, the user's prompt and a block of up to six facts chosen for the message being sent (`src/components/chat/ChatView.tsx:464-472`). The first message of the request therefore changes whenever the recalled set does. The engine behind it is a local `janas-server` or llama.cpp process, so the cost is re-evaluating the conversation from the top; nothing in the tree measures it.
+
 ## The same constraint, one layer down
 
 Everything above is about where a *memory system* puts its recall block. The same
