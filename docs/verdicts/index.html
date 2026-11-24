@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 853 reports.</strong></p>
+<p><strong>This page covers all 854 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35087,6 +35087,45 @@ remember preferences across sessions, and where that floor stops.</li>
 <li>Do not copy when: the model reads content you do not control, users
 write in non-Latin scripts, or a forgotten fact must stay
 forgotten.</li>
+</ul>
+<h3 id="attested-memory"><a
+href="../systems/attested-memory/"><code>attested-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>search the body only where the caller may read
+it.</strong> The catalogue lists paid and team units by title and tag
+and matches content only for the owner, a grantee or a team member, so a
+priced document cannot be probed by substring; a test requires zero hits
+for the body and one for the title.</li>
+<li>Second idea: request-bound actor proofs. An Ed25519 signature covers
+audience, method, path, query and body hash, small-order keys are
+refused, and each nonce is spent once in the database.</li>
+<li>Biggest risk: <strong>receipt verification trusts the key in the
+row.</strong> <code>verify</code> recomputes two hashes, checks the link
+to the previous row and validates both signatures against the public key
+stored in the receipt being checked. Whoever can rewrite the row can
+re-sign it, and deleting the newest receipts leaves the rest valid. The
+committed tamper test edits one column and leaves the hashes alone.</li>
+<li>Second risk: the agent-facing write path is the unattested one.
+<code>memory.write@v1</code> stores a unit and requests no receipt, the
+REST path's receipt is best-effort with no retry, and the ledger's
+<code>memory.attest@v1</code> appends to any memory id with any hash for
+any hub caller, anonymous included. Truth status is arithmetic over the
+owner's own stance and quality numbers, and the ledger signs it.</li>
+<li>Most reusable component: the access and search clauses of
+<code>catalog</code>,
+<code>memory-market/src/memory_market/store.py:325-359</code>, and
+<code>memory-market/src/memory_market/actor_auth.py</code>.</li>
+<li>Maturity impression: Apache-2.0 with MIT product shells; 6,871 lines
+of Python published as 26 sync commits from a private monorepo between 9
+October and 23 November 2026; 91 test functions, seven on the ledger,
+none run here. Three marks: <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>. No memory can be
+edited or deleted.</li>
+<li>Study when: you are building access control for memory that is sold
+or shared between agents.</li>
+<li>Do not copy when: a receipt has to convince someone who does not
+trust the ledger's database, or a memory has to be corrected or
+withdrawn.</li>
 </ul>
         </article>
       </div>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 853 reports.**
+**This page covers all 854 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7852,3 +7852,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: GPL-3.0-only; 17 commits by one author between 10 and 21 November 2026, version 0.1.1; four Rust tests on the bank, none on recall, no CI in the tree, none run here. No marks.
 - Study when: you want to see how little a chat client needs to remember preferences across sessions, and where that floor stops.
 - Do not copy when: the model reads content you do not control, users write in non-Latin scripts, or a forgotten fact must stay forgotten.
+
+### [`attested-memory`](../systems/attested-memory/)
+- Best idea: **search the body only where the caller may read it.** The catalogue lists paid and team units by title and tag and matches content only for the owner, a grantee or a team member, so a priced document cannot be probed by substring; a test requires zero hits for the body and one for the title.
+- Second idea: request-bound actor proofs. An Ed25519 signature covers audience, method, path, query and body hash, small-order keys are refused, and each nonce is spent once in the database.
+- Biggest risk: **receipt verification trusts the key in the row.** `verify` recomputes two hashes, checks the link to the previous row and validates both signatures against the public key stored in the receipt being checked. Whoever can rewrite the row can re-sign it, and deleting the newest receipts leaves the rest valid. The committed tamper test edits one column and leaves the hashes alone.
+- Second risk: the agent-facing write path is the unattested one. `memory.write@v1` stores a unit and requests no receipt, the REST path's receipt is best-effort with no retry, and the ledger's `memory.attest@v1` appends to any memory id with any hash for any hub caller, anonymous included. Truth status is arithmetic over the owner's own stance and quality numbers, and the ledger signs it.
+- Most reusable component: the access and search clauses of `catalog`, `memory-market/src/memory_market/store.py:325-359`, and `memory-market/src/memory_market/actor_auth.py`.
+- Maturity impression: Apache-2.0 with MIT product shells; 6,871 lines of Python published as 26 sync commits from a private monorepo between 9 October and 23 November 2026; 91 test functions, seven on the ledger, none run here. Three marks: `scope_enforced`, `audit_log`, `negative_eval`. No memory can be edited or deleted.
+- Study when: you are building access control for memory that is sold or shared between agents.
+- Do not copy when: a receipt has to convince someone who does not trust the ledger's database, or a memory has to be corrected or withdrawn.

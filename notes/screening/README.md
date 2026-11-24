@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 852 of 853 screened at the report's current pin.**
+**Progress: 853 of 854 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 404 |
+| Repositories with an auto-run surface (`RUNS`) | 405 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 389 |
-| Repositories with build-time execution (`EXEC`) | 615 |
+| Repositories with build-time execution (`EXEC`) | 616 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -65,6 +65,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`areev`](../../content/systems/areev.md) | `.githooks/` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
 | [`athena`](../../content/systems/athena.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
+| [`attested-memory`](../../content/systems/attested-memory.md) | `server.json` |
 | [`attune-ai`](../../content/systems/attune-ai.md) | `.claude-plugin/`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `.mcp.json`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`aura-chetto1983`](../../content/systems/aura-chetto1983.md) | `.claude/settings.json` |
 | [`aurora`](../../content/systems/aurora.md) | `.mcp.json` |
