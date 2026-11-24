@@ -1,18 +1,22 @@
 ---
 title: NOOA Memory
 eyebrow: Cognitive-model recall
-description: NVIDIA's agent memory implements ACT-R activation and the Ebbinghaus retention curve directly, and stores the score components of every retrieval on the memory that was retrieved.
+description: "NVIDIA's agent memory package implements ACT-R activation and Ebbinghaus retention, and stores the score components of each retrieval on the retrieved memory."
 root: ../..
 page_kind: system
 source_name: NVIDIA-NeMo/labs-OO-Agents
 source_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents
 archive_name: "NVIDIA-NeMo--labs-OO-Agents"
-revision: 362f8bd217fcc39f75b70d4b668e49fc86dec104
-revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/362f8bd217fcc39f75b70d4b668e49fc86dec104
-analyzed_at: 2026-09-16
+revision: 7b8ec1c76db9dee5e3eca504c7a537d491497290
+revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/7b8ec1c76db9dee5e3eca504c7a537d491497290
+analyzed_at: 2026-11-24
+licence: "Apache-2.0 in LICENSE and in the root and package manifests"
+size: "478,510 lines of Python in 1,499 files across the repository; packages/nooa-memory holds 4,323 lines of source and 4,623 of tests"
+activity: "1,375 commits from 20 July to 24 November 2026 under 53 author names; latest tag v0.0.12 of 18 August 2026"
+tests: "286 test functions in 26 modules under packages/nooa-memory/tests/memory; none run for this reading"
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
-  scope_enforced: "the owner key applied inside the graph traversal, not to the rows it returns | packages/nooa-memory/src/nooa_memory/retrieval.py:246-296, packages/nooa-memory/src/nooa_memory/schema.py:102-113, packages/nooa-memory/src/nooa_memory/store.py:72, :160-163 | `owner` is a `TEXT NOT NULL DEFAULT ''` column with its own index, and `_spread` closes over a `_visible` predicate it calls on every edge target at every hop; the `continue` fires before both the `spread` and the `nxt` accumulators, so an invisible memory neither receives activation nor enters the next hop's frontier and cannot relay activation between two visible memories connected only through it — `owner_matches` admits an unowned row against every scope and the `is not None` clause drops an edge pointing at a row that no longer exists | packages/nooa-memory/tests/memory/test_memory_owner.py:126-142 (`test_spread_does_not_leak_foreign_memories`), :159-190 (`test_spread_does_not_relay_through_foreign_memories`), packages/nooa-memory/tests/memory/test_memory_owner_roles.py:128 (`test_spread_confined_to_role`)"
+  scope_enforced: "the owner key applied inside the graph traversal, not to the rows it returns | packages/nooa-memory/src/nooa_memory/retrieval.py:246-292, packages/nooa-memory/src/nooa_memory/schema.py:102-113, packages/nooa-memory/src/nooa_memory/store.py:72, :160-163 | `owner` is a `TEXT NOT NULL DEFAULT ''` column with its own index, and `_spread` closes over a `_visible` predicate it calls on every edge target at every hop; the `continue` fires before both the `spread` and the `nxt` accumulators, so an invisible memory neither receives activation nor enters the next hop's frontier and cannot relay activation between two visible memories connected only through it — `owner_matches` admits an unowned row against every scope and the predicate also drops an edge target that no longer exists or is archived | packages/nooa-memory/tests/memory/test_memory_owner.py:126-142 (`test_spread_does_not_leak_foreign_memories`), :159-190 (`test_spread_does_not_relay_through_foreign_memories`), packages/nooa-memory/tests/memory/test_memory_owner_roles.py:128 (`test_spread_confined_to_role`)"
   negative_eval: "the relay test, which asserts the same path is live before asserting it is not | packages/nooa-memory/tests/memory/test_memory_owner.py:159-190 | the three-node graph `alice_a -> bob -> alice_c`, whose only path between alice's two memories runs through bob's, is spread twice: unscoped first, asserting both `bid` and `cid` are reachable, then under alice's scope, asserting neither is — so the exclusion cannot pass on an empty frontier; two further cases each build one edge across an owner boundary and assert the far node is absent from `recall` | the same files"
 stack_storage: "sqlite, delegated"
 stack_retrieval: "graph"
@@ -22,7 +26,7 @@ matrix:
   storage: "SQLite with owner/status columns and pluggable vector backends, opened with `check_same_thread=False` behind a re-entrant lock the store takes on every connection and index access"
   retrieval: "ACT-R activation — relevance, base-level recency, importance, plus graph spreading over k hops"
   write: "Authoring via a memory skill; reflection distils episodes into gists"
-  update_delete: "Retention decay archives below threshold; `archived` flag, record-keyed"
+  update_delete: "Retention decay archives below threshold; `archived` flag, record-keyed; an archived memory neither receives nor relays spreading activation"
   scoping: "`owner` column, indexed, applied on the retrieval path"
   integration: "Exposed as a memory skill inside the Object-Oriented Agents framework; tracing bridge"
   background: "Reflection: dedup/merge, edge formation, re-scoring, prune — deterministic steps need no LLM"
@@ -34,7 +38,7 @@ matrix:
 ## 1. Executive Summary
 
 `nooa-memory` is a dedicated package inside NVIDIA's Apache-2.0 Object-Oriented
-Agents labs repository — about 4,200 lines with a test file for nearly every
+Agents labs repository, with a test file for nearly every
 module. It is the most direct implementation of *cognitive-psychology models* in
 this atlas, and it does one thing nothing else here does.
 
@@ -169,12 +173,15 @@ flowchart TB
 
 ## 3. Architecture
 
-`packages/nooa-memory/src/nooa_memory/` — `manager.py` (933), `store.py` (526),
-`schema.py` (372), `retrieval.py` (369), `reflection.py` (348),
-`vector_backends.py` (225), `generative.py` (205), `config.py` (202),
-`observability.py` (174), `references.py` (163), `embeddings.py` (145),
-`monitoring.py` (120), `forgetting.py` (98), `tracing_bridge.py` (90),
+`packages/nooa-memory/src/nooa_memory/` — `manager.py`, `store.py`,
+`schema.py`, `retrieval.py`, `reflection.py`, `vector_backends.py`,
+`generative.py`, `config.py`, `observability.py`, `references.py`,
+`embeddings.py`, `monitoring.py`, `forgetting.py`, `tracing_bridge.py`,
 `memory_skill/`, `descriptors.py`.
+
+A manager installed with `enabled=False` constructs no embedder and opens no
+database; the store, retrieval engine, reflection engine and forgetting engine
+are cached properties built on first use (`manager.py:161-201`).
 
 Storage is SQLite with `owner` and `status` columns added by migration
 (`ALTER TABLE` guarded by a column check), indexes on both plus `archived`, and
@@ -235,11 +242,17 @@ pattern asks for: recall bumps `strength`, which slows forgetting, and leaves
 `confidence` alone. Being read a lot makes a memory *stick*; it does not make it
 *true*. Several systems in this atlas collapse exactly that distinction.
 
-The paper adds a refinement the code reading did not surface, and it closes the
-loop this pattern warns about: "**Injected memories are not reinforced, so what
-the harness surfaces does not distort the usage signal.**" Spontaneous injection
-runs at a fixed cadence of roughly one per turn, and those injections do *not*
-bump strength — only deliberate reads do. So the system cannot reinforce a memory
+The paper states a refinement that closes the loop this pattern warns about:
+"**Injected memories are not reinforced, so what the harness surfaces does not
+distort the usage signal.**" Spontaneous injection runs at a fixed cadence of
+roughly one per turn, and those injections do *not* bump strength — only
+deliberate reads do. The code logs an `injected` access without touching the
+record (`manager.py:714-719`).
+
+Injection accounting follows what the model can see. `_format_recall` renders
+the block, cuts it at the character budget, and counts a memory as injected
+only when its complete `[type#id]` marker lies inside the cut
+(`manager.py:661-719`). A record the budget dropped gets no access entry. So the system cannot reinforce a memory
 merely by having chosen to show it, which is precisely the self-amplifying
 feedback the pattern says nobody dampens. It is the cleanest answer to that
 hazard in the atlas.
@@ -288,6 +301,8 @@ What is absent:
 
 - **No value-level tombstone.** `archived` is a boolean on the record. A memory
   that decayed away can be re-authored, and nothing consults its absence.
+  Archived rows are excluded from listing, from the vector index and from the
+  graph spread.
 - **No trust state.** `confidence` is a float; `status` exists but is reserved
   for todo lifecycle by an explicit validator.
 - **No bi-temporal validity.** `created_at` and `last_accessed_at` are record
@@ -335,13 +350,22 @@ This is the strong form of `scope_enforced`: most systems in this atlas that
 carry the mark apply the key to the rows they return, and a graph traversal that
 does that alone is still reading the foreign node to decide it should be dropped.
 
-Unowned memories stay visible under it, which is the intended behaviour and is
-easy to misread from the code. `_visible` requires `owner_of(mid) is not None`,
-but the column is `owner TEXT NOT NULL DEFAULT ''` (`store.py:72`), so an
-unowned row returns `""` and `owner_matches` accepts `""` against every scope
-(`schema.py:109`). The `is not None` clause is therefore about a *dangling edge
-target* — an edge pointing at a row that no longer exists — which it drops, and
-which is the right answer for that case too.
+`_visible` loads the target with `store.get` and requires three things: the row
+exists, it is not archived, and its owner matches the scope
+(`retrieval.py:259-268`). Unowned memories stay visible: the column is
+`owner TEXT NOT NULL DEFAULT ''` (`store.py:72`), and `owner_matches` accepts
+`""` against every scope (`schema.py:109`). A dangling edge target is dropped.
+
+The archived clause applies with or without an owner scope. Until commit
+`7985a640`, merged on 4 November 2026, an unscoped spread skipped the predicate
+and a scoped one checked the owner alone, so an archived neighbour of a
+relevant memory could be activated and returned.
+`test_recall_does_not_resurface_archived_neighbor` asserts the neighbour is
+recalled before `store.archive` and absent after, with its access count at 0.
+`test_spread_does_not_relay_through_archived_memory` asserts the downstream
+node is reachable through the bridge before archiving and that the spread is
+empty after (`tests/memory/test_memory_retrieval.py:125-155`). Both run
+unscoped and under an owner.
 
 Three committed tests cover it. `test_spread_does_not_leak_foreign_memories`
 (`test_memory_owner.py:126`) and `test_spread_confined_to_role`
@@ -374,14 +398,15 @@ for the `hops: 2+` case rather than a live protection — which is the refactor
 risk stated precisely: the check looks incidental until someone moves it, and at
 defaults nothing would fail if they did.
 
-The reported activations reproduce from the committed constants without running
-anything. With `per_hop_decay = 0.6` and an associative edge weight of `0.6`, a
-unit seed gives `0.6 × 0.6 = 0.36` at the first hop and `0.36 × 0.36 × 0.6 =
-0.07776` at the second — the two numbers the proposed test asserts unscoped
-before asserting the scoped result is empty. Note the margin: `activation_floor`
-is `0.05`, so a two-hop relay contributes `0.07776` and clears the floor by
-little. At defaults the amplify path matters only in a narrow band even when
-`hops` is raised.
+The decay is one factor per hop: `contrib = decay * act * e.weight * type_w`,
+with `act` already carrying the earlier hops (`retrieval.py:272-284`). With
+`per_hop_decay = 0.6` and the associative type weight of `0.6`, a unit seed
+over unit-weight edges gives `0.36` at the first hop and `0.1296` at the
+second, against an `activation_floor` of `0.05`. Until commit `d429da6c`,
+merged on 4 November 2026, the loop raised the decay to the hop number on top
+of the carried activation, which put the same second hop at `0.07776`.
+`test_spread_decay_is_one_factor_per_hop` asserts `0.6`, `0.6**2` and `0.6**3`
+along three causal edges (`tests/memory/test_memory_retrieval.py:88-106`).
 
 *Answered by [Jeriah Keith](https://github.com/Yeriahz) in
 [issue #1](https://github.com/neoneye/agent-memory-atlas/issues/1), who then
@@ -390,7 +415,9 @@ wrote the missing test upstream.*
 ## 7. Write Mechanics
 
 Authoring through the memory skill, with reflection distilling episodes into
-`reflection`-type gists. `references.py` attaches `MemoryRef`s — kind, key,
+`reflection`-type gists. `update` re-validates the record when its content
+changes, so the size fields are re-derived, and re-embeds only when the
+embedding text changed (`manager.py:423-470`). `references.py` attaches `MemoryRef`s — kind, key,
 preview, capture time — pointing at external artifacts rather than copying them.
 
 The paper describes what that pointer does at read time, and it is stronger than
@@ -419,6 +446,43 @@ Exposed as a skill inside the Object-Oriented Agents framework, with
 `observability.py`, `monitoring.py` and `tracing_bridge.py` connecting it to the
 surrounding tracing so `trace_ref` on an access record resolves to a real span.
 
+### Context compaction is a separate mechanism
+
+The host framework gives the model a second way to manage what it sees, and it
+is not memory. `self.events.collapse(start, end, summary_text)` replaces a
+range of events in the active history with one `Summary` event tagged
+`start..end` (`src/nooa/runtime/events.py:220-262`,
+`src/nooa/runtime/event_manager.py:669-760`). The replaced events are set to
+`ARCHIVED` and removed from the active list; `events["9"]` still returns the
+original. Collapsing the exact range of an existing summary rewrites its text
+in place.
+
+The harness has its own compaction beside it. A summarizer runs at a share of
+the usable window, 0.8 by default, and keeps the 10 newest events
+(`src/nooa/agents/summarization.py:587-621`,
+`src/nooa/config/summarizer_config.py:19`). When the provider rejects a
+request as too large, the actor archives the oldest events
+(`src/nooa/runtime/actor.py:701-785`).
+
+The event history lives in memory or, under a storage manager, in the
+session's SQLite `events` table with a `status` column
+(`src/nooa/runtime/event_backend.py:270`, `src/nooa/storage/sqlite.py:118-125`,
+`:233`, `:893`). A resumed session therefore keeps its summaries and archived
+originals.
+
+The memory package reads this history in one place: `derive_queries` builds
+the per-turn recall query from recent events (`retrieval.py:365`). It does not
+store summaries as memories, and no file under `packages/nooa-memory/src`
+calls `collapse`. A summary is a statement about one session's transcript,
+addressed by position in that transcript. It has no owner, type, edges or
+decay, and none of the seven marks is assessed against it.
+
+NVIDIA's dev note of 23 November 2026,
+[*Letting Models Manage Their Own Context*](https://nvidia-nemo.github.io/Applied-Research/dev-notes/posts/2026-11-23-model-driven-context-management/),
+is about this API and does not mention the memory package. It compares the
+harness summarizer with letting the model call `collapse`. Section 10 gives
+its figures and what of the experiment is in this tree.
+
 ## 9. Reliability, Safety, and Trust
 
 Strengths:
@@ -442,6 +506,9 @@ Strengths:
   recall cannot interleave on one SQLite handle; two committed cases cover it,
   one wrapping the connection and the index in guards that assert the lock is
   held on every call, the other running reflection against foreground writes.
+- **Archived memories are out of the graph.** `_visible` refuses an archived
+  edge target, so it neither receives nor relays activation, with two tests
+  that assert the path is live before archiving.
 - **A committed negative case with a positive control.**
   `test_spread_does_not_relay_through_foreign_memories` asserts a foreign memory
   is neither activated nor used as a relay, and asserts first that the same path
@@ -455,7 +522,7 @@ Gaps:
   features.** `schema.py:223-224` declares `valid_from` and `valid_to`, the
   second carrying the comment *"bi-temporal: invalidate-don't-delete"*, and the
   package README lists `valid_from/valid_to` in the metadata a memory carries
-  (`README.md:113`). Those three lines are every occurrence of either name in
+  (`README.md:118`). Those three lines are every occurrence of either name in
   any Python or Markdown file in the repository — no writer, no reader, no
   test. The mark is withheld not because the design lacks the idea but because
   the idea is a schema comment with a documentation entry; the intent is
@@ -476,7 +543,7 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-Twenty-four test modules holding 260 cases, covering retrieval, forgetting,
+Twenty-six test modules holding 286 cases, covering retrieval, forgetting,
 reflection and its interrupt path, owner roles, contract, embeddings and their
 integration, observability, monitoring, references, todo, schema, store and a
 v2 store, routes, skill, authoring, generative, vector backends, background
@@ -530,6 +597,31 @@ noting the sample and the censoring.
 Retrieval observability also goes further than the schema showed: "a retrieval
 call can be replayed with `explain()`", and "memory events bridge to OpenTelemetry
 spans with trace ↔ record cross-links".
+
+**The dev note's experiment is reported, and its harness is not in this tree.**
+The note gives the model the events API, a context-usage readout, an
+instruction to consider compacting at 85% and a warning near the limit, and
+sweeps hard request budgets from 8K to 512K tokens. Its stated results on
+OfficeQA Pro v2, 90 questions:
+
+| Model, budget | Harness-driven | Model-driven |
+| --- | --- | --- |
+| GPT-6.1 Sol, 32K | 21% | 56% |
+| Kimi K3, 32K | 41%, 62M input tokens | 43%, 36M input tokens |
+| Kimi K3, 64K | 52% | 57% |
+
+The note reports a much smaller effect on MLE-bench Lite, that Opus 5.5 called
+the API in 4% of tasks against 42–53% for the other three models, and that
+without the 85% instruction Kimi and DeepSeek compacted early and scored about
+8 points below the harness baseline at 128K and above.
+
+In the tree: the API, the summarizer and the context-usage block, whose text
+names `self.events.collapse` (`src/nooa/context_blocks/models.py:462-468`).
+Not in the tree: any file naming OfficeQA or MLE-bench, the 85% instruction or
+the pressure warning as text, and the SGLang suffix-cache prototype the note
+credits with a 4–15% cut in prefill compute. The figures are the note's own and
+were not reproduced. They measure answer accuracy under a context budget
+within one run, and say nothing about the memory package.
 
 The evaluation the design still invites is the *internal* one: the components are
 computed, weighted, normalized and stored, so the contribution of `rel`, `rec`,
@@ -592,15 +684,16 @@ nothing about whether it was ever right.
 
 ## 12. Open Questions
 
-- How large is the access-log ring, and what happens to the explanation of an
-  old, heavily-used memory once its formative accesses roll off?
+- The access-log ring holds 64 entries per memory (`config.py:141`). What
+  happens to the explanation of an old, heavily-used memory once its formative
+  accesses roll off?
 - Have the six scoring constants been ablated? The subsystem has been measured
   end to end; the scorer has not been measured against itself, and the stored
   components make it cheap.
 - What prevents an archived memory being re-authored identically?
 - Is `intent` acted on by a scheduler, or does it only surface when retrieval
   happens to reach it? The paper reports the type unused in evaluation, so the
-  question is now what would have to exist for it to be used.
+  question is what would have to exist for it to be used.
 - If reflection output is 22% of rows and ~1% of reads, what is consolidation
   buying, and would the store be better without it in this workload?
 - Will `examples/memory_bench/` be published? The README's six figures name
@@ -617,6 +710,10 @@ nothing about whether it was ever right.
   and Figure 7, operational statistics and reproduction run ids in Appendix D
   (§D.4, *"Memory-system usage during play"*).
 - Blog: [Six agent harness capabilities for higher model performance](https://developer.nvidia.com/blog/six-agent-harness-capabilities-for-higher-model-performance/).
+- Dev note: [Letting Models Manage Their Own Context: Where We Stand](https://nvidia-nemo.github.io/Applied-Research/dev-notes/posts/2026-11-23-model-driven-context-management/),
+  23 November 2026, on the events API. It cites
+  [arXiv:2607.21616](https://arxiv.org/abs/2607.21616) for the early-compaction
+  behaviour it calls context anxiety.
 
 Claims taken from these are attributed in the text. The RHAE figures and the
 operational statistics are reported, not reproduced here.
@@ -631,10 +728,41 @@ operational statistics are reported, not reproduced here.
 - Store: `store.py` (owner/status migration, indexes).
 - Observability: `observability.py`, `monitoring.py`, `tracing_bridge.py`.
 - Skill surface: `memory_skill/`.
-- Tests: `packages/nooa-memory/tests/memory/` (24 modules, 260 cases).
+- Tests: `packages/nooa-memory/tests/memory/` (26 modules, 286 cases).
 - Package documentation: `packages/nooa-memory/src/nooa_memory/README.md`.
+- Context compaction, outside the package: `src/nooa/runtime/events.py`,
+  `src/nooa/runtime/event_manager.py`, `src/nooa/runtime/event_backend.py`,
+  `src/nooa/storage/sqlite.py`, `src/nooa/agents/summarization.py`,
+  `src/nooa/runtime/actor.py`, `src/nooa/context_blocks/models.py`.
+
+### Recorded searches
+
+Run from the repository root at the pinned commit with `/usr/bin/git grep`.
+
+- **Nothing writes the bi-temporal fields.**
+  `git grep -n -w -E 'valid_from|valid_to' -- '*.py' '*.md'` returns
+  `schema.py:223-224` and `README.md:118` of the memory package.
+- **The memory package does not call collapse.**
+  `git grep -n 'collapse' -- packages/nooa-memory/src` returns nothing;
+  `git grep -n 'def collapse' -- src/nooa/runtime` matches three files.
+- **The dev note's benchmarks are not named in the tree.**
+  `git grep -n -i -l -E 'officeqa|mle-bench|mlebench|mle_bench' -- .` returns
+  nothing; `git grep -n -i -l 'swe-bench' -- .` matches `README.md`.
+- **No pressure warning or 85% instruction as text.**
+  `git grep -n -i -E 'context[_ -]pressure|85%' -- '*.py' '*.md' ':!*tests*' ':!CHANGELOG.md'`
+  returns lines of `util/eval_pipeline` about a process memory limit.
+- **No suffix-cache prototype.** `git grep -n -i 'sglang' -- .` returns one
+  comment in `packages/nooa-cli/src/nooa_cli/commands/_connect_wizard.py`.
+- **The README's harness is unpublished.**
+  `git grep -n -i -E 'not published|memory_bench' -- packages/nooa-memory`
+  returns the README line at `:412` and the test that guards it.
+- **The memory viewer only reads.**
+  `git grep -n -E '@router\.(get|post|put|delete|patch)' -- src/nooa/viewer/memory_routes.py`
+  returns five `get` routes.
 
 ## History
+
+**2026-11-24** — [`7b8ec1c76db9dee5e3eca504c7a537d491497290`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/7b8ec1c76db9dee5e3eca504c7a537d491497290). Re-read at the head of `main`, 816 commits past `362f8bd`, 23 of them touching the memory package, after NVIDIA's dev note on model-driven context management. Both marks hold. Archived memories are excluded from the graph spread and the per-hop decay is a single factor, each with tests ([section 6](#6-retrieval-mechanics)); the earlier text's second-hop figure of 0.07776 described the compounded decay. The events API the note describes is context compaction outside the memory package and carries no mark ([section 8](#8-agent-integration)); its figures are reported in [section 10](#10-tests-evals-and-benchmarks). Screened first: no auto-run surface, seven dependency files inside the seven-day cooldown, ten `conftest.py` files, seven unpinned surfaces. Nothing was installed, built or run.
 
 **2026-09-16** — [`362f8bd217fcc39f75b70d4b668e49fc86dec104`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/362f8bd217fcc39f75b70d4b668e49fc86dec104) — re-read at a commit dated 2026-09-16, 203 commits past the previous pin. Both marks re-tested and held. The single change to the anchored file is a one-line type-name check on the event being folded in; no mechanism behind a mark moved. Screened before reading, from a full clone: no auto-run surface, six build-time execution points, six unpinned dependency surfaces and four dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
