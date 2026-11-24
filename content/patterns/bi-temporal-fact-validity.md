@@ -283,6 +283,8 @@ date *"never decides which of two contradicting edges the graph retires"*
 
 [IronRAG](../../systems/ironrag/) derives event time from content rather than taking it from a writer. Rendering a JSONL record picks the earliest value-shaped timestamp under any key and writes it into a chunk header, and chunk preparation parses those headers into `occurred_at` and `occurred_until` beside the revision's `created_at` (`apps/api/src/shared/extraction/record_jsonl/rendering.rs:263-270`, `apps/api/src/services/content/service/revision/preparation.rs:319-331`). `grounded_answer` binds the compiled question's date range to that range on every chunk lane and again on the assembled bundle. The record clock is the one nothing queries: no read asks what the store held at a past record time, and the raw `search_documents` tool passes no bounds at all.
 
+[Recall (Polign)](../../systems/recall-polign/) has one clock and calls it belief time. Each event carries `observed_at`, which a writer may set to any past instant, and the fold that answers `as_of`, `history` and `diff` orders by it (`internal/engine/store.go:186-205`, `internal/engine/event.go:177-214`). No acceptance time is stored. Its own test pins the consequence: a write accepted second with an earlier clock is what an as-of read at that clock returns (`internal/engine/concurrency_test.go:11-32`). An import written in November and dated 1 April therefore changes what an as-of read for 2 April returns, which is the answer a record clock exists to keep fixed. Forget alone is stamped after every existing event, so a retraction cannot be backdated.
+
 ## A third clock
 
 Two clocks answer *what was true* and *what did we believe*. The temporal

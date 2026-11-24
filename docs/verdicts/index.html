@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 856 reports.</strong></p>
+<p><strong>This page covers all 857 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35215,6 +35215,52 @@ and which turn may write.</li>
 <li>Do not copy when: a memory must stay corrected, be deletable for a
 person who leaves, or be retrieved by relevance rather than prepended
 whole.</li>
+</ul>
+<h3 id="recall-polign"><a
+href="../systems/recall-polign/"><code>recall-polign</code></a></h3>
+<ul>
+<li>Best idea: <strong>a belief is a fold, never a row.</strong> Every
+statement and retraction is an immutable event, and exact, semantic and
+as-of reads all fold the candidate pair's whole history at the query
+instant, so a search that ranks a superseded value first still answers
+with the current one. A history the backend cannot return whole is
+refused rather than folded, because a partial log could revive a
+retraction.</li>
+<li>Second idea: corrections that say what they replaced. A statement
+may name beliefs under other predicates it makes untrue, each is
+withdrawn by a retraction carrying the statement's id, and every answer
+lists what it displaced and any other belief holding the same
+value.</li>
+<li>Biggest risk: <strong>forgetting lasts until the value is said
+again.</strong> A retraction withdraws what is held when it is written;
+the next assertion of the same value, whether from the extractor reading
+the user's text, a replayed text or a backdated import, is held again,
+and the forget tool says so. Nothing can be erased: the value stays in
+the log, its note, its recorded extraction and every export.</li>
+<li>Second risk: one clock, <code>observed_at</code>, which any writer
+may set to the past, so an as-of read answers when statements were made
+rather than what was recorded then. The shipped extractor names what
+each statement replaces, while the reference says it proposes none, and
+the only committed measurement of model-proposed corrections found 32/35
+retired beliefs still true, on an earlier form. In the README's default
+install, with no model, the forget tool refuses.</li>
+<li>Most reusable component: the fold and its ordering rules,
+<code>internal/engine/event.go:123-351</code>, and the truncation
+refusal in <code>completeEvents</code>,
+<code>internal/engine/store.go:1268-1291</code>.</li>
+<li>Maturity impression: Apache-2.0, with a closed-source default store;
+25,002 lines of Go and 270 commits, all but one by one author, between
+12 September and 19 November 2026, tagged v0.26.0; 424 Go test
+functions, 234 in the engine on an in-memory fake, run in CI against
+four databases and not run here. The LongMemEval numbers in the README
+have no committed run output. Two marks: <code>audit_log</code>,
+<code>negative_eval</code>.</li>
+<li>Study when: you want memory whose every answer can be replayed from
+a log and explained, with typed predicates, explicit cardinality and
+as-of reads.</li>
+<li>Do not copy when: a retraction must survive the next extraction,
+users must be able to erase what they said, or validity time and record
+time must be told apart.</li>
 </ul>
         </article>
       </div>

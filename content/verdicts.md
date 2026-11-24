@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 856 reports.**
+**This page covers all 857 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7882,3 +7882,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 4,437 commits from 2 February 2025 to 24 November 2026, almost all from two people, at product tag v3.1.0; 450 test cases in 26 memory test files, run in CI against an in-memory MongoDB and not run here. Two marks: `scope_enforced`, `negative_eval`.
 - Study when: you are adding memory to a workspace where several people's agents meet, and need rules for which agent sees which section and which turn may write.
 - Do not copy when: a memory must stay corrected, be deletable for a person who leaves, or be retrieved by relevance rather than prepended whole.
+
+### [`recall-polign`](../systems/recall-polign/)
+- Best idea: **a belief is a fold, never a row.** Every statement and retraction is an immutable event, and exact, semantic and as-of reads all fold the candidate pair's whole history at the query instant, so a search that ranks a superseded value first still answers with the current one. A history the backend cannot return whole is refused rather than folded, because a partial log could revive a retraction.
+- Second idea: corrections that say what they replaced. A statement may name beliefs under other predicates it makes untrue, each is withdrawn by a retraction carrying the statement's id, and every answer lists what it displaced and any other belief holding the same value.
+- Biggest risk: **forgetting lasts until the value is said again.** A retraction withdraws what is held when it is written; the next assertion of the same value, whether from the extractor reading the user's text, a replayed text or a backdated import, is held again, and the forget tool says so. Nothing can be erased: the value stays in the log, its note, its recorded extraction and every export.
+- Second risk: one clock, `observed_at`, which any writer may set to the past, so an as-of read answers when statements were made rather than what was recorded then. The shipped extractor names what each statement replaces, while the reference says it proposes none, and the only committed measurement of model-proposed corrections found 32/35 retired beliefs still true, on an earlier form. In the README's default install, with no model, the forget tool refuses.
+- Most reusable component: the fold and its ordering rules, `internal/engine/event.go:123-351`, and the truncation refusal in `completeEvents`, `internal/engine/store.go:1268-1291`.
+- Maturity impression: Apache-2.0, with a closed-source default store; 25,002 lines of Go and 270 commits, all but one by one author, between 12 September and 19 November 2026, tagged v0.26.0; 424 Go test functions, 234 in the engine on an in-memory fake, run in CI against four databases and not run here. The LongMemEval numbers in the README have no committed run output. Two marks: `audit_log`, `negative_eval`.
+- Study when: you want memory whose every answer can be replayed from a log and explained, with typed predicates, explicit cardinality and as-of reads.
+- Do not copy when: a retraction must survive the next extraction, users must be able to erase what they said, or validity time and record time must be told apart.

@@ -127,7 +127,7 @@ belief.</p>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
 recurs across the corpus. 86 systems of
-856 carry the mark, and <a
+857 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -292,7 +292,7 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>86 systems of
-856 in the atlas carry the mark.</strong> The
+857 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -2069,6 +2069,20 @@ dedup cannot match it and a later session, an MCP
 <code>write_memory</code> call or the HTTP API stores it again. A
 product that must both erase and not relearn needs a keyed hash of the
 forgotten value kept apart from the content.</p>
+<p><a href="../../systems/recall-polign/">Recall (Polign)</a> keys its
+retraction on the value and lets the next assertion override it, on
+purpose. <code>forget</code> appends an event holding subject, predicate
+and value, and the fold drops that value
+(<code>internal/engine/store.go:437-534</code>,
+<code>internal/engine/event.go:293-303</code>). A later assertion of the
+same value is applied after it and held again; the test
+<code>TestReassertionAfterForgetting</code> requires exactly that, and
+the text forget tool tells the model <em>"remembering it again brings it
+back"</em> (<code>internal/engine/store_test.go:283-300</code>,
+<code>cmd/recall/mcp_text.go:65</code>). The record a tombstone needs is
+already in the log, keyed the right way. What is missing is a write path
+that reads it: the extractor, the replay of a recorded extraction and a
+backdated import all assert past it.</p>
 <p><strong><a href="../../systems/kenfold/">Kenfold</a> keeps the
 rejected row and reads it by value, from one writer.</strong>
 <code>Reject</code> and <code>forget</code> set a memory

@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 855 of 856 screened at the report's current pin.**
+**Progress: 856 of 857 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 406 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 390 |
-| Repositories with build-time execution (`EXEC`) | 617 |
+| Repositories with an auto-run surface (`RUNS`) | 407 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 391 |
+| Repositories with build-time execution (`EXEC`) | 618 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -351,6 +351,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`ragflow`](../../content/systems/ragflow.md) | `.github/copilot-instructions.md` |
 | [`re-call`](../../content/systems/re-call.md) | `.claude-plugin/`, `hooks/`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/`, `plugin/hooks/hooks.json`, `server.json` |
 | [`reasonix`](../../content/systems/reasonix.md) | `.githooks/` |
+| [`recall-polign`](../../content/systems/recall-polign.md) | `server.json` |
 | [`recallnest`](../../content/systems/recallnest.md) | `.claude-plugin/`, `.mcp.json` |
 | [`recollect`](../../content/systems/recollect.md) | `.opencode/` |
 | [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |

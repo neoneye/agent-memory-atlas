@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go library, MCP server and HTTP
+service that stores typed statements as an append-only event log and
+folds them into beliefs at any instant.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Recall
+(Polign) — Agent Memory Atlas">
+    <meta property="og:description" content="A Go library, MCP server
+and HTTP service that stores typed statements as an append-only event
+log and folds them into beliefs at any instant.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Recall
+(Polign) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go library, MCP server
+and HTTP service that stores typed statements as an append-only event
+log and folds them into beliefs at any instant.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Recall (Polign) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Recall (Polign)",
+      "description": "A Go library, MCP server and HTTP service that stores typed statements as an append-only event log and folds them into beliefs at any instant.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Beliefs folded from an append-only log of
+typed statements, readable at any instant</p>
+          <h1>Recall (Polign)</h1>
+          <p class="document-deck">A Go library, MCP server and HTTP
+service that stores typed statements as an append-only event log and
+folds them into beliefs at any instant.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Polign/recall">
+              <span>Source</span>
+              <strong>Polign/recall</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Polign/recall/commit/c86175aea027c655e1d790b7b5db64daece9802c" title="c86175aea027c655e1d790b7b5db64daece9802c">
+              <span>Analyzed revision</span>
+              <code>c86175ae…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-24</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Polign--recall" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Polign--recall</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE and python/LICENSE, matching python/pyproject.toml; the
+default local store runs polign-server, a closed-source binary under its
+own licence that the Python package depends on and the Go binary
+downloads</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>25,002
+lines of Go in 77 files outside tests, examples, evals and deploy;
+internal/engine holds 9,719 of them, cmd/recall 7,990 and the four
+backend drivers with the polign client 3,868; 14,854 lines of Go tests;
+a 1,661-line Python client; two Mach-O executables, recall (46 MB) and
+actor (11 MB), committed at the root</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>270
+commits from 12 September to 19 November 2026, 269 by one author and one
+by dependabot; 41 tags, the head at v0.26.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>424
+Go test functions in 80 files, 234 of them in internal/engine on an
+in-memory fake that never skips; 61 Python test methods; ci.yml runs go
+test -race against PostgreSQL with pgvector, MongoDB, Qdrant and
+polign-server; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Recall is a Go memory library with a <code>recall</code> binary that
+serves it over MCP and HTTP. It stores every typed statement about a
+subject as an immutable event and derives what is believed by folding
+those events, so the same call answers what is believed now and what was
+believed at an earlier instant. What is notable is how strictly that
+holds: exact, semantic and as-of reads all go through one fold, and a
+history the backend cannot return whole is refused rather than folded.
+What is weak is correction. A forgotten value returns as soon as
+anything states it again, and the one clock the log keeps can be
+backdated by the writer.</p>
+<p>The design rests on a per-predicate registry. Each predicate declares
+a value type, whether it holds one value or many, and which predicates
+exclude it, so <code>dislikes mangoes</code> withdraws
+<code>likes mangoes</code>
+(<code>internal/engine/event.go:111-121</code>, <code>:161-175</code>).
+A single-valued predicate's newer statement replaces the older one in
+the fold, a retraction withdraws, and nothing is rewritten.</p>
+<p>Plain text goes through a model extractor that proposes typed
+statements, each of which must quote the text it came from. The whole
+text is kept first as a note, and the proposals are recorded beside it,
+so the same text is filed the same way when it is remembered again.
+Without a model, text is kept as a note and nothing replaces
+anything.</p>
+<p>The second half of the repository is a State API: a lease per agent
+id, working-state handoff notes, turns, tool outputs and a ledger of
+tool calls, so a restarted agent resumes from its records. It is memory
+of the agent's own position rather than of the world and carries no mark
+here.</p>
+<p>Two marks are earned: <code>audit_log</code> on the event log, which
+is the store, and <code>negative_eval</code> on fold tests that require
+a superseded or retracted value to stay out of a populated answer.
+Section 9 gives the reason for each of the five withheld.</p>
+<p><strong>Licence.</strong> The Apache-2.0 grant stops at the client.
+The store Recall uses when nothing is configured is
+<code>polign-server</code>, under <em>"its own license, which is not
+Apache-2.0"</em> (<code>THIRD_PARTY_NOTICES.md:27-32</code>). The tree
+does not hold that text, and the vendor's <code>Polign/polign</code>
+README says the server's source is not public.
+<code>python/pyproject.toml</code> makes <code>polign_db</code> a
+dependency on every mainstream platform, and
+<code>backend/local/fetch.go</code> downloads the server on first use
+unless <code>RECALL_NO_DOWNLOAD=1</code> is set. A reader can audit the
+engine and can neither audit nor learn their rights over the default
+store their memory lands in. PostgreSQL, MongoDB and Qdrant drivers in
+the tree run the same engine without it. Separately, <code>recall</code>
+and <code>actor</code>, 46 MB and 11 MB Mach-O executables, are
+committed at the root with nothing in the tree tying them to its
+source.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>statement</strong>: a subject, a predicate and
+a typed value, with a confidence, a source, an observation instant and,
+when it came from text, the excerpt and the note that holds the whole
+text (<code>internal/engine/event.go:12-58</code>). A
+<strong>belief</strong> is never stored. It is the result of folding one
+subject and predicate's events up to an instant
+(<code>event.go:60-98</code>, <code>:123-175</code>). The package
+documentation states the rule: <em>"a belief is derived, never
+mutated"</em> (<code>doc.go:8</code>).</p>
+<p>A statement becomes a belief when it is appended and the fold keeps
+it.</p>
+<ul>
+<li><strong>Typed remember.</strong> <code>Store.remember</code>
+validates the value against the registry, reads the pair's history,
+folds it at the statement's instant, and returns without writing if the
+value is already held. Otherwise it appends one event
+(<code>internal/engine/store.go:195-352</code>).</li>
+<li><strong>Text remember.</strong> <code>RememberTextAt</code> keeps
+the text as a note, has the extractor propose statements, refuses any
+proposal whose evidence is not a substring of the text, records the
+proposals beside the note, and remembers each statement at confidence
+0.8 with source <code>agent_inferred</code>
+(<code>internal/engine/extract.go:88-253</code>).</li>
+</ul>
+<p>A belief stops holding in four ways, all of them appended events.</p>
+<ul>
+<li><strong>Supersession.</strong> A newer value of a single-valued
+predicate clears the held values in the fold
+(<code>event.go:311-323</code>).</li>
+<li><strong>Exclusion.</strong> A value asserted under a predicate that
+excludes this one withdraws the same value here
+(<code>event.go:264-288</code>).</li>
+<li><strong>Named correction.</strong> A statement may name beliefs
+under other predicates in <code>replaces</code>, and each is withdrawn
+by a retraction in its own history whose <code>replaced_by</code> names
+the statement (<code>store.go:409-435</code>).</li>
+<li><strong>Forget.</strong> A retraction of one value or of the whole
+pair (<code>store.go:437-534</code>).</li>
+</ul>
+<p>Nothing stops a belief from returning. The fold applies events in
+instant order, so a value asserted after its retraction is held again,
+and the text forget tool says so: <em>"remembering it again brings it
+back"</em> (<code>cmd/recall/mcp_text.go:65</code>). The one time on an
+event is <code>ObservedAt</code>, the writer's instant, and a writer may
+set it to the past (<code>store.go:198-205</code>). As-of reads order by
+it, so a statement written on 20 November and dated 1 October changes
+what an as-of read for 2 October returns.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a statement is folded against its own history before one event is appended; supersession, exclusion, named corrections and forget all append retractions; the fold reads every event by observation time, so a later statement of a forgotten value revives it and a backdated one rewrites the past</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a statement is folded against its own history before one event is appended; supersession, exclusion, named corrections and forget all append retractions; the fold reads every event by observation time, so a later statement of a forgotten value revives it and a backdated one rewrites the past
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    W1[&quot;typed remember:&lt;br/&gt;subject, predicate, value&quot;]
+    W2[&quot;text remember: note kept,&lt;br/&gt;model proposes statements&quot;]
+    W1 ~~~ W2
+  end
+  writers --&gt; Q{&quot;evidence quotes&lt;br/&gt;the text?&quot;}
+  Q --&gt;|&quot;no&quot;| REF[&quot;batch refused&quot;]
+  Q --&gt;|&quot;yes, or typed&quot;| FOLD1{&quot;fold the pair&#39;s history:&lt;br/&gt;value already held?&quot;}
+  FOLD1 --&gt;|&quot;yes&quot;| NOOP[&quot;nothing written&quot;]
+  FOLD1 --&gt;|&quot;no&quot;| EV[&quot;append one event&lt;br/&gt;at observed_at&quot;]
+  EV --&gt; RET[&quot;retractions appended for&lt;br/&gt;replaces and exclusions&quot;]
+  F[&quot;forget: retraction&lt;br/&gt;after the newest event&quot;] --&gt; LOG
+  RET --&gt; LOG[&quot;the log: immutable events,&lt;br/&gt;no update, no delete&quot;]
+  EV --&gt; LOG
+  LOG --&gt; READ[&quot;fold at as_of: newest&lt;br/&gt;value of a single&lt;br/&gt;predicate; retractions&lt;br/&gt;withdraw&quot;]
+  READ --&gt; BEL[&quot;beliefs, each with&lt;br/&gt;what it replaced&quot;]
+  LOG ~~~ GAP[&quot;the same value stated&lt;br/&gt;again is held again&quot;]
+  LOG ~~~ BACK[&quot;a backdated statement&lt;br/&gt;changes past as-of reads&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The engine is a Go package, <code>internal/engine</code>, re-exported
+by the root package <code>recall</code> (<code>recall.go</code>). It
+talks to storage through a three-method interface, <code>Put</code>,
+<code>List</code> and <code>Search</code>, with optional capabilities
+for keyword search, exact gets, watermarks, leases and fenced writes
+(<code>internal/engine/store.go:29-53</code>,
+<code>backends.go</code>).</p>
+<ul>
+<li><strong><code>backend/local</code></strong> starts a
+<code>polign-server</code> for a directory on a free loopback port with
+a generated key, and leaves it running for later processes
+(<code>backend/local/local.go:1-20</code>).</li>
+<li><strong><code>polign/</code></strong> is the HTTP client for that
+server.</li>
+<li><strong><code>backend/pgvector</code></strong> creates one table per
+collection with an HNSW index, a GIN index on the metadata and a
+generated <code>tsvector</code>
+(<code>backend/pgvector/backend.go:339-352</code>).</li>
+<li><strong><code>backend/mongodb</code></strong> and
+<strong><code>backend/qdrant</code></strong> do the same on those
+stores; Qdrant has no keyword search or leases.</li>
+<li><strong><code>cmd/recall</code></strong> is the binary:
+<code>mcp</code>, <code>serve</code>, <code>connect</code>,
+<code>key</code>, <code>explain</code>, <code>history</code>,
+<code>ask</code>, <code>diff</code>, <code>reembed</code>,
+<code>setup</code> and <code>telemetry</code>
+(<code>cmd/recall/main.go:55-77</code>).</li>
+<li><strong><code>model/</code></strong> holds the Anthropic,
+OpenAI-compatible and Ollama extractors and the embedders, including
+all-MiniLM-L6-v2 run in pure Go.</li>
+<li><strong><code>python/polign_recall</code></strong> spawns
+<code>recall mcp</code> and speaks MCP to it over stdio
+(<code>python/polign_recall/client.py:553</code>,
+<code>:902</code>).</li>
+</ul>
+<p>Each event is embedded when it is written. The default embedder
+hashes words into 256 buckets
+(<code>internal/engine/defaults.go:195-210</code>), and each embedder
+gets its own default collection, so turning on a model embedder starts
+an empty memory unless <code>recall reembed</code> copies the log
+(<code>cmd/recall/embedder.go:83-104</code>,
+<code>cmd/recall/reembed.go:15-18</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>With nothing configured, memory lives under
+<code>~/.local/share/recall</code> in a polign_db the binary starts, and
+every agent on the machine shares it. When no <code>polign-server</code>
+is installed, the binary downloads release v0.16.0 from
+<code>dl.polign.com</code> once and checks it against a SHA-256 pinned
+per platform (<code>backend/local/fetch.go:33-47</code>,
+<code>:92-161</code>). Nothing needs an API key until a model extractor
+or embedder is named.</p>
+<p>The store is not human-readable. Every event is a vector row with
+JSON metadata, and the tools to read it are <code>recall history</code>,
+<code>explain</code>, <code>diff</code> and an audit export with a
+digest, verified offline by <code>recall-audit</code>
+(<code>internal/engine/audit.go:19-58</code>,
+<code>cmd/recall-audit/main.go:1-40</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Typed write.</strong> The MCP <code>remember</code> tool,
+<code>POST /v1/remember</code> and the clients reach
+<code>Client.Remember</code>, then <code>Store.remember</code>, which
+resolves the predicate, folds the history, applies
+<code>replaces</code>, appends the event and its retractions, and
+reports what was superseded
+(<code>internal/engine/store.go:195-352</code>).</li>
+<li><strong>Text write.</strong> <code>RememberTextAt</code> replays a
+recorded extraction for text it has seen, otherwise calls the extractor
+with the current beliefs in the context, re-asks about any sentence no
+proposal quotes, keeps the note, records the proposals and remembers
+each (<code>internal/engine/extract.go:88-253</code>,
+<code>:421-484</code>).</li>
+<li><strong>Extractor.</strong> <code>model.Extractor.Extract</code>
+sends the registry and the held beliefs, parses statements with
+<code>replaces</code>, and filters through
+<code>Registry.AdmitProposals</code>
+(<code>model/model.go:127-182</code>).</li>
+<li><strong>Read.</strong> <code>Store.Recall</code> dispatches to an
+exact pair read, a discovery read or <code>recallRanked</code>, which
+searches events, groups hits by pair and folds each pair's whole history
+at the query instant (<code>store.go:581-668</code>).
+<code>Client.AskWith</code> turns beliefs into sentences for the text
+tools (<code>internal/engine/ask.go:76-108</code>).</li>
+<li><strong>Fold.</strong> <code>foldOrder</code> drops events after the
+ceiling and sorts by instant, placing a retraction after an assertion
+that shares its instant; <code>apply</code> runs cardinality, exclusion
+and retraction (<code>event.go:177-351</code>).</li>
+<li><strong>Forget.</strong> <code>Store.Forget</code> appends a
+retraction at an instant after every event in the pair
+(<code>store.go:437-534</code>, <code>:805-813</code>).
+<code>ForgetText</code> searches for candidates and lets a model
+selector pick which to withdraw
+(<code>internal/engine/forgettext.go:31-85</code>).</li>
+<li><strong>Server.</strong> <code>recall serve</code> maps a key to a
+namespace and the namespace to a collection, and strips or refuses
+identity fields in the arguments
+(<code>cmd/recall/serve.go:149-163</code>, <code>:316-355</code>).</li>
+<li><strong>State API.</strong> <code>Client.Resume</code> takes the
+lease, loads the working state, turns, pointers, outputs and open
+actions from the <code>_agents</code> collection, and adds up to 20
+memories within an 8,000-token default budget
+(<code>internal/engine/agent.go:322-346</code>,
+<code>internal/engine/agent_context.go</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The event.</strong> Its fields become typed metadata:
+<code>kind</code>, <code>subject</code>, <code>predicate</code>,
+<code>confidence</code>, <code>source</code>, <code>retraction</code>,
+<code>observed_at</code> as a fixed-width string and
+<code>observed_ms</code> as a number, <code>value</code> and a
+case-folded <code>value_key</code>, <code>evidence</code>,
+<code>evidence_id</code>, <code>replaces</code> as one JSON string,
+<code>replaced_by</code>, and a <code>text</code> field for keyword
+search (<code>internal/engine/codec.go:84-126</code>). The id is a
+SHA-256 prefix of subject, predicate, value key, assert or retract, and
+the instant, so an assertion and a later re-assertion of the same value
+are two events (<code>codec.go:35-60</code>).</p>
+<p><strong>The registry</strong> is itself a log. Each definition,
+redefinition, rename and merge is an event about
+<code>recall:registry</code>, folded like any other, and a client whose
+configured registry disagrees with the stored one is refused
+(<code>internal/engine/schema.go:15-30</code>). <code>Redefine</code>
+applies to the whole history, as-of reads included
+(<code>docs/reference.md:646</code>).</p>
+<p><strong>Notes and extraction records.</strong> Each remembered text
+is an event under the multi-valued <code>note</code> predicate about
+<code>user</code>, at confidence 0.5. The model's proposals are an event
+about <code>recall:extraction</code> whose <code>evidence_id</code> is
+the note (<code>extract.go:55-66</code>, <code>:462-484</code>). Reads
+leave both out unless asked.</p>
+<p><strong>Time.</strong> One clock. <code>ObservedAt</code> is when the
+writer says the statement was made; the backend's acceptance order is
+not stored and no code records it (Recorded searches).</p>
+<p><strong>Scope.</strong> No scope field on an event. The namespace is
+the collection. Agent State records carry <code>recall_agent</code> and
+<code>record</code> keys, and every State read filters on both
+(<code>agent.go:912</code>, <code>:957-966</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Retrieval is tool-mediated.</strong> Nothing injects memory
+into a prompt; the agent calls <code>recall</code>, and the text tool's
+description tells it to do so <em>"before assuming anything about the
+user"</em> (<code>cmd/recall/mcp_text.go:46-61</code>). A recall with no
+question returns the user's whole profile, up to 1,000 beliefs
+(<code>internal/engine/validation.go:10</code>,
+<code>ask.go:77-83</code>).</p>
+<p><strong>Candidates, then the fold.</strong> A query with text embeds
+it, searches the events, and fuses the hits with the backend's keyword
+search when it has one. Under the hashed-word embedder every keyword hit
+ranks ahead of the vector hits rather than being fused
+(<code>store.go:1113-1170</code>, <code>:1234</code>). Hits are grouped
+by subject and predicate, and each pair's whole history is folded at the
+query instant (<code>store.go:622-668</code>). A search hit on a
+superseded value therefore answers with the value that holds now, and a
+multi-valued pair returns only the values whose own events matched.</p>
+<p><strong>Filters after the fold.</strong> Kind,
+<code>min_confidence</code>, an observation window and value ranges are
+checked on beliefs, not events (<code>store.go:1061-1094</code>). A time
+phrase in the question reorders candidates toward the span it names
+(<code>internal/engine/when.go</code>).</p>
+<p><strong>What comes back.</strong> Each belief carries what it
+replaced, one step back, and a list of the subject's other beliefs that
+hold the same value under another predicate
+(<code>event.go:79-98</code>). The text tool adds the sentence of the
+original text the belief came from. With a model embedder, answers below
+half the best match's similarity are dropped
+(<code>ask.go:96-102</code>, <code>:329</code>).</p>
+<p><strong>Cost per read.</strong> Every candidate pair costs one
+complete history read of up to 10,000 events, cached per pair in a
+materialization the writer invalidates
+(<code>internal/engine/materialized.go</code>,
+<code>store.go:1105-1106</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes are synchronous.</strong> A typed remember is a
+history read, a fold and one <code>Put</code>. A text remember adds one
+or two extraction calls inside the call, so the agent waits for the
+model. A memory is retrievable as soon as the call returns. No
+background pass reads or rewrites the store.</p>
+<p><strong>The quote rule is code, with two openings.</strong>
+<code>RememberTextAt</code> refuses a batch whose proposal evidence is
+not a substring of the text (<code>extract.go:167-169</code>). The
+bundled extractor filters first through <code>AdmitProposals</code>, and
+its <code>repairEvidence</code> replaces a missing quote with the whole
+text when the text is at most 2,048 bytes
+(<code>extract.go:295-319</code>), so a statement with no quote is kept.
+The <code>messages</code> form writes the conversation as
+<code>User:</code> and <code>Assistant:</code> lines and quotes against
+all of it, so an excerpt from the assistant's turn passes. The tool
+description says only what the user said or agreed to is kept, which is
+a prompt rule (<code>internal/engine/transcript.go:17-45</code>,
+<code>cmd/recall/mcp_text.go:23</code>, <code>:28</code>).</p>
+<p><strong>Who sets source and confidence.</strong> Extracted statements
+are <code>agent_inferred</code> at 0.8. On the typed tools the model
+passes <code>source</code> and <code>confidence</code>, and the default
+is <code>user_stated</code> at 1
+(<code>cmd/recall/mcp_memory.go:75-83</code>,
+<code>store.go:164-166</code>, <code>:255-260</code>).</p>
+<p><strong>The extractor names what a statement replaces.</strong> Since
+14 October 2026 the extractor sees up to 64 current beliefs and its
+prompt asks it to set <code>replaces</code> to every listed belief the
+statement makes untrue, copying each value word for word
+(<code>model/model.go:325-327</code>). <code>Extract</code> passes those
+through and <code>RememberText</code> withdraws each one that is held
+(<code>model/model.go:158-177</code>, <code>extract.go:229-231</code>).
+The reference still says <em>"The <code>model</code> extractor proposes
+none"</em> (<code>docs/reference.md:196-197</code>), and the README says
+no model reconciles memory on its own (<code>README.md:161</code>).</p>
+<p><strong>Replay.</strong> Remembering a text already kept replays its
+recorded proposals through the fold instead of asking the model again
+(<code>extract.go:47-54</code>, <code>:125-129</code>). A replayed text
+re-asserts what it said, including a value forgotten since.</p>
+<p><strong>Bounds.</strong> A pair's history is capped at 10,000 events.
+A write to a full pair is refused, and a pair with more cannot be read
+(<code>store.go:58-64</code>, <code>:294-296</code>,
+<code>:1271-1291</code>). Every remembered text appends to the single
+<code>(user, note)</code> pair, and <code>recordedExtraction</code>
+reads that pair whole on each text remember
+(<code>extract.go:421-430</code>). Text memory therefore refuses new
+text after 10,000 distinct passages per collection, and each write
+before then reads every earlier note.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>One history read per write and per candidate pair on read, plus the
+extraction calls in text mode. The README's demo puts a saved message at
+about 3.0k tokens for Recall; no committed artifact holds that
+measurement.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>recall mcp</code> serves text tools by default:
+<code>remember(text or messages)</code>, <code>recall(question)</code>,
+<code>forget(text)</code>, <code>history</code> and <code>diff</code>.
+Without <code>-write</code> only the reads are listed
+(<code>cmd/recall/mcp_text.go:18-101</code>). <code>-typed</code> serves
+<code>list_predicates</code>, <code>remember</code>,
+<code>recall</code>, <code>forget</code>, <code>explain</code>,
+<code>memory_history</code>, <code>timeline</code> and
+<code>diff</code>, and <code>-agent</code> adds the State API tools
+(<code>cmd/recall/mcp_memory.go:52-170</code>,
+<code>cmd/recall/mcp_agent.go:253-414</code>).</p>
+<p>The README's install line is <code>recall mcp -write</code> with no
+model. In that configuration every remembered text is a note, nothing
+supersedes anything, and the listed <code>forget</code> tool returns
+<em>"forgetting by description needs an extraction model"</em>
+(<code>mcp_text.go:168-176</code>, <code>:262-265</code>). The agent can
+store and cannot withdraw.</p>
+<p><code>recall serve</code> exposes the same tools over
+<code>POST /mcp</code>, <code>POST /v1/&lt;tool&gt;</code> and
+<code>POST /v1/agent/&lt;verb&gt;</code> behind keys, with short-lived
+keys minted from a Kubernetes service-account token or an Agent
+Substrate token. A request that names another namespace, session or
+fixed agent is refused (<code>cmd/recall/serve.go:316-355</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="forgetting-holds-until-the-value-is-said-again">Forgetting holds
+until the value is said again</h3>
+<p>A retraction is keyed on subject, predicate and value, and the fold
+reads it. It withdraws what is held when it is written and nothing
+later: a new assertion of the same value after it is held again
+(<code>internal/engine/store_test.go:283-300</code> pins this). Three
+paths make that likely. The extractor reads the user's text, a replayed
+text re-files what it said, and a backdated import can place an
+assertion before or after the retraction depending on the date it
+carries.</p>
+<h3 id="one-clock-set-by-the-writer">One clock, set by the writer</h3>
+<p><code>observed_at</code> is accepted from any caller up to a minute
+in the future (<code>store.go:186-205</code>), the MCP
+<code>remember</code> tools take it as an argument, and the fold orders
+by it. <code>TestObservationTimeOverridesWriteAcceptanceOrder</code>
+pins the consequence: a write accepted second with an earlier clock is
+what an as-of read at that earlier instant returns
+(<code>concurrency_test.go:11-32</code>). An as-of read answers <em>as
+of when statements were made</em>, which is a world-time question, while
+the README presents it as what the agent believed then.</p>
+<h3 id="nothing-can-be-erased">Nothing can be erased</h3>
+<p>No driver has a delete (Recorded searches). A forgotten value stays
+in its event, its note, its recorded extraction, every audit export and
+every backend replica. Text sent to the extractor goes to the configured
+provider.</p>
+<h3 id="the-default-store-is-a-closed-binary">The default store is a
+closed binary</h3>
+<p>The local backend runs <code>polign-server</code>, whose source is
+not in this tree. The fold's refusal of a truncated history depends on
+the store honouring the engine's contract (exact totals,
+read-after-write, an ordered listing prefix), and the conformance suite
+in <code>backendtest</code> checks that contract in CI against whatever
+<code>polign_db</code> release pip resolves.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>audit_log</code> — earned.</strong> The memory
+collection is an event log and the only store of memory. Every write
+path appends; retractions name what caused them; the registry's changes
+and each extraction's proposals are events in the same log. The log is
+not tamper-evident: <code>Put</code> upserts by id, and immutability
+rests on ids that hash content and instant.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Fold tests
+require a superseded value to stay out of a search that ranks it first,
+a forgotten value out of a populated multi-valued answer, and an
+excluded value out of the opposed predicate.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> A namespace
+is its own collection, and the server's comment says so: <em>"no filter
+stands between two tenants' records"</em>
+(<code>cmd/recall/serve.go:7-11</code>). That is a physical partition.
+The State API's <code>recall_agent</code> key is a stored key applied on
+read, over a working-state handoff and transcript rather than beliefs,
+and its value comes from the call's <code>agent_id</code> unless the key
+fixes one.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> One instant per
+event, settable by the writer; no record time.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> The retraction
+is keyed on the value and is overridden by the next assertion of it, by
+design.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>source</code> has three values and no read filters on it;
+<code>min_confidence</code> is a caller's threshold over a float.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No memory
+waits for anyone. <code>recall-audit -notes</code> lists unfiled
+statements for a person to read after they are stored.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran nothing from the repository. CI runs
+<code>go test -race ./...</code> with PostgreSQL, MongoDB, Qdrant and an
+unpinned <code>polign_db</code> from pip
+(<code>.github/workflows/ci.yml:62-97</code>). The engine's tests use an
+in-memory <code>fakeDB</code> and do not skip; the backend suites skip
+without their database URL.</p>
+<p>What the engine tests cover, among others:</p>
+<ul>
+<li>one write per statement, nothing written for a restatement, the
+superseded event kept in history, as-of reads, forget as one appended
+retraction that leaves the past unchanged
+(<code>internal/engine/store_test.go:166-268</code>);</li>
+<li>re-assertion after forgetting, multi-valued retraction, and semantic
+recall never returning a superseded belief (<code>:283-336</code>);</li>
+<li>exclusions, named corrections and their links surviving an audit
+round-trip (<code>exclusion_test.go</code>,
+<code>correction_test.go</code>);</li>
+<li>the 10,000-event bound refusing both reads and writes
+(<code>history_test.go:108-126</code>).</li>
+</ul>
+<p>What is not covered: no test runs a text remember, forgets a
+statement from it, and remembers the same text again; the namespace
+isolation test reads a namespace that holds nothing
+(<code>cmd/recall/serve_test.go:229-243</code>).</p>
+<p><strong>Evals.</strong> <code>eval/longmemeval</code> is a harness
+for the LongMemEval user-facts subset. The README's table (88.8 with
+word search, 92.9 with an OpenAI embedder, 89.9 for BM25, 96.6 for the
+oracle) appears in the README, the changelog and a comment in
+<code>uf_server.sh</code> dated 14 October 2026. The run outputs are
+gitignored and none is committed, so the numbers do not recompute from
+the tree. The README's comparison with mem0 and Zep has no harness in
+the tree. <code>eval/corrections</code> holds 68 hand-written cases, 40
+corrections and 28 traps, with no committed result.</p>
+<p><strong>The one committed result is the most useful.</strong>
+<code>eval/longmemeval/retired-judged.jsonl</code> scores by hand the 35
+beliefs a model-driven corrector retired on a branch not in the clone:
+32 were still true, 2 unclear and 1 a real correction, which I
+recomputed from the file. The commit that added it, on 11 October 2026,
+also wrote that no model proposes corrections. On 14 October the shipped
+extractor gained the <code>replaces</code> field. Its prompt restricts
+the model to word-for-word copies of beliefs it is shown, and no
+committed measurement covers that form.</p>
+<p>The tree cites no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Derive beliefs, store events.</strong> One fold over an
+immutable log, used by exact, semantic and historical reads alike, means
+a search cannot surface a value the exact read would say is gone.</li>
+<li><strong>Refuse a truncated history.</strong> Reading one extra row
+and failing when the total disagrees turns a backend's silent page cap
+into an error instead of a revived retraction.</li>
+<li><strong>Corrections that say what they replaced.</strong> A
+retraction carrying the id of the statement that caused it, and a belief
+carrying what it displaced, make every answer explain itself.</li>
+<li><strong>Record the extraction beside the text.</strong> Replaying
+the recorded proposals for repeated text makes a retried write file the
+text the same way.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A retraction the next statement overrides.</strong> If
+forgetting must hold, consult withdrawn values before an extracted
+statement is appended.</li>
+<li><strong>A caller-settable instant as the only clock.</strong> Keep
+the acceptance time too, or an import rewrites what an as-of read
+reports was believed.</li>
+<li><strong>One pair that every text lands in.</strong> A per-pair bound
+plus a single note pair caps the whole memory.</li>
+<li><strong>A forget tool that needs a model the default install
+lacks.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an operator who wants memory a reviewer can replay: a
+typed vocabulary, a log that answers what was said and when, and Go or
+Python clients against a database they already run. It assumes someone
+curates the registry, and without a model embedder it does not reach a
+fact phrased differently from the question. Walk away if users must be
+able to erase what they said, if a retraction must survive a later
+extraction, or if the store cannot depend on a closed-source server and
+PostgreSQL is not an option.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the extractor's <code>replaces</code> has been measured
+since it shipped, and whether the reference's statement that it proposes
+none is meant to stand.</li>
+<li>Whether as-of reads are meant to answer world time or belief
+time.</li>
+<li>What <code>polign-server</code>'s licence permits, since its text is
+only inside the release archives.</li>
+<li>Why <code>recall</code> and <code>actor</code> executables are
+committed at the root, and whether they correspond to the tagged
+source.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Event, fold, registry: <code>internal/engine/event.go</code>,
+<code>internal/engine/codec.go</code>,
+<code>internal/engine/predicate.go</code>,
+<code>internal/engine/schema.go</code>, <code>doc.go</code></li>
+<li>Write, forget, read: <code>internal/engine/store.go</code>,
+<code>internal/engine/client.go</code>,
+<code>internal/engine/forgettext.go</code></li>
+<li>Text and extraction: <code>internal/engine/extract.go</code>,
+<code>internal/engine/transcript.go</code>,
+<code>internal/engine/ask.go</code>, <code>model/model.go</code></li>
+<li>Audit export: <code>internal/engine/audit.go</code>,
+<code>cmd/recall-audit/main.go</code></li>
+<li>State API: <code>internal/engine/agent.go</code>,
+<code>internal/engine/agent_context.go</code>,
+<code>internal/engine/agent_action.go</code></li>
+<li>MCP and HTTP: <code>cmd/recall/mcp.go</code>,
+<code>cmd/recall/mcp_text.go</code>,
+<code>cmd/recall/mcp_memory.go</code>,
+<code>cmd/recall/mcp_agent.go</code>, <code>cmd/recall/serve.go</code>,
+<code>cmd/recall/keys.go</code></li>
+<li>Backends: <code>backend/local/local.go</code>,
+<code>backend/local/fetch.go</code>, <code>polign/</code>,
+<code>backend/pgvector/backend.go</code>,
+<code>backend/mongodb/backend.go</code>,
+<code>backend/qdrant/backend.go</code>,
+<code>backendtest/backendtest.go</code></li>
+<li>Evals: <code>eval/longmemeval/</code>,
+<code>eval/corrections/</code>,
+<code>eval/predicate-matching/</code></li>
+<li>Docs: <code>README.md</code>, <code>docs/reference.md</code>,
+<code>docs/memory-api-v1.md</code>, <code>THIRD_PARTY_NOTICES.md</code>,
+<code>TELEMETRY.md</code>, <code>CHANGELOG.md</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No delete in any driver.</strong>
+<code>git grep -n -E 'func \([a-z]+ \*?[A-Za-z]+\) (Delete|Drop|Remove|Purge|Truncate|Erase)' -- .</code>
+returns only <code>internal/engine/agent.go:752</code>,
+<code>RemovePointer</code>, which writes a removal record. The same
+pattern with <code>(Forget|Remember)</code> matches
+<code>internal/engine/store.go:159</code> and <code>:443</code>.
+<code>git grep -n -i -E 'DELETE FROM|deleteMany|DeleteOne|DeletePoints|\.Delete\(' -- '*.go' '*.py'</code>
+returns nothing; <code>INSERT INTO</code> matches three lines of
+<code>backend/pgvector/backend.go</code>.</li>
+<li><strong>No second clock.</strong>
+<code>git grep -n -i -E 'recorded_at|accepted_at|ingested_at|written_at|stored_at|valid_from|valid_to|valid_until|tx_time|transaction_time' -- '*.go' '*.py' '*.md'</code>
+returns nothing; <code>observed_at</code> matches
+<code>internal/engine/store.go:201</code>.</li>
+<li><strong>No read filters on source.</strong>
+<code>git grep -n -E '\.Source ?(==|!=)' -- '*.go'</code> returns
+<code>cmd/recall/history.go:102</code>, a display check, and test
+files.</li>
+<li><strong>No value-keyed refusal of memory.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|suppress|do_not_remember|never_remember|denylist' -- '*.go'</code>
+returns the key-revocation record in <code>cmd/recall/keys.go</code> and
+the pointer removal in <code>internal/engine/agent.go:750</code>.</li>
+<li><strong>No pending or approval state on the memory path.</strong>
+<code>git grep -n -i -w -E 'pending|approve|approved|approval|quarantine|quarantined' -- internal/engine/store.go internal/engine/event.go internal/engine/extract.go internal/engine/forgettext.go cmd/recall/mcp_memory.go cmd/recall/mcp_text.go</code>
+returns nothing; the same pattern matches
+<code>internal/engine/agent_action.go:270</code>.</li>
+<li><strong>No mem0 or Zep harness.</strong>
+<code>git grep -n -i -w -E 'zep|mem0' -- . ':!README.md'</code> returns
+only the binaries <code>recall</code>, <code>actor</code> and
+<code>examples/amend/amend.gif</code>.</li>
+<li><strong>No committed LongMemEval output.</strong>
+<code>git ls-files eval/ | grep -E '(^|/)out/|hyp\.jsonl|judge\.jsonl|report-'</code>
+returns nothing; <code>eval/longmemeval/.gitignore</code> lists
+<code>out/</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- . ':!*.json'</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-24</strong> — <a
+href="https://github.com/Polign/recall/commit/c86175aea027c655e1d790b7b5db64daece9802c"><code class="commit-id" title="c86175aea027c655e1d790b7b5db64daece9802c">c86175ae…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, tag
+v0.26.0. Screened first: one auto-run surface, <code>server.json</code>,
+an MCP manifest declaring a start command, not run;
+<code>python/pyproject.toml</code> inside the seven-day cooldown; one
+build-time execution point, <code>deploy/agent-sandbox/Makefile</code>;
+unpinned <code>eval/longmemeval/requirements.txt</code> and
+<code>python/pyproject.toml</code>. Two committed Mach-O executables at
+the root were not run. Docs and prompts were read as data. Nothing was
+installed, built or run, and the 424 Go test functions and 61 Python
+test methods were not run. Two marks: <code>audit_log</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

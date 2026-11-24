@@ -645,6 +645,20 @@ that range on every chunk lane and again on the assembled bundle. The
 record clock is the one nothing queries: no read asks what the store
 held at a past record time, and the raw <code>search_documents</code>
 tool passes no bounds at all.</p>
+<p><a href="../../systems/recall-polign/">Recall (Polign)</a> has one
+clock and calls it belief time. Each event carries
+<code>observed_at</code>, which a writer may set to any past instant,
+and the fold that answers <code>as_of</code>, <code>history</code> and
+<code>diff</code> orders by it
+(<code>internal/engine/store.go:186-205</code>,
+<code>internal/engine/event.go:177-214</code>). No acceptance time is
+stored. Its own test pins the consequence: a write accepted second with
+an earlier clock is what an as-of read at that clock returns
+(<code>internal/engine/concurrency_test.go:11-32</code>). An import
+written in November and dated 1 April therefore changes what an as-of
+read for 2 April returns, which is the answer a record clock exists to
+keep fixed. Forget alone is stamped after every existing event, so a
+retraction cannot be backdated.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision
