@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 857 reports.**
+**This page covers all 858 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7892,3 +7892,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, with a closed-source default store; 25,002 lines of Go and 270 commits, all but one by one author, between 12 September and 19 November 2026, tagged v0.26.0; 424 Go test functions, 234 in the engine on an in-memory fake, run in CI against four databases and not run here. The LongMemEval numbers in the README have no committed run output. Two marks: `audit_log`, `negative_eval`.
 - Study when: you want memory whose every answer can be replayed from a log and explained, with typed predicates, explicit cardinality and as-of reads.
 - Do not copy when: a retraction must survive the next extraction, users must be able to erase what they said, or validity time and record time must be told apart.
+
+### [`distillery`](../systems/distillery/)
+- Best idea: **pre-register the benchmark cell.** `bench/HEADLINE.md` fixes one LongMemEval configuration and the R@5, R@10 and NDCG@10 triplet before any result, and requires an ADR to change either; `bench/LIMITATIONS.md` says the numbers are retrieval diagnostics, not QA accuracy. The committed headline recomputes from its per-type rows.
+- Second idea: graph expansion re-tests each neighbour against the seed's status filter, and a populated test links an archived neighbour that only the expansion can reach, requires it absent, and brings it back with `include_archived`.
+- Biggest risk: **a correction does not stay corrected.** `distillery_correct` archives the wrong entry, and `find_similar`, which drives both the 0.95 duplicate refusal and the conflict check, excludes archived rows; a test pins that exclusion. The wrong statement stored again is a new active entry ranked beside its correction.
+- Second risk: the quick starts select the embedder with `DISTILLERY_EMBEDDING_PROVIDER`, which no code reads, so a server started without a `distillery.yaml` embeds every text as a zero vector and its semantic search, duplicate refusal and conflict check stop discriminating. Separately, `find_similar` and graph expansion ignore the project, and the review queue is cleared by `distillery_resolve_review` on the agent's own surface.
+- Most reusable component: the status mirror in `_expand_search_with_graph`, `src/distillery/mcp/tools/search.py:381-392`, with `tests/test_mcp_tools/test_search_expand_graph.py:488-537` and its twin at `:540`; and `bench/HEADLINE.md` with `bench/LIMITATIONS.md` as a template for publishing a number.
+- Maturity impression: Apache-2.0; 38,723 lines of Python under `src/` and 61,334 of tests; 1,821 commits from 21 March to 19 November 2026, almost all from one author and bots; 14 tags; 3,252 test functions in CI with an 80% coverage floor, none run here. Two marks: `audit_log`, `negative_eval`.
+- Study when: you are building shared team memory over MCP and want a benchmark discipline and a read filter that survives graph expansion.
+- Do not copy when: projects must be isolated from each other, a retraction has to hold against a later restatement, or review has to be a person's.

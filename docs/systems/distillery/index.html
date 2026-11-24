@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A team knowledge base reached
+through Claude Code skills and an MCP server, storing entries in DuckDB
+with hybrid search, typed relations and feed ingestion.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Distillery — Agent Memory Atlas">
+    <meta property="og:description" content="A team knowledge base
+reached through Claude Code skills and an MCP server, storing entries in
+DuckDB with hybrid search, typed relations and feed ingestion.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Distillery — Agent Memory Atlas">
+    <meta name="twitter:description" content="A team knowledge base
+reached through Claude Code skills and an MCP server, storing entries in
+DuckDB with hybrid search, typed relations and feed ingestion.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Distillery — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Distillery",
+      "description": "A team knowledge base reached through Claude Code skills and an MCP server, storing entries in DuckDB with hybrid search, typed relations and feed ingestion.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Skills-driven team knowledge in DuckDB,
+where a correction archives the old entry out of the deduplicator's
+sight</p>
+          <h1>Distillery</h1>
+          <p class="document-deck">A team knowledge base reached through
+Claude Code skills and an MCP server, storing entries in DuckDB with
+hybrid search, typed relations and feed ingestion.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/norrietaylor/distillery">
+              <span>Source</span>
+              <strong>norrietaylor/distillery</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/norrietaylor/distillery/commit/c5ad2e45ff6be07335892bc479498117bf33fda6" title="c5ad2e45ff6be07335892bc479498117bf33fda6">
+              <span>Analyzed revision</span>
+              <code>c5ad2e45…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-24</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/norrietaylor--distillery" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>norrietaylor--distillery</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE and pyproject.toml</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>38,723
+lines of Python in 76 files under src/: 14,519 in the MCP layer, 7,620
+in the store (store/duckdb.py alone is 5,656), 5,811 in feed ingestion;
+61,334 lines of tests in 120 files; 15 skills</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,821
+commits from 21 March to 19 November 2026, 1,621 under Norrie Taylor's
+three spellings and the rest from bots and four other people; 14 tags,
+the latest v0.7.0, while the manifests read 0.8.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>3,252
+test functions in 115 files; ci.yml runs pytest -m 'not bench' with an
+80% coverage floor; a LongMemEval retrieval bench with committed results
+under bench/; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Distillery is a team knowledge base for Claude Code: fifteen skills
+call an MCP server that stores free-text entries in one DuckDB file and
+searches them with BM25 and cosine similarity fused by rank. Its notable
+parts are the discipline around its numbers and its read filter: a
+LongMemEval cell pre-registered before any result landed, and an
+archived-entry filter that graph expansion mirrors, with a populated
+test. Its weak part is correction. A corrected entry is archived, the
+deduplicator does not look at archived entries, and the same wrong
+statement stored a week later is accepted as new.</p>
+<p>The product is a plugin, a server and a set of background feeds. A
+person runs <code>/distill</code>, <code>/bookmark</code> or
+<code>/minutes</code>, and the model drafts an entry, checks it against
+similar ones and stores it. Feeds and GitHub sync add external items on
+a schedule. <code>/recall</code>, <code>/pour</code> and
+<code>/investigate</code> search it. Run over HTTP with GitHub or GitLab
+OAuth, one store serves a whole organisation, and every member reads
+every entry.</p>
+<p>The quick starts in the README and docs set
+<code>DISTILLERY_EMBEDDING_PROVIDER</code>, and no code reads that
+variable. Without a <code>distillery.yaml</code> the embedding provider
+is the empty string, and the server constructs a provider that returns a
+zero vector for every text (section 3).</p>
+<p>The licence is Apache-2.0, in <code>LICENSE</code> and
+<code>pyproject.toml</code>.</p>
+<p>Two marks are earned: <code>audit_log</code> on the row each MCP
+write tool appends, and <code>negative_eval</code> on the
+archived-neighbour case under graph expansion. Section 9 gives the
+reason for each of the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>entry</strong>: a block of prose with a type
+such as <code>session</code>, <code>bookmark</code>,
+<code>reference</code> or <code>feed</code>, an author and project the
+caller names, tags, and metadata
+(<code>src/distillery/models.py:278-350</code>). Entries are documents,
+not extracted facts. Nothing in the server calls a language model;
+distillation, classification and conflict judgement happen in the client
+model, steered by skill prose.</p>
+<p>An entry becomes memory when a caller stores it. The
+<code>/distill</code> skill is user-invoked only
+(<code>disable-model-invocation: true</code>,
+<code>skills/distill/SKILL.md:10</code>) and asks the model to show a
+preview first (<code>:65</code>); that request is prose, and
+<code>distillery_store</code> is a plain tool. Before persisting, the
+handler runs <code>find_similar</code> at 0.92 and refuses to store a
+candidate whose top match scores 0.95 or more, returning the existing id
+instead (<code>src/distillery/mcp/tools/crud.py:488-570</code>,
+<code>src/distillery/config.py:112</code>, <code>:153</code>).</p>
+<p>An entry has three lifecycle states and three verification values,
+and the two fields are independent
+(<code>src/distillery/models.py:72-101</code>).</p>
+<ul>
+<li><strong><code>active</code></strong> is the default.</li>
+<li><strong><code>pending_review</code></strong> is set when a
+classification's confidence is below 0.6
+(<code>src/distillery/mcp/tools/classify.py:178-179</code>). The
+confidence is about the entry's <em>type</em>, and the default read set
+includes this state
+(<code>src/distillery/mcp/tools/crud.py:1549</code>).</li>
+<li><strong><code>archived</code></strong> is the soft delete. Update,
+correction, a review verdict, feed rescoring and a feed purge all reach
+it, and it hides the entry from search, list, get and the
+deduplicator.</li>
+<li><strong><code>verification</code></strong> (<code>unverified</code>,
+<code>testing</code>, <code>verified</code>) is a field a caller sets
+and can filter on. Nothing filters on it by default.</li>
+</ul>
+<p>A correction is a new entry with a <code>corrects</code> edge to the
+old one, which is archived in the same transaction
+(<code>src/distillery/store/duckdb.py:4428-4516</code>). No record is
+kept of the rejected statement as a value.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an entry is stored unless a live entry is 95% similar; correction archives the old entry and links the new one; archived entries leave every read and the duplicate check, so the corrected statement can be stored again as new</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an entry is stored unless a live entry is 95% similar; correction archives the old entry and links the new one; archived entries leave every read and the duplicate check, so the corrected statement can be stored again as new
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    W1[&quot;/distill, /bookmark,&lt;br/&gt;/minutes: the model&lt;br/&gt;calls distillery_store&quot;]
+    W2[&quot;feed poller and&lt;br/&gt;gh-sync: external items&quot;]
+    W3[&quot;distillery_correct:&lt;br/&gt;new entry, source manual&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  writers --&gt; DUP{&quot;top live match&lt;br/&gt;in any project&lt;br/&gt;at 0.95 or more?&quot;}
+  DUP --&gt;|&quot;yes&quot;| SKIP[&quot;not stored,&lt;br/&gt;existing id returned&quot;]
+  DUP --&gt;|&quot;no&quot;| ACT[&quot;active, unverified&quot;]
+  ACT --&gt; CLS{&quot;classify: model&#39;s&lt;br/&gt;confidence 0.6 or more?&quot;}
+  CLS --&gt;|&quot;no&quot;| PR[&quot;pending_review,&lt;br/&gt;still served by search&quot;]
+  CLS --&gt;|&quot;yes&quot;| LIVE[&quot;active&quot;]
+  PR --&gt; RR[&quot;resolve_review on the&lt;br/&gt;agent&#39;s own MCP surface&quot;]
+  RR --&gt; LIVE
+  LIVE --&gt; ARCH[&quot;archived: hidden from&lt;br/&gt;search, list, get, dedup&quot;]
+  RR --&gt; ARCH
+  ARCH --&gt; GAP[&quot;the corrected statement,&lt;br/&gt;restated, matches nothing&lt;br/&gt;and is stored as new&quot;]
+  GAP --&gt; DUP</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The server is one Python process around one DuckDB connection, with a
+second read handle so searches do not queue behind writes
+(<code>src/distillery/store/duckdb.py:1617-1672</code>). The store path
+may be a local file, an S3 URL through <code>httpfs</code>, or
+MotherDuck; the default is <code>~/.distillery/distillery.db</code>
+(<code>src/distillery/config.py:45</code>).</p>
+<ul>
+<li><strong><code>store/</code></strong> holds the schema migrations and
+the DuckDB store with hybrid search, relations, the audit and search
+logs, and the bulk paths.</li>
+<li><strong><code>mcp/</code></strong> holds the FastMCP server with 17
+tools, OAuth providers for GitHub and GitLab, rate-limit and body-size
+middleware, and webhook routes.</li>
+<li><strong><code>feeds/</code></strong> polls RSS and GitHub sources,
+scores relevance against the user's interests and syncs issues and pull
+requests.</li>
+<li><strong><code>classification/</code></strong> parses a model's
+classification response and holds a heuristic classifier based on
+embedding centroids; it calls no model.</li>
+<li><strong><code>eval/</code></strong> runs scenario evals through
+<code>claude</code> and the LongMemEval bench.</li>
+<li><strong><code>skills/</code></strong> and
+<strong><code>.claude-plugin/</code></strong> are the client side.</li>
+</ul>
+<p>The plugin's manifest registers a <code>SessionStart</code> and a
+<code>Stop</code> hook, and both only <code>echo</code> a fixed line:
+the first names the skills, the second suggests <code>/distill</code>,
+<code>/watch</code> or <code>/bookmark</code>
+(<code>.claude-plugin/plugin.json:12-35</code>). Neither writes
+anything. The <code>/setup</code> skill can add a second
+<code>SessionStart</code> hook,
+<code>scripts/hooks/distillery-hooks.sh</code>, which runs
+<code>session_start_briefing.py</code>. That script finds the server,
+derives the project from the basename of the git root, calls
+<code>distillery_list</code> for five recent entries and three not
+accessed in 30 days, and prints at most three and two 60-character
+snippets (<code>scripts/hooks/session_start_briefing.py:795-812</code>,
+<code>:874-891</code>). No hook captures a session or a transcript.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Local use is <code>uvx distillery-mcp</code> over stdio. The README
+says the default is on-device <code>fastembed</code>, selected by
+<code>DISTILLERY_EMBEDDING_PROVIDER</code>
+(<code>README.md:82-91</code>). The provider is read only from YAML:
+<code>EmbeddingConfig</code> defaults it to <code>""</code>
+(<code>src/distillery/config.py:70</code>), a server with no config file
+gets <code>DistilleryConfig()</code> (<code>:1845-1847</code>), and
+<code>_create_embedding_provider</code> maps <code>""</code> to
+<code>StubEmbeddingProvider</code>, which returns
+<code>[0.0] * dimensions</code> for every input
+(<code>src/distillery/mcp/server.py:116-152</code>,
+<code>src/distillery/mcp/_stub_embedding.py:21-66</code>).
+<code>distillery_status</code> reports the model name as
+<code>stub</code>. With every vector zero, cosine similarity carries no
+information, so the vector arm, the 0.95 duplicate refusal and the
+conflict check cannot discriminate, and BM25 is the only working arm.
+The variable has the documented effect only for someone whose
+<code>DISTILLERY_CONFIG</code> file also names the provider, as the
+docs' examples pair the two.</p>
+<p>Jina and OpenAI need an API key; <code>fastembed</code> downloads an
+ONNX model on first use. The store is a DuckDB file, queryable with the
+DuckDB CLI and not editable as text. <code>distillery export</code> and
+<code>import</code> move it as JSON.</p>
+<p>The team deployment is the same server over streamable HTTP with
+OAuth and an optional organisation or group allow-list, deployed to
+Fly.io by a workflow. <code>server.auth.provider</code> defaults to
+<code>none</code>, and an HTTP server started that way logs a warning
+and serves everyone
+(<code>src/distillery/mcp/__main__.py:171-174</code>). Scheduled work
+arrives over bearer-token webhooks: <code>/hooks/poll</code>,
+<code>/hooks/rescore</code>, <code>/hooks/classify-batch</code> and
+<code>/api/maintenance</code>
+(<code>src/distillery/mcp/webhooks.py:1760-1766</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Store.</strong> <code>distillery_store</code> resolves the
+authenticated login, calls <code>_handle_store</code>, then
+<code>_audit</code> (<code>src/distillery/mcp/server.py:389-481</code>).
+<code>_handle_store</code> validates the type, metadata schema and
+reserved tags, checks the size and embedding budgets, runs the duplicate
+check, persists, and runs the conflict check
+(<code>src/distillery/mcp/tools/crud.py:277-680</code>).
+<code>_sync_store</code> inserts the row, fans out
+<code>related_entries</code> from metadata, optionally auto-links
+neighbours, rebuilds the FTS index and checkpoints
+(<code>src/distillery/store/duckdb.py:1959-2023</code>).</li>
+<li><strong>Search.</strong> <code>_handle_search</code> builds filters,
+applies the default status filter, calls <code>store.search</code>, and
+optionally <code>_expand_search_with_graph</code>
+(<code>src/distillery/mcp/tools/search.py:188-256</code>,
+<code>:307-420</code>). <code>search</code> runs the vector query, then
+BM25, fetches BM25-only hits under the same filters, and fuses
+(<code>src/distillery/store/duckdb.py:2709-2903</code>).</li>
+<li><strong>Similarity.</strong> <code>find_similar</code> is a cosine
+scan above a threshold that excludes archived entries and takes no other
+filter (<code>src/distillery/store/duckdb.py:2922-2981</code>). It
+serves the duplicate check, the conflict check and the
+<code>distillery_find_similar</code> tool.</li>
+<li><strong>Update.</strong> <code>_handle_update</code> accepts
+content, type, author, project, tags, status, verification, metadata,
+expiry and session id, and the store re-embeds on a content change
+(<code>src/distillery/mcp/tools/crud.py:1353-1390</code>).</li>
+<li><strong>Correct.</strong> <code>_handle_correct</code> builds the
+new entry with <code>source=EntrySource.MANUAL</code> and calls
+<code>apply_correction</code>
+(<code>src/distillery/mcp/tools/crud.py:2162-2275</code>,
+<code>src/distillery/store/duckdb.py:4428-4516</code>).</li>
+<li><strong>Classify and review.</strong> <code>_handle_classify</code>
+sets type and status from the caller's confidence;
+<code>_handle_resolve_review</code> approves, reclassifies or archives
+(<code>src/distillery/mcp/tools/classify.py:129-240</code>,
+<code>:241-420</code>).</li>
+<li><strong>Relations.</strong> <code>distillery_relations</code> adds,
+retires, revalidates, removes and traverses edges, lists and resolves
+candidate edges, suggests links and promotes entity tags to entries
+(<code>src/distillery/mcp/tools/relations.py</code>).</li>
+<li><strong>Ownership and audit.</strong> <code>_own</code> and
+<code>_audit</code> wrap the mutating tools
+(<code>src/distillery/mcp/server.py:351-387</code>).</li>
+<li><strong>Feeds.</strong> <code>FeedPoller</code> stores items as
+<code>feed</code> entries with source <code>import</code> and archives
+those whose rescored relevance falls below the threshold
+(<code>src/distillery/feeds/poller.py:553-554</code>,
+<code>:1284-1287</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Entries.</strong> <code>id</code>, <code>content</code>,
+<code>entry_type</code>, <code>source</code>, <code>author</code>,
+<code>project</code>, <code>tags</code>, <code>status</code>,
+<code>metadata</code>, <code>created_at</code>, <code>updated_at</code>,
+<code>version</code>, <code>embedding FLOAT[n]</code>,
+<code>created_by</code> and <code>last_modified_by</code>
+(<code>src/distillery/store/migrations.py:39-56</code>), later joined by
+<code>accessed_at</code>, <code>expires_at</code>,
+<code>verification</code> and <code>session_id</code>. The embedding
+width is fixed at creation, so changing provider means a new
+database.</p>
+<p><strong>Scope fields.</strong> <code>project</code> is a nullable
+string, <code>author</code> is whatever the caller passes (the skills
+use <code>git config user.name</code>), and <code>created_by</code> is
+the OAuth login when there is one
+(<code>skills/CONVENTIONS.md:84-90</code>). Tags are lowercase
+slash-separated paths validated on construction
+(<code>src/distillery/models.py:114-155</code>).</p>
+<p><strong>Provenance.</strong> <code>source</code> is one of six
+labels. Its docstring calls <code>inference</code> <em>"lower
+trust"</em>, and no read consults it except an explicit filter. A
+correction is always labelled <code>manual</code>, the label the enum
+reserves for a human operator, whether a person or the model made it
+(<code>src/distillery/mcp/tools/crud.py:2269</code>).</p>
+<p><strong>Time.</strong> <code>created_at</code> and
+<code>updated_at</code> are record times; <code>accessed_at</code> is
+stamped by a deferred flusher after reads; <code>expires_at</code> is
+set by the caller and only surfaces an entry in the stale list
+(<code>src/distillery/mcp/tools/analytics.py:1063-1097</code>). An
+expired entry is still searched.</p>
+<p><strong>Relations.</strong> <code>entry_relations</code> holds
+<code>from_id</code>, <code>to_id</code>, <code>relation_type</code> and
+<code>created_at</code>, then <code>weight</code>,
+<code>valid_at</code>, <code>invalid_at</code> and <code>metadata</code>
+(<code>src/distillery/store/migrations.py:126-133</code>,
+<code>:692-697</code>). Reads keep edges whose window contains the
+current time (<code>src/distillery/store/duckdb.py:101-108</code>).
+Candidate edges carry <code>metadata.review_status = "pending"</code>
+and are excluded from traversal (<code>:4597-4601</code>).</p>
+<p><strong>Logs.</strong> <code>audit_log</code> (section 9),
+<code>search_log</code> with query and result ids,
+<code>feedback_log</code> with implicit signals, and <code>_meta</code>
+for schema version, embedding model and webhook audit records
+(<code>src/distillery/store/migrations.py:82-113</code>).</p>
+<p>There is no entry history: an update overwrites content and bumps
+<code>version</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Search is hybrid by default.</strong> The vector arm orders
+by cosine distance through the HNSW index when there is no filter, and
+by an exact cosine scan when there is one, because DuckDB's HNSW filters
+after the index scan. It takes three times the limit as candidates. BM25
+runs over the FTS index for the same count, BM25-only hits are fetched
+under the same filters, and the two rank lists are fused with
+<code>1 / (60 + rank)</code> each, multiplied by a recency weight that
+is 1.0 for 90 days and falls linearly to 0.5
+(<code>src/distillery/store/duckdb.py:2690-2707</code>,
+<code>:2745-2884</code>). The displayed score is the cosine similarity
+mapped to [0, 1], not the fused score.</p>
+<p><strong>Default status filter.</strong> Search and list add
+<code>status IN ('active', 'pending_review')</code> unless the caller
+passes a status, <code>status="any"</code> or
+<code>include_archived</code>
+(<code>src/distillery/mcp/tools/crud.py:1976-2019</code>).</p>
+<p><strong>Graph expansion.</strong> With <code>expand_graph</code>,
+each seed's live relations are walked one or two hops, each neighbour
+scored at half its parent, and neighbours whose status the seed filter
+would have hidden are dropped
+(<code>src/distillery/mcp/tools/search.py:307-420</code>). Type,
+project, tags and author are not re-applied. A search for project
+<code>a</code> with expansion returns any neighbour an edge reaches, in
+any project.</p>
+<p><strong>Session-start injection</strong> is the briefing hook from
+section 3: a few snippets, scoped by the git root's name, printed at
+session start if <code>/setup</code> installed the hook. Everything else
+is tool-mediated. <code>/recall</code> and <code>/pour</code> pass a
+project only when the user names one
+(<code>skills/pour/SKILL.md:55-81</code>).</p>
+<p><strong>Token cost.</strong> The search tool returns summaries by
+default (<code>src/distillery/mcp/tools/search.py:169</code>), with full
+content on request. Nothing is injected per turn.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A store blocks the caller on up to three embeddings (candidate,
+duplicate check, conflict check), the insert, and a rebuild of the whole
+FTS index followed by a checkpoint
+(<code>src/distillery/store/duckdb.py:518-572</code>,
+<code>:1959-2023</code>). DuckDB's FTS has no incremental update, so
+each single write costs time proportional to the store; the bulk path
+defers the rebuild. Once the call returns, the entry is searchable.</p>
+<p><strong>Duplicates and conflicts.</strong> The duplicate check
+returns up to five entries at 0.92 or above; at 0.95 the store is
+refused. Between the two, the response carries a hint and the entry is
+stored. The conflict check returns entries at 0.60 or above, with an
+optional prompt for the model to judge them through
+<code>distillery_find_similar(conflict_check=true)</code>
+(<code>src/distillery/mcp/tools/crud.py:623-660</code>). Both checks
+span every project and skip archived entries.</p>
+<p><strong>Correction.</strong> <code>distillery_correct</code> writes a
+new active entry, a <code>corrects</code> edge and the old entry's
+archival in one transaction. The old text survives in the archived row
+and is reachable with <code>include_archived</code>.</p>
+<p><strong>Feeds and sync.</strong> The poller stores items whose
+relevance passes a threshold, deduplicates by external id and by
+similarity, and on rescoring archives items that fall below it. GitHub
+sync materialises issues and pull requests with citation edges. In a
+team deployment these are the largest writers, and none of them writes
+an audit row.</p>
+<p><strong>Batch classification.</strong>
+<code>/hooks/classify-batch</code> classifies <code>inbox</code> entries
+by heuristic or through <code>state["llm_client"]</code>. Only tests
+assign that key, so in the default <code>llm</code> mode every batch
+entry is written back as <code>pending_review</code> with a warning
+(<code>src/distillery/mcp/webhooks.py:1158</code>,
+<code>:1237-1247</code>, <code>:1285-1292</code>).</p>
+<p><strong>Deletion.</strong>
+<code>distillery_update(status="archived")</code> is the delete. The
+archived row keeps its content and embedding. The CLI
+<code>import --mode replace</code> runs <code>DELETE FROM entries</code>
+before restoring (<code>src/distillery/cli.py:1391-1394</code>); nothing
+else removes an entry. <code>remove</code> on a relation is a hard
+delete; <code>retire</code> sets <code>invalid_at</code>.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The server calls no language model. Embedding is local with
+<code>fastembed</code> or one HTTP call per text with Jina or OpenAI,
+under an optional daily budget whose default of 0 sets no ceiling
+(<code>src/distillery/config.py:474</code>). The per-write FTS rebuild
+is the cost that grows with the store. No pass rewrites the whole store;
+rescoring reads feed entries and updates their metadata.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model sees 17 tools (<code>src/distillery/mcp/server.py</code>).
+Every write tool is on the same surface as the reads, including
+<code>distillery_resolve_review</code> and the relation-candidate
+verdicts. Skills narrow which tools each one uses through
+<code>allowed-tools</code>, and <code>/distill</code> is invocable only
+by the user. The model supplies <code>author</code>,
+<code>project</code> and <code>source</code> as arguments.</p>
+<p><code>.claude/settings.local.json</code> in the repository is a
+permission allowlist that pre-approves every <code>distillery_*</code>
+tool and a few shell commands. It ships in the tree, not in the
+plugin.</p>
+<p>Adapting the server to another MCP client is direct; the skills are
+Claude-Code-specific prose.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="correction-does-not-hold">Correction does not hold</h3>
+<p><code>find_similar</code> excludes archived rows by design, and its
+test says why: <em>"an archived entry is conceptually removed, so it
+must not be returned as a near-duplicate match"</em>
+(<code>tests/test_store_integration.py:313-337</code>). The duplicate
+check and the conflict check both use it. So the statement a correction
+archived matches nothing the next time it is stored, is persisted as a
+new active entry, and ranks against the correction on equal terms. The
+<code>corrects</code> edge links two records; nothing compares a new
+candidate with the archived one.</p>
+<h3 id="scope-is-a-facet">Scope is a facet</h3>
+<p><code>project</code> is applied as a predicate on both search arms
+and on list when a caller passes it. Three paths do not take it:
+<code>distillery_find_similar</code> has no project parameter
+(<code>src/distillery/mcp/server.py:1066-1078</code>), graph expansion
+re-applies only status, and the duplicate refusal can answer a store in
+project <code>b</code> with the id of an entry in project
+<code>a</code>. Over HTTP, reads carry no identity predicate.
+<code>_own</code> refuses an update, correction, classification or
+review by a user other than <code>created_by</code>, and passes when
+<code>created_by</code> is empty, which it is for every feed, sync and
+stdio-era entry (<code>src/distillery/mcp/server.py:351-370</code>).
+<code>distillery_relations</code> has no ownership check.</p>
+<h3 id="the-audit-log">The audit log</h3>
+<p>Each of six write tools appends a row with login, tool, entry id,
+action and outcome after the handler returns
+(<code>src/distillery/mcp/server.py:372-387</code>). The row holds no
+content. The write is a separate statement, and its failure is logged at
+debug level and ignored. <code>_audit</code> derives success from the
+response having no <code>error</code>, so a store refused as a duplicate
+is recorded as a successful <code>store</code> against the existing
+entry's id (<code>src/distillery/mcp/server.py:479-480</code>,
+<code>src/distillery/mcp/tools/crud.py:557-561</code>).
+<code>docs/architecture.md:310</code> says all tool invocations are
+recorded; classify, relations, watch, sync and configure are not.</p>
+<p><code>_gather_audit</code> in <code>analytics.py</code> reads the
+table for a metrics scope, and its handler is called from
+<code>src/distillery/eval/mcp_bridge.py:659</code> and from no server
+tool. <code>docs/getting-started/mcp-setup.md:93</code> calls the audit
+view operator-only.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>audit_log</code> — earned.</strong> A named table in
+the store, appended by every write tool on the MCP surface and by the
+ownership guard, and never updated or deleted by code. The limits are
+above: no content, best-effort, and the background writers absent.</li>
+<li><strong><code>negative_eval</code> — earned.</strong>
+<code>test_expand_graph_excludes_archived_neighbours_by_default</code>
+links an archived neighbour to an active seed and requires the seed
+present and the neighbour absent under both provenances; its twin
+requires the neighbour back with <code>include_archived</code>. The
+default list case requires exactly two of three seeded entries.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> The project
+key reaches the search SQL on request.
+<code>distillery_find_similar</code>, a retrieval tool on the same
+surface, declares no project, and graph expansion drops it, so two of
+the agent's read paths return entries from any project. No read path
+carries a user predicate.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> The state that
+withholds an entry is <code>archived</code>, the soft delete shared by
+deletion, correction, feed pruning and review.
+<code>pending_review</code> measures doubt about the type, not the
+content, and is served by default. <code>verification</code> is read
+only when a caller filters on it; <code>/briefing</code> lists
+<code>testing</code> entries in a section of their own.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> No record keyed
+on a rejected value exists, and the archived row is invisible to the
+duplicate check that would consult it.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> Entries carry
+record time only. Relations carry <code>valid_at</code> and
+<code>invalid_at</code> beside <code>created_at</code>, and every read
+evaluates the window at the current time. <code>retire</code> writes the
+moment of retirement into <code>invalid_at</code> unless the caller
+supplies a time, <code>revalidate</code> clears it, and no column
+records when the system learned an edge had ended
+(<code>src/distillery/store/duckdb.py:4701-4742</code>). No skill passes
+either field.</li>
+<li><strong><code>human_review</code> — withheld.</strong> The review
+queue holds <code>pending_review</code> entries until
+<code>distillery_resolve_review</code> resolves them, and that tool is
+on the agent's surface. Its <code>reviewer</code> argument is
+client-supplied, and <code>_own</code> checks only that the caller
+created the entry, so the agent that stored and classified an entry can
+approve it.</li>
+</ul>
+<h3 id="prompt-injection">Prompt injection</h3>
+<p>Feed items, bookmarked pages and synced issues are stored as entries
+and returned by the same search as <code>/distill</code> entries,
+labelled by type and source. No filter or render step treats external
+text differently.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI runs <code>pytest -m "not bench"</code> with an 80% coverage floor
+(<code>.github/workflows/ci.yml:46-47</code>). Tests use an in-memory
+DuckDB, so the suite needs no service. I ran nothing from the
+repository.</p>
+<p>What the memory tests cover:</p>
+<ul>
+<li>default exclusion of archived entries from list and search, and the
+opt-ins (<code>tests/test_list_archived_default.py</code>);</li>
+<li>graph expansion's hop limits, discounts and archived-neighbour
+exclusion
+(<code>tests/test_mcp_tools/test_search_expand_graph.py</code>);</li>
+<li>correction archiving the original, inheriting or overriding fields,
+refusing an archived target, and chaining
+(<code>tests/test_corrections.py:29-182</code>);</li>
+<li>the duplicate check's thresholds and responses
+(<code>tests/test_dedup.py</code>,
+<code>tests/test_store_dedup_response.py</code>);</li>
+<li>ownership refusals and the auth audit callback
+(<code>tests/test_mcp_auth.py</code>);</li>
+<li>relation retirement, candidates and backfill
+(<code>tests/test_relations*.py</code>).</li>
+</ul>
+<p>What the tests do not establish:</p>
+<ul>
+<li><code>test_search_filter_by_project</code> loops over the results
+asserting each is in the project, which passes on an empty result
+(<code>tests/test_duckdb_store.py:391-396</code>). No populated case
+asserts a project boundary on search.</li>
+<li><code>test_default_search_excludes_archived</code> asserts only that
+no returned status is <code>archived</code>
+(<code>tests/test_list_archived_default.py:161-171</code>).</li>
+<li>No test stores a value, corrects it, stores the original again and
+asserts anything. <code>test_find_similar_excludes_archived</code> pins
+the behaviour that lets it through, over a store holding only the
+archived entry.</li>
+<li>No test drives <code>_audit</code>.</li>
+</ul>
+<p><strong>The LongMemEval bench.</strong>
+<code>bench/HEADLINE.md</code> pre-registers one cell (hybrid, session
+granularity, recency on, <code>bge-small</code>) and requires the
+triplet R@5, R@10 and NDCG@10 together.
+<code>bench/LIMITATIONS.md</code> says these are retrieval diagnostics
+and not the QA accuracy of <a
+href="https://arxiv.org/abs/2410.10813">arXiv:2410.10813</a>
+(LongMemEval, submitted 14 October 2024). The committed summary for the
+headline run of 18 May 2026 reports 0.970, 0.990 and 0.885 over 100
+questions, 30 multi-session and 70 single-session-user, at git
+<code>fce1688c85df</code>
+(<code>bench/results/summary_longmemeval_hybrid_session_on_bge-small_20260518T090851Z.json</code>).
+R@5 recomputes from the two per-type rows. The 100 are the first 100 of
+the dataset (<code>questions[:limit]</code>,
+<code>src/distillery/eval/longmemeval.py:770-771</code>, and
+<code>limit: 100</code> in the summary), and only two of its question
+types appear among them. Each question builds a fresh in-memory store
+with no project, no archived entries and no relations, so the bench
+measures the hybrid ranker and none of the mechanisms in section 9. No
+paper describes Distillery itself.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Pre-register the benchmark cell and publish a
+triplet.</strong> Fixing the configuration and the metrics before any
+result lands, with an ADR required to change them, removes the choice of
+best cell after the fact.</li>
+<li><strong>Mirror the seed filter into expansion.</strong> When a
+search follows edges, re-test each neighbour against the predicates the
+seed query used, and test it with a neighbour only the expansion can
+reach. Do it for every predicate, not only status.</li>
+<li><strong>Correction as a linked new record.</strong> Writing the
+correction, the edge and the archival in one transaction keeps both
+versions and the reason the old one stopped counting.</li>
+<li><strong>A duplicate refusal that returns the existing id.</strong>
+The caller learns where its content already lives.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A deduplicator that cannot see what was retracted.</strong>
+Excluding archived rows from the duplicate check is right for merging
+and wrong for correction. Check new candidates against corrected values
+separately and refuse or flag a match.</li>
+<li><strong>Configuration documented in one place and read in
+another.</strong> An environment variable the code never reads, with a
+silent fallback to a zero vector, gives a working server whose semantic
+search does nothing.</li>
+<li><strong>A review verb on the reviewed agent's tool surface.</strong>
+A queue the producer can clear records approvals nobody gave.</li>
+<li><strong>An audit outcome computed from the absence of an
+error.</strong> Record what the handler did (stored, skipped, refused),
+not whether it raised.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a small team already working in Claude Code that wants a
+shared, searchable record of decisions, meeting notes and bookmarks,
+plus feeds, on one server it can run. The design assumes trusted
+colleagues: everyone in the organisation reads everything, only some
+tools check ownership, and the model is the classifier and the conflict
+judge. Walk away if projects must be isolated from each other, if a
+correction has to stay corrected, or if an operator needs to reconstruct
+what an entry said before an update.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What DuckDB's <code>array_cosine_similarity</code> returns for two
+zero vectors, and so how the stub provider's vector arm orders results
+and whether any threshold comparison passes.</li>
+<li>Whether the briefing hook's project, the git root's basename,
+matches the project the skills store under when <code>--project</code>
+is given.</li>
+<li>Whether the Fly.io deployment names a provider in YAML, which would
+make the hosted demo semantic while the local quick starts are not.</li>
+<li>What is meant to populate <code>state["llm_client"]</code> for batch
+classification.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and store: <code>src/distillery/store/migrations.py</code>,
+<code>src/distillery/store/duckdb.py</code>,
+<code>src/distillery/models.py</code></li>
+<li>MCP tools and wrappers: <code>src/distillery/mcp/server.py</code>,
+<code>src/distillery/mcp/tools/crud.py</code>,
+<code>src/distillery/mcp/tools/search.py</code>,
+<code>src/distillery/mcp/tools/classify.py</code>,
+<code>src/distillery/mcp/tools/relations.py</code></li>
+<li>Embedding and configuration:
+<code>src/distillery/mcp/_stub_embedding.py</code>,
+<code>src/distillery/embedding/</code>,
+<code>src/distillery/config.py</code></li>
+<li>Auth and middleware: <code>src/distillery/mcp/auth.py</code>,
+<code>src/distillery/mcp/gitlab_auth.py</code>,
+<code>src/distillery/mcp/middleware.py</code>,
+<code>src/distillery/mcp/__main__.py</code></li>
+<li>Background: <code>src/distillery/feeds/poller.py</code>,
+<code>src/distillery/feeds/github_sync.py</code>,
+<code>src/distillery/mcp/webhooks.py</code></li>
+<li>Hooks and skills: <code>.claude-plugin/plugin.json</code>,
+<code>scripts/hooks/</code>, <code>skills/distill/SKILL.md</code>,
+<code>skills/CONVENTIONS.md</code>,
+<code>skills/setup/SKILL.md</code></li>
+<li>Bench: <code>bench/</code>,
+<code>src/distillery/eval/longmemeval.py</code></li>
+<li>Tests: <code>tests/test_list_archived_default.py</code>,
+<code>tests/test_mcp_tools/test_search_expand_graph.py</code>,
+<code>tests/test_store_integration.py</code>,
+<code>tests/test_corrections.py</code>,
+<code>tests/test_query_audit_log.py</code>,
+<code>tests/test_duckdb_store.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No code reads the documented embedding variable.</strong>
+<code>git grep -n 'DISTILLERY_EMBEDDING_PROVIDER' -- src scripts tests .claude-plugin server.json</code>
+returns nothing; the same pattern over <code>README.md</code> returns
+three lines.</li>
+<li><strong>The only hard delete of entries is the import.</strong>
+<code>git grep -n -E 'DELETE FROM entries' -- src</code> returns
+<code>src/distillery/cli.py:1393</code>.</li>
+<li><strong>Nothing edits the audit log.</strong>
+<code>git grep -n -i -E '(DELETE FROM|UPDATE|TRUNCATE)[[:space:]]+audit_log' -- .</code>
+returns nothing;
+<code>git grep -n -E 'INSERT INTO audit_log' -- src</code> returns
+<code>src/distillery/store/duckdb.py:3471</code>.</li>
+<li><strong>The relations tool writes no audit row.</strong>
+<code>awk 'NR&gt;=1356 &amp;&amp; NR&lt;=1490' src/distillery/mcp/server.py | grep -c _audit</code>
+prints 0.</li>
+<li><strong>find_similar takes no project.</strong>
+<code>awk 'NR&gt;=1066 &amp;&amp; NR&lt;=1078' src/distillery/mcp/server.py | grep -c project</code>
+and
+<code>awk 'NR&gt;=2922 &amp;&amp; NR&lt;=2981' src/distillery/store/duckdb.py | grep -c project</code>
+both print 0.</li>
+<li><strong>Graph expansion applies no filter other than
+status.</strong>
+<code>awk 'NR&gt;=307 &amp;&amp; NR&lt;=420' src/distillery/mcp/tools/search.py | grep -c -E 'project|filters'</code>
+prints 0.</li>
+<li><strong>No value-keyed rejection.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist|do_not_(store|remember)|rejected_value' -- src</code>
+returns nothing.</li>
+<li><strong>No default read filters on verification.</strong>
+<code>git grep -n -E "verification[[:space:]]*(=|!=)[[:space:]]*.(verified|unverified|testing)" -- src</code>
+returns nothing; the same shape for status,
+<code>git grep -n -E "status[[:space:]]*(=|!=)[[:space:]]*.(archived|pending_review)" -- src</code>,
+matches <code>src/distillery/mcp/tools/analytics.py:448</code>.</li>
+<li><strong>llm_client is assigned only in tests.</strong>
+<code>git grep -n -E '\[.llm_client.\] *=' -- .</code> returns two lines
+of <code>tests/test_webhooks/test_classify_batch.py</code>.</li>
+<li><strong>The audit metrics handler has no server caller.</strong>
+<code>git grep -n -E '_handle_metrics\(' -- src</code> returns
+<code>src/distillery/eval/mcp_bridge.py:659</code> and
+<code>src/distillery/mcp/tools/relations.py:390</code>, the second being
+the relations module's own graph-metrics function of the same name.</li>
+<li><strong>No skill sets relation validity.</strong>
+<code>git grep -n -E 'valid_at|invalid_at' -- skills</code> returns
+nothing.</li>
+<li><strong>No submodules.</strong> <code>.gitmodules</code> is
+absent.</li>
+<li><strong>No paper on Distillery.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- . ':!uv.lock'</code>
+returns the LongMemEval citation in <code>bench/</code> and
+<code>docs/benchmarks.md</code> and one test fixture string.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-24</strong> — <a
+href="https://github.com/norrietaylor/distillery/commit/c5ad2e45ff6be07335892bc479498117bf33fda6"><code class="commit-id" title="c5ad2e45ff6be07335892bc479498117bf33fda6">c5ad2e45…</code></a>.
+First reading, from a full clone at the head of <code>main</code>.
+Screened first: four auto-run surfaces, the plugin manifest whose
+<code>SessionStart</code> and <code>Stop</code> hooks only echo a line,
+two <code>.claude</code> settings files holding an env var and a
+permission allowlist, and <code>server.json</code>; <code>uv.lock</code>
+inside the seven-day cooldown; the <code>Makefile</code> and
+<code>tests/conftest.py</code> execute; <code>CLAUDE.md</code>, skills
+and docs were read as data. Nothing was installed, built or run, and the
+test functions were not run. Two marks: <code>audit_log</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). A corrected value
+can be stored again, and the documented embedding variable is read by no
+code.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 857 reports.</strong></p>
+<p><strong>This page covers all 858 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35261,6 +35261,51 @@ as-of reads.</li>
 <li>Do not copy when: a retraction must survive the next extraction,
 users must be able to erase what they said, or validity time and record
 time must be told apart.</li>
+</ul>
+<h3 id="distillery"><a
+href="../systems/distillery/"><code>distillery</code></a></h3>
+<ul>
+<li>Best idea: <strong>pre-register the benchmark cell.</strong>
+<code>bench/HEADLINE.md</code> fixes one LongMemEval configuration and
+the R@5, R@10 and NDCG@10 triplet before any result, and requires an ADR
+to change either; <code>bench/LIMITATIONS.md</code> says the numbers are
+retrieval diagnostics, not QA accuracy. The committed headline
+recomputes from its per-type rows.</li>
+<li>Second idea: graph expansion re-tests each neighbour against the
+seed's status filter, and a populated test links an archived neighbour
+that only the expansion can reach, requires it absent, and brings it
+back with <code>include_archived</code>.</li>
+<li>Biggest risk: <strong>a correction does not stay corrected.</strong>
+<code>distillery_correct</code> archives the wrong entry, and
+<code>find_similar</code>, which drives both the 0.95 duplicate refusal
+and the conflict check, excludes archived rows; a test pins that
+exclusion. The wrong statement stored again is a new active entry ranked
+beside its correction.</li>
+<li>Second risk: the quick starts select the embedder with
+<code>DISTILLERY_EMBEDDING_PROVIDER</code>, which no code reads, so a
+server started without a <code>distillery.yaml</code> embeds every text
+as a zero vector and its semantic search, duplicate refusal and conflict
+check stop discriminating. Separately, <code>find_similar</code> and
+graph expansion ignore the project, and the review queue is cleared by
+<code>distillery_resolve_review</code> on the agent's own surface.</li>
+<li>Most reusable component: the status mirror in
+<code>_expand_search_with_graph</code>,
+<code>src/distillery/mcp/tools/search.py:381-392</code>, with
+<code>tests/test_mcp_tools/test_search_expand_graph.py:488-537</code>
+and its twin at <code>:540</code>; and <code>bench/HEADLINE.md</code>
+with <code>bench/LIMITATIONS.md</code> as a template for publishing a
+number.</li>
+<li>Maturity impression: Apache-2.0; 38,723 lines of Python under
+<code>src/</code> and 61,334 of tests; 1,821 commits from 21 March to 19
+November 2026, almost all from one author and bots; 14 tags; 3,252 test
+functions in CI with an 80% coverage floor, none run here. Two marks:
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Study when: you are building shared team memory over MCP and want a
+benchmark discipline and a read filter that survives graph
+expansion.</li>
+<li>Do not copy when: projects must be isolated from each other, a
+retraction has to hold against a later restatement, or review has to be
+a person's.</li>
 </ul>
         </article>
       </div>

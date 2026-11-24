@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 856 of 857 screened at the report's current pin.**
+**Progress: 857 of 858 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 407 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 391 |
-| Repositories with build-time execution (`EXEC`) | 618 |
+| Repositories with an auto-run surface (`RUNS`) | 408 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 392 |
+| Repositories with build-time execution (`EXEC`) | 619 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -137,6 +137,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`dense-mem`](../../content/systems/dense-mem.md) | `.githooks/` |
 | [`deus`](../../content/systems/deus.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`dexto`](../../content/systems/dexto.md) | `.cursor/rules/` |
+| [`distillery`](../../content/systems/distillery.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.claude/settings.json`, `.claude/settings.local.json`, `server.json` |
 | [`dovsg`](../../content/systems/dovsg.md) | `.gitmodules` |
 | [`dreamgraph`](../../content/systems/dreamgraph.md) | `.github/copilot-instructions.md` |
 | [`dynamics-memory`](../../content/systems/dynamics-memory.md) | `.opencode/` |
