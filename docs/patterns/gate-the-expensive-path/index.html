@@ -325,6 +325,18 @@ not cancel the server's work, and 19 abandoned recall requests had piled
 up (<code>docs/memory-quality-optimization-report.md:399-422</code>). A
 second gate, <code>should_use_expensive_fallbacks</code>, keeps the
 embedding and archive scans behind the same hit count.</p>
+<p><a href="../../systems/memohood/">MemoHood</a> gates capture in two
+bands and fails each direction on purpose. <code>compute_signals</code>
+scores a turn on weighted keyword patterns; a score of zero drops it,
+four or more keeps it with no model call, and only the band between
+reaches one Gemini classification (<code>capture.py:577-598</code>). The
+supersede judge is gated the same way, by a cosine band, by the
+capture's kind and by whether a Gemini key is set
+(<code>capture.py:271-274</code>). Past the monthly spend ceiling the
+borderline band fails closed and the turn is not stored, while the
+recall gate, a pass-through by default, returns recall on every error
+(<code>gate.py:403-443</code>). The keyword list is where a memorable
+turn is lost without a call, and no test measures how often.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Feed the gate turns that plainly need memory and turns that plainly

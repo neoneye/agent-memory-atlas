@@ -186,6 +186,8 @@ the one that matters — is unknown in every case.
 
 [Hermes Memory Installer](../../systems/hermes-memory-installer/) gates a remote recall three ways and lets it fail closed, for a reason its own operations log records. Live Hindsight recall runs only when `should_use_live_hindsight` finds too few direct hits among five local layers, the operator has set `MEMORY_LIVE_HINDSIGHT_ENABLED`, and a circuit file is not open (`scripts/tiered_context_injector.py:425-443`, `:1536`). A timeout opens the circuit for 600 seconds and queues the query for a background worker that drains oldest-first. The project's optimization report gives the direction: client timeouts did not cancel the server's work, and 19 abandoned recall requests had piled up (`docs/memory-quality-optimization-report.md:399-422`). A second gate, `should_use_expensive_fallbacks`, keeps the embedding and archive scans behind the same hit count.
 
+[MemoHood](../../systems/memohood/) gates capture in two bands and fails each direction on purpose. `compute_signals` scores a turn on weighted keyword patterns; a score of zero drops it, four or more keeps it with no model call, and only the band between reaches one Gemini classification (`capture.py:577-598`). The supersede judge is gated the same way, by a cosine band, by the capture's kind and by whether a Gemini key is set (`capture.py:271-274`). Past the monthly spend ceiling the borderline band fails closed and the turn is not stored, while the recall gate, a pass-through by default, returns recall on every error (`gate.py:403-443`). The keyword list is where a memorable turn is lost without a call, and no test measures how often.
+
 ## Tests to require
 
 - Feed the gate turns that plainly need memory and turns that plainly do not,

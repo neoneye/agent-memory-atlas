@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-859, generated from each report's frontmatter —
+860, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-859, generated from each report's frontmatter —
+860, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-859, generated from each report's frontmatter —
+860, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 859, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 860, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-859, generated from each report's frontmatter —
+860, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 859 systems by the seven mechanisms
+filters all 860 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -20502,6 +20502,60 @@ real token budget and a profile/event split</td>
 hard-deleted after extraction</td>
 </tr>
 <tr>
+<td><a href="../systems/memohood/"><code>memohood</code></a></td>
+<td>A capture: one whole user or assistant turn with secrets redacted,
+carrying kind, notability, EXTRACTED or INFERRED source, a pinned flag,
+a confidence, the id it supersedes and a dated history of what it
+replaced; beside it an FTS index of every user and assistant message
+from Hermes's state.db</td>
+<td>memory.db beside Hermes's state.db: captures, an FTS5 table with a
+Russian-stemmed column, a sqlite-vec vec0 table of 1,024-dimension
+BGE-M3 vectors, messages_fts, a spend ledger and _meta; signals,
+session_tags and session_links are declared and never written</td>
+<td>Before every turn, FTS5 BM25 over raw and stemmed text and a vec0
+KNN over the query embedding, fused by reciprocal rank with top-rank
+bonuses, blended with a Cohere rerank by RRF position, then MMR and
+near-duplicate collapse; BM25 over the message history index beside it;
+four captures and two messages by default, each cut to 300
+characters</td>
+<td>After each turn on the host's background worker, a keyword score
+keeps or drops each side outright and sends the middle band to one
+Gemini classification; the stored text is the whole turn; a
+nearest-neighbour check then marks a duplicate, asks a Gemini judge or
+inserts; the capture tool and mirrored built-in memory writes run the
+same check</td>
+<td>Supersede stamps invalidated_at on the old row and copies its text,
+dated, into the new row's history; a built-in memory remove invalidates
+the exact-content mirror; decay below 0.05 and dedup at cosine 0.95
+invalidate when an operator runs consolidate; no row is ever deleted and
+there is no forget tool</td>
+<td>One memory.db per Hermes home directory, a physical partition;
+session_id is stored on every capture and used by no recall predicate;
+subagent, cron and flush contexts get no recall, capture or tools</td>
+<td>A Hermes MemoryProvider plugin: prefetch returns the recall block,
+sync_turn captures, on_pre_compress rescues up to five definite-keep
+messages, on_memory_write mirrors the built-in memory and on_delegation
+records a summary; five tools (search, fetch, recall, stats, capture)
+and a hermes memohood CLI</td>
+<td>Capture on the host's serialized worker after the reply; history
+indexing from state.db at each initialize; a consolidate command running
+decay, dedup, a day-week-month Gemini rollup and an FTS rebuild, which
+nothing schedules</td>
+<td>Active or invalidated, filtered on every captures read; pinned
+exempts identity, medical and remember-forever turns from decay;
+EXTRACTED or INFERRED and confidence are stored and filter nothing; the
+history index has no state</td>
+<td>A two-band capture gate that sends only the uncertain middle to a
+model; every invalidation leaves both indexes in the same transaction; a
+deadline on recall's network steps with FTS-only fallback; a monthly
+spend ceiling per provider</td>
+<td>A superseded statement still returns through the history leg of the
+same block; supersession invalidates and inserts in two transactions; a
+restatement at cosine 0.95 or more is dropped as a duplicate and
+reinforces the old row with no model call; graph rerank, on by default,
+reads a table nothing writes</td>
+</tr>
+<tr>
 <td><a href="../systems/memoir-cli/"><code>memoir-cli</code></a></td>
 <td>Two kinds — an entry file (markdown with YAML frontmatter, one of
 six types) living in whichever host tool's memory directory owns it, and
@@ -38571,7 +38625,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>86 of 859:</em> <a
+<p><em>86 of 860:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -38661,7 +38715,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>224 of 859:</em> <a
+<p><em>225 of 860:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -38783,6 +38837,7 @@ href="../systems/memex/"><code>memex</code></a>, <a
 href="../systems/memhtml/"><code>memhtml</code></a>, <a
 href="../systems/memledger/"><code>memledger</code></a>, <a
 href="../systems/memmy-agent/"><code>memmy-agent</code></a>, <a
+href="../systems/memohood/"><code>memohood</code></a>, <a
 href="../systems/memorix/"><code>memorix</code></a>, <a
 href="../systems/memory-cpp/"><code>memory-cpp</code></a>, <a
 href="../systems/memory-garden/"><code>memory-garden</code></a>, <a
@@ -38893,7 +38948,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>146 of 859:</em> <a
+<p><em>146 of 860:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -39049,7 +39104,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>365 of 859:</em> <a
+<p><em>365 of 860:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -39431,7 +39486,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>293 of 859:</em> <a
+<p><em>293 of 860:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -39737,7 +39792,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>106 of 859:</em> <a
+<p><em>106 of 860:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -39847,7 +39902,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>558 of 859:</em> <a
+<p><em>558 of 860:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -40442,7 +40497,7 @@ href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
 558 repositories of
-859 assert that particular material must
+860 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -40515,7 +40570,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 859 is the real figure for the second kind, and
+of 860 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

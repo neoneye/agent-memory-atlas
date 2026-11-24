@@ -829,6 +829,20 @@ same text also resets the decay record to a fresh buffer entry, undoing
 earned promotion. The case to cite when decay exists to be shown rather
 than used: wire the state into the ranker or the filter, or do not pay
 for the pass.</p>
+<p><strong><a href="../../systems/memohood/">MemoHood</a> reinforces on
+every recall and every near-duplicate, and only an operator ever
+decays.</strong> Confidence is <code>1.0 * exp(-age / halflife)</code>
+from <code>last_seen_at</code> with half-lives per kind, recomputed from
+the fixed base on each run because, as the comment records, reusing the
+stored value compounded the decay (<code>consolidate.py:121-160</code>).
+Pinned rows are exempt, and below 0.05 a row is invalidated rather than
+deleted. Every capture shown in a recall block has
+<code>last_seen_at</code> touched (<code>provider.py:217-227</code>),
+and with the default gate passing every turn that is every recall; a new
+turn at cosine 0.95 or more to a capture touches it too, as a duplicate,
+with no model call (<code>capture.py:467-476</code>). The decay pass
+runs only from <code>hermes memohood consolidate</code>, which nothing
+schedules.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

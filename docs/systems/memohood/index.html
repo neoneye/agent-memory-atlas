@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Hermes Agent memory provider
+that stores memorable dialogue turns in SQLite, recalls them before
+every turn, and supersedes them by LLM judgement.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MemoHood — Agent Memory Atlas">
+    <meta property="og:description" content="A Hermes Agent memory
+provider that stores memorable dialogue turns in SQLite, recalls them
+before every turn, and supersedes them by LLM judgement.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MemoHood — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Hermes Agent memory
+provider that stores memorable dialogue turns in SQLite, recalls them
+before every turn, and supersedes them by LLM judgement.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MemoHood — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MemoHood",
+      "description": "A Hermes Agent memory provider that stores memorable dialogue turns in SQLite, recalls them before every turn, and supersedes them by LLM judgement.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A correction retires the stored turn and
+leaves the original in the history index</p>
+          <h1>MemoHood</h1>
+          <p class="document-deck">A Hermes Agent memory provider that
+stores memorable dialogue turns in SQLite, recalls them before every
+turn, and supersedes them by LLM judgement.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/maximskorohod/memohood">
+              <span>Source</span>
+              <strong>maximskorohod/memohood</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/maximskorohod/memohood/commit/b1e0a038bbb7d2270fdabd2d0ca7b7f67d04ee0b" title="b1e0a038bbb7d2270fdabd2d0ca7b7f67d04ee0b">
+              <span>Analyzed revision</span>
+              <code>b1e0a038…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-24</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/maximskorohod--memohood" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>maximskorohod--memohood</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE, matching the README; plugin.yaml carries no licence
+field</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>8,657
+lines of Python in 23 files outside tests; capture, db, provider,
+retrieve, consolidate, extract_llm and tools hold 4,033 of them; 5,522
+lines of tests</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>34
+commits from 12 July to 8 November 2026 under two author names,
+myfullexpert and Maxim Skorohod; no tags; one other branch,
+fix/setup-resume-skipped-steps</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>286
+test functions in 27 files under tests/, against a README badge of 247
+passed and 1 skipped; two integration tests skip without real API keys;
+no CI configuration; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MemoHood is a memory provider for <a href="../hermes-agent/">Hermes
+Agent</a>: it captures memorable turns of a conversation into a local
+SQLite file, recalls the relevant ones into a
+<code>&lt;memory-context&gt;</code> block before every reply, and lets a
+newer statement supersede an older one. What is notable is the capture
+gate. A free keyword score keeps or drops most turns, and only the
+uncertain middle band costs one Gemini call. What is weak is that
+supersession reaches only one of the two corpora recall reads. The
+capture is retired, and the original message stays in the history index
+that feeds the same block.</p>
+<p>The stored memory is the turn, not a fact extracted from it. The
+borderline model classifies a turn and returns no text, and the pipeline
+stores the whole user or assistant message with secrets redacted
+(<code>capture.py:600-609</code>).</p>
+<p>A correction works by similarity. A new capture's nearest active
+neighbours are found by vector or FTS overlap, and a Gemini judge
+decides duplicate, supersede or independent in the ambiguous band. The
+supersede classifier is modelled, by its own docstring, on <a
+href="../gbrain/">GBrain</a>'s <code>facts/classify.ts</code>
+(<code>capture.py:20-37</code>).</p>
+<p>Three declared pieces do nothing at this commit. Graph rerank is on
+by default and reads <code>session_links</code>, which no code writes.
+The README describes nightly consolidation through
+<code>hermes cron</code>, and nothing registers the job. The
+<code>signals</code> and <code>session_tags</code> tables have no
+writer.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code>, and the
+README says the same. <code>plugin.yaml</code> carries no licence field,
+which matters only to a packager reading the manifest.
+<code>DESIGN_v1.md</code> was written against two private planning
+documents it names as not part of the repository; the code does not
+depend on them.</p>
+<p>One mark, <code>trust_state</code>, on the
+<code>invalidated_at</code> column that every read of captures excludes.
+Section 9 gives the reasons for the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>capture</strong>: one side of one turn, judged
+worth keeping. It is believed from the moment it is written. There is no
+candidate state, and the <code>EXTRACTED</code> or <code>INFERRED</code>
+label the borderline model assigns filters nothing.</p>
+<p>A turn side becomes a capture in three bands
+(<code>capture.py:577-598</code>):</p>
+<ul>
+<li><strong>Score 0.</strong> No keyword signal matched. Dropped, no
+model call.</li>
+<li><strong>Score 4 or more.</strong> A correction, decision, "remember
+this" or pinned trigger, summed by <code>compute_signals</code>
+(<code>capture.py:142-173</code>). Kept with the kind of the heaviest
+signal, no model call.</li>
+<li><strong>In between.</strong> One Gemini call returns
+<code>is_memorable</code>, <code>kind</code>, <code>notability</code>,
+<code>source_type</code> and <code>pinned</code>
+(<code>extract_llm.py:331-383</code>).</li>
+</ul>
+<p>A capture stops being believed in one way:
+<code>invalidated_at</code> is stamped and the row leaves both search
+indexes. Four writers do it:</p>
+<ul>
+<li><strong>Supersede</strong>, when the judge says so or a Hermes
+built-in memory <code>replace</code> names the row's exact content
+(<code>capture.py:449-497</code>).</li>
+<li><strong>Removal</strong>, when a built-in memory <code>remove</code>
+names it (<code>capture.py:705-720</code>).</li>
+<li><strong>Decay</strong>, when confidence computed from
+<code>last_seen_at</code> falls below 0.05 and the row is not pinned
+(<code>consolidate.py:121-160</code>).</li>
+<li><strong>Dedup</strong>, when two active rows sit at cosine 0.95 or
+more (<code>consolidate.py:212-239</code>).</li>
+</ul>
+<p>The row is never deleted. A tag records why for decay, dedup and
+removal, and no code reads the tag. A superseded row carries no tag; its
+successor names it in <code>supersedes</code> and holds its text, dated,
+in <code>history</code>.</p>
+<p>Recall then reads two corpora. Captures are filtered on
+<code>invalidated_at</code>. The history index,
+<code>messages_fts</code>, holds every user and assistant message from
+Hermes's own <code>state.db</code> and has no state at all. A statement
+retired as a capture is still a message.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a turn side is dropped, kept, or sent to one model call by its keyword score; the whole turn is stored after a nearest-neighbour check that can drop it as a duplicate or ask a judge to supersede; a supersede invalidates the old row and inserts the new one in separate commits; recall filters captures on invalidated_at and reads the history index, which nothing invalidates, into the same block</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a turn side is dropped, kept, or sent to one model call by its keyword score; the whole turn is stored after a nearest-neighbour check that can drop it as a duplicate or ask a judge to supersede; a supersede invalidates the old row and inserts the new one in separate commits; recall filters captures on invalidated_at and reads the history index, which nothing invalidates, into the same block
+flowchart TD
+    T[&quot;One side of a turn&lt;br/&gt;user or assistant&quot;] --&gt; S{&quot;Keyword score&quot;}
+    S --&gt;|&quot;0&quot;| X[&quot;Not stored&quot;]
+    S --&gt;|&quot;between 0 and 4&quot;| L[&quot;One Gemini call&lt;br/&gt;is_memorable, kind,&lt;br/&gt;source_type, pinned&quot;]
+    S --&gt;|&quot;4 or more&quot;| K[&quot;Kept, no model call&quot;]
+    L --&gt;|&quot;not memorable&quot;| X
+    L --&gt; W[&quot;Whole turn text&lt;br/&gt;secrets redacted&quot;]
+    K --&gt; W
+    W --&gt; N{&quot;Nearest active capture&lt;br/&gt;vector, else FTS overlap&quot;}
+    N --&gt;|&quot;0.95 or more&quot;| D[&quot;Duplicate: new text&lt;br/&gt;dropped, old row&#39;s&lt;br/&gt;last_seen_at touched&quot;]
+    N --&gt;|&quot;ambiguous&quot;| J[&quot;Gemini judge&lt;br/&gt;0.92 to 0.95, or a&lt;br/&gt;correction kind at 0.5&lt;br/&gt;needs key and budget&quot;]
+    N --&gt;|&quot;otherwise&quot;| A
+    J --&gt;|&quot;duplicate&quot;| D
+    J --&gt;|&quot;supersede&quot;| I[&quot;Old row gets&lt;br/&gt;invalidated_at&lt;br/&gt;first commit&quot;]
+    J --&gt;|&quot;independent&quot;| A
+    I --&gt; A[(&quot;Active capture&lt;br/&gt;second commit,&lt;br/&gt;history on new row&quot;)]
+    A --&gt; R[&quot;Recall: every captures&lt;br/&gt;read drops invalidated&quot;]
+    H[(&quot;messages_fts&lt;br/&gt;every user and&lt;br/&gt;assistant message,&lt;br/&gt;never invalidated&quot;)] --&gt; R
+    R --&gt; C[&quot;One memory-context&lt;br/&gt;block per turn&quot;]
+    O[&quot;Operator runs&lt;br/&gt;hermes memohood&lt;br/&gt;consolidate&quot;] --&gt; E[&quot;Decay below 0.05,&lt;br/&gt;dedup at 0.95:&lt;br/&gt;invalidated&quot;]
+    E -.-&gt; A</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Hermes plugin of <code>kind: exclusive</code>, installed into
+<code>$HERMES_HOME/plugins/memohood/</code> and selected with
+<code>memory.provider: memohood</code> (<code>plugin.yaml</code>). The
+host loads <code>MemoHoodMemoryProvider</code> and calls its lifecycle
+methods; nothing runs outside the Hermes process.</p>
+<p>Storage is one SQLite file,
+<code>&lt;hermes_home&gt;/memory.db</code>, in WAL mode beside Hermes's
+<code>state.db</code> (<code>db.py:109-124</code>,
+<code>:255-266</code>). It holds <code>captures</code>,
+<code>captures_fts</code>, the vec0 table <code>captures_vec</code>,
+<code>messages_fts</code>, <code>spend</code> and <code>_meta</code>.
+<code>state.db</code> is opened read-only through a <code>mode=ro</code>
+URI and never written (<code>db.py:769-783</code>).</p>
+<p>Three external services sit behind the keys, each optional:</p>
+<ul>
+<li><strong>Cloudflare Workers AI</strong> embeds with
+<code>@cf/baai/bge-m3</code> at 1,024 dimensions. An offline
+<code>fastembed</code> provider with
+<code>intfloat/multilingual-e5-large</code> is the alternative
+(<code>_engine/embed.py:214-260</code>).</li>
+<li><strong>Cohere</strong> reranks with <code>rerank-v3.5</code>
+(<code>_engine/rerank.py:39</code>).</li>
+<li><strong>Gemini</strong> <code>gemini-flash-lite-latest</code>
+classifies, judges and summarises through the OpenAI-compatible endpoint
+(<code>extract_llm.py:81-82</code>).</li>
+</ul>
+<p>Every call is logged to <code>spend</code>, and a provider whose
+trailing 30-day estimate passes its ceiling, $5 each by default, is
+skipped (<code>db.py:685-711</code>).</p>
+<p>The provider keeps no long-lived connection. Each method opens its
+own, because Hermes 0.22 calls providers from several threads
+(<code>provider.py:9-19</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>install.sh</code> or <code>install.ps1</code> finds Hermes's
+virtual environment, installs the dependencies, copies the plugin and
+sets the provider in <code>config.yaml</code>. With no keys, memory
+works on FTS5 alone, and only the definite-keep band is captured, since
+the borderline call and the judge need <code>GEMINI_API_KEY</code>.</p>
+<p>The store is a SQLite file a person can open. Nothing in the tree
+exports or edits it. <code>AGENTS.md</code> is installation instructions
+addressed to an agent that installs the plugin from a chat.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema.</strong> <code>db.py</code>: <code>captures</code>
+<code>:143-162</code>, <code>captures_fts</code> <code>:167-172</code>,
+<code>messages_fts</code> <code>:177-185</code>, <code>signals</code>,
+<code>session_tags</code>, <code>session_links</code>
+<code>:188-217</code>, <code>spend</code> <code>:219-227</code>,
+migrations <code>:388-398</code>.</li>
+<li><strong>Capture.</strong> <code>provider.py:343-378</code>
+(<code>sync_turn</code>) → <code>capture.process_turn</code>
+<code>:615-641</code> → <code>extract_and_store</code>
+<code>:547-612</code> → <code>_store_capture</code>
+<code>:417-539</code>.</li>
+<li><strong>Supersede decision.</strong> <code>_nearest_captures</code>
+<code>capture.py:295-362</code>, <code>_fts_dup_candidates</code>
+<code>:365-397</code>, <code>_should_judge</code> <code>:271-274</code>,
+<code>extract_llm.judge</code> <code>extract_llm.py:404-478</code>.</li>
+<li><strong>Invalidation and index cleanup.</strong>
+<code>db.drop_capture_from_indexes</code> <code>db.py:650-671</code>,
+called from every invalidating writer.</li>
+<li><strong>Recall.</strong>
+<code>provider._compute_prefetch_text</code>
+<code>provider.py:229-293</code> → <code>gate.should_recall</code> →
+<code>retrieve.hybrid_search</code>
+<code>_engine/retrieve.py:395-510</code> →
+<code>graph_rerank.graph_rerank</code> →
+<code>post_recall.attach_vectors</code> and <code>diversify</code> →
+<code>retrieve.fts_search_messages</code> <code>:174-201</code>.</li>
+<li><strong>History index.</strong> <code>db.catch_up_from_state</code>
+<code>db.py:809-932</code>, run from <code>initialize</code>
+(<code>provider.py:152-162</code>) and
+<code>hermes memohood seed</code>.</li>
+<li><strong>Mirrors of the built-in memory.</strong>
+<code>provider.on_memory_write</code> <code>provider.py:449-491</code>,
+<code>capture.find_active_by_content</code> and
+<code>forget_by_content</code> <code>capture.py:690-720</code>.</li>
+<li><strong>Consolidation.</strong> <code>consolidate.run_nightly</code>
+<code>consolidate.py:441-462</code>, called only from
+<code>cli.py:167-172</code>.</li>
+<li><strong>Tools.</strong> <code>tools.py:51-256</code>, dispatched at
+<code>:280-291</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>captures</code> row (<code>db.py:143-162</code>):</p>
+<ul>
+<li><code>id</code> is a random hex UUID minted per insert
+(<code>capture.py:501</code>), so a superseding capture gets a new id.
+The schema docstring says the id is <em>"stable across a SUPERSEDE
+rewrite"</em> (<code>db.py:19-23</code>); the code inserts a new
+row.</li>
+<li><code>content</code> is the redacted turn. <code>kind</code> is one
+of seven values plus <code>summary</code> for rollups.
+<code>notability</code> is high, medium or low.</li>
+<li><code>source</code> is <code>EXTRACTED</code> or
+<code>INFERRED</code>. <code>confidence</code> starts at 1.0 and is
+rewritten by decay.</li>
+<li><code>pinned</code> exempts the row from decay and from being the
+victim of a dedup (<code>consolidate.py:204-209</code>).</li>
+<li><code>supersedes</code> and <code>history</code> are on the
+successor only.</li>
+<li><code>session_id</code>, <code>tags</code>,
+<code>last_seen_at</code>, <code>created_at</code>,
+<code>updated_at</code>, <code>valid_from</code>,
+<code>invalidated_at</code>, <code>embed_signature</code>.</li>
+</ul>
+<p><code>valid_from</code> is written as the insert time by both writers
+(<code>capture.py:514-516</code>, <code>consolidate.py:316-318</code>)
+and read by nothing. The schema comment calls it bi-temporal after
+Graphiti (<code>DESIGN_v1.md</code>); in the code it is record time.</p>
+<p><code>message_id</code> is always <code>NULL</code>, so a capture
+cannot be traced to the Hermes message it came from, only to its
+session.</p>
+<p><code>messages_fts</code> stores message id, session, role, text, a
+stemmed copy and the timestamp in the FTS row itself. It has no status
+column.</p>
+<p>Three tables have a schema, indexes and no writer:
+<code>signals</code>, <code>session_tags</code> and
+<code>session_links</code>. <code>DESIGN_v1.md</code> says
+<code>sync_turn</code> should write <em>"signals/tags/links"</em>;
+<code>sync_turn</code> calls <code>process_turn</code> and nothing
+else.</p>
+<p>Scope is the file. One <code>memory.db</code> per Hermes home, and
+every capture from every session in it is one corpus.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall runs inline in <code>prefetch</code> for the current message.
+<code>queue_prefetch</code> is a deliberate no-op, because a result
+precomputed after turn N was being served on turn N+1 for the wrong
+message (<code>provider.py:329-334</code>).</p>
+<p>The gate comes first. Its default backend <code>pass</code> always
+recalls. The opt-in <code>model2vec</code> backend skips recall only
+when small-talk seeds clearly beat memory-question seeds, and every
+error path returns recall (<code>gate.py:403-443</code>).</p>
+<p>The query is reduced to meaningful terms by
+<code>query_norm.meaningful_terms</code>, and <code>hybrid_search</code>
+runs two arms over three times <code>k</code> candidates:</p>
+<ul>
+<li><strong>FTS5.</strong> Alphabetic tokens are stemmed with the
+Russian Snowball stemmer and matched against <code>content_stem</code>;
+tokens holding a digit, hyphen or dot are matched raw against
+<code>content</code>; all are ORed, at most 32
+(<code>_engine/retrieve.py:108-142</code>).</li>
+<li><strong>Vector.</strong> The query is embedded and matched by vec0
+KNN. The arm is skipped during an embedding migration, past the spend
+ceiling, or when the deadline leaves under half a second
+(<code>_engine/retrieve.py:250-301</code>).</li>
+</ul>
+<p>The two lists fuse by reciprocal rank with k=60 and a bonus for ranks
+1 to 3. Hydration drops any row with <code>invalidated_at</code> set
+(<code>_engine/retrieve.py:348-366</code>). The top 20 go to Cohere,
+blended with the RRF score at 75/25, 60/40 or 40/60 by original rank so
+a top lexical hit survives the reranker (<code>:444-473</code>).</p>
+<p>Three post-passes follow:</p>
+<ul>
+<li><strong>Graph rerank</strong> returns its input unchanged when
+<code>session_links</code> is empty
+(<code>graph_rerank.py:350-354</code>), and it always is.</li>
+<li><strong>Near-duplicate collapse and MMR</strong> need a vector on
+every candidate. One missing vector makes both a passthrough
+(<code>post_recall.py:174-199</code>). Rollup summaries are inserted
+with no vector (<code>consolidate.py:316-323</code>), so a summary among
+the results switches diversity off for that turn.</li>
+<li><strong>History.</strong> <code>fts_search_messages</code> returns
+BM25 hits from <code>messages_fts</code> with no filter but the match
+(<code>_engine/retrieve.py:174-201</code>).</li>
+</ul>
+<p>The block lists captures, pinned ones tagged, then history messages:
+four and two by default (<code>config.py:70</code>), where the README's
+settings table says 8 and 4. Each item is flattened to one line and cut
+at 300 characters by <code>inline_data</code>
+(<code>_engine/security.py:451-460</code>), under a note that the lines
+are data and not instructions. A capture is a whole turn, so a fact
+stated past its 300th character is not in the block.</p>
+<p>Every capture shown has its <code>last_seen_at</code> touched
+(<code>provider.py:217-227</code>). With the gate passing every turn,
+recall is also the reinforcement signal for decay.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>sync_turn</code> hands both sides to <code>process_turn</code>.
+On Hermes 0.22 and later it runs on the host's single background worker,
+which serialises turns; on older hosts it spawns a daemon thread per
+turn (<code>provider.py:53-57</code>, <code>:375-378</code>). The
+assistant side is captured by default. The config comment states the
+risk: <em>"The agent's own replies can carry its mistakes, which would
+then come back as 'facts'"</em> (<code>config.py:49-51</code>).</p>
+<p>Assistant text has one signal pattern, weight 3.0, for lines like
+<code>итог:</code>, <code>вывод:</code> or <code>root cause</code>, so
+an assistant capture always passes through the borderline model
+(<code>capture.py:137-139</code>).</p>
+<p>Before scoring, a turn that repeats an active rollup summary is
+skipped, so a recalled summary echoed back is not captured again
+(<code>capture.py:222-253</code>).</p>
+<p><strong>The supersede check.</strong> <code>_store_capture</code>
+embeds the new text and takes the five nearest vectors, keeping only
+active rows. When the vector top is under 0.92 it also tries FTS
+candidates scored by word Jaccard, so a twin written while the embedder
+was down is still found (<code>capture.py:438-444</code>). Then:</p>
+<ul>
+<li><strong>0.95 or more:</strong> duplicate. The new text is dropped
+and the old row's <code>last_seen_at</code> touched; a pinned trigger on
+the new text pins the old row (<code>:467-476</code>).</li>
+<li><strong>0.92 to 0.95, or a correction, preference or decision at 0.5
+or more with a Gemini key:</strong> the judge sees up to three
+candidates and answers with an index, which the code resolves to an id
+and range-checks (<code>extract_llm.py:454-474</code>).</li>
+<li><strong>Otherwise:</strong> independent insert.</li>
+</ul>
+<p>On supersede, the old row is stamped and dropped from both indexes in
+one transaction, and the new row with its <code>history</code> line is
+inserted in a second (<code>capture.py:489-524</code>). A failed insert
+after the first commit leaves the old row invalidated and no
+successor.</p>
+<p><code>manual_capture</code> skips the gate and runs the same check.
+It serves the <code>memohood_capture</code> tool, the built-in memory
+mirror and delegation summaries (<code>capture.py:644-687</code>). A
+built-in memory <code>replace</code> passes the previous content, which
+resolves by exact match to an active mirror and supersedes it with no
+judge.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Recall blocks the reply. Its two network steps get three seconds each
+with no retries, under a six-second deadline after which they are
+skipped (<code>provider.py:62-66</code>). Capture does not block the
+reply. A capture is retrievable once its commit lands, normally before
+the next turn. A message reaches <code>messages_fts</code> at the next
+<code>initialize</code>, so the current session's history is not
+searchable until a later session starts.</p>
+<p>Consolidation runs only when an operator starts it, and then it
+touches the whole store. Decay reads every active unpinned row, and
+dedup runs one self-KNN per active row. The rollup makes one Gemini call
+per session-day bucket of five or more captures, and the last stage
+rewrites <code>captures_fts</code> whole
+(<code>consolidate.py:121-160</code>, <code>:212-239</code>,
+<code>:339-386</code>, <code>:425-433</code>).</p>
+<p>The injection is the current turn's memory block and four to six
+one-line items by default. The system prompt block is a fixed text
+(<code>provider.py:82-92</code>), so recall does not disturb a cached
+prefix.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model sees five tools (<code>tools.py:263-277</code>):
+<code>memohood_search</code> for raw hits with ids and scores,
+<code>memohood_fetch</code> for one capture with its supersede history,
+<code>memohood_recall</code> for the same block on demand,
+<code>memohood_stats</code>, and <code>memohood_capture</code>, which
+takes <code>kind</code> and <code>pinned</code> from the model.</p>
+<p>No tool forgets, corrects or lists history across rows. The README
+says so, and says a wrong record is fixed by stating the correct
+version.</p>
+<p>Hermes hooks carry the rest:</p>
+<ul>
+<li><code>on_pre_compress</code> stores up to five of the newest
+definite-keep messages about to be compressed
+(<code>provider.py:380-423</code>).</li>
+<li><code>on_memory_write</code> mirrors writes to Hermes's built-in
+memory as captures, <code>persona</code> for the <code>user</code>
+target and <code>instruction</code> otherwise: <code>add</code> inserts,
+<code>replace</code> supersedes, <code>remove</code> invalidates
+(<code>provider.py:449-491</code>).</li>
+<li><code>on_delegation</code> records the task and result, 300
+characters each, as an <code>event</code>
+(<code>provider.py:493-515</code>).</li>
+<li><code>on_session_switch</code> with <code>rewound</code> clears the
+prefetch cache and nothing else (<code>provider.py:428-447</code>).
+Captures made from the dropped turns stay.</li>
+</ul>
+<p>A child context is a hard no-op: <code>parent_session_id</code>, or
+an <code>agent_context</code> of <code>subagent</code>,
+<code>cron</code> or <code>flush</code>, turns off recall, capture and
+the tool list (<code>provider.py:128-133</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-history-leg-serves-what-supersession-retired">The history
+leg serves what supersession retired</h3>
+<p><code>hybrid_search</code> and every other read of captures drop an
+invalidated row. The same recall block then appends
+<code>fts_search_messages</code> hits from <code>messages_fts</code>,
+which indexes every user and assistant message and is never updated when
+a capture is superseded or removed. The only <code>DELETE</code> on it
+is the version 2 migration that removed tool output
+(<code>db.py:392</code>).</p>
+<p>A user who said <em>"I'm allergic to penicillin"</em> in one session
+and corrected it in another has the correction as the active capture and
+the original sentence in the history index. A query that matches the
+original's words gets it back, under <em>"Похожие места в истории
+диалога"</em>, with nothing marking it as replaced. The README's account
+of the same scenario says the old record <em>"no longer surfaces in
+normal search"</em>. That is true of <code>memohood_search</code>, which
+reads captures only, and not of the automatic block or
+<code>memohood_recall</code>.</p>
+<h3 id="supersede-in-two-commits">Supersede in two commits</h3>
+<p>The old row's invalidation commits before the new row's insert
+(<code>capture.py:489-524</code>). An insert that fails raises
+<code>DbError</code>, and <code>extract_and_store</code> returns
+<code>None</code> (<code>:605-612</code>). The fact is then gone from
+recall: the old row is invalidated, and the history line that would have
+preserved it lived on the row that was never written.
+<code>DESIGN_v1.md</code> asks that an error <em>"don't write
+partial"</em>.</p>
+<h3 id="the-duplicate-band-reinforces-instead-of-correcting">The
+duplicate band reinforces instead of correcting</h3>
+<p>At cosine 0.95 or more the new text is dropped as a duplicate without
+a model call, and the old row's <code>last_seen_at</code> is touched. A
+correction phrased as the old sentence with a negation lands here if it
+embeds that close. Whether it does under BGE-M3 was not measured. The
+FTS fallback uses word Jaccard against the same 0.95, and a negation
+adds one word.</p>
+<h3 id="what-a-removed-fact-can-do-next">What a removed fact can do
+next</h3>
+<p><code>forget_by_content</code> invalidates the row and tags it
+<code>memory_removed</code>. The duplicate check reads active rows only
+(<code>capture.py:277-284</code>), so the same statement captured again
+is a new independent row. Nothing keyed on the value remembers the
+removal.</p>
+<h3 id="prompt-injection-and-secrets">Prompt injection and secrets</h3>
+<p>Text sent to Gemini is fenced as untrusted data
+(<code>extract_llm.py:351</code>, <code>:432-436</code>). Text going
+into the store passes <code>scan_secrets</code> and has each finding
+replaced with <code>[REDACTED]</code> (<code>capture.py:197-214</code>).
+Recalled text is flattened, stripped of list and heading markers and
+capped. The borderline model and the <code>memohood_capture</code> tool
+can both set <code>pinned</code>, which exempts a row from decay for
+good.</p>
+<h3 id="concurrency">Concurrency</h3>
+<p><code>sync_turn</code> is serialised by the host on Hermes 0.22.
+<code>on_memory_write</code> and <code>on_delegation</code> always spawn
+their own threads (<code>provider.py:491</code>, <code>:515</code>), so
+either can run the supersede check concurrently with a turn's capture.
+SQLite's five-second busy timeout prevents lock errors; it does not
+prevent two writers reading the same active candidate. The history
+catch-up re-reads its watermark under <code>BEGIN IMMEDIATE</code> for
+the same reason (<code>db.py:877-884</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code> — earned.</strong>
+<code>invalidated_at</code> has four producers on reachable paths and is
+excluded by every read of captures, including the automatic recall.
+There is no candidate state, and the history leg of the same block has
+no state.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Removal and
+supersession are keyed on a row. The duplicate check cannot see an
+invalidated row, so a removed statement can be captured again.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>valid_from</code> is the insert time at both writers and nothing
+reads it.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> The
+boundary is one file per Hermes home. <code>session_id</code> is on
+every capture; the one query that filters on it is the graph expansion,
+which never runs.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>spend</code> is an append-only ledger of external calls, not of
+mutations. A superseded row's text survives in its successor's
+<code>history</code>; decay, dedup and removal leave a tag and no
+event.</li>
+<li><strong><code>human_review</code> — withheld.</strong> A capture is
+served the moment it is written. The CLI reports and maintains; it
+approves nothing.</li>
+<li><strong><code>negative_eval</code> — withheld.</strong> Section 10
+gives the reason.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the tests. The counts are from reading.</p>
+<p>There are 286 test functions in 27 files. The README badge reads 247
+passed and 1 skipped. <code>tests/conftest.py</code> loads a fresh copy
+of the package per test under a synthetic namespace, strips the four
+credential variables, and reads the real <code>~/.hermes/.env</code>
+only for tests marked <code>integration</code>. It imports Hermes's
+<code>agent.memory_provider</code>, so the suite needs a Hermes
+installation.</p>
+<p>What the suite covers well:</p>
+<ul>
+<li>the three capture bands and the judge's cosine floors, with judge
+and nearest-neighbour monkeypatched (<code>tests/test_capture.py</code>,
+<code>tests/test_supersede_band.py</code>);</li>
+<li>index cleanup on supersede, decay and dedup
+(<code>tests/test_index_hygiene.py</code>);</li>
+<li>pinned rows surviving dedup and supersede
+(<code>tests/test_pinned_integrity.py</code>);</li>
+<li>decay idempotence across consecutive runs
+(<code>tests/test_consolidate.py:64-78</code>);</li>
+<li>the recall network budget
+(<code>tests/test_prefetch_budget.py</code>);</li>
+<li>concurrent initialisation
+(<code>tests/test_db_concurrency.py</code>).</li>
+</ul>
+<p><strong><code>negative_eval</code> is withheld.</strong> No test runs
+<code>hybrid_search</code>, <code>prefetch</code>,
+<code>memohood_search</code> or <code>memohood_recall</code> over a
+populated store holding an invalidated capture and asserts it absent.
+The supersede and removal tests assert on <code>captures_fts</code>
+contents and on counts of rows where <code>invalidated_at IS NULL</code>
+(<code>tests/test_index_hygiene.py:45-63</code>,
+<code>tests/test_small_fixes.py:90-100</code>). That is the index and
+the column, not a read. The pipeline test that asserts
+<code>cap-a-hidden</code> absent from the final block is testing
+near-duplicate collapse of a valid capture
+(<code>tests/test_v1_1_pipeline.py:283-291</code>), and it inserts
+<code>session_links</code> rows by hand, which no product path does.</p>
+<p>No test covers the history leg after a supersede, a failed insert
+after an invalidation, or a negated restatement in the duplicate
+band.</p>
+<p>There is no retrieval evaluation, no benchmark, no committed result
+and no paper reference in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Two bands around one model call.</strong> Score the turn for
+free; keep the clear positives and drop the clear negatives without a
+model, and spend one call only on the middle. The score also decides
+which kinds get a judge below the near-duplicate band
+(<code>capture.py:267-274</code>).</li>
+<li><strong>Leave every index in the transaction that retires the
+row.</strong> <code>drop_capture_from_indexes</code> runs inside the
+invalidating transaction, so a retired row cannot occupy a top-k slot
+before hydration drops it.</li>
+<li><strong>Decay from a fixed base.</strong> Each run recomputes from
+1.0 and the age since <code>last_seen_at</code>; the comment records
+that reusing last night's value compounded the decay
+(<code>consolidate.py:132-135</code>).</li>
+<li><strong>A deadline on the read path.</strong> Each network step on
+recall gets a timeout bounded by the time left and no retries, and a
+step with too little time is skipped to FTS-only.</li>
+<li><strong>Mirror the host's own memory edits.</strong> A
+<code>replace</code> carrying the previous content becomes an
+exact-match supersede with no model in it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A correction that reaches one of two corpora.</strong> If
+recall reads raw history beside curated memory, retiring a fact has to
+mark or exclude the messages it came from, or the block serves
+both.</li>
+<li><strong>Retire and insert in separate commits.</strong> The
+correction and its replacement are one change.</li>
+<li><strong>Storing the turn as the fact.</strong> A paragraph with a
+fact in it is matched by everything else in the paragraph and truncated
+before the fact.</li>
+<li><strong>A near-duplicate band that never asks.</strong> Above the
+threshold, a sentence and its negation look alike; the cheap path should
+not be the one that reinforces the old value.</li>
+<li><strong>Default-on stages over tables nothing writes.</strong> They
+pass every test that inserts the rows by hand and do nothing in a real
+install.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one Russian-speaking Hermes user who wants recall without
+commands and will pay a few cents a month for embeddings and a small
+model. It installs in one step, degrades to FTS5 without keys, and keeps
+its cost visible. The Russian stemmer is the only stemmer, so English
+text gets no inflection matching on the lexical arm.</p>
+<p>Walk away if a correction must stay corrected. The history index
+brings back what supersession retired, a removed fact can be captured
+again, and nothing is ever deleted from <code>memory.db</code>. Walk
+away too for more than one person per Hermes home: the file is the only
+boundary.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How close does BGE-M3 put a sentence and its negation? That decides
+how often a correction is dropped as a duplicate.</li>
+<li>Is <code>session_links</code> meant to be written by the host or by
+a later version? The plugin declares it, reads it and never fills
+it.</li>
+<li>Does Hermes's <code>on_memory_write</code> deliver
+<code>previous_content</code> on every <code>replace</code> and
+<code>remove</code>? Without it, only <code>add</code> is mirrored
+(<code>provider.py:458-466</code>).</li>
+<li>Was the badge count of 247 taken before the later fix commits added
+tests?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>provider.py</code></td>
+<td>The Hermes <code>MemoryProvider</code>: recall, capture, hooks,
+child-context no-op</td>
+</tr>
+<tr>
+<td><code>capture.py</code></td>
+<td>Keyword scoring, borderline call, supersede check, insert,
+mirrors</td>
+</tr>
+<tr>
+<td><code>extract_llm.py</code></td>
+<td>Gemini classify, judge and summarise</td>
+</tr>
+<tr>
+<td><code>db.py</code></td>
+<td>Schema, migrations, index cleanup, spend, history catch-up</td>
+</tr>
+<tr>
+<td><code>_engine/retrieve.py</code></td>
+<td>FTS5 and vec0 arms, RRF, rerank blend, invalidated filter, history
+search</td>
+</tr>
+<tr>
+<td><code>consolidate.py</code></td>
+<td>Decay, dedup, rollup, FTS rebuild</td>
+</tr>
+<tr>
+<td><code>graph_rerank.py</code></td>
+<td>Session-link boost and expansion over an empty table</td>
+</tr>
+<tr>
+<td><code>post_recall.py</code></td>
+<td>Near-duplicate collapse and MMR</td>
+</tr>
+<tr>
+<td><code>gate.py</code></td>
+<td>Pass-through or model2vec recall gate</td>
+</tr>
+<tr>
+<td><code>tools.py</code></td>
+<td>The five agent tools</td>
+</tr>
+<tr>
+<td><code>cli.py</code></td>
+<td><code>hermes memohood status</code>, <code>reindex</code>,
+<code>seed</code>, <code>consolidate</code>, <code>setup</code></td>
+</tr>
+<tr>
+<td><code>_engine/security.py</code></td>
+<td>Untrusted fences, secret scan, recall flattening</td>
+</tr>
+<tr>
+<td><code>config.py</code></td>
+<td>Defaults and config merge</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>The suite; <code>conftest.py</code> executes on collection</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Nothing writes <code>session_links</code>.</strong>
+<code>git grep -n -E 'INSERT( OR [A-Z]+)? INTO session_links'</code>
+returns <code>tests/test_graph_rerank.py:66</code> and
+<code>tests/test_v1_1_pipeline.py:82</code>;
+<code>git grep -n 'FROM session_links'</code> matches
+<code>graph_rerank.py:168</code> and <code>:207</code>.</li>
+<li><strong>Nothing writes <code>signals</code> or
+<code>session_tags</code>.</strong>
+<code>git grep -n -E 'INTO (signals|session_tags)'</code> returns
+nothing; <code>git grep -n -E 'INTO spend' -- '*.py' ':!tests'</code>
+matches <code>db.py:694</code>.</li>
+<li><strong>Supersession never touches the history index.</strong>
+<code>git grep -n -E 'DELETE FROM messages_fts|UPDATE messages_fts'</code>
+returns the migration at <code>db.py:392</code> only.</li>
+<li><strong>No row is deleted from captures.</strong>
+<code>git grep -n -E 'DELETE FROM captures([^_]|$)'</code> returns
+nothing;
+<code>git grep -n 'DELETE FROM captures_fts' -- '*.py' ':!tests'</code>
+matches <code>consolidate.py:428</code> and <code>db.py:664</code>.</li>
+<li><strong><code>valid_from</code> is never read.</strong>
+<code>git grep -n 'valid_from' -- '*.py' ':!tests'</code> returns the
+column, two docstrings and the two <code>INSERT</code> column
+lists.</li>
+<li><strong>The one session predicate is the graph expansion.</strong>
+<code>git grep -n -E 'session_id *= *\?' -- '*.py' ':!tests'</code>
+returns <code>graph_rerank.py:268</code>.</li>
+<li><strong>No reader of the removal and decay tags.</strong>
+<code>git grep -n -E 'memory_removed|archived_decay|dedup_merged' -- '*.py' ':!tests'</code>
+returns the writers at <code>capture.py:716</code>,
+<code>consolidate.py:138</code> and <code>:197</code> and docstrings;
+<code>git grep -n 'rolled_up' -- '*.py' ':!tests'</code> matches three
+readers in <code>consolidate.py</code>.</li>
+<li><strong>Nothing registers a cron job.</strong>
+<code>git grep -n -i 'cron' -- '*.py' '*.sh' '*.ps1'</code> returns
+docstrings, the child-context set at <code>provider.py:80</code> and a
+test.</li>
+<li><strong>No review or approval surface.</strong>
+<code>git grep -n -i -E 'approv|human|review' -- '*.py' ':!tests'</code>
+returns pricing comments, log-message docstrings and setup-wizard
+labels.</li>
+<li><strong>No mutation audit.</strong>
+<code>git grep -n -i 'audit' -- '*.py' ':!tests'</code> returns one
+docstring, <code>consolidate.py:25</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|doi\.org|citation'</code> returns
+one comment, <code>_engine/stem.py:34</code>;
+<code>git grep -n -i 'gbrain'</code> matches.</li>
+<li><strong>No CI.</strong> <code>git ls-files .github</code> returns
+nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-24</strong> — <a
+href="https://github.com/maximskorohod/memohood/commit/b1e0a038bbb7d2270fdabd2d0ca7b7f67d04ee0b"><code class="commit-id" title="b1e0a038bbb7d2270fdabd2d0ca7b7f67d04ee0b">b1e0a038…</code></a>.
+First reading at <code>b1e0a03</code>, read only from a full clone at
+the head of <code>main</code>. Screened first: no auto-run surface,
+nothing inside the seven-day cooldown, one build-time execution point
+(<code>tests/conftest.py</code> executes on pytest collection), and an
+<code>AGENTS.md</code> addressed to installing agents, read as data; no
+submodules. Nothing was installed, built or run, and the test count was
+not run. One mark, <code>trust_state</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). The history index
+returns superseded statements, supersede commits twice, and graph rerank
+reads a table nothing writes.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 859 reports.**
+**This page covers all 860 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7912,3 +7912,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT since 10 November 2026; 11,405 lines of Python under `src`, 3,726 of them prompts, with the Panini path in playground scripts that point at hard-coded data paths; 24 commits by one author between 13 February and 13 November 2026; 56 unit tests, none on the reconciler, none run here. No marks.
 - Study when: you want a structured episodic index over a fixed narrative corpus, or a question-answer-pair representation for multi-hop retrieval.
 - Do not copy when: memory must grow one document at a time, be corrected, or keep two people with one name apart.
+
+### [`memohood`](../systems/memohood/)
+
+- Best idea: **one model call, only for the turns a keyword score cannot settle.** `compute_signals` sums weighted Russian and English patterns; a score of zero drops the turn, four or more keeps it with no call, and only the band between reaches Gemini. The capture's kind then decides which candidates below the near-duplicate band get a judge (`capture.py:267-274`, `:577-598`).
+- Second idea: every invalidation leaves both search indexes in its own transaction. `drop_capture_from_indexes` runs inside the update that stamps `invalidated_at`, from supersede, removal, decay and dedup alike, so a retired row never takes a top-k slot before hydration drops it.
+- Biggest risk: **supersession reaches captures and not the history index.** The automatic block and `memohood_recall` append BM25 hits from `messages_fts`, which holds every user and assistant message and is never updated, so the sentence a correction replaced comes back in the same block with nothing marking it.
+- Second risk: supersede invalidates and inserts in two commits, so a failed insert loses the fact from recall. A restatement at cosine 0.95 or more is dropped as a duplicate and reinforces the old row without a model call, and a removed statement can be captured again as a new row.
+- Most reusable component: `capture.py:417-539` with `db.py:650-671`, the duplicate, judge or insert decision and the same-transaction index cleanup.
+- Maturity impression: MIT; 8,657 lines of Python outside tests over 34 commits from 12 July to 8 November 2026; 286 test functions, none run here, and no CI. Graph rerank is on by default over a table nothing writes, and the nightly consolidation the README describes is never scheduled. One mark: `trust_state`.
+- Study when: you want a cheap capture gate in front of a model, or a Hermes provider that mirrors the host's built-in memory edits into its own store.
+- Do not copy when: a correction must stay corrected, or recall reads raw history beside curated memory.
