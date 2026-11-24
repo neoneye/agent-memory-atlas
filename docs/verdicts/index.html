@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 854 reports.</strong></p>
+<p><strong>This page covers all 855 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35126,6 +35126,49 @@ or shared between agents.</li>
 <li>Do not copy when: a receipt has to convince someone who does not
 trust the ledger's database, or a memory has to be corrected or
 withdrawn.</li>
+</ul>
+<h3 id="datamind"><a
+href="../systems/datamind/"><code>datamind</code></a></h3>
+<ul>
+<li>Best idea: <strong>bind identity in the transport.</strong> The MCP
+wrapper adds <code>profile</code> to every tool schema, consumes it to
+choose the runtime's storage directory before the tool sees it, and
+refuses a value other than the one the host bound in
+<code>DATAMIND_PROFILE</code>; <code>DataPlane.call</code> refuses a
+context whose profile differs from the runtime's.</li>
+<li>Second idea: a scope column with one key per scope and a per-scope
+recall budget of two session, four profile and two global rows, with a
+populated test that two profiles in one file see one row each.</li>
+<li>Biggest risk: <strong>the receipt ledger drops memory writes it has
+seen succeed.</strong> It fingerprints the tool and its arguments,
+exempts replacement tools and no memory tool, and returns
+<code>unchanged</code> without running the handler. A fact forgotten and
+saved again in the same words is not saved, and a session-scoped save
+repeated in a second session writes nothing, because the session comes
+from context and is not in the fingerprint.</li>
+<li>Second risk: <code>memory_forget</code> archives or deletes any id
+with no scope predicate, a hard delete leaves the saved text in
+<code>audit.jsonl</code>, and the session key is a tool argument the
+model can set to another session's id. On the MCP path recall is
+substring scoring with no minimum score, so each scope returns its full
+budget whether or not anything matched.</li>
+<li>Most reusable component: the profile binding in
+<code>datamind/mcp.py:61-79</code> with the runtime check in
+<code>datamind/data_plane.py:54-56</code>, and the scoped slices of
+<code>recall</code> in
+<code>datamind/capabilities/memory/providers/sqlite_store.py:282-380</code>.</li>
+<li>Maturity impression: Apache-2.0; 117 commits under ten author names
+from 29 March to 22 October 2026, tags up to v1.1.0 and a package at
+2.1.0; 391 test functions with CI on two Python versions, 19 on memory,
+none run here. Memory is the smallest of five surfaces and its LLM fact
+extractor is unwired. Three marks: <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Study when: you are putting several data surfaces for a coding agent
+behind one MCP server and want identity bound by the host rather than
+chosen by the model.</li>
+<li>Do not copy when: memory must be corrected and restated, or an
+idempotency layer sits in front of a store whose rows can be
+deleted.</li>
 </ul>
         </article>
       </div>

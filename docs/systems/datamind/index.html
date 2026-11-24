@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Codex data layer over MCP whose
+Memory surface keeps session, profile and global facts in one SQLite
+table per profile.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="DataMind — Agent Memory Atlas">
+    <meta property="og:description" content="A Codex data layer over MCP
+whose Memory surface keeps session, profile and global facts in one
+SQLite table per profile.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DataMind — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Codex data layer over
+MCP whose Memory surface keeps session, profile and global facts in one
+SQLite table per profile.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>DataMind — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "DataMind",
+      "description": "A Codex data layer over MCP whose Memory surface keeps session, profile and global facts in one SQLite table per profile.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Scope-typed memory behind a receipt ledger
+that refuses to write the same words twice</p>
+          <h1>DataMind</h1>
+          <p class="document-deck">A Codex data layer over MCP whose
+Memory surface keeps session, profile and global facts in one SQLite
+table per profile.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/OpenDCAI/DataMind">
+              <span>Source</span>
+              <strong>OpenDCAI/DataMind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/OpenDCAI/DataMind/commit/36e189d69e207d57410803c93c6d0a950be68921" title="36e189d69e207d57410803c93c6d0a950be68921">
+              <span>Analyzed revision</span>
+              <code>36e189d6…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-24</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/OpenDCAI--DataMind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>OpenDCAI--DataMind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE, pyproject.toml and the Codex plugin manifest</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>33,679
+lines of Python in tracked files; the installed datamind package holds
+20,714 lines outside its tests in 108 files, and the memory capability
+1,090</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>117
+commits under ten author names from 29 March to 22 October 2026, 82 of
+them by Hao Liang; tags 0.3.0, v1.0.0 and v1.1.0, with the package
+declaring 2.1.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>391
+test functions in 47 files, 19 in datamind/tests/test_memory.py;
+python-ci.yml runs datamind/tests and the plugin tests on Python 3.11
+and 3.12; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>DataMind is a data layer for Codex. A Codex plugin, the official
+Codex SDK and a FastAPI server all reach one set of tools over a stdio
+MCP server, covering five surfaces: a document KB, SQL, a graph,
+procedural Skills and Memory. Memory is the one surface that is agent
+memory: free-text facts a later session recalls under a profile or
+session key. What is notable is that every memory write passes through a
+write-receipt ledger and a hash-chained audit file. What is weak is that
+the same ledger silently refuses to store a fact whose words and
+arguments it has seen succeed before.</p>
+<p>The memory store is one SQLite table, <code>memory_v2</code>, with a
+scope of <code>global</code>, <code>profile</code> or
+<code>session</code> on every row. Recall unions up to two session, four
+profile and two global rows. Over MCP it scores them by substring
+matching, because the memory call builds a runtime with no embedder.</p>
+<p>The dedupe is the finding to read first. The ledger fingerprints the
+tool name and its arguments, and the session a
+<code>session</code>-scoped save lands in comes from context, not
+arguments. A second session saving the same sentence gets a receipt
+saying <code>unchanged</code> and no row. A fact forgotten and saved
+again in the same words is not saved either.</p>
+<p><strong>Licence.</strong> Apache-2.0, and the <code>LICENSE</code>
+file, <code>pyproject.toml</code> and the Codex plugin manifest agree.
+The licence file carries no additions. Nothing restricts use; the
+unpinned dependency surfaces the screen reported are an operational
+caveat, not a licence one.</p>
+<p>Three marks are earned: <code>scope_enforced</code> and
+<code>negative_eval</code> on the memory store, and
+<code>audit_log</code> on the data plane's audit file and receipt
+ledger. Section 9 gives the reasons for the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a sentence with a scope</strong>. The model calls
+<code>memory_save</code> with text, a scope and a kind; the row is
+active and recallable the moment the insert commits. Nothing scores it,
+reviews it or links it to a source.</p>
+<p>It stops being recalled one way: <code>memory_forget</code> with its
+id. A soft forget sets <code>status='archived'</code> and every recall
+excludes it. A hard forget deletes the row
+(<code>datamind/capabilities/memory/providers/sqlite_store.py:384-399</code>).
+There is no edit and no supersession.</p>
+<p>The scope decides who sees it:</p>
+<ul>
+<li><strong>session</strong> — recalled only when the caller's session
+id matches.</li>
+<li><strong>profile</strong> — recalled within one profile, which is
+also, by default, one file on disk.</li>
+<li><strong>global</strong> — recalled by every caller of the same file.
+With the default layout that is every session of one profile, not every
+profile.</li>
+</ul>
+<p>Between the tool and the table sits the receipt ledger, which belongs
+to the data plane rather than to memory. It turns a repeat of a call
+that once succeeded into a no-op, and that is where a forgotten fact
+meets its old fingerprint.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a memory call passes the profile check, is written to the hash-chained audit file, then meets the receipt ledger; a tool-plus-arguments fingerprint seen before returns unchanged and writes nothing, which is what happens to a forgotten fact saved again and to a session fact saved in a second session</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a memory call passes the profile check, is written to the hash-chained audit file, then meets the receipt ledger; a tool-plus-arguments fingerprint seen before returns unchanged and writes nothing, which is what happens to a forgotten fact saved again and to a session fact saved in a second session
+flowchart TD
+    subgraph C[&quot;Callers&quot;]
+        direction TB
+        M[&quot;Codex over MCP&lt;br/&gt;datamind_memory_save&quot;]
+        P[&quot;Python DataPlane.call&quot;]
+        M ~~~ P
+    end
+    C --&gt; D[&quot;DataPlane.call&lt;br/&gt;context profile must&lt;br/&gt;equal runtime profile&quot;]
+    D --&gt; A[(&quot;audit.jsonl&lt;br/&gt;args incl. content&lt;br/&gt;hash chain, unkeyed&quot;)]
+    D --&gt; L{&quot;Receipt ledger:&lt;br/&gt;tool + args seen&lt;br/&gt;succeed before?&quot;}
+    L --&gt;|yes| U[&quot;Receipt: unchanged&lt;br/&gt;no row written&quot;]
+    L --&gt;|no| S[(&quot;memory_v2&lt;br/&gt;storage/PROFILE/memory.db&lt;br/&gt;scope, profile, session_id&quot;)]
+    S --&gt; R[&quot;memory_recall&lt;br/&gt;session 2, profile 4,&lt;br/&gt;global 2, status active&quot;]
+    F[&quot;memory_forget(id)&lt;br/&gt;no scope check&quot;] --&gt; X[&quot;status archived&lt;br/&gt;or row deleted&quot;]
+    X -.-&gt; Y[&quot;Same words saved again:&lt;br/&gt;old fingerprint matches&quot;]
+    Y -.-&gt; U</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The installed package <code>datamind</code> is the product.
+<code>python -m datamind.mcp</code> is a stdio MCP server whose tools
+are the data plane's direct tools, each prefixed <code>datamind_</code>
+and each requiring an <code>operation_id</code> from
+<code>datamind_operation_begin</code>
+(<code>datamind/mcp.py:35-58</code>). The Codex plugin under
+<code>plugins/datamind-context/</code> launches that server.
+<code>CodexSession</code> and <code>CodexHost</code> start Codex through
+the official SDK with the same server as a subprocess, bound by
+environment to one profile and one session
+(<code>datamind/codex.py:12-41</code>,
+<code>datamind/host.py:44-51</code>).</p>
+<p>Each MCP call builds a fresh data plane for the one surface it
+touches and closes it after the call
+(<code>datamind/mcp.py:160-171</code>). Storage is files under
+<code>storage/&lt;profile&gt;/</code>: <code>memory.db</code>,
+<code>audit.jsonl</code>, <code>ingest_ledger.sqlite3</code>,
+<code>ingest_receipts.jsonl</code> and <code>operations.sqlite3</code>
+(<code>datamind/config.py:171-173</code>,
+<code>datamind/capabilities/memory/service.py:182-183</code>).</p>
+<p>The root also holds a LlamaIndex-based runtime under
+<code>modules/</code> and <code>core/</code>, whose
+<code>create_memory</code> wraps LlamaIndex's chat memory. Nothing in
+the <code>datamind</code> package imports it and the wheel excludes it
+(<code>pyproject.toml:113-116</code>). This report reads the
+<code>datamind</code> package.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install -e .</code> and
+<code>./scripts/install_codex_plugin.sh</code> give a local Codex a
+working memory with no model key, because memory needs no embedder on
+this path. An operator who wants a shared deployment runs the FastAPI
+server or the SDK host and is told, in
+<code>docs/SECURITY_BOUNDARIES.md</code>, to put authentication and
+per-tenant authorization in front of it. CORS is <code>*</code> by
+default (<code>datamind/server.py:65-70</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Store.</strong>
+<code>datamind/capabilities/memory/providers/sqlite_store.py</code>:
+schema <code>:136-170</code>, legacy migration <code>:172-228</code>,
+<code>save</code> <code>:232-278</code>, <code>recall</code>
+<code>:282-380</code>, <code>forget</code> <code>:384-399</code>, slice
+query and scoring <code>:447-510</code>.</li>
+<li><strong>Service and tools.</strong>
+<code>datamind/capabilities/memory/service.py:68-158</code>;
+<code>datamind/capabilities/memory/tools.py:22-190</code>.</li>
+<li><strong>Runtime assembly.</strong>
+<code>datamind/runtime.py:32-46</code> (hooks), <code>:49-143</code>
+(services, receipt wrapping, direct tool set).</li>
+<li><strong>Dispatch.</strong>
+<code>datamind/data_plane.py:49-86</code>; MCP wrapper
+<code>datamind/mcp.py:61-190</code>; operations
+<code>datamind/operations.py:40-64</code>.</li>
+<li><strong>Receipts.</strong>
+<code>datamind/capabilities/ingest/ledger.py:47-97</code> (source
+identity), <code>:162-174</code> (append), <code>:182-289</code> (dedupe
+and execute), <code>:293-320</code> (wrapper).</li>
+<li><strong>Audit.</strong>
+<code>datamind/capabilities/hooks/audit.py:156-249</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory_v2</code> holds <code>id</code>, <code>scope</code>
+under a <code>CHECK</code>, <code>profile</code>,
+<code>session_id</code>, <code>kind</code>, <code>status</code>,
+<code>content</code>, <code>metadata</code> as JSON,
+<code>embedding</code> as packed float32, <code>created_at</code>,
+<code>updated_at</code> and <code>archived_at</code>
+(<code>sqlite_store.py:140-153</code>). Three partial indexes cover the
+active rows of each scope (<code>:158-169</code>).</p>
+<p><code>save</code> stores the profile only for profile scope and the
+session only for session scope, so a row carries exactly one key or none
+(<code>:262-268</code>). <code>kind</code> is one of six values the tool
+schema lists and is used only as an optional recall filter.
+<code>status</code> has two values in practice: <code>active</code>, set
+on insert, and <code>archived</code>, set by a soft forget.</p>
+<p>A legacy <code>memory</code> table with a <code>namespace</code>
+column is copied into <code>memory_v2</code> on first open, every row as
+profile scope under its old namespace, and then dropped
+(<code>:172-228</code>). A namespace such as <code>session:s1</code>
+therefore becomes a profile named <code>session:s1</code>, which the
+migration test asserts
+(<code>datamind/tests/test_memory.py:220-258</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>memory_recall</code> is a tool the model calls. Nothing injects
+memory into a prompt; the plugin's Skill and the server instructions
+name the tool and leave the choice to Codex.</p>
+<p>Recall runs up to three SQL slices, one per scope, each selecting
+every active row of that scope and key
+(<code>sqlite_store.py:341-375</code>). Each slice is scored in Python
+and cut to its budget: two session rows, four profile rows, two global
+rows. The union is sorted by score, ties broken session before profile
+before global, and cut to <code>top_k</code> (<code>:377-380</code>). A
+caller can narrow the scopes with <code>scope_filter</code> and the
+kinds with <code>kinds</code>.</p>
+<p>Scoring depends on whether the runtime has an embedder. With one, it
+is cosine between the query vector and each row's stored vector, and a
+row saved without a vector scores zero (<code>:481-493</code>). Without
+one, it is the fraction of whitespace-separated query words that occur
+as substrings of the row (<code>:495-510</code>).</p>
+<p>The MCP path has no embedder. A memory call builds a data plane with
+only the memory surface enabled, the embedder is built only when
+<code>kb</code> is enabled, and the memory service is built with
+<code>auto_embedding=False</code>
+(<code>datamind/runtime.py:60-81</code>,
+<code>datamind/mcp.py:160-167</code>). Codex therefore recalls by
+substring, and rows it saves carry no vector. The FastAPI server's
+read-only <code>/api/memory/{namespace}</code> peek builds with
+<code>kb</code> when an embedding key is set, and then scores every
+Codex-saved row zero (<code>datamind/server.py:43-46</code>,
+<code>:323-341</code>).</p>
+<p>Two consequences of the scoring. There is no minimum score, so each
+slice returns its full budget whether or not a row matched. And a query
+with no spaces, which is how Chinese is written, is one term, matched
+only when the whole query appears in the row; the UI's own suggested
+prompt is Chinese (<code>datamind/static/app.html:868</code>). The slice
+query has no <code>ORDER BY</code>, so rows that tie at zero come back
+in whatever order SQLite scans them.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>The model writes.</strong> <code>memory_save</code> takes
+content, scope, kind and metadata, and over MCP may also take a
+<code>session_id</code>
+(<code>datamind/capabilities/memory/tools.py:40-59</code>,
+<code>:96-128</code>). Profile and session default to the request
+context. The insert is synchronous, and the row is recallable when it
+commits. On the MCP path no embedding call precedes it.</p>
+<p><strong>The receipt ledger decides first.</strong> Every write tool
+with a surface is wrapped by <code>with_receipts</code>, memory tools
+included (<code>datamind/runtime.py:132-136</code>,
+<code>datamind/capabilities/ingest/ledger.py:293-320</code>). The
+wrapper binds the handler's defaults and fingerprints the tool name, the
+arguments and a hash of the content (<code>ledger.py:86-88</code>,
+<code>:191-199</code>). If that fingerprint has a successful receipt,
+the call returns a receipt with status <code>unchanged</code> and
+<code>duplicate_of</code>, and the handler does not run
+(<code>:221-237</code>). The list of tools exempt from this, because
+they replace rather than append, names KB, graph, DB and workspace tools
+and no memory tool (<code>:216-220</code>).</p>
+<p>Two cases follow, both inferred from the code and not run:</p>
+<ul>
+<li><strong>A fact forgotten and saved again.</strong>
+<code>memory_forget</code> archives or deletes the row; the successful
+fingerprint of the original save stays in the ledger's
+<code>successful</code> table. The same <code>memory_save</code> call
+returns <code>unchanged</code>, and the fact stays forgotten.</li>
+<li><strong>The same session fact in two sessions.</strong> The session
+id of a <code>session</code>-scoped save comes from context and is not
+an argument, so the fingerprint is the same in every session. The second
+session's save writes nothing, and its recall does not see the first
+session's row.</li>
+</ul>
+<p>A model reading the receipt sees <code>unchanged</code> where it
+asked for a write.
+<code>test_store_tool_emits_receipt_and_deduplicates</code> asserts the
+dedupe for a <code>memory_save</code> stub: two identical calls, one
+handler invocation, the second receipt <code>unchanged</code>
+(<code>datamind/tests/test_two_agent_data_plane.py:30-62</code>).</p>
+<p><strong>Extraction is unwired.</strong>
+<code>MemoryService.extract_and_save</code> asks the fallback model for
+durable facts in a turn and saves each as session scope with
+<code>_source: auto_extracted</code>
+(<code>datamind/capabilities/memory/service.py:126-158</code>). Its only
+caller is <code>datamind/scripts/hello_memory.py</code>, and on every
+runtime path the service gets no text client and returns an empty list.
+The short-term rolling window beside it has the same single caller.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write blocks on one SQLite insert, one ledger transaction and two
+file appends. Each MCP call also builds and closes a data plane. No
+background pass reads or rewrites memory.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Codex is the only agent the product assembles. Over MCP it gets
+<code>datamind_memory_save</code>, <code>datamind_memory_recall</code>
+and <code>datamind_memory_forget</code>;
+<code>memory_list_profiles</code> is defined and left out of the direct
+tool set (<code>datamind/direct_tools.py:13-19</code>). A read-mode
+operation refuses the two writes
+(<code>datamind/mcp.py:144-145</code>).</p>
+<p>Memory is outside the workspace snapshot that the KB, SQL and graph
+surfaces publish and pin. A pinned read operation still reads live
+memory (<code>datamind/mcp.py:146-148</code>). The README states
+this.</p>
+<p>Identity comes from the host. <code>sdk_config</code> sets
+<code>DATAMIND_PROFILE</code>, and <code>CodexHost</code> sets
+<code>DATAMIND_SESSION_ID</code>, request id and access mode per request
+and refuses a runtime environment that overrides them
+(<code>datamind/codex.py:23-31</code>,
+<code>datamind/host.py:44-53</code>). With the local plugin nothing
+binds either, and each <code>datamind_operation_begin</code> without a
+<code>session_id</code> creates a fresh random session
+(<code>datamind/operations.py:40-50</code>). A session-scoped memory
+then lasts one operation unless Codex passes the session id along.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-ledger-drops-writes-it-has-seen">The ledger drops writes it
+has seen</h3>
+<p>Section 7 has the mechanism. The design reason is sound for imports,
+where a retried call should not append twice. It is wrong for memory,
+whose writes are not idempotent in the store's own terms: the row a
+fingerprint vouches for may have been forgotten, or may live in another
+session. The fix is either to exempt <code>memory_save</code> as
+replacement tools are exempted, or to put the context session and the
+current row's existence into the fingerprint.</p>
+<h3 id="scope">Scope</h3>
+<p>The scope keys are applied in SQL on every recall slice
+(<code>sqlite_store.py:341-375</code>, <code>:460-471</code>). Who
+supplies them differs by key and by path:</p>
+<ul>
+<li><strong>Profile over MCP</strong> is server-resolved. The wrapper
+adds <code>profile</code> to every tool schema, pops it before dispatch
+to choose the runtime's storage directory, and raises when
+<code>DATAMIND_PROFILE</code> binds another
+(<code>datamind/mcp.py:51-54</code>, <code>:61-70</code>,
+<code>:79</code>). The tool's own <code>profile</code> override never
+reaches it. <code>DataPlane.call</code> refuses a context whose profile
+differs from the runtime's
+(<code>datamind/data_plane.py:54-56</code>).</li>
+<li><strong>Profile from Python</strong> is a tool argument.
+<code>memory_save</code> and <code>memory_recall</code> accept
+<code>profile</code> and use it ahead of the context
+(<code>tools.py:49</code>, <code>:72</code>). The tool description says
+to pass it <em>"only when you need to cross boundaries on
+purpose"</em>.</li>
+<li><strong>Session</strong> is a tool argument on every path.
+<code>memory_recall</code> takes <code>session_id</code> and uses it
+ahead of the context, and the MCP bound-session check compares the
+operation's session, not the argument (<code>tools.py:73</code>,
+<code>datamind/mcp.py:130-132</code>). A model that knows another
+session's id reads that session's memories.</li>
+</ul>
+<p>By default each profile has its own <code>memory.db</code>, so the
+profile predicate runs inside a file that holds one profile. Set
+<code>memory.dsn</code> and every profile shares one file, where the
+predicate is the boundary; the tests exercise that layout.
+<code>global</code> rows follow the file, so the tool's
+<em>"system-wide"</em> means one profile in the default layout.</p>
+<p><code>memory_forget</code> deletes or archives by id with no scope
+predicate (<code>sqlite_store.py:388-396</code>). Any id in the file can
+be forgotten from any session.</p>
+<h3 id="the-audit-keeps-what-forget-removes">The audit keeps what forget
+removes</h3>
+<p><code>AuditLogHook</code> writes one record per call through
+<code>DataPlane.call</code> with the redacted arguments, the session,
+the profile, a hash of the result and the previous record's hash
+(<code>datamind/capabilities/hooks/audit.py:156-205</code>). It is on by
+default (<code>datamind/config.py:250-253</code>). A
+<code>memory_save</code> record holds the content in full, and a hard
+<code>memory_forget</code> leaves it there. The record of a save holds
+the result's hash and not the new id; the receipt holds the id.</p>
+<p>The chain hash is an unkeyed SHA-256 truncated to 16 hex characters
+(<code>audit.py:56</code>, <code>:68-69</code>). A writer who rewrites a
+record can recompute every later hash, and deleting the newest records
+leaves a valid chain; <code>verify_audit_log</code> checks only links
+and recomputed hashes (<code>:211-249</code>). The committed tamper test
+edits one field and keeps its stale hash
+(<code>datamind/tests/test_hooks.py:403-420</code>).</p>
+<p>Each MCP call constructs a new hook, which reads the file's last hash
+and appends under an in-process lock (<code>audit.py:190-205</code>).
+Two MCP subprocesses on one profile, which the SDK host allows with a
+default concurrency of four (<code>datamind/config.py:74</code>), can
+read the same tail and append two records naming one predecessor. That
+breaks verification from the second record on. This is inferred from the
+code and was not run; the receipt ledger takes an <code>IMMEDIATE</code>
+SQLite transaction and is not exposed to it.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> Session and
+profile keys are stored on each row and applied as SQL predicates on
+every recall slice. The session key is a model-suppliable argument, and
+the profile key is also, by default, a per-profile file.</li>
+<li><strong><code>audit_log</code> — earned.</strong>
+<code>audit.jsonl</code> and the receipt ledger are append-only records
+of every memory save and forget in the system's own store, with
+producers on the MCP path. The audit chain is unkeyed and can fork under
+concurrent MCP processes.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Three
+committed cases require another profile's or another session's row to be
+absent from a populated recall, beside rows that must be present.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>status</code> is <code>active</code> or <code>archived</code> and
+records deletion. No value marks a fact as doubted, and no producer
+exists for any other value.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> The ledger's
+<code>successful</code> index does block a forgotten fact from being
+saved again in the same words. It is keyed on the call that succeeded,
+not on a rejected value, it blocks legitimate re-saves equally, and a
+save with any argument changed, a different kind for instance, walks
+past it.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>created_at</code>, <code>updated_at</code> and
+<code>archived_at</code> are record times.</li>
+<li><strong><code>human_review</code> — withheld.</strong> A memory is
+recallable on insert. The UI's memory panel is a read-only peek, and any
+approval of a tool call happens in the Codex client, outside this
+tree.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading.</p>
+<p><code>datamind/tests/test_memory.py</code> has 19 test functions, one
+parametrized over six scope filters. The negative cases are
+populated:</p>
+<ul>
+<li><code>test_scope_isolation_profile_to_profile</code> stores one row
+per profile in one file and requires <code>len == 1</code> and the right
+content for each, so it fails if the profile predicate is dropped
+(<code>:84-95</code>).</li>
+<li><code>test_recall_unions_all_three_scopes</code> stores five rows,
+requires three and excludes session-Y and profile-B
+(<code>:124-140</code>).</li>
+<li><code>test_session_scope_isolated_within_profile</code> requires one
+session's row and excludes the other's (<code>:112-121</code>).</li>
+</ul>
+<p><code>test_soft_delete_archives_and_hides_from_recall</code> checks
+the forgotten row is absent with <code>not any(...)</code> over a recall
+that, with that row archived, has nothing else to return. That assertion
+would pass on an empty result; the <code>count</code> assertions after
+it carry the case (<code>:163-181</code>).</p>
+<p>No test saves, forgets and saves the same fact, or saves one session
+fact from two sessions. No test calls <code>memory_forget</code> on an
+id outside the caller's scope, and none runs recall over MCP and checks
+the scoring.</p>
+<p>The audit hook has eight tests: record shape, three on redaction, a
+denied decision, a clean chain, one tampered field and a resumed chain
+(<code>datamind/tests/test_hooks.py:284-437</code>). None runs two
+writers.</p>
+<p><code>benchmark/</code> runs dataset-neutral question sets through
+the Codex host and fault experiments on workspace builds. No file in it
+names memory. There is no paper reference in the tree, and a web search
+for the project and organisation names found no paper about this
+system.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A scope column with a <code>CHECK</code> and one key per
+scope.</strong> <code>save</code> stores the profile only for profile
+scope and the session only for session scope, so a row cannot belong to
+two boundaries.</li>
+<li><strong>A per-scope recall budget.</strong> Two session, four
+profile, two global keeps a pile of global preferences from crowding out
+the current conversation.</li>
+<li><strong>Bind identity in the transport, not the prompt.</strong> The
+MCP wrapper consumes <code>profile</code> before the tool sees it and
+refuses a mismatch with the host's binding.</li>
+<li><strong>A receipt for every write</strong>, including the failed and
+the unchanged ones, so the agent can tell a write that happened from one
+that did not.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Idempotency keys that omit the scope from context.</strong>
+The fingerprint must include every input that decides where a write
+lands.</li>
+<li><strong>Dedupe that outlives deletion.</strong> A success index that
+does not learn about a forget turns "remember this again" into a silent
+no-op.</li>
+<li><strong>Audit records that keep what erasure removes</strong>, with
+no redaction path for them.</li>
+<li><strong>A scoring arm the main path never runs.</strong> Codex's
+recall is substring-only while the server's peek scores by vector, and
+each scores the other's rows differently.</li>
+<li><strong>Delete by id without the caller's scope.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team already running Codex who want its KB, SQL, graph,
+Skills and a small preferences store behind one MCP server, with
+receipts and an audit file they can read. For them memory is the least
+of the five surfaces, and it is enough for a few dozen stable
+preferences per profile.</p>
+<p>It does not suit anyone whose memory must be corrected. The one
+correction verb is forget, the ledger prevents restating a forgotten
+fact in the same words, and forgotten text stays in the audit file. A
+reader who needs recall over many facts, or in a language written
+without spaces, will find the MCP path's substring scoring the
+limit.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the receipt dedupe on <code>memory_save</code> intended? The
+replacement list names every graph and KB writer and no memory
+tool.</li>
+<li>Is <code>memory.dsn</code> with a shared file a supported
+deployment, given that <code>docs/SECURITY_BOUNDARIES.md</code> asks for
+a separate profile and database per trust boundary?</li>
+<li>Should Codex pass a stable <code>session_id</code> to
+<code>datamind_operation_begin</code> in the local plugin, so that
+session-scoped memory outlives one operation?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>datamind/capabilities/memory/providers/sqlite_store.py</code></td>
+<td>Schema, migration, save, scoped recall, forget, scoring</td>
+</tr>
+<tr>
+<td><code>datamind/capabilities/memory/service.py</code></td>
+<td>Service, unwired fact extraction, store construction</td>
+</tr>
+<tr>
+<td><code>datamind/capabilities/memory/tools.py</code></td>
+<td>The four memory tools and their context defaults</td>
+</tr>
+<tr>
+<td><code>datamind/capabilities/memory/extractor.py</code></td>
+<td>The fact-extraction prompt</td>
+</tr>
+<tr>
+<td><code>datamind/runtime.py</code></td>
+<td>Data-plane assembly, hooks, receipt wrapping</td>
+</tr>
+<tr>
+<td><code>datamind/data_plane.py</code></td>
+<td><code>DataPlane.call</code>: profile check, schema validation,
+hooks</td>
+</tr>
+<tr>
+<td><code>datamind/mcp.py</code></td>
+<td>The stdio MCP server, profile binding, operations</td>
+</tr>
+<tr>
+<td><code>datamind/operations.py</code></td>
+<td>Operation tokens and their sessions</td>
+</tr>
+<tr>
+<td><code>datamind/capabilities/ingest/ledger.py</code></td>
+<td>Receipt ledger and fingerprint dedupe</td>
+</tr>
+<tr>
+<td><code>datamind/capabilities/hooks/audit.py</code></td>
+<td>Hash-chained audit file and verifier</td>
+</tr>
+<tr>
+<td><code>datamind/server.py</code></td>
+<td>FastAPI host and the read-only memory peek</td>
+</tr>
+<tr>
+<td><code>datamind/tests/test_memory.py</code></td>
+<td>Scope, deletion and migration tests</td>
+</tr>
+<tr>
+<td><code>datamind/tests/test_two_agent_data_plane.py</code></td>
+<td>Receipt dedupe and context binding tests</td>
+</tr>
+<tr>
+<td><code>datamind/tests/test_hooks.py</code></td>
+<td>Audit chain tests</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Fact extraction and the short-term window have one
+caller.</strong>
+<code>git grep -n -E 'append_turn|recent_turns|extract_facts|extract_and_save' -- '*.py'</code>
+returns the definitions, <code>datamind/scripts/hello_memory.py</code>
+and <code>datamind/tests/test_memory.py</code>.</li>
+<li><strong>No memory tool is exempt from the dedupe.</strong>
+<code>git grep -n -E 'memory_' -- datamind/capabilities/ingest/ledger.py</code>
+returns only <code>:86</code>, the source-identity branch; the
+replacement set is at <code>:216-220</code>.</li>
+<li><strong>Recall slices have no ORDER BY.</strong>
+<code>git grep -n 'ORDER BY' -- datamind/capabilities/memory</code>
+returns only <code>list_profiles</code> at
+<code>sqlite_store.py:409</code>.</li>
+<li><strong>No minimum score.</strong>
+<code>git grep -n -i -E 'min_score|threshold|min_sim' -- datamind/capabilities/memory</code>
+returns one word in the extraction prompt;
+<code>git grep -n 'top_k' -- datamind/capabilities/memory/providers/sqlite_store.py</code>
+matches.</li>
+<li><strong>No rejected value, review state or validity time on
+memory.</strong>
+<code>git grep -n -i -E 'tombstone|rejected|blocklist|suppress' -- datamind/capabilities/memory datamind/capabilities/ingest/ledger.py</code>
+and
+<code>git grep -n -i -E 'approve|pending|review' -- datamind/capabilities/memory</code>
+return nothing;
+<code>git grep -n -i 'archived' -- datamind/capabilities/memory</code>
+matches.
+<code>git grep -n -i -E 'valid_from|valid_to|valid_at|valid_until' -- datamind</code>
+returns two substrings of <code>invalid_token</code> and a test named
+<code>..._is_valid_...</code>.</li>
+<li><strong>Every read of status keeps active rows.</strong>
+<code>git grep -n -E 'status' -- datamind/capabilities/memory</code>
+returns the schema, the indexes, the archive update,
+<code>status='active'</code> in <code>count</code>,
+<code>list_profiles</code> and the slice query, and the row mapper.</li>
+<li><strong>Forget has no scope predicate; the only deletes.</strong>
+<code>git grep -n -E 'DELETE FROM|UPDATE memory_v2' -- datamind/capabilities/memory</code>
+returns <code>sqlite_store.py:390</code> and <code>:393</code>.</li>
+<li><strong>No file lock on the audit file or the memory store.</strong>
+<code>git grep -n -i -E 'filelock|FileLock' -- datamind/capabilities/hooks datamind/capabilities/memory</code>
+returns nothing; the same pattern matches
+<code>datamind/operations.py</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|doi\.org|CITATION|@article|@misc' -- .</code>
+returns two lines of a Skill using the word "citations".</li>
+<li><strong>The benchmark does not touch memory.</strong>
+<code>git grep -n -i 'memory' -- benchmark benchmark.py</code> returns
+nothing; <code>git grep -n -i -E 'kb_|graph_|db_' -- benchmark</code>
+matches.</li>
+<li><strong>No submodules.</strong> <code>.gitmodules</code> is
+absent.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-24</strong> — <a
+href="https://github.com/OpenDCAI/DataMind/commit/36e189d69e207d57410803c93c6d0a950be68921"><code class="commit-id" title="36e189d69e207d57410803c93c6d0a950be68921">36e189d6…</code></a>.
+First reading at <code>36e189d</code>, read only, from a full clone at
+the head of <code>main</code>. Screened first: four files scanned, no
+auto-run surface, nothing inside the seven-day cooldown, no build-time
+execution; <code>pyproject.toml</code> declares dependencies with no
+lockfile and <code>requirements-legacy.txt</code> has 14 unpinned
+requirements. Docs, Skills and prompts were read as data. Nothing was
+installed, built or run, and the 391 test functions were not run. Three
+marks: <code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). The receipt
+ledger drops a memory save whose arguments succeeded before, forget
+checks no scope, and MCP recall is substring-only.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

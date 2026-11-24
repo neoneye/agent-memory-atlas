@@ -149,6 +149,8 @@ lands at all.
 
 [Backboard Desktop](../../systems/backboard-desktop/) fails the same way through an environment variable. Its memory store takes no destination; it is built on whatever directory the runtime was handed for session logs. The desktop sets that to one directory under the home directory, to keep logs out of the workspace, and the memory followed: every project's subscription chats read and write one file, under a prompt block that calls it *"workspace-local memory"*. Run from a repository, the CLI writes to that repository's root, so the same code has two scopes depending on which process launched it.
 
+[DataMind](../../systems/datamind/) keeps the destination out of its dedupe key. Every memory write passes a receipt ledger that fingerprints the tool name and its arguments and returns `unchanged`, without running the handler, when that fingerprint once succeeded (`datamind/capabilities/ingest/ledger.py:191-237`). A session-scoped save takes its session from the request context, not from an argument, so the same sentence saved in a second session matches the first session's fingerprint and lands nowhere. The success index also survives `memory_forget`, so a forgotten fact restated in the same words stays forgotten. The ledger exempts KB, graph and DB replacement tools from the check and no memory tool (`:216-220`).
+
 ## Implementation checklist
 
 - Make the destination a required argument of every write and mutate call, and

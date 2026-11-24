@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 854 reports.**
+**This page covers all 855 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7862,3 +7862,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 with MIT product shells; 6,871 lines of Python published as 26 sync commits from a private monorepo between 9 October and 23 November 2026; 91 test functions, seven on the ledger, none run here. Three marks: `scope_enforced`, `audit_log`, `negative_eval`. No memory can be edited or deleted.
 - Study when: you are building access control for memory that is sold or shared between agents.
 - Do not copy when: a receipt has to convince someone who does not trust the ledger's database, or a memory has to be corrected or withdrawn.
+
+### [`datamind`](../systems/datamind/)
+- Best idea: **bind identity in the transport.** The MCP wrapper adds `profile` to every tool schema, consumes it to choose the runtime's storage directory before the tool sees it, and refuses a value other than the one the host bound in `DATAMIND_PROFILE`; `DataPlane.call` refuses a context whose profile differs from the runtime's.
+- Second idea: a scope column with one key per scope and a per-scope recall budget of two session, four profile and two global rows, with a populated test that two profiles in one file see one row each.
+- Biggest risk: **the receipt ledger drops memory writes it has seen succeed.** It fingerprints the tool and its arguments, exempts replacement tools and no memory tool, and returns `unchanged` without running the handler. A fact forgotten and saved again in the same words is not saved, and a session-scoped save repeated in a second session writes nothing, because the session comes from context and is not in the fingerprint.
+- Second risk: `memory_forget` archives or deletes any id with no scope predicate, a hard delete leaves the saved text in `audit.jsonl`, and the session key is a tool argument the model can set to another session's id. On the MCP path recall is substring scoring with no minimum score, so each scope returns its full budget whether or not anything matched.
+- Most reusable component: the profile binding in `datamind/mcp.py:61-79` with the runtime check in `datamind/data_plane.py:54-56`, and the scoped slices of `recall` in `datamind/capabilities/memory/providers/sqlite_store.py:282-380`.
+- Maturity impression: Apache-2.0; 117 commits under ten author names from 29 March to 22 October 2026, tags up to v1.1.0 and a package at 2.1.0; 391 test functions with CI on two Python versions, 19 on memory, none run here. Memory is the smallest of five surfaces and its LLM fact extractor is unwired. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you are putting several data surfaces for a coding agent behind one MCP server and want identity bound by the host rather than chosen by the model.
+- Do not copy when: memory must be corrected and restated, or an idempotency layer sits in front of a store whose rows can be deleted.

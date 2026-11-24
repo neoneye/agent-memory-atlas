@@ -1110,6 +1110,20 @@ every later hash. A row holds ids and counts, not the values a merge or
 an overwrite import replaced; the snapshot taken first holds those. And
 no committed test calls <code>record_audit</code> or
 <code>verify_audit</code>.</p>
+<p><a href="../../systems/datamind/">DataMind</a> keeps two records of
+every memory call, and the one with the text outlives deletion. A hook
+appends each call through its data plane to <code>audit.jsonl</code>
+with the redacted arguments and an unkeyed, truncated SHA-256 chain, and
+a receipt ledger appends each write's outcome, stored, unchanged or
+failed, to a SQLite table written with <code>INSERT OR IGNORE</code>
+(<code>datamind/capabilities/hooks/audit.py:156-205</code>,
+<code>datamind/capabilities/ingest/ledger.py:162-174</code>). The audit
+record of a save holds the content and not the new id; the receipt holds
+the id and only a hash of the content. A hard <code>memory_forget</code>
+deletes the row and leaves the text in the audit file. Each MCP call
+builds a new hook that reads the file's last hash with no file lock, so
+two concurrent MCP processes on one profile can append two records
+naming one predecessor.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>
