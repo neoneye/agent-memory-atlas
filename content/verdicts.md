@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 860 reports.**
+**This page covers all 861 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7923,3 +7923,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 8,657 lines of Python outside tests over 34 commits from 12 July to 8 November 2026; 286 test functions, none run here, and no CI. Graph rerank is on by default over a table nothing writes, and the nightly consolidation the README describes is never scheduled. One mark: `trust_state`.
 - Study when: you want a cheap capture gate in front of a model, or a Hermes provider that mirrors the host's built-in memory edits into its own store.
 - Do not copy when: a correction must stay corrected, or recall reads raw history beside curated memory.
+
+### [`session-export`](../systems/session-export/)
+- Best idea: **index only the branch the tool would resume.** Extraction walks Claude Code's `leafUuid` chain, OMP's active leaf and Command Code's parent links, so an exchange the user rewound away from is never indexed, and a populated test requires the abandoned branch's text to return nothing while the active branch's text returns the session.
+- Second idea: injected text is typed at extraction. AGENTS.md blocks, environment context, hook prompts and format flags such as `isMeta` mark a user-role message `contextual`, and a default search excludes it while `include_contextual=True` brings it back, with a test on both arms.
+- Biggest risk: **the ranking is over whatever was collected first.** `SessionSearchIndex.search` stops at `max_results` before it sorts by score, and the engine walks providers in a fixed order, Codex, Pi, OpenCode, then Claude Code, stopping at the same limit; ten matching Codex sessions fill the default fifty and Claude Code is never searched.
+- Second risk: recall crosses projects and carries secrets. The cwd filter applies only when the model passes one, the `search_chats` hit omits the cwd and path, no redaction runs on indexing or reading, and the HTTP transport has no authentication. The literal mode's FTS5 prefilter is whole-token, so a substring never reaches the matcher, and a regex with `\b` or a character class before a word is prefiltered into a term that matches nothing.
+- Most reusable component: `_claude_branch` and `_omp_active_branch` in `session_sdk/converters.py:611-653` and `:407`, and the live-listing path predicate in `session_sdk/search.py:709`, `:1242-1252`.
+- Maturity impression: MIT; 13,525 lines of Python, most of it conversion between twelve tools; 35 commits from 10 July to 27 October 2026, tags v0.1.0 to v0.5.0; 169 unittest methods, 14 on the search path, run only by the tag-triggered publish workflow and not here. One mark: `negative_eval`. Nothing marks a recalled message as wrong.
+- Study when: you want recall over the session files coding agents already write, and need a model for reading each tool's branch structure.
+- Do not copy when: recall must stay inside one project, keep credentials out of the model's context, arrive without the agent asking, or rank across tools fairly.

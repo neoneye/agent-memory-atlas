@@ -996,6 +996,8 @@ that matches only through `LIKE`'s `_` wildcard.
 
 [Commonly](../../systems/commonly/) keys agent memory on an identity the server resolves and scopes sharing per section. One MongoDB document per `agentName` and `instanceId` is read and written only under the identity the runtime token resolves to, and every blob section and array entry carries `private`, `pod` or `public`. The cross-agent read keeps `pod` only when the requester's authorised pods meet the owner's active installations, and builds what it returns from an allow-list of fields, so version history stays with the owner (`backend/services/agentMemoryService.ts:626-690`). A route test writes all three levels for one agent and requires the private sections absent from another agent's read beside the public and pod ones present. The weak end is who sets the key: the writing model passes `visibility` as a tool argument, a `public` section shows on an unauthenticated profile, and the owner's editor keeps the stored value with no way to narrow it.
 
+[UniSessions](../../systems/session-export/) stores a cwd on every indexed message and leaves it out of the answer. `search_chats` filters by project only when the model passes `cwd`, and the default spans every project and every coding tool on the machine (`session_sdk/search.py:1261-1271`). The hit the agent receives carries provider, session id and snippet; the result object's `cwd` and `path` are not in `as_dict` (`:57-70`), so a snippet from another repository arrives with nothing to say so. `search_sessions`, the coarser tool beside it, does return the cwd (`:82-90`).
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

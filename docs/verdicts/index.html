@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 860 reports.</strong></p>
+<p><strong>This page covers all 861 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35382,6 +35382,53 @@ Hermes provider that mirrors the host's built-in memory edits into its
 own store.</li>
 <li>Do not copy when: a correction must stay corrected, or recall reads
 raw history beside curated memory.</li>
+</ul>
+<h3 id="session-export"><a
+href="../systems/session-export/"><code>session-export</code></a></h3>
+<ul>
+<li>Best idea: <strong>index only the branch the tool would
+resume.</strong> Extraction walks Claude Code's <code>leafUuid</code>
+chain, OMP's active leaf and Command Code's parent links, so an exchange
+the user rewound away from is never indexed, and a populated test
+requires the abandoned branch's text to return nothing while the active
+branch's text returns the session.</li>
+<li>Second idea: injected text is typed at extraction. AGENTS.md blocks,
+environment context, hook prompts and format flags such as
+<code>isMeta</code> mark a user-role message <code>contextual</code>,
+and a default search excludes it while
+<code>include_contextual=True</code> brings it back, with a test on both
+arms.</li>
+<li>Biggest risk: <strong>the ranking is over whatever was collected
+first.</strong> <code>SessionSearchIndex.search</code> stops at
+<code>max_results</code> before it sorts by score, and the engine walks
+providers in a fixed order, Codex, Pi, OpenCode, then Claude Code,
+stopping at the same limit; ten matching Codex sessions fill the default
+fifty and Claude Code is never searched.</li>
+<li>Second risk: recall crosses projects and carries secrets. The cwd
+filter applies only when the model passes one, the
+<code>search_chats</code> hit omits the cwd and path, no redaction runs
+on indexing or reading, and the HTTP transport has no authentication.
+The literal mode's FTS5 prefilter is whole-token, so a substring never
+reaches the matcher, and a regex with <code>\b</code> or a character
+class before a word is prefiltered into a term that matches
+nothing.</li>
+<li>Most reusable component: <code>_claude_branch</code> and
+<code>_omp_active_branch</code> in
+<code>session_sdk/converters.py:611-653</code> and <code>:407</code>,
+and the live-listing path predicate in
+<code>session_sdk/search.py:709</code>, <code>:1242-1252</code>.</li>
+<li>Maturity impression: MIT; 13,525 lines of Python, most of it
+conversion between twelve tools; 35 commits from 10 July to 27 October
+2026, tags v0.1.0 to v0.5.0; 169 unittest methods, 14 on the search
+path, run only by the tag-triggered publish workflow and not here. One
+mark: <code>negative_eval</code>. Nothing marks a recalled message as
+wrong.</li>
+<li>Study when: you want recall over the session files coding agents
+already write, and need a model for reading each tool's branch
+structure.</li>
+<li>Do not copy when: recall must stay inside one project, keep
+credentials out of the model's context, arrive without the agent asking,
+or rank across tools fairly.</li>
 </ul>
         </article>
       </div>

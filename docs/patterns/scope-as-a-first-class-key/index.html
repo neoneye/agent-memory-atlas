@@ -1791,6 +1791,17 @@ present. The weak end is who sets the key: the writing model passes
 <code>visibility</code> as a tool argument, a <code>public</code>
 section shows on an unauthenticated profile, and the owner's editor
 keeps the stored value with no way to narrow it.</p>
+<p><a href="../../systems/session-export/">UniSessions</a> stores a cwd
+on every indexed message and leaves it out of the answer.
+<code>search_chats</code> filters by project only when the model passes
+<code>cwd</code>, and the default spans every project and every coding
+tool on the machine (<code>session_sdk/search.py:1261-1271</code>). The
+hit the agent receives carries provider, session id and snippet; the
+result object's <code>cwd</code> and <code>path</code> are not in
+<code>as_dict</code> (<code>:57-70</code>), so a snippet from another
+repository arrives with nothing to say so. <code>search_sessions</code>,
+the coarser tool beside it, does return the cwd
+(<code>:82-90</code>).</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

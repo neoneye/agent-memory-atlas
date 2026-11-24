@@ -565,6 +565,20 @@ reader carries everywhere: the latest-value compile runs only when the
 task contains a state keyword, so a question worded another way gets
 lexical retrieval over old and new assignments alike
 (<code>src/tomc/routing.py:12-15</code>, <code>:48-56</code>).</p>
+<p><a href="../../systems/session-export/">UniSessions</a> has no
+capture path: the transcript each tool writes is the event, and the
+index is derived from it on request. The cost the pattern avoids at
+write time arrives at read time instead. A new session is invisible
+until something calls <code>refresh_chats_index</code> or searches with
+<code>stale_policy="refresh"</code>, because the default search reads
+only what was already indexed (<code>session_sdk/search.py:1065</code>,
+<code>:1089-1100</code>), and the MCP tool's docstring tells the model
+to check the index first. What the derived index buys is a correction
+for free: extraction walks the branch Claude Code, OMP or Command Code
+would resume, so an exchange the user rewound is dropped at the next
+re-index, with a populated test
+(<code>session_sdk/converters.py:611-653</code>,
+<code>tests/test_omp.py:662-675</code>).</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>

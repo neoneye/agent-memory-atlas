@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python SDK that converts
+coding-agent session files between twelve tools and serves an SQLite
+FTS5 index over all of them as MCP chat recall.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="UniSessions — Agent Memory Atlas">
+    <meta property="og:description" content="A Python SDK that converts
+coding-agent session files between twelve tools and serves an SQLite
+FTS5 index over all of them as MCP chat recall.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="UniSessions — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python SDK that converts
+coding-agent session files between twelve tools and serves an SQLite
+FTS5 index over all of them as MCP chat recall.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>UniSessions — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "UniSessions",
+      "description": "A Python SDK that converts coding-agent session files between twelve tools and serves an SQLite FTS5 index over all of them as MCP chat recall.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Recall over transcripts other tools wrote,
+cut at the rewind</p>
+          <h1>UniSessions</h1>
+          <p class="document-deck">A Python SDK that converts
+coding-agent session files between twelve tools and serves an SQLite
+FTS5 index over all of them as MCP chat recall.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/vibheksoni/session-export">
+              <span>Source</span>
+              <strong>vibheksoni/session-export</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/vibheksoni/session-export/commit/14e7e55f4c9254ef5eff2dfa0392bc266c8e4d77" title="14e7e55f4c9254ef5eff2dfa0392bc266c8e4d77">
+              <span>Analyzed revision</span>
+              <code>14e7e55f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-24</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/vibheksoni--session-export" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>vibheksoni--session-export</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in LICENSE and pyproject.toml</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>13,525
+lines of Python in 16 files under session_sdk and unisessions, 5,970 of
+them in converters.py; the recall index is search.py at 1,358 lines and
+the MCP server is 300; 4,037 lines of tests in 11 files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>35
+commits under two author names, 10 July to 27 October 2026, all but one
+under the maintainer's; one merged contributor pull request adding the
+OMP provider; tags v0.1.0 to v0.5.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>169
+unittest methods in 11 files, 14 of them on the search path; run by the
+PyPI publish workflow on tag pushes only; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>UniSessions is a Python SDK and CLI that converts coding-agent
+session files between twelve tools, exports them as training traces, and
+serves an MCP server that searches every session on the machine for the
+agent. What is notable is that recall follows each tool's own resume
+logic: a branch the user rewound away from in Claude Code, OMP or
+Command Code is not indexed, and injected instruction blocks are typed
+and kept out of default results. What is weak is the ranking, which
+scores the first fifty matches collected in a fixed provider order
+rather than the best fifty.</p>
+<p>The README states the memory goal in the maintainer's words: an agent
+told that a bug was fixed in another session should <em>"go check and
+learn from it"</em>. The mechanism is a derived SQLite FTS5 index over
+the transcripts Claude Code, Codex, Pi, OpenCode and eight other tools
+already write. Nothing is extracted and no model is called. A message is
+a recall unit as written.</p>
+<p>Conversion is the larger part of the code. It moves a whole session
+into another tool's store so that tool can resume it, which carries a
+conversation across agents as a transcript rather than as recall. Trace
+export writes the same sessions out as HuggingFace, OpenAI fine-tuning
+or ShareGPT records; it is outside memory and is not covered
+further.</p>
+<p>The store holds no correction of its own. A message stops being
+recalled when its file is deleted, when the source tool's rewind moves
+it off the active branch and the session is re-indexed, or when its type
+is <code>contextual</code> or <code>compaction</code>. Nothing can mark
+a recalled message as wrong.</p>
+<p>One mark is earned: <code>negative_eval</code>, on two populated
+tests that keep an abandoned branch and an injected AGENTS.md block out
+of search. Section 9 gives the reason for each of the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>a past message, believed in the sense of
+being returned, from the moment its session is indexed</strong>. There
+is no candidate stage and no verified stage. The agent decides what a
+snippet is worth.</p>
+<p>Four things decide whether a message is in the recallable set:</p>
+<ul>
+<li><strong>Which branch it sits on.</strong> For Claude Code the active
+branch is the leaf named by the last <code>last-prompt</code> record,
+walked back through <code>parentUuid</code>
+(<code>session_sdk/converters.py:611-653</code>). OMP follows its own
+<code>resolveSessionLeafId</code> (<code>:407</code>), and Command Code
+walks back from the last entry (<code>:529-544</code>). A rewound
+exchange stays in the file and leaves the index at the next
+re-index.</li>
+<li><strong>Its type.</strong> <code>contextual</code> covers text the
+harness injected under the user role: AGENTS.md blocks,
+<code>&lt;environment_context&gt;</code>, hook prompts and the rest of
+25 markers matched in the first 120 characters (<code>:150-181</code>),
+plus format flags such as Claude's <code>isMeta</code> and OMP's
+<code>synthetic</code>. <code>compaction</code> covers summaries. Both
+are excluded from a default search.</li>
+<li><strong>Whether its file is still listed.</strong> A search reads
+only rows whose path is in the live listing of the providers asked
+(<code>session_sdk/search.py:1242-1252</code>, <code>:709</code>).</li>
+<li><strong>Whether the index has caught up.</strong> The default
+<code>stale_policy</code> is <code>skip</code>, so a session changed
+since its last indexing serves its old rows, and a new one serves
+nothing, until a refresh.</li>
+</ul>
+<p>The one user act that changes belief inside a session is OMP's
+<code>/clear</code>, which turns every earlier message
+<code>contextual</code> (<code>converters.py:356-357</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — recall indexes only the active branch of each transcript and types injected text as contextual; a search reads only files the live listing returns, but collects the first fifty hits in a fixed provider order before scoring them, and the hit returned to the agent names no project</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: recall indexes only the active branch of each transcript and types injected text as contextual; a search reads only files the live listing returns, but collects the first fifty hits in a fixed provider order before scoring them, and the hit returned to the agent names no project
+flowchart TD
+    subgraph SRC[&quot;Transcripts other tools wrote&quot;]
+        direction TB
+        A[&quot;Claude Code, Codex, Pi,&lt;br/&gt;OMP, OpenCode and&lt;br/&gt;seven more&quot;]
+    end
+    SRC --&gt; X[&quot;MessageExtractor&lt;br/&gt;active branch only for&lt;br/&gt;Claude, OMP, Command Code&quot;]
+    X --&gt; T[&quot;text kept; tool output&lt;br/&gt;and reasoning dropped&quot;]
+    T --&gt; C[&quot;typed message,&lt;br/&gt;contextual or compaction&quot;]
+    R[&quot;refresh_chats_index or&lt;br/&gt;stale_policy=refresh&quot;] --&gt; I
+    C --&gt; I[(&quot;search.sqlite&lt;br/&gt;messages + FTS5&lt;br/&gt;replaced on mtime/size&quot;)]
+    Q[&quot;search_chats&lt;br/&gt;query, cwd optional&quot;] --&gt; L[&quot;live listing of files,&lt;br/&gt;cwd filter only if given&quot;]
+    I --&gt; P[&quot;rows of listed files&lt;br/&gt;deleted file drops out&quot;]
+    L --&gt; P
+    P --&gt; F[&quot;FTS5 whole-token prefilter&lt;br/&gt;then substring or regex&quot;]
+    F --&gt; D[&quot;default drops&lt;br/&gt;contextual, compaction&quot;]
+    D --&gt; K[&quot;first 50 hits collected,&lt;br/&gt;providers in fixed order,&lt;br/&gt;then scored&quot;]
+    K --&gt; O[&quot;snippet to the agent:&lt;br/&gt;provider, session id,&lt;br/&gt;no cwd, no path&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three layers in one package. <code>session_sdk/stores.py</code> reads
+and writes each tool's native store: JSONL files for most, SQLite
+databases for OpenCode, grok-cli, Freebuff and T3 Code, and AES-GCM
+encrypted trajectory files for Windsurf, decrypted with a key constant
+in the source (<code>stores.py:1251</code>).
+<code>session_sdk/converters.py</code> extracts a common message list
+and builds records for each target. <code>session_sdk/search.py</code>
+holds the recall index and engine. <code>unisessions/cli.py</code> and
+<code>unisessions/mcp_server.py</code> sit on top.</p>
+<p>The index is one SQLite file. Its path is
+<code>UNISESSIONS_SEARCH_INDEX</code>, or
+<code>unisessions/search.sqlite</code> under <code>LOCALAPPDATA</code>,
+<code>XDG_CACHE_HOME</code> or <code>~/.cache</code>
+(<code>unisessions/mcp_server.py:19-25</code>). It opens in WAL mode
+with <code>synchronous=NORMAL</code>
+(<code>search.py:513-515</code>).</p>
+<p>The MCP server builds a new engine, twelve store objects and a
+database connection on every tool call
+(<code>mcp_server.py:28-44</code>, called at <code>:56</code>,
+<code>:77</code>, <code>:94</code>, <code>:166</code>,
+<code>:229</code>). Section 6 covers what that costs.</p>
+<p>Default store locations come from a class named
+<code>WindowsDefaults</code>, which resolves under the home directory
+and reads environment overrides for some tools
+(<code>session_sdk/paths.py:38-60</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install unisessions</code> with the <code>mcp</code> extra,
+then register <code>unisessions-mcp</code> with the agent. Nothing else
+runs: no daemon, no model, no API key. The index is an ordinary SQLite
+file that can be deleted and rebuilt from the transcripts with one
+refresh call. Dependencies are ranges in <code>pyproject.toml</code>
+with no lockfile. <code>cryptography</code> is a core dependency for the
+Windsurf path; <code>orjson</code> and <code>google-re2</code> are
+optional speedups.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Index schema and maintenance.</strong>
+<code>session_sdk/search.py</code>: schema v2 and the v1 drop
+<code>:505-571</code>; <code>ensure</code> <code>:142-184</code>;
+<code>_needs_index</code> <code>:605-617</code>;
+<code>_index_prepared</code>, delete-then-insert per session,
+<code>:635-666</code>; <code>prune_deleted</code> <code>:595-603</code>,
+called only from <code>refresh_index</code> <code>:997</code>.</li>
+<li><strong>Message extraction.</strong>
+<code>session_sdk/converters.py</code>: contextual markers
+<code>:150-181</code>; <code>from_omp</code> <code>:327-366</code>;
+<code>_omp_active_branch</code> <code>:407</code>;
+<code>_commandcode_branch</code> <code>:529-544</code>;
+<code>_claude_branch</code> <code>:611-653</code>;
+<code>from_session</code> dispatch <code>:1269-1286</code>.</li>
+<li><strong>Search.</strong> <code>search.py</code>:
+<code>SessionSearchIndex.search</code> <code>:290-418</code>;
+<code>search_sessions</code> <code>:420-501</code>; <code>_rows</code>
+and <code>_rows_batch</code> <code>:668-744</code>;
+<code>build_fts_query</code> <code>:756-768</code>;
+<code>_regex_fts_query</code> <code>:773-787</code>;
+<code>_relevance_score</code> <code>:866-905</code>;
+<code>SessionSearchEngine.search</code> <code>:1042-1164</code>;
+<code>_scoped_summaries</code> <code>:1242-1252</code>;
+<code>_cwd_matches</code> <code>:1261-1271</code>; <code>_matcher</code>
+<code>:1296-1358</code>.</li>
+<li><strong>MCP surface.</strong>
+<code>unisessions/mcp_server.py:47-254</code>.</li>
+<li><strong>SDK escape hatch.</strong> <code>raw_search_rows</code>,
+<code>search.py:236-288</code>, <code>:1010-1040</code>.</li>
+<li><strong>Conversion write.</strong> The <code>--write</code> and
+<code>--on-conflict</code> options, <code>unisessions/cli.py:711</code>,
+<code>:809</code>; per-store <code>write</code> methods in
+<code>session_sdk/stores.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>sessions</code> holds one row per transcript file:
+<code>path</code> as primary key, provider, session id, cwd, timestamp,
+<code>mtime_ns</code>, <code>size</code> and <code>message_count</code>
+(<code>search.py:532-541</code>).</p>
+<p><code>messages</code> holds one row per extracted message: path,
+provider, session id, cwd, timestamp, <code>message_index</code>, role,
+<code>message_type</code> and text (<code>:542-553</code>). It is
+indexed on path and on provider with timestamp.
+<code>messages_fts</code> is an external-content FTS5 table over
+<code>text</code> with the <code>unicode61</code> tokenizer, kept in
+step by insert and delete triggers (<code>:556-567</code>).</p>
+<p>The text is <code>TextMessage.text</code> only. Thinking and tool
+calls exist on the model (<code>session_sdk/models.py:33-45</code>) and
+are not written to the index (<code>search.py:639-652</code>).</p>
+<p>Scope keys on the record are the cwd and the provider. There is no
+user, agent or tenant key, which fits a single-user machine.</p>
+<p>Time is one field: the message timestamp, or the session's when the
+message has none (<code>:645</code>). It is when the source tool
+recorded the message.</p>
+<p>There is no correction chain, no supersession field and no TTL.
+Identity is the file path; a session is replaced whole when its file
+changes.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is tool-mediated. The agent calls <code>search_chats</code>
+for messages or <code>search_sessions</code> for sessions ranked by
+match count.</p>
+<p><strong>The prefilter is whole-token.</strong> Literal mode turns the
+query into an FTS5 phrase, with variants for apostrophes and split
+contractions (<code>search.py:756-768</code>, <code>:790-840</code>).
+The Python matcher afterwards is a substring find
+(<code>:1332-1356</code>). FTS5 with <code>unicode61</code> does not
+match a token prefix, so a query for <code>auth</code> never reaches the
+matcher for a message saying <code>authentication</code> (section 10
+records the scratch check).</p>
+<p><strong>A regex is prefiltered by the words in its source.</strong>
+<code>_regex_fts_query</code> takes every run of two or more letters
+from the pattern text and ORs them as FTS5 terms
+(<code>:773-787</code>). An escape or a character class glued to a word
+changes the term: <code>\bauth\b</code> yields <code>bauth</code>, and
+<code>[Ee]rror</code> yields <code>ee</code> and <code>rror</code>.
+Neither matches a stored token, so the search returns nothing for text
+the regex would match. A regex with no qualifying run falls back to the
+2,000 newest rows per batch (<code>:316</code>, <code>:739</code>).</p>
+<p><strong>Hits are collected, then scored.</strong>
+<code>SessionSearchIndex.search</code> walks rows in FTS5 rank order,
+applies the matcher, the exclusions and the per-session cap, and stops
+when it holds <code>max_results</code> (<code>:339-386</code>). Only
+then does it sort by its own score (<code>:388</code>). The engine
+searches providers in the order the stores were registered, Codex, Pi,
+OpenCode, Claude Code and on, and stops at <code>max_results</code>
+across them (<code>:926-948</code>, <code>:1125-1126</code>). With the
+default of 50 and five per session, ten matching Codex sessions fill the
+response and Claude Code is never searched. The tool docstring describes
+the result as <em>"ranked by relevance score"</em>
+(<code>unisessions/mcp_server.py:136-138</code>).</p>
+<p>The score is match density times ten plus a position term, less 0.15
+for a compaction and up to 0.5 for the share of code blocks, multiplied
+by up to five for keywords close together
+(<code>search.py:866-905</code>). Identical text is collapsed on its
+first 500 characters, with a <code>duplicate_count</code> and the
+earliest timestamp (<code>:351-359</code>). A second dedup runs across
+providers on the snippet (<code>:1128-1138</code>).</p>
+<p><strong>Batches rank separately.</strong> Path lists are split into
+batches of 900 for the SQL <code>IN</code> clause, and each batch
+carries its own <code>LIMIT</code> and its own rank order
+(<code>:681-694</code>, <code>:740-743</code>). For a provider with more
+than 900 sessions the first batch's rows come first in the concatenated
+list, and collection stops before later batches are reached.</p>
+<p><strong>What the agent gets.</strong> A <code>search_chats</code> hit
+carries rank, score, provider, session id, timestamp, role, type, a
+snippet of 300 characters each side, duplicate count and match positions
+(<code>:57-70</code>). It does not carry the cwd or the file path, which
+the result object holds. <code>search_sessions</code> does return the
+cwd (<code>:82-90</code>).</p>
+<p><strong>Cost per call.</strong> Each MCP call builds fresh stores, so
+the per-file listing memo (<code>session_sdk/stores.py:33-56</code>) and
+the five-second listing cache (<code>search.py:1239-1247</code>) start
+empty every time. The comment on the second reads <em>"long-lived
+engines (the MCP server) must see new sessions"</em>; the server's
+engine lives for one call. Every search therefore lists and reads the
+header of every session file of every provider asked.
+<code>docs/mcp-server.md:181</code> quotes 35 to 40 ms for a cached
+search; that figure was not reproduced.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Recall has no write path of its own. The agent's transcript is the
+write, and UniSessions indexes it on request.</p>
+<p>A session is re-indexed when its file's <code>(mtime_ns, size)</code>
+differs from the stored pair (<code>search.py:605-617</code>). Its rows
+are deleted and reinserted inside the batch's transaction
+(<code>:162-182</code>, <code>:635-666</code>). A T3 Code thread has a
+virtual path under its database file, so every thread of that database
+is re-indexed when the database changes (<code>:579-593</code>).</p>
+<p>Indexing happens in two places: <code>refresh_chats_index</code>,
+which also prunes rows of vanished files, and a search with
+<code>stale_policy="refresh"</code>. The default is <code>skip</code>.
+<code>max_refresh_sessions</code> and <code>max_refresh_bytes</code>
+make a refresh refuse rather than run long (<code>:155-158</code>). A
+session that fails to parse is recorded in <code>failures</code>, an
+in-memory list, and skipped (<code>:135-136</code>,
+<code>:165-169</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A refresh parses every changed session and blocks the calling tool
+until it finishes. Under the default policy a new message is retrievable
+after the next refresh call and not before; nothing schedules one. No
+pass rewrites the whole index except the v1-to-v2 migration, which drops
+the old tables and rebuilds on the next refresh (<code>:519-529</code>).
+Injection is bounded by <code>max_results</code> and
+<code>context_chars</code>, defaulting to 50 snippets of up to about 600
+characters each; it arrives as a tool result, after any cached prompt
+prefix.</p>
+<h3 id="conversion">Conversion</h3>
+<p>Conversion writes a session into another tool's native store when
+<code>--write</code> is given, with <code>--on-conflict</code> choosing
+skip, overwrite, fork under a new id, or update
+(<code>unisessions/cli.py:711</code>). The receiving tool then resumes
+the session with its history in context. That is cross-agent
+continuation of a whole transcript, with no selection and no index.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Five MCP tools (<code>unisessions/mcp_server.py:47-254</code>). The
+<code>search_chats</code> docstring tells the agent the workflow: check
+<code>index_status</code>, call <code>refresh_chats_index</code> if
+stale, then search with <code>skip</code>. A model that skips the first
+two steps on a fresh install searches an empty index and gets an empty
+result, which the docstring warns about (<code>:146</code>).</p>
+<p>The agent controls every narrowing argument: provider, cwd and match
+mode, session ids, roles, message types, time window, exclusion keywords
+and the regex. Nothing is injected automatically. There are no hooks and
+no session-start context.</p>
+<p>The SDK exposes the same engine, plus <code>raw_search_rows</code>,
+which returns index rows with full text and no live-listing predicate
+(<code>search.py:236-288</code>). <code>docs/search.md:136</code> states
+that it skips <em>"live-source pruning"</em>.</p>
+<p>Adapting the server to another agent costs nothing: it reads files
+that already exist and speaks MCP.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="recall-reaches-every-project-on-the-machine">Recall reaches
+every project on the machine</h3>
+<p>The cwd filter applies only when the model passes one, and its
+default is none (<code>search.py:1261-1271</code>). A search from one
+project therefore returns snippets from every other project's sessions,
+in every tool. The <code>search_chats</code> hit omits the cwd, so the
+agent cannot tell from the result where a snippet came from.</p>
+<h3 id="secrets-are-indexed-and-returned">Secrets are indexed and
+returned</h3>
+<p>The index stores message text as extracted. No redaction runs on the
+indexing path or the read path. A credential pasted into any session in
+any tool is searchable by every agent connected to the server.</p>
+<h3 id="deletion-is-immediate-for-search-and-late-for-the-file">Deletion
+is immediate for search and late for the file</h3>
+<p>Deleting a transcript removes it from <code>search_chats</code> and
+<code>search_sessions</code> at the next call, because both read only
+listed paths. The text stays in <code>search.sqlite</code> until
+<code>refresh_chats_index</code> prunes it (<code>:595-603</code>,
+<code>:997</code>), and <code>raw_search_rows</code> returns it until
+then.</p>
+<h3 id="stale-reads-under-the-default-policy">Stale reads under the
+default policy</h3>
+<p><code>skip</code> serves the rows indexed at the last refresh. A
+Claude Code session the user rewound after that refresh still returns
+the abandoned branch until the next refresh.</p>
+<h3 id="transport">Transport</h3>
+<p>HTTP, SSE and streamable HTTP transports are available, bound to
+<code>127.0.0.1</code> by default and to whatever <code>--host</code>
+names otherwise, with no authentication in <code>unisessions/</code>
+(<code>mcp_server.py:264-296</code>). With a non-loopback bind, every
+transcript on the machine is readable by anyone who reaches the
+port.</p>
+<h3 id="uncertainty">Uncertainty</h3>
+<p>Nothing represents it. A message from a session that ended in a dead
+end is returned with the same standing as one that fixed the bug. The
+compaction penalty of 0.15 is the only term in the score that concerns
+where a text came from.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>negative_eval</code> — earned.</strong> Two tests on
+the search path keep particular material out of a populated index: the
+OMP abandoned branch against a hit on the active branch of the same
+session, and the AGENTS.md block against its own reappearance under
+<code>include_contextual=True</code>.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> The cwd is
+stored on every session and message and applied when supplied. Omitting
+it is the default and searches every project, and the value is a model
+argument.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>message_type</code> filters reads, but it records what kind of
+text a message is, assigned at extraction from markers and format flags.
+It is not a judgement that a message is true or false, and nothing
+changes it afterwards except OMP's <code>/clear</code> at the next
+re-index.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> No value is
+recorded as rejected. A deleted or rewound message is gone from the
+index, and nothing stops the same text being recalled from another
+session.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> The only time
+is the source's message timestamp.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> No record of
+index changes is kept; the parse failures list lives for one
+engine.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No surface
+shows or approves recalled content.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. Counts are from reading: 169
+<code>unittest</code> methods in 11 files. Most cover conversion
+fidelity per provider. Fourteen touch the search path: six in
+<code>tests/test_search_index_v2.py</code>, six in
+<code>SearchTests</code> in <code>tests/test_conversion.py</code>, and
+one each in <code>tests/test_omp.py</code> and
+<code>tests/test_t3.py</code>.</p>
+<p>The search tests worth trusting:</p>
+<ul>
+<li><code>test_search_indexes_the_active_branch</code>
+(<code>tests/test_omp.py:662-675</code>) runs over the
+<code>rich_session</code> fixture, whose docstring names <em>"an
+abandoned branch that must not be read"</em> (<code>:92-116</code>). It
+requires the active branch's <code>changelog</code> to return the
+session and <code>abandoned</code> to return nothing.</li>
+<li><code>test_search_supports_regex_keywords_roles_and_contextual_exclusion</code>
+(<code>tests/test_conversion.py:629-701</code>) requires the user-role
+filter to return exactly one of two matching messages, and an AGENTS.md
+block to be absent by default and present with
+<code>include_contextual=True</code>.</li>
+<li><code>test_reindexing_a_grown_session_replaces_its_rows</code>
+asserts the message and FTS row counts after a session grows, which pins
+the delete-then-insert
+(<code>tests/test_search_index_v2.py:36-49</code>).</li>
+<li><code>test_vanished_files_do_not_break_status_and_deleted_sessions_are_pruned</code>
+asserts zero message rows after a deleted transcript is refreshed
+(<code>:61-73</code>). It checks the table, not a search.</li>
+</ul>
+<p>One assertion cannot fail. The <code>exclude_keywords</code> case
+searches for <code>test</code> while excluding <code>billing</code>,
+over a fixture in which both messages containing <code>test</code> also
+contain <code>billing</code>, then asserts with <code>all(...)</code>
+that no snippet contains <code>billing</code>
+(<code>tests/test_conversion.py:703-704</code>). The result is empty by
+construction, and the assertion holds for any implementation.</p>
+<p>Nothing tests the cwd filter on <code>search_chats</code>, a search
+across providers, the order in which hits are collected, a regex
+containing an escape, a substring query, or a rewind after the last
+refresh under <code>skip</code>.</p>
+<p>I ran two scratch scripts of my own, not the project's code, to check
+the prefilter claims in section 6. The token pattern from
+<code>_regex_fts_query</code> turned <code>\bauth\b</code> into
+<code>bauth</code> and <code>[Ee]rror</code> into <code>Ee</code> and
+<code>rror</code>. An FTS5 table with the <code>unicode61</code>
+tokenizer, holding <em>"the auth error happened"</em> and <em>"fixed the
+authentication bug"</em>, matched 0 rows for <code>"bauth"</code>, for
+<code>"ee" OR "rror"</code> and for <code>"auth"</code> against the
+second text, and 1 row each for <code>"auth"</code>,
+<code>"error"</code> and <code>"authentication"</code> where the whole
+token was present.</p>
+<p>The tests run only in <code>.github/workflows/publish.yml</code>,
+triggered by a tag push (<code>:3-5</code>, <code>:59-60</code>). No
+workflow runs them on a push to <code>main</code> or a pull request. The
+README badge reads 163 passing.</p>
+<p>There is no retrieval evaluation, no benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Index the transcripts the agent already writes.</strong> The
+corpus is full on day one, the index can be thrown away, and there is no
+capture path to fail.</li>
+<li><strong>Follow the tool's own resume logic when reading a
+transcript.</strong> The branch the tool would resume is the branch the
+user kept; walking it at index time turns every rewind into a
+correction.</li>
+<li><strong>Type injected text at extraction and exclude it by
+default.</strong> An AGENTS.md block under the user role is not
+something the user said; a flag to bring it back keeps the forensic case
+open.</li>
+<li><strong>Limit reads to files that still exist.</strong> A predicate
+on the live listing makes deletion take effect for search without
+waiting for a prune.</li>
+<li><strong>Refuse a refresh above a stated size.</strong>
+<code>max_refresh_sessions</code> and <code>max_refresh_bytes</code>
+turn an unbounded parse into an error the caller sees.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Stopping collection before scoring.</strong> A
+<code>break</code> at the result limit before the sort makes the
+relevance order a property of the iteration order.</li>
+<li><strong>Prefiltering a regex by the words in its source.</strong>
+Escapes and classes become literal terms; parse the pattern or skip the
+prefilter.</li>
+<li><strong>A token index under a substring matcher.</strong> The
+matcher promises what the prefilter has already ruled out.</li>
+<li><strong>Dropping the scope from the result.</strong> A cross-project
+hit the agent cannot attribute is worse than a miss.</li>
+<li><strong>A per-call engine under a cache written for a long-lived
+one.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who moves between several coding agents on
+one machine and wants an agent to search its own history when asked. The
+cost is a pip install and a refresh call, and nothing is lost if the
+index is deleted.</p>
+<p>It does not suit anyone who needs recall to arrive without being
+asked, to stay inside one project, or to keep credentials out of a
+model's context. The first needs hooks this project does not have; the
+second and third need a default scope and a redaction pass on the
+indexing path. <a href="../../systems/deja-vu/">deja-vu</a> and <a
+href="../../systems/brain-mcp/">brain-mcp</a> build the same shape with
+hooks and with redaction respectively.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does Pi write rewound branches into the same session file?
+<code>from_pi</code> reads every record in file order with no branch
+walk (<code>converters.py:282</code>), while the test fixture writes
+<code>parentId</code> links and OMP, which descends from Pi, is
+documented as a tree.</li>
+<li>How often does a Codex-heavy user see Claude Code results at all
+under the default <code>max_results</code>? The ordering follows from
+the code and was not run.</li>
+<li>Is the per-call engine in the MCP server deliberate, given the cache
+comments in <code>search.py</code> and <code>stores.py</code>?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>session_sdk/search.py</code></td>
+<td>Index schema, refresh, prune, search, scoring, cwd filter</td>
+</tr>
+<tr>
+<td><code>unisessions/mcp_server.py</code></td>
+<td>The five MCP tools and the transport options</td>
+</tr>
+<tr>
+<td><code>session_sdk/converters.py</code></td>
+<td><code>MessageExtractor</code>, branch walks, contextual markers,
+conversion builders</td>
+</tr>
+<tr>
+<td><code>session_sdk/stores.py</code></td>
+<td>Per-tool readers and writers, listing memo, Windsurf decryption</td>
+</tr>
+<tr>
+<td><code>session_sdk/models.py</code></td>
+<td><code>SessionSummary</code>, <code>TextMessage</code>,
+<code>NativeSession</code></td>
+</tr>
+<tr>
+<td><code>session_sdk/paths.py</code></td>
+<td>Default store locations</td>
+</tr>
+<tr>
+<td><code>unisessions/cli.py</code></td>
+<td>Conversion, bulk export, trace export, conflict policy</td>
+</tr>
+<tr>
+<td><code>tests/test_search_index_v2.py</code></td>
+<td>Re-index, new sessions, prune, schema move</td>
+</tr>
+<tr>
+<td><code>tests/test_conversion.py</code></td>
+<td><code>SearchTests</code> at <code>:611-852</code></td>
+</tr>
+<tr>
+<td><code>tests/test_omp.py</code></td>
+<td>The abandoned-branch search test</td>
+</tr>
+<tr>
+<td><code>.github/workflows/publish.yml</code></td>
+<td>The only workflow that runs the tests</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>No redaction on indexing or search.</strong>
+<code>git grep -n -i -E 'redact|scrub|mask_|sanitiz' -- session_sdk unisessions</code>
+returns only <code>sanitize_claude_cwd</code> in
+<code>session_sdk/paths.py:246-249</code> and its callers in
+<code>stores.py</code>, which turn a cwd into a directory name.</li>
+<li><strong>No authentication on the MCP server.</strong>
+<code>git grep -n -i -E 'auth|bearer|verifier' -- unisessions</code>
+returns nothing;
+<code>git grep -n -i 'host' -- unisessions/mcp_server.py</code> matches
+<code>:272</code> and <code>:293</code>.</li>
+<li><strong>No hooks or automatic injection.</strong>
+<code>git grep -n -i -E 'SessionStart|UserPromptSubmit|hooks?\.json|settings\.json' -- . ':!tests'</code>
+returns nothing; <code>git grep -n -i 'hook' -- session_sdk</code>
+matches the contextual marker <code>&lt;hook_prompt</code> and format
+fields.</li>
+<li><strong>One caller of prune.</strong>
+<code>git grep -n 'prune_deleted' -- .</code> returns the definition at
+<code>session_sdk/search.py:595</code> and <code>refresh_index</code> at
+<code>:997</code>.</li>
+<li><strong><code>raw_search_rows</code> has no product caller.</strong>
+<code>git grep -n 'raw_search_rows' -- . ':!docs'</code> returns the two
+definitions, a README example and one test.</li>
+<li><strong>No search in the CLI.</strong>
+<code>git grep -n -i -E 'search|index' -- unisessions/cli.py</code>
+returns nothing;
+<code>git grep -n 'add_parser("list")' -- unisessions/cli.py</code>
+matches <code>:288</code>.</li>
+<li><strong>No embedding or vector arm.</strong>
+<code>git grep -n -i -E 'embedding|vector|faiss|bm25' -- session_sdk unisessions</code>
+returns nothing; <code>git grep -n -i 'fts5' -- session_sdk</code>
+matches <code>search.py:507</code> and <code>:556</code>.</li>
+<li><strong>No delete or forget tool.</strong>
+<code>git grep -n -i -E 'def (forget|delete|remove)' -- unisessions session_sdk/search.py</code>
+returns nothing;
+<code>git grep -c '@mcp.tool' -- unisessions/mcp_server.py</code>
+returns 5.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|doi\.org|CITATION' -- .</code>
+returns nothing; <code>git grep -n -i 'license' -- pyproject.toml</code>
+matches.</li>
+<li><strong>Tests run only on tags.</strong>
+<code>git grep -n -E '^on:|tags:|Run tests' -- .github/workflows/publish.yml</code>
+returns <code>:3</code>, <code>:5</code> and <code>:59</code>;
+<code>docs.yml</code> triggers on changes under <code>docs/</code> and
+runs no tests.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-24</strong> — <a
+href="https://github.com/vibheksoni/session-export/commit/14e7e55f4c9254ef5eff2dfa0392bc266c8e4d77"><code class="commit-id" title="14e7e55f4c9254ef5eff2dfa0392bc266c8e4d77">14e7e55f…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, the
+commit triage selected. Screened first: no auto-run surface, nothing
+inside the seven-day cooldown, no build-time execution, three unpinned
+surfaces (<code>pyproject.toml</code> with no lockfile,
+<code>requirements.txt</code>, <code>requirements-mcp.txt</code>); no
+submodules. Docs read as data. Nothing was installed, built or run, and
+the 169 test methods were not run; two scratch scripts of my own checked
+FTS5 token matching. One mark: <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). Hits are
+collected in a fixed provider order before scoring, and recall crosses
+projects with no redaction.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
