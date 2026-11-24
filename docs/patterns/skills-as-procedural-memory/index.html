@@ -598,6 +598,22 @@ holds the <code>learning_confirm</code> tool, which publishes to
 everyone when the project's mode is <code>confirmed</code>. Fixed-error
 rules seen three times may also apply on their own when an admin turns
 that on, on counted evidence rather than a model's confidence.</p>
+<p><a href="../../systems/team-agent-memory/">TeamAgentMemory</a>
+distils skills from tool-heavy turns on the server and holds every
+change for a person. The <code>amem</code> hooks post turns with many
+tool calls to <code>skill/conversation/add</code>; a model reviews the
+archive against the agent's existing skills, and an action naming a
+skill it was not shown is dropped. With <code>require_approval</code>
+on, the default, each create or edit is stored as a <code>Pending</code>
+proposal and no skill changes until the conversation's user, a team
+admin or a system admin applies it; the decider is taken from the user
+key, and an undecided proposal expires after 30 days
+(<code>crates/memory-application/src/skill/extraction.rs:530-559</code>,
+<code>:682-757</code>). The gate's weak end is its reviewer: the member
+whose conversation produced the proposal may approve it alone, and the
+skill then lists for every member of a team-visible agent. No shipped
+client reads a skill, so procedures reach agents only through the HTTP
+routes and the Panel.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Store a skill, then execute the retrieved copy in a fresh context

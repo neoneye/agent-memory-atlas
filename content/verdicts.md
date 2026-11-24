@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 861 reports.**
+**This page covers all 862 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7933,3 +7933,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 13,525 lines of Python, most of it conversion between twelve tools; 35 commits from 10 July to 27 October 2026, tags v0.1.0 to v0.5.0; 169 unittest methods, 14 on the search path, run only by the tag-triggered publish workflow and not here. One mark: `negative_eval`. Nothing marks a recalled message as wrong.
 - Study when: you want recall over the session files coding agents already write, and need a model for reading each tool's branch structure.
 - Do not copy when: recall must stay inside one project, keep credentials out of the model's context, arrive without the agent asking, or rank across tools fairly.
+
+### [`team-agent-memory`](../systems/team-agent-memory/)
+- Best idea: **resolve the scope once and rewrite the request.** One middleware authenticates the user key, checks the named team and agent against the caller's membership and the agent's owner and visibility, defaults the user to the caller, and writes the resolved team, agent and user back into the body and the headers, so no handler can read an unauthorized value.
+- Second idea: every id a model returns is fenced against the ids it was shown. Supersession keeps only ids among the session atoms in the prompt, and dedup only ids among the scoped candidates, because the loader beneath both reads any atom in the department by id.
+- Biggest risk: **correction leaves no record and does not finish.** An atom revision replaces the row, the audit table covers credentials only, and a deleted atom's text is copied into a stale mark, served in its scene until L2 rewrites it, and kept in every earlier scene version.
+- Second risk: the read and write split is computed and ignored. `role_allows` returns `on_self` for every action, so any member of a shared agent can overwrite the persona every other member's recall injects, and hybrid recall skips the score threshold and injects up to five atoms whatever their relevance.
+- Most reusable component: `crates/memory-gateway/src/authz.rs` with `authorize_memory_scope` in `crates/memory-domain/src/meta/memory_access.rs:48-98`, and the scoped KNN with re-check in `crates/memory-infrastructure/src/sqlite/memory_store.rs:720-757`.
+- Maturity impression: Apache-2.0 from 0.5.3, after sixteen days under BSL 1.1; 53,803 lines of Rust and a 9,225-line TypeScript panel in 83 commits between 18 October and 13 November 2026; 334 Rust tests, 46 end-to-end, none run here. Three marks: `scope_enforced`, `human_review`, `negative_eval`.
+- Study when: you are putting one memory in front of several people's agents and need membership, ownership and private agents enforced on the server rather than trusted from the client.
+- Do not copy when: a fact must be provably gone after a delete, or you must show what the memory held before a revision.

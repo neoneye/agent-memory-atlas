@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Rust memory server
+for teams of agents that distils conversations into facts, scenes and a
+persona, authorizing every scope from a user key.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="TeamAgentMemory — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Rust memory
+server for teams of agents that distils conversations into facts, scenes
+and a persona, authorizing every scope from a user key.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TeamAgentMemory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Rust memory
+server for teams of agents that distils conversations into facts, scenes
+and a persona, authorizing every scope from a user key.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>TeamAgentMemory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "TeamAgentMemory",
+      "description": "A self-hosted Rust memory server for teams of agents that distils conversations into facts, scenes and a persona, authorizing every scope from a user key.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Team memory authorized from a user key,
+distilled from L0 to L3</p>
+          <h1>TeamAgentMemory</h1>
+          <p class="document-deck">A self-hosted Rust memory server for
+teams of agents that distils conversations into facts, scenes and a
+persona, authorizing every scope from a user key.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/hsuanshao/TeamAgentMemory">
+              <span>Source</span>
+              <strong>hsuanshao/TeamAgentMemory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/hsuanshao/TeamAgentMemory/commit/ef0cf52e2c39367f2ebbe1f7efc08115b2d6ff20" title="ef0cf52e2c39367f2ebbe1f7efc08115b2d6ff20">
+              <span>Analyzed revision</span>
+              <code>ef0cf52e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-24</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/hsuanshao--TeamAgentMemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>hsuanshao--TeamAgentMemory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+for the server from 0.5.3; MIT for the amem client and the agent
+plugins; the tags v0.4.0 to v0.5.2 carry BSL 1.1</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>53,803
+lines of Rust in 139 files across six crates; a TypeScript panel of
+9,225 lines in 101 files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>83
+commits from 18 October to 13 November 2026, 70 by one author, 11 by a
+second and 2 by dependabot; 15 tags from v0.1.1 to v0.5.3</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>334
+Rust test functions in 60 files, 46 of them end-to-end against a spawned
+server, and 71 panel tests; ci.yml runs the Postgres and Redis suites,
+which skip themselves without their URLs; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>TeamAgentMemory, which calls itself AgentMemory, is a self-hosted
+Rust server that gives a team's coding agents one long-term memory. It
+captures each conversation, has a model distil it into facts, scenes and
+a persona in the background, and injects what is relevant before every
+prompt. What is notable is the authorization layer: one middleware turns
+a user key into a resolved team, agent and user, and every read filters
+on that triple in SQL. What is weak is correction: a revised fact
+overwrites its row, no record of memory mutations is kept, and a deleted
+fact's text stays in the scene history it was distilled into.</p>
+<p>The layered design and much of the API (<code>atomic/update</code>,
+<code>scenario/write</code>, <code>core/write</code>,
+<code>recall</code>) follow <a
+href="../tencentdb-agent-memory/">TencentDB Agent Memory</a>, which the
+README credits as the source of the ideas while stating that no code is
+taken from it (<code>README.md:330</code>). Two differences matter. A
+caller here cannot assert its own scope, which there it could. And the
+append-only mutation journal that earns the TencentDB report its
+<code>audit_log</code> mark has no counterpart in this tree.</p>
+<p>Departments are separate databases. Inside one, conversations and
+facts belong to one user, while scenes and the persona belong to the
+agent and are shared by every member who uses it. The README states the
+trade-off: a shared agent's scenes and persona <em>"mix everyone's
+facts"</em>.</p>
+<p><strong>Licence.</strong> The licence changed twice in sixteen days,
+and six released tags keep a use-restricted one. Commit
+<code>5817f65</code> (21 October 2026) moved the server from MIT to BSL
+1.1, whose Additional Use Grant limits an organisation's production use
+to <em>"no more than one (1) Department and no more than ten (10)
+Members"</em>. Commit <code>56f7c7d</code> (4 November 2026) relicensed
+it from 0.5.3 under Apache-2.0. A reader who checks out any tag from
+<code>v0.4.0</code> to <code>v0.5.2</code> gets the BSL text, and
+<code>COMMERCIAL.md</code> says the shipped text is what counts. At this
+pin the tree agrees with itself: <code>LICENSE</code>,
+<code>NOTICE</code> and <code>Cargo.toml</code> say Apache-2.0, and
+<code>crates/memory-client/</code> and <code>clients/</code> each carry
+an MIT <code>LICENSE</code>.</p>
+<p>Three marks are earned: <code>scope_enforced</code> and
+<code>negative_eval</code> on the data plane, and
+<code>human_review</code> on extracted skill changes. Section 9 gives
+the reason for each of the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory starts as a <strong>conversation turn (L0)</strong>, stored
+verbatim after client-side and server-side secret redaction. It becomes
+a <strong>belief</strong> when the L1 pass has a model extract an atom
+from it: a short fact typed <code>episodic</code>, <code>persona</code>
+or <code>instruction</code>, with a priority and the ids of the messages
+it came from. An atom is served by recall as soon as it is stored.
+Nothing marks it as provisional.</p>
+<p>Atoms feed two shared layers per team and agent. <strong>Scenes
+(L2)</strong> are up to 15 Markdown documents a model maintains from new
+atoms, each recording which atoms it was built from. The <strong>persona
+(L3)</strong> is a model summary of the scenes. Both are append-only
+versions, and recall injects the persona and an index of the scenes.</p>
+<p>An atom stops being what it was in four ways:</p>
+<ul>
+<li><strong>A later turn supersedes it.</strong> Extraction is shown the
+session's ten newest episodic atoms and may name some as out of date;
+the new text replaces the old in place and the version increments
+(<code>crates/memory-application/src/pipeline/l1.rs:215-219</code>,
+<code>:364-414</code>).</li>
+<li><strong>Deduplication merges it.</strong> A model compares new atoms
+with up to five scoped hybrid hits each and answers store, update, merge
+or skip; a merge rewrites the first target and deletes the rest
+(<code>:302-361</code>).</li>
+<li><strong>A person edits or deletes it</strong> through
+<code>atomic/update</code> or <code>atomic/delete</code>.</li>
+<li><strong>Its agent is archived</strong>, which clears every layer for
+every user
+(<code>crates/memory-application/src/meta/agents.rs:247-263</code>).</li>
+</ul>
+<p>When an atom placed in a scene is rewritten or deleted, the scene is
+marked stale and the mark keeps the old text, so the next L2 run is told
+what to remove. Until then the scene keeps serving it. Old scene
+versions keep it for good.</p>
+<p>Skills take a separate path. With <code>require_approval</code> on,
+the default, a model's proposed skill change waits as a
+<code>Pending</code> proposal until a person applies or rejects it, and
+expires after 30 days.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the user key decides the scope before any handler runs; an atom is served once extracted and is revised in place; a deleted or rewritten atom leaves its text in a stale mark and in older scene versions; skill changes from the model wait for a person</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the user key decides the scope before any handler runs; an atom is served once extracted and is revised in place; a deleted or rewritten atom leaves its text in a stale mark and in older scene versions; skill changes from the model wait for a person
+flowchart TD
+    K[&quot;Request: user key,&lt;br/&gt;team_id, agent_id&quot;] --&gt; Z{&quot;authorize_memory_scope&lt;br/&gt;member? agent in team?&lt;br/&gt;private agent owner?&quot;}
+    Z -- refused --&gt; X[&quot;403 before any handler&quot;]
+    Z -- allowed --&gt; R[&quot;Body and headers rewritten&lt;br/&gt;to team / agent / user&quot;]
+    R --&gt; L0[(&quot;L0 turns&lt;br/&gt;one user&#39;s&quot;)]
+    L0 --&gt; L1[&quot;L1 model extraction&lt;br/&gt;supersedes: shown ids only&lt;br/&gt;dedup: scoped hits only&quot;]
+    L1 --&gt; A[(&quot;L1 atoms&lt;br/&gt;one user&#39;s, served at once&lt;br/&gt;revised in place&quot;)]
+    A --&gt; L2[&quot;L2 consolidation over&lt;br/&gt;every user of the agent&quot;]
+    L2 --&gt; S[(&quot;Scenes and persona&lt;br/&gt;team + agent&lt;br/&gt;append-only versions&quot;)]
+    D[&quot;atomic/update or delete&quot;] --&gt; M[&quot;Stale mark on the scene&lt;br/&gt;keeps the old text&quot;]
+    A ~~~ D
+    M --&gt; L2
+    S --&gt; RC[&quot;recall: caller&#39;s atoms&lt;br/&gt;+ shared persona&lt;br/&gt;+ scene index&quot;]
+    SK[&quot;Skill extraction&lt;br/&gt;server&#39;s model&quot;] --&gt; P[&quot;Proposal: pending&quot;]
+    RC ~~~ SK
+    P --&gt; H[&quot;Approve or reject:&lt;br/&gt;conversation&#39;s user,&lt;br/&gt;team admin, system admin&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Six crates in a layered workspace: <code>memory-domain</code>
+(policies), <code>memory-application</code> (use cases and ports),
+<code>memory-infrastructure</code> (SQLite, Postgres, Redis, the
+OpenAI-compatible and CLI model clients), <code>memory-gateway</code>
+(the axum <code>/v3</code> API), <code>memory-server</code>
+(configuration and wiring) and <code>memory-client</code> (the
+<code>amem</code> CLI and its redaction crate). <code>panel/</code> is a
+Hono backend with a React front end.</p>
+<p><strong>Persistence.</strong> SQLite is the default:
+<code>&lt;data_dir&gt;/departments/&lt;id&gt;/memory.db</code>, one file
+per department, opened lazily through an LRU pool
+(<code>crates/memory-infrastructure/src/sqlite/db.rs:92-161</code>).
+FTS5 indexes conversations, atoms and skills over CJK bigrams and Latin
+words; sqlite-vec indexes atom embeddings when it loads. PostgreSQL is
+the scale-out option: one schema per department, named from a hash of
+its id, with <code>tsvector</code> columns and a pgvector HNSW index
+(<code>crates/memory-infrastructure/src/postgres/db.rs:1-10</code>).
+Redis is optional and holds the job queue, locks and pipeline state.</p>
+<p><strong>Background work</strong> runs in the server process: L1, L2
+and L3 jobs, an embedding backfill for atoms stored without a vector,
+skill extraction, a dead-letter sweeper and proposal expiry. A failed
+job retries and then dead-letters; the Panel lists dead letters and a
+system admin can redrive them.</p>
+<p><strong>Model calls</strong> go to any OpenAI-compatible endpoint, or
+to a local CLI (<code>claude</code>, <code>codex</code>,
+<code>agy</code>) run as a subprocess. The core image bundles the
+<code>claude</code> and <code>agy</code> CLIs.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>./install.sh</code> asks for a storage backend, a coordination
+backend, a model and an exposure mode, writes <code>.env</code> with
+mode 600, starts Docker Compose and creates the first admin. The minimum
+is one container with SQLite and a model endpoint. Embeddings are
+optional; without them recall is keyword only. A model is required for
+anything past L0: without one, turns are stored and nothing is
+distilled.</p>
+<p>The SQLite files can be inspected by hand. The server refuses to bind
+a non-loopback address without <code>AGENT_MEMORY_API_KEY</code>
+(<code>crates/memory-server/src/config.rs:846-850</code>). On loopback
+with no key, the operator routes, <code>department/destroy</code> among
+them, are open to any local process
+(<code>crates/memory-gateway/src/router.rs:26-56</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Authorization.</strong>
+<code>crates/memory-gateway/src/authz.rs:81-151</code>
+(<code>authorize</code>),
+<code>crates/memory-domain/src/meta/memory_access.rs:48-98</code>
+(<code>authorize_memory_scope</code>) and <code>:108-141</code>
+(<code>authorize_proposal_review</code>); the trust zones in
+<code>crates/memory-gateway/src/router.rs:338-413</code>.</li>
+<li><strong>Capture.</strong>
+<code>crates/memory-gateway/src/handlers/memory.rs:106</code>
+(<code>conversation_add</code>) and <code>:650</code>
+(<code>session_add</code>); the client side in
+<code>crates/memory-client/src/capture.rs</code> and
+<code>hooks.rs:350-426</code>.</li>
+<li><strong>L1.</strong>
+<code>crates/memory-application/src/pipeline/l1.rs</code>:
+<code>extract</code> <code>:117-165</code>, <code>to_atoms</code>
+<code>:190-238</code>, <code>reconcile_and_store</code>
+<code>:242-298</code>, <code>dedup</code> <code>:302-361</code>,
+<code>merge_into_targets</code> <code>:364-414</code>,
+<code>store</code> <code>:418</code>.</li>
+<li><strong>L2 and L3.</strong>
+<code>crates/memory-application/src/pipeline/l2.rs</code> and
+<code>l3.rs</code>; scene-atom links and stale marks in
+<code>crates/memory-infrastructure/src/sqlite/scene_links.rs</code>.</li>
+<li><strong>Storage.</strong> Schema in
+<code>crates/memory-infrastructure/src/sqlite/schema.rs:10-125</code>;
+reads and writes in <code>sqlite/memory_store.rs</code>
+(<code>atom_where</code> <code>:380</code>, <code>upsert_filtered</code>
+<code>:411-470</code>, <code>keyword_search</code> <code>:540</code>,
+<code>vector_search</code> <code>:576</code>, <code>knn_search</code>
+<code>:724</code>, <code>delete_atoms</code> <code>:799</code>); the
+Postgres equivalents beside them.</li>
+<li><strong>Recall.</strong>
+<code>crates/memory-application/src/memory/recall.rs:96-191</code>,
+<code>search.rs:38-82</code> (hybrid and fallback), RRF in
+<code>crates/memory-domain/src/retrieval.rs:41</code>.</li>
+<li><strong>Skills.</strong>
+<code>crates/memory-application/src/skill/service.rs</code> (CRUD;
+visibility at <code>:445-473</code>) and
+<code>skill/extraction.rs</code> (proposals at <code>:530-559</code>,
+<code>decide</code> at <code>:682-757</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The department database holds the memory tables
+(<code>crates/memory-infrastructure/src/sqlite/schema.rs:10-82</code>):</p>
+<ul>
+<li><code>conversations</code>: id, <code>team_id</code>,
+<code>agent_id</code>, <code>user_id</code>, <code>task_id</code>,
+<code>session_id</code>, role, content, <code>timestamp_ms</code> (the
+client's) and <code>recorded_at_ms</code> (the server's), version.</li>
+<li><code>atoms</code>: the same four scope columns,
+<code>atom_type</code>, content, <code>background</code> (the scene name
+extraction gave it), priority, <code>source_ids</code>, version,
+<code>created_at_ms</code>, <code>updated_at_ms</code> and an embedding.
+No status column.</li>
+<li><code>scenes</code> and <code>scene_versions</code>: one row per
+scene keyed on team and agent, and one row per version with
+<code>op</code> (<code>create</code>, <code>update</code>,
+<code>merge</code>, <code>retire</code>), slug, summary, heat, body,
+parents and author. <code>persona_versions</code> has the same shape for
+L3.</li>
+<li><code>scene_atoms</code>: which atom each scene version holds, with
+the atom's user and a state; at most one current scene per atom.</li>
+<li><code>scene_stale</code>: why a scene may be out of date, with the
+atom, a reason, the atom's text before the change and an attempt
+count.</li>
+</ul>
+<p>Beside them sit the metadata tables (users, digested keys, teams,
+members, agents with an owner and a <code>visibility</code>), the skills
+tables with a head flag and one row per version, the skill extraction
+tasks that carry proposals in their <code>candidates</code> document,
+<code>generation_logs</code> with the ids each pipeline run read and
+wrote, and redaction rules.</p>
+<p><strong>Scope.</strong> Every L0 and L1 row carries team, agent and
+user; scenes, persona and skills carry team and agent.
+<code>task_id</code> is stored and filterable and is not an isolation
+boundary (<code>crates/memory-domain/src/scope.rs:53-61</code>).</p>
+<p><strong>Time.</strong> <code>conversations</code> keeps the client's
+message time beside the server's record time. Atoms keep creation and
+update times only, and a revision replaces the row
+(<code>INSERT OR REPLACE</code>,
+<code>crates/memory-infrastructure/src/sqlite/memory_store.rs:435-454</code>),
+so the version number is the only trace of an atom's history outside a
+stale mark.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>recall</code> strips any block an earlier recall injected from
+the query, then runs the configured strategy over the caller's atoms
+(<code>crates/memory-application/src/memory/recall.rs:110-148</code>).</p>
+<p><strong>Hybrid</strong> is the default. FTS5 BM25
+(<code>ts_rank_cd</code> on Postgres) and vector search each return
+three times the limit, keyword scores are normalised to the best hit,
+and the two lists are fused by reciprocal rank with k = 60
+(<code>search.rs:38-82</code>, <code>:120-146</code>). Without an
+embedder, or when embedding fails, the mode degrades to keyword only.
+sqlite-vec applies the scope inside the KNN scan and the join back to
+<code>atoms</code> re-checks it, so nearer neighbours from another scope
+cannot crowd out the caller's
+(<code>memory_store.rs:720-757</code>).</p>
+<p><strong>The score threshold does not apply to hybrid
+results.</strong> The comment reads <em>"Hybrid ranks are already a
+consensus"</em>, and the code returns the top results whatever their
+score; a corpus no larger than the limit returns everything
+(<code>recall.rs:174-189</code>). Every prompt therefore receives up to
+five atoms, related or not.</p>
+<p>The result has two blocks. Atoms go into
+<code>&lt;relevant-memories&gt;</code>, prepended to the user turn. The
+persona and a scene index (filename, summary, heat, update time) go into
+<code>&lt;user-persona&gt;</code> and
+<code>&lt;scene-navigation&gt;</code>, appended to the system context,
+each with a note that it is data and not instructions. Any
+<code>&lt;</code> in stored text that could open a tag is escaped at
+output, including one followed by zero-width or bidi characters
+(<code>:219-235</code>).</p>
+<p>Per-memory and total character caps exist and default to 0, which
+means unbounded
+(<code>crates/memory-server/src/config.rs:419-430</code>). The Claude
+Code hook trims to 9,500 characters for the host's limit and sends the
+system-context block every 20 prompts by default.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Capture.</strong> At Stop, the <code>amem</code> hooks read
+the host's transcript, redact secrets on the client, and post new turns
+to <code>conversation/add</code> and tool-heavy turns to
+<code>skill/conversation/add</code>. When the server is unreachable the
+turns wait in a local queue. The server redacts again under the rules
+for every team, the team and the user before storing.</p>
+<p><strong>L1 extraction.</strong> A new session runs L1 after 1, 2 and
+4 rounds, then every 5, or after 600 seconds idle. The model sees the
+new messages, the previous scene name and the session's newest episodic
+atoms, and returns memories grouped by scene. A memory below its type's
+minimum priority is dropped, and at most 20 are kept per run.</p>
+<p><strong>Two places where model output names existing rows, and both
+are fenced.</strong> A <code>supersedes</code> id is kept only if it was
+among the atoms the model was shown (<code>l1.rs:215-219</code>). A
+dedup target id is kept only if it was among the scoped candidates
+(<code>:352-357</code>). <code>merge_into_targets</code> loads each
+target by id with no scope check (<code>:373</code>), so those two
+filters are what keeps an invented id from rewriting another user's
+atom.</p>
+<p><strong>L2 and L3.</strong> L2 waits 90 seconds after L1 and at least
+900 seconds since its last run, with a sweep every 3,600 seconds. It is
+given the new atoms, up to ten stale scenes and the current scene list,
+and returns operations. It may create one scene per run, up to 15 in
+all, and an operation whose body is empty or <code>[DELETED]</code> is
+skipped (<code>l2.rs:359-365</code>). L3 regenerates the persona on a
+cold start, every 50 new memories, or when L2 asks.</p>
+<p><strong>API writes.</strong> A member may update or delete their own
+atoms, delete their own conversations, and write the agent's scenes and
+persona. Each write is redacted.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The agent never blocks on a model: capture is an HTTP post, and
+extraction runs in a job. A fact is retrievable once its L1 job
+completes, which is within one round of the threshold or ten minutes
+after a session goes idle, plus model latency. L2 lags L1 by at least 90
+seconds. No pass rereads the whole store: L2 works from new atoms and
+stale marks, and the embedding backfill reads only atoms missing a
+vector. Recall adds one embedding call per prompt when vectors are
+on.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent's reach is deliberately small. Hooks recall on each prompt
+and capture at Stop for Claude Code, Codex and Antigravity. The
+<code>amem mcp</code> server exposes one tool,
+<code>memory_recall</code>
+(<code>crates/memory-client/src/mcp.rs:15-29</code>), and the Hermes
+provider one, <code>agentmemory_search</code>. No shipped client writes
+a memory directly, reads a skill or touches a proposal; skills are
+reached over HTTP and through the Panel.</p>
+<p>The client holds the user key, department, team and agent in its
+config or, for the MCP server, in environment variables
+(<code>clients/claude-code/.mcp.json</code>). The user id is never sent:
+the server derives it from the key.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="scope-is-decided-once-before-the-handler">Scope is decided once,
+before the handler</h3>
+<p><code>require_user</code> reads the body, takes the requested team,
+agent and user from it or from headers, and calls
+<code>authorize_memory_scope</code> with the caller loaded from the key
+(<code>crates/memory-gateway/src/authz.rs:81-121</code>). The policy
+refuses an agent outside the team, even for a system admin, then a
+non-member or removed member, an archived agent, and another member's
+private agent unless the caller is a team admin. <code>user_id</code>
+defaults to the caller, and a member naming anyone else is refused
+(<code>memory_access.rs:53-98</code>). The middleware then writes the
+resolved values back into the body and the <code>x-memory-*</code>
+headers, so a handler reading either sees only the authorized scope
+(<code>authz.rs:123-144</code>).</p>
+<p>Three limits:</p>
+<ul>
+<li><strong>System admins skip the membership and role checks</strong>,
+and may read or write any user's conversations and facts by naming them.
+The collaboration guide says so.</li>
+<li><strong>Read and write are classified and not used.</strong>
+<code>action_for</code> sorts paths by suffix, and
+<code>role_allows</code> returns <code>on_self</code> for every role and
+action (<code>memory_access.rs:37-39</code>). Any member who may read an
+agent's shared persona may also overwrite it through
+<code>core/write</code>. The Panel's admin-only list is the Panel's own
+rule; Core accepts the call.</li>
+<li><strong>The shared layers are a designed leak.</strong> L2 reads
+every user's atoms for the agent and writes scenes every member reads.
+<code>scene_atom_view</code> hides other users' atoms and counts
+them.</li>
+</ul>
+<p><code>stats/overview</code> returns department-wide counts to any
+member (<code>crates/memory-gateway/src/handlers/ops.rs:310-320</code>).
+It carries no content.</p>
+<h3 id="correction-leaves-text-behind">Correction leaves text
+behind</h3>
+<p>A deletion reaches the derived layer by marking.
+<code>delete_atoms</code> copies each doomed atom's text, redacted under
+the current rules, into a <code>scene_stale</code> row before it deletes
+the atom (<code>memory_store.rs:799-845</code>). The next L2 run is
+shown the mark and rewrites the scene. The design propagates a delete
+that a consolidation pass could not otherwise see, and it has two
+costs.</p>
+<p>Until L2 runs, the scene body still states the deleted fact and is
+served. After it runs, earlier <code>scene_versions</code> rows still
+hold it, and nothing deletes a scene version short of clearing the whole
+agent. A mark L2 fails to clear within its attempts stays for a person,
+and recall serves the scene in the meantime, since
+<code>scene_heads</code> filters on <code>op &lt;&gt; 'retire'</code>
+and nothing else.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> Team, agent
+and user are stored on every L0 and L1 row and applied in SQL on
+keyword, vector and KNN reads, resolved from the key.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Three
+committed tests require another scope's rows to be absent from a
+populated result, two of them with exact lists.</li>
+<li><strong><code>human_review</code> — earned, on skills.</strong> The
+server's model proposes; a person authenticated by key decides;
+<code>decided_by</code> is set from that key; the agent's declared tools
+carry no verb; and the skill routes serve only what was applied. The
+conversation's own user may approve alone, so one member's procedure can
+enter a team-wide skill list on that member's word, and the key that
+approves sits in the agent's environment.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> The audit table
+records refused credentials, lockouts and keys issued outside the Panel
+(<code>crates/memory-application/src/ports/audit.rs:15-22</code>).
+Memory mutations have no record: atoms are replaced in place, a delete
+leaves only a stale mark, and <code>generation_logs</code> names the ids
+a pipeline run touched, not API edits or what changed. Scene and persona
+versions are a history of the object.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> Atoms carry no
+status. Proposal states live on a queue item, not on a served memory,
+and stale marks withhold nothing.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Nothing is keyed
+on a rejected value. A stale mark keeps the deleted text and is cleared
+when L2 resolves it; a rejected proposal is keyed on its task and index,
+so the same change can be proposed again.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> The client's
+message time and the server's record time sit on L0 turns; atoms, the
+beliefs, have record times only.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading.</p>
+<p>The end-to-end suite spawns the server with a fake model endpoint and
+drives it over HTTP: distillation through every layer, scene versions
+across merges, escaping in recall, the private-agent rule, redaction on
+every write path, skill proposals, department destruction, dead letters,
+supersession and credential throttling.
+<code>a_private_agent_is_its_owners</code> checks that eight routes
+refuse a second member, and that the owner's skill id is absent from
+that member's list and search while a team admin's list contains it
+(<code>crates/memory-server/tests/e2e.rs:606-771</code>).
+<code>other_users_cannot_read_or_change_foreign_data</code> checks that
+a non-member gets 403 on recall and skill reads
+(<code>:2358-2428</code>).</p>
+<p>The store tests carry the two exact negatives.
+<code>other_scopes_are_never_returned_even_when_nearer</code> inserts
+120 nearer vectors in three foreign scopes and requires the result to be
+<code>["alice-2", "alice-1"]</code>
+(<code>crates/memory-infrastructure/tests/sqlite_vec.rs:150-201</code>);
+its guard asserts that sqlite-vec loaded rather than skipping. The
+conversation test stores one sentence for alice and for bob and requires
+one hit, <code>m1</code> (<code>sqlite_stores.rs:75-118</code>).</p>
+<p>The Postgres and Redis suites, and two end-to-end cases, return early
+with <code>eprintln!("skipping: ...")</code> when their URL is unset.
+<code>ci.yml</code> starts both services and sets both URLs, so they run
+in CI and pass without asserting anything on a machine that has
+neither.</p>
+<p>There is no retrieval-quality evaluation, no benchmark and no paper
+reference in the tree. Tests worth adding: a deleted atom absent from
+recall and from its scene after L2; a scene or persona write by a member
+who is not the owner of a shared agent; a supersedes or dedup id from
+another scope being dropped.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Resolve the scope once and rewrite the request.</strong> A
+middleware that replaces the caller's team, agent and user with the
+authorized ones, in the body and in the headers, leaves no handler able
+to read an unauthorized value.</li>
+<li><strong>Put scope inside the vector scan, then re-check it.</strong>
+Filtering after an over-fetch loses the caller's rows when other scopes
+are nearer, and the test that proves it is cheap to write.</li>
+<li><strong>Fence every id a model returns against the ids it was
+shown.</strong> Both supersession and dedup do it here, and the loader
+beneath them has no scope check.</li>
+<li><strong>Tell the derived layer what was removed.</strong> A stale
+mark carrying the old text lets a consolidation pass delete a fact it
+cannot otherwise see.</li>
+<li><strong>Escape at output, not at storage.</strong> Stored text stays
+as written, and no stored text can close the block it is injected
+in.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Revising beliefs in place with no record.</strong> A version
+counter with no prior value cannot say what was believed before.</li>
+<li><strong>An append-only derived layer under a delete.</strong> A
+scene history that keeps every version keeps every deleted fact that
+reached it.</li>
+<li><strong>A relevance threshold one mode skips.</strong> Fusion
+returns ranks, and a rank always has a first place.</li>
+<li><strong>Computing read and write and checking neither.</strong> Use
+the action or drop it, so the next reader does not assume it is
+enforced.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a team that wants coding agents to share what they learn,
+runs its own model endpoint, and accepts that the shared scenes and
+persona carry paraphrases of every member's facts. The authorization is
+the strongest part and will stand up to a security review. The operating
+cost is low for what it does: one container and SQLite to start.</p>
+<p>It does not fit a reader who must show what the memory believed on an
+earlier date, or make a fact disappear. Atoms are overwritten, deleted
+text survives in scene versions, and the only audit is of credentials. A
+deployment where a member's facts must not reach colleagues in any form
+needs one private agent per person, which the README offers and which
+gives up the shared layer.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should a stale scene be withheld from recall, or flagged in the
+navigation, until L2 or a person resolves it?</li>
+<li>Is self-approval by the conversation's user intended for
+team-visible agents, where an approved skill reaches every member?</li>
+<li>Which client is meant to read skills? No shipped client calls a
+skill read route.</li>
+<li>Is <code>role_allows</code> meant to gain per-action rules, given
+that the Panel already treats persona and scene writes as
+admin-only?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/memory-gateway/src/authz.rs</code></td>
+<td>The data-plane authorization middleware</td>
+</tr>
+<tr>
+<td><code>crates/memory-domain/src/meta/memory_access.rs</code></td>
+<td>Scope and proposal-review policies</td>
+</tr>
+<tr>
+<td><code>crates/memory-gateway/src/router.rs</code></td>
+<td>Routes and trust zones</td>
+</tr>
+<tr>
+<td><code>crates/memory-infrastructure/src/sqlite/schema.rs</code></td>
+<td>Department schema</td>
+</tr>
+<tr>
+<td><code>crates/memory-infrastructure/src/sqlite/memory_store.rs</code></td>
+<td>L0 to L3 storage, search and delete</td>
+</tr>
+<tr>
+<td><code>crates/memory-infrastructure/src/sqlite/db.rs</code></td>
+<td>One database per department</td>
+</tr>
+<tr>
+<td><code>crates/memory-infrastructure/src/postgres/db.rs</code></td>
+<td>One schema per department</td>
+</tr>
+<tr>
+<td><code>crates/memory-application/src/pipeline/l1.rs</code></td>
+<td>Extraction, supersession, dedup</td>
+</tr>
+<tr>
+<td><code>crates/memory-application/src/pipeline/l2.rs</code></td>
+<td>Scene consolidation and stale marks</td>
+</tr>
+<tr>
+<td><code>crates/memory-application/src/memory/recall.rs</code></td>
+<td>Recall assembly and escaping</td>
+</tr>
+<tr>
+<td><code>crates/memory-application/src/memory/search.rs</code></td>
+<td>Hybrid search and fallback</td>
+</tr>
+<tr>
+<td><code>crates/memory-application/src/skill/extraction.rs</code></td>
+<td>Skill proposals and decisions</td>
+</tr>
+<tr>
+<td><code>crates/memory-application/src/audit.rs</code></td>
+<td>Credential throttling and audit</td>
+</tr>
+<tr>
+<td><code>crates/memory-client/src/mcp.rs</code></td>
+<td>The one-tool MCP server</td>
+</tr>
+<tr>
+<td><code>crates/memory-server/tests/e2e.rs</code></td>
+<td>End-to-end suite</td>
+</tr>
+<tr>
+<td><code>crates/memory-infrastructure/tests/sqlite_vec.rs</code></td>
+<td>KNN scope test</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>The audit log records credential events only.</strong>
+<code>git grep -n -E 'AuditKind::[A-Z]' -- crates ':!*tests*'</code>
+returns <code>CredentialRejected</code>, <code>SourceLocked</code> and
+<code>KeyIssued</code>, in
+<code>crates/memory-application/src/audit.rs</code> and
+<code>crates/memory-gateway/src/handlers/meta.rs:649</code>.</li>
+<li><strong>Nothing deletes a generation log.</strong>
+<code>git grep -n -E 'generation_logs|generation_refs' -- crates</code>
+piped to <code>grep -i -E 'delete|truncate|drop'</code> returns nothing;
+<code>git grep -n -E 'INSERT INTO generation_logs' -- crates</code>
+matches
+<code>crates/memory-infrastructure/src/sqlite/pipeline_store.rs:476</code>.</li>
+<li><strong>Recall does not consult stale marks.</strong>
+<code>git grep -n -E 'stale' -- crates/memory-application/src/memory/recall.rs</code>
+returns nothing; the same pattern matches 17 lines of
+<code>crates/memory-application/src/memory/service.rs</code>.</li>
+<li><strong>"Tombstone" names a skipped L2 operation.</strong>
+<code>git grep -n -i 'tombstone' -- crates</code> returns
+<code>is_tombstone</code> in
+<code>crates/memory-domain/src/profile.rs:522</code>, its test, and its
+use at
+<code>crates/memory-application/src/pipeline/l2.rs:363</code>.</li>
+<li><strong>No shipped client reads a skill.</strong>
+<code>git grep -n -E 'skill/' -- crates/memory-client clients</code>
+returns only <code>skill/conversation/add</code>, in
+<code>crates/memory-client/src/capture.rs</code>.</li>
+<li><strong>One tool per agent surface.</strong>
+<code>git grep -n -E '"name": "' -- crates/memory-client/src/mcp.rs</code>
+returns <code>memory_recall</code> and the server name;
+<code>git grep -n 'agentmemory_search' -- clients/hermes</code> returns
+the Hermes tool.</li>
+<li><strong>The role rule ignores the action.</strong>
+<code>git grep -n -A3 'fn role_allows' -- crates/memory-domain/src/meta/memory_access.rs</code>
+shows the body <code>on_self</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- . ':!panel/package-lock.json'</code>
+returns nothing; <code>git grep -n -i 'tencentdb' -- README.md</code>
+matches line 330.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-24</strong> — <a
+href="https://github.com/hsuanshao/TeamAgentMemory/commit/ef0cf52e2c39367f2ebbe1f7efc08115b2d6ff20"><code class="commit-id" title="ef0cf52e2c39367f2ebbe1f7efc08115b2d6ff20">ef0cf52e…</code></a>.
+First reading, from a full clone at the head of <code>main</code>.
+Screened first: five auto-run surfaces, all the Claude Code plugin —
+<code>.claude-plugin/marketplace.json</code>,
+<code>clients/claude-code/.claude-plugin/plugin.json</code>,
+<code>clients/claude-code/.mcp.json</code> (starts
+<code>amem mcp</code>) and <code>clients/claude-code/hooks/</code> with
+its <code>hooks.json</code> (runs <code>amem</code> on SessionStart,
+UserPromptSubmit and Stop); nothing inside the seven-day cooldown; no
+build-time execution; three unpinned panel manifests, two without a
+lockfile; no submodules. Docs were read as data. Nothing was installed,
+built or run, and the test counts were not run. Three marks:
+<code>scope_enforced</code>, <code>human_review</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

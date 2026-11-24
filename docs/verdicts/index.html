@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 861 reports.</strong></p>
+<p><strong>This page covers all 862 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35429,6 +35429,46 @@ structure.</li>
 <li>Do not copy when: recall must stay inside one project, keep
 credentials out of the model's context, arrive without the agent asking,
 or rank across tools fairly.</li>
+</ul>
+<h3 id="team-agent-memory"><a
+href="../systems/team-agent-memory/"><code>team-agent-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>resolve the scope once and rewrite the
+request.</strong> One middleware authenticates the user key, checks the
+named team and agent against the caller's membership and the agent's
+owner and visibility, defaults the user to the caller, and writes the
+resolved team, agent and user back into the body and the headers, so no
+handler can read an unauthorized value.</li>
+<li>Second idea: every id a model returns is fenced against the ids it
+was shown. Supersession keeps only ids among the session atoms in the
+prompt, and dedup only ids among the scoped candidates, because the
+loader beneath both reads any atom in the department by id.</li>
+<li>Biggest risk: <strong>correction leaves no record and does not
+finish.</strong> An atom revision replaces the row, the audit table
+covers credentials only, and a deleted atom's text is copied into a
+stale mark, served in its scene until L2 rewrites it, and kept in every
+earlier scene version.</li>
+<li>Second risk: the read and write split is computed and ignored.
+<code>role_allows</code> returns <code>on_self</code> for every action,
+so any member of a shared agent can overwrite the persona every other
+member's recall injects, and hybrid recall skips the score threshold and
+injects up to five atoms whatever their relevance.</li>
+<li>Most reusable component:
+<code>crates/memory-gateway/src/authz.rs</code> with
+<code>authorize_memory_scope</code> in
+<code>crates/memory-domain/src/meta/memory_access.rs:48-98</code>, and
+the scoped KNN with re-check in
+<code>crates/memory-infrastructure/src/sqlite/memory_store.rs:720-757</code>.</li>
+<li>Maturity impression: Apache-2.0 from 0.5.3, after sixteen days under
+BSL 1.1; 53,803 lines of Rust and a 9,225-line TypeScript panel in 83
+commits between 18 October and 13 November 2026; 334 Rust tests, 46
+end-to-end, none run here. Three marks: <code>scope_enforced</code>,
+<code>human_review</code>, <code>negative_eval</code>.</li>
+<li>Study when: you are putting one memory in front of several people's
+agents and need membership, ownership and private agents enforced on the
+server rather than trusted from the client.</li>
+<li>Do not copy when: a fact must be provably gone after a delete, or
+you must show what the memory held before a revision.</li>
 </ul>
         </article>
       </div>
