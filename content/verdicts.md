@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 858 reports.**
+**This page covers all 859 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7902,3 +7902,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 38,723 lines of Python under `src/` and 61,334 of tests; 1,821 commits from 21 March to 19 November 2026, almost all from one author and bots; 14 tags; 3,252 test functions in CI with an 80% coverage floor, none run here. Two marks: `audit_log`, `negative_eval`.
 - Study when: you are building shared team memory over MCP and want a benchmark discipline and a read filter that survives graph expansion.
 - Do not copy when: projects must be isolated from each other, a retraction has to hold against a later restatement, or review has to be a person's.
+
+### [`gsw-memory`](../systems/gsw-memory/)
+- Best idea: **store the unanswered question.** The operator writes `None` for a semantic role the chunk has not filled, and the reconciler offers those open questions to the model when a later chunk mentions a linked entity, so a gap is a record that a later document can close.
+- Second idea: questions as the index unit. Panini retrieves question-answer pairs hop by hop with a beam of five and a geometric-mean chain score, and its paper reports 319.79 average answer-context tokens against 705.27 for chunk retrieval.
+- Biggest risk: **the default reconciler merges on name alone.** `ExactMatchStrategy` pairs every entity with the same cleaned name from another chunk and nothing verifies, so two people with one name become one entity with one summary; the embedding alternative's verifier accepts "strongly related" pairs as matches.
+- Second risk: question resolution writes to any question id the model returns, answered ones included, and the space-time linker spends one LLM call per chunk on output no code reads, the configuration the paper's own ablation scores at 0.811 F1 against 0.850.
+- Most reusable component: the extraction prompts and output schema in `src/gsw_memory/prompts/operator_prompts.py:40-320`, and the open-question collection in `src/gsw_memory/memory/reconciler_utils/matching.py:371-476`.
+- Maturity impression: MIT since 10 November 2026; 11,405 lines of Python under `src`, 3,726 of them prompts, with the Panini path in playground scripts that point at hard-coded data paths; 24 commits by one author between 13 February and 13 November 2026; 56 unit tests, none on the reconciler, none run here. No marks.
+- Study when: you want a structured episodic index over a fixed narrative corpus, or a question-answer-pair representation for multi-hop retrieval.
+- Do not copy when: memory must grow one document at a time, be corrected, or keep two people with one name apart.

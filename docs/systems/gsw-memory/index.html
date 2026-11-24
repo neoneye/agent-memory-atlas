@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A research pipeline that turns
+documents into per-chunk networks of actors, roles and verb-phrase
+questions, reconciles them into JSON workspaces, and answers from entity
+summaries.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="GSW Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A research pipeline that
+turns documents into per-chunk networks of actors, roles and verb-phrase
+questions, reconciles them into JSON workspaces, and answers from entity
+summaries.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GSW
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A research pipeline that
+turns documents into per-chunk networks of actors, roles and verb-phrase
+questions, reconciles them into JSON workspaces, and answers from entity
+summaries.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>GSW Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "GSW Memory",
+      "description": "A research pipeline that turns documents into per-chunk networks of actors, roles and verb-phrase questions, reconciles them into JSON workspaces, and answers from entity summaries.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Episodic workspace of actors, roles and
+question-answer pairs, built per corpus</p>
+          <h1>GSW Memory</h1>
+          <p class="document-deck">A research pipeline that turns
+documents into per-chunk networks of actors, roles and verb-phrase
+questions, reconciles them into JSON workspaces, and answers from entity
+summaries.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/roychowdhuryresearch/gsw-memory">
+              <span>Source</span>
+              <strong>roychowdhuryresearch/gsw-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/roychowdhuryresearch/gsw-memory/commit/eb2ef0df8030dca2acb1d6ef61377194c0b5ff69" title="eb2ef0df8030dca2acb1d6ef61377194c0b5ff69">
+              <span>Analyzed revision</span>
+              <code>eb2ef0df…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-24</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/roychowdhuryresearch--gsw-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>roychowdhuryresearch--gsw-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+in a LICENSE file added on 10 November 2026; pyproject.toml names no
+licence</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>11,405
+lines of Python in 42 files under src, 3,726 of them prompt templates;
+8,660 lines in 15 playground scripts that hold the Panini path; 2,256 in
+two baselines</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>24
+commits by one author from 13 February to 13 November 2026; no tag; 15
+other branches on the remote, not read</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>56
+test functions in four files on the models, chunking, parsing, the query
+matcher and the BM25 tools; none constructs a Reconciler; ci.yml runs
+them; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>GSW Memory is the code for two papers from UCLA's Roychowdhury group:
+Generative Semantic Workspaces, which turns a narrative into a network
+of actors, roles, states and verb-phrase questions, and Panini, which
+answers multi-hop questions by chaining those question-answer pairs. The
+idea worth taking is the <strong>unanswered question as a stored
+object</strong>: the extractor writes <code>None</code> for a role the
+text has not filled, and the reconciler asks a later chunk to fill it.
+The weakness is the reconciler around that idea. Its default strategy
+merges any two entities with the same cleaned name from different chunks
+without a check, and the space-time step the paper credits is computed
+and never applied.</p>
+<p>It is a corpus index, not an agent's running memory. A run builds the
+workspace from a list of documents and writes it to JSON. The loaders
+reload it so later runs can skip the expensive stages, and no path adds
+a document to a saved workspace. It is in scope on the same terms as <a
+href="../hipporag/">HippoRAG</a>: the workspace outlives the process,
+its entities have identities, and the reconciler revises what it
+holds.</p>
+<p>The reconciler revises in three ways, each unguarded. It merges
+entities by name. It fills an unanswered question with whatever the
+model returns, and the write accepts any question id in the response,
+answered ones included. It keeps a contradicting later answer as a
+second question with the same text, with nothing marking the pair.</p>
+<p>Panini, the second paper, lives in <code>playground/</code> and skips
+the reconciler: one workspace per document, cross-document links found
+at read time by beam search over question-answer pairs. The code matches
+the paper's description of its read path, including the geometric-mean
+chain score.</p>
+<p><strong>Licence.</strong> The MIT grant arrived on 10 November 2026,
+nine months after the first public commit on 13 February 2026: every
+checkout before <code>9f34cec</code> has no licence file, and
+<code>pyproject.toml</code> still names none. The 20-chapter Tulving
+Bench book and its questions ship inside the package under
+<code>src/gsw_memory/benchmarks/tulvingbench/</code> with no statement
+of where they come from or on what terms.</p>
+<p>No capability mark is earned. Section 9 gives the reason for
+each.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a semantic role filled by an entity, a literal,
+or nothing yet</strong>. The operator reads one chunk and writes
+entities, each with roles and states, and verb phrases, each with
+questions such as <em>"Who apprehended the suspect?"</em> whose answers
+are entity ids, <code>TEXT:</code> literals or <code>None</code>
+(<code>src/gsw_memory/prompts/operator_prompts.py:282-312</code>). Every
+role and question carries the <code>chunk_id</code> it came from
+(<code>src/gsw_memory/memory/models.py:13-66</code>).</p>
+<p>A chunk's network becomes part of the workspace when the reconciler
+folds it in. <code>Reconciler.reconcile</code> is the paper's
+<em>GSW_new = Reconciler(GSW_old, new_context)</em>, applied chunk by
+chunk in one process
+(<code>src/gsw_memory/memory/reconciler.py:68-138</code>):</p>
+<ul>
+<li><strong>An entity is merged</strong> into an earlier one when the
+strategy pairs them. The newer roles join the older entity and answers
+are rewritten to the older id
+(<code>src/gsw_memory/memory/models.py:272-302</code>).</li>
+<li><strong>A verb phrase is merged</strong> when its phrase text
+matches and one question pair shares an answer. A <code>None</code>
+answer is filled from the newer copy; a different answer to the same
+question text is appended as another question
+(<code>src/gsw_memory/memory/reconciler_utils/matching.py:241-369</code>).</li>
+<li><strong>An unanswered question is resolved</strong> when the new
+chunk mentions an entity it links to. The model reads the chunk and
+returns question ids with answers
+(<code>matching.py:371-547</code>).</li>
+</ul>
+<p>Nothing leaves the workspace. A wrong merge, a wrong fill or a stale
+answer stays until the next run rebuilds the workspace from the operator
+outputs. There is no status, confidence or validity time on any node;
+the only temporal signal is the chunk order the summaries are sorted
+by.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — documents become per-chunk networks, the reconciler merges by name and fills open questions in one process, the space-time output goes to a sidecar nothing reads, and Panini skips the reconciler</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: documents become per-chunk networks, the reconciler merges by name and fills open questions in one process, the space-time output goes to a sidecar nothing reads, and Panini skips the reconciler
+flowchart TD
+    D[&quot;Documents&quot;] --&gt; O[&quot;Operator, one LLM call&lt;br/&gt;per chunk: entities,&lt;br/&gt;roles, verb phrases,&lt;br/&gt;questions with None&quot;]
+    O --&gt; ST[&quot;Space-time linker&lt;br/&gt;one LLM call per chunk&quot;]
+    ST -.-&gt; SC[&quot;Stored beside the chunk&lt;br/&gt;no reader&quot;]
+    O --&gt; N[(&quot;networks/doc_N/&lt;br/&gt;gsw_N_M.json&quot;)]
+    N --&gt; R[&quot;Reconciler, empty at&lt;br/&gt;the start of every run&quot;]
+    N --&gt; P[&quot;Panini: one network&lt;br/&gt;per document, chains&lt;br/&gt;found at read time&quot;]
+    R --&gt; M[&quot;Same cleaned name,&lt;br/&gt;other chunk: merged&lt;br/&gt;with no check&quot;]
+    R --&gt; Q[&quot;Open question filled&lt;br/&gt;by the model; any id&lt;br/&gt;it returns is written&quot;]
+    M --&gt; W[(&quot;reconciled JSON&lt;br/&gt;one per document&quot;)]
+    Q --&gt; W
+    W --&gt; A[&quot;One LLM summary&lt;br/&gt;per entity&quot;]
+    A --&gt; QA[&quot;Names matched, summaries&lt;br/&gt;reranked, top 17&lt;br/&gt;to the answerer&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Python library over JSON files, with no service.
+<code>GSWProcessor</code>, <code>reconcile_gsw_outputs</code>,
+<code>EntitySummaryAggregator</code> and
+<code>GSWQuestionAnswerer</code> are the public surface
+(<code>src/gsw_memory/__init__.py:72-82</code>). Every LLM call goes
+through <code>bespokelabs-curator</code>, which batches and caches
+requests. Voyage <code>voyage-3</code> embeddings rerank summaries and
+back the embedding matcher; FAISS holds entity vectors for the agentic
+tools.</p>
+<p>Persistence is a directory tree written when an
+<code>output_dir</code> is passed:
+<code>networks/doc_N/gsw_N_M.json</code> per chunk,
+<code>gsw_results_combined.json</code> for the whole run, and under
+<code>reconciled/</code> either <code>doc_N_reconciled.json</code> per
+document or one <code>global_reconciled.json</code>
+(<code>src/gsw_memory/memory/operator.py:531-600</code>,
+<code>src/gsw_memory/memory/reconciler.py:553-674</code>).
+<code>utils/loaders.py</code> reads these back, and its docstring states
+the purpose: <em>"enabling iteration on downstream components without
+re-running expensive LLM operations"</em>
+(<code>src/gsw_memory/utils/loaders.py:1-7</code>).</p>
+<p>The Panini path is a set of playground scripts with hard-coded data
+paths, such as <code>/mnt/SSD1/shreyas/SM_GSW/2wiki/networks</code>
+(<code>playground/multi_hop_qa_chains.py:126-129</code>). It embeds
+entities and question-answer pairs with Qwen3-Embedding through vLLM and
+reranks chains with Voyage. The GSW networks it reads for five datasets
+are published on HuggingFace, not in the tree.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>uv sync</code>, an <code>OPENAI_API_KEY</code> and a
+<code>VOYAGE_API_KEY</code>. Nothing can be stored without the OpenAI
+key, since extraction is the write. A vLLM endpoint can replace OpenAI
+for extraction; the code then forces the factual prompt set whatever
+<code>prompt_type</code> was asked for
+(<code>operator.py:282-305</code>). The Panini scripts also need vLLM
+and a GPU for Qwen3 embeddings.</p>
+<p>The store is human-readable JSON and can be repaired by hand, which
+is the only correction path there is. The README's package map names
+files that are not in the tree (<code>processors.py</code>,
+<code>reconciliation.py</code>, <code>entity_matcher.py</code>,
+<code>summary_reranker.py</code>), and its
+<code>pip install gsw-memory</code> was not checked against a
+registry.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Extraction.</strong>
+<code>GSWProcessor.process_documents</code>
+(<code>src/gsw_memory/memory/operator.py:71-450</code>): coreference per
+document (<code>:123-153</code>), three-sentence chunks with one
+sentence of overlap (<code>:155-191</code>), a context paragraph per
+chunk (<code>:193-229</code>), the operator under constrained decoding
+to <code>GSWStructure</code> (<code>:282-347</code>), and the space-time
+linker (<code>:384-437</code>). A chunk whose output fails to parse is
+dropped with a print (<code>:349-363</code>).</li>
+<li><strong>Reconciliation.</strong> <code>reconcile_gsw_outputs</code>
+(<code>src/gsw_memory/memory/reconciler.py:742-866</code>) creates a
+fresh <code>Reconciler</code> per document for <code>local</code> or one
+for <code>global</code>; <code>reconcile</code> (<code>:68-138</code>)
+prefixes ids with the chunk id (<code>:140-217</code>), merges entities
+(<code>:219-266</code>), adds space and time nodes
+(<code>:280-336</code>), merges verb phrases and resolves questions
+(<code>:121-136</code>).</li>
+<li><strong>Matching.</strong> <code>ExactMatchStrategy</code> and
+<code>EmbeddingMatchStrategy</code>
+(<code>src/gsw_memory/memory/reconciler_utils/matching.py:199-547</code>,
+<code>:686-784</code>), chosen by
+<code>create_matching_components</code> (<code>:790-831</code>); the
+verification prompt is in
+<code>src/gsw_memory/prompts/reconciler_prompts.py:44-64</code>.</li>
+<li><strong>Summaries.</strong>
+<code>EntitySummaryAggregator.precompute_summaries</code>
+(<code>src/gsw_memory/memory/aggregators/entity_summary.py:141-176</code>)
+gathers each entity's roles and verb-phrase involvement by chunk
+(<code>:309-372</code>) and makes one LLM call per entity.</li>
+<li><strong>Query.</strong> <code>GSWQuestionAnswerer.ask_batch</code>
+(<code>src/gsw_memory/qa/qa_system.py:103-167</code>) with
+<code>EntityMatcher</code>
+(<code>src/gsw_memory/qa/matcher.py:24-92</code>),
+<code>SummaryReranker</code>
+(<code>src/gsw_memory/qa/reranker.py:32-138</code>) and
+<code>AnsweringAgent</code>
+(<code>src/gsw_memory/qa/answering_agent.py:14-99</code>).</li>
+<li><strong>Agentic query.</strong> <code>AgenticAnsweringAgent</code>
+(<code>src/gsw_memory/qa/agentic_agent.py:59-306</code>) over
+<code>GSWTools</code>
+(<code>src/gsw_memory/qa/gsw_tools.py</code>).</li>
+<li><strong>Panini.</strong>
+<code>playground/generate_gsws_multihop.py</code> builds the
+per-document networks, <code>playground/simple_entity_search.py</code>
+indexes entities and question-answer pairs,
+<code>playground/multi_hop_qa_chains.py</code> runs the chain search,
+<code>playground/evaluate_panini.py</code> drives it.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Pydantic models in <code>src/gsw_memory/memory/models.py</code>:</p>
+<ul>
+<li><strong><code>EntityNode</code></strong> (<code>:26-40</code>): id,
+name, a list of <code>Role</code> (role, states, chunk id), the chunk id
+it first appeared in, and a <code>summary</code> field nothing in the
+pipeline writes (the aggregator keeps summaries in its own dict).</li>
+<li><strong><code>VerbPhraseNode</code></strong> (<code>:56-66</code>):
+id, phrase, and <code>Question</code> objects (<code>:43-53</code>) each
+holding answers as a list of strings.</li>
+<li><strong><code>SpaceNode</code> and <code>TimeNode</code></strong>
+(<code>:69-112</code>): a <code>name_history</code> keyed by chunk id
+and a <code>current_name</code>.</li>
+<li><strong><code>GSWStructure</code></strong> (<code>:115-145</code>):
+the four node lists and three edge lists (similarity, entity-space,
+entity-time).</li>
+</ul>
+<p>An answer string is one of three things by convention: an entity id,
+a <code>TEXT:</code> literal or <code>"None"</code>. Ids become
+<code>&lt;chunk_id&gt;::&lt;local id&gt;</code> on reconciliation
+(<code>reconciler.py:140-217</code>), where a chunk id is
+<code>&lt;doc index&gt;_&lt;chunk index&gt;</code>
+(<code>operator.py:177</code>).</p>
+<p>Scope is the file. The <code>local</code> strategy writes one
+workspace per document and <code>GSWQuestionAnswerer</code> searches all
+of the workspaces it is handed (<code>qa_system.py:193-201</code>). No
+record carries a user, agent, session or tenant key.</p>
+<p>Time is chunk order. There is no wall-clock or validity field
+anywhere in the model; <code>name_history</code> on a space or time node
+is keyed by chunk id.</p>
+<h3 id="space-and-time-nodes-have-no-producer">Space and time nodes have
+no producer</h3>
+<p>The reconciler merges space and time nodes, redirects their edges and
+keeps a history of names (<code>models.py:305-376</code>,
+<code>reconciler.py:280-336</code>), and the aggregator can put them in
+a summary (<code>entity_summary.py:374-408</code>). Nothing in the tree
+creates one. The operator prompts name only <code>entity_nodes</code>
+and <code>verb_phrase_nodes</code> in their output schema
+(<code>operator_prompts.py:282-312</code>). The space-time linker's
+result is stored under the chunk's <code>spacetime</code> key and saved
+to <code>spacetime/doc_N/</code> (<code>operator.py:434-437</code>,
+<code>:520-529</code>), and no code reads that key back. Space and time
+nodes exist only if the extraction model fills the optional schema
+fields its prompt never asks for.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The default path is name matching, then embedding
+rerank.</strong> An LLM extracts entity names from the question.
+<code>EntityMatcher</code> keeps every entity whose name contains a
+question entity, is contained in one, or shares any word with one, with
+no stop-word list (<code>matcher.py:49-75</code>). So a question entity
+containing <em>"the"</em> matches every entity name containing
+<em>"the"</em>. The matched entities' precomputed summaries are embedded
+with the question on every call, ranked by cosine and cut to
+<code>max_summaries</code>, 17 by default
+(<code>reranker.py:69-136</code>, <code>qa_system.py:87</code>,
+<code>:106</code>). The answering prompt calls them <em>"chapter by
+chapter narrative summaries"</em>
+(<code>answering_agent.py:17-30</code>).</p>
+<p><code>include_connected=True</code> adds every entity that appears in
+any verb phrase with a matched entity (<code>matcher.py:94-144</code>).
+It is off by default.</p>
+<p><strong>Summaries carry a chronology that drops the
+document.</strong> <code>_sort_chunk_key</code> was written for ids of
+the form <code>chunk_X_Y</code> and skips the first part
+(<code>entity_summary.py:410-437</code>). A reconciled id is
+<code>X_Y</code>, so the key is the chunk index alone. Within one
+document that is the right order. In a <code>global</code> workspace
+chunk 2 of the first document sorts after chunk 0 of the tenth. A
+question resolved by the model has its chunk id rewritten to
+<code>chunk_&lt;doc&gt;_&lt;chunk&gt;</code>
+(<code>reconciler.py:369</code>) and sorts by a different key from its
+siblings. This follows from the code and was not run.</p>
+<p><strong>The agentic tools search entities, not summaries.</strong>
+<code>GSWTools</code> offers BM25 over entity names, FAISS over Voyage
+embeddings of entity names, and a context call that returns every
+question an entity answers with the other entities in it
+(<code>gsw_tools.py:416-582</code>). The FAISS index is cached as
+<code>gsw_embeddings_gpu.faiss</code> and <code>gsw_metadata.json</code>
+in the working directory and reused when the stored entity count equals
+the current one (<code>gsw_tools.py:172-193</code>). A different corpus
+with the same entity count loads the old vectors against the new names.
+The <code>.gsw_cache</code> directory the constructor creates is never
+used (<code>:67-69</code>). The Panini searcher checks its cache entry
+by entry against the current texts
+(<code>playground/simple_entity_search.py:602-623</code>).</p>
+<p><strong>Panini decomposes, then follows chains.</strong> One LLM call
+splits the question into sub-questions, each later one taking the
+previous answer as its argument. Each hop retrieves question-answer
+pairs by entity search and dense search, reranks them, and keeps five
+chains (<code>playground/evaluate_panini.py:543-553</code>). The mode
+named <code>cumulative</code> scores a chain by the geometric mean of
+its normalised hop scores
+(<code>playground/multi_hop_qa_chains.py:207-242</code>), which is what
+the paper's equation 1 describes.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The write is the batch. <code>process_documents</code> runs
+coreference, chunking, context, extraction and space-time linking for
+all documents at once, and <code>reconcile_gsw_outputs</code> folds the
+results. An agent never writes.</p>
+<p><strong>Entity reconciliation, exact strategy.</strong> The default.
+Names are lowercased and stripped of anything but letters, digits and
+spaces, and every earlier entity with the same cleaned name from another
+chunk becomes a merge pair (<code>matching.py:218-239</code>). The class
+docstring says <em>"exact name and verifying roles/states"</em>
+(<code>:200</code>); nothing verifies. Two people called John in
+different chunks of a chapter become one entity, and under
+<code>global</code> that holds across the whole corpus.</p>
+<p><strong>Entity reconciliation, embedding strategy.</strong> The top
+five neighbours by Voyage embedding go to an LLM verifier, whose prompt
+accepts pairs that are <em>"the same or strongly related"</em> and gives
+<em>"person and their role"</em> as an example of the second
+(<code>reconciler_prompts.py:49-64</code>). A related pair is merged
+like an identical one. This strategy reconciles no verb phrases and
+resolves no questions (<code>matching.py:766-784</code>).</p>
+<p><strong>Question resolution.</strong> For each chunk whose entities
+matched earlier ones, the reconciler collects that entity's verb phrases
+with an unanswered question and asks the model which ones the chunk
+answers (<code>matching.py:371-476</code>). The response is applied by
+question id, looked up across the whole workspace
+(<code>:501-507</code>). An answered question whose id the model returns
+is overwritten, and an entry with neither answer text nor entity id sets
+the answer back to <code>None</code> (<code>:518-536</code>). The chunk
+text in that prompt is document content, so an instruction inside a
+document reaches the step that chooses which ids to overwrite.</p>
+<p><strong>Contradiction.</strong> When a newer verb phrase merges into
+an older one and a question with the same text has a different answer,
+the newer question is appended beside the older
+(<code>matching.py:326-354</code>). Both are summarised and both are
+served. Nothing records that they disagree.</p>
+<p><strong>Failure handling.</strong> A chunk whose operator output
+fails to parse is dropped (<code>operator.py:359-363</code>). Under
+<code>local</code>, a document whose reconciliation raises is skipped
+(<code>reconciler.py:819-821</code>), and the saved files are numbered
+by position in the result list (<code>:561-565</code>), so every later
+document is saved under the previous document's number. An empty summary
+is replaced by <em>"Summary generation failed."</em> and served like any
+other (<code>entity_summary.py:282-290</code>). Each question resolution
+writes its prompt and parsed response to
+<code>logs/prompt_log_chunk_&lt;id&gt;.txt</code> under the working
+directory (<code>matching.py:386</code>, <code>:479-485</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Extraction is up to three LLM calls per chunk (context, operator,
+space-time) plus one coreference call per document, in parallel batches.
+Reconciliation is sequential, with one question-resolution call per
+chunk that matched an earlier entity and, under the embedding strategy,
+one verification call and a set of embedding calls per chunk. Summaries
+are one call per entity. The AAAI paper puts indexing 200 chapters at
+about $15 with GPT-4o. Nothing is retrievable until the whole batch
+finishes, and adding a document means running reconciliation and
+summaries again over the corpus (<code>reconciler.py:46</code>,
+<code>:65</code>, <code>:94</code> are the only assignments to the
+in-process workspace).</p>
+<p>A query costs one entity-extraction call, one Voyage call embedding
+every candidate summary, and one answer call over up to 17
+summaries.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no agent-facing write. <code>AgenticAnsweringAgent</code>
+drives the OpenAI Responses API with two read tools,
+<code>search_gsw_entity_embeddings</code> and
+<code>get_multiple_entity_contexts</code>, and a caller-supplied dict
+mapping their names to <code>GSWTools</code> methods
+(<code>agentic_agent.py:59-117</code>, <code>:236-251</code>). The
+system prompt teaches the model to look for inverse relations because
+the workspace may store one direction only (<code>:149-158</code>).</p>
+<p><code>get_multiple_entity_contexts</code> takes ids of the form
+<code>&lt;file path&gt;::&lt;entity id&gt;</code>, splits off the path
+and opens it (<code>gsw_tools.py:598-627</code>). The path comes from
+the model's tool arguments and is not checked against the files the
+tools were built over. A path to a non-GSW file returns an error
+string.</p>
+<p>The package's console script prints <em>"Hello from gsw-memory!"</em>
+(<code>src/gsw_memory/__init__.py:120-121</code>). There is no MCP
+server, HTTP route or framework adapter.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-reconciler-trusts-names-and-the-model">The reconciler trusts
+names and the model</h3>
+<p>The exact strategy's merge is the largest risk, because it is the
+default and nothing downstream can undo it: a merged entity has one id,
+one summary and the union of two people's roles. The embedding strategy
+is the alternative and its verifier is told to merge related entities
+too.</p>
+<p>Question resolution is the second. The candidate list the model sees
+is restricted to unanswered questions; the write is not. An answer the
+operator extracted directly from the text can be replaced by one the
+model inferred from a later chunk, and the summary shows only the
+replacement.</p>
+<h3 id="paper-and-code">Paper and code</h3>
+<p>The AAAI paper (<a
+href="https://arxiv.org/abs/2511.07587">arXiv:2511.07587</a>, submitted
+10 November 2025, revised 16 February 2026) describes space-time
+coupling as a separate step whose result updates space and time nodes
+and propagates to coupled entities. The code runs that step and discards
+its result into a sidecar (section 5). The paper's appendix ablation on
+the 200-chapter EpBench corpus reports overall F1 of 0.850 for the full
+system and 0.811 <em>"w/o Space/Time Linking"</em>. The released
+pipeline is, as wired, closer to the second configuration. That is an
+inference from the code; nothing here was run.</p>
+<p>The rest of the read path matches: chapter-scoped reconciliation is
+the <code>local</code> strategy, query entities are matched by string,
+and the 17-chapter cap is <code>max_summaries</code>.</p>
+<p>Panini (<a
+href="https://arxiv.org/abs/2602.15156">arXiv:2602.15156</a>, submitted
+16 February 2026) states in its body that cross-document connections
+<em>"are not precomputed"</em> and that it <em>"does not yet perform
+latent-link caching or experience-driven reconciliation"</em>. The code
+agrees: <code>generate_gsws_multihop.py</code> imports
+<code>reconcile_gsw_outputs</code> and never calls it
+(<code>playground/generate_gsws_multihop.py:27</code>). The abstract's
+memory that <em>"accumulates and consolidates"</em> describes the
+direction, not this tree. The same script disables space-time linking
+(<code>:113</code>) and prints that it is enabled
+(<code>:123</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — withheld.</strong> No record
+carries a scope key. The local strategy's per-document files are a
+physical partition, and the question answerer searches all of them.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No status
+field exists. <code>None</code> on an answer means unfilled, not
+doubted.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Nothing is
+rejected or deleted; a rebuild re-derives everything from the operator
+outputs.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> The only time
+is chunk order.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> The per-chunk
+prompt logs record question resolutions only, are overwritten by the
+next run with the same chunk ids, and say nothing about merges.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No surface;
+hand-editing the JSON is authoring.</li>
+<li><strong><code>negative_eval</code> — withheld.</strong> Section
+10.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading.</p>
+<p>There are 56 test functions in four files: 20 on the models, 13 on
+chunking and output parsing, 10 on <code>EntityMatcher</code>, 13 on
+<code>GSWTools</code> with embeddings patched out. CI runs them with
+ruff on pushes and pull requests to <code>main</code>
+(<code>.github/workflows/ci.yml</code>). No test constructs a
+<code>Reconciler</code>, an aggregator or the question answerer, so
+merging, question resolution and contradiction handling are
+untested.</p>
+<p>Three tests assert an absence, and none earns
+<code>negative_eval</code>. <code>test_search_bm25_no_results</code>
+searches a term no entity has
+(<code>tests/test_gsw_tools.py:35-39</code>). <code>test_no_match</code>
+asserts that a name no entity carries is not returned, which cannot fail
+since the matcher returns only stored entities
+(<code>tests/test_matcher.py:36-44</code>).
+<code>test_exact_match</code> requires exactly one result for <em>"John
+Smith"</em> from three entities
+(<code>tests/test_matcher.py:10-13</code>), an ordinary precision
+check.</p>
+<p>The evaluation code is a Tulving Bench evaluator with an LLM judge
+(<code>src/gsw_memory/evaluation/benchmarks/tulving_bench/</code>) and
+HippoRAG-style EM and F1
+(<code>src/gsw_memory/evaluation/hipporag_eval.py</code>). The tree
+holds a 20-chapter book and its questions; the paper's 200- and
+2,000-chapter EpBench corpora are not committed, and no result file is.
+The paper reports overall F1 of 0.850 against 0.771 for the best
+baseline at 200 chapters, 0.773 against 0.675 at 2,000, and about 3,587
+context tokens per query.</p>
+<p>Panini's networks and evaluation splits are on HuggingFace. Its paper
+reports an average F1 of 56.06 against 53.3 for HippoRAG 2 over six
+benchmarks and 319.79 average answer-context tokens. None of it
+recomputes from this tree, whose Panini scripts point at
+<code>/mnt/SSD1/...</code> and <code>/home/yigit/...</code> paths.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Store the unanswered question.</strong> A slot the text has
+not filled is a record with an id, so a later document can fill it and a
+reader can see it is open.</li>
+<li><strong>Questions as the index unit.</strong> A verb phrase with
+typed who, what, where, when questions gives both a retrieval key and an
+answer, and Panini's short chains of them reach an answer with far less
+context than passages.</li>
+<li><strong>Chunk provenance on every role and question.</strong> It is
+what makes a chronological per-entity summary possible.</li>
+<li><strong>Check a cache entry by its content.</strong> The Panini
+searcher compares cached texts one by one before reusing vectors; the
+packaged tools compare a count.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Merging on an exact name with no second signal.</strong> A
+name is the weakest identity a narrative has.</li>
+<li><strong>A verifier prompt that accepts "strongly related"</strong>
+as a merge.</li>
+<li><strong>Applying a model's write by the id it returns</strong>
+rather than the ids it was offered.</li>
+<li><strong>Running a stage and discarding its output.</strong> The
+space-time call costs one LLM request per chunk and changes nothing the
+reader sees.</li>
+<li><strong>A sort key written for another id format.</strong> It
+degrades silently into a plausible order.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a researcher who wants a structured episodic index over a
+fixed corpus of narratives, rebuilt when the corpus changes, and who
+will read the JSON. For that reader the operator prompts and the
+question-filling idea are the assets.</p>
+<p>It does not suit an agent that learns as it goes. There is no
+incremental write, no correction other than a rebuild, and no record of
+what was merged or overwritten. Anyone whose corpus has two people with
+one name should expect them to be one person.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Did the original research code apply the space-time linker's output
+to the workspace? The paper says so; this tree does not.</li>
+<li>What do the unmerged branches hold? <code>sleep-time-gsw</code> (tip
+30 April 2026) changes 309 files and <code>Sleep-Time-Panini</code> 93;
+the pyproject's <code>training</code> extra mentions sleep-time agent
+research. Neither was read.</li>
+<li>Was <code>global</code> reconciliation used for any published
+result, given the timeline key drops the document index?</li>
+<li>Is <code>gsw-memory</code> published on a package index, and with
+which licence metadata?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/gsw_memory/memory/models.py</code></td>
+<td>Entity, role, verb phrase, question, space and time nodes;
+merges</td>
+</tr>
+<tr>
+<td><code>src/gsw_memory/memory/operator.py</code></td>
+<td>The extraction pipeline and its file layout</td>
+</tr>
+<tr>
+<td><code>src/gsw_memory/memory/reconciler.py</code></td>
+<td>Chunk-by-chunk reconciliation, local and global strategies,
+saving</td>
+</tr>
+<tr>
+<td><code>src/gsw_memory/memory/reconciler_utils/matching.py</code></td>
+<td>Exact and embedding matching, verb-phrase merge, question
+resolution</td>
+</tr>
+<tr>
+<td><code>src/gsw_memory/prompts/operator_prompts.py</code></td>
+<td>Episodic and factual extraction prompts, space-time prompt</td>
+</tr>
+<tr>
+<td><code>src/gsw_memory/prompts/reconciler_prompts.py</code></td>
+<td>Question-resolution and entity-verification prompts</td>
+</tr>
+<tr>
+<td><code>src/gsw_memory/memory/aggregators/entity_summary.py</code></td>
+<td>Per-entity chronological summaries</td>
+</tr>
+<tr>
+<td><code>src/gsw_memory/qa/qa_system.py</code>,
+<code>matcher.py</code>, <code>reranker.py</code>,
+<code>answering_agent.py</code></td>
+<td>The default query path</td>
+</tr>
+<tr>
+<td><code>src/gsw_memory/qa/gsw_tools.py</code>,
+<code>agentic_agent.py</code></td>
+<td>Agentic read tools</td>
+</tr>
+<tr>
+<td><code>src/gsw_memory/utils/loaders.py</code></td>
+<td>Reloading a saved run</td>
+</tr>
+<tr>
+<td><code>playground/generate_gsws_multihop.py</code>,
+<code>simple_entity_search.py</code>,
+<code>multi_hop_qa_chains.py</code>,
+<code>evaluate_panini.py</code></td>
+<td>The Panini path</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>The 56 unit tests</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>Nothing constructs a space or time node.</strong>
+<code>git grep -n -E 'SpaceNode\(|TimeNode\(' -- src playground ':!*.ipynb'</code>
+returns the two class definitions in <code>models.py:69</code> and
+<code>:92</code>.</li>
+<li><strong>The operator prompts name no space or time fields.</strong>
+<code>git grep -n -E 'space_nodes|time_nodes|space_edges|time_edges' -- src/gsw_memory/prompts</code>
+returns nothing;
+<code>git grep -c 'entity_nodes' -- src/gsw_memory/prompts</code>
+returns 15.</li>
+<li><strong>The space-time result has no reader.</strong>
+<code>git grep -n -E '"spacetime"' -- src playground ':!*.ipynb'</code>
+returns <code>operator.py:188</code>, <code>:434</code>,
+<code>:481</code>, <code>:520</code> and <code>:529</code>, all
+initialising, setting or saving it.</li>
+<li><strong>No path loads a saved workspace into the
+reconciler.</strong>
+<code>git grep -n -E 'global_memory *=' -- src playground ':!*.ipynb'</code>
+returns <code>reconciler.py:46</code>, <code>:65</code> and
+<code>:94</code>, and the keyword argument at <code>:367</code>.</li>
+<li><strong>Panini generation never reconciles.</strong>
+<code>git grep -n 'reconcile_gsw_outputs' -- playground/generate_gsws_multihop.py</code>
+returns only the import at <code>:27</code>.</li>
+<li><strong>Only the embedding strategy verifies.</strong>
+<code>git grep -n -E 'EntityVerifier\(|verify_pairs\(' -- src</code>
+returns <code>matching.py:129</code>, <code>:707</code>,
+<code>:724</code> and <code>:755</code>, all in or above
+<code>EmbeddingMatchStrategy</code>.</li>
+<li><strong>No test reaches the reconciler, aggregator or
+answerer.</strong>
+<code>git grep -n -E 'Reconciler|reconcile|EntitySummaryAggregator|GSWQuestionAnswerer|resolve_questions' -- tests</code>
+returns nothing; <code>git grep -n 'GSWTools' -- tests</code>
+matches.</li>
+<li><strong>No deletion or expiry in the package.</strong>
+<code>git grep -n -i -E 'delete|forget|tombstone|expire|ttl' -- src ':!src/gsw_memory/benchmarks'</code>
+returns nothing;
+<code>git grep -n -i 'remove' -- src/gsw_memory/evaluation/hipporag_eval.py</code>
+matches.</li>
+<li><strong>No scope key.</strong>
+<code>git grep -n -i -E 'user_id|tenant|session_id|agent_id|namespace' -- src ':!src/gsw_memory/benchmarks'</code>
+returns nothing;
+<code>git grep -n 'doc_idx' -- src/gsw_memory/memory/reconciler.py</code>
+matches.</li>
+<li><strong>No service surface.</strong>
+<code>git grep -n -i -E 'mcp|fastapi|flask|uvicorn' -- src</code>
+returns nothing;
+<code>git grep -n -i 'openai' -- src/gsw_memory/qa/agentic_agent.py</code>
+matches.</li>
+<li><strong>The cache directory is unused.</strong>
+<code>git grep -n 'cache_dir' -- src</code> returns
+<code>gsw_tools.py:68</code> and <code>:69</code>.</li>
+<li><strong>Files the playground README lists are absent.</strong>
+<code>git ls-files playground | grep -E 'hypernode|evaluate_multi_hop|generate_hypernode|process_full_2wiki_corpus\.py'</code>
+returns nothing;
+<code>git ls-files playground | grep process_full_2wiki</code> returns
+the <code>_backup.py</code> file.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-24</strong> — <a
+href="https://github.com/roychowdhuryresearch/gsw-memory/commit/eb2ef0df8030dca2acb1d6ef61377194c0b5ff69"><code class="commit-id" title="eb2ef0df8030dca2acb1d6ef61377194c0b5ff69">eb2ef0df…</code></a>.
+First reading, from a full clone at the head of <code>main</code>.
+Screened first: one auto-run surface,
+<code>.claude/settings.json</code>, a harness permission list; one
+collection-time execution point, <code>tests/conftest.py</code>;
+<code>uv.lock</code> last changed on 13 February 2026, outside the
+seven-day cooldown. Docs and prompts were read as data. Nothing was
+installed, built or run, and the 56 test functions were not run. Both
+arXiv ids were checked against their titles. No marks (<a
+href="#9-reliability-safety-and-trust">section 9</a>). The space-time
+linker's output is never applied, and the default reconciler merges
+entities on name alone.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
