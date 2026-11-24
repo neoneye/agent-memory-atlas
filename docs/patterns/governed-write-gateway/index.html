@@ -414,6 +414,21 @@ agent's payload, so the sections it refused a moment earlier are deleted
 along with every omitted section's history (<code>:3592-3600</code>). A
 read-only rule enforced by validating the payload holds only for writes
 that merge.</p>
+<p><a href="../../systems/cartographer/">Cartographer</a> makes the
+gateway the only committer and judges the final diff. Every concept tool
+runs inside one wrapper that pulls under a per-KB git lock, runs the
+handler, regenerates indexes, lints the changed pages against
+<code>HEAD</code> in a quarantine object store and rolls back any new
+finding the write could have avoided, so a refused write leaves not even
+a blob; no setting lowers it
+(<code>internal/mcpserver/gitwrap.go:51-170</code>,
+<code>internal/mcpserver/writegate.go:114</code>). Two things reach
+history around it. The wrapper first commits whatever changed in the
+working tree, ungated, as external changes
+(<code>gitwrap.go:354-367</code>), and the pull brings in whatever
+anyone pushed to the remote. And the gate judges form only, links,
+contracts and secrets, so a well-linked wrong page is served to every
+agent from its commit.</p>
 <h3 id="gates-on-something-other-than-a-write">Gates on something other
 than a write</h3>
 <p>These are analogies rather than instances. Each puts one gate, or one

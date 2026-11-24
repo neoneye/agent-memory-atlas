@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 862 reports.**
+**This page covers all 863 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7943,3 +7943,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 from 0.5.3, after sixteen days under BSL 1.1; 53,803 lines of Rust and a 9,225-line TypeScript panel in 83 commits between 18 October and 13 November 2026; 334 Rust tests, 46 end-to-end, none run here. Three marks: `scope_enforced`, `human_review`, `negative_eval`.
 - Study when: you are putting one memory in front of several people's agents and need membership, ownership and private agents enforced on the server rather than trusted from the client.
 - Do not copy when: a fact must be provably gone after a delete, or you must show what the memory held before a revision.
+
+### [`cartographer`](../systems/cartographer/)
+- Best idea: **gate the final diff against `HEAD`.** `judgeWrite` stages the write into a quarantine object store, lints the changed pages and refuses only findings the write introduced and could have avoided, rolling the tree back so a refused write leaves not even a blob; no setting lowers it (`internal/mcpserver/writegate.go:18-27`, `:114`).
+- Second idea: an attempt and a completion audit event around every MCP tool call, hash-chained and Ed25519-signed, on by default, with the commit sha on the completion, a `required` mode that refuses the call when the attempt cannot be written, and a verifier that takes the public key from the operator.
+- Biggest risk: **the reading tool serves what search hides.** `graph_context`, one of four entry tools, seeds from keyword hits with archived pages included and ranks neighbours with no status filter, so superseded and archived pages come back unmarked, while `search` hides archived pages and its related block hides every retired status (`internal/mcpserver/tools_graph.go:183`, `:230`).
+- Second risk: no person stands between a write and every teammate's agent. Status is the writer's own field, `conflict_resolve` is on the agent's surface, edits made in the working tree are committed ungated before the next write, and a text-only skill an agent writes installs on every client at the next sync. The audit omits background auto-repair and the ids of a `concept_batch`.
+- Most reusable component: `judgeWrite` with its quarantine, `internal/mcpserver/writegate.go:114`, and the audit package `internal/audit/audit.go` with `TestVerifyTampered` at `internal/audit/audit_test.go:147`.
+- Maturity impression: Apache-2.0; 203,603 lines of Go outside tests and 257,103 of tests, a 38,312-line TypeScript web UI and 785 decision records; 1,509 commits from 18 July to 24 November 2026, 1,434 of them by the author; latest release v0.29.1 on 18 November 2026; 7,607 test functions with CI, none run here. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you are building shared, human-readable memory that several agents write, and want a deterministic write gate and an audit an operator can verify.
+- Do not copy when: memory must be approved by a person before agents act on it, or a retired page must stay out of every read path.

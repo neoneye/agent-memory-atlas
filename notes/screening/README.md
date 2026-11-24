@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 861 of 862 screened at the report's current pin.**
+**Progress: 862 of 863 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 410 |
+| Repositories with an auto-run surface (`RUNS`) | 411 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 392 |
-| Repositories with build-time execution (`EXEC`) | 621 |
+| Repositories with build-time execution (`EXEC`) | 622 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -85,6 +85,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`browsentic`](../../content/systems/browsentic.md) | `server.json` |
 | [`buzz`](../../content/systems/buzz.md) | `.vscode/settings.json` |
 | [`byterover`](../../content/systems/byterover.md) | `.claude/settings.json`, `.github/copilot-instructions.md`, `.gitmodules` |
+| [`cartographer`](../../content/systems/cartographer.md) | `server.json` |
 | [`caura`](../../content/systems/caura.md) | `.claude/hooks/`, `.claude/settings.json`, `.mcp.json` |
 | [`chump`](../../content/systems/chump.md) | `.claude/settings.json`, `.cursor/rules/`, `.gitmodules` |
 | [`cindy`](../../content/systems/cindy.md) | `.gitattributes`, `.githooks/` |

@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go MCP server, sole writer of a
+team's git-backed Markdown wiki, that refuses agent writes adding lint
+findings and audits every tool call.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cartographer — Agent Memory Atlas">
+    <meta property="og:description" content="A Go MCP server, sole
+writer of a team's git-backed Markdown wiki, that refuses agent writes
+adding lint findings and audits every tool call.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cartographer — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go MCP server, sole
+writer of a team's git-backed Markdown wiki, that refuses agent writes
+adding lint findings and audits every tool call.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cartographer — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Cartographer",
+      "description": "A Go MCP server, sole writer of a team's git-backed Markdown wiki, that refuses agent writes adding lint findings and audits every tool call.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Git-backed team wiki behind a lint gate and
+a signed audit of every MCP call</p>
+          <h1>Cartographer</h1>
+          <p class="document-deck">A Go MCP server, sole writer of a
+team's git-backed Markdown wiki, that refuses agent writes adding lint
+findings and audits every tool call.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/BeppeTemp/cartographer">
+              <span>Source</span>
+              <strong>BeppeTemp/cartographer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/BeppeTemp/cartographer/commit/98be02aab51f557700ad6476f7af5d263c4776d1" title="98be02aab51f557700ad6476f7af5d263c4776d1">
+              <span>Analyzed revision</span>
+              <code>98be02aa…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-24</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/BeppeTemp--cartographer" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>BeppeTemp--cartographer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0,
+root LICENSE with a NOTICE; CITATION.cff agrees</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>203,603
+lines of Go outside tests in 735 files, 257,103 lines of Go tests in
+1,054 files, a 38,312-line TypeScript web UI, and 785 decision records
+under docs/decisions</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,509
+commits from 18 July to 24 November 2026, 1,434 of them by the author
+under two names; latest release v0.29.1 on 18 November
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>7,607
+Go test functions in 1,054 files, 29 of them named for the write gate
+and 55 in the audit package; ci.yml is present; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cartographer is a Go server, Meridian, that holds one or more team
+wikis as git repositories of Markdown pages and is their only writer:
+agents in Claude Code, Codex, OpenCode and other MCP clients read and
+write pages through its tools, and every write is linted, committed and
+pushed. What is notable is the write path and the audit: a write that
+adds a lint finding it could have avoided is rolled back and refused,
+and every tool call leaves a signed, hash-chained attempt and completion
+pair. What is weak is what the wiki believes. A page is served the
+moment it is committed, its status is a field the writing agent sets,
+and <code>graph_context</code>, one of the four entry tools the server
+asks clients to keep loaded, returns archived and superseded pages that
+<code>search</code> hides.</p>
+<p>The "can't break" in the README is a claim about structure, not
+truth. The gate checks links, frontmatter contracts, index entries,
+templates and secrets
+(<code>internal/mcpserver/writegate.go:114</code>). It never asks
+whether a statement is correct, and no person approves a page before it
+is served.</p>
+<p>The same binary is also a configurator. Compass syncs a KB's skills,
+subagents, hooks and MCP descriptors into each client. A person must
+approve anything that executes, bound to its content hash. A skill or
+subagent made only of text installs on every teammate's client without
+approval.</p>
+<p><strong>Licence.</strong> Apache-2.0 in the root
+<code>LICENSE</code>, with a <code>NOTICE</code> naming the copyright
+holder and the bundled <code>gopkg.in/yaml.v3</code>;
+<code>CITATION.cff</code> states the same licence.
+<code>web/package.json</code> carries no licence field. Nothing
+restricts use.</p>
+<p>Three marks are earned: <code>scope_enforced</code> on the token's
+map and type selectors, <code>audit_log</code> on the audit trail, and
+<code>negative_eval</code> on populated search tests. Section 9 gives
+the reason for each of the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a concept</strong>: one Markdown page with YAML
+frontmatter, in a map (grouped by theme) or a journal (dated entries) of
+a KB. The only required field is <code>type</code>. The documented
+frontmatter adds <code>status</code>, <code>provenance</code>,
+<code>confidence</code>, <code>valid_from</code>, <code>valid_to</code>,
+<code>superseded_by</code> and <code>review_after</code>, and says the
+server ignores <code>confidence</code>, <code>valid_from</code> and
+<code>valid_to</code> (<code>docs/data-plane.md:162-168</code>). Links
+between pages are the graph.</p>
+<p>A concept is believed, in the sense of being served, from the commit
+that writes it. There is no candidate state the server holds a page
+in:</p>
+<ul>
+<li><strong>Written.</strong> An agent calls <code>concept_write</code>,
+<code>concept_new</code>, <code>concept_patch</code> or
+<code>concept_batch</code>. The write gate judges structure; if it
+passes, the page is committed and readable on the next call.</li>
+<li><strong>Retired.</strong> <code>supersede</code> sets
+<code>status: superseded</code> and <code>superseded_by</code>
+(<code>internal/mcpserver/tools_write.go:1844-1846</code>).
+<code>concept_archive</code> moves the page to an archive map with
+<code>status: deprecated</code> by default, or <code>archived</code>.
+<code>kb.IsRetired</code> names those three statuses as "no longer
+current" (<code>internal/kb/linkgraph.go:29-31</code>).</li>
+<li><strong>Hidden.</strong> Only <code>archived</code> is hidden from
+<code>search</code>, and <code>search</code> brings archived pages back
+when nothing live matches
+(<code>internal/mcpserver/tools_search.go:155</code>,
+<code>:168-173</code>).</li>
+<li><strong>Gone.</strong> <code>concept_delete</code> removes the file.
+Git history keeps it, and <code>concept_history</code> reads it
+back.</li>
+</ul>
+<p><code>disputed</code> and <code>draft</code> are values in the
+documented vocabulary. Lint knows <code>disputed</code> is not retired,
+and no read path excludes either.</p>
+<p>Every move between these states is made by the same tools the writing
+agent holds. The Surveyor, the optional model loop, holds them too,
+minus a deny list of destructive tools
+(<code>internal/surveyor/allow.go:25-28</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every write enters through one MCP dispatch that audits it and one git-locked wrapper that gates and commits it; the page is served at once; search hides archived pages while graph_context serves every status; edits made outside the server are committed before the next write without the gate</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every write enters through one MCP dispatch that audits it and one git-locked wrapper that gates and commits it; the page is served at once; search hides archived pages while graph_context serves every status; edits made outside the server are committed before the next write without the gate
+flowchart TD
+    subgraph W[&quot;Writers&quot;]
+        direction TB
+        A[&quot;Agent MCP tool call&lt;br/&gt;bearer token or&lt;br/&gt;loopback admin&quot;]
+        S[&quot;Surveyor model loop&lt;br/&gt;same tools, surveyor&lt;br/&gt;token, deny list&quot;]
+        A ~~~ S
+    end
+    W --&gt; D[&quot;callToolChecked&lt;br/&gt;authorize, write_veto&lt;br/&gt;hooks see ids only&quot;]
+    D --&gt; AU1[(&quot;audit.log attempt&lt;br/&gt;hash chain, Ed25519&quot;)]
+    D --&gt; G[&quot;gitWrap under KB lock&lt;br/&gt;pull --rebase first&quot;]
+    E[&quot;Editor or process&lt;br/&gt;changed the tree&quot;] -.-&gt; X[&quot;commitExternalChanges&lt;br/&gt;commits it ungated&quot;]
+    X -.-&gt; G
+    G --&gt; H[&quot;Handler writes .md&lt;br/&gt;repair-on-write&lt;br/&gt;regenerate indexes&quot;]
+    H --&gt; J{&quot;judgeWrite:&lt;br/&gt;new avoidable&lt;br/&gt;lint finding?&quot;}
+    J --&gt;|&quot;yes&quot;| R[&quot;Roll back to HEAD&lt;br/&gt;refuse with fixes&quot;]
+    J --&gt;|&quot;no&quot;| C[&quot;One git commit&lt;br/&gt;Reason, Agent trailers&lt;br/&gt;push to remote&quot;]
+    C --&gt; AU2[(&quot;audit.log completion&lt;br/&gt;outcome, commit sha&quot;)]
+    C --&gt; P[(&quot;Concept served at once&lt;br/&gt;status set by writer&quot;)]
+    P --&gt; Q[&quot;search: hides archived&lt;br/&gt;falls back to them&quot;]
+    P --&gt; GC[&quot;graph_context:&lt;br/&gt;no status filter&quot;]
+    AR[&quot;Background auto-repair&lt;br/&gt;calls gitWrap directly&quot;] -.-&gt; G
+    AR -.-&gt; NA[&quot;No audit pair&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Go binary, <code>cartographer</code>, deployed as four components
+(<code>README.md</code>, <em>The four components</em>).
+<strong>Meridian</strong> (<code>cartographer serve</code>) is the
+server: MCP over HTTP or stdio, a REST API, and the
+<strong>Atlas</strong> web UI as a switch of the same process.
+<strong>Compass</strong> (<code>cartographer connect</code>,
+<code>sync</code>) runs on each developer machine and writes client
+configuration. The <strong>Surveyor</strong>
+(<code>cartographer surveyor</code>) is a headless agent that calls a
+model and the same MCP tools.</p>
+<p>Persistence is a git working tree per KB, under the server's data
+directory, pushed to a remote the operator gave it. Beside each tree
+sits a disposable SQLite FTS5 index at
+<code>.cartographer/index.db</code>
+(<code>cmd/cartographer/serve.go:540-541</code>), rebuilt from the files
+when its schema version changes
+(<code>internal/sqlindex/sqlindex.go:1-21</code>). The link graph is an
+in-memory cache re-validated by file stat on every read
+(<code>docs/data-plane.md:192</code>). The audit trail is a JSONL file,
+<code>audit.log</code> or <code>&lt;data&gt;/audit/audit.log</code>,
+with rotated segments and a signed checkpoint index
+(<code>cmd/cartographer/serve.go:1280-1333</code>).</p>
+<p>Concurrency is serialised per KB. Every committing tool runs inside
+<code>k.WithGitLock</code>, which pulls with rebase before the handler
+and pushes after the commit, inline or on a debounced worker
+(<code>internal/mcpserver/gitwrap.go:51-170</code>). A rebase conflict
+marks the files degraded and surfaces as a guided workflow with its own
+tools (<code>conflicts_list</code>,
+<code>git_conflict_resolve</code>).</p>
+<p>Meridian calls no model. Search is keyword-only since 0.8.0, which
+removed semantic search and the Ollama dependency
+(<code>CHANGELOG.md</code>, <em>Migration note</em>). The Surveyor is
+the only component with a model client, for Anthropic, OpenAI-compatible
+and HTTP providers (<code>internal/surveyor/anthropic.go</code>,
+<code>openai.go</code>, <code>httpmodel.go</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A single machine runs <code>cartographer setup</code>, which installs
+a local service, creates the first KB against an empty git remote and
+connects every agent client it detects (<code>README.md</code>,
+<em>Install and quick start</em>). Nothing else has to run: no database
+server, no vector store, no API key. A shared server needs bearer
+tokens; the server refuses to listen on a non-loopback address without
+them (<code>cmd/cartographer/serve.go:1172-1183</code>). The store is
+plain Markdown and YAML in git, readable in an editor or Obsidian and
+repairable by hand, and a hand edit is committed by the server before
+its next write (section 7).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Dispatch and audit seam.</strong>
+<code>internal/mcpserver/sdkbridge.go:258</code> is
+<code>callToolChecked</code>: authorization, the identity requirement
+for writes, the <code>write_veto</code> hooks, then
+<code>beginAuditCall</code> at <code>:355</code>, the handler, and
+<code>call.end</code> with the outcome. The audit record shapes are
+<code>internal/mcpserver/audit.go:37-90</code> (the resource
+allow-list), <code>:252</code> (attempt) and <code>:300-317</code>
+(completion, with <code>CommitSHA</code>).</li>
+<li><strong>Write wrapper.</strong>
+<code>internal/mcpserver/gitwrap.go:51</code>: identity refusal
+<code>:60</code>, sync-in, re-authorization under the lock,
+<code>commitExternalChanges</code> <code>:85</code>, gate precheck
+<code>:99</code>, handler, index regeneration, <code>judgeWrite</code>
+<code>:119</code>, commit as the token's person <code>:138</code>, push
+<code>:159</code>.</li>
+<li><strong>Write gate.</strong>
+<code>internal/mcpserver/writegate.go</code>: <code>gatedTool</code>
+<code>:41</code> (every <code>concept_*</code> tool but
+<code>concept_transfer</code>, plus <code>supersede</code> and
+<code>source_register</code>), <code>judgeWrite</code>
+<code>:114</code>, which stages the write into a quarantine object
+directory so a refused write leaves no blob behind.</li>
+<li><strong>Concept writers.</strong>
+<code>internal/mcpserver/tools_write.go</code>:
+<code>concept_write</code> <code>:27</code>,
+<code>writeConceptAndLog</code> <code>:526</code>,
+<code>concept_patch</code> <code>:572</code>, <code>supersede</code>
+<code>:1789</code>, <code>concept_batch</code> <code>:3245</code>,
+<code>concept_delete</code> <code>:3703</code>;
+<code>internal/mcpserver/tools_archive.go:24</code> for
+<code>concept_archive</code>; <code>internal/kb/kb.go:1400-1416</code>
+for <code>WriteConcept</code> and its <code>if_match</code> rule.</li>
+<li><strong>Search.</strong>
+<code>internal/mcpserver/tools_search.go</code>: handler
+<code>:117-256</code>, archived default and fallback
+<code>:155-173</code>, the backend filter <code>:568-586</code>, the
+centrality prior <code>:637</code>; FTS5 schema in
+<code>internal/sqlindex/sqlindex.go</code>.</li>
+<li><strong>Graph reads.</strong>
+<code>internal/mcpserver/tools_graph.go</code>:
+<code>visibleGraph</code> <code>:38</code>, <code>rankNeighbours</code>
+<code>:79</code>, <code>graph_context</code> <code>:133-251</code>,
+<code>link_suggest</code> with its retired filter <code>:298</code>,
+<code>:367</code>; the related block in
+<code>internal/mcpserver/search_related.go:62-113</code>.</li>
+<li><strong>Access policy.</strong>
+<code>internal/auth/auth.go:57-141</code>;
+<code>internal/mcpserver/policy.go:598-604</code>
+(<code>Visible</code>), <code>:747-785</code> (<code>allowedID</code>,
+<code>conceptClass</code>).</li>
+<li><strong>Audit store.</strong> <code>internal/audit/audit.go</code>:
+<code>Entry</code> <code>:59-96</code>, <code>AppendEvent</code>
+<code>:576</code>, <code>appendDurable</code> <code>:658</code>,
+rotation <code>:710</code>, <code>VerifyAudit</code> <code>:1237</code>;
+opened in <code>cmd/cartographer/serve.go:1287</code>.</li>
+<li><strong>Background repair.</strong>
+<code>internal/mcpserver/autorepair.go:743-800</code>.</li>
+<li><strong>Client provisioning and approval.</strong>
+<code>internal/provisioning/provisioning.go:1622-1626</code>,
+<code>:3252-3291</code>;
+<code>internal/provisioning/approvalmigration.go:13-18</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A KB is a directory with
+<code>data/&lt;map&gt;/&lt;concept&gt;.md</code>, journals with dated
+slugs, an optional <code>services/</code> namespace,
+<code>skills/</code>, <code>agents/</code> and <code>hooks/</code> for
+provisioning artifacts, a <code>glossary.yaml</code>, a root
+<code>log.md</code> and an <code>instructions.md</code>
+(<code>docs/data-plane.md:19-70</code>). A concept id is its path
+without the extension, so the map is the id's first segment. An expanded
+concept is a directory whose <code>index.md</code> is the page, with
+satellites and assets beside it.</p>
+<p>Each map's <code>_map.md</code> can declare a contract: a type
+palette, required fields per type, allowed values per field, forbidden
+fields, templates and <code>read_whole</code> types
+(<code>docs/data-plane.md:133-142</code>). The contract is enforced by
+lint, and lint is enforced on write by the gate.</p>
+<p>Provenance is three things. The frontmatter <code>provenance</code>
+list is free text the writer supplies. Each commit carries
+<code>Reason</code>, <code>Agent</code> and
+<code>Cartographer-Token</code> trailers and is authored as the person
+behind the token (<code>internal/mcpserver/gitwrap.go:124-138</code>,
+<code>internal/mcpserver/writerauthor.go:92</code>). The
+<code>Agent</code> trailer is the MCP client's self-declared name, which
+the code's own comment calls "an attribution hint, not an identity"
+(<code>internal/mcpserver/gitwrap.go:378-384</code>). The audit trail is
+the third.</p>
+<p>Temporal fields are record time only. <code>timestamp</code> and git
+commit dates are what the server reads. <code>valid_from</code> and
+<code>valid_to</code> appear in Go only in two frontmatter parse
+tests.</p>
+<p>Scope has two layers. Across KBs it is a physical partition: one
+repository each. Inside a KB the token's permission rules name maps,
+journals and types, covered in section 9.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is tool-mediated. Four entry tools carry an always-load
+flag that Claude Code and Antigravity honour:
+<code>atlas_overview</code>, <code>search</code>,
+<code>concept_read</code> and <code>graph_context</code>
+(<code>docs/control-plane.md:57</code>). Nothing injects KB content into
+a session automatically. The session-start hook syncs client
+configuration, not pages (<code>docs/sync.md:48</code>).</p>
+<p><strong><code>search</code></strong> is keyword-only
+(<code>internal/mcpserver/tools_search.go:93-112</code>). On FTS5 the
+index is a trigram tokenizer with diacritics removed and bm25 weights 5,
+2 and 1 for title, metadata and body
+(<code>internal/sqlindex/sqlindex.go:1-10</code>); without it, an
+in-memory index. All terms are required first; with fewer than three
+full matches an any-term pass appends partial hits after them. A
+glossary expands aliases into at most eight queries. A
+personalized-PageRank percentile lifts a score by at most 20%
+(<code>:50</code>, <code>:637</code>). Twenty hits by default, each with
+a 200-character snippet and the page's byte size so the agent can choose
+an outline or a section read.</p>
+<p>Archived pages are dropped inside the backend filter before the cut,
+so the page of results stays full (<code>:568-586</code>). When nothing
+live matches and the caller did not pass <code>include_archived</code>,
+the search runs again with archived pages and flags the answer
+<code>archived_fallback</code> (<code>:168-173</code>).
+<code>superseded</code> and <code>deprecated</code> pages are ordinary
+hits.</p>
+<p><strong>The related block</strong> under a search is
+<code>graph_context</code>'s ranking seeded from the top hits, with
+every retired page left out
+(<code>internal/mcpserver/search_related.go:98-100</code>).</p>
+<p><strong><code>graph_context</code></strong> takes a query or up to
+ten ids, seeds personalized PageRank from keyword hits, and returns up
+to 30 neighbours over links in both directions
+(<code>internal/mcpserver/tools_graph.go:133-251</code>). It seeds with
+<code>skipArchived</code> false and calls <code>rankNeighbours</code>
+with no skip predicate (<code>:183</code>, <code>:230</code>). An
+archived, deprecated or superseded page is returned like any other, with
+no status field in the result.</p>
+<p>So three read paths built on one ranking hold three different rules:
+search hides archived, its related block hides all three retired
+statuses, and <code>graph_context</code> hides none.</p>
+<p>The read side records what it touched. <code>search</code> stamps the
+hits as surfaced, <code>concept_read</code> stamps a read, and a
+whole-KB search with no hits is recorded as a miss for
+<code>kb_status</code> (<code>tools_search.go:196-216</code>). Those
+records drive the maintenance list, not ranking.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen on the hot path, synchronously, through MCP tools. The
+agent blocks while the server pulls, writes, lints, commits and pushes;
+the push can be moved to a debounced worker
+(<code>gitwrap.go:152-159</code>). The server calls no model on the
+write path, so the lag before a page is searchable is the duration of
+the call: the next search reconciles the index with the files.</p>
+<p>The write sequence inside the lock
+(<code>internal/mcpserver/gitwrap.go:68-163</code>):</p>
+<ol type="1">
+<li>Pull with rebase. A conflict aborts the write.</li>
+<li>Re-authorize the call against state the pull may have changed.</li>
+<li>Commit any uncommitted changes in the tree as "external changes"
+(<code>:354-367</code>). This is how an edit made in an editor reaches
+history.</li>
+<li>Refuse if an earlier failed write left files behind.</li>
+<li>Run the handler. <code>concept_write</code> overwrites without a
+check unless the caller passes <code>if_match</code>
+(<code>internal/kb/kb.go:1400-1404</code>).</li>
+<li>Repair what the write can fix safely, regenerate generated
+indexes.</li>
+<li><code>judgeWrite</code>: stage the result into a quarantine object
+store, lint the changed pages, and compare their findings with the
+findings at <code>HEAD</code>. A new finding of a check marked
+<code>AvoidableAtWrite</code> rolls the tree back and refuses with each
+finding and its fix. No setting turns the gate off and nothing accepts a
+finding (<code>writegate.go:18-27</code>).</li>
+<li>Commit, authored as the token's person, with the caller's
+<code>reason</code>.</li>
+<li>Push.</li>
+</ol>
+<p>Three properties of step 7 matter. The gate fails open on a git
+problem that leaves the tree intact, and it is skipped when the tree was
+not clean or the repository has no commit
+(<code>writegate.go:67-79</code>, <code>:105-114</code>). In a KB that
+is not a git repository there is no gate at all (<code>:46-50</code>).
+And a finding on a page the caller cannot see is neither judged nor
+named, so a map-scoped writer is not refused for what its write does to
+pages outside its maps (<code>:110-113</code>).</p>
+<p>The write response carries advice the gate does not act on. A new
+page whose title nearly matches an existing one gets a
+<code>similar</code> list, archived pages included. A written line
+already carried by enough other pages gets a <code>repeated_fact</code>
+finding (<code>internal/mcpserver/factfinder.go:61</code>,
+<code>internal/mcpserver/tools_review.go:166-188</code>). Both are
+review items, and neither refuses.</p>
+<p>Contradiction is a page type. A <code>Contradiction</code> concept
+with <code>resolution_status: open</code> is reported by
+<code>contradiction_report</code> and blocks <code>commit_gate</code>,
+which is a tool an agent calls, not a step of the write path:
+<code>CommitGate</code> has callers only in <code>commit_gate</code> and
+<code>gate_check</code>
+(<code>internal/mcpserver/tools_governance.go:370</code>,
+<code>:570</code>). <code>conflict_resolve</code> closes one, and the
+Surveyor may call it.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Every write costs a pull, a lint of the changed pages against
+<code>HEAD</code> and a commit, under a lock that serialises writers on
+that KB. No background pass rewrites the store. The periodic auto-repair
+applies a quota of safe fixes per run in one commit
+(<code>internal/mcpserver/autorepair.go:743-800</code>). The Surveyor's
+token spend is bounded per run by step and token limits
+(<code>internal/surveyor/loop.go:20-36</code>). Reads inject nothing
+unless called; a default search answer is held under 5 KB on average by
+a test (<code>docs/control-plane.md:736</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Meridian registers about seventy tools
+(<code>internal/mcpserver/tools.go:50</code>), and the default agent
+profile hides the operator ones from <code>tools/list</code> while
+keeping them callable (<code>internal/mcpserver/visibility.go</code>,
+<code>advancedToolNames</code>). The agent is expected to search before
+it writes and to write what it learns; the operating guide arrives in
+the MCP <code>initialize.instructions</code>
+(<code>docs/control-plane.md:66</code>).</p>
+<p>Compass makes the integration portable. It writes MCP entries, a
+session-start hook that runs <code>cartographer sync</code> at most
+every ten minutes, and a <code>PostToolUse</code> hook that returns
+write findings to the agent as feedback it must act on, in each client's
+own channel (<code>docs/sync.md:48-50</code>). It also projects the KB's
+skills, subagents, hooks and MCP descriptors into each client's format.
+A KB artifact waits for a person's <code>cartographer approve</code>
+only when it is an MCP descriptor, a hook, ships an executable file, or
+declares hooks or MCP servers
+(<code>internal/provisioning/provisioning.go:3252-3291</code>).
+Everything else, including a skill an agent just wrote with
+<code>artifact_write</code>, is installed at the teammate's next
+sync.</p>
+<p>The Surveyor is the same integration with a model inside the server's
+trust boundary: a loop of at most 30 steps and 200,000 tokens by default
+that sees the read tools and the write tools a task allows
+(<code>internal/surveyor/loop.go:20-36</code>,
+<code>internal/surveyor/allow.go:25-40</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-gate-guards-structure-not-belief">The gate guards structure,
+not belief</h3>
+<p>The write gate is the strongest part. It is one enforcement point for
+every concept writer, it judges the final diff rather than the request,
+and a refusal leaves no object in the repository, not even the blob of
+the refused text (<code>writegate.go:115-121</code>). Twenty-nine tests
+are named for it.</p>
+<p>What it guards is that the wiki stays well-formed: links resolve,
+contracts hold, indexes list their pages, no secret is committed. A
+wrong statement with good links passes, and is served on the next call
+to every agent of the team. <code>write_veto</code> hooks can refuse a
+write, but they see the tool name, the principal and the allow-listed
+identifiers, never the content
+(<code>internal/mcpserver/writeveto.go:52-80</code>,
+<code>docs/hooks.md:70-88</code>).</p>
+<h3 id="the-sole-writer-has-a-side-door">The sole writer has a side
+door</h3>
+<p>The README calls Meridian the only writer of a KB. Inside the server
+that holds: every committing tool goes through <code>gitWrap</code>. Two
+paths reach the history without the gate. An edit made in the working
+tree by an editor or another process is committed by
+<code>commitExternalChanges</code> before the next tool call, under the
+server's name with the reason
+<code>uncommitted changes found before &lt;tool&gt;</code>
+(<code>gitwrap.go:354-367</code>). And a commit pushed to the remote by
+anyone with push access arrives through the pull at the start of every
+write. Lint reports both afterwards; neither is refused.</p>
+<h3 id="status-is-a-lifecycle-field-the-writer-sets">Status is a
+lifecycle field the writer sets</h3>
+<p>Retirement is written by the same agent tools as content, and its
+effect on reads depends on the tool. <code>graph_context</code> returns
+retired pages with no marker (section 6), so an agent that follows the
+documented one-call reading path can be handed the superseded page as
+context.</p>
+<h3 id="audit">Audit</h3>
+<p>The audit trail is on by default (<code>serve.go:1280</code>) and
+records every tool call, reads and refusals included, as an attempt and
+a completion. Entries chain by hash and are signed; rotated segments are
+checkpointed before retention may delete them, and the checkpoint index
+is signed too (<code>internal/audit/audit.go:185-203</code>).
+<code>cartographer audit verify</code> takes the public key from the
+operator. In <code>required</code> mode a failed attempt append rejects
+the call before it runs
+(<code>internal/mcpserver/audit.go:252-287</code>).</p>
+<p>Four limits:</p>
+<ul>
+<li><strong>No content.</strong> An entry holds the tool, the principal
+hash, allow-listed identifiers and the commit sha. What changed is in
+git, linked by the sha.</li>
+<li><strong><code>concept_batch</code> records no ids.</strong> It has
+no entry in <code>auditResourceFields</code>, so a batch of many writes
+is one pair naming only the commit
+(<code>internal/mcpserver/audit.go:37-90</code>).</li>
+<li><strong>Background auto-repair is not audited.</strong> It wraps the
+handler in <code>gitWrap</code> and calls it directly, outside
+<code>callToolChecked</code>
+(<code>internal/mcpserver/autorepair.go:767-773</code>). Its runs go to
+a separate pruned log (<code>:157-175</code>).</li>
+<li><strong><code>graph_context</code>'s free-text query is
+recorded.</strong> The allow-list's own comment excludes "free-text
+query strings", and the <code>graph_context</code> entry lists
+<code>query</code> (<code>audit.go:30</code>, <code>:56</code>).</li>
+</ul>
+<h3 id="scope">Scope</h3>
+<p>Inside a KB, a token's rules select maps, journals and concept types,
+and <code>Policy.Allows</code> requires one rule to match all three
+(<code>internal/auth/auth.go:127-141</code>). The map comes from the
+concept id and the type from the page's frontmatter
+(<code>policy.go:763-785</code>), and the predicate runs inside the
+search backend filter and in the construction of every graph view. A
+hidden page is indistinguishable from a missing one on
+<code>concept_read</code> (<code>policy_retrieval_test.go:74-83</code>).
+The values come from server-side token configuration, not from the
+model.</p>
+<p>Two edges. On a loopback listener with authentication off, every
+caller is the local admin (<code>internal/auth/auth.go:520-523</code>).
+And because the type selector reads the page's own <code>type</code>, a
+writer allowed to change a page's type within a map it may write can
+move the page into or out of another token's view.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> Map, journal
+and type keys are applied as a predicate on every concept read, from
+token configuration.</li>
+<li><strong><code>audit_log</code> — earned.</strong> An append-only,
+signed hash chain of every tool call in the server's own data, with the
+commit sha of each write. It does not cover background auto-repair,
+external edits swept into a commit, or the content of a change.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Populated
+tests require an archived page, a hidden page and a deprecated neighbour
+to be absent, each beside a positive control.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>status</code> is a discrete field with retired values and a
+producer, and two reads exclude on it. It is a lifecycle state the
+writing agent sets, <code>disputed</code> excludes nothing, and the
+entry tool <code>graph_context</code> filters none of it.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Supersede,
+archive and delete act on a page path; the root <code>log.md</code>
+records retirements by path
+(<code>internal/kb/retirements.go:10-27</code>). Nothing keyed on a
+value stops the same statement being written again.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>valid_from</code> and <code>valid_to</code> are documented free
+fields that no code reads.</li>
+<li><strong><code>human_review</code> — withheld.</strong> A page is
+served from its commit. The one approval a person gives,
+<code>cartographer approve</code>, is for executable artifacts on a
+client machine, not for memory content. The Atlas is read-only for
+concepts, and <code>conflict_resolve</code> is on the agent's
+surface.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading: 7,607 Go test
+functions in 1,054 files, 1,558 of them in
+<code>internal/mcpserver</code>.</p>
+<p>Memory-specific tests that can fail:</p>
+<ul>
+<li><strong>Archived exclusion.</strong>
+<code>TestSearch_ArchivedHiddenByDefault</code> seeds a live and an
+archived page that both match <code>gateway</code>, requires exactly the
+live one, then both with <code>include_archived</code>;
+<code>TestSearch_ArchivedFallback</code> requires the fallback flag and
+its absence under an explicit false
+(<code>internal/mcpserver/archived_test.go:40-71</code>).</li>
+<li><strong>Scope leaks.</strong>
+<code>TestSearchSectionNeverLeaksAHiddenConcept</code> requires a
+map-scoped search to omit a hidden page that shares the query term and
+to contain the visible one
+(<code>internal/mcpserver/searchsection_test.go:132-151</code>).
+<code>TestPolicyRetrievalFiltersMixedVisibility</code> checks six tools
+for hidden ids but asserts nothing present, so it would pass on empty
+answers
+(<code>internal/mcpserver/policy_retrieval_test.go:56-72</code>).</li>
+<li><strong>Retired neighbours.</strong> The related block must omit a
+deprecated neighbour and include a live one
+(<code>internal/mcpserver/search_related_test.go:122-146</code>).</li>
+<li><strong>Audit chain.</strong> Hash chain, tamper detection, invalid
+signature and incomplete-attempt cases in
+<code>internal/audit/audit_test.go:121-381</code>; the attempt and
+completion pair in
+<code>internal/mcpserver/audit_test.go:57-93</code>.</li>
+<li><strong>Write gate.</strong> Twenty-nine
+<code>TestWriteGate_*</code> cases across the
+<code>internal/mcpserver</code> tests.</li>
+</ul>
+<p>No test found asserts what <code>graph_context</code> returns for an
+archived or superseded page.</p>
+<p><code>test/usage/</code> is an agent-level harness: seven task files,
+each run by a headless agent CLI against the binary, judged by shell
+assertions on the transcript and the KB rather than by a second model
+(<code>test/usage/run.sh:1-30</code>). It runs on a maintainer's
+machine, not in CI, and no result is committed.
+<code>docs/control-plane.md:736</code> cites a benchmark behind
+restoring the 20-hit default; its data is not in the tree.</p>
+<p><code>CITATION.cff</code> cites the software. No paper is
+referenced.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Gate the final diff, not the request.</strong> Run the
+write, lint what changed against <code>HEAD</code>, and refuse only
+findings the write introduced and could have avoided. Pre-existing debt
+never blocks an unrelated edit.</li>
+<li><strong>Quarantine the refused write's objects.</strong> Staging
+into a throwaway object directory means a refused secret never lands as
+a blob.</li>
+<li><strong>Audit as an attempt and a completion pair.</strong> An
+attempt with no completion is evidence the server stopped mid-call, and
+the next start closes it as <code>interrupted</code>.</li>
+<li><strong>Hand the verifying key to the operator.</strong> The
+verifier takes the public key as an argument rather than reading it from
+the log it checks.</li>
+<li><strong>Make hidden and missing the same answer.</strong> A scoped
+caller cannot probe for a page by the error it gets.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Several read paths with their own status rule.</strong> Put
+the retired filter in the shared ranking, or the most convenient tool
+becomes the one that serves the superseded page.</li>
+<li><strong>Sweeping external edits into a commit before the
+gate.</strong> If the store is editable outside the gateway, either
+refuse to write over unexplained changes or lint them as part of the
+next write.</li>
+<li><strong>An audit seam that background jobs walk around.</strong> The
+unattended writer is the one most worth recording.</li>
+<li><strong>A text artifact that installs on every machine without
+review.</strong> Skills and subagents steer agents as much as hooks
+do.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that wants its agents' notes as a wiki people can
+also read and repair, with git as the backup and sync layer and an audit
+an operator can verify, and that accepts the agents as the editors. The
+cost is operational: a single binary, but a git remote per KB, tokens
+per person and client, and a server that serialises writes per KB.</p>
+<p>It does not suit a reader who needs memory to be reviewed before it
+is believed, or a correction to stay corrected. The design governs
+whether the wiki is well-formed and who changed it, and leaves what it
+says to whoever writes next.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>graph_context</code>'s lack of a status filter intended?
+Its shared ranking is credited to D242 and D781 in code comments, and no
+comment states a reason for leaving retired pages in.</li>
+<li>How often does the external-changes commit fire on a shared server?
+It depends on whether operators edit the working tree directly.</li>
+<li>Does any deployment use <code>write_veto</code> hooks to route
+writes to a person? The hook sees no content, so it could only gate by
+tool, principal and id.</li>
+<li>What did the benchmark behind D1354 measure, and on which KB?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/mcpserver/sdkbridge.go</code></td>
+<td><code>callToolChecked</code>: authorization, veto hooks, audit
+seam</td>
+</tr>
+<tr>
+<td><code>internal/mcpserver/gitwrap.go</code></td>
+<td>The write wrapper: lock, pull, external changes, gate, commit,
+push</td>
+</tr>
+<tr>
+<td><code>internal/mcpserver/writegate.go</code></td>
+<td><code>gatedTool</code>, <code>judgeWrite</code></td>
+</tr>
+<tr>
+<td><code>internal/mcpserver/tools_write.go</code></td>
+<td>Concept writers, supersede, delete, batch</td>
+</tr>
+<tr>
+<td><code>internal/mcpserver/tools_archive.go</code></td>
+<td><code>concept_archive</code></td>
+</tr>
+<tr>
+<td><code>internal/mcpserver/tools_search.go</code></td>
+<td>Search, archived filter and fallback, centrality prior</td>
+</tr>
+<tr>
+<td><code>internal/mcpserver/tools_graph.go</code></td>
+<td><code>graph_context</code>, <code>link_suggest</code>,
+<code>rankNeighbours</code></td>
+</tr>
+<tr>
+<td><code>internal/mcpserver/search_related.go</code></td>
+<td>The related block and its retired filter</td>
+</tr>
+<tr>
+<td><code>internal/mcpserver/policy.go</code>,
+<code>internal/auth/auth.go</code></td>
+<td>Token policy and the visibility predicate</td>
+</tr>
+<tr>
+<td><code>internal/mcpserver/audit.go</code>,
+<code>internal/audit/audit.go</code></td>
+<td>Audit events, chain, signatures, rotation, verify</td>
+</tr>
+<tr>
+<td><code>internal/mcpserver/autorepair.go</code></td>
+<td>Background repair</td>
+</tr>
+<tr>
+<td><code>internal/kb/kb.go</code>,
+<code>internal/kb/linkgraph.go</code>,
+<code>internal/kb/retirements.go</code></td>
+<td>Concept storage, status predicates, retirement log</td>
+</tr>
+<tr>
+<td><code>internal/sqlindex/sqlindex.go</code></td>
+<td>FTS5 index</td>
+</tr>
+<tr>
+<td><code>internal/provisioning/provisioning.go</code></td>
+<td>Client artifact install and approval gate</td>
+</tr>
+<tr>
+<td><code>internal/surveyor/allow.go</code>,
+<code>internal/surveyor/loop.go</code></td>
+<td>Surveyor tool allowlist and limits</td>
+</tr>
+<tr>
+<td><code>docs/data-plane.md</code>, <code>docs/control-plane.md</code>,
+<code>docs/sync.md</code>, <code>docs/hooks.md</code></td>
+<td>Project documentation, read as claims</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>Validity fields are read by no code.</strong>
+<code>git grep -n -E 'valid_from|valid_to|ValidFrom' -- '*.go'</code>
+returns four lines, all in
+<code>internal/okf/frontmatter_test.go</code>;
+<code>git grep -n 'review_after' -- 'internal/*.go' ':!*_test.go'</code>
+matches production code.</li>
+<li><strong><code>disputed</code> filters nothing.</strong>
+<code>git grep -n -w 'disputed' -- 'internal/*.go' 'cmd/*.go' ':!*_test.go'</code>
+returns two comments, in <code>internal/kb/linkgraph.go:27</code> and
+<code>internal/lint/structure.go:44</code>.</li>
+<li><strong>Retired-status filters are on three reads.</strong>
+<code>git grep -n -E 'IsRetired\(|retired\(' -- 'internal/*.go' 'cmd/*.go' ':!*_test.go'</code>
+outside <code>internal/lint</code> returns
+<code>search_related.go:98</code>, <code>tools_graph.go:298</code>,
+<code>:367</code>, the web UI's retired listing and the test KB
+generator.</li>
+<li><strong>The commit gate is advisory.</strong>
+<code>git grep -n -E 'GateBlockers|CommitGate\(|commitGate' -- 'internal/*.go' ':!*_test.go'</code>
+returns the definitions in <code>internal/kb/gate.go</code> and the two
+tool callers in <code>tools_governance.go:370</code> and
+<code>:570</code>.</li>
+<li><strong>No approval of memory content.</strong>
+<code>git grep -n -i -E 'approv|proposal|pending_review|awaiting' -- 'internal/*.go' ':!*_test.go'</code>
+returns client configuration, MCP and artifact approvals in
+<code>internal/clientconfig</code> and
+<code>internal/provisioning</code>, and an HTTP timeout message.</li>
+<li><strong>The web UI has no concept write route.</strong>
+<code>git grep -n -E 'MethodPost|MethodPut|MethodPatch|MethodDelete|"POST"|"PUT"' -- 'internal/mcpserver/*.go' ':!*_test.go'</code>
+returns component, client-settings, Surveyor, usage and MCP
+handlers.</li>
+<li><strong><code>concept_batch</code> and <code>kb_repair</code> have
+no audit resource entry.</strong>
+<code>grep -n -E 'concept_batch|kb_repair' internal/mcpserver/audit.go</code>
+returns nothing;
+<code>grep -n 'concept_merge' internal/mcpserver/audit.go</code>
+matches.</li>
+<li><strong>Auto-repair bypasses the audit seam.</strong>
+<code>git grep -n -E 'beginAuditCall\(' -- 'internal/*.go' ':!*_test.go'</code>
+returns the definition and two calls, both in
+<code>sdkbridge.go</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- README.md 'docs/*.md' CITATION.cff</code>
+returns nothing;
+<code>git grep -n -i 'benchmark' -- README.md 'docs/*.md'</code> matches
+<code>docs/control-plane.md:736</code>.</li>
+<li><strong>No submodules.</strong> <code>.gitmodules</code> is
+absent.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-24</strong> — <a
+href="https://github.com/BeppeTemp/cartographer/commit/98be02aab51f557700ad6476f7af5d263c4776d1"><code class="commit-id" title="98be02aab51f557700ad6476f7af5d263c4776d1">98be02aa…</code></a>.
+First reading, from a full clone at the head of <code>main</code>;
+triage had selected <code>5a3a39085751</code>, 53 commits earlier.
+Screened first: one auto-run surface, <code>server.json</code>, an MCP
+registry manifest declaring a start command, which was not run; nothing
+inside the seven-day cooldown; one build-time execution point, the
+<code>Makefile</code>; one unpinned surface,
+<code>web/package.json</code>, with a lockfile. <code>AGENTS.md</code>,
+<code>CLAUDE.md</code> and the docs were read as data. Nothing was
+installed, built or run, and the test counts were not run. Three marks:
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

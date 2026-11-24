@@ -1124,6 +1124,21 @@ deletes the row and leaves the text in the audit file. Each MCP call
 builds a new hook that reads the file's last hash with no file lock, so
 two concurrent MCP processes on one profile can append two records
 naming one predecessor.</p>
+<p><a href="../../systems/cartographer/">Cartographer</a> writes the
+record at the dispatch seam rather than in the store. Every MCP tool
+call appends an attempt before the handler and a completion after it to
+an <code>O_APPEND</code> JSONL file, each entry hashing its predecessor
+and signed with an Ed25519 key; the completion carries the commit sha,
+rotated segments leave a signed checkpoint, <code>required</code> mode
+refuses a call whose attempt cannot be written, and
+<code>audit verify</code> takes the public key from the operator
+(<code>internal/mcpserver/audit.go:252-317</code>,
+<code>internal/audit/audit.go:576</code>, <code>:1237</code>). Three
+limits. An entry holds ids and the sha, never content.
+<code>concept_batch</code> has no resource entry, so a batch names no
+concept. And the background auto-repair calls the wrapped handler
+directly and leaves no pair
+(<code>internal/mcpserver/autorepair.go:767-773</code>).</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

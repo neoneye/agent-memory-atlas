@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 862 reports.</strong></p>
+<p><strong>This page covers all 863 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35469,6 +35469,53 @@ agents and need membership, ownership and private agents enforced on the
 server rather than trusted from the client.</li>
 <li>Do not copy when: a fact must be provably gone after a delete, or
 you must show what the memory held before a revision.</li>
+</ul>
+<h3 id="cartographer"><a
+href="../systems/cartographer/"><code>cartographer</code></a></h3>
+<ul>
+<li>Best idea: <strong>gate the final diff against
+<code>HEAD</code>.</strong> <code>judgeWrite</code> stages the write
+into a quarantine object store, lints the changed pages and refuses only
+findings the write introduced and could have avoided, rolling the tree
+back so a refused write leaves not even a blob; no setting lowers it
+(<code>internal/mcpserver/writegate.go:18-27</code>,
+<code>:114</code>).</li>
+<li>Second idea: an attempt and a completion audit event around every
+MCP tool call, hash-chained and Ed25519-signed, on by default, with the
+commit sha on the completion, a <code>required</code> mode that refuses
+the call when the attempt cannot be written, and a verifier that takes
+the public key from the operator.</li>
+<li>Biggest risk: <strong>the reading tool serves what search
+hides.</strong> <code>graph_context</code>, one of four entry tools,
+seeds from keyword hits with archived pages included and ranks
+neighbours with no status filter, so superseded and archived pages come
+back unmarked, while <code>search</code> hides archived pages and its
+related block hides every retired status
+(<code>internal/mcpserver/tools_graph.go:183</code>,
+<code>:230</code>).</li>
+<li>Second risk: no person stands between a write and every teammate's
+agent. Status is the writer's own field, <code>conflict_resolve</code>
+is on the agent's surface, edits made in the working tree are committed
+ungated before the next write, and a text-only skill an agent writes
+installs on every client at the next sync. The audit omits background
+auto-repair and the ids of a <code>concept_batch</code>.</li>
+<li>Most reusable component: <code>judgeWrite</code> with its
+quarantine, <code>internal/mcpserver/writegate.go:114</code>, and the
+audit package <code>internal/audit/audit.go</code> with
+<code>TestVerifyTampered</code> at
+<code>internal/audit/audit_test.go:147</code>.</li>
+<li>Maturity impression: Apache-2.0; 203,603 lines of Go outside tests
+and 257,103 of tests, a 38,312-line TypeScript web UI and 785 decision
+records; 1,509 commits from 18 July to 24 November 2026, 1,434 of them
+by the author; latest release v0.29.1 on 18 November 2026; 7,607 test
+functions with CI, none run here. Three marks:
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</li>
+<li>Study when: you are building shared, human-readable memory that
+several agents write, and want a deterministic write gate and an audit
+an operator can verify.</li>
+<li>Do not copy when: memory must be approved by a person before agents
+act on it, or a retired page must stay out of every read path.</li>
 </ul>
         </article>
       </div>
