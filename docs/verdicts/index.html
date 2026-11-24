@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 855 reports.</strong></p>
+<p><strong>This page covers all 856 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35169,6 +35169,52 @@ chosen by the model.</li>
 <li>Do not copy when: memory must be corrected and restated, or an
 idempotency layer sits in front of a store whose rows can be
 deleted.</li>
+</ul>
+<h3 id="commonly"><a
+href="../systems/commonly/"><code>commonly</code></a></h3>
+<ul>
+<li>Best idea: <strong>gate a memory write on who started the
+turn.</strong> A public seat's child token carries an owner-woken marker
+only when the owner's own message woke the turn, and both memory routes
+refuse an unmarked token before reading the body; a workspace seat's
+turn in a room not confirmed private gets no memory and no memory
+tools.</li>
+<li>Second idea: a shared view built from an allow-list.
+<code>filterSectionsByVisibility</code> copies only declared fields per
+entry kind, so history and any field added later stay with the owner,
+and populated tests require private sections absent beside public and
+pod ones present.</li>
+<li>Biggest risk: <strong>a full sync erases what the agent may not
+write.</strong> The sync route refuses <code>system_exchanges</code> and
+anything but an append to <code>cycles</code>, then in
+<code>mode: 'full'</code> <code>$set</code>s <code>sections</code> to
+the agent's payload, removing the platform's ring, the cycle journal and
+every omitted section's history. The full-mode test seeds only
+agent-writable sections.</li>
+<li>Second risk: correction and deletion. An overwrite keeps the old
+text in a ten-entry history that the agent's own read returns; no route
+deletes a memory document and human account deletion keeps it; the model
+chooses a section's visibility, a <code>public</code> section shows on
+an unauthenticated profile, and the owner's editor cannot narrow
+it.</li>
+<li>Most reusable component: <code>filterSectionsByVisibility</code> and
+its tests, <code>backend/services/agentMemoryService.ts:580-690</code>
+and
+<code>backend/__tests__/unit/services/agentMemoryService.visibility.test.ts</code>,
+and the owner-woken gate,
+<code>backend/routes/agentsRuntime.ts:3140-3146</code> with
+<code>backend/services/spawnCredentialService.ts:127-129</code>.</li>
+<li>Maturity impression: Apache-2.0; 4,437 commits from 2 February 2025
+to 24 November 2026, almost all from two people, at product tag v3.1.0;
+450 test cases in 26 memory test files, run in CI against an in-memory
+MongoDB and not run here. Two marks: <code>scope_enforced</code>,
+<code>negative_eval</code>.</li>
+<li>Study when: you are adding memory to a workspace where several
+people's agents meet, and need rules for which agent sees which section
+and which turn may write.</li>
+<li>Do not copy when: a memory must stay corrected, be deletable for a
+person who leaves, or be retrieved by relevance rather than prepended
+whole.</li>
 </ul>
         </article>
       </div>

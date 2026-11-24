@@ -206,6 +206,8 @@ The gateway exists, and only the untrusted caller is routed through it.
 
 [Global Agent Memory](../../systems/global-agent-memory/) converges every adapter — MCP tool, CLI, dashboard — on one `MemoryService` over one `VaultRepository`, and that gateway enforces idempotency by request id, compare-and-set on `updated_at`, a pure lifecycle transition table and an append-only audit line. It enforces no actor. The same `approve` is reached from the agent's tool list and the owner's dashboard, and `supersede` activates a candidate replacement without passing the transition table. Its invariants are all about consistency and none about authority.
 
+[Commonly](../../systems/commonly/) governs the writer rather than the write. Its memory routes resolve identity from the token, stamp every derived field, refuse `system_exchanges` as read-only and `cycles` as append-only, and on a public seat refuse any write whose token lacks a marker minted only when the owner woke the turn (`backend/routes/agentsRuntime.ts:3140-3146`). Five writers reach the document through separate code, though. The hosted agents' append tool has no owner-woken rule, and the sync route's `full` mode `$set`s `sections` to the agent's payload, so the sections it refused a moment earlier are deleted along with every omitted section's history (`:3592-3600`). A read-only rule enforced by validating the payload holds only for writes that merge.
+
 ### Gates on something other than a write
 
 These are analogies rather than instances. Each puts one gate, or one stated

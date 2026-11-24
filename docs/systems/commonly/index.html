@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted multiplayer
+workspace whose coding agents keep one sectioned memory document per
+identity, written over MCP and HTTP and prepended to each turn.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Commonly — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted multiplayer
+workspace whose coding agents keep one sectioned memory document per
+identity, written over MCP and HTTP and prepended to each turn.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Commonly — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted multiplayer
+workspace whose coding agents keep one sectioned memory document per
+identity, written over MCP and HTTP and prepended to each turn.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Commonly — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Commonly",
+      "description": "A self-hosted multiplayer workspace whose coding agents keep one sectioned memory document per identity, written over MCP and HTTP and prepended to each turn.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One memory document per agent identity,
+carried into every pod and runtime it joins</p>
+          <h1>Commonly</h1>
+          <p class="document-deck">A self-hosted multiplayer workspace
+whose coding agents keep one sectioned memory document per identity,
+written over MCP and HTTP and prepended to each turn.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Team-Commonly/commonly">
+              <span>Source</span>
+              <strong>Team-Commonly/commonly</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Team-Commonly/commonly/commit/0e84b9652c14d48a81f2f4911685a6006a545b7d" title="0e84b9652c14d48a81f2f4911685a6006a545b7d">
+              <span>Analyzed revision</span>
+              <code>0e84b965…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-24</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Team-Commonly--commonly" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Team-Commonly--commonly</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE, NOTICE and every product manifest; packages/integration-sdk
+and packages/types declare MIT in package.json with no licence file
+beside them; NOTICE reserves the name and logo</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>191,669
+lines of TypeScript and JavaScript under backend/ outside tests, 43,127
+under cli/, 60,219 under frontend/, 2,816 in commonly-mcp/; the
+agent-memory code is about 2,650 lines in seven files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>4,437
+commits from 2 February 2025 to 24 November 2026: 4,042 under three
+identities of Lily Shen, 318 under three of Sam Xu, 62 from a Commonly
+Agent bot identity and the rest from eleven other identities; 292 tags,
+the latest product tag v3.1.0 of 23 November 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>19,574
+it/test calls by grep in 1,706 test files, 450 of them in 26 files about
+agent memory; tests.yml runs the backend Jest suite in three shards
+against an in-memory MongoDB, plus the cli, commonly-mcp, seats and
+worker suites; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Commonly is a self-hosted workspace where people and the coding
+agents each of them runs share chat rooms ("pods") and a task board,
+with a hosted instance at commonly.me. Its agent memory is one MongoDB
+document per agent identity, divided into typed sections, written by the
+agent over MCP and HTTP, by platform hooks and by the agent's owner. The
+notable part is the policy on who may write and read. Identity and
+metadata come from the server, a public seat writes memory only on a
+turn its owner started, and other agents see only sections marked
+<code>pod</code> or <code>public</code>. The weak part is correction.
+Memory is a document rather than a set of facts, and nothing extracts,
+deduplicates or ranks it. An overwrite keeps the old text where the
+agent reads it back, and no route or tool deletes a memory document.</p>
+<p>A CLI seat (Claude Code, Codex and six other adapters run by the
+<code>commonly</code> CLI) reads <code>long_term</code> before every
+turn and prepends the whole text to the prompt. Hosted agents read and
+append through two tools. Every event the platform delivers carries a
+digest of the document, and a cue on mention events says how many
+platform entries are new.</p>
+<p>A sync in <code>full</code> mode replaces the whole
+<code>sections</code> object, so any agent token can erase the
+<code>system_exchanges</code> section the platform treats as read-only,
+along with the <code>cycles</code> journal and every section's version
+history.</p>
+<p><strong>Licence.</strong> Apache-2.0, in <code>LICENSE</code>,
+<code>NOTICE</code> and every product <code>package.json</code>, with
+one disagreement: <code>packages/integration-sdk/package.json</code> and
+<code>packages/types/package.json</code> declare MIT and no licence file
+sits beside either. <code>NOTICE</code> excludes the Commonly name, logo
+and brand assets from the grant and credits a Seatbelt policy derived
+from OpenAI Codex and a vendored OfficeCLI skill bundle, both
+Apache-2.0. The submodule <code>external/awesome-openclaw-skills</code>
+is not checked out, so its terms are not in the tree.</p>
+<p>Two marks are earned on the agent memory document:
+<code>scope_enforced</code> on the per-section visibility filter and
+<code>negative_eval</code> on the populated tests of the cross-agent
+read. Section 9 gives the reason for each of the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a section of one document an agent owns</strong>.
+The document is keyed on <code>agentName</code> and
+<code>instanceId</code>, unique together
+(<code>backend/models/AgentMemory.ts:326</code>), and carries nine
+sections (<code>:103-117</code>):</p>
+<ul>
+<li><code>soul</code>, <code>long_term</code>, <code>shared</code>,
+<code>runtime_meta</code> and <code>dedup_state</code> are text blobs
+with a visibility, a server-stamped <code>updatedAt</code> and byte
+size, a provenance stamp and up to ten prior versions
+(<code>:33-41</code>, <code>:31</code>);</li>
+<li><code>daily</code> holds notes keyed by a <code>YYYY-MM-DD</code>
+date, and <code>relationships</code> holds notes keyed by another
+agent's instance id, each with its own visibility
+(<code>:43-59</code>);</li>
+<li><code>cycles</code> is a journal of entries of at most 500
+characters, newest first, capped at 40 (<code>:91-101</code>,
+<code>:160-161</code>);</li>
+<li><code>system_exchanges</code> is a ring of at most 50 entries the
+platform writes when an agent DM ends, a loop guard trips or a task
+completes, each with a takeaway of at most 280 characters
+(<code>:61-86</code>, <code>:153-155</code>).</li>
+</ul>
+<p>Nothing interprets the text. A section holds what its writer put
+there, and the system has no notion of a fact inside it, a confidence,
+or a status. The model decides what goes into <code>long_term</code>;
+the tool description asks for "decisions, project facts, a preference
+the human stated" (<code>commonly-mcp/src/tools.js:661</code>).</p>
+<p>A section changes in three ways. A blob write replaces the text and
+pushes the previous text into <code>history</code> when it differs
+(<code>backend/services/agentMemoryService.ts:464-497</code>). An array
+write replaces the array under PUT and merges by key under a patch sync
+(<code>:510-547</code>). The two rings evict their oldest entry on
+overflow (<code>:816-839</code>, <code>:962-985</code>). A section is
+emptied by a write that blanks it and removed by a <code>full</code>
+sync that omits it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — five writers reach one document per identity; a patch keeps siblings and pushes the old text into history, a full sync replaces every section including the platform's own; reads split into the owner's whole document, the CLI's long_term preamble and a visibility-filtered view for everyone else</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: five writers reach one document per identity; a patch keeps siblings and pushes the old text into history, a full sync replaces every section including the platform&#39;s own; reads split into the owner&#39;s whole document, the CLI&#39;s long_term preamble and a visibility-filtered view for everyone else
+flowchart TD
+  subgraph writers[&quot;Writers of one document&quot;]
+    direction TB
+    W1[&quot;agent tools over MCP:&lt;br/&gt;save one section, PUT,&lt;br/&gt;append a cycle&quot;]
+    W2[&quot;hosted agent tool:&lt;br/&gt;append a timestamped note&quot;]
+    W3[&quot;platform hooks: DM end,&lt;br/&gt;loop trip, task done&quot;]
+    W4[&quot;owner: editor, local-file&lt;br/&gt;import, install copy&quot;]
+    W1 ~~~ W2 ~~~ W3 ~~~ W4
+  end
+  writers --&gt; MODE{&quot;write shape&quot;}
+  MODE --&gt;|&quot;PUT or patch sync&quot;| MERGE[&quot;named sections replaced,&lt;br/&gt;siblings kept, old blob&lt;br/&gt;text kept in history&quot;]
+  MODE --&gt;|&quot;full sync&quot;| WIPE[&quot;sections object replaced:&lt;br/&gt;cycles, system_exchanges&lt;br/&gt;and history gone&quot;]
+  MERGE --&gt; DOC[&quot;AgentMemory document,&lt;br/&gt;agentName + instanceId&quot;]
+  WIPE --&gt; DOC
+  DOC --&gt; OWN[&quot;own token: the whole&lt;br/&gt;document, history included&quot;]
+  OWN ~~~ CLI[&quot;CLI seat: long_term text&lt;br/&gt;prepended to every turn&quot;]
+  DOC --&gt; VIS{&quot;visibility of the&lt;br/&gt;section or entry&quot;}
+  VIS --&gt;|&quot;private&quot;| HID[&quot;never returned&lt;br/&gt;to another reader&quot;]
+  VIS --&gt;|&quot;pod and a shared pod&quot;| POD[&quot;another agent&#39;s&lt;br/&gt;shared read&quot;]
+  VIS --&gt;|&quot;public&quot;| PUB[&quot;shared read and the&lt;br/&gt;anonymous profile&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The memory lives inside the Commonly backend, an Express and
+TypeScript server over MongoDB, with chat messages in PostgreSQL. Agents
+reach it in three ways:</p>
+<ul>
+<li><strong>CLI seats.</strong>
+<code>commonly agent run &lt;name&gt; --adapter claude</code> (or
+<code>codex</code>, <code>opencode</code>, <code>qwen</code>,
+<code>goose</code>, <code>hermes</code>, <code>pi</code>,
+<code>dsh</code>) runs on the person's own machine, polls the backend
+for events and spawns the agent's own CLI per turn. The agent calls
+Commonly through the <code>@commonlyai/mcp</code> server in
+<code>commonly-mcp/</code>.</li>
+<li><strong>Hosted native agents.</strong>
+<code>backend/services/nativeRuntimeService.ts</code> runs a tool loop
+against a model provider inside the backend.</li>
+<li><strong>Any HTTP client</strong> holding a <code>cm_agent_</code>
+runtime token, through the routes documented in
+<code>docs-site/agents/memory.mdx</code>.</li>
+</ul>
+<p>The files that hold the memory:</p>
+<ul>
+<li><code>backend/models/AgentMemory.ts</code> — the schema and the
+caps.</li>
+<li><code>backend/services/agentMemoryService.ts</code> — stamping,
+provenance and history, patch merge, the visibility filter, the two ring
+appends, the native append and the digest builders.</li>
+<li><code>backend/routes/agentsRuntime.ts:3327-3638</code> —
+<code>GET</code> and <code>PUT /memory</code> and
+<code>POST /memory/sync</code>; <code>:4525-4595</code> —
+<code>GET /memory/shared/:agentName/:instanceId?</code>.</li>
+<li><code>backend/routes/agentMemoryView.ts</code> — the owner and admin
+index and editor.</li>
+<li><code>backend/services/systemExchangeTriggers.ts</code> — the
+platform hooks.</li>
+<li><code>cli/src/lib/memory-bridge.js</code>,
+<code>cli/src/lib/memory-import.js</code> — the CLI side.</li>
+</ul>
+<p>A second store is <strong>pod memory</strong>: <code>PodAsset</code>
+documents of type <code>memory</code> (<code>MEMORY.md</code>) and
+<code>daily-log</code> per pod, written and read through the v1 Context
+API (<code>backend/routes/contextApi.ts:195-233</code>) and searched by
+<code>backend/services/podMemorySearchService.ts</code>. No file under
+<code>cli/src</code>, <code>commonly-mcp/src</code>,
+<code>packages</code>, <code>plugins</code> or <code>frontend/src</code>
+calls the v1 routes, and the pod search route
+(<code>backend/routes/pods.ts:455</code>) is called from one developer
+page (Recorded searches), so this report treats pod memory as a
+secondary surface. An optional per-pod sqlite-vec index sits behind it
+(<code>backend/services/vectorSearchService.ts:85-96</code>), and
+neither <code>better-sqlite3</code> nor <code>sqlite-vec</code> appears
+in any <code>package.json</code>, so the vector arm is off unless an
+operator installs both by hand.</p>
+<p>What was read:</p>
+<ul>
+<li>the agent-memory model, service and routes, and the cross-agent and
+profile routes;</li>
+<li>the hosted runtime's memory tools and taint rules;</li>
+<li>the CLI memory bridge, import and run-loop wiring, and the MCP
+memory tools;</li>
+<li>the event digest and cues;</li>
+<li>the pod-memory write, read and search paths;</li>
+<li>account deletion and the synthetic-account purge;</li>
+<li>ADR-003, ADR-012 and the memory tests.</li>
+</ul>
+<p>What was not read: the frontend beyond the editor's section list, the
+Cloudflare worker runtime, the seats package beyond its adapter
+contract, and the plugins. Hosted "moltbot" agents run in an OpenClaw
+gateway provisioned from an external image by
+<code>backend/services/agentProvisionerServiceK8s.ts</code>. That
+gateway keeps its own workspace memory files and is not in this
+tree.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>./install.sh</code> builds and starts the stack with Docker
+Compose: MongoDB, PostgreSQL, the backend and the frontend, at about 8
+GB of disk by the README's account. Memory needs only MongoDB. No API
+key is needed to store anything, since no model touches a write. The
+store is readable by hand in MongoDB, one document per agent, and the
+owner's editor shows <code>soul</code>, <code>long_term</code> and
+<code>shared</code> as plain text. By the README, hosted agents run on
+the hosted instance at commonly.me and not in a self-hosted install,
+which runs CLI seats.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Agent write through MCP.</strong>
+<code>commonly_save_my_memory</code> posts one section to
+<code>POST /memory/sync</code> with <code>mode: 'patch'</code> and
+<code>sourceRuntime: 'mcp'</code>
+(<code>commonly-mcp/src/tools.js:660-678</code>). The route then:</p>
+<ol type="1">
+<li>runs <code>agentRuntimeAuth</code>, then
+<code>ownerOnlyMemoryWrite</code>, which returns 403 for a public seat's
+child token not marked as woken by its owner
+(<code>backend/routes/agentsRuntime.ts:3140-3146</code>,
+<code>backend/services/spawnCredentialService.ts:127-129</code>);</li>
+<li>resolves the identity from the installation or the bot user and
+lowercases the name (<code>agentsRuntime.ts:3148-3163</code>);</li>
+<li>validates section names and shapes (<code>:3165</code> onward) and
+splits off a cycle append (<code>:3307-3321</code>,
+<code>:3541-3549</code>);</li>
+<li>computes a dedup key over day, runtime and a hash of the payload,
+and returns <code>deduped: true</code> on a repeat
+(<code>:3572-3580</code>);</li>
+<li>stamps the sections and pushes replaced text into history
+(<code>:3584-3589</code>);</li>
+<li>merges or replaces (<code>:3592-3596</code>) and <code>$set</code>s
+the result (<code>:3620-3624</code>).</li>
+</ol>
+<p><code>commonly_write_agent_memory</code> sends a
+<code>PUT /memory</code>, which <code>$set</code>s each named section by
+dotted path so siblings survive (<code>:3370-3471</code>).
+<code>commonly_log_cycle</code> sends a cycles-only sync that reaches
+<code>appendCycle</code>
+(<code>commonly-mcp/src/tools.js:680-694</code>,
+<code>agentMemoryService.ts:935-998</code>).</p>
+<p><strong>Hosted agent write.</strong>
+<code>commonly_write_memory</code> calls
+<code>appendLongTermMemory</code>, one aggregation-pipeline update that
+concatenates a timestamped note onto <code>long_term</code>, mirrors it
+into <code>content</code> and pushes the prior text into history inside
+the document lock (<code>nativeRuntimeService.ts:1395-1405</code>,
+<code>agentMemoryService.ts:181-293</code>). The tool is withdrawn once
+web results or a computer read have entered the turn, since the
+post-taint allow-list holds only reading and posting in the pod
+(<code>nativeRuntimeService.ts:871</code>, <code>:890-914</code>).</p>
+<p><strong>Platform write.</strong>
+<code>recordAgentDmConclusion</code>, the loop-trip hook and
+<code>recordTaskCompleted</code> call <code>appendSystemExchange</code>,
+a single <code>$push</code> with <code>$position: 0</code> and
+<code>$slice: 50</code> that also increments <code>revision</code>
+(<code>systemExchangeTriggers.ts:238-247</code>, <code>:307-318</code>,
+<code>:377-386</code>, <code>agentMemoryService.ts:741-842</code>). The
+loop-trip hook suppresses a repeat of the same takeaway in the same pod
+within six hours (<code>systemExchangeTriggers.ts:301</code>).</p>
+<p><strong>Owner write.</strong>
+<code>PATCH /api/agent-memory/:agentName/:instanceId/editable/:section</code>
+accepts <code>soul</code>, <code>long_term</code> or <code>shared</code>
+from an admin or the person who owns every retained installation of the
+identity, caps content at 64 KB, and compares the section's
+<code>updatedAt</code> with the value the editor loaded, in the update's
+own filter (<code>agentMemoryView.ts:117-138</code>,
+<code>:162-234</code>). The <code>commonly agent</code> import composes
+<code>CLAUDE.md</code>, <code>AGENTS.md</code>, <code>MEMORY.md</code>
+and the Claude Code project memory directory into one document and
+appends it to <code>long_term</code> by patch sync
+(<code>cli/src/lib/memory-import.js:55-156</code>). An install copies a
+hosted agent's <code>long_term</code> into a new BYO identity only into
+an empty, private target the same person owns
+(<code>backend/services/installHandoffMemory.ts:26-100</code>).</p>
+<p><strong>Read into the prompt.</strong> Before each CLI turn the run
+loop reads <code>long_term</code>, except on a workspace seat's turn in
+an unconfirmed room (<code>cli/src/commands/agent.js:3173-3187</code>).
+<code>buildMemoryPreamble</code> puts the whole text under
+<code>=== Context (your persistent memory) ===</code> ahead of the turn,
+on resumed sessions as well as fresh ones
+(<code>cli/src/lib/memory-bridge.js:75-149</code>). A failed read
+becomes a distinct "unreadable" cue rather than an empty one
+(<code>:151-171</code>).</p>
+<p><strong>Read into the event.</strong> When the CLI or a runtime
+claims events, the backend reads the document once and spreads
+<code>memoryRevision</code>, <code>memoryDigest</code>,
+<code>cyclesDigest</code>, <code>longTermDigest</code> and
+<code>recentDailyDigest</code> into each payload
+(<code>agentEventService.ts:3156-3164</code>, <code>:3243</code>,
+<code>agentMemoryService.ts:1014-1125</code>). An acknowledgement raises
+<code>lastSeenRevision</code> with <code>$max</code>
+(<code>agentEventService.ts:3426-3438</code>). Mention and DM events
+also get a one-line cue counting new system exchanges
+(<code>:2027-2051</code>).</p>
+<p><strong>Cross-agent read.</strong>
+<code>GET /memory/shared/:agentName/:instanceId?</code> loads the
+target's document, lists the pods of its active installations, and
+returns
+<code>filterSectionsByVisibility(sections, requesterAuthorizedPodIds, ownerPodIds)</code>
+(<code>agentsRuntime.ts:4525-4595</code>,
+<code>agentMemoryService.ts:626-690</code>). The unauthenticated profile
+route calls the same filter with no requester pods
+(<code>backend/routes/agentProfile.ts:204-223</code>).</p>
+<p><strong>Delete.</strong> No route deletes a memory document. The
+synthetic-account purge removes the documents of throwaway smoke-test
+accounts
+(<code>backend/services/syntheticAccountPurgeService.ts:263</code>,
+<code>:270</code>), and an operator script deletes a merged identity's
+row (<code>scripts/merge-agent-variants.ts:22</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One document per identity, with these fields beside the sections: a
+v1 <code>content</code> string mirrored from <code>long_term</code>,
+<code>sourceRuntime</code>, <code>schemaVersion</code>, the sync dedup
+pair <code>lastSyncKey</code> and <code>lastSyncAt</code>, and
+<code>revision</code> and <code>lastSeenRevision</code> for the
+system-exchange delta (<code>AgentMemory.ts:119-137</code>,
+<code>:307-324</code>).</p>
+<p><strong>Scope.</strong> The key is the identity, not a pod, a user or
+a session. One agent installed in five pods keeps one document across
+all five, and a hosted agent handed to a BYO seat can carry it on.
+Per-section and per-entry <code>visibility</code> decides what other
+readers see; <code>system_exchanges</code> and <code>cycles</code> have
+single-valued <code>private</code> enums (<code>:252-290</code>).
+Identity is resolved on the server on every path. The run loop's own
+comment names the read-after-write split the lowercase normalisation
+guards against (<code>agentsRuntime.ts:3118-3139</code>).</p>
+<p><strong>Provenance.</strong> A blob section carries
+<code>source.runtime</code> (the caller's <code>sourceRuntime</code>
+string), <code>source.via</code> (<code>memory-put</code>,
+<code>memory-sync</code>, <code>memory-owner</code> or
+<code>native-tool</code>) and <code>writtenAt</code>
+(<code>agentMemoryService.ts:464-479</code>). <code>runtime</code> is
+self-reported by the caller. Arrays carry only
+<code>updatedAt</code>.</p>
+<p><strong>Time.</strong> <code>updatedAt</code> is server-stamped on
+every write (<code>:310-359</code>). <code>daily[].date</code> names the
+journal day and is filled with today's UTC date when the caller omits it
+(<code>agentsRuntime.ts:3243-3266</code>). A cycle entry's
+<code>ts</code> comes from the caller when it parses
+(<code>:3314-3317</code>). None is a validity time for the content.</p>
+<p><strong>History.</strong> Up to ten earlier versions per blob
+section, each with the text, <code>replacedAt</code> and the old
+provenance (<code>AgentMemory.ts:19-31</code>). History exists only on
+the five blob sections, is returned whole to the identity's own token,
+and is left out of the shared view by construction
+(<code>agentMemoryService.ts:596-625</code>). Nothing reads it to
+restore a version.</p>
+<p><strong>Pod memory</strong> is a separate model:
+<code>PodAsset</code> with <code>podId</code>, <code>type</code>,
+<code>title</code>, <code>content</code>, <code>tags</code>,
+<code>metadata.scope</code> (<code>agent</code> or <code>pod</code>)
+with <code>metadata.agentName</code> and
+<code>metadata.instanceId</code>, <code>createdByType</code> and a
+<code>status</code> of <code>active</code> or <code>archived</code>
+(<code>backend/models/PodAsset.ts:18-74</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval over agent memory in the search sense. No
+query, ranking, embedding or token budget touches it. What reaches a
+model is decided by section:</p>
+<ul>
+<li><strong>A CLI seat</strong> receives the whole
+<code>long_term</code> text every turn. The preamble has no size cap,
+and <code>long_term</code> grows by appends on the hosted path and by
+imports, so its cost per turn is its size
+(<code>cli/src/lib/memory-bridge.js:100-101</code>,
+<code>:117</code>).</li>
+<li><strong>The event payload</strong> carries the first 800 characters
+of <code>long_term</code>, the five newest cycles, up to two daily notes
+from the last seven days at 400 characters each, and up to ten system
+exchanges newer than the last acknowledged revision
+(<code>agentMemoryService.ts:1014-1090</code>). The OpenClaw heartbeat
+template tells agents that <code>cyclesDigest</code> is read back
+(<code>backend/routes/registry/presets.ts:2393</code>); no file under
+<code>cli/src</code>, <code>packages</code>, <code>plugins</code> or
+<code>workers</code> reads any of the five digest fields (Recorded
+searches).</li>
+<li><strong>The agent's own read</strong> returns the whole document,
+history included (<code>agentsRuntime.ts:3327-3345</code>).</li>
+<li><strong>A hosted agent</strong> calls
+<code>commonly_read_memory</code>, which returns <code>long_term</code>
+or the v1 <code>content</code>
+(<code>nativeRuntimeService.ts:1386-1393</code>).</li>
+</ul>
+<p>The memory bridge's own comment states the failure this produces:
+only <code>long_term</code> is read back into the prompt, so a write to
+<code>daily</code> "succeeds, returns 200, and is never seen again" by a
+CLI seat except through the digest
+(<code>memory-bridge.js:58-62</code>). The empty-memory preamble says so
+to the model.</p>
+<p><strong>Pod memory</strong> is searched with MongoDB
+<code>$text</code> over title, tags and content, sorted by text score
+and recency, with a keyword regex fallback scored by tag, title and
+content hits, filtered by pod, <code>status: 'active'</code> and the
+agent-scope predicate (<code>podMemorySearchService.ts:177-251</code>,
+<code>podAssetService.ts:143-171</code>). The context assembler takes
+the agent's own <code>MEMORY.md</code> for that pod, falling back to the
+pod's, if it fits in 30% of the token budget
+(<code>contextAssemblerService.ts:170-198</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is a synchronous HTTP call or a direct database update,
+with no model in the path. A write is readable as soon as the call
+returns. Nothing extracts facts from conversation, so what the agent
+stores is what it chose to send.</p>
+<ul>
+<li><strong>Deduplication.</strong> A sync repeated with the same
+payload on the same UTC day is skipped, and every non-sync writer clears
+the key so a later sync is not skipped wrongly
+(<code>agentMemoryService.ts:568-578</code>,
+<code>agentsRuntime.ts:3440-3454</code>). Within a section there is no
+deduplication.</li>
+<li><strong>Update.</strong> Replace, never merge, at the section level.
+Two agents' or two runtimes' writes to <code>long_term</code> overwrite
+each other; the CLI import reads and appends to avoid that and the patch
+sync does not.</li>
+<li><strong>Concurrency.</strong> The sync route reads, merges and
+writes with no version check, as its comment states
+(<code>agentMemoryService.ts:505-509</code>). The hosted append is one
+atomic pipeline update (<code>:170-180</code>). The owner editor
+compares <code>updatedAt</code> in the update filter.</li>
+<li><strong>Caps that report.</strong> A cycle over 500 characters is
+cut and the response carries <code>truncated</code>,
+<code>storedChars</code> and <code>submittedChars</code>; an append that
+evicts carries <code>evicted</code>, <code>retainedEntries</code> and
+<code>entryCap</code> (<code>agentMemoryService.ts:867-933</code>).</li>
+<li><strong>Input filtering.</strong> None on content. The controls are
+on the writer: seat type and owner-woken turns on CLI seats, web taint
+on hosted agents, and an outsider-grant policy that treats a write
+naming any non-private visibility, a <code>content</code> string, a
+<code>sourceRuntime</code> or <code>mode: 'full'</code> as an outward
+action
+(<code>backend/services/runtimeOutsiderGrantRoutes.ts:35-46</code>,
+<code>:133-136</code>).</li>
+<li><strong>A declared, unwired write-back.</strong> The run loop syncs
+<code>result.memorySummary</code> into <code>long_term</code> after a
+turn (<code>cli/src/commands/agent.js:3699-3702</code>). No adapter in
+<code>cli/src</code> or <code>packages/seats/src</code> returns that
+field (Recorded searches), so the path runs only in tests. If one did,
+the patch sync would replace <code>long_term</code> with the
+summary.</li>
+</ul>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The agent never blocks on a model for memory. Writes cost one or two
+MongoDB round trips. No background pass reads or rewrites the store. On
+the read side, a CLI seat pays the full <code>long_term</code> length in
+prompt tokens on every turn, placed ahead of the turn text, so the block
+is part of the prefix and changes whenever <code>long_term</code> does.
+The event digest adds about 1.5 KB per event by the budget stated beside
+its builders (<code>agentMemoryService.ts:1000-1003</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four MCP tools: <code>commonly_read_agent_memory</code>,
+<code>commonly_write_agent_memory</code>,
+<code>commonly_save_my_memory</code> and <code>commonly_log_cycle</code>
+(<code>commonly-mcp/src/tools.js:637-694</code>). The server
+instructions tell the agent to save "what a teammate would need next
+week, not a transcript" and that a public seat writes only when its
+owner woke the turn (<code>:153-156</code>). On a fresh CLI session the
+preamble asks the model to read memory before acting and to save durable
+state before the session ends
+(<code>memory-bridge.js:125-144</code>).</p>
+<p>Hosted agents get <code>commonly_read_memory</code> and
+<code>commonly_write_memory</code>
+(<code>nativeRuntimeService.ts:529-549</code>).</p>
+<p>Memory is agent-controlled. The platform adds the system-exchange
+ring, and the owner can edit three sections. The CLI seat sees its
+memory automatically; the hosted agent sees it only by calling the tool.
+The HTTP contract is small and documented, so another runtime can adopt
+it with a token and four routes, which is what the two-driver test
+simulates
+(<code>backend/__tests__/service/two-driver-memory-cross-check.test.js</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="a-full-sync-erases-what-the-agent-may-not-write">A full sync
+erases what the agent may not write</h3>
+<p><code>validateSectionsPayload</code> refuses
+<code>system_exchanges</code> with a 403
+(<code>agentsRuntime.ts:3177-3179</code>) and refuses any
+<code>cycles</code> shape but an append.
+<code>stampSectionsForWrite</code> and
+<code>decorateSectionsWithProvenance</code> both skip those two sections
+(<code>agentMemoryService.ts:325</code>, <code>:329</code>,
+<code>:472</code>). In <code>full</code> mode the route takes the
+stamped sections as the whole result and <code>$set</code>s
+<code>sections</code> to it (<code>agentsRuntime.ts:3592-3600</code>,
+<code>:3620-3624</code>). The platform's ring, the agent's cycle journal
+and the history of every section left out of the payload are gone. No
+shipped client sends <code>mode: 'full'</code> (Recorded searches), and
+the route accepts it from any runtime token whose seat may write. The
+test of full mode seeds only agent-writable sections
+(<code>backend/__tests__/service/agent-memory-envelope.test.js:633-659</code>).</p>
+<h3 id="correction-keeps-the-old-text-in-front-of-the-agent">Correction
+keeps the old text in front of the agent</h3>
+<p>An owner who removes a wrong fact from <code>long_term</code> writes
+the new text, and the old text moves into <code>history</code> with its
+provenance (<code>agentMemoryView.ts:203-223</code>). The agent's own
+<code>GET /memory</code>, and so
+<code>commonly_read_agent_memory</code>, returns that history
+(<code>agentsRuntime.ts:3333-3339</code>), and a test pins it
+(<code>agentsRuntime.sharedMemoryHistory.test.js:146-153</code>). The
+CLI preamble shows only the current text, so the corrected value stays
+out of the prompt until the agent reads its document. Nothing prevents
+the agent writing the fact again on the next turn.</p>
+<h3 id="deletion">Deletion</h3>
+<p>No route or tool deletes a memory document, its history or a
+pod-memory asset. Uninstalling keeps the document by design (ADR-003
+invariant 7), and human account deletion "pauses owned runtimes,
+preserving independent agent User/memory rows"
+(<code>backend/services/accountDeletionService.ts:262</code>). Blanking
+a section through the editor or a write leaves up to ten prior versions
+in the document.</p>
+<h3 id="visibility-is-the-models-choice">Visibility is the model's
+choice</h3>
+<p><code>commonly_save_my_memory</code> takes <code>visibility</code> as
+an argument (<code>commonly-mcp/src/tools.js:662-673</code>). A section
+marked <code>public</code> appears on the profile route, which is
+mounted without authentication. The editor's PATCH keeps the stored
+visibility (<code>agentMemoryView.ts:203-205</code>), so the owner can
+blank a published section and has no control to make it private again.
+ADR-003's rule against retroactive publishing holds: a widening write
+publishes its own content, and the earlier versions in history stay
+private.</p>
+<h3 id="write-policy">Write policy</h3>
+<p>The memory routes resolve identity from the token and stamp every
+derived field. On a public seat, a child token not marked owner-woken is
+refused before the body is read
+(<code>agentsRuntime.ts:3140-3146</code>), with 44 cases on how that
+marker is minted and honoured
+(<code>backend/__tests__/service/owner-woken-memory-write.test.js</code>).
+A workspace seat's turn in a room not confirmed private gets no memory
+and no memory tools, because what it reads there must not reach the next
+workspace turn (<code>agent.js:3173-3187</code>). The hosted runtime has
+no owner-woken rule: a pod member who mentions a hosted agent can steer
+it to append, and only web taint withdraws the tool (Recorded
+searches).</p>
+<h3 id="pod-memory">Pod memory</h3>
+<p>The asset route returns any <code>PodAsset</code> in the pod by id to
+any member, without the agent-scope predicate the search, the path read
+and the assembler apply (<code>contextApi.ts:179-188</code>). An
+agent-scoped daily log is private from other agents only while its id is
+unknown to them.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> A stored
+visibility per section and per entry is applied on the cross-agent read
+and the anonymous profile, against pods resolved on the server
+(capability evidence above). The identity key is also resolved from the
+token on every own read.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> The route test
+reads another agent's document holding private, pod and public sections
+and requires the private ones absent beside the public and pod ones
+present (<code>agentsRuntime.crossAgent.test.js:353-381</code>).</li>
+<li><strong><code>audit_log</code> — withheld.</strong> The per-section
+history is capped at ten and evicts, covers only blob sections, replaces
+arrays without a record, and is erased by a full sync. The write routes
+log to the console (<code>agentsRuntime.ts:3456</code>,
+<code>:3626</code>). No collection records memory mutations.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Every write
+lands at once. The owner's editor rewrites a section after the fact,
+which is authoring.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> Memory content
+carries no status. PodAsset <code>status</code> is <code>active</code>
+or <code>archived</code> and filters reads, a lifecycle flag on pod
+assets rather than a statement about whether a memory is true.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> A blanked
+section leaves nothing that stops the agent writing the same text
+again.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> Only write
+times are recorded; <code>daily[].date</code> names a journal
+bucket.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>tests.yml</code> runs the backend Jest suite in three shards on
+an in-memory MongoDB (<code>.github/workflows/tests.yml:329-335</code>),
+and the CLI and MCP suites in another job (<code>:435-436</code>).
+<code>setupMongoDb</code> throws when it cannot start a server
+(<code>backend/__tests__/utils/testUtils.js:66-108</code>), so the
+database suites fail rather than skip. I ran nothing from the
+repository.</p>
+<p>What the 26 memory test files cover:</p>
+<ul>
+<li>the envelope routes: shapes, server stamps, sibling preservation,
+whole-array replace, patch merge by key, full replace, dedup and its
+invalidation, <code>system_exchanges</code> refused and kept across a
+PUT, <code>cycles</code> append-only with truncation and eviction
+reported (<code>agent-memory-envelope.test.js</code>);</li>
+<li>the visibility filter, element-wise filtering, history and
+undeclared fields left out
+(<code>agentMemoryService.visibility.test.ts</code>), and the same
+through the shared route and the profile
+(<code>agentsRuntime.crossAgent.test.js:330-460</code>,
+<code>agentsRuntime.sharedMemoryHistory.test.js</code>,
+<code>agentProfile.publicMemory.test.js</code>);</li>
+<li>two simulated drivers isolated from each other, including that
+neither token reads the other's text
+(<code>two-driver-memory-cross-check.test.js:432-466</code>);</li>
+<li>the hosted append under overlapping writers and through the CLI
+reader (<code>native-memory-append.test.js</code>);</li>
+<li>the owner editor's access rule and stale-edit refusal
+(<code>agent-memory-editor.test.js</code>);</li>
+<li>the owner-woken rule on public seats
+(<code>owner-woken-memory-write.test.js</code>);</li>
+<li>the CLI preamble's four states and the import's composition and
+append (<code>cli/__tests__/memory-bridge.test.mjs</code>,
+<code>cli/__tests__/memory-import.test.mjs</code>).</li>
+</ul>
+<p>What is not covered:</p>
+<ul>
+<li>a <code>full</code> sync over a document that holds
+<code>system_exchanges</code>, <code>cycles</code> or history;</li>
+<li>that a corrected value stays out of anything the agent reads;</li>
+<li>the pod-memory asset route against an agent-scoped asset;</li>
+<li>any measure of whether agents write useful memory or read it
+back.</li>
+</ul>
+<p>No benchmark or evaluation of memory quality is committed, and the
+tree cites no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Resolve the memory key from the credential, never from an
+argument.</strong> Every route here derives the identity from the token,
+so a wrapper bug cannot write to another agent's document.</li>
+<li><strong>Build the shared view from an allow-list of fields.</strong>
+A field added to the schema later stays private until someone lists it,
+and history never leaves by accident.</li>
+<li><strong>Gate memory writes on who started the turn.</strong> A
+public-facing seat that answers strangers reads its memory and writes
+only on turns its owner woke; a turn that ran in an unconfirmed room
+gets no memory at all.</li>
+<li><strong>Report every mutation of the input.</strong> An append that
+truncates or evicts says so in the response, with the flag present even
+when false so an absent flag means an old server.</li>
+<li><strong>Tell the model when the read failed.</strong> An unreadable
+memory and an empty one get different text, so the model does not
+rewrite state it holds.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A replace mode that can reach sections the caller may not
+write.</strong> Validate the payload and also preserve what the caller
+cannot address, or the read-only rule holds only for the polite
+path.</li>
+<li><strong>History the agent reads back after a correction.</strong>
+Keep prior versions for the owner, and out of the agent's own read, or a
+correction is one tool call from undone.</li>
+<li><strong>A visibility the model widens and the owner cannot
+narrow.</strong></li>
+<li><strong>A whole-document preamble with no budget.</strong>
+Prepending all of a growing section to every turn makes memory cost
+scale with its age.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team already running Commonly that wants its agents to
+carry a notebook across sessions, runtimes and pods, with a clear rule
+for what other agents may see. It is a shared notebook with careful
+access control rather than a recall system. There is no search, no
+consolidation and no notion of a fact, so an agent that writes well gets
+value and one that writes badly gets a long preamble. Walk away if a
+wrong memory must stay corrected, if memory must be deletable for a
+person who leaves, or if you need retrieval over more than a few
+kilobytes.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>mode: 'full'</code> has a live caller outside this
+tree, such as the OpenClaw gateway image, and whether it is meant to
+clear <code>system_exchanges</code>.</li>
+<li>Whether the agent's own read is meant to include history.</li>
+<li>What deletes an agent's memory when its owner leaves, and whether
+the ADR-003 quota proposal (256 KB soft, 1 MB hard per section) is
+planned.</li>
+<li>Whether any shipped adapter is meant to return
+<code>memorySummary</code>.</li>
+<li>Whether the pod-memory v1 Context API is still used by any
+client.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>backend/models/AgentMemory.ts</code>,
+<code>backend/models/PodAsset.ts</code></li>
+<li>Write, merge, history, filter, rings, digests:
+<code>backend/services/agentMemoryService.ts</code></li>
+<li>Routes: <code>backend/routes/agentsRuntime.ts</code> (memory routes,
+shared read), <code>backend/routes/agentMemoryView.ts</code>,
+<code>backend/routes/agentProfile.ts</code>,
+<code>backend/routes/contextApi.ts</code>,
+<code>backend/routes/pods.ts</code></li>
+<li>Platform writers:
+<code>backend/services/systemExchangeTriggers.ts</code>,
+<code>backend/services/installHandoffMemory.ts</code></li>
+<li>Hosted runtime:
+<code>backend/services/nativeRuntimeService.ts</code></li>
+<li>Event delivery:
+<code>backend/services/agentEventService.ts</code></li>
+<li>Write policy:
+<code>backend/services/spawnCredentialService.ts</code>,
+<code>backend/services/runtimeOutsiderGrantRoutes.ts</code></li>
+<li>Deletion: <code>backend/services/accountDeletionService.ts</code>,
+<code>backend/services/syntheticAccountPurgeService.ts</code>,
+<code>scripts/merge-agent-variants.ts</code></li>
+<li>Pod memory:
+<code>backend/services/contextAssemblerService.ts</code>,
+<code>backend/services/podMemorySearchService.ts</code>,
+<code>backend/services/podAssetService.ts</code>,
+<code>backend/services/vectorSearchService.ts</code></li>
+<li>CLI: <code>cli/src/lib/memory-bridge.js</code>,
+<code>cli/src/lib/memory-import.js</code>,
+<code>cli/src/commands/agent.js</code>,
+<code>cli/src/lib/adapters/claude.js</code></li>
+<li>MCP: <code>commonly-mcp/src/tools.js</code>,
+<code>commonly-mcp/src/public-seat-gate.js</code></li>
+<li>Design: <code>docs/adr/ADR-003-memory-as-kernel-primitive.md</code>,
+<code>docs/adr/ADR-012-memory-propagation-and-injection.md</code>,
+<code>docs-site/agents/memory.mdx</code></li>
+<li>Tests: the 26 files under <code>backend/__tests__</code>,
+<code>cli/__tests__</code> and <code>frontend/src/v2/__tests__</code>
+whose names contain <code>memory</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Nothing deletes a memory document outside the purge and a
+script.</strong>
+<code>git grep -n -E 'AgentMemory\.(deleteOne|deleteMany|findOneAndDelete|findByIdAndDelete|remove)|agentmemories' -- . ':!backend/__tests__' ':!docs'</code>
+returns a comment in
+<code>backend/routes/registry/presets.ts:2502</code>, a migration
+script's model binding, <code>syntheticAccountPurgeService.ts:263</code>
+and <code>:270</code>, and <code>scripts/merge-agent-variants.ts</code>.
+The same alternation over <code>backend/__tests__</code> matches
+<code>deleteMany</code> calls, so the pattern can match.</li>
+<li><strong>No delete route for memory.</strong>
+<code>git grep -n -E "router\.delete\(" -- backend/routes/agentMemoryView.ts backend/routes/agentsRuntime.ts</code>
+returns one claim route at <code>agentsRuntime.ts:473</code> and none
+naming memory.</li>
+<li><strong>No adapter returns <code>memorySummary</code>.</strong>
+<code>git grep -n -E 'memorySummary' -- cli/src packages/seats/src plugins workers</code>
+returns the run loop's reader at
+<code>cli/src/commands/agent.js:3699-3702</code> and two contract
+comments in <code>packages/seats/src</code>.</li>
+<li><strong>No shipped client sends a full sync.</strong>
+<code>git grep -n -E "mode: *'full'" -- cli/src commonly-mcp/src packages plugins workers backend/services backend/routes frontend/src ':!*__tests__*' ':!*.test.*'</code>
+returns the type annotation at <code>agentMemoryService.ts:571</code>;
+the same pattern with <code>'patch'</code> matches
+<code>cli/src/lib/memory-bridge.js:176</code>.</li>
+<li><strong>No consumer of the event digest in the CLI, packages,
+plugins or worker.</strong>
+<code>git grep -n -E 'memoryDigest|cyclesDigest|longTermDigest|recentDailyDigest' -- cli/src packages plugins workers ':!*__tests__*' ':!*.test.*'</code>
+returns nothing; the pattern matches
+<code>agentMemoryService.ts:1041</code>.</li>
+<li><strong>No reader of history beyond the whole-document
+return.</strong>
+<code>git grep -n -E 'replacedAt' -- backend/routes backend/services frontend/src cli/src commonly-mcp/src ':!*__tests__*' ':!*.test.*'</code>
+returns the two writers at <code>agentMemoryService.ts:208</code> and
+<code>:484</code>.</li>
+<li><strong>No status on memory content.</strong>
+<code>git grep -n -i -E 'pending|approv|quarantin|candidate|verified|rejected' -- backend/models/AgentMemory.ts backend/services/agentMemoryService.ts backend/routes/agentMemoryView.ts</code>
+returns two comments about rejected cycle overwrites
+(<code>AgentMemory.ts:115</code>, <code>:265</code>); the pattern
+matches <code>backend/models/ApprovalAction.ts</code>.</li>
+<li><strong>The hosted runtime has no owner-woken rule.</strong>
+<code>git grep -n -i -E 'ownerWoken|publicSeat|memoryWriteOwnerOnly|PUBLIC_SEAT' -- backend/services/nativeRuntimeService.ts</code>
+returns nothing; <code>webTainted</code> matches the same file at
+<code>:950</code>.</li>
+<li><strong>The vector dependencies are in no manifest.</strong>
+<code>git grep -n -E 'better-sqlite3|sqlite-vec' -- '*package.json' '*Dockerfile*' docker k8s</code>
+returns nothing; the same names match
+<code>backend/services/vectorSearchService.ts:89</code>.</li>
+<li><strong>No client calls the v1 pod-memory routes.</strong>
+<code>git grep -n -E "/api/v1/(memory|context|search|pods/[^'\"]*/memory)" -- cli/src commonly-mcp/src packages plugins frontend/src ':!*__tests__*' ':!*.test.*'</code>
+returns nothing; the routes are mounted at
+<code>backend/server.ts:280</code>.</li>
+<li><strong>One in-tree caller of the pod search route.</strong>
+<code>git grep -n -E 'context/search' -- frontend/src cli/src commonly-mcp/src backend/routes backend/services ':!*__tests__*' ':!*.test.*'</code>
+returns the route at <code>backend/routes/pods.ts:455</code> and
+<code>frontend/src/components/PodContextDevPage.tsx:286</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- . ':!*package-lock.json' ':!backend/docs/skills/*'</code>
+returns two DOI links inside a vendored OfficeCLI skill example.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-24</strong> — <a
+href="https://github.com/Team-Commonly/commonly/commit/0e84b9652c14d48a81f2f4911685a6006a545b7d"><code class="commit-id" title="0e84b9652c14d48a81f2f4911685a6006a545b7d">0e84b965…</code></a>.
+First reading, from a full clone at the head of <code>main</code> on 24
+November 2026; triage had selected the project at
+<code>448347a6cbf1</code>, and the reading is at the newer head.
+Screened first: auto-run surfaces in
+<code>.claude-plugin/marketplace.json</code>,
+<code>.cursor/rules/commonly.mdc</code>, one unchecked-out submodule and
+a plugin manifest that launches a package through <code>npx</code>;
+every product manifest and lockfile changed inside the seven-day
+cooldown; a <code>prepublishOnly</code> and a husky <code>prepare</code>
+script; floating ranges under lockfiles. AGENTS.md, CLAUDE.md, prompts
+and docs were read as data. Nothing was installed, built or run, and no
+test count was run. Two marks: <code>scope_enforced</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). A full sync
+erases the platform's own section, a correction stays in the agent's
+readable history, and no route or tool deletes a memory document.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

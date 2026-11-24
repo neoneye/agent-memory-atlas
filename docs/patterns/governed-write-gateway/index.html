@@ -400,6 +400,20 @@ append-only audit line. It enforces no actor. The same
 owner's dashboard, and <code>supersede</code> activates a candidate
 replacement without passing the transition table. Its invariants are all
 about consistency and none about authority.</p>
+<p><a href="../../systems/commonly/">Commonly</a> governs the writer
+rather than the write. Its memory routes resolve identity from the
+token, stamp every derived field, refuse <code>system_exchanges</code>
+as read-only and <code>cycles</code> as append-only, and on a public
+seat refuse any write whose token lacks a marker minted only when the
+owner woke the turn
+(<code>backend/routes/agentsRuntime.ts:3140-3146</code>). Five writers
+reach the document through separate code, though. The hosted agents'
+append tool has no owner-woken rule, and the sync route's
+<code>full</code> mode <code>$set</code>s <code>sections</code> to the
+agent's payload, so the sections it refused a moment earlier are deleted
+along with every omitted section's history (<code>:3592-3600</code>). A
+read-only rule enforced by validating the payload holds only for writes
+that merge.</p>
 <h3 id="gates-on-something-other-than-a-write">Gates on something other
 than a write</h3>
 <p>These are analogies rather than instances. Each puts one gate, or one

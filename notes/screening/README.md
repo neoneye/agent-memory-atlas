@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 854 of 855 screened at the report's current pin.**
+**Progress: 855 of 856 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 405 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 389 |
-| Repositories with build-time execution (`EXEC`) | 616 |
+| Repositories with an auto-run surface (`RUNS`) | 406 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 390 |
+| Repositories with build-time execution (`EXEC`) | 617 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -102,6 +102,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`cognicore`](../../content/systems/cognicore.md) | `.claude-plugin/`, `.cursor/mcp.json`, `.cursorrules`, `.vscode/mcp.json`, `plugins/cognicore-experience/.claude-plugin/plugin.json`, `plugins/cognicore-experience/.mcp.json`, `plugins/cognicore-experience/hooks/`, `plugins/cognicore-experience/hooks/hooks.json` |
 | [`cogz`](../../content/systems/cogz.md) | `server.json` |
 | [`commonground`](../../content/systems/commonground.md) | `.gitmodules` |
+| [`commonly`](../../content/systems/commonly.md) | `.claude-plugin/`, `.cursor/rules/`, `.gitmodules`, `plugins/commonly/.claude-plugin/plugin.json` |
 | [`compartment`](../../content/systems/compartment.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `mcp.json`, `server.json` |
 | [`context-engineering`](../../content/systems/context-engineering.md) | `.gitattributes` |
 | [`context-keeper`](../../content/systems/context-keeper.md) | `hooks/`, `server.json` |

@@ -1762,6 +1762,22 @@ shared row
 The policy is row-level, so that second owner also receives the other
 memory's <code>resource_id</code>, agent and run in the provenance
 column.</p>
+<p><a href="../../systems/commonly/">Commonly</a> keys agent memory on
+an identity the server resolves and scopes sharing per section. One
+MongoDB document per <code>agentName</code> and <code>instanceId</code>
+is read and written only under the identity the runtime token resolves
+to, and every blob section and array entry carries <code>private</code>,
+<code>pod</code> or <code>public</code>. The cross-agent read keeps
+<code>pod</code> only when the requester's authorised pods meet the
+owner's active installations, and builds what it returns from an
+allow-list of fields, so version history stays with the owner
+(<code>backend/services/agentMemoryService.ts:626-690</code>). A route
+test writes all three levels for one agent and requires the private
+sections absent from another agent's read beside the public and pod ones
+present. The weak end is who sets the key: the writing model passes
+<code>visibility</code> as a tool argument, a <code>public</code>
+section shows on an unauthenticated profile, and the owner's editor
+keeps the stored value with no way to narrow it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

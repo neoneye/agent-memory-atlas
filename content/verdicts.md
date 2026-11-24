@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 855 reports.**
+**This page covers all 856 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7872,3 +7872,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 117 commits under ten author names from 29 March to 22 October 2026, tags up to v1.1.0 and a package at 2.1.0; 391 test functions with CI on two Python versions, 19 on memory, none run here. Memory is the smallest of five surfaces and its LLM fact extractor is unwired. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you are putting several data surfaces for a coding agent behind one MCP server and want identity bound by the host rather than chosen by the model.
 - Do not copy when: memory must be corrected and restated, or an idempotency layer sits in front of a store whose rows can be deleted.
+
+### [`commonly`](../systems/commonly/)
+- Best idea: **gate a memory write on who started the turn.** A public seat's child token carries an owner-woken marker only when the owner's own message woke the turn, and both memory routes refuse an unmarked token before reading the body; a workspace seat's turn in a room not confirmed private gets no memory and no memory tools.
+- Second idea: a shared view built from an allow-list. `filterSectionsByVisibility` copies only declared fields per entry kind, so history and any field added later stay with the owner, and populated tests require private sections absent beside public and pod ones present.
+- Biggest risk: **a full sync erases what the agent may not write.** The sync route refuses `system_exchanges` and anything but an append to `cycles`, then in `mode: 'full'` `$set`s `sections` to the agent's payload, removing the platform's ring, the cycle journal and every omitted section's history. The full-mode test seeds only agent-writable sections.
+- Second risk: correction and deletion. An overwrite keeps the old text in a ten-entry history that the agent's own read returns; no route deletes a memory document and human account deletion keeps it; the model chooses a section's visibility, a `public` section shows on an unauthenticated profile, and the owner's editor cannot narrow it.
+- Most reusable component: `filterSectionsByVisibility` and its tests, `backend/services/agentMemoryService.ts:580-690` and `backend/__tests__/unit/services/agentMemoryService.visibility.test.ts`, and the owner-woken gate, `backend/routes/agentsRuntime.ts:3140-3146` with `backend/services/spawnCredentialService.ts:127-129`.
+- Maturity impression: Apache-2.0; 4,437 commits from 2 February 2025 to 24 November 2026, almost all from two people, at product tag v3.1.0; 450 test cases in 26 memory test files, run in CI against an in-memory MongoDB and not run here. Two marks: `scope_enforced`, `negative_eval`.
+- Study when: you are adding memory to a workspace where several people's agents meet, and need rules for which agent sees which section and which turn may write.
+- Do not copy when: a memory must stay corrected, be deletable for a person who leaves, or be retrieved by relevance rather than prepended whole.
