@@ -838,6 +838,8 @@ never assert anything is still returned.
 
 [Luna](../../systems/luna-local-agent/) claims the digest's property without the digest's strength. Its design comment says the fingerprint keeps *"Never the words"*, and each hash covers one stemmed dictionary word under a salt that is a constant in the source (`mind/forgetting.py:9-11`, `:95-96`). Hashing a system word list recovers the stored set for *"Ryan works at the bakery"* as `work` and `bakery`. A word-level key is what lets the match survive rewording, and it is also what makes the record readable.
 
+[Renor Engine](../../systems/renor-engine/) keeps a digest of the event rather than of the value. Its erase rewrites the ledger so that a retired fact's event becomes `original_digest`, the SHA-256 of the whole event, beside the ids it had closed, and its retire and restore events are dropped (`src/memory/lifecycle.ts:1907-1912`). That proves an erasure happened without keeping the value, and it cannot match anything: a new event saying the same thing has a different id and time, and `rememberCritical` never consults `retired_facts` or `erased_facts` before storing. Retirement, the reversible step, is keyed on the event too, so the same statement saved after a retire is a new current fact.
+
 ### The refusal that reaches the inference
 
 [RCK](../../systems/rck/) is the instance that closes the loop this page has

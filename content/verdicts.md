@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 863 reports.**
+**This page covers all 864 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7953,3 +7953,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 203,603 lines of Go outside tests and 257,103 of tests, a 38,312-line TypeScript web UI and 785 decision records; 1,509 commits from 18 July to 24 November 2026, 1,434 of them by the author; latest release v0.29.1 on 18 November 2026; 7,607 test functions with CI, none run here. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you are building shared, human-readable memory that several agents write, and want a deterministic write gate and an audit an operator can verify.
 - Do not copy when: memory must be approved by a person before agents act on it, or a retired page must stay out of every read path.
+
+### [`renor-engine`](../systems/renor-engine/)
+- Best idea: **the ledger is the record and the index is a cache.** `remember` appends a Markdown event before it projects into SQLite (`src/memory/lifecycle.ts:1826-1827`), startup and `rebuild` replay the ledger, every check that can refuse a write runs before the append, and `doctor` compares the ledger's event count with what the index applied.
+- Second idea: an approval the agent has no way to give. A saved standing rule is shown as an instruction only after the owner approves its exact event; `approve.mjs` refuses without an interactive terminal, the server route needs a `rules:approve` key minted on a loopback route, and no MCP tool approves anything.
+- Biggest risk: **forgetting is keyed on the event.** Retire moves a fact out of every read and erase leaves a digest of the event, and `rememberCritical` never compares an incoming value with a retired or erased one, so the same value saved again, by an agent or by consolidation, is a new current fact.
+- Second risk: scope is an optional argument the model supplies, a read without it sees every scope, and the stdio server the README installs has one scope. Erase is reachable only through the hosted dashboard, so a self-hosted owner has no permanent delete.
+- Most reusable component: `src/memory/lifecycle.ts`, the ledger format, `appendLedgerEvent`, the replay and the pre-append refusals, with `tests/mvp/retire-fact-recall.test.ts:72-117` as the test shape for retirement across every read path.
+- Maturity impression: Apache-2.0 from 1.1.0, ISC for unmarked imported files; 68,800 lines of TypeScript under `src/` and 93,888 of tests; 41 commits from 13 October to 24 November 2026, most of them exports from a private repository; 3,774 test calls in CI, none run here; the README benchmarks are single runs, not held out, with no per-question output. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you want agent memory a person can read and back up as files, with history answerable as of a time and a store that can be rebuilt from its log.
+- Do not copy when: a retraction has to hold against a later restatement, projects must be isolated without trusting the model to name them, or the whole system has to be reproducible from the public tree.

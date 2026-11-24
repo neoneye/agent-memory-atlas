@@ -127,7 +127,7 @@ belief.</p>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
 recurs across the corpus. 86 systems of
-863 carry the mark, and <a
+864 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -292,7 +292,7 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>86 systems of
-863 in the atlas carry the mark.</strong> The
+864 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -1484,6 +1484,18 @@ Hashing a system word list recovers the stored set for <em>"Ryan works
 at the bakery"</em> as <code>work</code> and <code>bakery</code>. A
 word-level key is what lets the match survive rewording, and it is also
 what makes the record readable.</p>
+<p><a href="../../systems/renor-engine/">Renor Engine</a> keeps a digest
+of the event rather than of the value. Its erase rewrites the ledger so
+that a retired fact's event becomes <code>original_digest</code>, the
+SHA-256 of the whole event, beside the ids it had closed, and its retire
+and restore events are dropped
+(<code>src/memory/lifecycle.ts:1907-1912</code>). That proves an erasure
+happened without keeping the value, and it cannot match anything: a new
+event saying the same thing has a different id and time, and
+<code>rememberCritical</code> never consults <code>retired_facts</code>
+or <code>erased_facts</code> before storing. Retirement, the reversible
+step, is keyed on the event too, so the same statement saved after a
+retire is a new current fact.</p>
 <h3 id="the-refusal-that-reaches-the-inference">The refusal that reaches
 the inference</h3>
 <p><a href="../../systems/rck/">RCK</a> is the instance that closes the

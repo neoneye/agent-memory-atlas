@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 863 reports.</strong></p>
+<p><strong>This page covers all 864 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35516,6 +35516,49 @@ several agents write, and want a deterministic write gate and an audit
 an operator can verify.</li>
 <li>Do not copy when: memory must be approved by a person before agents
 act on it, or a retired page must stay out of every read path.</li>
+</ul>
+<h3 id="renor-engine"><a
+href="../systems/renor-engine/"><code>renor-engine</code></a></h3>
+<ul>
+<li>Best idea: <strong>the ledger is the record and the index is a
+cache.</strong> <code>remember</code> appends a Markdown event before it
+projects into SQLite (<code>src/memory/lifecycle.ts:1826-1827</code>),
+startup and <code>rebuild</code> replay the ledger, every check that can
+refuse a write runs before the append, and <code>doctor</code> compares
+the ledger's event count with what the index applied.</li>
+<li>Second idea: an approval the agent has no way to give. A saved
+standing rule is shown as an instruction only after the owner approves
+its exact event; <code>approve.mjs</code> refuses without an interactive
+terminal, the server route needs a <code>rules:approve</code> key minted
+on a loopback route, and no MCP tool approves anything.</li>
+<li>Biggest risk: <strong>forgetting is keyed on the event.</strong>
+Retire moves a fact out of every read and erase leaves a digest of the
+event, and <code>rememberCritical</code> never compares an incoming
+value with a retired or erased one, so the same value saved again, by an
+agent or by consolidation, is a new current fact.</li>
+<li>Second risk: scope is an optional argument the model supplies, a
+read without it sees every scope, and the stdio server the README
+installs has one scope. Erase is reachable only through the hosted
+dashboard, so a self-hosted owner has no permanent delete.</li>
+<li>Most reusable component: <code>src/memory/lifecycle.ts</code>, the
+ledger format, <code>appendLedgerEvent</code>, the replay and the
+pre-append refusals, with
+<code>tests/mvp/retire-fact-recall.test.ts:72-117</code> as the test
+shape for retirement across every read path.</li>
+<li>Maturity impression: Apache-2.0 from 1.1.0, ISC for unmarked
+imported files; 68,800 lines of TypeScript under <code>src/</code> and
+93,888 of tests; 41 commits from 13 October to 24 November 2026, most of
+them exports from a private repository; 3,774 test calls in CI, none run
+here; the README benchmarks are single runs, not held out, with no
+per-question output. Three marks: <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Study when: you want agent memory a person can read and back up as
+files, with history answerable as of a time and a store that can be
+rebuilt from its log.</li>
+<li>Do not copy when: a retraction has to hold against a later
+restatement, projects must be isolated without trusting the model to
+name them, or the whole system has to be reproducible from the public
+tree.</li>
 </ul>
         </article>
       </div>

@@ -1065,6 +1065,21 @@ discontinuities without recomputing a digest, so an edited
 <code>broken_links == 0</code> only on clean ledgers. And there is no
 erasure at all: no code path removes or redacts an event, so the
 deletion obligation this page names is not met.</p>
+<p><a href="../../systems/renor-engine/">Renor Engine</a> is the same
+inversion in plain text. Every <code>store</code>,
+<code>supersede</code>, <code>retire</code> and <code>restore</code> is
+appended to <code>System/Memory Events Ledger.md</code> as a Markdown
+block naming the event it closed, the scope, the source, the user's
+statement and the authenticated writer, before SQLite is written, and
+the facts tables are replayed from the file at startup and on rebuild
+(<code>src/memory/lifecycle.ts:462-477</code>, <code>:1826-1827</code>).
+Every check that can refuse a write runs before the append, so a refused
+write leaves the bytes identical. Erasure is the one rewrite: it
+replaces a retired fact's event and its retire and restore events with
+one event holding the original digest and the ids it closed, and only
+the hosted dashboard reaches it (<code>:1860-1951</code>). Notes are
+outside the ledger, and the file sits in a folder anyone with access can
+edit.</p>
 <p><a href="../../systems/praxis/">Praxis</a> records every SkillGraph
 mutation as a change set whose items hold the object's whole row as
 <code>before_json</code> and <code>after_json</code>. Apply, promote,
