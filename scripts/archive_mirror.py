@@ -22,13 +22,11 @@ measured here.
 
 What it does, per repository:
 
-  1. Reads the upstream's licence. A copy outside GitHub's fork mechanism is a
-     redistribution, so it needs a licence that grants one. A repository with no
-     licence, or one this script does not recognise, is forked instead, here and
-     in the same run: a fork taken once and never synced (creating a fork writes
-     nothing upstream; moving its branch does). Every repository is archived
-     whatever its licence says; the licence only decides which kind of copy.
-     A history over GitHub's push limit is forked the same way.
+  1. Reads the upstream's size. Every repository is archived as a copy, never
+     as a fork, whatever its licence says: several upstreams force-push, and a
+     fork follows its parent's network, where a copy keeps the commits the
+     report cites. The licence is recorded, not consulted. A history over
+     GitHub's push limit is refused, not forked, and the run says so.
   2. Creates `agent-memory-atlas-archive/<owner>--<repo>` — the same naming rule
      as the forks, so `archive_name` and `check_archive_names.py` are unchanged —
      with issues, projects and wiki off and the topic `atlas-mirror`.
@@ -54,7 +52,7 @@ Usage:
     python3 scripts/archive_mirror.py                         # every cited repo with no archive
 
 Exit codes: 0 everything asked for is archived; 1 a repository failed for its
-own reasons (fork or push rejected, pin missing).
+own reasons (push rejected, pin missing, history too large to push).
 
 Set GITHUB_TOKEN with `repo` scope and admin on the organisation; `gh auth token`
 works. The token reaches git through an `http.extraheader`, never through the
@@ -85,13 +83,14 @@ REVISION = re.compile(r"^revision:\s*\"?([0-9a-f]{40})\"?\s*$", re.M)
 
 # GitHub refuses a single push over 2 GB, and the first push of a copy carries
 # the whole history. `size` from the repository API is in KB and approximates the
-# packed history; above this the push would fail after a long clone, so the copy
-# is forked instead. CIRISAI/CIRISAgent (9.2 GB) was the first to hit it.
+# packed history; above this the push would fail after a long clone, so the
+# repository is refused rather than archived. It is never forked instead.
+# CIRISAI/CIRISAgent (9.2 GB) was the first to hit it.
 MAX_HISTORY_KB = 1_800_000
 
-# SPDX ids GitHub reports for licences that grant redistribution. A copyleft
-# licence is on the list: the copy carries the LICENSE file and the source, which
-# is what those licences ask of a verbatim redistribution.
+# SPDX ids GitHub reports for licences that grant redistribution. Kept for the
+# record each copy carries and for reporting; it no longer decides anything,
+# because every repository is copied and none is forked.
 REDISTRIBUTABLE = {
     "MIT", "MIT-0", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "BSD-3-Clause-Clear",
     "0BSD", "ISC", "Zlib", "BSL-1.0", "Unlicense", "CC0-1.0", "CC-BY-4.0",
@@ -210,52 +209,16 @@ def verify_pins(name: str, pins: set[str]) -> list[str]:
     return missing
 
 
-def fork_instead(key: str, owner: str, repo: str, name: str, slugs: list[str], pins: set[str],
-                 dry_run: bool, spdx: str, why: str) -> str:
-    """Archive a repository that cannot be copied as a fork, taken once and never synced.
-
-    The licence does not decide whether a repository is archived, only how: a
-    fork stays inside GitHub's fork mechanism, which the upstream accepted by
-    publishing there. A fork starts at the upstream's head, so it holds every pin
-    that is still reachable upstream; the pins are read back to say so.
-    """
-    status, existing, _ = af.request("GET", f"{API}/repos/{ORG}/{name}")
-    if status == 200 and isinstance(existing, dict):
-        kind = "fork" if existing.get("fork") else "copy"
-        return f"{kind}-exists: left alone ({why})"
-    if status != 404:
-        return f"failed: could not tell whether {ORG}/{name} exists (HTTP {status})"
-    if dry_run:
-        return f"would-fork ({why})"
-    outcome, detail = af.fork_with_backoff(owner, repo, name)
-    if outcome != "forked":
-        return f"failed: fork {outcome} {detail}".rstrip()
-    missing = sorted(pins)
-    for _ in range(12):                   # GitHub fills a new fork asynchronously
-        time.sleep(10)
-        missing = verify_pins(name, pins)
-        if not missing:
-            break
-    af.record({"upstream": key, "fork": f"{ORG}/{name}", "kind": "fork", "status": "forked",
-               "licence": spdx, "pins": sorted(pins), "slugs": slugs, "detail": why})
-    if missing:
-        return f"failed: forked ({why}), but pin(s) not readable from the fork: {', '.join(missing)}"
-    return f"forked ({why}; {len(pins)} pin(s) readable)"
-
-
 def archive_one(key: str, owner: str, repo: str, slugs: list[str], pins: set[str],
                 dry_run: bool) -> str:
     name = af.fork_name(owner, repo)
     spdx, upstream = licence_of(owner, repo)
     if upstream is None:
         return f"upstream-unreadable ({spdx})"
-    if spdx not in REDISTRIBUTABLE:
-        return fork_instead(key, owner, repo, name, slugs, pins, dry_run, spdx,
-                            f"licence {spdx} grants no standalone copy")
     size_kb = int(upstream.get("size") or 0)
     if size_kb > MAX_HISTORY_KB:
-        return fork_instead(key, owner, repo, name, slugs, pins, dry_run, spdx,
-                            f"{size_kb // 1024} MB of history, over GitHub's 2 GB push limit")
+        return (f"failed: refused-size, {size_kb // 1024} MB of history is over GitHub's 2 GB "
+                f"push limit; not archived, and not forked")
     if dry_run:
         status, existing, _ = af.request("GET", f"{API}/repos/{ORG}/{name}")
         if status == 200 and isinstance(existing, dict):

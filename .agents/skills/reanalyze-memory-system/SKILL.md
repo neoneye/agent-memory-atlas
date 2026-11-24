@@ -382,10 +382,10 @@ holds, which the repository's `fork` field says
   deletion prints the path of the local bare clone, which holds every pin;
   push from it to finish.
 
-  The conversion refuses where `archive_mirror.py` would — a licence that does
-  not grant redistribution, or more than about 1.8 GB of history. That fork
-  stays frozen at its old pins, the new pin is held upstream only, and the
-  completion summary says so.
+  The licence is not consulted: every fork is converted to a copy. The one
+  refusal is more than about 1.8 GB of history, which GitHub will not take in
+  one push. That fork stays frozen at its old pins, the new pin is held
+  upstream only, and the completion summary says so.
 
 If the upstream changed owner or name, `archive_name` has to follow
 `source_url`, so rename the archive repository to the new `<owner>--<repo>`

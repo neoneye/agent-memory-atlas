@@ -12,9 +12,10 @@ it. The name stays `<owner>--<repo>`, so `archive_name` and
 What it does, per repository, in an order that loses nothing if it stops:
 
   1. Confirms `agent-memory-atlas-archive/<owner>--<repo>` is a fork whose
-     parent or source is the upstream, and that the upstream's licence and size
-     allow a copy (the same refusals as `archive_mirror.py`). A refused
-     repository stays a frozen fork, and the script says so.
+     parent or source is the upstream, and that the upstream's history is small
+     enough to push. The licence is not consulted: every repository is held as
+     a copy, never a fork. An oversize one stays a frozen fork until it can be
+     pushed, and the script says so.
   2. Collects every pin the atlas cites for the upstream: each report's
      `revision` and every `<source_url>/commit/<sha>` link in it, History
      entries included.
@@ -156,8 +157,6 @@ def convert(owner: str, repo: str, dry_run: bool) -> str:
     spdx, upstream = am.licence_of(owner, repo)
     if upstream is None:
         return f"upstream-unreadable ({spdx}): the fork stays"
-    if spdx not in am.REDISTRIBUTABLE:
-        return f"refused-licence ({spdx}): stays a frozen fork"
     if int(upstream.get("size") or 0) > am.MAX_HISTORY_KB:
         return "refused-size (over GitHub's 2 GB push limit): stays a frozen fork"
     pins, slugs = cited_pins(owner, repo)
