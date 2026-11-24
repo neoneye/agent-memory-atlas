@@ -1,7 +1,7 @@
 # Archive copies, not forks
 
-**Status:** decided 2026-11-01; applies to repositories added to the archive from
-that date. The existing forks stay where they are.
+**Status:** decided 2026-11-01 for new repositories; since 2026-11-24 the archive
+never forks for any reason (below). Older forks convert to copies at re-read.
 
 ## What happened
 
@@ -66,3 +66,26 @@ under the same name with an `atlas-pin-` tag per pin. A licence or size the
 mirror refuses leaves that fork frozen. Every report is archived, whatever marks
 it earns. The first two conversions were TokenMizer (four pins, the first of
 them unreachable from the upstream's default branch) and ThoughtDAG (fourteen).
+
+## Never fork (2026-11-24)
+
+The fork fallbacks are gone. From 2026-11-14 `archive_mirror.py` forked a
+repository whose licence it did not recognise or whose history was over the
+push limit, and the original fallback above forked one whose licence did not
+grant redistribution. Each of those forks sits in its parent's network, and
+any later move of its branch would ping upstream threads again. Now:
+
+- the licence is recorded and consulted by nothing: every repository is
+  archived as a copy;
+- a history over about 1.8 GB is refused (`failed: refused-size`) rather than
+  forked, since GitHub rejects a single push over 2 GB;
+- `archive_convert.py` converts a fork whatever its licence says;
+- `archive_fork.py` lists what is missing from the archive and refuses to fork.
+
+The reason is the one at the top of this note, the pings in upstream trackers.
+It is easy to misremember as force-pushes, and it was misremembered that way
+on 2026-11-24. Force-pushes were never the reason: `archive_sync.py` already
+kept a fork's rewritten-away history by saving the old head on a dated branch
+before moving the default branch, and a pin tag holds a commit in a fork as
+well as in a copy. What a copy fixes is that its `#969` resolves to its own
+issue tracker, which is switched off.

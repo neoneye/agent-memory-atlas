@@ -120,6 +120,15 @@ itself, and its rubric is uncalibrated, which the README says in its own words.
 - **Verify before you claim.** `npm run build && bash scripts/test_site.sh` runs
   the anchor, pin, history, diagram, homepage and count checks. Green is the
   minimum, not the evidence.
+- **The archive never forks.** A fork shares its parent's network, so GitHub
+  resolves a short `#969` in the fork's commit messages to the upstream's issue
+  969, and every time a fork's branch moved, each commit naming an issue or a
+  squash-merged pull request pinged that upstream thread under the atlas
+  maintainer's account, until the Wenlan maintainer asked what it was. Archive with
+  `scripts/archive_mirror.py`, which makes a standalone copy whatever the
+  licence says. Force-pushes were not the reason: a fork kept rewritten history
+  on dated branches. Decision and history:
+  [`notes/2026-11-01-archive-copies-not-forks.md`](notes/2026-11-01-archive-copies-not-forks.md).
 
 ---
 

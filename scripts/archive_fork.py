@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Fork every repository the atlas cites into the archive organisation.
+"""List cited repositories missing from the archive organisation. It no longer forks.
 
-**Superseded for new repositories on 2026-11-01 by `archive_mirror.py`,** which
-makes a standalone copy instead: a fork's commit messages cross-reference the
-upstream's issues whenever its branch moves, and a copy's do not. This script
-remains the fallback for a repository whose licence does not grant
-redistribution, and such a fork is taken once and never synced — creating it
-writes nothing upstream; `archive_sync.py` moving it later is what does.
+**The archive never forks** (notes/2026-11-01-archive-copies-not-forks.md). A
+fork shares its parent's network, so GitHub resolves a short `#969` in the
+fork's commit messages to the upstream's issue 969, and every time a fork's
+branch moved, each commit naming an issue or a squash-merged pull request put a
+line in that upstream thread under the maintainer's account. Archive with
+`archive_mirror.py`, which makes a standalone copy whatever the licence says.
+This module stays because `archive_mirror.py` and `archive_convert.py` import
+its corpus walk, API client and naming, and `--dry-run` and `--suggest-helpers`
+still work. A run without `--dry-run` refuses.
 
 Every claim in this atlas is pinned to a commit in somebody else's repository,
 which means every claim depends on that repository continuing to exist. It does
@@ -241,41 +244,6 @@ def suggest_helpers() -> int:
 
 
 
-def fork_with_backoff(owner: str, repo: str, name: str, attempts: int = 5) -> tuple[str, str]:
-    """Fork one repository, waiting out a secondary rate limit rather than failing it.
-
-    Returns ("forked", ""), ("rate-limited", detail) when the wall outlasts the
-    retries, or (f"http-{code}", detail) for anything else. A rate limit is not
-    the repository's fault, so it never counts as that repository failing — it is
-    retried, and if it still will not pass the caller stops the run.
-    """
-    body = {"organization": ORG, "name": name, "default_branch_only": False}
-    url = f"{API}/repos/{owner}/{repo}/forks"
-    wait = 60
-    for attempt in range(1, attempts + 1):
-        status, payload, headers = request("POST", url, body)
-        if status in (200, 202):
-            return "forked", ""
-        # A renamed repository answers the POST with a redirect, and urllib will
-        # not follow a 307/301 on a POST because it must preserve the method.
-        # Twelve repositories in this corpus have been renamed since their report
-        # was written, and the first run recorded every one as a failure.
-        if status in (301, 307, 308) and headers.get("Location"):
-            url = headers["Location"]
-            continue
-        if is_secondary_limit(status, payload, headers):
-            if attempt == attempts:
-                return "rate-limited", str((payload or {}).get("message", ""))[:120]
-            delay = int(headers.get("Retry-After") or wait)
-            print(f"    secondary rate limit; waiting {delay}s (attempt {attempt}/{attempts})",
-                  file=sys.stderr)
-            time.sleep(delay + 1)
-            wait = min(wait * 2, 900)
-            continue
-        return f"http-{status}", str((payload or {}).get("message", ""))[:120]
-    return "rate-limited", "retries exhausted"
-
-
 def record(entry: dict) -> None:
     STATE.mkdir(parents=True, exist_ok=True)
     with LEDGER.open("a", encoding="utf-8") as fh:
@@ -344,39 +312,11 @@ def main() -> int:
             print(f"{key:<52} -> {ORG}/{name:<56} ({', '.join(slugs)})")
         return 0
 
-    created = failed = 0
-    pace = args.sleep
-    for i, (key, owner, repo, name, slugs) in enumerate(todo, 1):
-        outcome, detail = fork_with_backoff(owner, repo, name)
-        if outcome == "forked":
-            created += 1
-            print(f"[{i}/{len(todo)}] forked  {key} -> {ORG}/{name}")
-            record({"upstream": key, "fork": f"{ORG}/{name}", "status": "forked", "slugs": slugs})
-        elif outcome == "rate-limited":
-            # Every remaining repository will hit the same wall. Stopping with the
-            # reason is honest; grinding through 200 instant failures is what the
-            # first run did, and it produced a ledger full of noise and no forks.
-            print(f"[{i}/{len(todo)}] STOPPING at {key}: {detail}", file=sys.stderr)
-            record({"upstream": key, "status": "rate-limited", "detail": detail, "slugs": slugs})
-            print(
-                f"\nSecondary rate limit still refusing after retries. {created} forked this run. "
-                f"Re-run to resume — already-forked repositories are skipped.",
-                file=sys.stderr,
-            )
-            return 2
-        else:
-            failed += 1
-            print(f"[{i}/{len(todo)}] FAILED  {key}: {outcome} {detail}", file=sys.stderr)
-            record({"upstream": key, "status": outcome, "detail": detail, "slugs": slugs})
-        # Every attempt spends the same budget, so pace on all of them rather
-        # than only on success.
-        time.sleep(pace)
-
-    print(f"\n{created} forked, {failed} failed. Ledger: {LEDGER}", file=sys.stderr)
-    # A repository that cannot be forked is the case this whole script exists for:
-    # it is already gone, or private, or blocked. That is a finding for the report
-    # that cites it, not a crash here.
-    return 1 if failed else 0
+    # The archive never forks: see the module docstring.
+    if todo:
+        sys.exit("refused: the archive never forks. Archive each repository as a copy with "
+                 "GITHUB_TOKEN=$(gh auth token) python3 scripts/archive_mirror.py --only OWNER/REPO")
+    return 0
 
 
 def run_until_done(argv_wait: int) -> int:
