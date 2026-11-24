@@ -469,7 +469,7 @@ Do not fork a new repository. A fork shares its parent's network, so GitHub reso
 
 What the script does, and what to check in its output:
 
-- **It never forks.** Several upstreams force-push, and a copy keeps the commits a report cites where a fork follows its parent's network. The licence is recorded and decides nothing: every report's source is archived as a copy whatever its licence says.
+- **It never forks**, for the reason above. The licence is recorded and decides nothing: every report's source is archived as a copy whatever its licence says.
 - **It refuses a repository whose history is over about 1.8 GB**, because GitHub rejects a single push over 2 GB and a copy's first push carries the whole history. The line reads `failed: refused-size`; nothing is archived and nothing is forked, and the completion summary says the archive does not hold the pin. CIRISAgent, at 9 GB, was the first.
 - **It switches GitHub Actions off on the copy and reads that back before pushing**, so the upstream's `on: push` workflows never run in the archive organisation. It also turns off issues, projects and wiki, and tags the copy `atlas-mirror`.
 - **It pushes every branch and tag plus `refs/tags/atlas-pin-<sha>` for each pinned revision**, then reads each pin back through the API. A `failed:` line means the archive does not hold the pin. Say so in the completion summary; do not publish an `archive_name` pointing at nothing.

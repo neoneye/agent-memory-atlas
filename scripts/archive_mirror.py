@@ -23,9 +23,9 @@ measured here.
 What it does, per repository:
 
   1. Reads the upstream's size. Every repository is archived as a copy, never
-     as a fork, whatever its licence says: several upstreams force-push, and a
-     fork follows its parent's network, where a copy keeps the commits the
-     report cites. The licence is recorded, not consulted. A history over
+     as a fork, whatever its licence says, for the reason above: a fork's
+     short references reach the upstream's tracker. The licence is recorded,
+     not consulted. A history over
      GitHub's push limit is refused, not forked, and the run says so.
   2. Creates `agent-memory-atlas-archive/<owner>--<repo>` — the same naming rule
      as the forks, so `archive_name` and `check_archive_names.py` are unchanged —
