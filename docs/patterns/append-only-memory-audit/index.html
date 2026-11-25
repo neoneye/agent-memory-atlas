@@ -1154,6 +1154,22 @@ limits. An entry holds ids and the sha, never content.
 concept. And the background auto-repair calls the wrapped handler
 directly and leaves no pair
 (<code>internal/mcpserver/autorepair.go:767-773</code>).</p>
+<p><a href="../../systems/obsidian-mcp-kuminov/">obsidian-mcp
+(Kuminov)</a> is the near-miss that records changes it did not make, and
+then deletes the record. Its memory is a vault that a person and several
+agents edit, so <code>note_events</code> takes two sources: each write
+tool appends the kind, path, content hash, tool and API key or OAuth
+client after its publication, and each index pass appends what it finds
+that no tool recorded, rendered <code>human/sync</code>, suppressing a
+repeat of the latest tool event at the same path and hash
+(<code>src/services/change_feed.py:201-351</code>,
+<code>src/mcp_server/tools.py:1029-1044</code>). Seqs are per user under
+an advisory lock, so a stored <code>ev:&lt;n&gt;</code> cursor is exact.
+It is not append-only, and the mark is withheld: default retention
+deletes events older than 90 days or beyond 100,000 per user, a
+vault-root reassignment deletes the user's events, and a user deletion
+purges them (<code>src/services/change_feed.py:482-589</code>). An event
+holds a hash, never content, and a tool's own event is best-effort.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

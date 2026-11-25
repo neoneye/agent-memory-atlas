@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted MCP server that
+serves an Obsidian vault as agent memory, with hybrid search, a link
+graph, an attributed change feed and hash-guarded writes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="obsidian-mcp
+(Kuminov) — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted MCP server
+that serves an Obsidian vault as agent memory, with hybrid search, a
+link graph, an attributed change feed and hash-guarded writes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="obsidian-mcp
+(Kuminov) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted MCP server
+that serves an Obsidian vault as agent memory, with hybrid search, a
+link graph, an attributed change feed and hash-guarded writes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>obsidian-mcp (Kuminov) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "obsidian-mcp (Kuminov)",
+      "description": "A self-hosted MCP server that serves an Obsidian vault as agent memory, with hybrid search, a link graph, an attributed change feed and hash-guarded writes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Every change to the vault is attributed to
+the credential that made it</p>
+          <h1>obsidian-mcp (Kuminov)</h1>
+          <p class="document-deck">A self-hosted MCP server that serves
+an Obsidian vault as agent memory, with hybrid search, a link graph, an
+attributed change feed and hash-guarded writes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/maxkuminov/obsidian-mcp">
+              <span>Source</span>
+              <strong>maxkuminov/obsidian-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/maxkuminov/obsidian-mcp/commit/2a482ba9eb49cce2602664bc660d094db92f9b36" title="2a482ba9eb49cce2602664bc660d094db92f9b36">
+              <span>Analyzed revision</span>
+              <code>2a482ba9…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/maxkuminov--obsidian-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>maxkuminov--obsidian-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE, copyright Max Kuminov; the vendored obsidian-markdown skill
+under vendor/obsidian-skills carries its own MIT LICENSE and a
+PROVENANCE file naming the upstream commit</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>82,018
+lines of Python in 92 files under src/, 186,788 in 376 files under
+tests/, 41 Alembic migrations; src/mcp_server/tools.py alone is 10,490
+lines and src/services/indexer.py 8,801</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>434
+commits from 26 April to 16 November 2026: 414 by Max Kuminov under two
+addresses, 20 from six other names including Renovate and two commits
+authored as Claude; 35 tags, the pinned commit tagged
+v1.6.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>7,357
+test functions in 362 files by a grep for def test_; the 1,326 under
+tests/integration skip unless PGVECTOR_TEST_ADMIN_URL is set, and ci.yml
+sets it against a pgvector service; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>obsidian-mcp is a self-hosted MCP server that serves a person's
+existing Obsidian vault as long-term memory to claude.ai, ChatGPT,
+Claude Code and other clients, over a Postgres index with keyword,
+vector and hybrid search, a wikilink graph and a task index. Its notable
+part is the change feed: every agent write is recorded with the API key
+or OAuth client that made it, and every edit by a person or a sync
+client is recorded as <code>human/sync</code>, so an agent can ask what
+changed since its last session and who changed it. Its weak part is that
+the memory has no state of its own: a note is believed because it
+exists, a deleted note leaves nothing that stops it being written again,
+and a tool write is not searchable until the next five-minute index
+pass.</p>
+<p>The server runs no extraction and no consolidation. The agent decides
+what to write, through 13 write tools, and the person edits the same
+files in Obsidian. The README states the position directly, that "an
+agent remembers something because it wrote a note, and forgets it
+because someone deleted one" (<code>README.md:116-118</code>).</p>
+<p>"Guarded writes" means three things in code: a stale
+<code>expected_hash</code> refuses the write before any byte moves, a
+create never overwrites, and every path resolves beneath the caller's
+own vault root. No write waits for a person.</p>
+<p>The licence is MIT, in <code>LICENSE</code>; the vendored Obsidian
+Markdown skill is MIT under its own file with its upstream commit
+recorded.</p>
+<p>Two marks, both on the owner predicate over the index:
+<code>scope_enforced</code> and <code>negative_eval</code>. The change
+feed is the near-miss for <code>audit_log</code>, withheld because
+retention and two wipe paths delete its events. Section 9 gives the
+reason for each of the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>Markdown file in the vault</strong>. Its
+frontmatter, tags, wikilinks and checkbox tasks are the structure; the
+server imposes no folder, schema or "memory" note type. A note is ground
+truth for every connected agent the moment it is on disk.</p>
+<p>A note becomes memory by one of two routes.</p>
+<ul>
+<li><strong>An agent writes it.</strong> <code>create_note</code>,
+<code>edit_note</code>, <code>set_frontmatter</code>,
+<code>move_note</code>, <code>write_file</code>,
+<code>import_from_url</code> and the four task tools publish bytes
+atomically under the caller's vault root. A readwrite credential is
+required, and an edit carrying <code>expected_hash</code> is refused if
+the file changed since it was read
+(<code>src/mcp_server/tools.py:3996-4060</code>).</li>
+<li><strong>A person writes it.</strong> Obsidian, a sync client or git
+changes the file, and the next index pass discovers it.</li>
+</ul>
+<p>Either way, the index pass turns the file into an index row, heading
+chunks with embeddings, link rows and task rows, and appends a change
+event. Agent writes carry their attribution from the call; a change the
+pass discovers carries none.</p>
+<p>A note stops being memory when the file goes.
+<code>delete_note</code> renames it into <code>.trash/</code>, a dot
+directory the indexer skips and every tool refuses
+(<code>src/services/vault.py:588-594</code>), or unlinks it with
+<code>permanent=true</code>. The next pass removes the index rows and
+appends a <code>deleted</code> event. Nothing records what the note
+said, and nothing stops the same content being created again. There is
+no candidate state, no confidence and no expiry.</p>
+<p>The server's guide to the agent is the vault's own
+<code>CLAUDE.md</code>, which <code>get_vault_guide</code> returns with
+a primer on Obsidian Markdown
+(<code>src/mcp_server/tools.py:3845-3849</code>). It is a note like any
+other.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an agent write passes the credential and hash checks, lands in the file and is recorded with its credential; a person's edit is discovered by the next pass and recorded as human/sync; search sees either only after that pass, and a delete leaves no record of the value</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an agent write passes the credential and hash checks, lands in the file and is recorded with its credential; a person&#39;s edit is discovered by the next pass and recorded as human/sync; search sees either only after that pass, and a delete leaves no record of the value
+flowchart TD
+  subgraph writers[&quot;Two writers, one vault&quot;]
+    direction TB
+    A[&quot;agent tool call:&lt;br/&gt;create, edit, move,&lt;br/&gt;delete, task tools&quot;]
+    H[&quot;person or sync client:&lt;br/&gt;Obsidian, Syncthing, git&quot;]
+    A ~~~ H
+  end
+  A --&gt; G{&quot;readwrite credential?&lt;br/&gt;expected_hash matches&lt;br/&gt;if sent or required?&quot;}
+  G --&gt;|&quot;no&quot;| R[&quot;MCP-REFUSAL,&lt;br/&gt;nothing written&quot;]
+  G --&gt;|&quot;yes&quot;| F[&quot;atomic publish to the&lt;br/&gt;Markdown file under the&lt;br/&gt;caller&#39;s vault root&quot;]
+  F --&gt; EV[&quot;note_events row:&lt;br/&gt;kind, hash, tool,&lt;br/&gt;API key or OAuth client&quot;]
+  H --&gt; P
+  F --&gt; P[&quot;index pass every 300 s:&lt;br/&gt;hash, tsvector, heading&lt;br/&gt;chunks, embeddings, links&quot;]
+  P --&gt; EV2[&quot;event for a change no&lt;br/&gt;tool recorded:&lt;br/&gt;human/sync&quot;]
+  P --&gt; IDX[&quot;notes_metadata and&lt;br/&gt;note_embeddings,&lt;br/&gt;keyed by user_id&quot;]
+  IDX --&gt; S[&quot;keyword, semantic, hybrid:&lt;br/&gt;user_id predicate on&lt;br/&gt;every read&quot;]
+  S ~~~ D[&quot;delete_note: rename into&lt;br/&gt;.trash, out of reach&lt;br/&gt;of every tool&quot;]
+  D --&gt; GAP[&quot;no record of the value;&lt;br/&gt;create_note can&lt;br/&gt;write it again&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One FastAPI process serves the MCP endpoint, the OAuth authorisation
+server, the control panel and a periodic indexer, over PostgreSQL 16
+with pgvector and a vault directory mounted read-write
+(<code>src/main.py</code>, <code>server.json</code>). An embedding
+backend is required: Ollama with bge-m3 by default, OpenAI or a Hugging
+Face TEI server. A reranker is optional (<code>RERANK_URL</code>).</p>
+<ul>
+<li><strong><code>src/mcp_server/</code></strong> holds the 33 tools
+(<code>server.py</code> registers them, <code>tools.py</code> implements
+them), the authentication middleware (<code>auth.py</code>) and the list
+filter that hides write tools from a read-only OAuth grant
+(<code>tool_permissions.py</code>).</li>
+<li><strong><code>src/services/indexer.py</code></strong> runs the
+passes: hash, derive, embed, links, tasks, change events, quarantine of
+notes that poison the database, and vault-root overlap detection.</li>
+<li><strong><code>src/services/vault.py</code>,
+<code>vault_fs.py</code></strong> do path validation, anchored
+<code>openat</code>-style publication, no-clobber creation and the
+<code>.trash</code> rename.</li>
+<li><strong><code>src/services/search.py</code>, <code>hybrid.py</code>,
+<code>embeddings.py</code>, <code>rerank.py</code></strong> are the
+three search paths.</li>
+<li><strong><code>src/services/change_feed.py</code></strong> is the
+feed's writer, retention and renderer.</li>
+<li><strong><code>src/oauth/</code></strong> implements registration,
+consent, tokens, grant families and revocation.</li>
+</ul>
+<p>The periodic loop sleeps <code>INDEX_INTERVAL_SECONDS</code>, 300 by
+default, between passes (<code>src/config.py:528</code>,
+<code>src/services/indexer.py:8683</code>), and a full-hash pass runs at
+start-up and every 24 hours. The panel has a manual Reindex.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Three things must run: the server, Postgres with pgvector, and an
+embedding service, which can be local (Ollama or TEI) or OpenAI with a
+key. Docker Compose files, a Kubernetes kustomization and a registry
+manifest are in the tree. A remote client needs a public hostname behind
+TLS; the README describes a Caddy or Traefik front.</p>
+<p>The store is the vault: plain Markdown a person reads and repairs in
+Obsidian. Losing the database loses the index, the change feed and the
+credentials, and a re-index rebuilds the first. Switching the embedding
+model requires <code>make reset-embeddings</code>.</p>
+<p>Multi-user mode is off by default (<code>src/config.py:1289</code>).
+With it on, each user has a <code>vault_path</code>, and the indexer
+refuses to serve two users whose roots overlap until an administrator
+fixes the assignment (<code>src/services/indexer.py:528</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Authentication.</strong> The middleware resolves a bearer
+API key or an OAuth access token, then sets
+<code>current_permission</code>, <code>current_user_id</code> and the
+actor from the credential row
+(<code>src/mcp_server/auth.py:950-962</code>, <code>:1170-1185</code>).
+Every tool reads the user from that context variable.</li>
+<li><strong>Write gate.</strong> <code>_vault_admission_error</code>,
+run by every tool's <code>_tracked</code> wrapper, resolves the caller's
+vault root before the body runs and refuses an unassigned or quarantined
+caller (<code>src/mcp_server/tools.py:1173-1236</code>). Write tools
+call <code>_require_write</code> (<code>:4181</code>); the set of write
+tools is one frozenset
+(<code>src/mcp_server/tool_permissions.py:36-54</code>).</li>
+<li><strong>Create.</strong> <code>create_note_impl</code> refuses a
+supplied hash as <code>no_incumbent</code>, opens the target beneath the
+root, checks size, confirms the vault assignment and publishes with
+<code>overwrite=False</code>, then records a <code>created</code> event
+(<code>src/mcp_server/tools.py:4630-4726</code>).</li>
+<li><strong>Edit and preconditions.</strong>
+<code>_precondition_error</code> compares the caller's
+<code>expected_hash</code> with the incumbent bytes and refuses
+<code>stale_precondition</code>; with
+<code>WRITE_PRECONDITION_REQUIRED</code> it refuses a missing hash
+(<code>src/mcp_server/tools.py:3996-4060</code>,
+<code>src/config.py:900</code>).</li>
+<li><strong>Delete.</strong> <code>delete_note_impl</code> renames into
+<code>.trash/</code> with <code>RENAME_NOREPLACE</code>, or unlinks
+(<code>src/mcp_server/tools.py:7196</code>,
+<code>src/services/vault.py:3057</code>).</li>
+<li><strong>Tool events.</strong> <code>_record_note_events</code> calls
+<code>change_feed.record_tool_events</code> after a confirmed
+publication, never on a refusal or dry run
+(<code>src/mcp_server/tools.py:1029-1044</code>,
+<code>src/services/change_feed.py:416-459</code>).</li>
+<li><strong>Index pass.</strong> The pass appends discovered changes
+with suppression of any a tool already recorded
+(<code>src/services/indexer.py:4502</code>,
+<code>src/services/change_feed.py:201-247</code>).</li>
+<li><strong>Search.</strong> <code>keyword_arm_rows</code> and the
+vector statement both pass through <code>apply_note_filters</code>
+(<code>src/services/search.py:94</code>,
+<code>src/services/embeddings.py:2899</code>);
+<code>hybrid_search</code> runs both arms to depth 50 and fuses them
+(<code>src/services/hybrid.py:63</code>, <code>:218-267</code>).</li>
+<li><strong>Change feed read.</strong> <code>get_changes_impl</code>
+reads the caller's scope from a cursor
+(<code>src/mcp_server/tools.py:10372</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The note row.</strong> <code>notes_metadata</code> holds
+<code>user_id</code>, <code>file_path</code>, <code>title</code>,
+<code>tags</code>, <code>frontmatter</code> as JSONB,
+<code>content_hash</code>, a weighted tsvector, stat columns for the
+shortcut, <code>content_changed_at</code>, truncation markers and
+derivation versions (<code>src/models/db.py:613-866</code>).
+<code>note_embeddings</code> holds heading chunks with their context
+prefix and a vector; <code>note_links</code> holds resolved and dangling
+wikilinks and Markdown links; <code>note_tasks</code> holds one row per
+checkbox with its state and Tasks-plugin dates
+(<code>src/models/db.py:867-1073</code>).</p>
+<p><strong>Scope.</strong> <code>user_id</code> is on
+<code>notes_metadata</code>, <code>note_events</code> and the
+credentials. Link, embedding and task rows reach ownership through their
+note. NULL is the single-user owner, and a database can hold both.</p>
+<p><strong>Time.</strong> <code>content_changed_at</code> moves only
+when the bytes change; a file's modification time is kept beside it.
+Task rows carry due, scheduled and start dates from the note's own
+syntax. No column says when a fact held.</p>
+<p><strong>The change feed.</strong> <code>note_events</code> holds a
+per-user <code>seq</code>, <code>occurred_at</code>, <code>kind</code>
+(created, modified, moved, deleted, gap, reset), <code>path</code>,
+<code>from_path</code>, <code>content_hash</code>, <code>source</code>
+(mcp or index), <code>tool</code>, <code>actor_kind</code>,
+<code>actor_label</code> and a principal pair used for
+<code>by="me"</code> and never rendered
+(<code>src/models/db.py:1196-1245</code>). CHECK constraints tie a move
+to a source path and an actor to the mcp source.</p>
+<p><strong>Usage log.</strong> <code>usage_logs</code> records every
+tool call, reads included, with the tool, parameters, duration and a
+denormalised actor that survives the credential's deletion
+(<code>src/models/db.py:540-612</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is tool-mediated. Nothing is injected; the MCP
+<code>instructions</code> paragraph tells the agent which search tool to
+use and to call <code>get_vault_guide</code> once per session
+(<code>src/mcp_server/server.py:149-157</code>).</p>
+<ul>
+<li><strong><code>keyword_search</code></strong> builds a tsquery from
+the configured text-search configs over a tsvector that weights title
+and aliases above tags above the body. Full matches come first and
+partial matches fill the page tagged <code>match: any</code>, each with
+a highlighted snippet (<code>src/services/search.py</code>).</li>
+<li><strong><code>semantic_search</code></strong> queries heading-aware
+chunks, each embedded under a <code>Title &gt; Heading</code> prefix,
+and returns one row per note with the matched section's locator.</li>
+<li><strong><code>hybrid_search</code></strong> fuses the top 50 of each
+arm by reciprocal rank with k = 60 and prints each arm's rank and term.
+If the embedder is down it returns the keyword ranking marked
+<code>keyword-only</code> (<code>src/services/hybrid.py:63</code>,
+<code>:218</code>, <code>src/config.py:702</code>).</li>
+<li><strong><code>rerank=true</code></strong> asks an
+operator-configured reranker to reorder the fetched candidates.</li>
+<li><strong>Graph tools</strong> walk <code>note_links</code> for
+backlinks, outgoing links, neighbourhoods and orphans;
+<code>find_related</code> is a vector neighbour search.</li>
+</ul>
+<p>A semantic or hybrid page carries <code>confidence: ok | low</code>;
+the threshold ships at 0, so it always says <code>ok</code> until an
+operator calibrates it, and it filters nothing.</p>
+<p>Every index read is scoped by <code>apply_note_filters</code>, which
+appends <code>user_id = :uid</code> or <code>user_id IS NULL</code> on
+every call (<code>src/services/filters.py:26-71</code>). Frontmatter and
+tag filters are caller arguments; a vault that marks notes
+<code>status: superseded</code> is excluded only if the agent asks for
+it.</p>
+<p>The failure mode is staleness: an index row reflects the file at the
+last pass, so a note written since then is found by
+<code>read_note</code> at its path and by no search until the next pass
+runs.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and hot-path: the tool publishes the file
+before it returns, and the change event is appended in its own
+transaction after the publication. The index follows on the next pass,
+so a new note is searchable up to 300 seconds later plus its embedding
+time. Nothing rewrites the store in the background; the 24-hour
+full-hash pass re-reads every file to catch edits the stat shortcut
+missed.</p>
+<p><strong>What the guard guards.</strong> An edit, frontmatter change,
+move or delete that carries <code>expected_hash</code> is refused before
+mutation when the file's current hash differs, with the current hash in
+a machine-readable refusal. A deployment can require the hash on every
+destructive call; the default does not (<code>src/config.py:900</code>),
+and the MCP instructions tell the agent that an unguarded stale edit
+overwrites. Creation never overwrites. Paths are validated beneath the
+caller's root, symlinked leaves are refused, and the assignment is
+re-confirmed immediately before publication.</p>
+<p><strong>What it does not guard.</strong> No content check, no
+provenance on the note and no person: <code>dry_run=true</code> returns
+a diff to the agent that asked for it. <code>import_from_url</code>
+writes a public page's bytes into the vault, and the note itself carries
+no mark that it came from the web; the change feed records the tool.</p>
+<p><strong>Deletion and correction.</strong> An edit replaces the bytes.
+A delete renames the file into <code>.trash/</code>. The value is gone
+from the index at the next pass, and any agent may write it again.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model call sits on the write path. Each pass hashes changed files
+and embeds changed chunks; a model switch re-embeds the vault. The usage
+log and change feed add one insert per tool call and one per published
+change.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The 33 tools are published with titles and MCP annotations: 19
+read-only, 11 destructive, <code>import_from_url</code> open-world. A
+client that honours annotations prompts before destructive calls; the
+server does not depend on that.</p>
+<p><strong>How several clients connect.</strong> claude.ai, Claude
+Desktop and ChatGPT register through OAuth dynamic registration or a
+Client ID Metadata Document, and a person signs in to the panel and
+approves the client on a consent page that offers read or
+read-and-write, clamped to what the client registered for
+(<code>src/oauth/scope.py:88-126</code>). Claude Code and n8n use bearer
+API keys created in the panel with <code>read</code> or
+<code>readwrite</code>. Every credential is bound to one user, and the
+user's vault is the whole of what it reaches: there is no per-client
+folder or note restriction. A read-only OAuth grant does not even see
+the write tools listed.</p>
+<p><strong>What the agent controls.</strong> Everything about content.
+It chooses what to write, where, and when to delete.
+<code>get_changes(since="ev:&lt;n&gt;")</code> gives it a durable cursor
+it is told to keep in its own notes, so a later session can read what
+other agents and the person changed in between, filtered by
+<code>by="me" | "agents" | "human"</code>.</p>
+<p><strong>The guide is writable.</strong> <code>get_vault_guide</code>
+returns the vault root's <code>CLAUDE.md</code>, and no write path
+treats that file differently from any other note (recorded search
+below). Any readwrite credential of the user can therefore change the
+instructions every other connected agent loads.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-change-feed">The change feed</h3>
+<p><code>append_events</code> is the only insert into
+<code>note_events</code>. It takes a per-user advisory lock, assigns
+consecutive seqs under it, folds any recorded gap rows into one
+<code>gap write_failed</code> line, and suppresses a pass event that
+repeats the latest tool event at the same path and hash
+(<code>src/services/change_feed.py:250-351</code>). A cursor is
+therefore exact within a user, and a seq reveals nothing about another
+tenant's volume.</p>
+<p>Its limits are deliberate and stated in the code.</p>
+<ul>
+<li>A tool's event is best-effort: a lock timeout or error is swallowed,
+and the next pass records the change as <code>human/sync</code>
+(<code>src/services/change_feed.py:416-459</code>).</li>
+<li>Retention deletes events older than 90 days and beyond 100,000 per
+user, never the newest, and raises a watermark so an old cursor reads
+<code>history_truncated</code> (<code>src/config.py:569-573</code>,
+<code>src/services/change_feed.py:528-589</code>).</li>
+<li>A vault-root reassignment that changes provenance deletes the user's
+index rows and every event, and starts a new history with
+<code>reset</code> (<code>src/services/indexer.py:2630-2665</code>,
+<code>src/services/change_feed.py:494-525</code>).</li>
+<li>Permanently deleting a user purges the feed
+(<code>:482-491</code>).</li>
+<li>An event holds a hash, not content. Two human edits between passes
+appear as one <code>modified</code>.</li>
+</ul>
+<h3 id="tenancy">Tenancy</h3>
+<p>The owner predicate is total: an ownerless credential reads exactly
+the NULL-owned slice, never everything, which closes the case where
+multi-user mode is turned off after users exist
+(<code>src/services/filters.py:49-56</code>). The graph tools apply
+ownership in the join's ON clause, so a link into another user's note
+neither resolves nor bridges a neighbourhood. Overlapping vault roots
+are quarantined rather than served.</p>
+<h3 id="what-has-no-protection">What has no protection</h3>
+<ul>
+<li><strong>Stale reads overwrite by default.</strong>
+<code>expected_hash</code> is optional unless the operator sets
+<code>WRITE_PRECONDITION_REQUIRED</code>.</li>
+<li><strong>The guide is a note.</strong> An agent can rewrite
+<code>CLAUDE.md</code>, which other agents read as their
+instructions.</li>
+<li><strong>Every client sees everything.</strong> A ChatGPT connector
+approved read-only reads the same notes as the owner's Claude Code
+key.</li>
+<li><strong>Deletion keeps the bytes.</strong> A soft delete leaves the
+file in <code>.trash/</code> until a person empties it; the database
+keeps the hash in the feed.</li>
+</ul>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong>
+<code>user_id</code> is stored on each index row and applied in SQL on
+every index read; the value comes from the resolved credential. In the
+default single-user mode it separates nothing, and file access is a
+separate per-user root.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> The
+owner-scoping integration module seeds two owners on one term and one
+vector and requires each search to return its own note and omit the
+other owner's.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No write
+waits. The consent page approves a credential, not memory content;
+<code>dry_run</code> is the agent's own preview; a person editing in
+Obsidian edits after the fact.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> A note has no
+status. <code>note_tasks.state</code> tracks a checkbox's workflow, and
+the search confidence token filters nothing.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> No record of a
+deleted value exists; a <code>deleted</code> event is keyed on the path
+and its hash and nothing consults it before a write.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>note_events</code> records every note creation, modification, move
+and deletion, with the credential and tool for agent writes, through one
+insert site that no code updates. It is not append-only: default
+retention deletes events older than 90 days or beyond 100,000 per user
+(<code>src/config.py:569-573</code>), a vault-root reassignment deletes
+the user's events (<code>src/services/change_feed.py:494-525</code>),
+and a user deletion purges them (<code>:482-491</code>). An event holds
+a hash, not content.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>content_changed_at</code> and the event time are record times; no
+column records when a fact held.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI runs the whole suite with a pgvector service and sets
+<code>PGVECTOR_TEST_ADMIN_URL</code>, so the integration modules run
+there, and fails the build if the mount-namespace test was skipped
+(<code>.github/workflows/ci.yml</code>). A schema gate migrates fresh
+databases to head. I ran nothing from the repository.</p>
+<p>Memory-relevant coverage:</p>
+<ul>
+<li>owner scoping across list, recent, keyword, semantic, tags, related,
+links, backlinks, neighbourhood and orphans, against both owners
+(<code>tests/integration/test_issue_127_owner_scoping_pg.py:177-385</code>);</li>
+<li>the change feed: an agent edit recorded once with its key and a
+later human edit recorded as <code>index</code>; each write tool's kind;
+a refused and a dry-run edit recording nothing; tenants' private gapless
+feeds; <code>by="me"</code>; retention by age and cap; discard on
+reassignment
+(<code>tests/integration/test_change_feed_pg.py:155-1053</code>);</li>
+<li>write preconditions on notes and files, including stale, missing and
+over-cap hashes (<code>tests/test_write_preconditions_notes.py</code>,
+<code>tests/test_write_preconditions_files.py</code>);</li>
+<li>read-only grants refused and write tools hidden from their list
+(<code>tests/test_issue_358_scoped_tools_list.py</code>).</li>
+</ul>
+<p>Not covered: no test deletes a note and checks that anything stops it
+being written back, and none checks what happens when an agent edits
+<code>CLAUDE.md</code>.</p>
+<p><strong>Retrieval evaluation.</strong> <code>make search-eval</code>
+mines judgments from the operator's own usage log, a search followed by
+a read of one of its results, and scores arms with recall, MRR and nDCG
+(<code>scripts/search_eval/</code>). The committed
+<code>tests/fixtures/search_eval/expected-report.json</code> is the
+harness's golden output over a 12-query fixture with fixture arms. The
+README reports a 2026-11-01 measurement on a 196-query reference vault,
+with reranking raising semantic recall@10 from 0.505 to 0.582 and
+lowering hybrid MRR from 0.533 to 0.465
+(<code>README.md:2300-2307</code>); the vault and its judgments are not
+in the tree, so the numbers cannot be recomputed from it. The tree cites
+no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Attribute every write to the credential, and mark the
+rest.</strong> A change feed that names the API key or OAuth client for
+agent writes and records out-of-band edits as <code>human/sync</code>
+answers "who changed this" across agents and a person sharing one
+store.</li>
+<li><strong>A per-scope sequence assigned under a lock.</strong> It
+makes a resumable cursor exact and leaks no other tenant's volume.</li>
+<li><strong>A total owner predicate.</strong> Map "no owner" to
+<code>IS NULL</code>, never to "no filter", and put ownership in the
+join's ON clause for link tables.</li>
+<li><strong>Hash preconditions on destructive writes,</strong> with the
+refusal carrying the current hash, and a deployment switch that makes
+them mandatory.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An index that lags its own writes.</strong> If the writing
+tool does not index what it wrote, the agent that just saved a fact
+cannot find it by search.</li>
+<li><strong>Serving agent instructions from a file agents can
+write.</strong> Either protect the guide or record it as a privileged
+path.</li>
+<li><strong>One permission bit per credential for a shared personal
+store.</strong> A connector that only needs one folder gets the whole
+vault.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person, or a small household of users, who already
+keeps an Obsidian vault and wants every agent they use to read and write
+it under their own eyes, with Postgres and an embedding service to run.
+It is a large, heavily specified codebase for a single maintainer, with
+a long upgrade section, and it changes quickly. Walk away if memory must
+be corrected so it stays corrected, if writes must wait for a person, or
+if different agents should see different parts of the store.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether an agent-facing index refresh after a write was considered
+and refused, or is pending.</li>
+<li>Whether <code>CLAUDE.md</code> is meant to be agent-writable.</li>
+<li>How the README's 2026-11-01 reranker measurement relates to the
+judgments a fresh deployment would mine.</li>
+<li><code>server.json</code> still names image <code>v0.9.2</code> while
+the pinned commit is tagged <code>v1.6.0</code>; whether the registry
+entry is maintained.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Tools and server: <code>src/mcp_server/server.py</code>,
+<code>src/mcp_server/tools.py</code>,
+<code>src/mcp_server/tool_permissions.py</code>,
+<code>src/mcp_server/read_result.py</code>,
+<code>src/mcp_server/vault_guide_primer.md</code></li>
+<li>Authentication: <code>src/mcp_server/auth.py</code>,
+<code>src/oauth/</code>, <code>src/auth/</code>,
+<code>src/services/api_keys.py</code></li>
+<li>Vault I/O: <code>src/services/vault.py</code>,
+<code>src/services/vault_fs.py</code>,
+<code>src/services/vault_overlap.py</code>,
+<code>src/services/transfer.py</code></li>
+<li>Index: <code>src/services/indexer.py</code>,
+<code>src/services/embeddings.py</code>,
+<code>src/services/links.py</code>,
+<code>src/services/task_index.py</code></li>
+<li>Retrieval: <code>src/services/search.py</code>,
+<code>src/services/fts.py</code>, <code>src/services/hybrid.py</code>,
+<code>src/services/rerank.py</code>,
+<code>src/services/filters.py</code>,
+<code>src/services/search_confidence.py</code></li>
+<li>Change feed: <code>src/services/change_feed.py</code></li>
+<li>Schema: <code>src/models/db.py</code>,
+<code>alembic/versions/</code></li>
+<li>Configuration: <code>src/config.py</code></li>
+<li>Tests:
+<code>tests/integration/test_issue_127_owner_scoping_pg.py</code>,
+<code>tests/integration/test_change_feed_pg.py</code>,
+<code>tests/test_write_preconditions_notes.py</code>,
+<code>.github/workflows/ci.yml</code></li>
+<li>Evaluation: <code>scripts/search_eval/</code>,
+<code>tests/fixtures/search_eval/</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No value-keyed refusal.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|deny_?list|rejected_value' -- src alembic</code>
+returns nothing; the same pattern over <code>.</code> matches
+<code>tests/test_oauth_cimd_jwks.py:524</code> and two docs lines.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -w -E 'valid_from|valid_to|valid_until|valid_at' -- src alembic</code>
+returns nothing;
+<code>git grep -n -w -E 'content_changed_at|expires_at' -- src/models/db.py</code>
+matches <code>:338</code>, <code>:821</code> and
+<code>:1447</code>.</li>
+<li><strong>No review or status on a note.</strong>
+<code>git grep -n -i -E 'pending|approv|review|verified|status' -- src/models/db.py</code>
+returns migration comments, OIDC and OAuth consent comments,
+<code>note_tasks.status_char</code> at <code>:969</code> and the
+transfer-token state at <code>:1503</code>.</li>
+<li><strong>No per-credential folder restriction.</strong>
+<code>git grep -n -i -E 'allowed_folder|path_prefix|folder_scope|allowed_paths' -- src alembic</code>
+returns nothing;
+<code>git grep -n -E 'permission: Mapped' -- src/models/db.py</code>
+matches <code>:336</code>.</li>
+<li><strong>No chat-model call in the server.</strong>
+<code>git grep -n -i -E 'chat/completions|ChatCompletion|messages\.create|/api/generate|/api/chat' -- src</code>
+returns nothing; <code>git grep -n -E '/api/embed' -- src</code> matches
+<code>src/config.py:521</code> and
+<code>src/services/embeddings.py:1111</code>.</li>
+<li><strong>No write triggers an index pass.</strong>
+<code>git grep -n -i -E 'wake|nudge|index_soon|inotify|watchdog' -- src</code>
+returns one comment, <code>src/services/transfer.py:1246</code>;
+<code>git grep -n -E 'asyncio\.sleep\(settings\.index_interval_seconds\)' -- src</code>
+matches <code>src/services/indexer.py:8683</code>.</li>
+<li><strong>Writes to the change feed.</strong>
+<code>git grep -n -i -E 'UPDATE note_events|update\(NoteEvent|DELETE FROM note_events|insert\(NoteEvent|INSERT INTO note_events' -- src scripts alembic docker</code>
+matches <code>src/services/change_feed.py:346</code>, <code>:503</code>
+and <code>:632</code>; the purge's DELETE is built from a table-name
+loop at <code>:490-491</code>.</li>
+<li><strong>CLAUDE.md is only read.</strong>
+<code>git grep -n 'CLAUDE.md' -- src/mcp_server/tools.py src/services/vault.py src/services/vault_fs.py</code>
+matches <code>tools.py:176</code>, <code>:178</code>,
+<code>:1190</code>, <code>:3846</code> and <code>:3849</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- .</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/maxkuminov/obsidian-mcp/commit/2a482ba9eb49cce2602664bc660d094db92f9b36"><code class="commit-id" title="2a482ba9eb49cce2602664bc660d094db92f9b36">2a482ba9…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, the
+commit triage selected. Screened first: one auto-run surface,
+<code>server.json</code>, an MCP registry manifest declaring a start
+command, which was not run; nothing inside the seven-day cooldown; two
+build-time execution points, the <code>Makefile</code> and
+<code>tests/conftest.py</code>; one unpinned requirement,
+<code>pip-audit</code> in <code>requirements-dev.txt</code>.
+<code>AGENTS.md</code>, <code>CLAUDE.md</code> and the docs were read as
+data. Nothing was installed, built or run, and the tests were not run.
+Two marks: <code>scope_enforced</code> and <code>negative_eval</code>
+(<a href="#9-reliability-safety-and-trust">section 9</a>);
+<code>audit_log</code> withheld because retention and root changes
+delete change-feed events. A tool write waits for the next index pass,
+the vault guide is agent-writable, and deletion keeps no record of the
+value.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

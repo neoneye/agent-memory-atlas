@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 872 of 873 screened at the report's current pin.**
+**Progress: 873 of 874 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 417 |
+| Repositories with an auto-run surface (`RUNS`) | 418 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 396 |
-| Repositories with build-time execution (`EXEC`) | 627 |
+| Repositories with build-time execution (`EXEC`) | 628 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -305,6 +305,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`nornicdb`](../../content/systems/nornicdb.md) | `.githooks/` |
 | [`nougenshards`](../../content/systems/nougenshards.md) | `.mcp.json`, `hooks/` |
 | [`obelyth-cortex`](../../content/systems/obelyth-cortex.md) | `.devcontainer/devcontainer.json` |
+| [`obsidian-mcp-kuminov`](../../content/systems/obsidian-mcp-kuminov.md) | `server.json` |
 | [`obsidian-mind`](../../content/systems/obsidian-mind.md) | `.claude-plugin/`, `.claude/settings.json`, `.gemini/settings.json`, `.mcp.json` |
 | [`obsidian-second-brain`](../../content/systems/obsidian-second-brain.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `hooks/`, `hooks/hooks.json` |
 | [`obsidian-wiki`](../../content/systems/obsidian-wiki.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.cursor/rules/`, `.github/copilot-instructions.md` |

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 873 reports.</strong></p>
+<p><strong>This page covers all 874 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36001,6 +36001,55 @@ store.</li>
 <li>Do not copy when: a stored memory must keep its words, a correction
 needs a record, projects must not see each other's visual memories, or a
 benchmark has to stand up to a reader.</li>
+</ul>
+<h3 id="obsidian-mcp-kuminov"><a
+href="../systems/obsidian-mcp-kuminov/"><code>obsidian-mcp-kuminov</code></a></h3>
+<ul>
+<li>Best idea: <strong>attribute every change to the credential behind
+it, and mark the rest as the person's.</strong> Each write tool appends
+a <code>note_events</code> row with the kind, path, content hash, tool
+and API key or OAuth client after it publishes, and the index pass
+records every change no tool recorded as <code>human/sync</code>;
+<code>get_changes</code> serves it per user from an exact
+<code>ev:&lt;seq&gt;</code> cursor, filtered by <code>me</code>,
+<code>agents</code> or <code>human</code>.</li>
+<li>Second idea: an owner predicate with no unfiltered case.
+<code>apply_note_filters</code> maps an ownerless credential to
+<code>user_id IS NULL</code> and a named one to
+<code>user_id = :uid</code> on every index read, link tables apply
+ownership in the join, and a populated integration test seeds two owners
+on one term and one vector.</li>
+<li>Biggest risk: <strong>the memory has no state of its own.</strong> A
+note is believed because it is on disk; a delete renames it into
+<code>.trash/</code> and keeps no record of the value, so any agent can
+write it back; and the vault's <code>CLAUDE.md</code>, which
+<code>get_vault_guide</code> serves to every agent as its instructions,
+is writable by any readwrite credential.</li>
+<li>Second risk: a tool write is not searchable until the next index
+pass, 300 seconds by default, and <code>expected_hash</code> is optional
+unless the operator sets <code>WRITE_PRECONDITION_REQUIRED</code>, so an
+unguarded stale edit overwrites. Every credential of a user reaches the
+whole vault; read or readwrite is the only distinction between a ChatGPT
+connector and the owner's own key.</li>
+<li>Most reusable component: <code>append_events</code> and
+<code>suppressed</code> in
+<code>src/services/change_feed.py:201-351</code>, and
+<code>apply_note_filters</code> in
+<code>src/services/filters.py:26-71</code>.</li>
+<li>Maturity impression: MIT; 82,018 lines of Python under
+<code>src/</code> and 186,788 under <code>tests/</code>, 41 migrations;
+434 commits from 26 April to 16 November 2026, nearly all by one author,
+tagged to v1.6.0; 7,357 test functions with the Postgres integration
+modules run in CI, none run here. Two marks:
+<code>scope_enforced</code>, <code>negative_eval</code>;
+<code>audit_log</code> withheld because retention and root changes
+delete change-feed events.</li>
+<li>Study when: several agents and a person share one store of plain
+files, and you need to know which agent changed what since a given
+point.</li>
+<li>Do not copy when: a correction must hold against the next write, a
+write must wait for a person, or different agents should see different
+parts of the store.</li>
 </ul>
         </article>
       </div>

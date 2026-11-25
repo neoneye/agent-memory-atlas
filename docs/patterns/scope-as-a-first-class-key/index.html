@@ -1855,6 +1855,24 @@ grants see everything: the owner's session and
 <code>unrestricted_data</code>. The SQL predicate's test filters a
 fixture in the test's own fake, so CI asserts what the server sends
 rather than what Postgres returns.</p>
+<p><a href="../../systems/obsidian-mcp-kuminov/">obsidian-mcp
+(Kuminov)</a> makes the owner predicate total.
+<code>apply_note_filters</code> appends <code>user_id IS NULL</code> for
+an ownerless credential and <code>user_id = :uid</code> for a named one,
+never nothing, because an ownerless key on a database that also held
+named users' rows had read every tenant's paths, titles and excerpts;
+the keyword arm, the vector arm and the list tools all build on it, and
+the id comes from the credential row
+(<code>src/services/filters.py:26-71</code>,
+<code>src/mcp_server/auth.py:957</code>, <code>:1181</code>). Link rows
+carry no owner, so the graph tools test ownership in the join's ON
+clause: a cross-owner edge neither resolves nor bridges a neighbourhood,
+and a dangling link is still reported. A populated integration module
+seeds both owners on one term and one vector and requires each read to
+omit the other
+(<code>tests/integration/test_issue_127_owner_scoping_pg.py:189-212</code>,
+<code>:365-385</code>). Every credential of a user still reaches the
+whole vault.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a
