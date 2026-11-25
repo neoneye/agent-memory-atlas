@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code plugin of
+context-isolated agent teams whose cross-session memory is Markdown:
+per-specialty lessons, a brief's decisions log, sprint retros and scout
+maps.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Coniso — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code plugin of
+context-isolated agent teams whose cross-session memory is Markdown:
+per-specialty lessons, a brief's decisions log, sprint retros and scout
+maps.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Coniso — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code plugin of
+context-isolated agent teams whose cross-session memory is Markdown:
+per-specialty lessons, a brief's decisions log, sprint retros and scout
+maps.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Coniso — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Coniso",
+      "description": "A Claude Code plugin of context-isolated agent teams whose cross-session memory is Markdown: per-specialty lessons, a brief's decisions log, sprint retros and scout maps.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Lessons that bind every engineer, written
+and pruned by the model</p>
+          <h1>Coniso</h1>
+          <p class="document-deck">A Claude Code plugin of
+context-isolated agent teams whose cross-session memory is Markdown:
+per-specialty lessons, a brief's decisions log, sprint retros and scout
+maps.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Palatine-Labs/coniso">
+              <span>Source</span>
+              <strong>Palatine-Labs/coniso</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Palatine-Labs/coniso/commit/15b6eb9223af3e0b79805366d3678d603ce7d683" title="15b6eb9223af3e0b79805366d3678d603ce7d683">
+              <span>Analyzed revision</span>
+              <code>15b6eb92…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Palatine-Labs--coniso" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Palatine-Labs--coniso</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE (the unmodified text), NOTICE and plugin.json; no per-file
+headers</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>4,112
+lines of Python in three files (scripts/coniso.py 3,131,
+scripts/coniso_hook.py 54, tests/test_coniso.py 927); 1,380 lines of
+Markdown prompts in 34 agent, skill and output-style files; a 419-line
+HTML roadmap template</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>29
+commits from 30 October to 10 November 2026 under two names that share
+one GitHub account; four tags, v1.0.0 to v1.2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>63
+unittest methods in tests/test_coniso.py, standard library only; no CI
+workflow in the tree; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Coniso is a Claude Code plugin that runs software work as a hierarchy
+of subagents, each in a fresh context, with a standard-library Python
+script doing the scheduling, worktrees, merges and roadmap edits. Its
+memory is a set of Markdown files the agents are told to read:
+per-specialty lessons, a brief with a Decisions log, sprint retros and
+scout maps. What is notable is that the lessons live beside the code,
+filed under the specialty that will read them. What is weak is upkeep:
+the trimming and condensing that keep the files small move decisions out
+of the reviewers' sight and prune lessons with no record outside
+git.</p>
+<p>Most of the plugin is orchestration: tickets, waves, worktrees, a
+merge gate, a roadmap and a SessionStart hook that reprints the sprint
+board after a compaction. That machinery decides what the current
+context holds and is outside the memory this report assesses (<a
+href="#scope">section 9</a>). What survives a session and is read back
+as instruction is smaller. A lesson in
+<code>docs/agent-feedback/&lt;specialty&gt;.md</code> binds every
+engineer of that specialty. A row in the brief's Decisions log binds
+every agent and is checked by reviewers. Three to five retro lines per
+sprint are read by the next Director at setup.</p>
+<p>None of it carries a status, a source or a date that any read
+consults. The script enforces size, not content: <code>preflight</code>
+warns over 150 lines or 12 KB of brief, <code>retro</code> names a
+lessons file over 30 lines, and <code>brief-trim</code> archives
+decisions older than the current sprint.</p>
+<p>The licence is Apache-2.0, unmodified, in <code>LICENSE</code>,
+<code>NOTICE</code> and the plugin manifest.</p>
+<p>No mark is earned. The nearest is a test that the Director's retro
+read leaves out an earlier sprint's lesson, which pins a window rather
+than material that must not be read. Section 9 gives the reason for each
+of the seven withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>a line of guidance an agent must
+follow</strong>, kept in a file the agent is pointed at. There are five
+kinds, and they differ in who writes them and who reads them.</p>
+<ul>
+<li><strong>Lessons.</strong> When the user critiques an agent's work,
+the main session appends a one-line imperative to
+<code>docs/agent-feedback/&lt;specialty&gt;.md</code> and commits it
+with the related fix (<code>skills/coniso/SKILL.md:99</code>). An
+engineer reads that file before working, and "its lessons bind you"
+(<code>agents/engineer.md:20</code>).</li>
+<li><strong>Decisions.</strong> The brief's
+<code>## Decisions log (append-only, stamped)</code> is a table of
+Stamp, Decision and Binds
+(<code>skills/coniso/references/brief-template.md:27-29</code>). The
+artisan specialty sends any decision other tickets depend on to FLAGS
+for it
+(<code>skills/coniso/references/specialties/artisan.md:11</code>), the
+Director owns the brief (<code>brief-template.md:2</code>), and
+reviewers press it as part of the spec lens
+(<code>agents/reviewer.md:15</code>, <code>:21</code>).</li>
+<li><strong>Retro lessons.</strong> After <code>retro</code>, the
+Director appends three to five lines on brief gaps, specialties worth
+promoting, auditor catches and overrules that proved wrong
+(<code>skills/coniso/references/director.md:133-134</code>). The next
+Director reads them at setup (<code>director.md:12</code>).</li>
+<li><strong>Maps.</strong> A scout writes up to 60 lines on one area to
+<code>.coniso/maps/&lt;unit&gt;.md</code>, each claim with a pointer,
+and the brief points at it (<code>agents/scout.md:19</code>,
+<code>skills/coniso/SKILL.md:45</code>).</li>
+<li><strong>Forged specialties.</strong> When three packets share a
+need, the Director copies the template to
+<code>.coniso/specialties/&lt;name&gt;.md</code>, which engineers check
+first (<code>SKILL.md:101</code>).</li>
+</ul>
+<p>There is no candidate state. A line is binding from the moment it is
+written, and it stops binding when a model edits it out. The script
+moves Decisions log rows into an archive that the moving code itself
+calls still binding.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every memory is a line a model writes into a file; reads are paths named in an assignment or a brief; the only script-side upkeep is moving old decisions out of the brief and flagging long lessons files, and a pruned lesson leaves no record outside git</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every memory is a line a model writes into a file; reads are paths named in an assignment or a brief; the only script-side upkeep is moving old decisions out of the brief and flagging long lessons files, and a pruned lesson leaves no record outside git
+flowchart TD
+  U[&quot;user critiques&lt;br/&gt;an agent&#39;s work&quot;] --&gt; D1[&quot;main session appends&lt;br/&gt;a one-line lesson&quot;]
+  D1 --&gt; FB[&quot;docs/agent-feedback/&lt;br/&gt;specialty.md, committed&quot;]
+  FB --&gt; E[&quot;engineer of that&lt;br/&gt;specialty reads it first&quot;]
+  FB --&gt; CAP{&quot;retro: file over&lt;br/&gt;30 lines?&quot;}
+  CAP --&gt;|&quot;yes&quot;| CON[&quot;Director condenses,&lt;br/&gt;drops superseded lines,&lt;br/&gt;record only in git&quot;]
+  CON ~~~ F
+  F[&quot;builder FLAGS a&lt;br/&gt;cross-cutting decision&quot;] --&gt; D2[&quot;Director adds a row&lt;br/&gt;to the Decisions log&quot;]
+  D2 --&gt; BR[&quot;.coniso/BRIEF.md,&lt;br/&gt;git-excluded&quot;]
+  BR --&gt; ALL[&quot;every agent reads&lt;br/&gt;the brief core&quot;]
+  BR --&gt; RV[&quot;reviewer spec lens:&lt;br/&gt;Decisions log conflicts&quot;]
+  BR --&gt; TRIM{&quot;brief-trim: row&lt;br/&gt;dated before&lt;br/&gt;this sprint?&quot;}
+  TRIM --&gt;|&quot;yes&quot;| AR[&quot;maps/decisions.md,&lt;br/&gt;still binding, not&lt;br/&gt;in reviewer reads&quot;]
+  AR ~~~ R
+  R[&quot;retro writes a&lt;br/&gt;sprint section&quot;] --&gt; D3[&quot;Director appends&lt;br/&gt;3 to 5 Lessons lines&quot;]
+  D3 --&gt; RT[&quot;.coniso/RETRO.md&quot;]
+  RT --&gt; NX[&quot;next Director:&lt;br/&gt;retro --lessons,&lt;br/&gt;last section only&quot;]
+  NX ~~~ SC
+  SC[&quot;scout&quot;] --&gt; MP[&quot;.coniso/maps/unit.md&quot;]
+  MP --&gt; PTR[&quot;read by pointer&lt;br/&gt;from the brief&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The plugin is prompts plus one script.
+<code>.claude-plugin/plugin.json</code> declares it;
+<code>agents/</code> holds eight subagent definitions (manager, lead,
+engineer, review lead, reviewer, reviewer-lite, auditor, scout);
+<code>skills/</code> holds the role commands and the <code>coniso</code>
+skill with its references; <code>output-styles/quiet.md</code> is
+optional.</p>
+<p><code>scripts/coniso.py</code> is copied into
+<code>.coniso/coniso.py</code> by <code>init</code>, which also replaces
+<code>.coniso/ref/</code> with the plugin's references whenever it runs
+from the plugin copy (<code>scripts/coniso.py:557-563</code>). It owns
+scheduling, sprint state in <code>.coniso/sprint.json</code>, worktrees
+under <code>.coniso/wt/</code> on branches
+<code>coniso/&lt;id&gt;</code>, diffs, test runs, squash merges, plan
+validation and roadmap edits.</p>
+<p>Memory lives in two places with different reach.
+<code>docs/agent-feedback/</code> is part of the user's repository and
+travels with it through git. Everything under <code>.coniso/</code>, the
+brief, retros, maps and forged specialties included, is local to one
+checkout, because <code>init</code> appends <code>/.coniso/</code> to
+<code>.git/info/exclude</code>
+(<code>scripts/coniso.py:566-575</code>).</p>
+<p><code>close</code> archives the sprint's <code>sprint.json</code>,
+<code>ledger.jsonl</code>, tickets, assignments and reports under
+<code>.coniso/archive/&lt;sprint&gt;/</code>
+(<code>scripts/coniso.py:1965-1970</code>). It leaves the brief,
+<code>RETRO.md</code>, the maps and the specialties in place, which is
+what makes them memory rather than sprint state.</p>
+<p>One hook is registered: <code>SessionStart</code> with matcher
+<code>compact</code> (<code>hooks/hooks.json:3-14</code>).
+<code>scripts/coniso_hook.py:25-45</code> finds
+<code>.coniso/sprint.json</code>, prints the sprint name and current
+wave, and runs <code>status --open</code> for the board. Outside a
+sprint it prints nothing.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Running:</strong> nothing. Python 3.8 or later and git; no
+service, database or API key.</li>
+<li><strong>Local and offline:</strong> yes. The script makes no network
+call; scouts' web lookups go through Claude Code's own tools.</li>
+<li><strong>Install:</strong> <code>/plugin marketplace add</code> and
+<code>/plugin install</code>; the first role call runs
+<code>init</code>.</li>
+<li><strong>Repair by hand:</strong> every memory is a Markdown file.
+Lessons are under version control; the rest is not, and nothing backs it
+up.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Lesson write.</strong> No code.
+<code>skills/coniso/SKILL.md:99</code> instructs the main session to
+append and commit. The script never writes under
+<code>docs/agent-feedback/</code>; it reads the directory in two places
+(<code>scripts/coniso.py:1936</code>, <code>:2020</code>).</li>
+<li><strong>Lesson read.</strong> <code>specialty_files</code> returns
+the specialty file and, if
+<code>docs/agent-feedback/&lt;spec&gt;.md</code> exists in the main
+checkout, its absolute path (<code>scripts/coniso.py:2017-2023</code>).
+<code>cmd_dispatch</code> joins those with the brief and the packet into
+a solo engineer's <code>READ FIRST</code> line (<code>:2153</code>). A
+lead's assignment names only the brief and the packet
+(<code>:2167</code>); the lead writes its engineers' assignments from
+the template at
+<code>skills/coniso/references/formats.md:20</code>.</li>
+<li><strong>Lesson upkeep.</strong> <code>cmd_retro</code> counts
+non-blank lines in each lessons file and names any over
+<code>FEEDBACK_MAX = 30</code> (<code>scripts/coniso.py:1862</code>,
+<code>:1936-1944</code>); <code>director.md:135</code> asks the Director
+to condense the file and commit.</li>
+<li><strong>Decisions write.</strong> No code. The template declares the
+table (<code>brief-template.md:27-29</code>); no step of
+<code>director.md</code> writes a row.</li>
+<li><strong>Decisions read.</strong> Every agent reads
+<code>.coniso/BRIEF.md</code>; the two reviewers read the Decisions log
+by name (<code>agents/reviewer.md:15</code>,
+<code>agents/reviewer-lite.md:15</code>).</li>
+<li><strong>Decisions archive.</strong> <code>cmd_brief_trim</code>
+takes the cutoff from <code>--before</code> or the sprint's
+<code>created</code> date, moves each table row whose first cell holds
+an earlier ISO date into <code>.coniso/maps/decisions.md</code> opened
+for append, and leaves the line
+<code>Older decisions (still binding): … Grep it before changing an area they cover.</code>
+(<code>scripts/coniso.py:878-923</code>).</li>
+<li><strong>Retro write and read.</strong> <code>cmd_retro</code>
+appends a section ending in <code>Lessons:</code> and a placeholder to
+<code>RETRO.md</code> (<code>:1945-1948</code>);
+<code>last_lessons</code> takes the text after the last
+<code>\n## </code>, collects lines after <code>Lessons:</code>, and
+skips the placeholder (<code>:1883-1899</code>).</li>
+<li><strong>Compaction.</strong>
+<code>scripts/coniso_hook.py:18-45</code>; tests at
+<code>tests/test_coniso.py:479-501</code>.</li>
+<li><strong>Tests.</strong> <code>tests/test_coniso.py</code>, 63
+methods, each in a throwaway git repository.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Nothing is typed. A lesson is a Markdown bullet with no date, ticket,
+author or source; the format is "a one-line imperative"
+(<code>SKILL.md:99</code>). A Decisions log row has a free-text Stamp,
+which <code>brief-trim</code> reads as a date only when it holds
+<code>YYYY-MM-DD</code> (<code>scripts/coniso.py:902-905</code>), and a
+Binds cell that nothing parses. A retro section is a heading
+<code>## &lt;sprint&gt; — &lt;date&gt;</code> with outcome lines
+generated from sprint state and the Director's free-text Lessons
+(<code>:1915-1945</code>). A map is whatever the scout wrote.</p>
+<p>Scope is physical. One lessons file per specialty decides which
+engineer reads a lesson. One <code>.coniso/</code> per checkout decides
+which sessions see the brief and retros, so a second clone of the same
+project starts with an empty brief and no retro while sharing the
+committed lessons. The brief's <code>## Track notes</code> section,
+"appended by managers", sits below the line
+<code>brief_core_lines</code> measures (<code>:857-867</code>); every
+agent is still told to read the brief, and nothing restricts a track's
+notes to that track.</p>
+<p>The specialty headers name legacy lessons files for older projects,
+such as <code>audio-designer.md</code> beside <code>audio.md</code>
+(<code>skills/coniso/references/specialties/audio.md:2</code>).
+<code>specialty_files</code> checks only <code>&lt;spec&gt;.md</code>,
+so a dispatch never names a lessons file kept under the older name.</p>
+<p>There are no temporal fields beyond the Stamp and the retro heading
+date, no version chain, no status and no deletion record.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is a path in a list. No query, ranking or budget selects
+content; the whole file is read, and the size caps are the budget. The
+brief core is held under 150 lines and 12 KB by a <code>preflight</code>
+warning (<code>scripts/coniso.py:852-853</code>, <code>:836-840</code>),
+a lessons file under 30 lines by a retro warning, and a map under 60
+lines by the scout prompt.</p>
+<p>Two copies of a lessons file can be meant. The dispatcher names the
+main checkout's file (<code>scripts/coniso.py:2020-2022</code>), and the
+engineer prompt says to read
+<code>docs/agent-feedback/&lt;s&gt;.md</code> in WORKDIR, the ticket's
+worktree (<code>agents/engineer.md:20</code>). The worktree is cut from
+<code>HEAD</code> at dispatch, so a lesson committed after that is in
+the first copy and not the second. An uncommitted lessons file stops
+<code>schedule</code> and <code>merge</code> on a dirty checkout
+(<code>:1014</code>, <code>:1422</code>), which keeps the gap to lessons
+written mid-sprint.</p>
+<p>The retro read is the one with a selection rule.
+<code>retro --lessons</code> returns the last section's Lessons only.
+Every earlier sprint's lines stay in the file and leave recall, and
+<code>director.md:12</code> forbids reading the file directly. A sprint
+whose Director appends nothing to its Lessons leaves the next Director
+with <code>no lessons recorded</code>.</p>
+<p>Readers differ by role. Engineers read lessons; reviewers, leads,
+managers and auditors are not pointed at them (recorded searches).
+Reviewers read the Decisions log in the brief and not the archive
+<code>brief-trim</code> writes, so once a sprint's decisions are
+trimmed, the spec lens checks the next sprint's diffs against the
+current sprint's decisions only.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every memory write is a model editing a file under a prompt rule, on
+the hot path of the main session. There is no extraction, deduplication
+or conflict check. A lesson written from a critique is committed and
+read by the next engineer of that specialty with no review step. A
+forged specialty takes effect at the next dispatch.</p>
+<p>Maintenance is warning-driven. <code>brief-trim</code> is the one
+script that changes memory content, and it moves rows rather than
+revising them. The lessons cap triggers model condensation, told to
+"merge duplicate lessons and drop ones a later lesson supersedes"
+(<code>director.md:135</code>); which lesson supersedes which is the
+model's call, and the commit is the record.</p>
+<p>Maps are written once. The scout notes versions and publication dates
+for docs findings (<code>agents/scout.md:16</code>), but a codebase map
+carries no commit and nothing rewrites it as tickets merge.
+<code>close</code> leaves <code>maps/</code> in place, so a map outlives
+the code it described.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Writes cost one file edit and no model call beyond the session
+already running. Reads cost the size caps on every spawn: the brief
+core, up to about 3k tokens by the script's own comment
+(<code>scripts/coniso.py:853</code>), goes to every agent, and a lessons
+file of up to 30 lines goes to every engineer of its specialty. Those
+reads land in the subagent's first turn, not in the main session's
+prefix.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent's reach over memory is total and informal. The main session
+writes every kind of memory with ordinary file tools, and every subagent
+is told not to edit the brief (<code>brief-template.md:34</code>,
+<code>agents/manager.md:54</code>). That rule is prompt text; the
+script's file checks are about ownership of project files in a
+delegation plan.</p>
+<p>The compaction hook prints sprint state, not memory: the board, the
+wave and a pointer to <code>.coniso/ref/director.md</code>, which the
+Director is told to trust over what it remembers
+(<code>director.md:147</code>). The lessons, the brief and the retro
+reach a restarted session only through the setup procedure.</p>
+<p>Adapting the scheme to another agent means copying the conventions,
+not code: the script knows the file names and does nothing with their
+content.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="scope">Scope</h3>
+<p>The repository is in scope for its persistent guidance files, and
+only for them. Sprint state, the auditor ledger, the roadmap and the
+compaction hook record what the team did: a ticket merged at a sha, a
+reviewer ruled, an auditor objected. Those records are workflow
+bookkeeping, and they are archived at <code>close</code>. The lessons,
+decisions, retro lines, maps and forged specialties are claims about how
+to work on this codebase. Each can turn false after a refactor or a
+reversed choice and still be read as binding. Each mark below is judged
+on those files.</p>
+<h3 id="archived-decisions-leave-the-review-lens">Archived decisions
+leave the review lens</h3>
+<p><code>brief-trim</code> exists to keep the brief small, and its
+default cutoff is the current sprint's creation date, so one call moves
+every decision from earlier sprints
+(<code>scripts/coniso.py:883-888</code>). The pointer it leaves calls
+them still binding and asks agents to grep the archive. The reviewer
+prompts name only <code>.coniso/BRIEF.md</code>, so the one role that
+checks diffs against decisions stops seeing them. The test pins the move
+and the pointer (<code>tests/test_coniso.py:436-452</code>); nothing
+requires the archive to be read.</p>
+<h3 id="one-sprint-of-retro-lessons">One sprint of retro lessons</h3>
+<p>The Director's setup read returns the last retro section's lessons. A
+retro whose Lessons the Director left empty, or a second
+<code>retro</code> call in the same sprint, which appends a fresh
+placeholder section each time (<code>scripts/coniso.py:1947</code>),
+puts an empty section last and hides every earlier lesson from the next
+Director. Lessons meant to last longer have to be carried into a
+specialty or a lessons file by hand, and the procedure asks for that
+only as "specialties worth promoting"
+(<code>director.md:134</code>).</p>
+<h3 id="pruning-without-a-record">Pruning without a record</h3>
+<p>A lesson is dropped by a model condensing a file over 30 lines. The
+previous text survives in git history, but nothing in the file records
+that a lesson was dropped, why, or which later lesson replaced it, and
+the next critique on the same point can re-add it. A Decisions log row
+is "append-only" by its heading; the Director edits the brief with
+ordinary file tools, and the script's one edit of the table removes
+rows.</p>
+<h3 id="provenance-and-injection">Provenance and injection</h3>
+<p>A lesson has no source field. It comes from the user's critique by
+the main session's paraphrase, and a scout's map comes from code and web
+pages the scout read. A web page that steers a scout reaches every agent
+pointed at that map. <code>.coniso/</code> is git-excluded, so the brief
+and maps of one checkout are never seen by a teammate, while lessons are
+shared through the repository with no review beyond the commit.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>negative_eval</code> — withheld.</strong> The
+near-miss is <code>test_retro_lessons_prints_only_last_lessons</code>,
+which writes two sprint sections, the first holding
+<code>- old lesson</code>, and requires <code>retro --lessons</code> to
+equal exactly the second sprint's two lessons
+(<code>tests/test_coniso.py:133-138</code>). It is an exact-output test
+of a section parser: the older lesson is left out because the read is
+defined as the last sprint only, not because it is wrong, out of scope
+or retracted, so it is a recall test. No test exercises a lesson,
+decision or map that must not be read.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> One lessons
+file per specialty and one <code>.coniso/</code> per checkout are
+physical partitions. The Binds cell is never parsed, and Track notes are
+read by everyone.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No file
+carries a status that a read excludes on.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> A condensed-away
+lesson leaves no record keyed on its text, so restating it is
+accepted.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> The Stamp is
+when the row was written, and nothing records when a decision stopped
+holding.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> No store records
+memory changes. <code>RETRO.md</code> and the decisions archive are
+opened for append, but the first holds retros and the second holds the
+moved rows themselves. <code>ledger.jsonl</code> counts auditor
+objections (<code>scripts/coniso.py:1479-1494</code>). Git history of
+the lessons files is a real record and a different mechanism.</li>
+<li><strong><code>human_review</code> — withheld.</strong> A lesson or
+decision binds as soon as it is written. The user's confirmation that
+<code>roadmap-sync</code> preserves applies to a ticket's
+<code>done</code> status, not to memory
+(<code>scripts/coniso.py:1812-1813</code>). The agent can also set it
+with <code>roadmap set --status done</code> (<code>:2875-2880</code>),
+and a ticket in <code>review</code> already satisfies a dependency
+unless the dependency is a gate or <code>--strict</code> is passed
+(<code>:957</code>, <code>:975</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>tests/test_coniso.py</code> drives the script as agents would,
+in temporary git repositories, with no dependency outside the standard
+library. Its memory-facing cases are three.
+<code>test_retro_lessons_prints_only_last_lessons</code> pins the retro
+read's last-sprint window, the near-miss in <a href="#marks">section
+9</a>. <code>test_retro_flags_long_feedback_files</code> requires a
+31-line <code>ui.md</code> to be named and a one-line
+<code>net.md</code> not to be (<code>:140-147</code>).
+<code>BriefTrim</code> checks the move, the pointer, idempotence and the
+<code>--before</code> cutoff (<code>:436-459</code>), and a preflight
+case checks the line and byte warnings (<code>:461-471</code>,
+<code>:880-887</code>).</p>
+<p>The hook cases check silence outside a sprint, the board from inside
+a worktree, and the <code>hooks.json</code> shape
+(<code>:479-501</code>). They concern sprint state.</p>
+<p>Nothing tests the engineer's lessons read end to end.
+<code>specialty_files</code> appending an existing lessons file to
+<code>READ FIRST</code> has no case (recorded searches). Nor does any
+case cover a reviewer reading archived decisions, or the Director's read
+after an empty retro section. No workflow under <code>.github/</code>
+runs the suite. The README makes no benchmark claim about memory, and
+the tree cites no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>File a lesson under the reader it is for.</strong> Keying
+guidance on the specialty that will act on it keeps one role's
+corrections out of another's context without any retrieval
+machinery.</li>
+<li><strong>Commit the lesson with the fix it came from.</strong> The
+lesson and the change that prompted it share a commit, and the
+repository carries both to every clone.</li>
+<li><strong>Make a decisions table a review lens.</strong> A reviewer
+told to check each diff against the recorded decisions turns a note into
+an enforced constraint.</li>
+<li><strong>Budget the always-read file in bytes as well as
+lines.</strong> The 12 KB check exists because a line cap alone "is met
+by ever-longer lines" (<code>scripts/coniso.py:853</code>).</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Archiving out of the enforcing reader's path.</strong> If a
+rule stays binding, the role that enforces it has to read where it
+went.</li>
+<li><strong>A last-section-only read over an append-only file.</strong>
+Recall then depends on the newest section being filled. Read back until
+a non-empty section, or keep durable lessons in a separate file.</li>
+<li><strong>Pruning by model with no record.</strong> When a cap forces
+condensation, keep the dropped line and what replaced it where the next
+writer can see it.</li>
+<li><strong>Maps without a commit.</strong> A codebase summary should
+name the tree it described so a reader can tell it has gone stale.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer driving long Claude Code sessions on one
+checkout, who wants corrections to stick for the next engineer and
+accepts that the main session is the only curator. The memory is a
+convention a model maintains, not a store, so it holds as long as the
+prompts are followed. Walk away if guidance has to be reviewed before it
+binds, shared across a team beyond the committed lessons, or traced to
+who wrote it and why.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the Director is meant to write Decisions log rows itself or
+only from builders' FLAGS; <code>director.md</code> names neither.</li>
+<li>Whether reviewers are meant to read
+<code>.coniso/maps/decisions.md</code> after a trim.</li>
+<li>Whether retro lessons are meant to last one sprint, with promotion
+to a specialty or lessons file as the only way to keep them.</li>
+<li>Whether the legacy lessons file names are still expected to be
+read.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory reads and upkeep: <code>scripts/coniso.py</code>
+(<code>brief_core_lines</code>, <code>cmd_brief_trim</code>,
+<code>last_lessons</code>, <code>cmd_retro</code>,
+<code>cmd_close</code>, <code>specialty_files</code>,
+<code>cmd_dispatch</code>, <code>cmd_init</code>)</li>
+<li>Compaction hook: <code>hooks/hooks.json</code>,
+<code>scripts/coniso_hook.py</code></li>
+<li>Brief and formats:
+<code>skills/coniso/references/brief-template.md</code>,
+<code>skills/coniso/references/formats.md</code></li>
+<li>Procedures: <code>skills/coniso/SKILL.md</code>,
+<code>skills/coniso/references/director.md</code>,
+<code>skills/coniso/references/playbook.md</code></li>
+<li>Readers: <code>agents/engineer.md</code>,
+<code>agents/reviewer.md</code>, <code>agents/reviewer-lite.md</code>,
+<code>agents/scout.md</code>, <code>agents/manager.md</code></li>
+<li>Specialties: <code>skills/coniso/references/specialties/</code></li>
+<li>Tests: <code>tests/test_coniso.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>The script never writes a lessons file.</strong>
+<code>git grep -n -E 'agent-feedback' -- scripts</code> returns
+<code>scripts/coniso.py:1936</code> and <code>:2020</code>, both
+reads.</li>
+<li><strong>The script writes no Decisions log row.</strong>
+<code>git grep -n 'Decisions log' -- scripts/coniso.py</code> returns
+lines in <code>brief-trim</code>, its help text and the preflight
+warning (<code>:840</code>, <code>:879</code>, <code>:890</code>,
+<code>:892</code>, <code>:909</code>, <code>:918</code>,
+<code>:3095</code>).</li>
+<li><strong>Only engineers are pointed at lessons.</strong>
+<code>git grep -n -i -E 'agent-feedback|lesson' -- agents</code> returns
+<code>agents/engineer.md:20</code> alone.</li>
+<li><strong>No Director step writes a decision.</strong>
+<code>git grep -n -i -E 'decision' -- skills/coniso/references/director.md</code>
+returns <code>:3</code>, <code>:9</code>, <code>:120</code> and
+<code>:138</code>, none about the log.</li>
+<li><strong>No status, tombstone or validity field.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|reject|suppress' -- scripts</code>
+returns one <code>argparse.SUPPRESS</code> at
+<code>scripts/coniso.py:2929</code>;
+<code>git grep -n -i -E 'superseded|deprecated|retired|valid_from|valid_to|expires' -- .</code>
+returns one line of <code>agents/scout.md:16</code> about deprecated
+Android APIs.</li>
+<li><strong>One hook event.</strong>
+<code>git grep -n -E 'SessionStart|PreCompact|"Stop"' -- hooks .claude-plugin</code>
+returns <code>hooks/hooks.json:3</code> alone.</li>
+<li><strong>The hook reads no memory file.</strong>
+<code>git grep -n -E 'RETRO|BRIEF|agent-feedback|maps' -- scripts/coniso_hook.py</code>
+returns nothing.</li>
+<li><strong>No test of the lessons read path.</strong>
+<code>git grep -n -E 'specialty_files|agent-feedback' -- tests</code>
+returns <code>tests/test_coniso.py:141</code>, the retro line-count
+case.</li>
+<li><strong>No CI.</strong> <code>git ls-files .github</code> lists
+issue templates and a pull request template, no workflow.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- .</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/Palatine-Labs/coniso/commit/15b6eb9223af3e0b79805366d3678d603ce7d683"><code class="commit-id" title="15b6eb9223af3e0b79805366d3678d603ce7d683">15b6eb92…</code></a>.
+First reading, from a full clone at the head of <code>main</code>;
+requested directly, not selected by triage. Screened first: three
+auto-run surfaces, the Claude Code plugin manifest, <code>hooks/</code>
+and <code>hooks/hooks.json</code>, which registers one
+<code>SessionStart</code> hook on the <code>compact</code> matcher;
+nothing inside the seven-day cooldown, no build-time execution, no
+unpinned manifest; no submodules. The hook was not run. Prompts, skills
+and docs were read as data. Nothing was installed, built or run, and the
+63 test methods were not run. No marks; the retro-window test is the
+<code>negative_eval</code> near-miss (<a href="#marks">section 9</a>).
+Trimmed decisions leave the reviewers' read, and the Director's retro
+read sees one sprint.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

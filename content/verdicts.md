@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 864 reports.**
+**This page covers all 865 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7963,3 +7963,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 from 1.1.0, ISC for unmarked imported files; 68,800 lines of TypeScript under `src/` and 93,888 of tests; 41 commits from 13 October to 24 November 2026, most of them exports from a private repository; 3,774 test calls in CI, none run here; the README benchmarks are single runs, not held out, with no per-question output. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you want agent memory a person can read and back up as files, with history answerable as of a time and a store that can be rebuilt from its log.
 - Do not copy when: a retraction has to hold against a later restatement, projects must be isolated without trusting the model to name them, or the whole system has to be reproducible from the public tree.
+
+### [`coniso`](../systems/coniso/)
+- Best idea: **file a lesson under the reader it is for, and commit it with the fix.** A user's critique becomes a one-line imperative in `docs/agent-feedback/<specialty>.md`, committed with the change it prompted, and the dispatcher lists that file in every solo engineer's `READ FIRST` line for that specialty, so one role's corrections stay out of the others' contexts without any retrieval.
+- Second idea: a Decisions log that reviewers enforce. Every agent reads the brief, and the reviewer's spec lens checks each diff for conflicts with the log, which turns a recorded choice into a review criterion.
+- Biggest risk: **trimming moves decisions out of the enforcing reader's path.** `brief-trim` moves every Decisions log row dated before the current sprint into `.coniso/maps/decisions.md` and leaves a pointer calling them still binding, while both reviewer prompts read only `.coniso/BRIEF.md`.
+- Second risk: upkeep has no record. The Director's setup read returns the last retro section's lessons only, so an empty or repeated retro hides every earlier one; a lessons file over 30 lines is condensed by the model, which drops lessons it judges superseded with git as the only trace; maps carry no commit and are never refreshed.
+- Most reusable component: the brief budget and trim in `scripts/coniso.py:852-923` (`brief_core_lines`, `brief_core_bytes`, `cmd_brief_trim`), and `specialty_files` at `:2017-2023`.
+- Maturity impression: Apache-2.0; 4,112 lines of Python in three files and 1,380 lines of Markdown prompts, published in 29 commits between 30 October and 10 November 2026 with four tags; 63 unittest methods with no CI workflow, none run here. No marks; the nearest, a test that the retro read leaves out an earlier sprint's lesson, pins a window rather than material that must not be read.
+- Study when: you want corrections to a coding agent to persist per role without building a store, and can accept the main session as the only curator.
+- Do not copy when: guidance must be reviewed before it binds, a superseded lesson must stay suppressed, or a decision has to keep binding the reviewer after it leaves the always-read file.
