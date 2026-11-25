@@ -1873,6 +1873,21 @@ omit the other
 (<code>tests/integration/test_issue_127_owner_scoping_pg.py:189-212</code>,
 <code>:365-385</code>). Every credential of a user still reaches the
 whole vault.</p>
+<p><a href="../../systems/palace-rs/">Palace (palace-rs)</a> has the
+predicate on the path the model drives and a deny-list on the path that
+fires by itself. <code>palace_search</code> puts the model's wing and
+room in SQL on the vector scan, the BM25 join and the preference pass
+(<code>src/store.rs:1149-1167</code>,
+<code>src/ranker.rs:488-489</code>), and searches every wing when the
+model names none. The prompt and post-tool hooks know the project from
+the working directory and still search the whole palace for twelve
+candidates, then drop hits from wings registered as other projects
+(<code>src/hooks.rs:450-510</code>, <code>:630-680</code>). A wing
+created by <code>palace_remember</code> is registered as a topic, so
+another project's decision filed under its name before that project was
+mined passes, and the twelve slots can fill with foreign hits before the
+filter runs. The write-time dedup compares across every wing, so a fact
+stored in one project is refused in the next.</p>
 <p><a href="../../systems/connapse/">Connapse</a> makes a fact's
 audience the intersection of its stored scope and the readers of what it
 cites. Each fact stores its space, <code>personal</code> or

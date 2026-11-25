@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust port of MemPalace: one
+SQLite file of verbatim drawers, hybrid search, a temporal fact graph,
+and recall hooks for coding-agent clients.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Palace
+(palace-rs) — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust port of MemPalace:
+one SQLite file of verbatim drawers, hybrid search, a temporal fact
+graph, and recall hooks for coding-agent clients.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Palace
+(palace-rs) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust port of MemPalace:
+one SQLite file of verbatim drawers, hybrid search, a temporal fact
+graph, and recall hooks for coding-agent clients.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Palace (palace-rs) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Palace (palace-rs)",
+      "description": "A Rust port of MemPalace: one SQLite file of verbatim drawers, hybrid search, a temporal fact graph, and recall hooks for coding-agent clients.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">MemPalace rewritten in Rust around one
+SQLite file, with hooks that recall before the agent asks</p>
+          <h1>Palace (palace-rs)</h1>
+          <p class="document-deck">A Rust port of MemPalace: one SQLite
+file of verbatim drawers, hybrid search, a temporal fact graph, and
+recall hooks for coding-agent clients.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/AncientiCe/palace-rs">
+              <span>Source</span>
+              <strong>AncientiCe/palace-rs</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/AncientiCe/palace-rs/commit/eda4d350b722408607d8d27db99f4d3ec9f66f7b" title="eda4d350b722408607d8d27db99f4d3ec9f66f7b">
+              <span>Analyzed revision</span>
+              <code>eda4d350…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/AncientiCe--palace-rs" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>AncientiCe--palace-rs</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE, Cargo.toml, manifest.json and the Claude Code plugin
+manifest; the notice names only AncientiCe and contributors, although
+eleven modules say they are ports of MemPalace's Python</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>25,407
+lines of Rust in 54 files under src/, the MCP server (3,038), the client
+installer (2,546) and the hooks (1,214) the largest; 11,352 lines of
+tests in 31 files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>253
+commits from 8 April to 24 November 2026: 179 by AncientiCe, 67 by Ionut
+Riza, including the first ones, three by Dependabot and four by other
+contributors; 57 tags, v0.1.0 to v0.20.11</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>480
+#[test] functions, 389 in 29 files under tests/ and 91 in 20 source
+files; ci.yml runs cargo test --all-features with the embedding model
+cached, and an evals job runs the coding-agent eval and the LongMemEval
+guard; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Palace is local memory for coding agents in one Rust binary and one
+SQLite file. It began on 8 April 2026 as a <em>"complete Rust rewrite of
+mempalace"</em>, and its modules still say <em>"Port of
+searcher.py"</em> and <em>"Direct port of knowledge_graph.py"</em>. What
+is notable is how memory reaches the model. Hooks inject standing
+preferences and project diary at session start, then up to three cited
+lines when a prompt or an investigation tool call matches something
+stored. What is weak is everything after the write: no status, no record
+of what changed, and a forgotten value can be filed again. A
+model-callable <code>palace_prune</code> deletes every drawer older than
+a given age.</p>
+<p>The relationship to <a href="../mempalace/">MemPalace</a> is a port
+that has diverged, not a fork. It shares no git history with the Python
+project, and <code>palace migrate</code> imports a MemPalace install.
+Chroma plus a separate SQLite graph became one <code>palace.db</code>
+with vectors in a BLOB column and a hand-built BM25 table. The wing,
+room, drawer, closet, tunnel and AAAK vocabulary is MemPalace's. The
+knowledge graph is the closed-window version: no <code>supersede</code>,
+no half-open boundary, and nothing like MemPalace's write-ahead log of
+mutations. The hooks, preference recall, ranking adjustments and model
+migration are this project's own.</p>
+<p>Three marks. <code>scope_enforced</code> is earned on wing and room
+predicates in SQL on both search arms. <code>negative_eval</code> is
+earned on populated tests that keep another wing's or project's material
+out. <code>bitemporal</code> is earned on the triple's caller-stated
+validity beside its write time. Section 9 gives the reasons for the four
+withheld.</p>
+<p><strong>Licence.</strong> The MIT grant in <code>LICENSE</code> names
+<em>"AncientiCe and contributors"</em> and no one else. MIT requires
+<em>"the above copyright notice"</em> in <em>"all copies or substantial
+portions"</em>, and eleven modules describe themselves as ports of
+MemPalace files, among them <code>src/knowledge_graph.rs:3</code>,
+<code>src/searcher.rs:4</code> and <code>src/layers.rs:8</code>.
+<code>git grep -i copyright</code> finds no other notice in the tree.
+The team edition that remote mode connects to, Palace Server, is
+commercial and not in this repository.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>drawer</strong>: verbatim text filed under a
+wing, usually a project or topic, and a room, a category such as
+<code>decisions</code> or <code>preferences</code>. Nothing summarises
+or rewrites the text. A drawer comes from one of four places:</p>
+<ul>
+<li><strong>The agent files it.</strong> <code>palace_remember</code>,
+<code>palace_add_drawer</code> and <code>palace_diary_write</code> store
+what the model passes. The installed rule tells it to save after
+substantive work and to put the user's preferences in
+<code>general/preferences</code> (<code>src/install.rs:14</code>).</li>
+<li><strong>A miner reads it.</strong> <code>palace mine</code>,
+<code>palace_mine</code> and the file watcher chunk project files;
+<code>mine-convos</code> chunks transcripts into exchanges, or runs a
+regex extractor that keeps decision, preference, milestone, problem and
+emotional sentences (<code>src/general_extractor.rs:1-4</code>).</li>
+<li><strong>An import copies it</strong>, from a MemPalace install or a
+palace export.</li>
+<li><strong>The stop hook asks for it.</strong> A session that did work
+and saved nothing is blocked once with an instruction to call
+<code>palace_diary_write</code> and <code>palace_kg_add</code>
+(<code>src/hooks.rs:188-197</code>, <code>:945-959</code>).</li>
+</ul>
+<p>Beside drawers, the <strong>knowledge graph</strong> holds
+subject-predicate-object triples. A triple holds from a caller-stated
+<code>valid_from</code> until <code>palace_kg_invalidate</code> sets
+<code>valid_to</code>, and stays as history after that.</p>
+<p>A drawer has one state: present. It is treated as true when recalled,
+with its provenance attached so the model can cite it. It stops counting
+only by deletion: <code>palace_forget</code> or
+<code>palace_delete_drawer</code> by id, <code>palace_prune</code> by
+age, or a re-mine that replaces the drawers of a changed file. Nothing
+keeps the deleted value, so the same text can be filed again.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every write lands live after a palace-wide dedup; the tool search applies wing and room in SQL only when the model names them, the hooks search everything and drop other projects afterwards, and a deleted value leaves nothing behind</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every write lands live after a palace-wide dedup; the tool search applies wing and room in SQL only when the model names them, the hooks search everything and drop other projects afterwards, and a deleted value leaves nothing behind
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    W1[&quot;agent tools: remember,&lt;br/&gt;add_drawer, diary_write&quot;]
+    W2[&quot;miner and watcher:&lt;br/&gt;files and transcripts&quot;]
+    W3[&quot;kg_add: triple with a&lt;br/&gt;caller-given valid_from&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  W1 --&gt; DUP{&quot;cosine 0.9 or more&lt;br/&gt;to a drawer in&lt;br/&gt;any wing?&quot;}
+  DUP --&gt;|&quot;yes&quot;| SKIP[&quot;not stored,&lt;br/&gt;reported as duplicate&quot;]
+  DUP --&gt;|&quot;no&quot;| ROW[&quot;drawer row: wing, room,&lt;br/&gt;verbatim text, vector,&lt;br/&gt;BM25 terms&quot;]
+  W2 --&gt; ROW
+  W3 --&gt; TRI[&quot;triple: valid_from,&lt;br/&gt;valid_to, extracted_at&quot;]
+  TRI --&gt; INV[&quot;kg_invalidate sets&lt;br/&gt;valid_to; as_of reads&lt;br/&gt;the window&quot;]
+  subgraph readers[&quot;Readers&quot;]
+    direction TB
+    TOOL[&quot;palace_search: wing, room&lt;br/&gt;in SQL on both arms,&lt;br/&gt;whole palace if omitted&quot;]
+    HOOK[&quot;prompt and tool hooks:&lt;br/&gt;whole palace, top 12,&lt;br/&gt;other projects dropped&quot;]
+    START[&quot;session start: all of&lt;br/&gt;general/preferences as&lt;br/&gt;standing rules&quot;]
+    TOOL ~~~ HOOK ~~~ START
+  end
+  ROW --&gt; readers
+  ROW --&gt; DEL[&quot;forget, delete, prune:&lt;br/&gt;row deleted, nothing&lt;br/&gt;keeps the value&quot;]
+  DEL --&gt;|&quot;same text can&lt;br/&gt;be filed again&quot;| W1</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs in one <code>palace</code> process per invocation
+against one file, <code>palace.db</code>, opened in WAL mode with a busy
+timeout because an MCP server per client, the hooks and the miners share
+it (<code>src/db.rs:12-64</code>). Schema migration runs on every open
+(<code>src/db.rs:97-356</code>).</p>
+<ul>
+<li><strong>Store.</strong> <code>src/store.rs</code> holds drawer CRUD,
+brute-force cosine search over BLOB vectors, the preference pass, dedup
+and the wings registry.</li>
+<li><strong>Ranking.</strong> <code>src/ranker.rs</code> holds BM25 over
+the <code>bm25_terms</code> table, fusion and the adjustments;
+<code>src/searcher.rs</code> adds query rewriting, the preference merge,
+the optional rerank and neighbouring chunks.</li>
+<li><strong>Graph.</strong> <code>src/knowledge_graph.rs</code> holds
+triples and entities.</li>
+<li><strong>Surfaces.</strong> <code>src/mcp_server.rs</code> is a stdio
+JSON-RPC loop with 50 tools; <code>src/hooks.rs</code> answers four hook
+events in eight client dialects (<code>src/hooks.rs:33-42</code>);
+<code>src/cli.rs</code> and <code>src/install.rs</code> configure twelve
+clients and write the rule files; <code>src/palace.rs</code> is the
+library facade.</li>
+<li><strong>Embeddings.</strong> <code>src/embedder.rs</code> runs ONNX
+Runtime in-process with an inline BERT tokenizer. The default is an int8
+<code>all-MiniLM-L6-v2</code>, about 23 MB, fetched from Hugging Face on
+first use (<code>src/embedding_models.rs:62-93</code>).
+<code>src/embedding_migration.rs</code> builds a second model's vectors
+beside the first, verifies and cuts over.</li>
+</ul>
+<p>Remote mode replaces all of this for MCP calls.
+<code>palace mcp</code> becomes a stdio-to-HTTP bridge to a Palace
+Server endpoint with a bearer key (<code>src/remote.rs:1-7</code>,
+<code>src/mcp_server.rs:28</code>). The hooks do not read the mode and
+keep recalling from the local file
+(<code>src/hooks.rs:1107-1117</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run besides the binary. Install is a release download
+with a SHA-256 check, Homebrew or <code>cargo build</code>;
+<code>palace install</code> then registers the MCP server, hooks and
+rule text in every client it finds. No API key is needed. The first
+embedding call downloads the model from the <code>main</code> revision
+of a third-party Hugging Face repository with no checksum
+(<code>src/embedder.rs:331-337</code>), and the <code>ort</code> crate's
+<code>download-binaries</code> feature fetches ONNX Runtime at build
+time (<code>Cargo.toml</code>). After that it runs offline. Intel macOS
+is unsupported for lack of an ONNX Runtime build.</p>
+<p>The store is a SQLite file a person can query by hand.
+<code>palace export</code> writes drawers as JSON without vectors, and
+<code>palace_memory_report</code> prints a summary for people who will
+not open the file.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Agent write.</strong> <code>tool_remember</code> checks
+palace-wide dedup at cosine 0.9, then stores at importance 5 with the
+text's hash in <code>source_file</code> so distinct facts get distinct
+ids (<code>src/mcp_server.rs:1739-1809</code>).
+<code>tool_add_drawer</code> does the same with an id hashed from the
+first 100 bytes and the clock (<code>:959-1018</code>).
+<code>tool_diary_write</code> dedups at 0.95 within the agent's diary
+wing only (<code>:1314</code>). All three end in
+<code>store::add_drawer</code> or <code>add_drawer_with_id</code>, an
+<code>INSERT OR IGNORE</code> that also detects a hall, entities and a
+preference span and indexes BM25 terms
+(<code>src/store.rs:65-207</code>).</li>
+<li><strong>Mining.</strong> <code>miner.rs</code> walks a project with
+the <code>ignore</code> crate, chunks files and calls
+<code>replace_file_drawers</code>, which deletes every drawer with that
+<code>source_file</code> and re-inserts, then records the file's content
+hash so an unchanged file is skipped next time
+(<code>src/store.rs:407-450</code>).</li>
+<li><strong>Search.</strong> <code>tool_search</code> passes the model's
+<code>wing</code> and <code>room</code> to
+<code>search_memories_with</code>
+(<code>src/mcp_server.rs:909-930</code>), which rewrites and sanitises
+the query, embeds it, runs <code>hybrid_search</code> and merges the
+preference pass (<code>src/searcher.rs:126-229</code>).</li>
+<li><strong>Hook recall.</strong> <code>recall_lines</code> searches
+with no wing or room for twelve candidates and filters them through
+<code>ProjectScope</code> (<code>src/hooks.rs:450-510</code>,
+<code>:630-680</code>).</li>
+<li><strong>Session start.</strong> <code>session_start_response</code>
+assembles the protocol, standing preferences and recent project diary
+within 9,000 bytes (<code>src/hooks.rs:233-278</code>,
+<code>:729-800</code>, <code>:861-928</code>).</li>
+<li><strong>Correction.</strong> <code>update_drawer_content</code>
+rewrites and re-embeds in place (<code>src/store.rs:216-262</code>);
+<code>delete_drawer</code> and <code>tool_prune</code> delete
+(<code>src/store.rs:209-214</code>,
+<code>src/mcp_server.rs:2082-2095</code>); <code>kg::invalidate</code>
+sets <code>valid_to</code>
+(<code>src/knowledge_graph.rs:365-385</code>).</li>
+<li><strong>Telemetry.</strong> Every MCP call is recorded to
+<code>usage_events</code> by <code>record_event</code> for the
+<code>palace gain</code> report and the stop hook's nudge
+(<code>src/usage.rs:61-75</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Drawers</strong> hold <code>id</code>, <code>wing</code>,
+<code>room</code>, <code>content</code>, <code>embedding</code>,
+<code>source_file</code>, <code>chunk_index</code>,
+<code>added_by</code>, <code>filed_at</code>, <code>created_at</code>,
+<code>importance</code>, <code>entity_metadata</code>,
+<code>hall</code>, <code>normalize_version</code>, <code>metadata</code>
+and <code>pref_embedding</code> (<code>src/db.rs:109-126</code>).
+<code>filed_at</code> and <code>created_at</code> are both set to the
+insert time. Mined ids are derived from wing, room, source file and
+chunk index, so a re-mine is idempotent
+(<code>src/store.rs:52-56</code>). <code>added_by</code> is a string the
+caller supplies and defaults to <code>mcp</code>.</p>
+<p><strong>Scope.</strong> <code>wing</code> and <code>room</code> are
+free strings. The <code>wings</code> registry records which wings are
+mined projects, with their path; <code>palace_remember</code> and
+<code>palace_add_drawer</code> register a new wing as <code>topic</code>
+(<code>src/store.rs:1005-1013</code>). Diaries go to
+<code>wing_diary__&lt;agent&gt;</code> and carry
+<code>project_path</code> in metadata when the model supplies it.</p>
+<p><strong>Preferences.</strong> A preference span is detected from the
+text, room and source type and stored in
+<code>metadata.preference</code> with its own embedding, so a preference
+can match a query that shares no keyword with the drawer around it
+(<code>src/store.rs:1199-1250</code>). Tagging rules are versioned, and
+a palace re-tags every drawer once when the version moves
+(<code>src/db.rs:382-407</code>).</p>
+<p><strong>The graph.</strong> <code>triples</code> carry
+<code>valid_from</code>, <code>valid_to</code>, <code>confidence</code>,
+<code>source_closet</code>, <code>source_file</code> and
+<code>extracted_at</code> (<code>src/db.rs:212-223</code>). Entity ids
+are lowercased names with spaces replaced, so two people with one name
+are one entity (<code>src/knowledge_graph.rs:44-46</code>).
+<code>add_triple</code> returns the existing id for an identical open
+triple and otherwise inserts (<code>:180-216</code>).</p>
+<p><strong>Carried over and unwired.</strong> <code>closets</code> and
+<code>tunnels</code> are MemPalace's layers. <code>add_closet</code> has
+no caller outside tests, although the importer's comment calls closets
+<em>"an index palace derives from drawers"</em>
+(<code>src/mempalace_import.rs:14-15</code>). Tunnels are written by
+<code>palace_create_tunnel</code> and read by traversal tools, not by
+search.</p>
+<p><strong>Telemetry tables.</strong> <code>usage_events</code>,
+<code>hook_sessions</code> and <code>gain_feedback</code> record tool
+calls, per-session hook activity and inferred usefulness
+(<code>src/db.rs:230-274</code>). They are not memory, and section 9
+says why they are not an audit either.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Two arms over the same scope.</strong> The vector arm reads
+every drawer vector matching the filter, newest first, and computes
+cosine in Rust (<code>src/store.rs:607-637</code>,
+<code>:720-753</code>). With the default
+<code>keyword_match_cosine</code>, it keeps every cosine so a
+keyword-only hit gets its real similarity. The BM25 arm queries
+<code>bm25_terms</code> once per unique query term, joined to
+<code>drawers</code> with the wing and room predicates
+(<code>src/ranker.rs:436-512</code>). Both cost a scan proportional to
+the scoped store on every query.</p>
+<p><strong>Fusion.</strong> Cosine is rescaled from the model's floor
+and weighted 0.65, normalised BM25 0.35 for MiniLM. Additive adjustments
+follow (<code>src/ranker.rs:12-38</code>, <code>:164-317</code>):</p>
+<ul>
+<li>a coding-intent boost from keyword lists, capped at 0.65;</li>
+<li>a preference match up to 0.22;</li>
+<li>a date boost up to 0.12 when the query has a time phrase;</li>
+<li>a recency boost up to 0.05 with a 35-day half-life;</li>
+<li>a 0.12 discount for mined files on a plain-language question;</li>
+<li>a same-source bonus of 0.1 times the source's best other hit;</li>
+<li>a 0.9 decay per higher-ranked drawer from the same source.</li>
+</ul>
+<p>The preference pass adds up to ten preference drawers at 0.4 of their
+cosine when that cosine is at least 0.25
+(<code>src/searcher.rs:271-318</code>). <code>rerank</code> is a
+token-overlap score blended at 0.35, not a model
+(<code>src/reranker.rs:1-30</code>).</p>
+<p><strong>What the model sees.</strong> <code>palace_search</code>
+returns text, wing, room, source file, both timestamps, every score
+component and, by default, the neighbouring chunks of the same source
+(<code>src/searcher.rs:183-229</code>).</p>
+<p><strong>Hook injection.</strong> The prompt hook runs on any prompt
+of three words or more that is not a slash command. The post-tool hook
+runs after a non-mutating tool call whose input carries a pattern,
+query, command or path; the Claude Code plugin matches Grep, Read and
+Glob (<code>src/hooks.rs:1125-1156</code>,
+<code>plugin/hooks/hooks.json</code>). Each searches the whole palace
+for twelve candidates and keeps up to three lines of 240 characters at a
+recall score of 0.4 or more, keeping one recorded memory over mined code
+where it can (<code>src/hooks.rs:179-183</code>, <code>:450-510</code>).
+Lines carry wing, room and drawer id. Session start injects the
+protocol, up to twenty standing rules from
+<code>general/preferences</code> at 300 characters each, the last 30
+days of this project's diary and three recent project drawers
+(<code>src/hooks.rs:233-278</code>, <code>:707-800</code>,
+<code>:861-928</code>). All of it arrives as hook context in the
+conversation, not in the system prompt.</p>
+<p><strong>The graph is separate.</strong> <code>palace_kg_query</code>
+returns every triple for an entity, current and ended, unless
+<code>as_of</code> is passed
+(<code>src/knowledge_graph.rs:391-467</code>). Search never reads the
+graph.</p>
+<p><strong>Failure modes.</strong> With no wing, tool search ranks every
+project together. The hook's twelve candidates can be filled by other
+projects' drawers before the filter drops them, so this project's memory
+is missed rather than leaked. A plain-language question about code is
+pushed toward filed memories by the mined discount, which is the intent
+and also a bias against the source of truth.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Every agent write is synchronous and cheap.</strong> The tool
+embeds the text locally, runs the dedup scan and inserts; the drawer is
+searchable when the call returns. No model call is made on any write
+path. The dedup reads every vector in the palace for
+<code>palace_remember</code> and <code>palace_add_drawer</code>
+(<code>src/store.rs:863-889</code>), so write cost grows with the
+store.</p>
+<p><strong>Dedup crosses wings on purpose.</strong> A remembered fact
+near-identical to any drawer in any wing is not stored, and the call
+returns <code>success: true</code> with <code>inserted: false</code> and
+the match (<code>src/mcp_server.rs:1760-1773</code>). A test pins this
+across rooms (<code>tests/test_mcp_server.rs:788-822</code>). A fact
+already filed in project A is therefore absent from a wing-scoped search
+in project B.</p>
+<p><strong>Update is in place.</strong>
+<code>palace_update_drawer</code> overwrites content and re-embeds with
+no copy (<code>src/store.rs:216-262</code>). An edit to a mined drawer
+lasts until the file changes, when <code>replace_file_drawers</code>
+deletes every drawer with that <code>source_file</code> and re-inserts.
+That delete is keyed on <code>source_file</code> alone, so a hand-filed
+drawer whose <code>source_file</code> names a mined path goes with it
+(<code>src/store.rs:416-420</code>).</p>
+<p><strong>Deletion is total and reachable by the agent.</strong>
+<code>palace_forget</code> and <code>palace_delete_drawer</code> delete
+one row by id. <code>palace_prune</code> runs
+<code>DELETE FROM drawers WHERE datetime(filed_at) &lt;= datetime('now', printf('-%d days', ?1))</code>
+with no wing, room or source condition, and its description warns only
+<em>"Irreversible, so export first if unsure"</em>
+(<code>src/mcp_server.rs:2082-2095</code>, <code>:2765-2774</code>).
+Foreign keys cascade to the BM25 rows, and a trigger removes stored
+vectors of other models (<code>src/db.rs:291-295</code>).</p>
+<p><strong>Conflict handling is in the graph only.</strong>
+<code>palace_conflicts</code> lists subject-predicate pairs with more
+than one object and is read-only. The rule text asks the agent to
+invalidate before adding. Nothing compares a new drawer with an old one
+beyond the dedup threshold.</p>
+<p><strong>Noisy input.</strong> The miner skips a deny-list of
+directories and oversized files. Nothing filters what the agent files,
+and the write path has no secret detection.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Per write: one ONNX embedding and one full vector scan. Per search:
+one query embedding, a scan of every in-scope vector, one BM25 query per
+term and a row read per candidate. Per prompt: one such search over the
+whole palace. Session start costs a list query and up to 9,000 bytes of
+context, a budget set from Claude Code's 10,000-character hook limit
+(<code>src/hooks.rs:203-207</code>). Nothing runs in the background. Two
+passes touch the whole store, both on demand: re-tagging preferences
+when the tagging version changes, and re-embedding during a model
+migration.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers 50 tools
+(<code>src/mcp_server.rs:252-311</code>). The model holds every verb:
+write, update, delete, prune, import, mine any directory it names,
+rename and merge wings, and migrate embeddings.
+<code>palace install</code> writes a rule into each client's instruction
+file calling the protocol <em>"MANDATORY"</em>, and the MCP
+<code>initialize</code> result repeats it as server instructions
+(<code>src/install.rs:14</code>,
+<code>src/mcp_server.rs:112-122</code>).</p>
+<p>Hooks make recall automatic. Each of the eight dialects has its own
+event names and output shape; clients whose prompt hook cannot inject,
+such as Cursor and VS Code, get recall only at session start and after
+tools. The Claude Code plugin registers the four hooks and the MCP
+server (<code>plugin/hooks/hooks.json</code>,
+<code>plugin/.mcp.json</code>).</p>
+<p><strong>Standing rules are injected verbatim from one room.</strong>
+Every drawer in <code>general/preferences</code> is a candidate for
+every session start, ranked by importance then recency. The only
+exclusion is a rule whose first 100 characters name another registered
+project and not this one (<code>src/hooks.rs:806-832</code>). Anything
+an agent files there through
+<code>palace_remember(wing="general", room="preferences")</code>, as the
+rule tells it to, becomes standing context for every later session in
+every project. Recent diary text arrives the same way, under a heading
+saying a prior agent may already have done the work.</p>
+<p><strong>Compaction.</strong>
+<code>hooks/palace_precompact_hook.sh</code> and
+<code>palace_save_hook.sh</code> are legacy wrappers that exec
+<code>palace mcp</code>. The installed hooks do not handle compaction;
+the stop hook's save nudge is the end-of-session mechanism.</p>
+<p>Adapting this to another agent means speaking MCP and, for automatic
+recall, the client's hook protocol. <code>palace::palace::Palace</code>
+is the in-process alternative, with <code>ingest_turn</code> storing an
+exchange and its regex-extracted memories
+(<code>src/palace.rs:346-384</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3
+id="scope-holds-on-the-tool-path-and-leans-on-a-deny-list-in-the-hooks">Scope
+holds on the tool path and leans on a deny-list in the hooks</h3>
+<p>The SQL predicate is the strong part: a wing-scoped search never
+scores a drawer from another wing. Who supplies the wing is the weak
+part. For tools it is the model, and the default is no wing. For hooks
+it is the working directory mapped through the registry, and the hooks
+do not use it as a predicate. They search everything and drop hits from
+wings registered as <em>other projects</em>
+(<code>src/hooks.rs:630-680</code>). A wing created by
+<code>palace_remember</code> is registered as a topic, so a decision
+filed under another project's name before that project was mined passes
+the filter. Diaries are kept when they name no project at all.</p>
+<h3 id="no-status-no-record-no-memory-of-a-deletion">No status, no
+record, no memory of a deletion</h3>
+<p>A drawer is present or absent. Every write is live, every deletion
+removes the value, and the only history is the graph's closed windows.
+An agent that read injected content can file it into
+<code>general/preferences</code>, and it will be injected into every
+later session as a standing rule. An agent can prune the whole store by
+age.</p>
+<h3 id="three-truncations-that-panic-the-server">Three truncations that
+panic the server</h3>
+<p><code>tool_add_drawer</code> hashes
+<code>&amp;content[..100.min(content.len())]</code>,
+<code>tool_diary_write</code> takes
+<code>&amp;entry[..50.min(entry.len())]</code>, and
+<code>tool_check_duplicate</code> prints <code>&amp;m.text[..200]</code>
+(<code>src/mcp_server.rs:994</code>, <code>:1365</code>,
+<code>:949</code>). These are byte slices. In Rust a slice that ends
+inside a multibyte character panics, and the stdio loop has no
+<code>catch_unwind</code> (<code>src/mcp_server.rs:66-96</code>). A
+drawer or diary entry whose 100th or 50th byte falls inside a character
+such as <code>é</code> or <code>─</code> therefore ends the MCP process.
+<code>src/layers.rs:364-366</code> records the same defect fixed in the
+wake-up layer, with a regression test using <code>─</code>.</p>
+<h3 id="remote-mode-splits-the-memory">Remote mode splits the
+memory</h3>
+<p>In remote mode MCP calls go to the server while every hook opens the
+local <code>palace.db</code> (<code>src/hooks.rs:1107-1117</code>). A
+team's saved memory is on the server, and the automatic recall comes
+from whatever is in the local file.</p>
+<h3 id="supply-chain">Supply chain</h3>
+<p>The default model comes from the <code>main</code> revision of
+<code>Xenova/all-MiniLM-L6-v2</code> with no pinned revision or hash
+(<code>src/embedder.rs:331-337</code>). A changed file upstream changes
+every vector a new palace writes.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong>
+<code>wing</code> and <code>room</code> are applied in SQL on the vector
+arm, the BM25 arm, the preference pass, listing and neighbour context
+(<code>src/store.rs:1149-1167</code>,
+<code>src/ranker.rs:488-489</code>). Limits as above: the model supplies
+the wing, the default is unscoped, the hooks post-filter, and dedup is
+palace-wide.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> A scoped
+preference search over two wings must return exactly the target wing's
+drawer from a pass with no floor
+(<code>tests/test_coding_agent_memory.rs:274-312</code>); a neighbour
+lookup must stay in its wing (<code>tests/test_store.rs:578-611</code>);
+the post-tool hook must not inject another project's matching decision
+and must inject it from inside that project
+(<code>tests/hooks.rs:136-153</code>).</li>
+<li><strong><code>bitemporal</code> — earned.</strong> Triples carry a
+caller-stated validity window beside <code>extracted_at</code>, and
+<code>as_of</code> reads filter on the window alone
+(<code>src/knowledge_graph.rs:406-410</code>). The window is closed at
+both ends with dates compared as strings, so an invalidate-and-add on
+one date leaves both facts true on that date. <a
+href="../mempalace-code/">mempalace-code</a> keeps the same shape, and
+<a href="../mempalace/">MemPalace</a> replaced it with a half-open
+window and <code>supersede</code>. No test passes
+<code>as_of</code>.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>usage_events</code> records MCP calls for the gain report, not
+mutations. It holds no content and misses the CLI, the miners and the
+hooks. It is off under <code>PALACE_GAIN_DISABLED</code> and deleted by
+the <code>palace gain</code> reset (<code>src/usage.rs:536-541</code>,
+<code>src/gain.rs:250-260</code>). Its delete entry reads the drawer id
+from <code>id</code> while <code>palace_delete_drawer</code> takes
+<code>drawer_id</code> (<code>src/usage.rs:305-310</code>,
+<code>src/mcp_server.rs:1021</code>), so the id is never recorded.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Deletion keeps
+nothing, and <code>add_triple</code> checks only for an open identical
+triple, so an invalidated fact can be added again.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No status
+exists. <code>confidence</code> on a triple is stored, and no tool sets
+it below 1.0.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No write
+waits. Every verb, including prune, is on the agent's tool surface.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI runs <code>cargo test --all-features</code> with the Hugging Face
+cache restored, so tests that embed run against the real model
+(<code>.github/workflows/ci.yml:87-93</code>). No test is marked
+<code>#[ignore]</code>. I ran nothing from the repository.</p>
+<p>What the memory tests cover: drawer CRUD, ids, scope in listing and
+neighbour context (<code>tests/test_store.rs</code>); preference tagging
+and filtered preference recall
+(<code>tests/test_coding_agent_memory.rs</code>); dedup across rooms and
+per agent (<code>tests/test_mcp_server.rs:788-900</code>); hook
+injection, budget, standing-rule caps and project filtering
+(<code>tests/hooks.rs</code>); concurrent writers on one file
+(<code>tests/test_concurrency.rs</code>); model migration and rollback
+(<code>tests/test_embedding_migration.rs</code>); KG add, invalidate,
+timeline and dedup (<code>tests/test_knowledge_graph.rs</code>).</p>
+<p>What is not covered: no test passes <code>as_of</code> to the graph;
+no test files non-ASCII text through <code>palace_add_drawer</code> or
+<code>palace_diary_write</code>; no test calls
+<code>palace_prune</code>; no test checks that a forgotten fact stays
+forgotten.</p>
+<p><strong>The LongMemEval guard cannot fail on retrieval.</strong> The
+CI step <em>"Check LongMemEval sampled baseline guard"</em> runs
+<code>sampled_longmemeval_baseline_guard_is_configured</code>, which
+parses <code>tests/baselines/longmemeval.json</code> and asserts its own
+constants. With <code>PALACE_RUN_LONGMEMEVAL=1</code> it still runs no
+retrieval (<code>tests/longmemeval_sample.rs:17-31</code>).</p>
+<p><strong>The coding-agent eval is keyword-only in CI.</strong> It
+calls <code>hybrid_search</code> with no query vector over 51 questions
+and asserts recall@1 of at least 0.86 and recall@5 of at least 0.98
+(<code>tests/coding_agent_eval.rs:33</code>, <code>:68</code>,
+<code>:82</code>). <code>docs/benchmarks.md:119</code> says the coding
+boosts include phrases taken from this eval's questions.</p>
+<p><strong>The LongMemEval figures are not reproducible from the
+pin.</strong> The runner lives on the
+<code>benchmarks/longmemeval-beam-runner</code> branch, which commits no
+result files. <code>docs/benchmarks.md:85</code> says <em>"No parameters
+were fitted on <code>s_cleaned</code>"</em>; <code>SOURCE_DECAY</code>
+in <code>src/ranker.rs:28-33</code> is documented as <em>"Measured on
+LongMemEval S exchange chunks"</em>, with the 395-of-470 coverage it
+bought. <code>SOURCE_WEIGHT</code> was chosen on the M split
+(<code>:23-27</code>). The tree cites no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Recall on investigation, not only on the prompt.</strong>
+Firing a scoped search after Grep and Read, with a high floor and three
+short cited lines, catches the moment an agent is about to rediscover
+something.</li>
+<li><strong>A byte budget measured against the host's limit.</strong>
+Size the session-start block from the client's documented truncation
+point and degrade the protocol text first.</li>
+<li><strong>Vectors of other models kept beside the active
+ones.</strong> Building, verifying and cutting over a second model's
+vectors in a side table, with triggers invalidating them on edit, makes
+a model change reversible (<code>src/db.rs:282-313</code>).</li>
+<li><strong>A preference span with its own embedding.</strong> Embedding
+the preference sentence apart from its chunk lets a preference answer a
+question that shares none of its words.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A standing-instructions room any writer can fill.</strong>
+If memory is injected as instructions, the room it comes from needs a
+writer the agent is not.</li>
+<li><strong>Deny-list scoping on an unscoped search.</strong> Search
+with the scope as a predicate, as the tool path already can, instead of
+filtering a top-k of everything.</li>
+<li><strong>A delete-by-age verb on the agent's tool
+surface.</strong></li>
+<li><strong>Byte-index truncation of user text in a long-running
+server.</strong></li>
+<li><strong>A benchmark guard that asserts its own
+configuration.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants several coding agents on one
+machine to share memory with no services, and who will read what the
+hooks inject. The maintenance budget is low and the install is one
+command. It is the wrong base for a team, where remote mode hands memory
+to a closed server while the hooks keep reading the local file. It is
+also wrong for anyone who needs a correction to hold, a record of what
+changed, or memory that an agent cannot erase. For the same design with
+a mutation log and a half-open temporal window, read <a
+href="../mempalace/">MemPalace</a> itself.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the hooks are meant to recall from the local palace in
+remote mode.</li>
+<li>Whether the closets table is kept only for import
+compatibility.</li>
+<li>Which LongMemEval numbers were produced before
+<code>SOURCE_DECAY</code> was set, and whether the S-split figures were
+re-run after it.</li>
+<li>What the release binaries carry of ONNX Runtime and its notices; the
+build downloads it, and no release artifact was inspected.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>src/db.rs</code>,
+<code>src/store.rs</code>, <code>src/wings.rs</code>,
+<code>src/embedding_migration.rs</code></li>
+<li>Write path: <code>src/mcp_server.rs</code>
+(<code>tool_remember</code>, <code>tool_add_drawer</code>,
+<code>tool_diary_write</code>, <code>tool_update_drawer</code>,
+<code>tool_forget</code>, <code>tool_prune</code>),
+<code>src/miner.rs</code>, <code>src/convo_miner.rs</code>,
+<code>src/watcher.rs</code>, <code>src/general_extractor.rs</code>,
+<code>src/preference.rs</code></li>
+<li>Retrieval: <code>src/ranker.rs</code>, <code>src/searcher.rs</code>,
+<code>src/reranker.rs</code>, <code>src/query_rewriter.rs</code>,
+<code>src/time_query.rs</code></li>
+<li>Context assembly: <code>src/hooks.rs</code>,
+<code>src/layers.rs</code>, <code>src/install.rs</code></li>
+<li>Graph: <code>src/knowledge_graph.rs</code>,
+<code>src/palace_graph.rs</code></li>
+<li>MCP and integration: <code>src/mcp_server.rs</code>,
+<code>src/remote.rs</code>, <code>src/palace.rs</code>,
+<code>plugin/</code>, <code>src/opencode_plugin.js</code></li>
+<li>Import: <code>src/mempalace_import.rs</code>,
+<code>docs/migrating.md</code></li>
+<li>Embeddings: <code>src/embedder.rs</code>,
+<code>src/embedding_models.rs</code></li>
+<li>Telemetry: <code>src/usage.rs</code>, <code>src/gain.rs</code>,
+<code>src/hook_sessions.rs</code></li>
+<li>Tests and evals: <code>tests/</code>,
+<code>.github/workflows/ci.yml</code>,
+<code>docs/benchmarks.md</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No mutation journal or write-ahead log.</strong>
+<code>git grep -n -i -E 'wal_log|write.ahead|audit' -- src</code>
+returns only the string <code>cargo audit</code> and a tool description;
+the control <code>git grep -n -i 'journal_mode=WAL' -- src</code>
+matches <code>src/db.rs:58</code>.</li>
+<li><strong>No supersession in the graph.</strong>
+<code>git grep -n -i 'supersed' -- src</code> returns one display label
+at <code>src/cli.rs:969</code>.</li>
+<li><strong>No value-keyed refusal.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist|suppress|do_not_remember|rejected' -- src</code>
+returns the miner's directory deny-list and one test string in
+<code>src/hooks.rs</code>.</li>
+<li><strong>No memory status.</strong>
+<code>git grep -n -i -E "verified|quarantin|candidate|'pending'|approve" -- src</code>
+returns embedding-migration metadata, the rerank flag and migrate
+candidates.</li>
+<li><strong>Hooks do not read the MCP mode.</strong>
+<code>git grep -n -i 'remote' -- src/hooks.rs src/hook_sessions.rs</code>
+returns nothing;
+<code>git grep -n -i -E 'mcp_mode|is_remote|remote_mode' -- src</code>
+returns <code>src/config.rs</code>, <code>src/cli.rs</code>,
+<code>src/embedding_migration.rs:765</code> and
+<code>src/mcp_server.rs:28</code>.</li>
+<li><strong>Closets have no producer.</strong>
+<code>git grep -n -w 'add_closet' -- src tests</code> returns the
+definition and three test files.</li>
+<li><strong>No panic guard in the server.</strong>
+<code>git grep -n -E 'catch_unwind|panic::' -- src</code> returns
+nothing.</li>
+<li><strong>Byte-index truncations.</strong>
+<code>git grep -n -E '\[\.\.[0-9]+\.min\(|\[\.\.[0-9]+\]' -- src</code>
+returns <code>src/mcp_server.rs:949</code>, <code>:994</code> and
+<code>:1365</code> among hash-prefix slices.</li>
+<li><strong>No as-of test.</strong>
+<code>git grep -n -E 'as_of|kg_query_as_of' -- tests</code> returns
+nothing.</li>
+<li><strong>No ignored tests.</strong>
+<code>git grep -n 'ignore' -- tests</code> returns no
+<code>#[ignore]</code> attribute.</li>
+<li><strong>Model download unpinned.</strong>
+<code>git grep -n -i -E 'sha256|checksum|revision|with_revision|Repo::with' -- src/embedder.rs src/embedding_models.rs src/embedding_migration.rs</code>
+returns only token-map lookups.</li>
+<li><strong>No other copyright notice.</strong>
+<code>git grep -n -i 'copyright'</code> returns <code>LICENSE:3</code>,
+<code>:12</code> and <code>:18</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|citation' -- . ':!Cargo.lock'</code>
+returns uses of "citation" meaning a drawer id; there is no
+<code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/AncientiCe/palace-rs/commit/eda4d350b722408607d8d27db99f4d3ec9f66f7b"><code class="commit-id" title="eda4d350b722408607d8d27db99f4d3ec9f66f7b">eda4d350…</code></a>.
+First reading, from a full clone at the head of <code>main</code>;
+triage had selected <code>9ceaae8c39c3</code>, an earlier commit. No
+submodules. Screened first: seven auto-run surfaces (the Claude Code
+marketplace and plugin manifests, <code>hooks/</code> with
+<code>palace_precompact_hook.sh</code> and
+<code>palace_save_hook.sh</code>, <code>plugin/hooks/hooks.json</code>,
+<code>plugin/.mcp.json</code>, <code>server.json</code>), none executed;
+<code>Cargo.toml</code> and <code>Cargo.lock</code> inside the seven-day
+cooldown; no build-time execution in the tree; no unpinned surface.
+<code>AGENTS.md</code>, <code>CLAUDE.md</code> and the rule text were
+read as data. Nothing was installed, built or run, and the 480 test
+functions were not run. Three marks: <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

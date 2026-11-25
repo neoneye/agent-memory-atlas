@@ -688,6 +688,23 @@ every judgment cited as current, in free Markdown the server does not
 parse, and expiry happens when the agent reads the date and edits the
 page. A field the read path ignores is a note to the reader, not a
 validity interval.</p>
+<p><a href="../../systems/palace-rs/">Palace (palace-rs)</a> is a third
+copy of the <a href="../../systems/mempalace/">MemPalace</a> triple,
+ported to Rust before upstream's half-open window and
+<code>supersede</code>. <code>palace_kg_add</code> takes
+<code>valid_from</code> from the model and
+<code>palace_kg_invalidate</code> takes <code>ended</code>, defaulting
+to the local date, beside <code>extracted_at</code>; an
+<code>as_of</code> read keeps rows with
+<code>valid_from &lt;= as_of</code> and
+<code>valid_to &gt;= as_of</code>, compared as date strings
+(<code>src/knowledge_graph.rs:365-385</code>, <code>:406-410</code>). So
+an invalidate-and-add on one date leaves both values true on that date,
+the moment of invalidation is not stored, a fact added without
+<code>valid_from</code> holds from the beginning of time, and no test
+passes <code>as_of</code>. The installed rule asks the agent to
+invalidate before every replacement, which makes the boundary case the
+common one.</p>
 <p><a href="../../systems/connapse/">Connapse</a> separates two kinds of
 correction on a window the agent states. <code>memory_remember</code>
 takes <code>validFrom</code> and <code>validTo</code> from the agent and

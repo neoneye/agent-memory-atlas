@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 874 of 875 screened at the report's current pin.**
+**Progress: 875 of 876 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 419 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 396 |
+| Repositories with an auto-run surface (`RUNS`) | 420 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 397 |
 | Repositories with build-time execution (`EXEC`) | 629 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
@@ -341,6 +341,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`ouroboros-agent-os`](../../content/systems/ouroboros-agent-os.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`ownmem`](../../content/systems/ownmem.md) | `.claude-plugin/`, `plugins/ownmem/.claude-plugin/plugin.json` |
 | [`ox`](../../content/systems/ox.md) | `.claude-plugin/`, `.claude/settings.json`, `.gemini/settings.json`, `.opencode/`, `claude-plugin/.claude-plugin/plugin.json`, `internal/pet/mod/.claude-plugin/plugin.json`, `internal/pet/mod/hooks/`, `internal/pet/mod/hooks/hooks.json` |
+| [`palace-rs`](../../content/systems/palace-rs.md) | `.claude-plugin/`, `hooks/`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json`, `server.json` |
 | [`papez`](../../content/systems/papez.md) | `server.json` |
 | [`particles`](../../content/systems/particles.md) | `hooks/`, `server.json` |
 | [`pensyve`](../../content/systems/pensyve.md) | `.claude-plugin/`, `integrations/claude-code/.claude-plugin/plugin.json`, `integrations/claude-code/hooks/`, `integrations/claude-code/hooks/hooks.json`, `server.json`, `smithery.yaml` |

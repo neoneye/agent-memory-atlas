@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **875 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **876 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -738,6 +738,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## P
 
 <ul class="az">
+<li><a class="az-row" href="../systems/palace-rs/"><span class="az-id">Palace (palace-rs)</span><span class="az-what">MemPalace rewritten in Rust around one SQLite file, with hooks that recall before the agent asks</span><code class="az-repo">AncientiCe/palace-rs</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/palazzo/"><span class="az-id">Palazzo</span><span class="az-what">An audit log that can refuse a delete</span><code class="az-repo">calibrae/palazzo</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/paperclip/"><span class="az-id">Paperclip</span><span class="az-what">An LLM wiki plugin inside a multi-agent control plane</span><code class="az-repo">paperclipai/paperclip</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/papez/"><span class="az-id">Papez</span><span class="az-what">Causal memory graph</span><code class="az-repo">Astrix-Labs/papez</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>

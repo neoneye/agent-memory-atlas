@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 875 reports.</strong></p>
+<p><strong>This page covers all 876 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36099,6 +36099,59 @@ history an agent can query by date.</li>
 <li>Do not copy when: cited documents are deleted or re-keyed often,
 memory must be found by meaning rather than shared words, or each agent
 of one user needs its own memory.</li>
+</ul>
+<h3 id="palace-rs"><a
+href="../systems/palace-rs/"><code>palace-rs</code></a></h3>
+<ul>
+<li>Best idea: <strong>recall fired by investigation.</strong> After a
+non-mutating tool call that carries a pattern or a path (Grep, Read and
+Glob in the Claude Code plugin), the hook searches, keeps up to three
+240-character lines at a recall score of 0.4 or more with wing, room and
+drawer id, and keeps one recorded memory over mined code where it can
+(<code>src/hooks.rs:450-510</code>, <code>:1125-1156</code>). Session
+start is held to 9,000 bytes against Claude Code's 10,000-character hook
+limit.</li>
+<li>Second idea: reversible embedding-model changes. A side table holds
+a migration target's vectors and the previous model's after cutover,
+triggers drop them when content or a preference span changes, and
+verify, cutover and rollback are commands
+(<code>src/db.rs:276-313</code>,
+<code>src/embedding_migration.rs</code>).</li>
+<li>Biggest risk: <strong>the agent can write standing instructions and
+erase the store.</strong> Every drawer in
+<code>general/preferences</code> is injected at every session start as a
+standing rule, and the installed rule tells the agent to file
+preferences there with <code>palace_remember</code>;
+<code>palace_prune</code> deletes every drawer filed before N days ago
+with no scope condition (<code>src/hooks.rs:729-800</code>,
+<code>src/mcp_server.rs:2082-2095</code>). Nothing records a mutation or
+remembers a deleted value.</li>
+<li>Second risk: three byte-index truncations, in
+<code>palace_add_drawer</code>, <code>palace_diary_write</code> and
+<code>palace_check_duplicate</code>, panic on a multibyte character at
+the cut, and the stdio loop has no <code>catch_unwind</code>
+(<code>src/mcp_server.rs:949</code>, <code>:994</code>,
+<code>:1365</code>). The hooks scope recall by dropping other registered
+projects from a whole-palace top 12 rather than by predicate, and keep
+reading the local file in remote mode.</li>
+<li>Most reusable component: <code>src/hooks.rs</code> for per-client
+hook dialects under a byte budget;
+<code>src/embedding_migration.rs</code> with the
+<code>embedding_vectors</code> table and its triggers in
+<code>src/db.rs:276-313</code>.</li>
+<li>Maturity impression: MIT; 25,407 lines of Rust in 54 source files
+and 11,352 lines of tests; 253 commits from 8 April to 24 November 2026,
+179 by AncientiCe and 67 by Ionut Riza, with 57 tags; 480 test functions
+run in CI with the model cached and not run here; the CI LongMemEval
+guard asserts its own JSON, and the published LongMemEval figures have
+no committed results. Three marks: <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>negative_eval</code>.</li>
+<li>Study when: you want automatic recall across several coding agents
+from one local file, or a MemPalace-shaped store without Python or
+Chroma.</li>
+<li>Do not copy when: memory is injected as instructions from a room the
+agent writes, a correction must hold, mutations need a record, or the
+agent must not be able to delete the store.</li>
 </ul>
         </article>
       </div>
