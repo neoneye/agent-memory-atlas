@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 869 reports.**
+**This page covers all 868 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7235,16 +7235,6 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT with an attribution term for user-facing products; 158,347 lines of TypeScript in src/ and 25,546 in the kernel outside tests; 8,016 commits, 6 August – 7 November 2026, 3,677 of them by one author; 1,299 node:test files run in CI, not run here. No marks. The paper's production figures and the third-party benchmark tables have no committed raw data to recompute from.
 - Study when: you are building reversible in-session compression and want originals, stable ref numbering and prefix-cache discipline worked out in production code.
 - Do not copy when: the proxy serves more than one person, a summary must be correctable or erasable everywhere, or memory must carry across sessions by design rather than by id.
-
-### [`openyantra`](../systems/openyantra/)
-- Best idea: **a superseded belief that refuses its own value.** `Superseded_By` on the Beliefs sheet drops a row from search and every context compiler through one shared predicate, and the write gate reads the same rows: an add or update repeating a superseded Position or Topic is rejected whatever agent sends it and whatever Topic it is filed under, with a `rejected` row on the ledger.
-- Second idea: one writer for the workbook that records every outcome. `LedgerAgent._process` saves a `written` ledger row in the same atomic write as the change, and appends `rejected` and `conflict` rows beside it, so the replay check reads a ledger that cannot lag the sheet.
-- Biggest risk: **the dashboard reads a store nothing fills.** Its sheet route returns SQLite tables that only `yantra sync` populates, so it shows the last sync's rows, an empty ledger, and *no quarantined writes* over a Quarantine sheet that holds them; the Release button is drawn per listed row and never appears. No test requests the route.
-- Second risk: the git-file mesh imports every teammate belief as `User-stated` at High confidence, compares no signature, and re-adds a row deleted locally because it pulls before it pushes. The gateway harvests decision phrases from model output into the Session Log as `System` at High confidence, and `yantra proxy` builds it without a workbook. The tombstone's override is a field any request can carry.
-- Most reusable component: the tombstone check, `_check_tombstone` in `openyantra/core.py:502-547`, beside the predicate it shares with every read, `is_superseded` at `:189-214`.
-- Maturity impression: MIT for the software, with the protocol's schemas under CC0 1.0 in a separate file; 16,420 lines of Python outside tests; 101 commits, 20 March – 23 November 2026, 15 of them after 10 November and carrying the version from 6.2.0 to 7.0.0; 184 pytest functions run in CI, not run here. Four marks: `audit_log`, `trust_state`, `tombstone`, `negative_eval`. The whitepaper's validation is review by language models, and the one committed benchmark times routing.
-- Study when: you want a correction that both leaves the read path and refuses re-assertion at the write gate, or a memory a person reads and edits in a spreadsheet application.
-- Do not copy when: a person must see what is held or stored through the dashboard, a workbook is shared between people, more than one process writes without `portalocker`, or the agent's own memory tools must pass the same gate as everything else.
 
 ### [`noosphere-lite-mcp`](../systems/noosphere-lite-mcp/)
 - Best idea: **a claim re-derived from its source on every read.** A claim stores a JSON pointer, the value it found there and the source's SHA-256, and the evidence query re-reads the pointer, re-hashes the source and walks every ancestor's status and Git anchor before it returns anything. A changed source, a stale ancestor or a drifted file is a read-time refusal, with a count per reason, and two values for one key are both withheld.
