@@ -14995,6 +14995,34 @@ functions — producer, consumer and test all present, which is more than
 the corpus's median for a mechanism of this shape. qmd enters the day
 its own store holds something the source files do not: an agent-written
 annotation, a status, or any row with a lifecycle of its own.</li>
+<li><strong><code>hskl18/boring-agent-memory</code> was examined and has
+no report: an agent queries files a person chose and writes
+nothing.</strong> MIT, about 3,300 lines of Python in <code>src/</code>
+and 2,300 in <code>tests/</code>, at <a
+href="https://github.com/hskl18/boring-agent-memory/commit/208816994effe344b4268e20def76ed9c046ced6"><code class="commit-id" title="208816994effe344b4268e20def76ed9c046ced6">20881699…</code></a>
+— SQLite FTS5 over heading-aware Markdown chunks, returning a path, line
+span and snippet per hit. Its four tables (<code>documents</code>,
+<code>chunks</code>, <code>chunks_fts</code>,
+<code>index_metadata</code>) are rebuilt by <code>bam build</code> or
+patched by <code>bam update</code> from the paths under
+<code>include:</code>, and the agent's surface,
+<code>memory_query</code> and the JSON-lines
+<code>bam serve --stdio</code>, has no write verb, so nothing in the
+store is a claim that could later be contradicted. "Trusted files" names
+the user's choice of paths: <code>source_type</code> is a free config
+string applied only when a caller passes it, and the sha256 freshness
+check runs in <code>bam inspect</code> and the eval harness, not on the
+query path. Two things transfer. <code>bam update</code> refuses to run
+when the configuration fingerprint (source scope, workspace, source
+type, privacy policy, chunk and schema settings) differs from the last
+build (<code>src/boring_agent_memory/index.py:144-145</code>), so a
+widened include list cannot be folded silently into an incremental
+update. And <code>--strict</code> drops the any-term OR stage and the
+LIKE fallback (<code>src/boring_agent_memory/query.py:81-92</code>); on
+the project's committed synthetic Benchmark v1 that moves adversarial
+no-answer abstention from 0 of 20 to 20 of 20 at a cost of Recall@3 from
+1.00 to 0.80, a trade the README charts rather than hides. It enters the
+day an agent can deposit a note the index keeps.</li>
 <li><strong><code>WujiangXu/A-mem</code> was examined and has no report
 because the atlas already reviews the same system.</strong> It is the
 A-MEM paper's (<a
