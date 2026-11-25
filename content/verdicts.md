@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 871 reports.**
+**This page covers all 872 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8033,3 +8033,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 65,459 lines of Python under `sgme/` and 89,070 of tests, in 988 commits between 14 August and 20 November 2026, 969 under one name; 4,312 Python test functions in `tests/` and 618 under `adapters/`, run by CI, none run here; design documents gitignored. Three marks: `trust_state`, `audit_log`, `negative_eval`.
 - Study when: you want a single-user profile injected at session start without a model call, or a deletion flow that admits what it leaves behind.
 - Do not copy when: a correction has to survive the next extraction, or the agents writing memory must not be the ones approving it.
+
+### [`mebular`](../systems/mebular/)
+- Best idea: **close the window, keep the fact.** A correction ends the old fact's `validTo` at the new fact's `validFrom`, records `supersededAt` from the clock and links the two; default reads drop the closed fact and `includeHistory` returns it, with a populated test for both, and a backfilled fact dated before the current value is not allowed to supersede it.
+- Second idea: every graph mutation is an Ed25519-signed event whose id is the hash of its canonical payload, and sync accepts a relayed event only when its certificate chains to the user's master key, quarantining a revoked author on the inbound side.
+- Biggest risk: **deletion hides and nothing removes.** `deleteNode` keeps `content` beside `deletedAt`, the creation and update events keep it on every device that synced them, and transcript chunks with a 7 to 365 day retention class expire the same way. The capability's dedupe index skips tombstones, so the next extraction of a deleted value stores it live again, while an exact revert to a superseded value is returned as a duplicate and the current value stays.
+- Second risk: isolation rests on assertions. The capability takes the actor from the request body and the sidecar takes `agentId` from the host under one shared token; an explicit domain list reaches any known domain; the 13 public MCP tools read every namespace by default with HTTP auth `none` on loopback. Between devices any admitted device may write or delete in any namespace, inbound events are not namespace-filtered, and the node inside an event is stored without comparing its `createdBy` and `namespace` to the signed envelope.
+- Most reusable component: `src/eventlog/EventLog.ts` with `src/sync/trust.ts:23-44`, and the supersede rules in `src/memory/MemoryService.ts:1622-1663` with `packages/memory-runtime/src/sidecar/ingest.ts:1500-1512`.
+- Maturity impression: MIT; 1,212 commits from April 2023, 1,106 of them from August 2026 on, under two names of one author plus an opencode identity and dependabot; about 3,300 Jest cases and 94 Python tests with 26 CI verify scripts, none run here; the project's `LIMITATIONS.md` states the trust boundary and the unauthenticated agent id plainly. Four marks: `bitemporal`, `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you want one person's memory replicated across devices without a server, and want signed, content-addressed events and validity-window correction to copy.
+- Do not copy when: memory must be isolated between agents or people, erased on request, or approved by a person before it is used.

@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 871 reports.</strong></p>
+<p><strong>This page covers all 872 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35899,6 +35899,55 @@ without a model call, or a deletion flow that admits what it leaves
 behind.</li>
 <li>Do not copy when: a correction has to survive the next extraction,
 or the agents writing memory must not be the ones approving it.</li>
+</ul>
+<h3 id="mebular"><a
+href="../systems/mebular/"><code>mebular</code></a></h3>
+<ul>
+<li>Best idea: <strong>close the window, keep the fact.</strong> A
+correction ends the old fact's <code>validTo</code> at the new fact's
+<code>validFrom</code>, records <code>supersededAt</code> from the clock
+and links the two; default reads drop the closed fact and
+<code>includeHistory</code> returns it, with a populated test for both,
+and a backfilled fact dated before the current value is not allowed to
+supersede it.</li>
+<li>Second idea: every graph mutation is an Ed25519-signed event whose
+id is the hash of its canonical payload, and sync accepts a relayed
+event only when its certificate chains to the user's master key,
+quarantining a revoked author on the inbound side.</li>
+<li>Biggest risk: <strong>deletion hides and nothing removes.</strong>
+<code>deleteNode</code> keeps <code>content</code> beside
+<code>deletedAt</code>, the creation and update events keep it on every
+device that synced them, and transcript chunks with a 7 to 365 day
+retention class expire the same way. The capability's dedupe index skips
+tombstones, so the next extraction of a deleted value stores it live
+again, while an exact revert to a superseded value is returned as a
+duplicate and the current value stays.</li>
+<li>Second risk: isolation rests on assertions. The capability takes the
+actor from the request body and the sidecar takes <code>agentId</code>
+from the host under one shared token; an explicit domain list reaches
+any known domain; the 13 public MCP tools read every namespace by
+default with HTTP auth <code>none</code> on loopback. Between devices
+any admitted device may write or delete in any namespace, inbound events
+are not namespace-filtered, and the node inside an event is stored
+without comparing its <code>createdBy</code> and <code>namespace</code>
+to the signed envelope.</li>
+<li>Most reusable component: <code>src/eventlog/EventLog.ts</code> with
+<code>src/sync/trust.ts:23-44</code>, and the supersede rules in
+<code>src/memory/MemoryService.ts:1622-1663</code> with
+<code>packages/memory-runtime/src/sidecar/ingest.ts:1500-1512</code>.</li>
+<li>Maturity impression: MIT; 1,212 commits from April 2023, 1,106 of
+them from August 2026 on, under two names of one author plus an opencode
+identity and dependabot; about 3,300 Jest cases and 94 Python tests with
+26 CI verify scripts, none run here; the project's
+<code>LIMITATIONS.md</code> states the trust boundary and the
+unauthenticated agent id plainly. Four marks: <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</li>
+<li>Study when: you want one person's memory replicated across devices
+without a server, and want signed, content-addressed events and
+validity-window correction to copy.</li>
+<li>Do not copy when: memory must be isolated between agents or people,
+erased on request, or approved by a person before it is used.</li>
 </ul>
         </article>
       </div>

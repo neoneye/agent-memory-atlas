@@ -659,6 +659,21 @@ written in November and dated 1 April therefore changes what an as-of
 read for 2 April returns, which is the answer a record clock exists to
 keep fixed. Forget alone is stamped after every existing event, so a
 retraction cannot be backdated.</p>
+<p><a href="../../systems/mebular/">Mebular</a> closes a fact's validity
+window on correction and keeps the record clock beside it.
+<code>validFrom</code> and <code>validTo</code> come from the writer —
+its model extraction schemas ask for both — while <code>createdAt</code>
+and <code>updatedAt</code> are stamped; a superseding fact sets the old
+one's <code>validTo</code> to its own <code>validFrom</code> and records
+<code>supersededAt</code> from the clock, and the runtime will not let a
+fact dated before the current value supersede it
+(<code>src/memory/MemoryService.ts:1622-1663</code>,
+<code>packages/memory-runtime/src/sidecar/ingest.ts:1506-1508</code>).
+Every read filters on the window at now and none asks about a past
+instant, <code>deleteNode</code> writes the deletion time into
+<code>validTo</code>, and an exact revert to a superseded value is
+absorbed as a duplicate by the content-hash dedupe, so the current value
+stays.</p>
 <p><a href="../../systems/oneself/">OneSelf</a> has a validity end and
 no reader for it. A fact in a page's <code>## Facts</code> fence may
 carry <code>valid_until</code> as a calendar date; the parser checks the

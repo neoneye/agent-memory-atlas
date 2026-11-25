@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local daemon that keeps all of a
+user's agents' memory and tasks in one signed event graph, synced
+directly between paired devices over libp2p.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mebular — Agent Memory Atlas">
+    <meta property="og:description" content="A local daemon that keeps
+all of a user's agents' memory and tasks in one signed event graph,
+synced directly between paired devices over libp2p.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mebular — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local daemon that keeps
+all of a user's agents' memory and tasks in one signed event graph,
+synced directly between paired devices over libp2p.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mebular — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mebular",
+      "description": "A local daemon that keeps all of a user's agents' memory and tasks in one signed event graph, synced directly between paired devices over libp2p.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One signed event graph for every agent and
+device, synced peer to peer</p>
+          <h1>Mebular</h1>
+          <p class="document-deck">A local daemon that keeps all of a
+user's agents' memory and tasks in one signed event graph, synced
+directly between paired devices over libp2p.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Windsander/Mebular">
+              <span>Source</span>
+              <strong>Windsander/Mebular</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Windsander/Mebular/commit/8dfb82bf5f310a74e568868bb7bf7237907099bd" title="8dfb82bf5f310a74e568868bb7bf7237907099bd">
+              <span>Analyzed revision</span>
+              <code>8dfb82bf…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Windsander--Mebular" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Windsander--Mebular</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE and in every package manifest; THIRD-PARTY.md registers the
+runtime dependencies and one vendored Apache-2.0 agent
+skill</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>21,432
+lines of TypeScript in src/ (graph, event log, sync, P2P, crypto);
+29,924 lines of JavaScript in packages/mcp/src (daemon, MCP tools,
+capability API); 32,748 in packages/memory-runtime/src (the optional
+sidecar); 17,702 in packages/fleet/src (the task graph); plus a console,
+an Electron shell and two host plugins</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,212
+commits from 23 April 2023 to 25 November 2026, 1,106 of them from
+August 2026 on; 1,170 under two names of Sobert Li (Windsander), 29 from
+an opencode identity, 13 from dependabot; 35 tags, the latest v0.3.5 on
+19 November 2026, 12 commits before the pin</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>About
+3,300 Jest cases in 317 test files by a count of it and test calls, plus
+94 Python test functions for the Hermes plugin; ci.yml runs the core and
+sidecar suites with coverage and 26 verify scripts on Node 24; none run
+for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mebular (忆云 in the Chinese docs) is a local daemon that keeps one
+graph of memory and tasks for all of a person's AI assistants,
+replicated directly between that person's devices. Every change to the
+graph is an Ed25519-signed, content-addressed event, and paired devices
+exchange missing events over libp2p with no server between them. What is
+notable is the event discipline: a correction closes the old fact's
+validity window rather than overwriting it, sync verifies each event's
+certificate chain to the user's master key, and a populated test keeps
+the superseded fact out of default recall. What is weak is removal and
+isolation. Deleting a memory, or letting a transcript chunk expire,
+hides it from reads and leaves its text in the node and in the creation
+event on every device that received it, and the agent identity that
+partitions memory is the caller's own assertion.</p>
+<p>There are two memory surfaces over one store. The 13 public MCP
+memory tools write and read the whole graph; the namespace on a record
+is optional on both sides and every read spans all namespaces unless the
+model names one. The optional memory runtime, off by default, is a
+loopback sidecar that a host plugin calls each turn: it extracts
+candidates, routes them to a domain such as <code>user</code> or
+<code>agent:opencode</code>, and recalls through a capability API that
+filters on the domains a per-agent policy allows.</p>
+<p>"Decentralized" holds for transport and storage and not for
+authority. Devices sync peer to peer, and a device's writes are accepted
+when its certificate chains to one user master key. Inside that trust
+boundary every admitted device may write, update or delete any memory in
+any namespace. The project's own <code>LIMITATIONS.md</code> states the
+boundary in as many words.</p>
+<p><strong>Licence.</strong> MIT in <code>LICENSE</code>, in both plugin
+packages and in every package manifest. Nothing in the tree restricts
+use. <code>THIRD-PARTY.md</code> registers each runtime dependency's
+licence and the one vendored Apache-2.0 skill.</p>
+<p>Four marks are earned: <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>. Section 9 gives the reason for each of the
+three withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a typed graph node: an entity, a fact triple, an episode
+(observations are episodes), a skill or a meta node
+(<code>src/memory/types.ts:10-78</code>). It is believed from the moment
+it is written. No state gates it, and nothing re-reads it later to
+decide whether it still holds.</p>
+<p>A fact stops being current in three ways, and only one of them is
+about truth:</p>
+<ul>
+<li><strong>Superseded.</strong> A new fact with the same subject and
+predicate and a different object names the old one in
+<code>supersedes</code>. The old fact's <code>validTo</code> is set to
+the new fact's <code>validFrom</code>, <code>supersededBy</code> and
+<code>supersededAt</code> go into its metadata, and a
+<code>supersedes</code> edge links them
+(<code>src/memory/MemoryService.ts:1622-1663</code>). It stays in the
+graph and leaves default recall. The runtime finds the old fact itself
+when one agent restates a single-valued key
+(<code>packages/memory-runtime/src/sidecar/ingest.ts:1500-1512</code>).</li>
+<li><strong>Archived.</strong> <code>metadata.archivedAt</code>,
+reversible, out of default recall
+(<code>src/memory/MemoryService.ts:810-833</code>).</li>
+<li><strong>Deleted.</strong> <code>deletedAt</code>,
+<code>deletedBy</code> and <code>validTo</code> set to the deletion time
+on the same node (<code>src/core/GraphStore.ts:165-196</code>). The
+content stays.</li>
+</ul>
+<p>Between devices, a concurrent edit is settled by rule: a delete beats
+an update, a later <code>validFrom</code> beats an earlier one, then the
+later <code>updatedAt</code>, then the larger device id
+(<code>src/sync/apply.ts:84-98</code>). The losing version remains in
+the event log and leaves the graph. No conflict is recorded or shown to
+anyone. The <code>conflicts_with</code> and
+<code>conflict_resolved</code> edge types are declared
+(<code>src/memory/types.ts:140</code>, <code>:147</code>) and nothing
+creates them.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three writers reach one graph; the runtime path dedupes by content hash and supersedes a same-key fact; default recall hides deleted, archived and closed facts; delete keeps the text, and a re-extracted deleted value is stored again</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three writers reach one graph; the runtime path dedupes by content hash and supersedes a same-key fact; default recall hides deleted, archived and closed facts; delete keeps the text, and a re-extracted deleted value is stored again
+flowchart TD
+    M[&quot;Public MCP memory_write&lt;br/&gt;namespace from the model&quot;]
+    R[&quot;Runtime ingest&lt;br/&gt;regex or model candidates&quot;]
+    P[&quot;Paired device&lt;br/&gt;signed event over sync&quot;]
+    R --&gt; G[&quot;Capability write&lt;br/&gt;domain gate on a&lt;br/&gt;self-declared agentId&quot;]
+    G --&gt; H{&quot;Same content hash&lt;br/&gt;live in this domain?&quot;}
+    H --&gt;|yes| DUP[&quot;Duplicate: returns the&lt;br/&gt;existing record, even&lt;br/&gt;a superseded one&quot;]
+    H --&gt;|no| N
+    M --&gt; N[(&quot;Node + signed event&lt;br/&gt;believed at once&quot;)]
+    P --&gt; V[&quot;Chain to user key checked&lt;br/&gt;revoked author dropped&lt;br/&gt;any namespace accepted&quot;]
+    V --&gt; N
+    N --&gt; S[&quot;Same subject and&lt;br/&gt;predicate, new object:&lt;br/&gt;old window closed at&lt;br/&gt;the new validFrom&quot;]
+    N --&gt; Q[&quot;Default recall drops&lt;br/&gt;deleted, archived and&lt;br/&gt;closed facts&quot;]
+    N --&gt; X[&quot;memory_delete or expiry:&lt;br/&gt;deletedAt set, text kept&lt;br/&gt;in node and event&quot;]
+    S --&gt; O[&quot;Old fact kept&lt;br/&gt;for includeHistory&quot;]
+    Q --&gt; D1[&quot;Runtime: domains from&lt;br/&gt;agentId and policy&quot;]
+    D1 ~~~ D2[&quot;Public MCP: namespace&lt;br/&gt;optional, default all&quot;]
+    X -.-&gt; RE[&quot;Same text extracted again:&lt;br/&gt;tombstones skip dedupe,&lt;br/&gt;stored live once more&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One process per machine, <code>mebular serve</code>, holds the
+identity, the store, the network and the sync loop. The console, the
+Electron app, the CLI and every MCP client are clients of it
+(<code>docs/architecture/ARCHITECT.md</code>, sections 1-2). The daemon
+is <code>packages/mcp/src/serve.mjs</code>; the domain code is
+<code>src/</code> and is published as <code>@mebular/core</code>.</p>
+<ul>
+<li><strong>Store.</strong> A <code>StorageAdapter</code> with nodes,
+edges and events (<code>src/storage/StorageAdapter.ts:8-29</code>). The
+default is a JSONL operation log replayed into memory at start
+(<code>src/storage/JsonFileStorage.ts:59-122</code>); SQLite through
+<code>node:sqlite</code> needs Node 22.5. At-rest encryption wraps each
+line in an <code>enc:v1:</code> envelope and is off unless configured
+(<code>packages/mcp/src/config-schema.mjs:620</code>).</li>
+<li><strong>Event log and graph.</strong> <code>GraphStore</code> writes
+the node and appends the event
+(<code>src/core/GraphStore.ts:34-77</code>); <code>EventLog</code> signs
+with the device key (<code>src/eventlog/EventLog.ts:62-89</code>).</li>
+<li><strong>Sync.</strong> <code>SyncManager</code> exchanges missing
+events per namespace with vector clocks, or a snapshot for a peer with
+nothing (<code>src/sync/syncmgr/SyncManager.ts</code>). libp2p with
+Noise and yamux, circuit relay and hole punching are optional
+dependencies; LAN discovery uses <code>bonjour</code>.</li>
+<li><strong>Trust.</strong> A user master key on the first device signs
+device certificates; invited devices get delegated certificates.
+Subscriptions, removals and the security tier are events in a
+<code>__policy__</code> namespace, accepted only when they chain to the
+master key (<code>src/sync/grantPolicy.ts:1307-1330</code>).</li>
+<li><strong>Memory runtime.</strong> A separate sidecar process,
+<code>@mebular/memory-runtime</code>, bound to loopback and guarded by
+one host token
+(<code>packages/memory-runtime/src/sidecar/server.ts:799-811</code>). It
+reaches the graph only through the daemon's capability API at
+<code>/internal/memory/v1</code>, which needs a second token
+(<code>packages/mcp/src/memory-capability.mjs:1-24</code>). It can
+install and run a local Qwen model through llama.cpp for
+extraction.</li>
+<li><strong>Fleet.</strong> Tasks, plans, messages and capability cards
+are nodes in the same graph written through
+<code>packages/fleet/src/store/*</code>. That is coordination, not
+memory, and no mark below rests on it.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>npm install -g @mebular/core</code> then
+<code>mebular serve</code> starts the daemon and the console; the
+desktop builds are unsigned Electron packages. Nothing has to run beside
+it: no database server, no API key, no network unless sync is enabled.
+Semantic recall needs <code>@huggingface/transformers</code> installed
+by hand, and falls back to substring matching without it. The store is a
+plaintext JSONL file by default, readable and greppable. A corrupt final
+line is skipped at start; a corrupt line anywhere else stops the store
+from opening (<code>src/storage/JsonFileStorage.ts:89-101</code>). Each
+device that joins needs an invite token or QR code from an admitted
+one.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Public MCP tools.</strong>
+<code>packages/mcp/src/tools.mjs</code>: input schema
+<code>:69-86</code>, the optional namespace filter <code>:88-89</code>,
+<code>memory_write</code> <code>:98-110</code>,
+<code>memory_query</code> <code>:126-163</code>,
+<code>memory_delete</code> and <code>memory_archive</code>
+<code>:335-360</code>, scopes per tool <code>:19-34</code>. Registered
+on stdio and HTTP alike (<code>:386-400</code>).</li>
+<li><strong>Memory service.</strong>
+<code>src/memory/MemoryService.ts</code>: <code>writeOne</code>
+<code>:1319-1400</code>, <code>writeRecord</code>
+<code>:1402-1519</code>, <code>query</code> <code>:519-576</code>,
+<code>search</code> <code>:578-635</code>, <code>delete</code>
+<code>:781-802</code>, <code>archive</code> <code>:810-833</code>,
+<code>updateRecord</code> <code>:1545-1616</code>,
+<code>supersedeRecords</code> <code>:1622-1663</code>,
+<code>isCurrentlyValidFact</code> <code>:2159-2164</code>.</li>
+<li><strong>Graph and events.</strong>
+<code>src/core/GraphStore.ts</code> (<code>createNode</code>
+<code>:34-77</code>, <code>updateNode</code> <code>:79-115</code>,
+<code>updateNodeValidity</code> <code>:125-163</code>,
+<code>deleteNode</code> <code>:165-196</code>);
+<code>src/eventlog/EventLog.ts</code> (<code>append</code>
+<code>:62-89</code>, <code>appendRemote</code> <code>:96-105</code>,
+<code>verifyEvent</code> <code>:126-161</code>).</li>
+<li><strong>Capability API.</strong>
+<code>packages/mcp/src/memory-capability.mjs</code>: write gate
+<code>assertDomainWrite</code> <code>:512-553</code>, governance
+<code>:556-581</code>, actor parsing <code>:1080-1109</code>, default
+domains <code>:1196-1206</code>, <code>resolveDomains</code>
+<code>:1263-1308</code>, dedupe index <code>:800-815</code>, write
+validation <code>:2712-2810</code>, write and supersede
+<code>:2855-2970</code>, query route <code>:4904-4949</code>.</li>
+<li><strong>Runtime.</strong>
+<code>packages/memory-runtime/src/sidecar/</code>:
+<code>ingest.ts</code> (staging, candidates, auto-supersede
+<code>:1455-1512</code>), <code>heuristic.ts</code>,
+<code>candidates.ts</code> (routing <code>:401-465</code>, write item
+<code>:632-644</code>), <code>recall.ts</code> (domain resolution
+<code>:2501-2550</code>, candidate fan-out <code>:2556-2676</code>),
+<code>intervention.ts</code>, <code>domains.ts</code> (policy
+<code>:110-116</code>, <code>:206-214</code>).</li>
+<li><strong>Sync.</strong> <code>src/sync/syncmgr/SyncManager.ts</code>:
+inbound <code>applyOffer</code> <code>:1589-1666</code>,
+<code>verifyEventTrust</code> <code>:1676-1685</code>, outbound filter
+<code>filterEventsForAllow</code> <code>:1461-1466</code>, snapshot
+<code>:1695-1756</code>; <code>src/sync/apply.ts</code> for conflict
+rules; <code>src/sync/trust.ts:23-44</code> for the chain check.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>BaseNode</code> carries <code>id</code> (a ULID),
+<code>type</code>, <code>createdBy</code> and <code>updatedBy</code>
+(device ids), <code>createdAt</code>, <code>updatedAt</code>,
+<code>deletedAt</code>, <code>deletedBy</code>, <code>validFrom</code>,
+<code>validTo</code>, <code>tags</code>, <code>labels</code>,
+<code>metadata</code> and <code>namespace</code>
+(<code>src/types/node.ts:3-26</code>). <code>content</code> holds the
+typed payload. A fact is
+<code>{subject, predicate, object, confidence?, source?}</code>;
+<code>memory_write</code> stores a plain note as
+<code>{subject: 'user', predicate: 'note', object: &lt;text&gt;}</code>
+(<code>src/memory/MemoryService.ts:1329-1340</code>).</p>
+<p>The namespace is the only scope key. <code>normalizeNamespace</code>
+maps a missing or blank value to <code>default</code> and accepts any
+other string (<code>src/core/namespace.ts:20-24</code>). The capability
+layer gives some names meaning: <code>user</code>, <code>default</code>,
+<code>shared</code>, <code>system</code>, <code>agent:&lt;id&gt;</code>
+and <code>task:&lt;thread&gt;</code>, with owner derived from the name
+(<code>packages/mcp/src/memory-capability.mjs:267-290</code>). Names
+starting <code>__</code> are internal.</p>
+<p>Writes through the capability carry <code>metadata.provenance</code>:
+source, writer type and id, extractor, model, device, host, thread,
+agent name, confirmation and time
+(<code>packages/mcp/src/memory-capability.mjs:471-503</code>). The
+public MCP path writes none of it; its only record of who wrote is the
+device id in <code>createdBy</code>.</p>
+<p>Detail records are verbatim chunks of conversation, tool output or
+document linked to the records extracted from them, with a retention
+class of 30, 7 or 90 days, extendable to 365 for conversation, or pinned
+(<code>src/memory/detail.ts:53-62</code>). Expiry and record deletion
+tombstone them the same way a memory is deleted
+(<code>src/memory/MemoryService.ts:2054-2062</code>).</p>
+<p>Every mutation is also an event:
+<code>{id: sha256 of the canonical payload, type, timestamp, vectorClock, data, author, signature, namespace}</code>,
+plus the author's certificate chain outside the signed payload
+(<code>src/types/event.ts:16-40</code>). <code>node_created</code>
+carries the whole node; <code>node_updated</code> carries the whole new
+version; <code>node_deleted</code> carries the id and time
+(<code>src/core/GraphStore.ts:66-70</code>, <code>:104-108</code>,
+<code>:185-189</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Keyword.</strong> <code>MemoryStore.search</code> lowercases
+the query and keeps nodes whose text contains it as a substring
+(<code>src/memory/MemoryStore.ts:365-390</code>). No tokenisation or
+ranking; results come in type order.</p>
+<p><strong>Vector.</strong> With an embedding provider configured,
+<code>query</code> asks the in-memory index for up to 200 hits, drops
+deleted, archived and internal nodes, then filters type and namespace,
+and falls back to the keyword path if nothing survives
+(<code>src/memory/MemoryService.ts:527-542</code>,
+<code>src/memory/MemoryStore.ts:406-432</code>). The namespace filter
+runs after the top-k, so in a store dominated by other domains a scoped
+query can come back from the keyword fallback rather than the vector
+arm.</p>
+<p><strong>Filters.</strong> Every read drops deleted, archived and
+internal nodes by default, and drops a fact whose window does not
+contain now unless <code>includeHistory</code> is set
+(<code>src/memory/MemoryService.ts:558-563</code>). Episodes keep their
+window as an occurrence time and are not filtered on it
+(<code>:2155-2164</code>).</p>
+<p><strong>Runtime recall.</strong> For each turn the sidecar extracts a
+cue, resolves the readable domains, and calls the capability's query,
+search, history, profile, skills and compact routes in parallel
+(<code>packages/memory-runtime/src/sidecar/recall.ts:2556-2676</code>).
+It scores and groups fragments, flags conflicts, and an intervention
+policy decides whether to inject nothing, a gist, a detail or a quote.
+The context block has a fixed order and a byte and token budget, escapes
+tags in memory text and marks it as untrusted data
+(<code>recall.ts:1-18</code>). Explicit confirmation raises a record's
+confidence to at least 0.88 (<code>recall.ts:936-937</code>); it filters
+nothing.</p>
+<p><strong>Public MCP.</strong> <code>memory_query</code> and
+<code>memory_search</code> read every namespace unless the model passes
+<code>filters.namespace</code>
+(<code>packages/mcp/src/tools.mjs:88-89</code>, <code>:126-198</code>).
+<code>memory_graph</code> traverses from a node id to depth five.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Public tool.</strong> <code>memory_write</code> takes up to
+100 items of type fact, episode, skill, preference or observation, with
+optional tags, related ids, an expiry and a namespace
+(<code>packages/mcp/src/tools.mjs:69-86</code>). The tool description
+asks the model to search before writing. There is no deduplication on
+this path. An <code>expiresAt</code> becomes <code>validTo</code>, and
+<code>validFrom</code> is then set to the write time
+(<code>src/memory/MemoryService.ts:1320-1325</code>).</p>
+<p><strong>Runtime ingest.</strong> A host plugin posts the turn's
+chunks to the sidecar. With host or model candidates it validates and
+routes them; without, a regex extractor takes explicit preferences,
+facts and decisions from user chunks only and stamps them
+<code>confirmation: 'explicit'</code>
+(<code>packages/memory-runtime/src/sidecar/heuristic.ts:1-31</code>,
+<code>:60</code>, <code>:81</code>). The sidecar checks the agent's
+write policy; a user-domain candidate without explicit confirmation is
+moved to the agent's own domain (<code>candidates.ts:401-465</code>).
+The capability then checks the same matrix, derives the owner, writes
+provenance, and deduplicates on client item id or a content hash of kind
+and content within the domain
+(<code>packages/mcp/src/memory-capability.mjs:783-815</code>,
+<code>:2900-2930</code>). Raw chunks wait in a local staging directory
+until settled, and failed capability writes go to a bounded outbox that
+is replayed.</p>
+<p><strong>Model extraction.</strong> The sidecar's inference schema and
+the DSH plugin's extraction prompt both allow <code>validFrom</code> and
+<code>validTo</code> on a fact
+(<code>packages/memory-runtime/src/sidecar/inference-provider.ts:348-356</code>,
+<code>packages/dsh-plugin/memory-runtime.js:3925</code>). The prompt
+tells the model the transcript is data, not instructions.</p>
+<p><strong>Correction.</strong> When a candidate restates a subject and
+predicate that the agent wrote with a different object, ingest attaches
+<code>supersedes</code>; a candidate whose <code>validFrom</code> is
+earlier than the current value's does not supersede it
+(<code>ingest.ts:1506-1508</code>). Facts the agent did not write are
+left alone, and several current values for one key are not superseded
+automatically.</p>
+<p><strong>Writes from other devices</strong> arrive as events and are
+applied by the conflict rules in section 2.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write blocks on one append to the JSONL file per node, one per
+event and one per edge, and on embedding the node when semantic recall
+is on; there is no model call on the public path. The runtime's model
+extraction, when enabled, runs in the sidecar against the turn. A memory
+is readable as soon as the call returns, and on another device after the
+next push-on-write or anti-entropy exchange. No background pass rewrites
+memories. The dedupe index on the capability path is rebuilt by listing
+every node on each write call
+(<code>memory-capability.mjs:800-815</code>), which grows with the
+store.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Thirteen memory tools and sixteen task tools are registered from one
+table on stdio (<code>mebular mcp</code>) and on the daemon's
+<code>/mcp</code> HTTP endpoint
+(<code>packages/mcp/src/tools.mjs:363-400</code>).
+<code>mebular print-config</code> and the skill installer write MCP
+entries for OpenCode, Claude, Cursor, DSH and others
+(<code>packages/skill/mcp/</code>). The model decides when to save and
+search; the skill text says when.</p>
+<p>Over HTTP, <code>auth</code> defaults to <code>none</code>, allowed
+only on loopback
+(<code>packages/mcp/src/config-schema.mjs:127-130</code>,
+<code>:386-388</code>). With <code>none</code>,
+<code>authenticate</code> returns success before reading any scope
+(<code>packages/mcp/src/serve.mjs:1740-1741</code>), so
+<code>memory_delete</code>'s <code>memory.admin</code> scope applies
+only when bearer or OAuth is configured.</p>
+<p>With the runtime enabled, the DSH and OpenCode plugins call the
+sidecar's recall before a turn and ingest after it, and a Hermes memory
+provider in Python calls the same sidecar routes and exposes no tools
+(<code>integrations/hermes/mebular-memory/__init__.py:1-30</code>).
+Recall is automatic for those hosts and tool-mediated for everyone
+else.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="deletion-hides-it-does-not-remove">Deletion hides; it does not
+remove</h3>
+<p><code>deleteNode</code> spreads the existing node into the tombstone,
+so <code>content</code> survives beside <code>deletedAt</code>
+(<code>src/core/GraphStore.ts:171-178</code>). The text also sits in the
+<code>node_created</code> event, and in every <code>node_updated</code>
+event, on every device that synced it. The tool description says peers'
+copies cannot be recalled; it does not say the local copy keeps the
+text. Detail expiry calls the same path
+(<code>src/memory/MemoryService.ts:2054-2062</code>), so a 30-day
+retention class on a verbatim transcript chunk removes it from reads and
+keeps it on disk. The only physical removal is the namespace hand-off,
+which drops all of a namespace's events, nodes and edges from one device
+after a successor has them (<code>src/mebular.ts:1127-1137</code>).</p>
+<h3 id="a-deleted-value-comes-back-a-reverted-value-does-not">A deleted
+value comes back; a reverted value does not</h3>
+<p>The capability's dedupe index skips tombstones
+(<code>packages/mcp/src/memory-capability.mjs:803-804</code>), so the
+next extraction of a deleted fact writes it as a new live record.
+Superseded facts are not tombstones and stay in the index. A user who
+changes a value back — 7332, then 7331, then 7332 — produces a candidate
+whose content hash matches the superseded 7332 record. The write returns
+<code>duplicate</code> with that record, and the supersede it carries is
+computed with the old record's <code>validFrom</code>, which is earlier
+than 7331's, so <code>supersedeRecords</code> skips it
+(<code>:2900-2915</code>,
+<code>src/memory/MemoryService.ts:1640-1644</code>). 7331 stays current.
+This follows from the code and was not run; the supersede tests cover a
+correction and its replay, not a revert.</p>
+<h3 id="agent-identity-is-a-label">Agent identity is a label</h3>
+<p>The capability takes <code>actor</code> from the request body and the
+sidecar takes <code>agentId</code> from the host, under one host token
+shared by every host
+(<code>packages/mcp/src/memory-capability.mjs:1080-1109</code>,
+<code>packages/memory-runtime/src/sidecar/server.ts:804-810</code>). The
+write matrix and the read policy are real and tested, and they bind
+whoever names the agent. <code>LIMITATIONS.md:29</code> says so: agentId
+is a logical assertion for partitioning, not an authenticated principal.
+The <code>user</code> domain gate asks for
+<code>confirmation: 'explicit'</code>, which the caller supplies and the
+regex extractor stamps on every match.</p>
+<h3 id="what-a-device-can-do-to-the-others">What a device can do to the
+others</h3>
+<p>A paired device's events are accepted when their signature verifies
+against the direct peer's key or a certificate chain to the user master
+key (<code>src/sync/syncmgr/SyncManager.ts:1676-1685</code>,
+<code>src/sync/trust.ts:23-44</code>), and events from a revoked author
+are neither stored nor applied (<code>:1621-1624</code>). Beyond
+that:</p>
+<ul>
+<li>Inbound events are not checked against any namespace. The allow list
+of trust, local subscription and peer subscription trims what a device
+sends (<code>:1461-1466</code>); <code>applyOffer</code> applies what it
+receives in any namespace.</li>
+<li>The node inside a <code>node_created</code> or
+<code>node_updated</code> event is stored as sent. Its
+<code>createdBy</code> and <code>namespace</code> are not compared with
+the event's signed <code>author</code> and <code>namespace</code>
+(<code>src/sync/apply.ts:126-193</code>); those two fields are used only
+to build placeholder tombstones (<code>:448-485</code>).</li>
+<li>A first sync to an empty device ships a snapshot of nodes and edges,
+applied without per-event verification and without their events
+(<code>SyncManager.ts:1724-1756</code>).</li>
+<li>Concurrent edits are settled by <code>updatedAt</code>, the writing
+device's wall clock, after the delete and <code>validFrom</code> rules
+(<code>src/sync/apply.ts:66-98</code>).</li>
+</ul>
+<p>These sit inside the boundary the project documents: any admitted
+device is trusted with every namespace
+(<code>docs/limitations/LIMITATIONS.md:3-5</code>). What the signatures
+establish is which device wrote an event, not that the write was within
+its remit.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>bitemporal</code> — earned.</strong> A fact's
+<code>validFrom</code> and <code>validTo</code> are stated by the writer
+and kept apart from <code>createdAt</code>, <code>updatedAt</code> and
+<code>supersededAt</code>; the model extraction paths produce them, a
+correction ends the old window at the new fact's start while recording
+when it was corrected, and reads filter on the window. No read asks what
+was valid at a past instant, <code>deleteNode</code> writes the deletion
+time into <code>validTo</code>, and the public <code>memory_write</code>
+stamps <code>validFrom</code> with the write time.</li>
+<li><strong><code>scope_enforced</code> — earned.</strong> The namespace
+on each node is applied as a filter on every arm of the capability and
+runtime reads, with defaults derived from the actor and a per-agent
+policy. The actor is asserted, the capability lets an explicit domain
+list reach any known domain, and the public MCP tools apply no namespace
+unless the model asks.</li>
+<li><strong><code>audit_log</code> — earned.</strong> The event log
+records every graph mutation, signed and content-addressed, append-only
+on the JSONL store and kept by compaction. Its author is a device, not
+an agent; snapshot-adopted nodes have no events on the receiving device;
+no route exposes the history of a memory.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Populated
+tests require another agent's episode to be absent from a default query
+and from search relations, and a superseded fact to be absent from a
+default query, each with a positive control.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Deletion is
+keyed on the record, and the dedupe index skips tombstones, so a
+re-extracted deleted value is stored again. The content-hash match
+against a superseded record is an idempotency key: it swallows a
+deliberate revert the same way.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No status
+field. <code>confirmation</code> is writer-supplied, routes user-domain
+writes and raises a score; archive is a reversible visibility flag with
+no claim about truth.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Every write
+takes effect at once. The console lists, archives and deletes after the
+fact, and the security approvals route handles device removal,
+admission, subscription and tier, not memories.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading.</p>
+<p>The suites are large and aimed at the protocol.
+<code>tests/sync/</code> holds 33 files on trust chains, revocation,
+snapshots, namespace watermarks, fault injection and retention.
+<code>TrustChain.test.ts</code> rejects relayed events with tampered
+content, a certificate that does not match the author, a foreign master
+key, or no master key configured
+(<code>tests/sync/TrustChain.test.ts:144-210</code>).
+<code>tests/eventlog/EventLog.test.ts:26-80</code> covers content
+addressing and signature failure.</p>
+<p>The memory-specific cases that matter here run against a real
+<code>MemoryService</code> behind the capability HTTP server:</p>
+<ul>
+<li><code>memory-capability-http.test.mjs:385-405</code> requires the
+default query for <code>alpha</code> as <code>opencode</code> to return
+exactly the user episode, while a Hermes episode containing
+<code>alpha</code> is in the store; <code>:407-422</code> reads it back
+with an explicit domain, so the fixture is populated.
+<code>:508-523</code> requires the Hermes episode and its relation to be
+absent from a search that returns the user and task episodes.</li>
+<li><code>memory-capability-write.test.mjs:1248-1327</code> corrects
+7332 to 7331 and requires the old fact absent from a default query,
+present with its closed window under <code>includeHistory</code>, and
+the new fact present.</li>
+<li><code>acceptance-security.test.ts:301-391</code> in the sidecar
+refuses a cross-agent read before any capability call and refuses writes
+to another agent's domain and to <code>system</code>; it runs against a
+fake capability.</li>
+</ul>
+<p>The sidecar's recall-quality matrix computes precision, detail
+correctness and false recall over a fixture against a fake capability
+with lexical filtering, and prints them
+(<code>packages/memory-runtime/tests/sidecar/acceptance-recall-quality.test.ts:1-8</code>).
+<code>LIMITATIONS.md:46-61</code> lists recall@k, omission rate and a
+real-model prompt-injection test as not part of the evidence for v0.3.2.
+<code>docs/quality/</code> holds the project's own acceptance and
+model-smoke reports, read as claims.</p>
+<p>No test deletes a memory and then extracts the same text again,
+writes a value back after a correction, or syncs an event whose inner
+node names a different namespace or author from the signed envelope.
+There is no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Close the window, keep the fact.</strong> A correction that
+sets the old fact's <code>validTo</code> to the new fact's
+<code>validFrom</code>, records when it was corrected, and hides it from
+default reads while <code>includeHistory</code> still returns it.</li>
+<li><strong>Refuse a backfill that would supersede the present.</strong>
+A fact dated earlier than the current value must not replace it,
+whatever order the writes came in.</li>
+<li><strong>Sign the event, address it by content.</strong> An event id
+that is the hash of its canonical payload makes replay idempotent and
+tampering visible, and a revoked author can be quarantined on the
+inbound side by id.</li>
+<li><strong>Mark memory text as untrusted in the injected
+block.</strong> Escape tags, label the block as data, and let the recall
+policy choose silence.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A delete that keeps the text.</strong> If the content lives
+in the materialised row and in an immutable event, a tombstone flag is a
+visibility rule. Decide where erasure happens before calling anything
+retention.</li>
+<li><strong>A dedupe index that ignores tombstones and honours
+supersession.</strong> It revives exactly what the user removed and
+swallows exactly what the user restated.</li>
+<li><strong>Trusting the payload's fields over the signed
+envelope's.</strong> Bind <code>createdBy</code> and
+<code>namespace</code> inside the data to the signed <code>author</code>
+and <code>namespace</code>, or check them on apply.</li>
+<li><strong>Two read surfaces with different defaults.</strong> The
+scoped one is the opt-in; the default MCP tools read everything.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who wants the same memory in every assistant on
+every machine they own, without a server, and who treats every device
+they pair as fully trusted. The sync and trust code is the most
+carefully built part of the tree and the reason to read it.</p>
+<p>It does not suit memory that has to be isolated between agents or
+people, or removed on request. Agent domains are labels under a shared
+token, any admitted device can rewrite any namespace, and nothing
+deletes a memory's text. Anyone who needs a person to approve what is
+remembered, or a record of disagreement between devices, will find
+neither.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the snapshot path's lack of per-event verification bounded by the
+handshake in practice, given that a snapshot goes only to a device with
+empty watermarks?</li>
+<li>Does any host call <code>memory_write</code> with a namespace, or do
+public-tool writes all land in <code>default</code>?</li>
+<li>Is erasure of a single memory planned, given that the event log is
+described as the single source of truth?</li>
+<li>What do the <code>conflicts_with</code> and
+<code>conflict_resolved</code> edge types record, and where?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/types/node.ts</code>, <code>src/types/event.ts</code></td>
+<td>Node and event shapes</td>
+</tr>
+<tr>
+<td><code>src/core/GraphStore.ts</code></td>
+<td>Node and edge writes, each with its event</td>
+</tr>
+<tr>
+<td><code>src/eventlog/EventLog.ts</code></td>
+<td>Signing, content addressing, verification</td>
+</tr>
+<tr>
+<td><code>src/storage/JsonFileStorage.ts</code></td>
+<td>Append-only JSONL store and compaction</td>
+</tr>
+<tr>
+<td><code>src/memory/MemoryService.ts</code></td>
+<td>Write, query, search, delete, archive, supersede</td>
+</tr>
+<tr>
+<td><code>src/memory/MemoryStore.ts</code></td>
+<td>Substring and vector search</td>
+</tr>
+<tr>
+<td><code>src/core/namespace.ts</code></td>
+<td>Namespace normalisation and matching</td>
+</tr>
+<tr>
+<td><code>src/sync/syncmgr/SyncManager.ts</code></td>
+<td>Offers, snapshots, inbound verification</td>
+</tr>
+<tr>
+<td><code>src/sync/apply.ts</code></td>
+<td>Conflict rules for remote events</td>
+</tr>
+<tr>
+<td><code>src/sync/trust.ts</code></td>
+<td>Certificate chain check</td>
+</tr>
+<tr>
+<td><code>packages/mcp/src/tools.mjs</code></td>
+<td>The 13 public memory tools</td>
+</tr>
+<tr>
+<td><code>packages/mcp/src/memory-capability.mjs</code></td>
+<td>Capability API: domains, write gate, dedupe</td>
+</tr>
+<tr>
+<td><code>packages/memory-runtime/src/sidecar/</code></td>
+<td>Ingest, heuristic, recall, policy</td>
+</tr>
+<tr>
+<td><code>docs/limitations/LIMITATIONS.md</code></td>
+<td>The project's stated boundaries</td>
+</tr>
+<tr>
+<td><code>tests/mcp/memory-capability-http.test.mjs</code></td>
+<td>Domain read tests</td>
+</tr>
+<tr>
+<td><code>tests/mcp/memory-capability-write.test.mjs</code></td>
+<td>Supersede tests</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Inbound sync applies no namespace filter.</strong>
+<code>git grep -n -E 'isNamespaceAllowed|filterEventsForAllow' -- src/sync/syncmgr/SyncManager.ts</code>
+returns the import, two calls building outgoing offers at
+<code>:922</code> and <code>:1076</code>, the filter at
+<code>:1461-1465</code> and the snapshot builder at
+<code>:1697-1704</code>.</li>
+<li><strong>Apply does not compare the payload with the
+envelope.</strong>
+<code>git grep -n -E 'event\.author|event\.namespace' -- src/sync/apply.ts</code>
+returns <code>:454</code>, <code>:462</code>, <code>:474</code> and
+<code>:482</code>, all in the placeholder tombstone constructors; the
+same pattern returns 21 lines in <code>SyncManager.ts</code>.</li>
+<li><strong>No conflict edge or listener has a producer.</strong>
+<code>git grep -n -E 'CONFLICT_RESOLVED|conflict_resolved|CONFLICTS_WITH|conflicts_with' -- src packages ':!*.md'</code>
+returns only <code>src/memory/types.ts:140</code> and <code>:147</code>;
+<code>git grep -n -E "on\(['\"]conflict" -- src packages</code> returns
+nothing, while <code>git grep -n "on('sync-completed'" -- src</code>
+matches <code>src/mebular.ts:491</code> and
+<code>src/memory/MemoryService.ts:398</code>.</li>
+<li><strong>No read at a past valid time.</strong>
+<code>git grep -n -E '(asOf|as_of|validAt|valid_at)' -- src packages/mcp/src packages/memory-runtime/src</code>
+returns nothing; <code>git grep -n isCurrentlyValidFact -- src</code>
+returns the definition and four calls, each passing the current
+time.</li>
+<li><strong>Dedupe skips tombstones.</strong>
+<code>git grep -n -E 'deletedAt' -- packages/mcp/src/memory-capability.mjs</code>
+includes <code>:804</code> inside <code>buildDedupeIndex</code>.</li>
+<li><strong>Events are deleted only by the namespace purge.</strong>
+<code>git grep -n -E 'deleteEvent\(' -- . ':!*.md'</code> returns the
+purge at <code>src/mebular.ts:1133</code>, the adapters and one storage
+test.</li>
+<li><strong>No trust or review status on a memory.</strong>
+<code>git grep -n -E "status: '(pending|candidate|rejected|verified|approved|confirmed)'" -- src packages/mcp/src packages/memory-runtime/src</code>
+returns job states in the sidecar's <code>ingest.ts</code> and
+<code>internal-objects.ts</code>, none on a memory node.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|doi\.org' -- . ':!package-lock.json'</code>
+returns nothing; <code>git grep -n -i citation -- docs</code> returns 74
+lines about recall citations.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/Windsander/Mebular/commit/8dfb82bf5f310a74e568868bb7bf7237907099bd"><code class="commit-id" title="8dfb82bf5f310a74e568868bb7bf7237907099bd">8dfb82bf…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, 12
+commits after v0.3.5; triage had selected <code>5349026d52df</code>, 34
+commits earlier. No submodules. Screened first: one auto-run surface, an
+<code>.opencode/</code> bundle holding one vendored skill; eleven
+dependency manifests inside the seven-day cooldown; one build-time
+execution point, the npm <code>prepare</code> script
+<code>scripts/prepare-install.mjs</code>; five unpinned surfaces. Docs
+and skill text were read as data. Nothing was installed, built or run,
+and the test suites were not run. Read on the memory write and read
+paths, the event log and sync; the fleet task graph, console and desktop
+shell were not read beyond where they touch the graph. Four marks:
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
