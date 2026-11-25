@@ -143,6 +143,9 @@ for a try-out. Single-user mode runs with auth off, which the authorizer treats
 as allow-all (`server/auth/authz.py:239-240`). An operator stands up ClickHouse,
 an embedder and a model, and about 3 GB of images.
 
+Loom's operator docs cover [SQL reader setup and permissions](https://loom.clickhouse.com/docs/reference/sql-surface)
+and show how to [report active memories by agent and provenance](https://loom.clickhouse.com/docs/use-cases/self-hosted-clickhouse#count-active-memories-by-agent-and-source).
+
 ## 4. Essential Implementation Paths
 
 - **The write.** `_handle_memory_set` runs named phases over one request state
