@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted personal context
+server: Markdown pages in owner-named sources, read and written by
+agents over MCP under per-source grants.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OneSelf — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted personal
+context server: Markdown pages in owner-named sources, read and written
+by agents over MCP under per-source grants.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OneSelf — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted personal
+context server: Markdown pages in owner-named sources, read and written
+by agents over MCP under per-source grants.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OneSelf — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OneSelf",
+      "description": "A self-hosted personal context server: Markdown pages in owner-named sources, read and written by agents over MCP under per-source grants.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Owner-approved grants per source decide
+what each agent reads; the portrait's rules live in the skill</p>
+          <h1>OneSelf</h1>
+          <p class="document-deck">A self-hosted personal context
+server: Markdown pages in owner-named sources, read and written by
+agents over MCP under per-source grants.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ptonlix/OneSelf">
+              <span>Source</span>
+              <strong>ptonlix/OneSelf</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ptonlix/OneSelf/commit/5543985e3b50f170bf2df803e0d8ee9f45876eec" title="5543985e3b50f170bf2df803e0d8ee9f45876eec">
+              <span>Analyzed revision</span>
+              <code>5543985e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ptonlix--OneSelf" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ptonlix--OneSelf</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE; no package manifest declares a licence; two vendored
+development skills under .agents/skills carry their own Apache-2.0 and
+MIT files</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>27,990
+lines of TypeScript outside test files: 7,759 in the server, 2,759 in
+the domain rules, 1,262 in the storage adapters, 421 in the schema,
+9,592 in the admin UI and 2,758 in the install CLI; 15,119 lines of
+tests; the agent skill is 525 lines of Chinese Markdown</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>117
+commits from 21 October to 24 November 2026: 90 as ptonlix, 21 as
+CyberFD under the same account's GitHub noreply address, 6 by Cursor
+Agent; 23 tags, the latest v0.9.1 on 24 November</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>448
+it and test calls in 66 files, run by pnpm check in CI on Node 24
+against in-memory fakes; five Postgres adapter tests skip unless
+ONESELF_POSTGRES_TESTS=1, and three closed-loop tests run only against
+Compose services; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OneSelf is a self-hosted server that keeps one person's context as
+Markdown pages and lets any approved agent read and write it over MCP or
+HTTP. Two built-in pages hold the agent's portrait of the person:
+<code>self/soul</code> for long-term traits and <code>self/recent</code>
+for current life. What is notable is the access model: the owner
+approves every agent credential with per-source read, write and
+visibility flags, every read path applies them, and a page an agent may
+not read answers exactly like one that does not exist. What is weak is
+that the memory rules the README leads with are skill text, not server
+code: a fact's <code>valid_until</code> is never compared with the date,
+and a candidate observation differs from a confirmed trait only by a
+Markdown heading.</p>
+<p>The server stores and serves. There is no model call, no embedding
+and no extraction in the tree. The agent that connects does the
+observing and writing, guided by a 525-line skill in Chinese that the
+server publishes at <code>/skills/oneself/</code>.</p>
+<p>Retrieval is a case-sensitive substring match. <code>search</code>
+covers type, title, body and frontmatter strings; <code>recall</code>
+covers the facts parsed from a page's <code>## Facts</code> fence;
+<code>query</code> filters by source, type, tag and update time. No
+result is ranked.</p>
+<p>Correction is page editing. <code>forget</code> deletes a fact's
+lines from the current Markdown, every write appends a version, and
+<code>revert_version</code> can restore a version that still holds the
+forgotten fact.</p>
+<p><strong>Licence.</strong> MIT in <code>LICENSE</code>, under a
+copyright line naming CyberFD, which is the name on commits made under
+the repository owner's GitHub address. No <code>package.json</code> in
+the workspace declares a licence. The two vendored development skills
+under <code>.agents/skills/</code> carry their own Apache-2.0 and MIT
+files and are not part of the product. Nothing restricts use.</p>
+<p>Two marks are earned: <code>scope_enforced</code> on the per-source
+grants, and <code>negative_eval</code> on committed cases requiring a
+forgotten fact and an ungranted source to stay out of populated results.
+Section 9 gives the reason for each of the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>a line of Markdown on a page the owner's
+agents can reach</strong>. There are three kinds, and the server knows
+about two of them:</p>
+<ul>
+<li><strong>A fact</strong>: an item in a page's <code>## Facts</code>
+fence with an <code>id</code>, an <code>entity</code>, a
+<code>statement</code>, an optional <code>confidence</code> between 0
+and 1 and an optional <code>valid_until</code> date
+(<code>packages/domain/src/fences.ts:3-9</code>, <code>:18</code>). The
+server parses it into the <code>facts</code> table and
+<code>recall</code> returns it.</li>
+<li><strong>A timeline entry</strong>:
+<code>date | title | detail</code> under <code>## Timeline</code>,
+parsed into <code>timeline_entries</code>.</li>
+<li><strong>A portrait judgment</strong> on <code>self/soul</code> or
+<code>self/recent</code>: free Markdown in a shape the skill defines,
+with a source label, a scope, evidence links, and on Recent an
+<code>observed_at</code> and a <code>valid_until</code>. The server does
+not parse it. It refuses <code>remember</code>, <code>forget</code> and
+<code>add_timeline_entry</code> on those two pages
+(<code>packages/domain/src/standing-judgment.ts:56-61</code>) and checks
+only that Soul's type is <code>soul</code> with a <code>name</code>
+field and Recent's type is <code>recent</code> with an
+<code>as_of</code> date (<code>:29-54</code>).</li>
+</ul>
+<p>A memory is believed from the moment its page is written. There is no
+pending state and no review. It stops being served in four ways: the
+agent edits it out, <code>forget</code> removes its lines, the page is
+soft-deleted, or the page's source is soft-deleted. Each of the last two
+is reversible for 30 days. Then the hourly pass removes the page and its
+version history
+(<code>packages/domain/src/maintenance.ts:11-66</code>).</p>
+<p>The skill draws a finer state machine on the portrait. A single
+observation stays in the evidence pages. A pattern worth watching goes
+into Soul's <code>Observations — 候选观察</code> section with
+<code>first_seen</code> and <code>last_seen</code>. Repeated independent
+evidence promotes it into one of six sections, and promotion deletes the
+candidate. A Recent judgment past its <code>valid_until</code> is moved
+to the Recent timeline or deleted. Every one of these transitions is an
+instruction to the agent
+(<code>skills/oneself/references/self.md</code>). The server enforces
+none of them, and the acceptance tests assert that the instructions are
+present in the skill text
+(<code>tests/acceptance/skills.test.ts:149-212</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an owner-approved grant decides which sources a credential reads; the agent rewrites Markdown and the server projects facts from it; forget removes a line that revert can restore, valid_until is never compared with the date, and the portrait's candidate and expiry rules are skill text the server does not parse</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an owner-approved grant decides which sources a credential reads; the agent rewrites Markdown and the server projects facts from it; forget removes a line that revert can restore, valid_until is never compared with the date, and the portrait&#39;s candidate and expiry rules are skill text the server does not parse
+flowchart TD
+    O[&quot;Owner session approves&lt;br/&gt;an API key or device code&lt;br/&gt;per-source read, write,&lt;br/&gt;visibility flags&quot;] --&gt; C[&quot;Credential resolved&lt;br/&gt;server-side on each request&quot;]
+    A[&quot;Agent: MCP tool&lt;br/&gt;or PCP route&quot;] --&gt; C
+    C --&gt; W[&quot;put_page, edit_page&lt;br/&gt;remember, forget&lt;br/&gt;all rewrite Markdown&quot;]
+    W --&gt; S[(&quot;Markdown object in S3&lt;br/&gt;keyed by content hash&lt;br/&gt;+ version row, keep 50&quot;)]
+    S --&gt; P[(&quot;Postgres projection&lt;br/&gt;pages, facts, timeline&lt;br/&gt;held whole in memory&quot;)]
+    P --&gt; R[&quot;search, query, recall&lt;br/&gt;keep pages whose source&lt;br/&gt;the grant can read&quot;]
+    R --&gt; H[&quot;Substring hits,&lt;br/&gt;unranked&quot;]
+    W -.-&gt; F[&quot;forget drops the&lt;br/&gt;fact&#39;s lines&quot;]
+    F -.-&gt; V[&quot;revert_version can&lt;br/&gt;bring the fact back&quot;]
+    P -.-&gt; U[&quot;valid_until returned&lt;br/&gt;by recall, never compared&lt;br/&gt;with today&quot;]
+    K[&quot;Skill text: candidate vs&lt;br/&gt;confirmed, expiry, labels&quot;] -.-&gt; SP[&quot;self/soul, self/recent&lt;br/&gt;free Markdown, not parsed&quot;]
+    SP --&gt; S</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Node 24 process built on Hono serves the PCP API, the MCP
+endpoint, the OAuth device flow, the admin UI and the owner's public
+site (<code>apps/server/src/index.ts</code>). Beside it run PostgreSQL
+18 and RustFS, an S3-compatible object store. <code>compose.yaml</code>
+adds one of four ingress profiles: local port, Cloudflare Tunnel, Caddy
+or Tailscale.</p>
+<p>The design separates source from projection. Page Markdown, uploaded
+originals and site files live in object storage under content-addressed
+keys (<code>pages/&lt;source&gt;/&lt;slug&gt;/&lt;sha256&gt;.md</code>,
+a <code>CHECK</code> in <code>packages/db/src/schema.ts:74-77</code>).
+PostgreSQL holds what the Markdown projects to.
+<code>rebuildProjections</code> can regenerate the projection from the
+objects (<code>packages/domain/src/maintenance.ts:72-161</code>).</p>
+<p>The runtime keeps the whole projection in memory. At start
+<code>loadProjection</code> reads every source, page, fact, chunk, tag,
+timeline entry and version and the Markdown object of every page
+(<code>apps/server/src/app/postgres-state.ts:95-270</code>). Every
+operation, reads included, runs through one promise chain,
+<code>exclusive</code>
+(<code>apps/server/src/app/runtime.ts:298-305</code>). A write computes
+the next state as a pure function, stores new objects, then writes the
+diff to Postgres in one transaction (<code>:2091-2116</code>,
+<code>saveDomain</code> at
+<code>apps/server/src/app/postgres-state.ts:276-489</code>). Only
+<code>search</code> queries Postgres directly; every other read scans
+the in-memory state.</p>
+<p>The domain rules are pure TypeScript in <code>packages/domain</code>,
+the storage adapters in <code>packages/adapters</code>, the operation
+table in <code>packages/operations</code>, and dependency-cruiser holds
+the direction (<code>.dependency-cruiser.cjs</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A one-line installer downloads a CLI binary that writes
+<code>.env</code>, pulls the image and starts Compose;
+<code>bin/oneself update | doctor | backup | restore</code> operate it
+(<code>apps/cli/src/</code>). The operator runs three containers and one
+ingress. No API key for a model provider is needed, because the server
+calls none. The store is human-readable: each page is a Markdown file in
+a bucket, and <code>pnpm data:export</code> packs the database and the
+bucket prefixes into one archive
+(<code>scripts/data-transfer.ts</code>). Memory scales with the corpus,
+since the process holds all of it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Operation table.</strong>
+<code>packages/operations/src/registry.ts:21-120</code>: 43 operations,
+three of them HTTP-only key management. MCP tools are generated from it
+with the operation name as the description
+(<code>apps/server/src/mcp/routes.ts:23-30</code>).</li>
+<li><strong>Authentication.</strong>
+<code>apps/server/src/app/runtime.ts:2178-2247</code>: an API key by
+hash, a bearer token through the OAuth engine, or the owner's session
+cookie, each producing a <code>Credential</code> with its source
+grants.</li>
+<li><strong>Grants.</strong>
+<code>packages/domain/src/access.ts:36-51</code>
+(<code>sourceFlags</code>); owner approval of keys and device codes at
+<code>runtime.ts:1603-1638</code>, <code>:1704-1746</code>,
+<code>:1822-1854</code>, each behind <code>#ownerActor</code>.</li>
+<li><strong>Page write.</strong>
+<code>packages/domain/src/pages.ts:445-507</code>
+(<code>preparePut</code>: source exists, grant allows write, hash
+matches, Markdown projects, standing-page contract, visibility flag,
+file ownership) and <code>:509-559</code> (<code>commitWrite</code>:
+object, record, version, trim to 50, file attachment). Edits at
+<code>:170-220</code> require the current hash and each search string to
+occur exactly once.</li>
+<li><strong>Structure writes.</strong>
+<code>apps/server/src/app/structure.ts:78-119</code>
+(<code>rememberFact</code>, <code>forgetFact</code>,
+<code>addTimeline</code>) rewrite the fences;
+<code>runtime.ts:1120-1189</code> checks the standing-page refusal and
+calls <code>#writeOne</code>.</li>
+<li><strong>Reads.</strong>
+<code>apps/server/src/app/search.ts:26-107</code>;
+<code>runtime.ts:788-866</code> (<code>search</code>, with the Postgres
+branch at <code>:816-850</code>), <code>:868-938</code>
+(<code>query</code>), <code>:940-990</code> (<code>recall</code>);
+<code>packages/adapters/src/postgres-store.ts:296-326</code> and
+<code>:657-684</code> (SQL search).</li>
+<li><strong>Delete, restore, versions.</strong>
+<code>packages/domain/src/pages.ts:294-420</code>; hourly purge in
+<code>packages/domain/src/maintenance.ts:11-66</code>, scheduled at
+<code>apps/server/src/index.ts:81-87</code>.</li>
+<li><strong>Portrait seeding.</strong>
+<code>packages/domain/src/pages.ts:111-150</code>
+(<code>ensureStandingJudgment</code>) and
+<code>packages/domain/src/standing-judgment.ts</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>pages</code> is keyed <code>(source, slug)</code> and holds
+type, title, <code>visibility</code> (<code>public</code> or
+<code>private</code> under a <code>CHECK</code>), frontmatter as JSONB,
+body, <code>content_hash</code>, <code>object_key</code>,
+<code>updated_at</code>, <code>deleted_at</code> and
+<code>hidden_by_source</code>
+(<code>packages/db/src/schema.ts:47-81</code>). <code>facts</code>,
+<code>timeline_entries</code>, <code>tags</code>, <code>links</code> and
+<code>chunks</code> hang off it by the same key (<code>:137-238</code>).
+<code>page_versions</code> records hash, object key, frontmatter and
+<code>written_at</code> per write (<code>:83-106</code>).</p>
+<p><code>sources</code> is a list of ids with a <code>deleted_at</code>.
+<code>self</code> is created on start and cannot be deleted. The scope a
+credential carries is a JSONB array of
+<code>{id, read, write, visibility}</code> on <code>api_keys</code> and
+<code>oauth_grants</code>, plus <code>unrestricted_data</code> and
+<code>site_write</code> booleans (<code>:316-390</code>).</p>
+<p>Time is thin. A page has <code>updated_at</code>; a version has
+<code>written_at</code>; a fact has <code>valid_until</code> as a date
+and nothing else. There is no <code>valid_from</code>, no
+<code>created_at</code> on a fact, and no record of which credential
+wrote anything.</p>
+<p><code>chunks</code> splits each body into pieces of at most 1,000
+characters on every write. Nothing reads them for retrieval; the search
+code says so in its docstring
+(<code>apps/server/src/app/search.ts:22-25</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three reads, all deterministic and all unranked.</p>
+<p><strong><code>search</code></strong> matches a case-sensitive
+substring against type, title, body and each string or string-array
+value in the frontmatter. With Postgres it is one <code>LIKE</code> per
+field plus a JSONB walk (<code>postgres-store.ts:657-684</code>),
+ordered by source and slug, 20 hits by default and at most 50, and the
+server cuts a 140-character snippet around the first match. The body is
+never returned. "Shanghai" does not find "shanghai".</p>
+<p><strong><code>query</code></strong> lists pages by source, type, tag
+and <code>updated_after</code> or <code>updated_before</code>, newest
+first (<code>runtime.ts:868-938</code>).</p>
+<p><strong><code>recall</code></strong> walks every page the credential
+can read and returns facts whose <code>entity</code> equals the argument
+or whose <code>statement</code> contains it
+(<code>runtime.ts:940-990</code>). It returns <code>confidence</code>
+and <code>valid_until</code> and filters on neither. A fact whose
+<code>valid_until</code> passed a year ago is returned as a current
+one.</p>
+<p>Nothing is injected automatically. The skill tells the agent to read
+<code>self/soul</code> and <code>self/recent</code> before answering who
+the person is, and to use <code>search</code>, <code>list_pages</code>
+or <code>recall</code> before writing. What enters the agent's context,
+and how much, is the agent's choice.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is a page write. <code>put_page</code> replaces a page,
+optionally guarded by the current hash; <code>edit_page</code> applies
+search-and-replace pairs and requires the hash; <code>put_pages</code>
+writes a batch all or nothing. <code>remember</code>,
+<code>forget</code>, <code>add_tag</code>, <code>add_link</code> and
+<code>add_timeline_entry</code> read the current Markdown, rewrite a
+fence or the frontmatter, and call the same write
+(<code>runtime.ts:2071-2089</code>, <code>:2125-2149</code>).</p>
+<p>Each write stores the Markdown object first, then updates the
+projection and appends a version in one transaction. A broken fence
+fails the parse and nothing is written
+(<code>packages/domain/src/page-rules.test.ts:429-461</code>).</p>
+<p>The agent decides what to write. The server has no deduplication
+beyond a fact-id collision on one page (<code>structure.ts:83-85</code>)
+and no conflict detection. The skill asks the agent not to save material
+from a task that was not a request to save, not to promote a single
+event into Soul, to label each judgment's source, and to keep candidates
+separate. None of it is checked.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write blocks on one object put and one Postgres transaction. It is
+visible to the next read, which runs after it on the same promise chain.
+No model is called on either path. The only background pass is the
+hourly purge of expired soft deletes and unreferenced objects; it does
+not read content. The read path returns at most 50 hits or facts and
+injects nothing.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An agent installs the skill with
+<code>npx skills add &lt;origin&gt; -a &lt;agent&gt; -s oneself -y</code>,
+requests a device code, and waits for the owner to approve it at
+<code>/admin/device</code> with a label and per-source flags
+(<code>skills/oneself/SKILL.md</code>). It then calls MCP tools or PCP
+routes; the two are generated from one table, and the same flags give
+the same results. The skill tells the agent to keep the refresh token in
+<code>~/.config/oneself/config.json</code> with mode
+<code>0600</code>.</p>
+<p>The MCP tools carry no descriptions beyond their names
+(<code>apps/server/src/mcp/routes.ts:28</code>). The instruction channel
+is the skill: which pages to read, which fence to use, how to write a
+portrait judgment, when not to write at all. A client that connects over
+MCP without the skill gets 40 bare verbs.</p>
+<p>The agent cannot create or approve keys, approve a site launch, or
+change visibility through the owner's route. It can change a page's
+visibility through <code>put_page</code> when its grant has the
+visibility flag (<code>pages.ts:693-704</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="scope-is-the-strongest-part">Scope is the strongest part</h3>
+<p>Every read path applies the credential's grants.
+<code>visiblePages</code> drops deleted pages, pages in deleted sources
+and pages whose source the credential cannot read
+(<code>apps/server/src/app/search.ts:81-107</code>);
+<code>readablePage</code> does the same for single-page reads and
+answers <code>not_found</code> whether the page is private, deleted,
+ungranted or absent (<code>packages/domain/src/pages.ts:621-639</code>).
+The Postgres search receives the readable source ids and adds
+<code>source IN (...)</code>; an empty list returns nothing before the
+query runs (<code>postgres-store.ts:296-307</code>).</p>
+<p>The scope value is resolved by the server from the credential, never
+from an argument. The owner sets the flags while approving, and the
+agent's <code>source</code> argument only narrows within them. Two broad
+grants exist: the owner's session and a grant with
+<code>unrestricted_data</code>, which reads and writes every source
+including <code>self</code>.</p>
+<p>The boundary is between agents, not people. An instance has one owner
+(<code>CHECK id = 1</code> on <code>owners</code>).</p>
+<h3 id="expiry-is-stored-and-not-read">Expiry is stored and not
+read</h3>
+<p><code>valid_until</code> is parsed as a calendar date, stored in
+<code>facts.valid_until</code>, round-tripped through the projection and
+returned by <code>recall</code>. No code compares it with the clock. A
+fact the agent wrote as true until 2026-12-20 is recalled in 2027 with
+nothing to mark it stale.</p>
+<p>The Recent page's <code>valid_until</code> is weaker still: it is a
+field in free Markdown, and expiry depends on the agent reading it and
+editing the page.</p>
+<h3 id="forget-is-a-page-edit-and-history-can-undo-it">Forget is a page
+edit, and history can undo it</h3>
+<p><code>forget</code> removes the fact's lines from the current
+Markdown. The previous version's object still holds them, which a
+committed test asserts
+(<code>tests/smoke/structure.test.ts:53-98</code>).
+<code>revert_version</code> on that version writes the fact back as a
+new write. So does any agent that writes the same statement again:
+nothing records that a value was withdrawn.</p>
+<p>Versions are trimmed to 50 per page, so on a page an agent edits
+often the history behind a correction disappears after 50 more writes. A
+deleted page records no version for its deletion; after 30 days its
+versions are removed with it.</p>
+<h3 id="the-portrait-has-no-writer-of-record">The portrait has no writer
+of record</h3>
+<p>Neither a page nor a version records which credential wrote it. Any
+grant with write on <code>self</code> can replace <code>self/soul</code>
+whole with <code>put_page</code> and no hash; the contract check needs
+only <code>type: soul</code> and a <code>name</code> field. Whether a
+trait came from the owner, from evidence, or from the agent's inference
+is a label the agent writes in prose.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> A source key
+on every page, applied from an owner-approved grant on every read path,
+with tests.</li>
+<li><strong><code>negative_eval</code> — earned.</strong>
+<code>tests/smoke/retrieval.test.ts:89-149</code> writes two facts,
+forgets one, and requires recall for its statement to return no facts
+and recall for the other to return exactly that one. These "smoke" files
+run in-process with in-memory fakes under the default config, so CI runs
+them. The SQL search test requires a <code>notes</code>-only key to get
+the <code>notes</code> hit and not the matching <code>secrets</code> or
+<code>publics</code> pages, though the filtering there is the test's own
+fake.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>valid_until</code> is an end date with no start and no reader;
+record time is <code>updated_at</code> and <code>written_at</code>.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> The server has
+no status on a fact or page. <code>confidence</code> is returned and
+filters nothing. The candidate section on Soul is a heading in
+prose.</li>
+<li><strong><code>tombstone</code> — withheld.</strong>
+<code>forget</code> deletes lines. Nothing keyed on the withdrawn value
+stops <code>remember</code>, <code>put_page</code> or
+<code>revert_version</code> from restoring it.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>page_versions</code> records one row per write with a hash and a
+time, but no actor and no operation, nothing for a delete, a restore or
+a source change, and the trim at 50 and the 30-day purge delete
+rows.</li>
+<li><strong><code>human_review</code> — withheld.</strong> A write is
+live at once. The owner approves credentials and site launches
+(<code>decideActivation</code>, <code>runtime.ts:1551-1601</code>),
+which are permission and publication, not memory content. The admin UI
+reads and deletes pages and edits none.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading.</p>
+<p>The tree has 448 <code>it</code> and <code>test</code> calls in 66
+files. The <code>tests/smoke/</code> files are misnamed for their
+runtime: they boot the server in-process with the in-memory object store
+and no database (<code>apps/server/src/index.ts:50</code>), and the
+default Vitest config includes them
+(<code>vitest.config.ts:6-13</code>), so <code>pnpm check</code> in CI
+runs them. <code>closed-loop.test.ts</code> alone needs PostgreSQL and
+RustFS and runs under <code>vitest.smoke.config.ts</code>.
+<code>packages/adapters/src/postgres-store.test.ts</code> skips unless
+<code>ONESELF_POSTGRES_TESTS=1</code> and a Postgres URL are set
+(<code>:14-21</code>). The SQL search predicate is therefore exercised
+in CI only against a proxy whose <code>searchPages</code> is the test's
+own filter
+(<code>apps/server/src/app/search-sql.test.ts:184-254</code>).</p>
+<p>Tested well: hash-guarded writes and edits, all-or-nothing batches,
+fence round-trips, soft delete and the 30-day window, version trimming,
+grant flags, OAuth refresh rotation, rate limits and ingress header
+trust.</p>
+<p>Not tested: a fact past <code>valid_until</code> (no code would treat
+it differently), a forgotten fact restored by
+<code>revert_version</code> and recalled, a restricted key's
+<code>recall</code> across sources, and anything about the portrait
+beyond the seeded templates and the refusal of structure writes on
+them.</p>
+<p><code>tests/acceptance/skills.test.ts</code> asserts that sentences
+are present in the skill files. It tests the instructions exist, not
+that any agent follows them.</p>
+<p>There is no retrieval evaluation, no benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Resolve the scope from the credential and let the caller
+only narrow it.</strong> Per-source read, write and visibility flags set
+by a person at approval, applied on every read, with unreadable
+answering as missing.</li>
+<li><strong>Keep the store as content-addressed text and the database as
+a projection.</strong> A rebuild from objects is one function, and an
+export is a bucket and a dump.</li>
+<li><strong>Guard edits with the current hash and an exactly-once search
+string.</strong> A stale or ambiguous edit fails before writing.</li>
+<li><strong>Refuse structured verbs on pages whose shape a person
+owns.</strong> The portrait cannot be appended to by
+<code>remember</code>; it must be edited whole.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A validity field with no reader.</strong> If a fact carries
+an end date, the recall path should filter or flag on it, and a test
+should pin a fact past it.</li>
+<li><strong>Correction by deletion beside a restore verb.</strong> A
+forget that a revert can undo needs a record of the withdrawn value that
+the revert checks.</li>
+<li><strong>Putting the memory model in the prompt.</strong> Candidate
+versus confirmed, source labels and expiry are the parts most worth
+enforcing, and here they are the parts left to the agent.</li>
+<li><strong>A version table with no writer identity.</strong> With
+several agents writing one portrait, "which one said this" is the first
+question after a bad edit.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who wants several agents to share a private,
+self-hosted notebook they can back up and read as files, with a clean
+permission model. It assumes the connected agent is competent and
+follows a long skill. A reader who wants the server to hold the line —
+on stale facts, withdrawn values, or unconfirmed inferences about a
+person's health and mood — should walk away or plan to build that layer,
+because here it is advice to the model.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>valid_until</code> meant to be filtered server-side, or is
+expiry a deliberate agent responsibility?</li>
+<li>The README promises that a candidate observation is not treated as a
+confirmed trait. Is any client-side or future server check planned?</li>
+<li>How large a corpus does the in-memory projection target before load
+time or memory becomes the limit?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/db/src/schema.ts</code></td>
+<td>Tables, checks and grant shape</td>
+</tr>
+<tr>
+<td><code>packages/domain/src/pages.ts</code></td>
+<td>Put, edit, delete, restore, versions, revert, read checks</td>
+</tr>
+<tr>
+<td><code>packages/domain/src/access.ts</code></td>
+<td>Per-source flags from a credential</td>
+</tr>
+<tr>
+<td><code>packages/domain/src/fences.ts</code></td>
+<td>Facts and Timeline parsing</td>
+</tr>
+<tr>
+<td><code>packages/domain/src/standing-judgment.ts</code></td>
+<td>Soul and Recent seeds and contract</td>
+</tr>
+<tr>
+<td><code>packages/domain/src/maintenance.ts</code></td>
+<td>Hourly purge and projection rebuild</td>
+</tr>
+<tr>
+<td><code>apps/server/src/app/runtime.ts</code></td>
+<td>Every operation, authentication, write publication</td>
+</tr>
+<tr>
+<td><code>apps/server/src/app/search.ts</code></td>
+<td>In-memory search and <code>visiblePages</code></td>
+</tr>
+<tr>
+<td><code>apps/server/src/app/structure.ts</code></td>
+<td>remember, forget, timeline, tag and link rewrites</td>
+</tr>
+<tr>
+<td><code>apps/server/src/app/postgres-state.ts</code></td>
+<td>Projection load and diff save</td>
+</tr>
+<tr>
+<td><code>packages/adapters/src/postgres-store.ts</code></td>
+<td>SQL, including the search predicate</td>
+</tr>
+<tr>
+<td><code>apps/server/src/mcp/routes.ts</code></td>
+<td>MCP tools from the operation table</td>
+</tr>
+<tr>
+<td><code>skills/oneself/</code></td>
+<td>The agent skill and its references</td>
+</tr>
+<tr>
+<td><code>tests/smoke/retrieval.test.ts</code>,
+<code>tests/smoke/structure.test.ts</code></td>
+<td>Forget and recall cases</td>
+</tr>
+<tr>
+<td><code>apps/server/src/app/search-sql.test.ts</code></td>
+<td>Source predicate sent to SQL search</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No read compares <code>valid_until</code> with a
+date.</strong>
+<code>git grep -n -E 'validUntil|valid_until' -- '*.ts' ':!*.test.ts'</code>
+returns the parser, the schema, the projection load and save, the route
+and MCP argument mapping, the fence writer and the <code>recall</code>
+output at <code>apps/server/src/app/runtime.ts:984</code>; none compares
+it.</li>
+<li><strong>No embedding, vector arm or full-text index.</strong>
+<code>git grep -n -i -E 'embedding|pgvector|vector|bm25|tsvector|to_tsquery' -- '*.ts' '*.sql'</code>
+returns only <code>THREE.Vector3</code> in
+<code>apps/admin/src/nebula-scene.ts</code>;
+<code>git grep -n 'LIKE' -- packages/adapters/src/postgres-store.ts</code>
+matches the search clause.</li>
+<li><strong>No model call.</strong>
+<code>git grep -n -i -E 'openai|anthropic|ollama|chat/completions|gpt-' -- '*.ts'</code>
+returns nothing;
+<code>git grep -n -i 'modelcontextprotocol' -- '*.ts'</code> matches
+<code>apps/server/src/mcp/routes.ts</code>.</li>
+<li><strong>No audit or event table.</strong>
+<code>git grep -n -E 'audit|event_log|history' -- packages/db/src/schema.ts 'packages/db/migrations/*.sql'</code>
+returns nothing;
+<code>git grep -n 'page_versions' -- packages/db/src/schema.ts</code>
+matches.</li>
+<li><strong>No status column on memory.</strong>
+<code>git grep -n -E 'status' -- packages/db/src/schema.ts</code>
+returns <code>site_activations</code> and <code>api_key_requests</code>
+only.</li>
+<li><strong>No value-keyed suppression.</strong>
+<code>git grep -n -i -E 'tombstone|forgotten|blocklist|suppress' -- '*.ts' ':!*.test.ts'</code>
+returns nothing; <code>rememberFact</code> refuses only a repeated id
+(<code>apps/server/src/app/structure.ts:83-85</code>).</li>
+<li><strong>Chunks are not read for retrieval.</strong>
+<code>git grep -n -w 'chunks' -- '*.ts' ':!*.test.ts'</code> returns the
+schema, the projection load and save, the splitter and the export
+list.</li>
+<li><strong>The admin UI writes no page content.</strong>
+<code>git grep -n -E 'pcp/v1/pages|/admin/pages' -- apps/admin/src ':!*.test.ts'</code>
+returns a GET at <code>apps/admin/src/http.ts:246</code>, a DELETE at
+<code>:268</code> and the visibility POST at <code>:275</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|doi\.org|CITATION|@article|@misc' -- .</code>
+returns nothing; <code>git grep -n -i 'license' -- README_EN.md</code>
+matches.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/ptonlix/OneSelf/commit/5543985e3b50f170bf2df803e0d8ee9f45876eec"><code class="commit-id" title="5543985e3b50f170bf2df803e0d8ee9f45876eec">5543985e…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, four
+commits after <code>a0dc086e1faa</code>, the commit triage selected.
+Screened first: no auto-run surface, nothing inside the seven-day
+cooldown, no build-time execution, one unpinned manifest in a vendored
+skill's eval fixture, and an <code>AGENTS.md</code> addressed to reading
+agents, read as data. No submodules. Nothing was installed, built or
+run, and the test counts are from reading. Two marks:
+<code>scope_enforced</code> and <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).
+<code>valid_until</code> has no reader, <code>revert_version</code>
+restores a forgotten fact, and the portrait's rules are skill text.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

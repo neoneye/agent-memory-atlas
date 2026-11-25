@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 869 reports.**
+**This page covers all 870 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8013,3 +8013,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 78,538 lines of JavaScript, the journal 617 of them, in 595 commits by one author from 23 April to 23 November 2026; the journal shipped in 0.11.0 and was hardened through 0.15.0; 97 journal checks among 1,132 in an `npm test` that CI runs on three Node versions and against a from-source engine rebuild, none run here; no journal evaluation committed, and the project withdrew its own relevance verdict in 0.15.0 on a published measurement. No marks; the nearest, `latest` returning exactly one note of two under a kind or tag filter, is an ordinary filter test.
 - Study when: you want several vendors' coding agents to leave a searchable, citable trail of handoffs and dead ends on one machine, with the model kept away from where and as whom it writes.
 - Do not copy when: a reversed decision must stop surfacing, notes must be separated by project or author on read, or a person must be able to remove one note without discarding the rest.
+
+### [`oneself`](../systems/oneself/)
+- Best idea: **resolve the scope from the credential and let the caller only narrow it.** The owner approves every API key and device code with read, write and visibility flags per source; `visiblePages` and `readablePage` apply them on every read, the Postgres search adds `source IN (...)`, and an unreadable page answers exactly like a missing one.
+- Second idea: content-addressed Markdown as the store and the database as a projection. Each write puts `pages/<source>/<slug>/<sha256>.md` first, then updates the projection and appends a version in one transaction; `rebuildProjections` regenerates the tables from the objects, and edits fail unless the hash is current and each search string occurs exactly once.
+- Biggest risk: **the memory rules are skill text.** A fact's `valid_until` is parsed, stored and returned by `recall` and never compared with the date; the line between a candidate observation and a confirmed trait on `self/soul` is a Markdown heading; no page or version records which credential wrote it, and an unrestricted grant can replace the portrait with no hash.
+- Second risk: correction does not hold. `forget` deletes the fact's lines from the current page, the previous version still holds them, and `revert_version` or a second `remember` restores the value with nothing to refuse it; versions are trimmed to 50 and purged with a page 30 days after deletion.
+- Most reusable component: `sourceFlags` in `packages/domain/src/access.ts:36-51` with `visiblePages` in `apps/server/src/app/search.ts:81-107`, and `preparePut` and `commitWrite` in `packages/domain/src/pages.ts:445-559`.
+- Maturity impression: MIT; 27,990 lines of TypeScript outside tests, about a third of it an admin UI; 117 commits from 21 October to 24 November 2026 by one person under two names and a coding agent, tags to v0.9.1; 448 test calls run in CI against in-memory fakes, none run here. Two marks: `scope_enforced`, `negative_eval`.
+- Study when: several agents should share one person's private notes under permissions the person sets, and the store should stay readable as files.
+- Do not copy when: the server must keep stale facts out of answers, keep withdrawn values withdrawn, or separate an agent's inference about a person from what the person said.

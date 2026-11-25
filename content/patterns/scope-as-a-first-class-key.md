@@ -1000,6 +1000,8 @@ that matches only through `LIKE`'s `_` wildcard.
 
 [UniSessions](../../systems/session-export/) stores a cwd on every indexed message and leaves it out of the answer. `search_chats` filters by project only when the model passes `cwd`, and the default spans every project and every coding tool on the machine (`session_sdk/search.py:1261-1271`). The hit the agent receives carries provider, session id and snippet; the result object's `cwd` and `path` are not in `as_dict` (`:57-70`), so a snippet from another repository arrives with nothing to say so. `search_sessions`, the coarser tool beside it, does return the cwd (`:82-90`).
 
+[OneSelf](../../systems/oneself/) keys every page on an owner-named source and puts the scope in the credential. The owner approves each API key and device code in an owner session with read, write and visibility flags per source, and the server resolves those from the key on every request; the agent's `source` argument only narrows. `visiblePages` drops pages whose source the grant cannot read before search, query, recall and backlinks see them, single-page reads answer `not_found` whether a page is private, ungranted, deleted or absent, and the Postgres search adds `source IN (...)` and returns nothing for an empty grant before querying (`apps/server/src/app/search.ts:81-107`, `packages/domain/src/pages.ts:621-639`, `packages/adapters/src/postgres-store.ts:296-307`). Two grants see everything: the owner's session and `unrestricted_data`. The SQL predicate's test filters a fixture in the test's own fake, so CI asserts what the server sends rather than what Postgres returns.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)
