@@ -320,6 +320,8 @@ is the thing a deletion request has to survive.
 
 [UniSessions](../../systems/session-export/) has no capture path: the transcript each tool writes is the event, and the index is derived from it on request. The cost the pattern avoids at write time arrives at read time instead. A new session is invisible until something calls `refresh_chats_index` or searches with `stale_policy="refresh"`, because the default search reads only what was already indexed (`session_sdk/search.py:1065`, `:1089-1100`), and the MCP tool's docstring tells the model to check the index first. What the derived index buys is a correction for free: extraction walks the branch Claude Code, OMP or Command Code would resume, so an exchange the user rewound is dropped at the next re-index, with a populated test (`session_sdk/converters.py:611-653`, `tests/test_omp.py:662-675`).
 
+[LLMSlim](../../systems/llmslim/) keeps the model off both sides and puts the interpretation a capture model would have done into a deterministic selector. Every writer — the `remember` tool, `POST /v1/memories`, the chat relay and `llmslim import` — inserts the turn verbatim (`llmslim/memory/_core.py:625-670`). Each search lists the whole scope and reserves budget for user turns, links later statements on the same subject by rare shared terms so a correction is shown beside what it corrects, and gathers standing requests and possibly conflicting statements into sections (`llmslim/memory/_turns.py:1-27`, `llmslim/memory/_later.py:1-20`). The cost moves to the read, which scans every turn of the scope on every query. A correction is never written as one, so it reaches the model only when the linking rule finds it.
+
 ## Implementation checklist
 
 - Assign a stable event ID before acknowledging capture.

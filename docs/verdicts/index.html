@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 867 reports.</strong></p>
+<p><strong>This page covers all 868 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35703,6 +35703,54 @@ instructions file.</li>
 returned by every search, several people share the vault, or the second
 agent's memory has to be loaded by code rather than by the model
 following instructions.</li>
+</ul>
+<h3 id="llmslim"><a
+href="../systems/llmslim/"><code>llmslim</code></a></h3>
+<ul>
+<li>Best idea: <strong>a model-free read path that keeps the user's own
+words and brings corrections along.</strong> User turns rank in their
+own pool with 55% of the budget reserved, so long replies cannot crowd
+out the short turn holding a fact, and up to two later exchanges sharing
+a strong candidate's rare terms rank just below it, so "it's tree nuts,
+not peanuts" is shown with the statement it corrects
+(<code>llmslim/memory/_turns.py:46</code>,
+<code>llmslim/memory/_later.py:1-20</code>).</li>
+<li>Second idea: the MCP scope is fixed where the server starts. User
+and agent come from flags or the environment and are captured in the
+tool closures, the model chooses only the session, and
+<code>forget</code> refuses an id outside the server's scope, with a
+populated session-boundary test through the tools.</li>
+<li>Biggest risk: <strong>forgetting does not survive the import
+path.</strong> <code>forget</code> and
+<code>DELETE /v1/memories/{id}</code> remove the row and record nothing,
+while <code>llmslim import</code> derives each id from the source and
+skips only ids it finds, and <code>docs/IMPORT.md</code> suggests
+importing <code>~/.claude/projects</code> every day. A forgotten
+imported turn is stored again, under the same id, at the next run. An
+update survives; a deletion does not.</li>
+<li>Second risk: two of the serving paths drop the scope.
+<code>llmslim serve</code> keys reach every scope and its id routes call
+get, update and delete with no scope; the library's <code>update</code>
+and <code>delete</code> take an id only. And the plugin, registry and
+Gemini manifests start PyPI <code>llmslim[mcp]==0.12.0</code>, tagged 75
+commits and 61 changed package files before the pin, so the reader of
+this tree and the user of the plugin run different code.</li>
+<li>Most reusable component: <code>llmslim/memory/_turns.py</code> with
+<code>llmslim/memory/_later.py</code>, and the fixed-scope tool closures
+in <code>llmslim/mcp_server.py:68-125</code>.</li>
+<li>Maturity impression: MIT; 36,581 lines of Python, 413 commits by
+essentially one author from 16 June to 22 November 2026; 1,855 Python
+test functions with a 90% coverage floor in CI and Docker runs against
+Postgres and MongoDB, none run here; round 3 benchmark output committed
+and its LoCoMo row recomputes. Two marks: <code>scope_enforced</code>,
+<code>negative_eval</code>. Withheld: <code>bitemporal</code>,
+<code>tombstone</code>, <code>trust_state</code>,
+<code>audit_log</code>, <code>human_review</code>.</li>
+<li>Study when: you want conversational recall with no model on either
+side and need a deterministic selector that fills a token budget
+well.</li>
+<li>Do not copy when: users must be able to make the system forget, or
+several tenants share one <code>llmslim serve</code>.</li>
 </ul>
         </article>
       </div>

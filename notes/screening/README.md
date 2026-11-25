@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 866 of 867 screened at the report's current pin.**
+**Progress: 867 of 868 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 414 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 393 |
-| Repositories with build-time execution (`EXEC`) | 622 |
+| Repositories with an auto-run surface (`RUNS`) | 415 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 394 |
+| Repositories with build-time execution (`EXEC`) | 623 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -219,6 +219,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`lindahaviv-second-brain`](../../content/systems/lindahaviv-second-brain.md) | `.claude/settings.json` |
 | [`linggen-memory`](../../content/systems/linggen-memory.md) | `.claude-plugin/`, `plugins/linggen/.claude-plugin/plugin.json`, `plugins/linggen/.mcp.json`, `plugins/linggen/hooks/`, `plugins/linggen/hooks/hooks.json` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
+| [`llmslim`](../../content/systems/llmslim.md) | `.claude-plugin/`, `plugins/llmslim/.claude-plugin/plugin.json`, `plugins/llmslim/.mcp.json`, `server.json` |
 | [`lobu`](../../content/systems/lobu.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitmodules`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/.mcp.json`, `server.json` |
 | [`local-memory-mcp`](../../content/systems/local-memory-mcp.md) | `server.json` |
 | [`lokalbot`](../../content/systems/lokalbot.md) | `.claude-plugin/`, `Distribution/claude-plugin/.claude-plugin/plugin.json` |

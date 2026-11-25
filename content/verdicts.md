@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 867 reports.**
+**This page covers all 868 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7993,3 +7993,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 8,586 lines of Python, about 1,730 of them on the memory paths, in 77 commits from 28 October to 22 November 2026 under six names; 215 unittest methods in CI on Ubuntu and macOS, none of them on the indexes or the hot.md updater, none run here. No marks; the nearest, a `/catchup` test that a keyword search omits the live session's matching transcript, is a window rule over transcripts rather than material that must not be recalled.
 - Study when: you want Claude Code and Codex to start from the same personal context with nothing but Markdown files, hooks and an instructions file.
 - Do not copy when: a deleted or corrected note must stop being returned by every search, several people share the vault, or the second agent's memory has to be loaded by code rather than by the model following instructions.
+
+### [`llmslim`](../systems/llmslim/)
+- Best idea: **a model-free read path that keeps the user's own words and brings corrections along.** User turns rank in their own pool with 55% of the budget reserved, so long replies cannot crowd out the short turn holding a fact, and up to two later exchanges sharing a strong candidate's rare terms rank just below it, so "it's tree nuts, not peanuts" is shown with the statement it corrects (`llmslim/memory/_turns.py:46`, `llmslim/memory/_later.py:1-20`).
+- Second idea: the MCP scope is fixed where the server starts. User and agent come from flags or the environment and are captured in the tool closures, the model chooses only the session, and `forget` refuses an id outside the server's scope, with a populated session-boundary test through the tools.
+- Biggest risk: **forgetting does not survive the import path.** `forget` and `DELETE /v1/memories/{id}` remove the row and record nothing, while `llmslim import` derives each id from the source and skips only ids it finds, and `docs/IMPORT.md` suggests importing `~/.claude/projects` every day. A forgotten imported turn is stored again, under the same id, at the next run. An update survives; a deletion does not.
+- Second risk: two of the serving paths drop the scope. `llmslim serve` keys reach every scope and its id routes call get, update and delete with no scope; the library's `update` and `delete` take an id only. And the plugin, registry and Gemini manifests start PyPI `llmslim[mcp]==0.12.0`, tagged 75 commits and 61 changed package files before the pin, so the reader of this tree and the user of the plugin run different code.
+- Most reusable component: `llmslim/memory/_turns.py` with `llmslim/memory/_later.py`, and the fixed-scope tool closures in `llmslim/mcp_server.py:68-125`.
+- Maturity impression: MIT; 36,581 lines of Python, 413 commits by essentially one author from 16 June to 22 November 2026; 1,855 Python test functions with a 90% coverage floor in CI and Docker runs against Postgres and MongoDB, none run here; round 3 benchmark output committed and its LoCoMo row recomputes. Two marks: `scope_enforced`, `negative_eval`. Withheld: `bitemporal`, `tombstone`, `trust_state`, `audit_log`, `human_review`.
+- Study when: you want conversational recall with no model on either side and need a deterministic selector that fills a token budget well.
+- Do not copy when: users must be able to make the system forget, or several tenants share one `llmslim serve`.

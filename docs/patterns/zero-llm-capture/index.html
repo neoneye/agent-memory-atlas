@@ -579,6 +579,20 @@ would resume, so an exchange the user rewound is dropped at the next
 re-index, with a populated test
 (<code>session_sdk/converters.py:611-653</code>,
 <code>tests/test_omp.py:662-675</code>).</p>
+<p><a href="../../systems/llmslim/">LLMSlim</a> keeps the model off both
+sides and puts the interpretation a capture model would have done into a
+deterministic selector. Every writer — the <code>remember</code> tool,
+<code>POST /v1/memories</code>, the chat relay and
+<code>llmslim import</code> — inserts the turn verbatim
+(<code>llmslim/memory/_core.py:625-670</code>). Each search lists the
+whole scope and reserves budget for user turns, links later statements
+on the same subject by rare shared terms so a correction is shown beside
+what it corrects, and gathers standing requests and possibly conflicting
+statements into sections (<code>llmslim/memory/_turns.py:1-27</code>,
+<code>llmslim/memory/_later.py:1-20</code>). The cost moves to the read,
+which scans every turn of the scope on every query. A correction is
+never written as one, so it reaches the model only when the linking rule
+finds it.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>
