@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 881 reports.**
+**This page covers all 882 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8133,3 +8133,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 109,688 lines of Python and 53,007 of Swift, in a 768.6 MB tree of which 625 MB is UI screenshots; 4,441 commits from 19 February to 24 November 2026, counted through the GitHub API and nearly all by one author, with 126 tags to v1.6.12; 8,227 Python test functions and 2,104 Swift test cases, run in CI and not run here. Two marks: `scope_enforced` and `negative_eval`.
 - Study when: you want project and worktree scoping with roles that fail closed, an MCP server that keeps a five-tool default palette, or a full-transcript index for Claude Code on a Mac.
 - Do not copy when: memory must stay corrected or show who changed it, the agent surface must run off macOS, or captured tool output must stay distinguishable from what the user said.
+
+### [`butterfly`](../systems/butterfly/)
+- Best idea: **learn only from a failed turn, and from the critique rather than the reply.** A reply scoring 0.65 or more on four checks strengthens every active rule and extracts nothing; a lower one weakens them and mines trigger-word sentences from the model's own review of the reply (`butterfly/agent.py:123-168`, `butterfly/extractor.py:41-82`), with a test that the reply's own *should* sentence is not learned (`tests/test_agent_api.py:44-52`).
+- Second idea: deduplication against every stored rule by normalised equality or Jaccard 0.8, not only within one batch, and every parameter of the paper in one validated dataclass with a test for each consequence: sixteen failures to prune, 1.5 after twenty alternating turns.
+- Biggest risk: **forgetting lasts one turn.** A pruned rule leaves its text only in a 200-entry turn log that nothing reads, `is_duplicate` checks stored rules alone, and the next failed turn whose critique repeats it adds it back at 1.0 (`butterfly/constraints.py:99-142`); the test that sustained failure empties the set uses a critique with no trigger word, so it cannot see this.
+- Second risk: credit is global and the grader is narrow. One score moves every active rule whatever the reply was about, the heuristic grader checks only rules phrased as prohibitions, model-written rules enter the next system prompt unreviewed, and the mirror loop's model call every third message changes no state.
+- Most reusable component: `butterfly/extractor.py` with `ConstraintSet.add` and `is_duplicate` in `butterfly/constraints.py`, and the atomic save in `butterfly/store.py`.
+- Maturity impression: Apache-2.0; 6 commits from 29 October to 25 November 2026 by one author under two names, the implementation in the first; 1,720 lines of Python and an 864-line React inspector; 60 pytest functions with no CI, none run here. No marks.
+- Study when: you want a small, readable loop that adjusts a persona's prompt from self-graded outcomes on a local model, with a paper section behind each parameter.
+- Do not copy when: memory must recall facts by query, serve more than one user, or keep a rejected rule out.

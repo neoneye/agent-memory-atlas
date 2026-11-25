@@ -878,6 +878,23 @@ is Atlas's <code>(1 + cosine) / 2</code>, so the threshold is raw cosine
 0.70. <strong>Test a decay threshold against the scorer's real output
 range, and a similarity threshold against the engine's real
 score.</strong></p>
+<p><strong><a href="../../systems/butterfly/">Butterfly</a> reinforces a
+rule set by the turn's outcome, and its forgetting does not
+hold.</strong> Every active rule gains 0.1 after a reply scoring 0.65 or
+more on four checks and loses 0.05 after one below it, whatever the
+reply was about, so strength measures the conversation while the rule
+was stored (<code>butterfly/agent.py:129-146</code>). The twelve
+strongest reach every system prompt, and strength sets only the label
+beside each, <em>Always</em>, <em>Usually</em> or <em>When possible</em>
+(<code>butterfly/prompts.py:14-42</code>). A rule at or below 0.2 is
+deleted (<code>butterfly/constraints.py:75-83</code>,
+<code>:127-142</code>). Deduplication compares a new rule only with the
+rules still stored, so the next failed turn whose critique repeats it
+adds it back at 1.0, and the test that sustained failure empties the set
+uses a critique that cannot produce a rule
+(<code>tests/test_agent_api.py:130-135</code>). <strong>Decay that
+deletes needs the deleted value kept where the writer checks, or the
+next write undoes it.</strong></p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

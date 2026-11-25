@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-881, generated from each report's frontmatter —
+882, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-881, generated from each report's frontmatter —
+882, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-881, generated from each report's frontmatter —
+882, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 881, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 882, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-881, generated from each report's frontmatter —
+882, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 881 systems by the seven mechanisms
+filters all 882 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -4870,6 +4870,55 @@ CLI's own file and shell tools</td>
 content; the promised researched-background section has no field to
 arrive in; recordings skip review; deleting an uploaded skill with the
 Bridge offline leaves the file the loader reads</td>
+</tr>
+<tr>
+<td><a href="../systems/butterfly/"><code>butterfly</code></a></td>
+<td>A behaviour rule: one sentence mined from the model's critique of a
+failed reply, with a strength between 0.1 and 2.0, success and failure
+counts and the turn it was created; beside it a per-persona trait
+profile of named values in [0, 1] with their starting baseline</td>
+<td>One JSON file per persona under data/ (BUTTERFLY_DATA), rewritten in
+full after every turn through a temporary file and os.replace; it also
+holds the last 40 messages, a 200-entry turn log and the last
+mirror-loop reflection</td>
+<td>No query: the 12 strongest rules by strength go into every system
+prompt, labelled Always (1.5 and up), Usually (0.8 and up) or When
+possible, with a sentence describing each trait level and the last 20
+messages</td>
+<td>Inside POST /api/chat under a per-persona lock: generate, score the
+reply on four checks, then on a score of 0.65 or more strengthen every
+active rule, or else weaken every active rule, ask the model to critique
+the reply and add the critique's trigger-word sentences that are not
+near-duplicates of a stored rule; prune, then run the mirror loop every
+third message, then save</td>
+<td>Strength moves by +0.1 or -0.05 for every active rule on every turn;
+a rule at or below 0.2 is pruned and leaves no record that deduplication
+reads; an optional max_constraints cap drops the weakest; POST
+/api/reset deletes the persona's file; no per-rule edit or delete</td>
+<td>One file per persona key, a physical partition; no user identity, so
+every client of a server shares a persona's rules and history; the
+server binds 127.0.0.1 by default with no authentication</td>
+<td>A FastAPI server with a React inspector that shows rules, strengths
+and traits, an importable ButterflyAgent class whose state persists only
+if the caller saves to_dict(), and Ollama, OpenAI-compatible or mock
+backends</td>
+<td>None; the mirror loop runs inline on every third message, nudging
+traits from heuristic counts over the last three replies and pulling
+each 15% toward the profile mean</td>
+<td>None: a rule reaches the system prompt on the turn after it is
+extracted, strength is credited to every active rule by one score per
+turn, and the heuristic grader checks only rules phrased as avoid, never
+or don't; an optional mode lets the generating model grade itself</td>
+<td>Learning only from failed turns and from the model's critique rather
+than the reply, with a test that the reply's own should-sentence is not
+learned; deduplication against stored rules; an atomic save that keeps a
+damaged file aside; every parameter in one dataclass with the paper's
+values and tests for each</td>
+<td>A pruned rule returns at strength 1.0 on the next failed turn that
+produces the same critique, and the test that the set empties uses a
+critique that yields no rule; credit goes to every active rule whatever
+the reply was about; model-written rules enter the prompt unreviewed;
+the mirror loop's model call changes no state</td>
 </tr>
 <tr>
 <td><a href="../systems/buzz/"><code>buzz</code></a></td>
@@ -39730,7 +39779,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>85 of 881:</em> <a
+<p><em>85 of 882:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -39819,7 +39868,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>227 of 881:</em> <a
+<p><em>227 of 882:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -40054,7 +40103,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>150 of 881:</em> <a
+<p><em>150 of 882:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -40214,7 +40263,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>381 of 881:</em> <a
+<p><em>381 of 882:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -40613,7 +40662,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>298 of 881:</em> <a
+<p><em>298 of 882:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -40924,7 +40973,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>107 of 881:</em> <a
+<p><em>107 of 882:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -41035,7 +41084,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>572 of 881:</em> <a
+<p><em>572 of 882:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -41645,7 +41694,7 @@ href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
 572 repositories of
-881 assert that particular material must
+882 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -41718,7 +41767,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 881 is the real figure for the second kind, and
+of 882 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not
