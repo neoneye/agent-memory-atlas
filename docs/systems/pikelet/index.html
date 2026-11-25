@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single-file search-pack
+toolchain whose MCP server lets coding agents append notes to a private
+layered journal that no tool can retract.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Pikelet — Agent Memory Atlas">
+    <meta property="og:description" content="A single-file search-pack
+toolchain whose MCP server lets coding agents append notes to a private
+layered journal that no tool can retract.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Pikelet — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single-file search-pack
+toolchain whose MCP server lets coding agents append notes to a private
+layered journal that no tool can retract.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Pikelet — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Pikelet",
+      "description": "A single-file search-pack toolchain whose MCP server lets coding agents append notes to a private layered journal that no tool can retract.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An agent journal of immutable layers that
+no tool can retract</p>
+          <h1>Pikelet</h1>
+          <p class="document-deck">A single-file search-pack toolchain
+whose MCP server lets coding agents append notes to a private layered
+journal that no tool can retract.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mcn92/pikelet">
+              <span>Source</span>
+              <strong>mcn92/pikelet</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mcn92/pikelet/commit/510ddd346f4cd9022470c8850d14685393785aa2" title="510ddd346f4cd9022470c8850d14685393785aa2">
+              <span>Analyzed revision</span>
+              <code>510ddd34…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mcn92--pikelet" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mcn92--pikelet</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0,
+the unmodified text, in LICENSE and packages/pikelet/LICENSE and in both
+package manifests; NOTICE credits the all-MiniLM-L6-v2 weights and BERT
+vocabulary every pack redistributes, both Apache-2.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>78,538
+lines of JavaScript (.mjs and .js) in 305 files, 5,928 of Python in 35,
+3,279 of C++ in 9 and 1,571 of TypeScript in 6, plus 17 committed .wasm
+binaries; the journal is 617 lines (journal.mjs and journal-cli.mjs)
+over a 1,392-line MCP server and the layered append, compact and chain
+reader (423, 449 and 852 lines)</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>595
+commits, all by Matthew Noonan, from 23 April to 23 November 2026; the
+journal landed on 14 October 2026 and shipped in 0.11.0; latest tag
+v0.15.0 (19 November 2026), 21 commits before the pin</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,132
+check() call sites in 25 files under test/, 97 checks in
+test/journal.mjs; npm test chains 13 Node suites and a type check,
+journal, layered_profile and mcp_conformance among them, run by ci.yml
+on Node 22, 24 and 26 and again against WASM rebuilt from source; none
+run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Pikelet is a toolchain for <code>.pikelet</code> files: a corpus, its
+keyword and vector indexes and its query encoder in one
+content-addressed file, compiled once and read over HTTP Range requests
+or mounted for an agent over MCP. Since 14 October 2026 it also has an
+agent journal. An agent started with <code>pikelet mcp --journal</code>
+appends notes through a <code>write_note</code> tool, any later session
+reads them with <code>latest</code> and <code>search</code>, and each
+note is one immutable layer on a private chain. What is notable is the
+write discipline: the model cannot pick the destination, cannot stamp
+its own author or time, and cannot touch the read-only packs, and the
+write survives a crash, a dead lock holder and a concurrent writer. What
+is weak is correction: no tool and no journal command can retract or
+supersede a note, so a wrong decision or a stale handoff stays live in
+every read.</p>
+<p>The corpus packs are a document index and this report treats them as
+context. A publisher compiles them from folders, websites, git history
+or chat exports, and <code>pikelet append</code> can retire or replace a
+record by id. Nothing an agent writes reaches them. The marks below are
+judged on the journal and on the layered machinery as the journal uses
+it.</p>
+<p>The journal reuses that machinery and leaves its correction half
+unused. <code>appendNote</code> hands <code>appendLayer</code> one
+ready-made record and never a removal or a supersession
+(<code>packages/pikelet/src/journal.mjs:518-550</code>), and a
+supersession cannot be expressed for ready-made records at all, because
+<code>appendLayer</code> resolves its target through a
+<code>--source</code> path
+(<code>packages/pikelet/src/append.mjs:48-52</code>). The project's
+design document plans <code>update_note</code>,
+<code>journal review</code> and <code>journal remove</code> and lists
+all three under <em>Not yet</em>
+(<code>docs/agent-journal.md:352-354</code>).</p>
+<p><strong>Licence.</strong> Apache-2.0, the unmodified text, in
+<code>LICENSE</code> and <code>packages/pikelet/LICENSE</code>, matching
+both package manifests. Every compiled pack, a journal included,
+redistributes the quantized all-MiniLM-L6-v2 weights and the BERT
+WordPiece vocabulary, both Apache-2.0, and <code>NOTICE</code> says so
+and asks publishers to keep it with their packs.</p>
+<p>No mark is earned. The nearest are the <code>latest</code> kind and
+tag filters, tested to return exactly one note of two
+(<code>test/journal.mjs:95-96</code>), which are ordinary filter tests.
+Section 9 gives the reason for each of the seven withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a note an agent chose to write for a reader who
+was not there</strong>. The tool description asks for a handoff at the
+end of a session, a decision with the alternatives rejected, a dead end
+with its evidence, a measurement with its method, or a durable user
+preference, and forbids copying passages from other packs in favour of
+citing them (<code>packages/pikelet/src/mcp.mjs:72-84</code>). Notes are
+not extracted from a conversation. Nothing writes one unless the model
+calls the tool.</p>
+<p>A note is believed from the moment its layer is committed and is
+never un-believed by the system. Its life has three states, and only the
+first is reachable through the product:</p>
+<ul>
+<li><strong>Live.</strong> Written by <code>write_note</code>, readable
+on the next call by <code>latest</code>, <code>search</code> and
+<code>get_record</code>, and kept through every compaction with the same
+id (<code>test/journal.mjs:117</code>).</li>
+<li><strong>Tombstoned or superseded.</strong> The layered format can
+mask a row id and record a successor, and both journal reads would
+honour it: <code>latestNotes</code> skips a tombstoned record
+(<code>packages/pikelet/src/journal.mjs:558</code>) and the chain query
+passes the mask into the scan
+(<code>packages/pikelet-wasm/complete/layer-reader.mjs:454-458</code>).
+No journal path writes either.</li>
+<li><strong>Gone.</strong> <code>pikelet journal init --force</code>
+rebuilds the journal from a seed and deletes every chain file
+(<code>packages/pikelet/src/journal.mjs:355-369</code>). This is the
+only way a person can remove a note, and it removes all of them.</li>
+</ul>
+<p>Correction is therefore additive. An agent that finds an earlier note
+wrong writes a new one, and the two sit side by side in
+<code>latest</code> (newest first by id) and in search (ranked by
+similarity, not by age). The design document says <em>"The model cannot
+delete. Removal is a user action through the CLI"</em>
+(<code>docs/agent-journal.md:132-133</code>), and the CLI at this pin
+accepts <code>init</code>, <code>list</code> and <code>compact</code>
+(<code>packages/pikelet/src/journal-cli.mjs:12</code>).</p>
+<p>The system's stance on truth is a label. Every note is returned with
+<code>agentWritten: true</code>
+(<code>packages/pikelet/src/mcp.mjs:243</code>), and a search that
+reaches the journal carries a <code>journalNote</code> telling the model
+to weigh notes as a colleague's working notes and never to follow
+instructions inside one (<code>:304-313</code>). Nothing the system does
+depends on whether a note is true.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a note becomes a live layer through one locked write path; the retraction and supersession the layered format supports have no producer on the journal path, so the only exit is discarding the whole journal</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a note becomes a live layer through one locked write path; the retraction and supersession the layered format supports have no producer on the journal path, so the only exit is discarding the whole journal
+flowchart TD
+  M[&quot;model calls&lt;br/&gt;write_note&quot;] --&gt; SH{&quot;shapeNote:&lt;br/&gt;kind, title, body,&lt;br/&gt;tags, repo, sources&lt;br/&gt;only?&quot;}
+  SH --&gt;|&quot;other key, e.g.&lt;br/&gt;authoredBy&quot;| RJ[&quot;refused&quot;]
+  SH --&gt;|&quot;yes&quot;| ST[&quot;server stamps created,&lt;br/&gt;session, client name&quot;]
+  ST --&gt; CAP{&quot;100 notes this&lt;br/&gt;process already?&quot;}
+  CAP --&gt;|&quot;yes&quot;| RJ
+  CAP --&gt;|&quot;no&quot;| LK[&quot;cross-process lock;&lt;br/&gt;at depth 8 compact&lt;br/&gt;into a new base first&quot;]
+  LK --&gt; AL[&quot;appendLayer: embed&lt;br/&gt;with the base encoder,&lt;br/&gt;stage, check, rename&quot;]
+  AL --&gt; JS[&quot;journal.json lists&lt;br/&gt;the new layer&quot;]
+  JS --&gt; LV[&quot;live note:&lt;br/&gt;latest, search,&lt;br/&gt;get_record&quot;]
+  LV --&gt; FIX{&quot;note turns out&lt;br/&gt;wrong?&quot;}
+  FIX --&gt;|&quot;agent&quot;| NN[&quot;writes another note;&lt;br/&gt;both stay live&quot;]
+  FIX --&gt;|&quot;person&quot;| NONE[&quot;no remove, review or&lt;br/&gt;supersede command&quot;]
+  NONE --&gt; FORCE[&quot;journal init --force:&lt;br/&gt;every note gone,&lt;br/&gt;ids restart at 1&quot;]
+  LV ~~~ DORM
+  DORM[&quot;tombstone bit and&lt;br/&gt;supersession edge:&lt;br/&gt;reads would hide them,&lt;br/&gt;nothing here writes them&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Pikelet is two npm packages in one workspace.
+<code>pikelet-wasm</code> is the reader and builder library: a C++
+engine compiled to WebAssembly for the HNSW and sketch indexes, a BM25
+index, an inline transformer encoder, and the chain reader that mounts a
+base file and its layers as one corpus
+(<code>packages/pikelet-wasm/complete/layer-reader.mjs</code>).
+<code>pikelet</code> is the Node CLI and MCP server
+(<code>packages/pikelet/src/cli.mjs</code>,
+<code>packages/pikelet/src/mcp.mjs</code>). The journal is two files in
+the second package: <code>journal.mjs</code> for the chain, lock and
+note shape, and <code>journal-cli.mjs</code> for the person's three
+commands.</p>
+<p>A journal is a directory,
+<code>~/.pikelet/journals/&lt;name&gt;</code> for a bare name or any
+path given (<code>packages/pikelet/src/journal.mjs:45-61</code>). It
+holds <code>journal.json</code> (format, name, creation time, generation
+and the ordered member files), one base <code>base-NNNN.pikelet</code>
+and up to eight layers <code>base-NNNN.LLLL.pikelet</code>, each holding
+one note (<code>:7-12</code>). The directory is forced to 0700 and its
+files to 0600 before and after every write, with a warning where the
+filesystem ignores modes (<code>:291-302</code>), and
+<code>journal init</code> warns when the directory sits inside a git
+repository (<code>:339-343</code>).</p>
+<p>The base is a complete pack compiled from a one-paragraph seed
+document that describes the journal as agent-written and unverified
+(<code>:377-381</code>), so it embeds the MiniLM query encoder. Every
+<code>.pikelet</code> is at least about 25 MiB for that reason
+(<code>README.md</code>, <em>Quick start</em>), and a journal with three
+notes is nearly as large as one with three hundred. The encoder must be
+available at <code>journal init</code>, which the CLI downloads from a
+GitHub release on first use and caches; after that, writes embed with
+the encoder inside the base and need no network.</p>
+<p>The MCP server is one Node process per client, speaking stdio. With
+<code>--journal</code> it mounts the journal last, beside any corpus
+packs, names it <code>journal</code> unless another pack has that name,
+and adds <code>write_note</code> and <code>latest</code> to the four
+corpus tools (<code>packages/pikelet/src/mcp.mjs:216-217</code>,
+<code>:566-597</code>). Before each tool call it re-reads
+<code>journal.json</code> and remounts when the members differ, so a
+long-running server sees notes and compactions from other sessions
+(<code>:616-626</code>, <code>:1321</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> Node at one of the patched
+releases the CLI requires; nothing else. No database, no embedding API,
+no model service.</li>
+<li><strong>Offline:</strong> yes once the encoder is cached. Corpus
+packs can be remote; the journal is always a local directory.</li>
+<li><strong>API key:</strong> none.</li>
+<li><strong>Install:</strong>
+<code>pikelet journal init &lt;name&gt;</code>, then
+<code>pikelet mcp install --pack &lt;file&gt; --journal &lt;name&gt;</code>,
+which writes the server into the project's <code>.mcp.json</code> for
+Claude Code or into Claude Desktop's config and pins the journal by
+absolute path (<code>packages/pikelet/src/mcp.mjs:854-856</code>,
+<code>:900</code>).</li>
+<li><strong>Repairable by hand:</strong> no. The notes are records
+inside binary pack files; <code>pikelet journal list</code> prints them,
+and there is no export at this pin. A person who wants to change one has
+no supported route short of <code>init --force</code>.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>write_note</code> reaches
+<code>callWriteNote</code>
+(<code>packages/pikelet/src/mcp.mjs:658-696</code>). It builds the
+server-side fields first: <code>created</code> from the clock,
+<code>session</code> from a UUID made once per server process
+(<code>:632-634</code>), and <code>authoredBy</code> from the client's
+<code>clientInfo</code>, taken from the request's <code>_meta</code> on
+a modern request and from <code>initialize</code> on a legacy session
+(<code>:646-656</code>, <code>:1280-1283</code>). <code>shapeNote</code>
+checks the agent's arguments against a fixed set of keys and limits and
+refuses any other key, including <code>created</code> and
+<code>authoredBy</code>
+(<code>packages/pikelet/src/journal.mjs:414-475</code>). The record id
+is <code>note-&lt;created&gt;-&lt;6 hex&gt;</code> and the title becomes
+the first line of the text so search sees both (<code>:466-473</code>).
+Inside a per-process queue the server checks the 100-note budget, calls
+<code>appendNote</code>, counts the write and remounts; a failed remount
+still reports the note as written, with a warning not to write it again
+(<code>packages/pikelet/src/mcp.mjs:668-695</code>).</p>
+<p><strong>Append.</strong> <code>appendNote</code> takes the
+cross-process lock, compacts first when the chain is eight layers deep,
+and calls <code>appendLayer</code> with the record as a ready-made chunk
+and <code>allow-drift</code> set
+(<code>packages/pikelet/src/journal.mjs:518-550</code>).
+<code>appendLayer</code> embeds the chunk with the base's own encoder
+and builds the layer's corpus, vector index, BM25 segment and the
+cumulative tombstone segment every layer carries
+(<code>packages/pikelet/src/append.mjs:91-116</code>,
+<code>:273-326</code>, <code>:372</code>). <code>publicChunk</code>
+keeps the <code>note</code> object on the stored record
+(<code>packages/pikelet/src/ingest.mjs:1161-1180</code>). The layer is
+built under a private name, the writer re-checks that it still holds the
+lock and that <code>journal.json</code> is unchanged, and only then
+renames it into place and rewrites <code>journal.json</code> with an
+fsync of the file and the directory
+(<code>packages/pikelet/src/journal.mjs:258-281</code>,
+<code>:109-120</code>).</p>
+<p><strong>Lock.</strong> The holder record is written whole under a
+private name and hard-linked to <code>.lock</code>, so a contender never
+reads an empty lock. A writer waits up to 30 seconds for a live holder;
+a lock whose pid no longer exists is broken under a second
+<code>.lock.break</code> lock; a live holder's lock is never broken
+however old (<code>packages/pikelet/src/journal.mjs:128-191</code>,
+<code>:208-245</code>).</p>
+<p><strong>Compact.</strong> <code>compactLocked</code> folds the chain
+into <code>base-&lt;generation+1&gt;.pikelet</code> with
+<code>compactChain</code>, writes <code>journal.json</code> naming only
+the new base, then unlinks the old members
+(<code>packages/pikelet/src/journal.mjs:477-491</code>). It runs inside
+the write that finds the chain at depth eight, or by hand through
+<code>pikelet journal compact</code>.</p>
+<p><strong>Read.</strong> <code>latest</code> validates
+<code>kind</code>, <code>tag</code> and a limit of 1 to 50 and calls
+<code>latestNotes</code>, which walks ids downward from the newest,
+skips tombstoned records and the seed, and applies the two filters
+(<code>packages/pikelet/src/mcp.mjs:698-725</code>,
+<code>packages/pikelet/src/journal.mjs:553-564</code>).
+<code>search</code> with no <code>pack</code> argument queries every
+mounted pack, the journal included
+(<code>packages/pikelet/src/mcp.mjs:252-267</code>,
+<code>:269-316</code>). <code>get_record</code> defaults to the one
+corpus pack and reaches the journal only when it is named
+(<code>:318-330</code>).</p>
+<p><strong>Correct or delete.</strong> None on the journal path.
+<code>git grep</code> for <code>update_note</code>,
+<code>journal remove</code> and <code>journal review</code> finds only
+<code>docs/agent-journal.md</code>, and <code>appendNote</code> has one
+caller outside tests, <code>callWriteNote</code>
+(<code>packages/pikelet/src/mcp.mjs:674</code>); see <em>Recorded
+searches</em>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A note is a document-shaped record with a <code>note</code> object
+(<code>packages/pikelet/src/journal.mjs:461-474</code>):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Source</th>
+<th>Read by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>title</code>, <code>text</code></td>
+<td>agent, one-line title of at most 200 characters, body of at most 16
+KiB</td>
+<td>search, latest preview, get_record</td>
+</tr>
+<tr>
+<td><code>headingPath</code></td>
+<td><code>[kind]</code></td>
+<td>returned only</td>
+</tr>
+<tr>
+<td><code>note.kind</code></td>
+<td>agent, one of seven</td>
+<td><code>latest</code> filter</td>
+</tr>
+<tr>
+<td><code>note.tags</code></td>
+<td>agent, at most 20, lower-cased and de-duplicated</td>
+<td><code>latest</code> filter</td>
+</tr>
+<tr>
+<td><code>note.repo</code></td>
+<td>agent, optional repository, branch, commits, files, versions</td>
+<td>returned only</td>
+</tr>
+<tr>
+<td><code>note.sources</code></td>
+<td>agent, optional <code>(pack identity, record id)</code> pairs,
+format-checked</td>
+<td>returned only</td>
+</tr>
+<tr>
+<td><code>note.created</code></td>
+<td>server clock</td>
+<td>returned only</td>
+</tr>
+<tr>
+<td><code>note.authoredBy</code></td>
+<td>the MCP client's self-declared name and version</td>
+<td>returned only</td>
+</tr>
+<tr>
+<td><code>note.session</code></td>
+<td>one UUID per server process</td>
+<td>returned only</td>
+</tr>
+</tbody>
+</table></div>
+<p>The record's id in the chain is a global integer: the seed is 0 and
+notes count up from 1 (<code>test/journal.mjs:89</code>). The
+<code>note-&lt;created&gt;-&lt;hex&gt;</code> string is the record's
+<code>docId</code>, which no read uses.</p>
+<p><strong>Scoping.</strong> The journal is a physical partition: a
+directory chosen by whoever starts the server, never by the model, since
+no tool takes a path (<code>docs/agent-journal.md:115-118</code>).
+Inside it there is no scope key a read applies. <code>repo</code>,
+<code>session</code> and <code>authoredBy</code> are stored and
+returned, and the only reads of <code>note.repo</code> and
+<code>note.authoredBy</code> in <code>packages/</code> copy them into
+the <code>latest</code> response
+(<code>packages/pikelet/src/mcp.mjs:716-718</code>). A journal is shared
+by every session and every client configured with the same name, which
+the changelog presents as a feature: <em>"several sessions can share one
+journal"</em> (<code>CHANGELOG.md:727-728</code>). Whether one journal
+serves one project or a user's whole working life is the person's naming
+choice, and the design document leaves it as an open question
+(<code>docs/agent-journal.md:292</code>).</p>
+<p><strong>Temporal fields.</strong> <code>created</code> only, set by
+the server. Nothing records when a decision stopped holding.</p>
+<p><strong>Separation.</strong> The seven kinds are a genre field.
+Decisions, dead ends and preferences share one chain, one index and one
+ranking.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong><code>latest</code></strong> is the orientation read the tool
+description tells the model to call at the start of a session
+(<code>packages/pikelet/src/mcp.mjs:117-131</code>). It is ordered by
+id, which appends make monotonic, and returns up to 50 notes with a
+300-character preview each; <code>get_record</code> returns the full
+text. A kind filter for <code>handoff</code> therefore returns the
+newest handoff first, and every earlier handoff after it, all live.</p>
+<p><strong><code>search</code></strong> runs the chain query. Lexical
+candidates come from each tier's BM25 index with document frequencies
+summed across tiers, and vector candidates from each tier's HNSW index;
+both scans take the tier's tombstone mask. The two orders are fused by
+reciprocal rank with <code>rrfK</code> 60 and a lexical weight of 0.5,
+behind a guard that keeps a clear vector winner at rank 1
+(<code>packages/pikelet-wasm/complete/layer-reader.mjs:426-533</code>,
+<code>packages/pikelet-wasm/complete/fusion.mjs:1-25</code>). The
+journal is unscored by design
+(<code>packages/pikelet/src/journal.mjs:4-5</code>), so a journal search
+returns its top k however distant; each section carries
+<code>grounding</code>, the query words the best passage does or does
+not contain.</p>
+<p><strong>Mixing.</strong> Because an unscoped <code>search</code>
+reaches every mounted pack, a question about a product's documentation
+also returns the agent's own notes on the same subject, in their own
+section, labelled <code>journal: true</code> and
+<code>agentWritten</code>
+(<code>packages/pikelet/src/mcp.mjs:290-313</code>). The sections are
+not merged into one ranking, which keeps the label attached; the model
+still receives a stale decision beside the manual it may contradict.</p>
+<p><strong>Failure modes.</strong> Stale hits are the main one: a
+superseded handoff or a reversed decision ranks on similarity like any
+other note, and the newer note that reverses it may not be in the top k.
+Over-recall follows from the absence of a threshold.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit tool calls, made hot-path by the model. Nothing
+is extracted, deduplicated or consolidated: the same note written twice
+is two records, because ready-made chunks bypass the chunker's dedupe
+(<code>packages/pikelet/src/append.mjs:191</code>) and the layered
+profile gives records <em>"identity within a history, not content
+identity"</em> (<code>LAYERED_PROFILE.md:144-147</code>).
+Agent-generated facts are the whole store, and the only filter on them
+is shape: kinds, lengths, counts, and the instruction in the tool
+description not to record secrets
+(<code>packages/pikelet/src/mcp.mjs:81-82</code>). No code scans a note
+for a secret.</p>
+<p>Updates and deletes do not exist on this path; section 2 covers what
+a person can do instead. Conflict handling is the reader's job.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Blocking.</strong> <code>write_note</code> is synchronous.
+The agent waits for the lock, one MiniLM embedding of the note on the
+CPU, a layer build with its own HNSW and BM25 segments, two fsyncs and a
+remount. The README puts embedding at about one chunk a second per
+core.</li>
+<li><strong>Lag.</strong> None once the call returns: the server
+remounts before replying, and other servers see the note at their next
+tool call.</li>
+<li><strong>Whole-store rewrite.</strong> Every ninth write folds the
+chain into a new base, which carries the encoder, so every eight notes
+the write path produces a new file of at least about 25 MiB and deletes
+the old ones. The design document calls this seconds of work, reusing
+stored vectors (<code>docs/agent-journal.md:230-235</code>). It scales
+with the journal's size and runs in the tool call.</li>
+<li><strong>Read cost.</strong> <code>latest</code> returns at most 50
+previews of 300 characters; search returns at most 20 results per pack
+(<code>packages/pikelet/src/mcp.mjs:65</code>). Nothing is injected
+automatically.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration is MCP only.
+<code>pikelet mcp --journal &lt;name&gt;</code> exposes
+<code>write_note</code> and <code>latest</code> beside
+<code>search</code>, <code>list_packs</code>, <code>verify_pack</code>
+and <code>get_record</code>
+(<code>packages/pikelet/src/mcp.mjs:1323-1339</code>);
+<code>list_packs</code> marks the journal <code>writable</code> and
+<em>"agent-written and unverified"</em> (<code>:457</code>). No hook
+writes on session end and no context is injected at session start; the
+model is told when to write and when to call <code>latest</code>, and
+the rest is its choice. The design document asks whether the server
+should ever write on its own and leaves it open
+(<code>docs/agent-journal.md:298-299</code>).</p>
+<p>The agency boundary is clear and narrow. The model chooses the
+content, kind, tags, anchors and citations. It cannot choose the
+journal, the time, the session or the author, cannot read or write a
+pack it was not given, and cannot delete. A person cannot write a note
+except through an MCP client either.</p>
+<p>Adapting the journal to another agent costs nothing beyond an MCP
+client, since the author is whatever the client declares. Adapting it to
+another store is not practical: the journal is the pack format, and its
+value proposition is that a note is citable as
+<code>(pack identity, record id)</code> and readable by any Pikelet
+reader.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="correction">Correction</h3>
+<p>A note that turns out false stays in every read. The agent's only
+move is a second note, and both are returned. The person's only move is
+<code>pikelet journal init --force</code>, which discards every note and
+restarts the id sequence: the test for it writes a note, re-initialises,
+writes another and requires the new one to be id 1
+(<code>test/journal.mjs:186-190</code>). <code>write_note</code> tells
+the agent the id <em>"stays this note's id as the journal grows and
+compacts"</em> and that the identity <em>"dates the citation rather than
+locating it"</em> (<code>packages/pikelet/src/mcp.mjs:689-693</code>),
+and <code>get_record</code> takes only a pack name and an id
+(<code>:318-330</code>). After a forced re-init, a citation an agent
+recorded in an earlier session, in a commit message or in another note,
+resolves to a different note with no error.</p>
+<p>The layered format's correction machinery would not close this if it
+were wired. Its tombstone is a bit on a global row id, un-deletion is a
+non-goal, and appending bytes equal to a removed record makes a new live
+id (<code>LAYERED_PROFILE.md:144-147</code>). An agent re-writing a
+retracted decision would get a new live note.</p>
+<h3 id="scope">Scope</h3>
+<p>The journal directory is the only boundary, and the person sets it.
+Every client configured with the same name writes to and reads from one
+journal, with no read separating projects or authors.
+<code>mcp install</code> writes the server into the current project's
+<code>.mcp.json</code> with the journal pinned by absolute path, so a
+user who installs the same bare name in two repositories gets one
+journal across both.</p>
+<h3 id="provenance-and-injection">Provenance and injection</h3>
+<p>The server-set fields are the best part of the design: a note cannot
+claim a time, a session or another client, and the test for it sends
+<code>created</code> over MCP and requires the refusal
+(<code>test/journal.mjs:514</code>). <code>authoredBy</code> is what the
+client declares about itself, so it distinguishes Claude Code from Codex
+and proves neither. Notes are labelled as data in three places, and a
+note summarising a hostile page is still returned to the next session in
+full. <code>sources</code> citations are format-checked and never
+resolved, so a note can cite a record that says something else.</p>
+<h3 id="concurrency-and-durability">Concurrency and durability</h3>
+<p>The lock and commit protocol is careful and tested. A live holder's
+lock is never broken, and a dead holder's is broken under a second lock.
+A writer that lost the lock abandons its staged file,
+<code>journal.json</code> and its directory are fsynced before a write
+counts, and an orphan layer from a crashed write does not block the next
+(<code>test/journal.mjs</code>, sections <em>one writer at a time</em>,
+<em>recovery and concurrent writers</em>, <em>a paused writer keeps its
+lock</em>). Within one server, writes are serialised by a promise queue
+and counted inside it, so concurrent calls cannot exceed the budget
+(<code>packages/pikelet/src/mcp.mjs:668-676</code>).</p>
+<h3 id="privacy">Privacy</h3>
+<p>Modes are enforced on every write and reported where the filesystem
+ignores them. Nothing redacts note content. The notes are in a binary
+format a person cannot grep without the CLI.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code> — withheld.</strong> No journal path
+writes a tombstone. The format's tombstone is keyed on a row id and
+expressly not on content (<code>LAYERED_PROFILE.md:144-147</code>), so
+even a wired one would not stop the same note being written again.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>agentWritten: true</code> is a constant on every note and
+<code>kind</code> is a genre. No read excludes a note for any
+status.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>created</code> is the server's clock at write time, and there is
+no validity field.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> One
+directory per configured journal is a physical partition.
+<code>repo</code>, <code>session</code> and <code>authoredBy</code> are
+stored and no read filters on them.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> The only
+mutation is an add, and the record of it is the note. Each add is an
+immutable, content-addressed layer until the next compaction folds it
+into a new base and unlinks it
+(<code>packages/pikelet/src/journal.mjs:477-491</code>), and
+<code>init --force</code> removes everything with no record.</li>
+<li><strong><code>human_review</code> — withheld.</strong> A note is
+live when its layer commits. <code>pikelet journal list</code> displays;
+<code>journal review</code> is design text
+(<code>docs/agent-journal.md:218-219</code>,
+<code>:352-354</code>).</li>
+<li><strong><code>negative_eval</code> — withheld.</strong> The
+journal's exclusions in tests are the <code>latest</code> kind and tag
+filters, each required to return exactly note 1 from a journal holding a
+decision and a dead end, and the seed's omission
+(<code>test/journal.mjs:94-96</code>). They are ordinary filter tests,
+with no case about a retracted note, a superseded one or another
+project's, since none can exist. The layered reader's must-not cases for
+masked rows (<code>test/layered_profile.mjs:928</code>,
+<code>:987</code>) guard the corpus path, and the journal produces no
+mask for them to guard. The abstention goldens below are a document
+index.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>npm test</code> chains thirteen Node suites and a type check,
+from the WebAssembly engine to the MCP server, and <code>ci.yml</code>
+runs it on Node 22, 24 and 26 against the committed WebAssembly and
+again after rebuilding the engine from source with a pinned Emscripten
+(<code>package.json:23</code>, <code>.github/workflows/ci.yml</code>).
+<code>test/journal.mjs</code> builds real journals with the inline
+encoder in a temporary directory and drives the MCP server in-process;
+its 97 checks cover note validation, init, write, read, compaction,
+every lock path, crash debris, racing inits, a paused writer, file
+modes, mounting beside a stalled pack and the MCP tools including
+concurrent writes interleaved with reads. Almost all of it is write-path
+correctness. The read-side checks are that the next read sees a note,
+that search finds the note that answers a query, that results carry the
+label, and the filters. There is no test of a note's correction because
+there is no correction.</p>
+<p>No evaluation of the journal is committed. The design document states
+the experiment it would take, a fresh agent from another vendor
+answering fixed history questions from the journal against the same
+questions from git and docs alone
+(<code>docs/agent-journal.md:356-364</code>), and nothing under
+<code>benchmarks/</code>, <code>docs/measurements/</code> or
+<code>scripts/</code> mentions the journal.</p>
+<p>Two results on the document side are evaluation of the kind this
+atlas looks for, and both bear on how the project treats its own
+claims.</p>
+<ul>
+<li><strong>The Veyra ablation</strong>
+(<code>docs/veyra-ablation.md</code>) rebuilt a pack byte-for-byte
+except for the record holding one fact; retrieval moved from
+<code>matchQuality: strong</code> at confidence 0.915 to
+<code>none</code> at 0.136, and a third pack that changed the value
+moved the grounded answer with it. The write-up keeps the reproducible
+retrieval numbers apart from model sessions it calls <em>"a described
+observation rather than a reproducible result"</em>, and says it
+<em>"does <strong>not</strong> mean Pikelet can prevent an LLM from
+hallucinating"</em>.
+<code>examples/one-file-search/web/public/reproduce-ablation.mjs</code>
+re-derives the retrieval side and prints rather than asserts, against
+packs that <code>npm run demo:veyra</code> fetches from a release, so
+nothing fails in CI when the numbers move.</li>
+<li><strong>The abstention goldens</strong>
+(<code>test/fixtures/encoder-conformance/abstention-golden.json</code>)
+hold ten labelled queries, five labelled <code>none</code>, and
+<code>test/complete_profile.mjs:891-898</code> requires all ten to
+reproduce their label and each <code>none</code> query to return zero
+results, inside <code>npm test</code>. It is a must-not-retrieve
+assertion for a search index, on a pack built from a committed
+calibration asset. Since 0.15.0 (19 November 2026) <code>compile</code>
+no longer fits a calibration, and <code>pikelet mcp</code> and
+<code>pikelet query</code> no longer report the verdict at all
+(<code>CHANGELOG.md:94-123</code>). The reason is a measurement: on a
+1,377-article Wikipedia pack the verdict called 278 unanswerable Natural
+Questions <code>strong</code>, out of 512 asked, and Sonnet and Haiku
+agents over MCP answered no better with it than without it in 320 runs
+(<code>docs/calibration.md:11-56</code>). The golden test now guards a
+library path that only packs calibrated by 0.14.0 or earlier
+exercise.</li>
+</ul>
+<p>The second is a project withdrawing its own headline signal on
+evidence and publishing the table.</p>
+<p>There is no paper. The repository carries a BEIR harness for encoder,
+quantisation and index quality under <code>benchmarks/beir/</code>, and
+the README's range-read and MCP proofs, none of which touch the
+journal.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Fix the write destination at configuration and keep it out
+of the tool.</strong> One writable store named when the server starts,
+every other mount read-only, and no path argument means the model cannot
+misroute a note, whatever it is told.</li>
+<li><strong>Stamp provenance on the server and refuse it in the
+arguments.</strong> A whitelist of agent keys that rejects
+<code>created</code> or <code>authoredBy</code> with an error, rather
+than overwriting them silently, teaches the model the boundary and makes
+the refusal testable.</li>
+<li><strong>Commit under a lock a live holder never loses.</strong>
+Write the holder record whole and hard-link it into place, break only a
+dead pid's lock and only under a second lock, re-check ownership and the
+expected state immediately before the rename, and fsync the directory
+after it.</li>
+<li><strong>Report a write as done once it is on disk, even if the
+follow-up read fails.</strong> The warning <em>"Do not write it
+again"</em> prevents the duplicate that a retrying agent would otherwise
+create.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An append-only store for claims that can be wrong, with no
+way to retract one.</strong> Handoffs, decisions and preferences are
+exactly the records that go stale. A journal whose only correction is a
+newer note leaves the reader to find and weigh both, every session.</li>
+<li><strong>Ids that a reset reuses while the citation contract says
+they are stable.</strong> If a citation is <code>(store, id)</code>, a
+reset has to change the store's name or skip past every id ever
+issued.</li>
+<li><strong>A whole-file rebuild on a fixed write count when the file
+carries a model.</strong> A 25 MiB base every eight notes is cheap on
+one laptop and is the cost a shared or synced journal would pay
+first.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Pikelet's journal suits one developer who wants coding agents from
+different vendors to leave a searchable trail of handoffs and dead ends
+for each other on one machine, accepts that the trail is append-only,
+and can live with discarding it when it goes bad. It is a careful first
+milestone of a design whose correction half is written down and not
+built. A team, anyone who needs a reversed decision to stop surfacing,
+or anyone whose agents must not see notes from another project should
+wait for <code>update_note</code> and <code>journal remove</code> or
+build the correction themselves. Adopt it for the pack format, and the
+journal comes free; adopt it for the journal alone and you are taking a
+25 MiB search engine to hold a notebook.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How long the ninth write's compaction blocks the agent on a journal
+of a few thousand notes, and whether a client times out on it. Running
+the system would answer it.</li>
+<li>Whether the planned <code>update_note</code> will supersede by row
+id through the existing machinery, which would hide the old note from
+search and still let the same text be re-asserted as a new id, or key on
+content.</li>
+<li>Whether <code>journal remove</code>, when it lands, will renumber on
+compaction, and how that squares with the promise that a note's id is
+stable.</li>
+<li>Whether any client sends a <code>clientInfo</code> name other than
+its own, and whether the project intends <code>authoredBy</code> as
+identity or as a hint.</li>
+<li>Whether the Veyra packs fetched by <code>demo:veyra</code> carry a
+calibration that the 0.15.0 library still scores, so that the reproduce
+script still prints a verdict. The packs are release assets and not in
+the tree.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Journal: <code>packages/pikelet/src/journal.mjs</code>,
+<code>packages/pikelet/src/journal-cli.mjs</code>,
+<code>docs/agent-journal.md</code></li>
+<li>MCP server and tools: <code>packages/pikelet/src/mcp.mjs</code>,
+<code>packages/pikelet/src/cli.mjs</code></li>
+<li>Layered write path: <code>packages/pikelet/src/append.mjs</code>,
+<code>packages/pikelet/src/compact.mjs</code>,
+<code>packages/pikelet/src/ingest.mjs</code> (<code>publicChunk</code>),
+<code>LAYERED_PROFILE.md</code></li>
+<li>Read path:
+<code>packages/pikelet-wasm/complete/layer-reader.mjs</code>,
+<code>packages/pikelet-wasm/complete/fusion.mjs</code></li>
+<li>Document-side evaluation: <code>docs/veyra-ablation.md</code>,
+<code>examples/one-file-search/web/public/reproduce-ablation.mjs</code>,
+<code>test/fixtures/encoder-conformance/abstention-golden.json</code>,
+<code>docs/calibration.md</code></li>
+<li>Tests: <code>test/journal.mjs</code>,
+<code>test/mcp_conformance.mjs</code>,
+<code>test/layered_profile.mjs</code>,
+<code>test/complete_profile.mjs</code>, <code>package.json</code>,
+<code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>No retract, supersede or review path for notes.</strong>
+<code>git grep -n -E 'update_note|journal remove|journal review|removeNote'</code>
+returns lines of <code>docs/agent-journal.md</code> only
+(<code>:133</code>, <code>:178</code>, <code>:218</code>,
+<code>:227</code>, <code>:245</code>, <code>:246</code>,
+<code>:270</code>, <code>:305</code>, <code>:306</code>,
+<code>:352</code>).</li>
+<li><strong>One product caller of the journal append.</strong>
+<code>git grep -n -E 'appendNote\('</code> returns the definition at
+<code>packages/pikelet/src/journal.mjs:518</code>,
+<code>packages/pikelet/src/mcp.mjs:674</code> and lines of
+<code>test/journal.mjs</code>.</li>
+<li><strong>The journal passes no removal or supersession to the
+append.</strong>
+<code>git grep -n -E 'remove|supersede' -- packages/pikelet/src/journal.mjs packages/pikelet/src/journal-cli.mjs</code>
+returns comments about lock files, staged files and replaced members
+only (<code>journal.mjs:162</code>, <code>:168</code>,
+<code>:178</code>, <code>:182</code>, <code>:188</code>,
+<code>:269</code>, <code>:358</code>, <code>:487</code>).</li>
+<li><strong>Six tools, two of them the journal's.</strong>
+<code>git grep -n -E "toolName === '" -- packages/pikelet/src/mcp.mjs</code>
+returns the dispatch for <code>search</code>, <code>list_packs</code>,
+<code>get_record</code>, <code>verify_pack</code>,
+<code>write_note</code> and <code>latest</code>
+(<code>:1323-1339</code>) and two routing lines (<code>:1164</code>,
+<code>:1169</code>).</li>
+<li><strong>Three journal commands.</strong>
+<code>git grep -n -E "\['init', 'list', 'compact'\]"</code> returns
+<code>packages/pikelet/src/journal-cli.mjs:12</code>.</li>
+<li><strong>No read filters on repo, session or author.</strong>
+<code>git grep -n -E 'note\.(repo|session|authoredBy)' -- packages</code>
+returns <code>packages/pikelet/src/mcp.mjs:716</code> and
+<code>:718</code>, both copying the field into the <code>latest</code>
+response.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- README.md docs FORMAT.md LAYERED_PROFILE.md spec</code>
+returns nothing; <code>git grep -n -i -E 'arxiv'</code> over the whole
+tree returns the WebANNS benchmark dataset name in
+<code>benchmarks/engine/webanns_1k/</code>.</li>
+<li><strong>No journal evaluation.</strong>
+<code>git grep -l -i 'journal' -- benchmarks docs/measurements scripts examples</code>
+returns nothing; <code>git grep -n -i 'journal' -- CHANGELOG.md</code>
+returns the release entries.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/mcn92/pikelet/commit/510ddd346f4cd9022470c8850d14685393785aa2"><code class="commit-id" title="510ddd346f4cd9022470c8850d14685393785aa2">510ddd34…</code></a>.
+First report, from a full clone at the head of <code>main</code>, 21
+commits after v0.15.0. Examined at <a
+href="https://github.com/mcn92/pikelet/commit/9f81ad79a6d9b52bb956125c7271c89021588edb"><code class="commit-id" title="9f81ad79a6d9b52bb956125c7271c89021588edb">9f81ad79…</code></a>
+and at <a
+href="https://github.com/mcn92/pikelet/commit/d00f50acbc4c768d8942af903794e403bc401211"><code class="commit-id" title="d00f50acbc4c768d8942af903794e403bc401211">d00f50ac…</code></a>
+(0.9.2) and excluded: only the corpus compiler wrote, the MCP server had
+four read tools, and a tombstone was a bit on a row id. The agent
+journal, added on 14 October 2026, gives an agent
+<code>write_note</code> and <code>latest</code> over MCP, which is
+memory; the second reason now applies to the journal more strongly,
+since its path writes no tombstone or supersession at all (<a
+href="#correction">section 9</a>). Screened first: no auto-run surface;
+three manifests inside the seven-day cooldown; two build-time execution
+points; nine unpinned surfaces; no submodules. Docs were read as data.
+Nothing was installed, built or run, and the test suites were not run.
+No marks.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

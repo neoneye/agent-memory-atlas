@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 868 reports.**
+**This page covers all 869 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8003,3 +8003,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 21,697 lines of Python in 366 commits between 1 June and 9 November 2026, almost all by the owner; 367 test functions, ten files against a real PostgreSQL that CI provisions, none run here; the card generator and butler jobs the README leads with are private. Two marks: `scope_enforced`, `negative_eval`.
 - Study when: you want write-time contradiction handling that hands the decision to a person, or a fused exact, keyword, time and vector recall over Chinese work logs.
 - Do not copy when: more than one user shares the server, or a correction or a forget has to hold on every read path.
+
+### [`pikelet`](../systems/pikelet/)
+- Best idea: **the write destination is configuration, not an argument.** One journal is named when the MCP server starts, no tool takes a path, every other mounted pack is read-only, and `shapeNote` refuses `created`, `authoredBy` or any other key the server owns (`packages/pikelet/src/journal.mjs:414-475`), so the model can neither misroute a note nor forge its provenance.
+- Second idea: a commit protocol that survives a dead writer and never robs a live one. The holder record is hard-linked into `.lock` whole, only a dead pid's lock is broken and only under `.lock.break`, and the layer is renamed into place after re-checking ownership and the expected `journal.json`, with fsyncs of the file and the directory (`packages/pikelet/src/journal.mjs:128-281`).
+- Biggest risk: **a wrong note cannot be taken back.** `appendNote` passes no removal or supersession (`packages/pikelet/src/journal.mjs:518-550`), the CLI offers `init`, `list` and `compact`, and `update_note`, `journal review` and `journal remove` exist only in `docs/agent-journal.md`; a reversed decision or stale handoff stays in `latest` and `search` beside the note that corrects it.
+- Second risk: `journal init --force`, the one way to remove a note, discards the whole journal and restarts ids at 1 (`test/journal.mjs:186-190`), while `write_note` promises the id is stable and `get_record` takes only a pack and an id, so an old citation silently resolves to a new note; an unscoped `search` also returns journal notes beside every corpus pack's results.
+- Most reusable component: `withLock`, `buildInPlace` and `assertUnchanged` in `packages/pikelet/src/journal.mjs:141-281`, a dependency-free single-writer commit for any append-only directory store.
+- Maturity impression: Apache-2.0; 78,538 lines of JavaScript, the journal 617 of them, in 595 commits by one author from 23 April to 23 November 2026; the journal shipped in 0.11.0 and was hardened through 0.15.0; 97 journal checks among 1,132 in an `npm test` that CI runs on three Node versions and against a from-source engine rebuild, none run here; no journal evaluation committed, and the project withdrew its own relevance verdict in 0.15.0 on a published measurement. No marks; the nearest, `latest` returning exactly one note of two under a kind or tag filter, is an ordinary filter test.
+- Study when: you want several vendors' coding agents to leave a searchable, citable trail of handoffs and dead ends on one machine, with the model kept away from where and as whom it writes.
+- Do not copy when: a reversed decision must stop surfacing, notes must be separated by project or author on read, or a person must be able to remove one note without discarding the rest.

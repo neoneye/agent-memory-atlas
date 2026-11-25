@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 868 reports.</strong></p>
+<p><strong>This page covers all 869 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35750,6 +35750,59 @@ the decision to a person, or a fused exact, keyword, time and vector
 recall over Chinese work logs.</li>
 <li>Do not copy when: more than one user shares the server, or a
 correction or a forget has to hold on every read path.</li>
+</ul>
+<h3 id="pikelet"><a
+href="../systems/pikelet/"><code>pikelet</code></a></h3>
+<ul>
+<li>Best idea: <strong>the write destination is configuration, not an
+argument.</strong> One journal is named when the MCP server starts, no
+tool takes a path, every other mounted pack is read-only, and
+<code>shapeNote</code> refuses <code>created</code>,
+<code>authoredBy</code> or any other key the server owns
+(<code>packages/pikelet/src/journal.mjs:414-475</code>), so the model
+can neither misroute a note nor forge its provenance.</li>
+<li>Second idea: a commit protocol that survives a dead writer and never
+robs a live one. The holder record is hard-linked into
+<code>.lock</code> whole, only a dead pid's lock is broken and only
+under <code>.lock.break</code>, and the layer is renamed into place
+after re-checking ownership and the expected <code>journal.json</code>,
+with fsyncs of the file and the directory
+(<code>packages/pikelet/src/journal.mjs:128-281</code>).</li>
+<li>Biggest risk: <strong>a wrong note cannot be taken back.</strong>
+<code>appendNote</code> passes no removal or supersession
+(<code>packages/pikelet/src/journal.mjs:518-550</code>), the CLI offers
+<code>init</code>, <code>list</code> and <code>compact</code>, and
+<code>update_note</code>, <code>journal review</code> and
+<code>journal remove</code> exist only in
+<code>docs/agent-journal.md</code>; a reversed decision or stale handoff
+stays in <code>latest</code> and <code>search</code> beside the note
+that corrects it.</li>
+<li>Second risk: <code>journal init --force</code>, the one way to
+remove a note, discards the whole journal and restarts ids at 1
+(<code>test/journal.mjs:186-190</code>), while <code>write_note</code>
+promises the id is stable and <code>get_record</code> takes only a pack
+and an id, so an old citation silently resolves to a new note; an
+unscoped <code>search</code> also returns journal notes beside every
+corpus pack's results.</li>
+<li>Most reusable component: <code>withLock</code>,
+<code>buildInPlace</code> and <code>assertUnchanged</code> in
+<code>packages/pikelet/src/journal.mjs:141-281</code>, a dependency-free
+single-writer commit for any append-only directory store.</li>
+<li>Maturity impression: Apache-2.0; 78,538 lines of JavaScript, the
+journal 617 of them, in 595 commits by one author from 23 April to 23
+November 2026; the journal shipped in 0.11.0 and was hardened through
+0.15.0; 97 journal checks among 1,132 in an <code>npm test</code> that
+CI runs on three Node versions and against a from-source engine rebuild,
+none run here; no journal evaluation committed, and the project withdrew
+its own relevance verdict in 0.15.0 on a published measurement. No
+marks; the nearest, <code>latest</code> returning exactly one note of
+two under a kind or tag filter, is an ordinary filter test.</li>
+<li>Study when: you want several vendors' coding agents to leave a
+searchable, citable trail of handoffs and dead ends on one machine, with
+the model kept away from where and as whom it writes.</li>
+<li>Do not copy when: a reversed decision must stop surfacing, notes
+must be separated by project or author on read, or a person must be able
+to remove one note without discarding the rest.</li>
 </ul>
         </article>
       </div>

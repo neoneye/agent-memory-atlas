@@ -151,6 +151,8 @@ lands at all.
 
 [DataMind](../../systems/datamind/) keeps the destination out of its dedupe key. Every memory write passes a receipt ledger that fingerprints the tool name and its arguments and returns `unchanged`, without running the handler, when that fingerprint once succeeded (`datamind/capabilities/ingest/ledger.py:191-237`). A session-scoped save takes its session from the request context, not from an argument, so the same sentence saved in a second session matches the first session's fingerprint and lands nowhere. The success index also survives `memory_forget`, so a forgotten fact restated in the same words stays forgotten. The ledger exempts KB, graph and DB replacement tools from the check and no memory tool (`:216-220`).
 
+[Pikelet](../../systems/pikelet/) removes the choice instead of requiring it. Its MCP server has one writable store, the journal named by `--journal` when the server starts; `write_note` takes no path, every other mounted pack is read-only, and the tool description names the one journal it writes to (`packages/pikelet/src/mcp.mjs:72-73`). The model cannot misroute a note, which is this page's aim reached through its own exception: the default sits on a path a person already chose. What the person chose is a directory, not a project. A bare name resolves to `~/.pikelet/journals/<name>`, `pikelet mcp install` pins that path into the current project's `.mcp.json`, and no read filters notes by the agent-supplied `repo` anchor, so the same name installed in two repositories is one journal for both.
+
 ## Implementation checklist
 
 - Make the destination a required argument of every write and mutate call, and
