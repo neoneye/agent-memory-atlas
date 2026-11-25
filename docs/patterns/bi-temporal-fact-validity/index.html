@@ -688,6 +688,25 @@ every judgment cited as current, in free Markdown the server does not
 parse, and expiry happens when the agent reads the date and edits the
 page. A field the read path ignores is a note to the reader, not a
 validity interval.</p>
+<p><a href="../../systems/connapse/">Connapse</a> separates two kinds of
+correction on a window the agent states. <code>memory_remember</code>
+takes <code>validFrom</code> and <code>validTo</code> from the agent and
+leaves them null when it gives none, while <code>recorded_at</code> and
+<code>superseded_at</code> come from the clock
+(<code>src/Connapse.Web/Mcp/McpTools.Memory.cs:146-147</code>). A
+<code>changed</code> correction requires a <code>validFrom</code> after
+the old start and ends the old fact there; a <code>wrong</code>
+correction stamps <code>superseded_at</code>, gives the new version the
+old dates, and refuses to move a date where another version of the chain
+starts or ends, so any date finds exactly one held version
+(<code>src/Connapse.Storage/Memory/PostgresMemoryStore.cs:43-72</code>,
+<code>:128-140</code>). <code>asOf</code> recall filters on the window
+and on <code>superseded_at IS NULL</code>, and a randomized integration
+test requires one version per started chain on every third day across
+six months
+(<code>tests/Connapse.Integration.Tests/Memory/MemoryLeakTests.cs:223-231</code>).
+No read asks what memory held at a past record time, and a fact saved
+without <code>validFrom</code> is true at every date.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

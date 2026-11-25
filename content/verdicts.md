@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 874 reports.**
+**This page covers all 875 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8063,3 +8063,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 82,018 lines of Python under `src/` and 186,788 under `tests/`, 41 migrations; 434 commits from 26 April to 16 November 2026, nearly all by one author, tagged to v1.6.0; 7,357 test functions with the Postgres integration modules run in CI, none run here. Two marks: `scope_enforced`, `negative_eval`; `audit_log` withheld because retention and root changes delete change-feed events.
 - Study when: several agents and a person share one store of plain files, and you need to know which agent changed what since a given point.
 - Do not copy when: a correction must hold against the next write, a write must wait for a person, or different agents should see different parts of the store.
+
+### [`connapse`](../systems/connapse/)
+- Best idea: **a fact inherits the permissions of what it cites.** A reader sees a fact only when it is team or theirs and every cited document is readable by that reader now, resolved per call through the same scope resolver and per-hit verifier as document search and passed into the SQL before the limit; a writer cannot cite a document it cannot read, and a team correction must keep every source the old version cites.
+- Second idea: two kinds of correction on a validity window the writer states. `changed` ends the old fact at the new `validFrom`, `wrong` supersedes it and inherits its dates, a boundary another version meets cannot move, and `asOf` recall returns one version per chain on any date; a randomized test checks that every third day for six months.
+- Biggest risk: **a deleted source strands its facts.** Readability requires the cited document's row, document deletion removes it, and nothing touches `memory_fact_sources` outside the memory store, so the fact is hidden from every reader and `memory_forget` and `memory_correct`, which need every version visible, refuse it; only deleting the whole space removes it. Read from the code, not run.
+- Second risk: any writer can supersede or forget a team fact it can see, and the approval hold covers the MCP forget only, not a `wrong` correction or a REST delete. A team space's deletion report counts only the facts the deleter can read and removes the rest too. The project's own realistic study found agent-written memory lowered the right-citation score from 0.703 to 0.609.
+- Most reusable component: `VisibleTo` in `src/Connapse.Storage/Memory/PostgresMemoryStore.Paging.cs:39-54` with `src/Connapse.Storage/Memory/MemorySourceAccess.cs`, and the chain lock and checked delete in `src/Connapse.Storage/Memory/PostgresMemoryStore.cs:103-184`.
+- Maturity impression: MIT; 95,734 lines of C# in `src/` and 1,770 commits from February to November 2026, one author under two names, at tag v0.4.3; 5,822 test attributes, 443 in memory test files, run in CI against a real pgvector database and not run here; a pre-registered agent study with committed runs. Four marks: `bitemporal`, `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: agent memory has to sit inside an existing document permission model, or facts need a validity window and a correction history an agent can query by date.
+- Do not copy when: cited documents are deleted or re-keyed often, memory must be found by meaning rather than shared words, or each agent of one user needs its own memory.

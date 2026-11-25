@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 874 reports.</strong></p>
+<p><strong>This page covers all 875 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36051,6 +36051,54 @@ point.</li>
 <li>Do not copy when: a correction must hold against the next write, a
 write must wait for a person, or different agents should see different
 parts of the store.</li>
+</ul>
+<h3 id="connapse"><a
+href="../systems/connapse/"><code>connapse</code></a></h3>
+<ul>
+<li>Best idea: <strong>a fact inherits the permissions of what it
+cites.</strong> A reader sees a fact only when it is team or theirs and
+every cited document is readable by that reader now, resolved per call
+through the same scope resolver and per-hit verifier as document search
+and passed into the SQL before the limit; a writer cannot cite a
+document it cannot read, and a team correction must keep every source
+the old version cites.</li>
+<li>Second idea: two kinds of correction on a validity window the writer
+states. <code>changed</code> ends the old fact at the new
+<code>validFrom</code>, <code>wrong</code> supersedes it and inherits
+its dates, a boundary another version meets cannot move, and
+<code>asOf</code> recall returns one version per chain on any date; a
+randomized test checks that every third day for six months.</li>
+<li>Biggest risk: <strong>a deleted source strands its facts.</strong>
+Readability requires the cited document's row, document deletion removes
+it, and nothing touches <code>memory_fact_sources</code> outside the
+memory store, so the fact is hidden from every reader and
+<code>memory_forget</code> and <code>memory_correct</code>, which need
+every version visible, refuse it; only deleting the whole space removes
+it. Read from the code, not run.</li>
+<li>Second risk: any writer can supersede or forget a team fact it can
+see, and the approval hold covers the MCP forget only, not a
+<code>wrong</code> correction or a REST delete. A team space's deletion
+report counts only the facts the deleter can read and removes the rest
+too. The project's own realistic study found agent-written memory
+lowered the right-citation score from 0.703 to 0.609.</li>
+<li>Most reusable component: <code>VisibleTo</code> in
+<code>src/Connapse.Storage/Memory/PostgresMemoryStore.Paging.cs:39-54</code>
+with <code>src/Connapse.Storage/Memory/MemorySourceAccess.cs</code>, and
+the chain lock and checked delete in
+<code>src/Connapse.Storage/Memory/PostgresMemoryStore.cs:103-184</code>.</li>
+<li>Maturity impression: MIT; 95,734 lines of C# in <code>src/</code>
+and 1,770 commits from February to November 2026, one author under two
+names, at tag v0.4.3; 5,822 test attributes, 443 in memory test files,
+run in CI against a real pgvector database and not run here; a
+pre-registered agent study with committed runs. Four marks:
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Study when: agent memory has to sit inside an existing document
+permission model, or facts need a validity window and a correction
+history an agent can query by date.</li>
+<li>Do not copy when: cited documents are deleted or re-keyed often,
+memory must be found by meaning rather than shared words, or each agent
+of one user needs its own memory.</li>
 </ul>
         </article>
       </div>

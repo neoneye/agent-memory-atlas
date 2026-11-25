@@ -1873,6 +1873,24 @@ omit the other
 (<code>tests/integration/test_issue_127_owner_scoping_pg.py:189-212</code>,
 <code>:365-385</code>). Every credential of a user still reaches the
 whole vault.</p>
+<p><a href="../../systems/connapse/">Connapse</a> makes a fact's
+audience the intersection of its stored scope and the readers of what it
+cites. Each fact stores its space, <code>personal</code> or
+<code>team</code> and its author, and <code>VisibleTo</code> adds to the
+SQL of recall, list, count, subjects and history that the fact is team
+or the caller's and that every cited source is in the set the caller may
+read, a set resolved per call through the scope resolver and per-hit
+verifier that trim document search
+(<code>src/Connapse.Storage/Memory/PostgresMemoryStore.Paging.cs:39-54</code>,
+<code>src/Connapse.Search/Links/UserDocumentAccess.cs:18-37</code>). The
+caller comes from the authenticated principal, an agent key resolving to
+its creator
+(<code>src/Connapse.Application/Memory/MemoryOperations.cs:110-115</code>).
+A populated test ranks 1,100 hidden matching facts ahead of one visible
+one and requires recall to return exactly that one. The coupling has a
+failure mode: a fact citing a deleted document fails the test for every
+reader, and forget, which requires every version visible, refuses
+it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

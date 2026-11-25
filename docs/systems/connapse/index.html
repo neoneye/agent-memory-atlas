@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted .NET knowledge base
+whose agents keep dated, sourced facts in personal and team spaces over
+MCP, beside permission-trimmed hybrid search.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Connapse — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted .NET
+knowledge base whose agents keep dated, sourced facts in personal and
+team spaces over MCP, beside permission-trimmed hybrid search.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Connapse — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted .NET
+knowledge base whose agents keep dated, sourced facts in personal and
+team spaces over MCP, beside permission-trimmed hybrid search.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Connapse — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Connapse",
+      "description": "A self-hosted .NET knowledge base whose agents keep dated, sourced facts in personal and team spaces over MCP, beside permission-trimmed hybrid search.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Dated facts shown only to readers of every
+cited source</p>
+          <h1>Connapse</h1>
+          <p class="document-deck">A self-hosted .NET knowledge base
+whose agents keep dated, sourced facts in personal and team spaces over
+MCP, beside permission-trimmed hybrid search.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Destrayon/Connapse">
+              <span>Source</span>
+              <strong>Destrayon/Connapse</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Destrayon/Connapse/commit/f5e1cf4b2ae72aa47b23cf9622cf024dfdf6db4f" title="f5e1cf4b2ae72aa47b23cf9622cf024dfdf6db4f">
+              <span>Analyzed revision</span>
+              <code>f5e1cf4b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Destrayon--Connapse" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Destrayon--Connapse</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE, stated again in CONTRIBUTING.md for contributions;
+THIRD_PARTY_NOTICES.md reproduces the BSD notice of a SciPy routine
+ported into the eval project</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>95,734
+lines of C# in 688 files under src/ outside migrations, plus 23,602
+lines of Razor; 146,242 lines of C# in 789 test files; agent memory is
+about 4,500 lines across the store, the service, the operations, the MCP
+tools and the REST routes</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,770
+commits from 4 February to 23 November 2026, 1,748 of them by one author
+under two names (Destrayon, Patrick Summers) and 22 by dependabot;
+latest tag v0.4.3</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>5,822
+xUnit Fact and Theory attributes under tests/, 443 of them in memory
+test files; ci.yml runs the unit suite, the integration suite in three
+shards against a Testcontainers pgvector/pg17 database, and a memory
+speed gate on its own; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Connapse is a self-hosted knowledge base for AI agents: one ASP.NET
+Core application over PostgreSQL with pgvector that indexes uploads,
+SFTP, S3, Azure Blob, GitHub, Confluence and Jira for hybrid search, and
+gives agents a small fact memory beside it over MCP and REST. Its
+notable part is that a fact inherits the permissions of the documents it
+cites: a reader sees it only when the fact is team or theirs and they
+can read every cited document now, checked in the SQL of every read. Its
+weak part is the same coupling seen from the other side. A fact whose
+cited document is deleted is hidden from every reader and cannot be
+forgotten through the tools.</p>
+<p>Two things live in this repository and only one is memory. The
+document side is retrieval over connected sources: chunks, vectors,
+BM25, a reranker and per-user permission trimming, all context for the
+agent and none of it written by the agent. The memory side is the
+<code>memory_facts</code> table. An agent writes a fact, a later session
+reads it back, and the fact can be corrected with its history kept or
+forgotten outright. The marks are earned on the memory side.</p>
+<p>A fact is a subject, attribute and value with a validity window the
+writer states and a record time the server stamps. A
+<code>changed</code> correction ends the old version at the new start
+date, a <code>wrong</code> one supersedes it, and recall can ask what
+was true on a past date. Recall is lexical only, and nothing injects
+memory automatically: the agent calls <code>memory_recall</code> or
+<code>memory_timeline</code>.</p>
+<p>The project evaluated its own memory before shipping the current
+form. A pre-registered realistic run on 5 November 2026, in which agents
+wrote their own memories and later agents used them, scored worse than
+no memory. The project then removed memory on document containers and
+kept personal and team spaces
+(<code>eval/agent-search/con-244/results.md:93-151</code>,
+<code>CHANGELOG.md:192</code>).</p>
+<p>The licence is MIT, in <code>LICENSE</code>.</p>
+<p>Four marks are earned: <code>bitemporal</code> on the validity
+window, <code>scope_enforced</code> on the space, scope, author and
+source predicate, <code>audit_log</code> on the <code>audit_logs</code>
+rows, and <code>negative_eval</code> on the leak tests. Section 9 gives
+the reason for each of the three withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one <strong>fact</strong>, a claim in three parts,
+<code>Halcyon</code> / <code>database</code> /
+<code>PostgreSQL 15</code>, kept with the dates it was true, the
+documents it was learned from, a reason and its author
+(<code>src/Connapse.Storage/Data/Entities/MemoryEntities.cs:5-28</code>).
+Every fact sits in a <strong>space</strong>. A personal space is seen by
+its owner and the agents acting for that owner, and a team space by
+every account. The space's kind fixes the fact's scope at write time
+(<code>src/Connapse.Application/Memory/MemoryOperations.cs:184-206</code>).</p>
+<p>A fact becomes a belief when a writer with write access saves it. The
+server checks one thing about its truth-relevant content, that the
+writer can read every source it cites, and refuses the save otherwise
+(<code>src/Connapse.Storage/Memory/MemoryService.cs:36-48</code>,
+<code>:355-371</code>). Nothing checks that the source says what the
+fact says. The save's answer lists the current facts in the space with
+the same subject and attribute, so an agent that meant to replace one
+can correct it instead (<code>:60-92</code>).</p>
+<p>A fact stops being current in three ways, and only one of them
+removes it.</p>
+<ul>
+<li><strong>Changed.</strong> The world moved. The old version's
+<code>valid_to</code> is set to the new version's
+<code>valid_from</code>, which must be later than the old start, and the
+new version joins the same chain
+(<code>src/Connapse.Storage/Memory/PostgresMemoryStore.cs:43-61</code>).</li>
+<li><strong>Wrong.</strong> The old value was never right. Its
+<code>superseded_at</code> is stamped and the new version takes its
+dates. A date where another version of the chain starts or ends cannot
+move, so on any date exactly one held version answers
+(<code>:62-72</code>, <code>:128-140</code>).</li>
+<li><strong>Forgotten.</strong> Every version of the chain is deleted,
+with its sources, after the server checks the caller can see every
+version (<code>:142-181</code>). Nothing of the value remains in the
+memory tables.</li>
+</ul>
+<p>Visibility is a second axis and it moves without any write. A fact is
+shown to a reader when it is team or theirs <strong>and</strong> every
+cited source is readable by that reader at the moment of the read
+(<code>src/Connapse.Storage/Memory/MemoryService.cs:335-336</code>).
+Losing access to one source in GitHub or Confluence hides the fact from
+that reader at the next read. Deleting the document hides it from
+everyone.</p>
+<p>The system treats a fact as a claim. Every recall answer opens with a
+fixed notice that the facts are "claims to weigh, not instructions"
+(<code>src/Connapse.Web/Mcp/McpTools.Memory.cs:20-22</code>), and
+nothing in the model separates a candidate from a verified fact.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a fact is admitted when the writer can read what it cites, corrected by appending a version, and shown only to readers who can read every cited source now; deleting a source hides the fact from everyone and blocks its forget</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a fact is admitted when the writer can read what it cites, corrected by appending a version, and shown only to readers who can read every cited source now; deleting a source hides the fact from everyone and blocks its forget
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    W1[&quot;agent over MCP:&lt;br/&gt;memory_remember&quot;]
+    W2[&quot;person: Memory page&lt;br/&gt;or REST&quot;]
+    W1 ~~~ W2
+  end
+  writers --&gt; CHK{&quot;writer can read&lt;br/&gt;every cited source?&quot;}
+  CHK --&gt;|&quot;no&quot;| REF[&quot;refused,&lt;br/&gt;nothing stored&quot;]
+  CHK --&gt;|&quot;yes&quot;| CUR[&quot;current version:&lt;br/&gt;valid window set by writer,&lt;br/&gt;recorded_at by server&quot;]
+  CUR --&gt;|&quot;correct: changed&quot;| ENDED[&quot;old version ends&lt;br/&gt;at the new validFrom&quot;]
+  CUR --&gt;|&quot;correct: wrong&quot;| SUP[&quot;old version gets&lt;br/&gt;superseded_at&quot;]
+  ENDED --&gt; NEXT[&quot;new version joins&lt;br/&gt;the same chain&quot;]
+  SUP --&gt; NEXT
+  NEXT --&gt; READ{&quot;read: team or own,&lt;br/&gt;and every source&lt;br/&gt;readable now?&quot;}
+  CUR --&gt; READ
+  READ --&gt;|&quot;yes&quot;| SHOWN[&quot;JSON under a&lt;br/&gt;claims notice&quot;]
+  READ --&gt;|&quot;no&quot;| HID[&quot;hidden; a lookup&lt;br/&gt;reads as not found&quot;]
+  HID ~~~ GAP[&quot;cited document deleted:&lt;br/&gt;hidden from everyone,&lt;br/&gt;forget refuses the chain&quot;]
+  CUR --&gt;|&quot;memory_forget&quot;| HOLD{&quot;token asks before&lt;br/&gt;deleting? default yes&quot;}
+  HOLD --&gt;|&quot;yes&quot;| BATCH[&quot;deletion batch waits&lt;br/&gt;for the owner&#39;s browser&quot;]
+  HOLD --&gt;|&quot;no, or REST&quot;| GONE[&quot;every version deleted;&lt;br/&gt;audit row keeps the id&quot;]
+  BATCH --&gt; GONE</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs in one ASP.NET Core process,
+<code>Connapse.Web</code>, which hosts the Blazor Server UI, the REST
+API and the MCP server at <code>/mcp</code>. Memory is a slice through
+four projects:</p>
+<ul>
+<li><strong><code>Connapse.Core</code></strong> declares
+<code>MemoryFact</code>, <code>MemoryCaller</code> and the store and
+service interfaces
+(<code>src/Connapse.Core/Models/MemoryModels.cs</code>,
+<code>src/Connapse.Core/Interfaces/IMemoryStore.cs</code>).</li>
+<li><strong><code>Connapse.Storage/Memory</code></strong> holds the
+rules and the SQL: <code>MemoryService</code> enforces sources, scope
+and correction rules, <code>PostgresMemoryStore</code> writes versions
+under a chain lock and builds the read queries, and
+<code>PostgresMemorySpaceStore</code> lists spaces and counts.</li>
+<li><strong><code>Connapse.Application/Memory</code></strong> holds the
+operations each surface calls, with write-access checks and space
+resolution
+(<code>src/Connapse.Application/Memory/MemoryOperations.cs</code>).</li>
+<li><strong><code>Connapse.Web</code></strong> maps the operations to
+seven MCP tools (<code>src/Connapse.Web/Mcp/McpTools.Memory.cs</code>),
+REST routes under <code>/api/memory</code>
+(<code>src/Connapse.Web/Endpoints/MemoryFactsEndpoints.cs</code>,
+<code>MemorySpacesEndpoints.cs</code>) and the Memory pages.</li>
+</ul>
+<p>The memory tables are in the same PostgreSQL database as the document
+index, with a GIN index on a stored tsvector that weights subject,
+attribute, value and reason A to D
+(<code>src/Connapse.Storage/Data/KnowledgeDbContext.cs:75-120</code>,
+<code>src/Connapse.Storage/Migrations/20261027094254_AddAgentMemory.cs:34</code>).
+Facts carry no embedding.</p>
+<p>The document side is the larger part of the tree. Ingestion parses
+files into chunks, embeds them through Ollama, OpenAI or Azure OpenAI
+into pgvector, and search fuses a vector arm and a BM25 arm, optionally
+reranked by a cross-encoder served locally through Text Embeddings
+Inference or by Cohere, Jina, Voyage or Azure AI Foundry
+(<code>src/Connapse.Search/Hybrid/HybridSearchService.cs</code>,
+<code>src/Connapse.Search/Reranking/Providers/</code>). Memory uses that
+side for one thing: deciding which documents a reader may read.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The quick start is one <code>docker compose</code> command that pulls
+PostgreSQL 17 with pgvector, MinIO, Ollama with an embedding model, the
+web app and a one-shot setup container that generates passwords; a
+reranker is a separate optional service
+(<code>docker-compose.yml</code>). Memory needs PostgreSQL and the web
+app. Storing a fact needs no model and no API key; the embedding service
+matters to memory only because a fact citing a document needs that
+document indexed.</p>
+<p>The store is ordinary SQL, readable and repairable by hand. An
+administrator cannot open someone's personal space through the
+application, by design (<code>docs/concepts/memory.md:59</code>); a
+database operator can.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>memory_remember</code> parses dates and
+sources and calls <code>RememberFact</code>
+(<code>src/Connapse.Web/Mcp/McpTools.Memory.cs:133-176</code>). The
+operation checks write access, resolves the named space as the caller
+may see it, refuses a document container, derives the scope from the
+space and refuses a mismatch
+(<code>src/Connapse.Application/Memory/MemoryOperations.cs:157-207</code>).
+<code>MemoryService.RememberAsync</code> validates lengths and dates,
+refuses unreadable sources, inserts through
+<code>PostgresMemoryStore.AddAsync</code>, writes the audit row, and
+lists same-key current facts in the answer
+(<code>src/Connapse.Storage/Memory/MemoryService.cs:36-92</code>,
+<code>src/Connapse.Storage/Memory/PostgresMemoryStore.cs:17-24</code>,
+<code>:330-352</code>).</p>
+<p><strong>Correction.</strong> <code>CorrectFact</code> requires write
+and read access and finds the fact by id in any space the caller can see
+(<code>src/Connapse.Application/Memory/MemoryOperations.cs:227-254</code>).
+The service reports a fact the caller cannot see as missing, refuses a
+scope change, and keeps the old subject, attribute and sources when the
+correction names none
+(<code>src/Connapse.Storage/Memory/MemoryService.cs:94-127</code>,
+<code>:317-320</code>). Inside the store's transaction the chain is
+locked by its first row, every version is read after the lock, and the
+service re-checks that the caller sees every version and that a team
+correction keeps every source the old version cites
+(<code>src/Connapse.Storage/Memory/PostgresMemoryStore.cs:26-80</code>,
+<code>:103-120</code>;
+<code>src/Connapse.Storage/Memory/MemoryService.cs:288-333</code>).</p>
+<p><strong>Forget.</strong> <code>ForgetFact</code> calls
+<code>MemoryService.ForgetAsync</code>, which hands the store a check
+that every version is visible; the store locks the chain, deletes
+exactly the rows it checked, and rolls back and retries up to three
+times if a correction added a version meanwhile
+(<code>src/Connapse.Application/Memory/MemoryOperations.cs:260-285</code>,
+<code>src/Connapse.Storage/Memory/MemoryService.cs:129-163</code>,
+<code>src/Connapse.Storage/Memory/PostgresMemoryStore.cs:142-184</code>).
+Over MCP the call first passes <code>McpApprovalGate</code>, which turns
+a destructive call from a token that asks before deleting into a
+deletion batch
+(<code>src/Connapse.Web/Mcp/McpApprovalGate.cs:37-55</code>).</p>
+<p><strong>Recall.</strong> <code>memory_recall</code> builds a
+<code>MemoryRecallRequest</code>
+(<code>src/Connapse.Web/Mcp/McpTools.Memory.cs:275-297</code>). One
+named space without <code>asOf</code> or <code>attribute</code> is read
+a keyset page at a time; anything else reads one space or, with no space
+named, up to 100 spaces the caller can see, newest change first, and
+merges them
+(<code>src/Connapse.Application/Memory/MemoryOperations.cs:296-351</code>,
+<code>:395-412</code>, <code>:518-539</code>). For each space,
+<code>MemoryService.RecallAsync</code> resolves which cited sources the
+caller can read and passes them into the query
+(<code>src/Connapse.Storage/Memory/MemoryService.cs:165-180</code>,
+<code>:268-269</code>).</p>
+<p><strong>The read predicate.</strong>
+<code>PostgresMemoryStore.QueryAsync</code> starts from
+<code>container_id</code>, applies <code>VisibleTo</code>, then subject,
+attribute, chain, window or as-of filters, then ranks
+(<code>src/Connapse.Storage/Memory/PostgresMemoryStore.cs:200-259</code>).
+<code>VisibleTo</code> requires every source row to be in the readable
+arrays and the fact to be team or the caller's
+(<code>src/Connapse.Storage/Memory/PostgresMemoryStore.Paging.cs:39-54</code>).
+List, count, subjects and history use the same function
+(<code>:56-75</code>, <code>:251-269</code>), and the space store writes
+the same rule in raw SQL
+(<code>src/Connapse.Storage/Memory/PostgresMemorySpaceStore.cs:28-37</code>).</p>
+<p><strong>Identity.</strong> <code>MemoryRules.Caller</code> builds the
+caller from the authenticated principal, never from a request field
+(<code>src/Connapse.Application/Memory/MemoryOperations.cs:110-115</code>).
+An agent key authenticates as the agent and carries an
+<code>on_behalf_of</code> claim set from the agent row's creator, which
+<code>SearchPrincipal.Resolve</code> returns as the user
+(<code>src/Connapse.Identity/Authentication/ApiKeyAuthenticationHandler.cs:149-166</code>,
+<code>src/Connapse.Core/Utilities/SearchPrincipal.cs:39-49</code>).</p>
+<p><strong>Source readability.</strong>
+<code>MemorySourceAccess.ReadableAsync</code> expands link nodes to
+their documents and asks <code>UserDocumentAccess</code>, which resolves
+the user's search scopes afresh, applies the same SQL rule as keyword
+search, and runs the per-hit verifier on documents that carry a cloud
+address
+(<code>src/Connapse.Storage/Memory/MemorySourceAccess.cs:13-31</code>,
+<code>src/Connapse.Search/Links/UserDocumentAccess.cs:18-37</code>,
+<code>src/Connapse.Search/Links/SearchDocumentAccess.cs:19-72</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory_facts</code> has one row per version: <code>id</code>,
+<code>chain_id</code>, <code>container_id</code>, <code>subject</code>,
+<code>attribute</code>, <code>value</code> (at most 2,000 characters),
+<code>valid_from</code>, <code>valid_to</code>,
+<code>recorded_at</code>, <code>superseded_at</code>,
+<code>replaces_id</code>, <code>reason</code>,
+<code>author_user_id</code>, <code>author_agent_id</code>,
+<code>author_name</code>, <code>scope</code> and the generated
+<code>search_vector</code>. <code>memory_fact_sources</code> holds up to
+20 <code>(kind, ref)</code> rows per version, a document id or a
+link-node id
+(<code>src/Connapse.Storage/Data/KnowledgeDbContext.cs:75-130</code>,
+<code>src/Connapse.Storage/Memory/MemoryService.cs:28</code>,
+<code>:377-397</code>).</p>
+<ul>
+<li><strong>Scope.</strong> <code>scope</code> defaults to personal in
+the schema, so a row written without one is seen by its author alone
+(<code>src/Connapse.Storage/Data/KnowledgeDbContext.cs:96-97</code>).
+The space is a <code>containers</code> row of kind <code>memory</code>
+with an audience and an owner user or agent
+(<code>src/Connapse.Core/Models/StorageModels.cs:110-124</code>).</li>
+<li><strong>Provenance.</strong> Author user, agent and display name are
+stamped from the caller. Sources are references with no foreign key to
+<code>documents</code>, so a deleted document leaves the reference in
+place.</li>
+<li><strong>Time.</strong> Two axes, stated in the store's own header:
+when it was true and when memory held it
+(<code>src/Connapse.Storage/Memory/PostgresMemoryStore.cs:10-14</code>).</li>
+<li><strong>Versioning.</strong> A chain is the set of rows sharing
+<code>chain_id</code>, the first row's id. <code>replaces_id</code>
+points at the version replaced. A chain never spans two spaces.</li>
+<li><strong>Status.</strong> None is stored. The MCP answer derives
+<code>corrected</code>, <code>ended</code> or <code>current</code> from
+<code>superseded_at</code> and <code>valid_to</code>
+(<code>src/Connapse.Web/Mcp/McpTools.Memory.cs:354</code>).</li>
+<li><strong>Copies.</strong> Copying a personal fact to a team space
+saves a new fact with a new chain, unlinked from the original
+(<code>src/Connapse.Application/Memory/CopyMemoryFact.cs:85-114</code>).</li>
+</ul>
+<p>Memory is one type. Facts are not split into episodic, semantic or
+profile kinds, and conversation turns are not stored at all.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is tool-mediated and lexical. The question's letters and
+digits are lowercased, deduplicated and capped at 32 words, then OR-ed
+into a tsquery, so a fact sharing any word matches and one sharing more
+ranks higher
+(<code>src/Connapse.Storage/Memory/PostgresMemoryStore.cs:273-289</code>).
+Because <code>ts_rank</code> has no inverse document frequency, a space
+with eight or more facts drops words that appear in more than half of
+them, unless that would leave no word that matches
+(<code>:291-318</code>). Ties break on <code>valid_from</code>, then
+<code>recorded_at</code> (<code>:247-255</code>).</p>
+<p>Without text, current facts come newest recorded first; with
+<code>includeHistory</code>, a change window or a chain, in date order
+(<code>:239-246</code>). The default is ten facts and the cap is 100. A
+recall across spaces runs each space's query separately and interleaves
+the ranked lists by position, since ranks from separate queries are not
+comparable
+(<code>src/Connapse.Application/Memory/MemoryOperations.cs:513-539</code>).</p>
+<p>The visibility predicate runs inside the SQL, before the limit, so a
+reader with narrow access gets a full page of what they can see rather
+than a page filtered down after the fact. The readable set is computed
+per space and per call over every source the space cites, through the
+scope resolver and the per-hit verifier, which for GitHub, Confluence
+and Jira asks the source system with the reader's linked account
+(<code>src/Connapse.Storage/Memory/MemoryService.cs:268-269</code>,
+<code>docs/concepts/permissions.md</code>). A recall across 100 spaces
+is 100 such checks. The project gates recall at a p95 under 150 ms in a
+dedicated CI step
+(<code>tests/Connapse.Integration.Tests/Memory/MemoryGateTests.cs:19-30</code>).</p>
+<p>Facts come back as JSON with space, scope, dates, status, author and
+sources with their document titles, under the fixed claims notice
+(<code>src/Connapse.Web/Mcp/McpTools.Memory.cs:327-362</code>). Nothing
+is placed in a prompt by the server; an agent's context sees memory only
+when it calls a tool.</p>
+<p>The failure modes follow from the design. A paraphrase sharing no
+word with the fact misses. A question naming a common word that the
+pruning removed still matches on its rarer words, which is the intent. A
+recall across many spaces can skip spaces past the 100th and says how
+many.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen on the hot path, through tools or people. No model
+extracts, summarises or consolidates anything; the agent decides what a
+fact says and which space it goes to, guided by a sentence in the tool
+description
+(<code>src/Connapse.Web/Mcp/McpTools.Memory.cs:31-34</code>). A save
+that names no space is refused with the caller's spaces listed
+(<code>:182-206</code>). An older client naming a container by
+<code>containerId</code> gets a safeguard: a fact citing no sources goes
+to the caller's own <code>&lt;name&gt;-personal</code> space
+(<code>src/Connapse.Application/Memory/MemoryOperations.cs:184-204</code>).</p>
+<p>Deduplication is advisory. The save's answer lists up to ten current
+facts with the same subject and attribute the caller can see, and the
+tool description asks the agent to correct one instead of leaving both
+(<code>src/Connapse.Storage/Memory/MemoryService.cs:50-92</code>). Both
+facts are stored either way. A copy to a team space is refused when the
+destination already has a current fact with that key, unless
+<code>anyway</code> is set
+(<code>src/Connapse.Application/Memory/CopyMemoryFact.cs:99-103</code>).</p>
+<p>Correction appends and never edits a value in place. The only fields
+a later write changes on an existing row are <code>valid_to</code> and
+<code>superseded_at</code>. Forget is a hard delete of the chain.
+Deleting a space cascades to its facts
+(<code>src/Connapse.Storage/Data/KnowledgeDbContext.cs:118</code>).</p>
+<p>Any account or agent key with write access can write, correct or
+forget a team fact it can fully see; <code>CorrectFact</code> and
+<code>ForgetFact</code> pass <code>teamWriter: true</code> because the
+operation has already required write access
+(<code>src/Connapse.Application/Memory/MemoryOperations.cs:252</code>,
+<code>:276</code>). A wrong agent can therefore supersede a colleague's
+team fact. The old version stays in history and the timeline shows the
+author of each version.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write is synchronous: two permission checks at most, one insert and
+an audit insert, gated in CI at under 200 ms. The tsvector is a stored
+generated column, so a fact is retrievable as soon as the transaction
+commits. No background pass reads or rewrites memory. Nothing is
+injected per turn, so memory costs a provider's prompt cache nothing
+until the agent calls a tool, and then the answer is a tool result of at
+most 100 facts.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server exposes seven memory tools:
+<code>memory_spaces</code>, <code>memory_space_create</code>,
+<code>memory_remember</code>, <code>memory_correct</code>,
+<code>memory_forget</code>, <code>memory_recall</code> and
+<code>memory_timeline</code>, each with a scope policy and a risk tier
+(<code>src/Connapse.Web/Mcp/McpTools.Memory.cs:39-321</code>).
+<code>request_deletions</code> accepts memory facts and spaces among its
+items, and <code>deletion_status</code> reports their outcome
+(<code>src/Connapse.Web/Mcp/McpTools.Approvals.cs:47-60</code>). The
+same operations are REST routes, which the project's own CLI and the
+Memory page use.</p>
+<p>The agent has full control over what it remembers and how it labels
+it; the server controls where it may go, what it may cite and who sees
+it. Session lifecycle is the client's business: there are no hooks, no
+session-start context and no compaction handling. Any MCP client works,
+and the tool descriptions carry the operating instructions, such as
+calling <code>memory_spaces</code> once per session and relaying where a
+fact was saved.</p>
+<p>Agent keys are created in the UI by a person, carry scopes such as
+<code>knowledge:write</code>, and by default ask before deleting
+(<code>src/Connapse.Core/Models/AuthModels.cs:60-61</code>). An agent
+key's role is <code>Agent</code>, which the REST memory routes do not
+admit, so an agent reaches memory only through MCP
+(<code>src/Connapse.Web/Endpoints/MemoryFactsEndpoints.cs:18-19</code>,
+<code>src/Connapse.Identity/IdentityServiceExtensions.cs:347-350</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="facts-follow-their-sources">Facts follow their sources</h3>
+<p>The design's central rule is that a fact is never shown to someone
+its sources would be hidden from, enforced at write, correction and
+read. A writer cannot cite a document it cannot read, so it cannot dress
+a fact in a source it was never given. A team correction must keep every
+source the old version cites, so a correction cannot widen who sees the
+new value. Correcting needs every version visible, so a chain always has
+someone who can forget it
+(<code>src/Connapse.Storage/Memory/MemoryService.cs:7-20</code>,
+<code>:288-333</code>). When the access check throws, reads return
+nothing and writes are refused (<code>:165-180</code>,
+<code>:355-371</code>).</p>
+<p>The reader's identity for this check is the same one document search
+uses. On the document side, the scope resolver's grants become a SQL
+predicate on both the keyword arm and the vector arm before ranking, a
+failed resolution denies cloud-governed documents, and the per-hit
+verifier drops what the reader may not open and backfills from an
+over-fetched pool. When a reranker is configured, verification runs
+first, so a third-party reranker receives only passages the reader may
+read
+(<code>src/Connapse.Search/Hybrid/HybridSearchService.cs:124-140</code>,
+<code>:202-228</code>,
+<code>src/Connapse.Storage/Vectors/PgVectorStore.cs:250-301</code>,
+<code>src/Connapse.Search/Keyword/KeywordSearchService.cs:103</code>).
+The vector store writes its own copy of the scope predicate rather than
+calling the shared <code>ScopePredicate</code> that keyword search and
+the link walk use. S3 and Azure Blob are trimmed only after an
+administrator switches per-user permissions on; uploads and SFTP are
+open to every account (<code>docs/concepts/permissions.md</code>).</p>
+<h3 id="a-deleted-source-hides-the-fact-from-everyone">A deleted source
+hides the fact from everyone</h3>
+<p><code>SearchDocumentAccess</code> admits a document only by finding
+its row in <code>documents</code>, and document deletion removes the row
+(<code>src/Connapse.Search/Links/SearchDocumentAccess.cs:33-56</code>,
+<code>src/Connapse.Storage/Documents/PostgresDocumentStore.cs:249</code>,
+<code>:275</code>). Nothing outside the memory store touches
+<code>memory_fact_sources</code>, so a fact citing a deleted document
+keeps the reference and fails the readability test for every reader.
+<code>ForgetAsync</code> and <code>CorrectAsync</code> both require
+every version visible, so neither the agent nor a person can forget or
+correct that chain through the tools; it leaves only when its space is
+deleted. This is read from the code and not run. A re-synced source that
+re-creates a document under a new id would have the same effect.</p>
+<h3 id="deletion-and-its-review">Deletion and its review</h3>
+<p>Forgetting removes every version and the audit row keeps only the id,
+so a forgotten value cannot be read back from the log
+(<code>docs/concepts/memory.md:76</code>). A team copy of a personal
+fact is a separate chain and survives the personal fact's forget.</p>
+<p>Deleting a space removes every fact in it. The delete's impact report
+counts only the facts the deleter may read, so a team space deletion by
+any writer can remove facts citing documents the deleter cannot see, and
+the report does not mention them
+(<code>src/Connapse.Application/Memory/MemorySpaceOperations.cs:407-437</code>,
+<code>src/Connapse.Storage/Memory/PostgresMemorySpaceStore.cs:231-254</code>).</p>
+<p>The approval gate holds destructive MCP calls from a token that asks
+before deleting, which is the default for agent keys and personal access
+tokens (<code>src/Connapse.Web/Mcp/McpApprovalGate.cs:44</code>,
+<code>src/Connapse.Identity/Authentication/McpApprovalClaims.cs:18-19</code>).
+Only a signed-in browser session may decide a request
+(<code>src/Connapse.Application/Approvals/McpApprovalOperations.cs:36-39</code>).
+The gate covers <code>memory_forget</code>; <code>memory_correct</code>
+with <code>kind=wrong</code>, which takes a value out of every default
+read, is a write and is never held, and the REST delete route has no
+hold.</p>
+<h3 id="injection">Injection</h3>
+<p>Facts are returned as data under a notice, and a writer must hold
+write access. The project's docs say plainly that anyone with write
+access can add facts to a team space that every account's agents will
+recall (<code>docs/concepts/memory.md:80</code>). No content check runs
+on a fact's text.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>bitemporal</code> — earned.</strong> The writer states
+<code>validFrom</code> and <code>validTo</code>; the server stamps
+<code>recorded_at</code> and <code>superseded_at</code>. A
+<code>changed</code> correction ends the old window at the new start,
+<code>asOf</code> recall filters on the window, and the timeline reads
+by change window. No read asks what memory held at a past record
+time.</li>
+<li><strong><code>scope_enforced</code> — earned.</strong> Space, scope
+and author keys are stored on every fact and applied in the SQL of every
+read, together with the readable source set, and the caller comes from
+the authenticated principal. All of a user's agents share that user's
+personal memory.</li>
+<li><strong><code>audit_log</code> — earned.</strong>
+<code>audit_logs</code> receives a row for every remember, correction,
+forget, copy and space deletion, and no code updates or deletes one. The
+row is written after the memory commit and a failure is swallowed.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Populated
+integration tests require hidden facts absent from recall, including
+1,100 hidden matches ranked ahead of one visible fact.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No status is
+stored. <code>corrected</code> and <code>ended</code> are derived from
+timestamps for display, and supersession by a <code>wrong</code>
+correction is a record replaced by another record, not a state a fact
+can hold while still on file as unconfirmed.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Forget deletes
+the chain and keeps nothing keyed on the value. A <code>wrong</code>
+correction keeps the old value in history, and nothing compares a new
+save against it, so the agent can save the retracted value again as a
+new fact.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No fact waits
+for a person before it is readable. The held deletion batch is a person
+approving a removal, decided from a browser session the agent cannot
+reach, and it gates the forget and not the admission or the supersession
+of a fact.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The memory suite is large and aimed at the boundary. Integration
+tests run against a real PostgreSQL started by Testcontainers with the
+<code>pgvector/pgvector:pg17</code> image, with no skip path when Docker
+is missing
+(<code>tests/Connapse.Integration.Tests/SharedWebAppFixture.cs:39-45</code>),
+and CI runs them in three shards
+(<code>.github/workflows/ci.yml:188-205</code>).</p>
+<ul>
+<li><strong>Leak tests.</strong> <code>MemoryLeakTests</code> seeds
+1,100 hidden facts that match a query and rank first, and requires
+recall to return exactly the visible one, which fails if the predicate
+ran after the limit. A randomized test over three seeds builds 80 facts
+with corrections across four users, ten documents and three link nodes,
+computes the expected answer independently for eight query shapes,
+requires an exact match, asserts at least one fact was shown, then
+breaks the access check and requires a denied read and a refused write
+(<code>tests/Connapse.Integration.Tests/Memory/MemoryLeakTests.cs:52-91</code>,
+<code>:160-273</code>).</li>
+<li><strong>Scope tests.</strong> A personal fact citing a document both
+users can read is seen by its author and the author's agent and by
+neither the other user nor that user's agent; a read-only user's recall
+returns the team fact and not an editor's personal one in the same space
+(<code>tests/Connapse.Integration.Tests/Memory/MemoryScopeTests.cs:79-94</code>,
+<code>:123-155</code>).</li>
+<li><strong>Time tests.</strong> The randomized test also checks that
+point-in-time recall returns one version per chain on every third day;
+same-day correction cases pin the date-only edge
+(<code>tests/Connapse.Integration.Tests/Memory/MemorySameDayCorrectionTests.cs:44-93</code>).</li>
+<li><strong>Races.</strong> <code>MemoryForgetRaceTests</code> covers a
+forget racing a correction.</li>
+</ul>
+<p>The leak and scope tests use a fake <code>IDocumentAccess</code>, so
+they establish the memory predicate and not the resolver and verifier
+behind it in a deployment. No test reads an audit row back for a memory
+action, and no test covers a fact whose cited document was deleted.</p>
+<p>The project measured its own memory against no memory. Synthetic
+baselines dated 27 October 2026 compare answering from notes with
+answering from facts
+(<code>eval/baselines/memory-v1-heldout-2026-10-27.json</code>). A
+pre-registered agent study, run with Claude Code on 5 November 2026, had
+two arms. With memory planted by hand, agents cited the right document
+more often, 0.911 against 0.479 on the tasks memory should help. With
+memory the agents wrote themselves, they did worse, 0.609 against 0.703,
+because recalled facts cited the replaced policy beside the new one and
+agents cited both
+(<code>eval/agent-search/con-244/results.md:26-31</code>,
+<code>:126-151</code>). The project removed memory on document
+containers after that run (<code>CHANGELOG.md:192</code>). The realistic
+arm was not repeated for personal and team spaces, which use the same
+store and tools. No paper is associated with the project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make a fact's audience the intersection of its scope and its
+sources' readers.</strong> Store citations as rows, compute the reader's
+readable set per call from the same permission model as document search,
+and pass it into the SQL so the filter runs before the limit.</li>
+<li><strong>Require the writer to read what it cites.</strong> It costs
+one permission check and closes the trick of attaching a private
+document to a claim to make it look supported.</li>
+<li><strong>Split correction into changed and wrong.</strong> One ends a
+window, the other supersedes a record, and refusing to move a boundary
+another version meets keeps exactly one answer per date.</li>
+<li><strong>Lock the chain, re-read inside the lock, delete only what
+was checked.</strong> <code>ForgetAsync</code> deletes the ids it saw
+and retries if the chain grew, which is the correct shape under read
+committed.</li>
+<li><strong>Write a leak test with an independent oracle.</strong>
+Randomize facts and permissions, compute the expected set outside the
+system, compare exactly, and assert the world showed something.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A visibility rule that can also hide a row from the people
+allowed to delete it.</strong> When readability depends on external
+objects, decide what happens when the object disappears, and keep a path
+for an owner or an administrator to remove what nobody can see.</li>
+<li><strong>An impact report that counts only what the actor can
+see</strong> before a delete that removes everything.</li>
+<li><strong>Holding the delete and not the overwrite.</strong> A
+supersession removes a value from every default read as effectively as a
+delete.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a team that already runs a self-hosted retrieval server
+over its documents and wants agents to keep small, dated, cited claims
+beside it, under the same permissions. The memory is a narrow piece of a
+large product, and adopting it means running the product: PostgreSQL,
+the .NET app, and the document pipeline its source checks depend on. A
+single developer who wants memory for one coding agent will find a fact
+table and seven tools inside a multi-tenant knowledge server, and should
+take the design, not the code. The project's own realistic evaluation is
+a reason to measure before trusting agent-written memory to help.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the per-call readability check over every source a space cites
+stay within budget for a space with thousands of cited documents on a
+source that needs a remote permission call per document?</li>
+<li>What does a deployment do with facts whose cited documents were
+deleted or re-synced under new ids? Nothing in the tree reports
+them.</li>
+<li>Would the realistic arm of the CON-244 study come out differently
+for personal and team spaces, where the tool description now asks the
+agent to choose a space and to correct rather than duplicate?</li>
+<li>Is the vector store's copy of the scope predicate checked against
+<code>ScopePredicate</code> anywhere other than by the search
+tests?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema:
+<code>src/Connapse.Storage/Data/Entities/MemoryEntities.cs</code>,
+<code>src/Connapse.Storage/Data/KnowledgeDbContext.cs</code>,
+<code>src/Connapse.Storage/Migrations/20261027094254_AddAgentMemory.cs</code>,
+<code>src/Connapse.Storage/Migrations/20261104183245_AddMemorySpaces.cs</code></li>
+<li>Rules and store:
+<code>src/Connapse.Storage/Memory/MemoryService.cs</code>,
+<code>src/Connapse.Storage/Memory/PostgresMemoryStore.cs</code>,
+<code>src/Connapse.Storage/Memory/PostgresMemoryStore.Paging.cs</code>,
+<code>src/Connapse.Storage/Memory/PostgresMemorySpaceStore.cs</code>,
+<code>src/Connapse.Storage/Memory/MemorySourceAccess.cs</code></li>
+<li>Operations:
+<code>src/Connapse.Application/Memory/MemoryOperations.cs</code>,
+<code>src/Connapse.Application/Memory/MemorySpaceOperations.cs</code>,
+<code>src/Connapse.Application/Memory/CopyMemoryFact.cs</code></li>
+<li>MCP and REST: <code>src/Connapse.Web/Mcp/McpTools.Memory.cs</code>,
+<code>src/Connapse.Web/Mcp/McpApprovalGate.cs</code>,
+<code>src/Connapse.Web/Endpoints/MemoryFactsEndpoints.cs</code>,
+<code>src/Connapse.Web/Endpoints/MemorySpacesEndpoints.cs</code></li>
+<li>Identity and audit:
+<code>src/Connapse.Core/Utilities/SearchPrincipal.cs</code>,
+<code>src/Connapse.Identity/Authentication/ApiKeyAuthenticationHandler.cs</code>,
+<code>src/Connapse.Identity/Services/AuditLogger.cs</code></li>
+<li>Document permissions:
+<code>src/Connapse.Search/Links/UserDocumentAccess.cs</code>,
+<code>src/Connapse.Search/Links/SearchDocumentAccess.cs</code>,
+<code>src/Connapse.Search/ScopePredicate.cs</code>,
+<code>src/Connapse.Search/Hybrid/HybridSearchService.cs</code>,
+<code>src/Connapse.Storage/Vectors/PgVectorStore.cs</code></li>
+<li>Tests and evals:
+<code>tests/Connapse.Integration.Tests/Memory/</code>,
+<code>tests/Connapse.Storage.Tests/Memory/</code>,
+<code>eval/agent-search/con-244/</code>, <code>eval/pass-bars.md</code>,
+<code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>Facts carry no embedding.</strong>
+<code>git grep -n -i 'embed' -- src/Connapse.Storage/Memory src/Connapse.Application/Memory src/Connapse.Storage/Data/Entities/MemoryEntities.cs</code>
+returns one comment,
+<code>src/Connapse.Application/Memory/MemoryOperations.cs:126</code>.</li>
+<li><strong>No value-keyed refusal.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist|suppress' -- src</code>
+returns Jira connector sync tombstones and a Hangfire comment, none in
+memory code.</li>
+<li><strong>Nothing updates or deletes an audit row.</strong>
+<code>git grep -n -E 'AuditLogs\.(Remove|Update)|DELETE FROM audit_logs|UPDATE audit_logs' -- src</code>
+returns nothing; <code>git grep -n -E 'AuditLogs\.Add' -- src</code>
+returns
+<code>src/Connapse.Identity/Services/AuditLogger.cs:58</code>.</li>
+<li><strong>No stored epistemic status on facts.</strong>
+<code>git grep -n -i -E 'verified|candidate|pending|quarantin' -- src/Connapse.Storage/Memory src/Connapse.Storage/Data/Entities/MemoryEntities.cs src/Connapse.Core/Models/MemoryModels.cs</code>
+returns only <code>Candidate</code> names for space-listing rows and a
+comment in <code>MemoryService.cs:64</code>.</li>
+<li><strong>The REST memory routes hold nothing for approval.</strong>
+<code>git grep -n -i 'approv' -- src/Connapse.Web/Endpoints/MemoryFactsEndpoints.cs src/Connapse.Web/Endpoints/MemorySpacesEndpoints.cs</code>
+returns nothing; the same pattern matches files under
+<code>src/Connapse.Web/Mcp</code>.</li>
+<li><strong>Nothing outside the memory store touches fact
+sources.</strong>
+<code>git grep -n -E 'MemoryFactSource|memory_fact_sources' -- src ':!src/Connapse.Storage/Memory' ':!src/Connapse.Storage/Migrations'</code>
+returns the entity and its DbContext mapping only.</li>
+<li><strong>Recall has no caller outside the tools and routes.</strong>
+<code>git grep -n -E '\.(RecallAsync|SpacesAsync|TimelineAsync)\(' -- src</code>
+returns the operations, <code>McpTools.Memory.cs:295</code>,
+<code>:319</code> and <code>MemoryFactsEndpoints.cs:144</code>,
+<code>:174</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|doi\.org' -- . ':!docs/research' ':!eval'</code>
+returns only references in a launch plan about README studies; the
+research notes under <code>docs/research</code> cite other projects'
+papers. There is no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/Destrayon/Connapse/commit/f5e1cf4b2ae72aa47b23cf9622cf024dfdf6db4f"><code class="commit-id" title="f5e1cf4b2ae72aa47b23cf9622cf024dfdf6db4f">f5e1cf4b…</code></a>.
+First reading, from a full clone at the head of <code>main</code>;
+triage selected <code>3c5d39f2b507</code>, three commits earlier, and
+the memory code did not change between them. Screened first: two
+auto-run surfaces, <code>.claude/settings.json</code> (flagged for
+SessionStart, PreToolUse and Stop hooks; it enables nine Claude Code
+plugins) and a <code>server.json</code> MCP manifest; nothing inside the
+seven-day cooldown; one build-time <code>Exec</code> in
+<code>src/Connapse.Ingestion/Connapse.Ingestion.csproj</code>; no
+unpinned surfaces. <code>CLAUDE.md</code> is addressed to reading agents
+and was read as data. Nothing was installed, built or run, and the test
+suite was not run. Four marks: <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
