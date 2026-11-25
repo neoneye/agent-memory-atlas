@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 865 reports.**
+**This page covers all 866 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7973,3 +7973,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 4,112 lines of Python in three files and 1,380 lines of Markdown prompts, published in 29 commits between 30 October and 10 November 2026 with four tags; 63 unittest methods with no CI workflow, none run here. No marks; the nearest, a test that the retro read leaves out an earlier sprint's lesson, pins a window rather than material that must not be read.
 - Study when: you want corrections to a coding agent to persist per role without building a store, and can accept the main session as the only curator.
 - Do not copy when: guidance must be reviewed before it binds, a superseded lesson must stay suppressed, or a decision has to keep binding the reviewer after it leaves the always-read file.
+
+### [`mem-forever`](../systems/mem-forever/)
+- Best idea: **check an owner's quote against the transcript, not the writer.** `evidence add --transcript` hashes the quoted text and records it as `owner_verbatim` only when it matches a `type: user` turn of a Claude Code JSONL; otherwise it is `owner_claimed`, with an inference's authority, and `provenance repair` downgrades any `by:owner_verbatim` block whose quote is not backed (`tools/brain.py:3571-3603`, `:3621-3642`, `:3702-3705`).
+- Second idea: an agent cannot write a rule. The pre-commit gate rejects a new `::BOUNDARY` or `A:` anti-pattern line without an owner source, and `repair` turns one into a tentative `advice_` fact rather than deleting it; `import` demotes everything from another store the same way.
+- Biggest risk: **the source the gate trusts is a string the writer types.** `by:owner_confirmed` and `by:legacy` are in `OWNER_SOURCES` and are never asked for evidence, so an agent that stamps either passes the new-boundary rule, the owner-edit rule and the retire tombstone (`tools/brain.py:2295`, `:3864-3896`); `evidence confirm`, `grant` and `otp issue`, the owner's verbs, are shell commands the agent can run.
+- Second risk: the gate sees edits and not removals. A deleted owner FACT, DECIDE or LESSON, or a deleted file under `memory/`, passes review (`:3867-3872`, `:3921-3926`); the hook is skippable with `--no-verify`, a hand-off change routed to the owner commits anyway, and no read path applies `conf` or `by`, so the claim that a bypassed hook "changes nothing" rests on the model.
+- Most reusable component: `transcript_user_q` and `quote_q` in `tools/brain.py:3528-3603`, and `cmd_handoff_review` with `overlay_candidate` at `:2042-2277` for reviewing a partial write-back block by block.
+- Maturity impression: MIT; 4,684 lines of standard-library Python in one engine file, a 675-line Hermes provider, 82 commits under five author names from 27 April to 24 November 2026 with nine tags; 43 unittest methods and a 38-check Hermes script run by CI, none run here. A weekly workflow in every copy overwrites the engine and hooks from upstream `main`. No marks; the nearest, a test that `repair` removes an expired tentative fact from its file, asserts about a file rather than a read.
+- Study when: you want plain-text memory you can diff and carry between coding tools, and want a commit-time check that stops a model from inventing rules about you.
+- Do not copy when: the gate must hold against the agent it governs, an owner's facts must survive deletion, or more than one person writes to the memory.

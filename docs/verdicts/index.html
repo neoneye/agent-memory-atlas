@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 865 reports.</strong></p>
+<p><strong>This page covers all 866 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35601,6 +35601,60 @@ only curator.</li>
 <li>Do not copy when: guidance must be reviewed before it binds, a
 superseded lesson must stay suppressed, or a decision has to keep
 binding the reviewer after it leaves the always-read file.</li>
+</ul>
+<h3 id="mem-forever"><a
+href="../systems/mem-forever/"><code>mem-forever</code></a></h3>
+<ul>
+<li>Best idea: <strong>check an owner's quote against the transcript,
+not the writer.</strong> <code>evidence add --transcript</code> hashes
+the quoted text and records it as <code>owner_verbatim</code> only when
+it matches a <code>type: user</code> turn of a Claude Code JSONL;
+otherwise it is <code>owner_claimed</code>, with an inference's
+authority, and <code>provenance repair</code> downgrades any
+<code>by:owner_verbatim</code> block whose quote is not backed
+(<code>tools/brain.py:3571-3603</code>, <code>:3621-3642</code>,
+<code>:3702-3705</code>).</li>
+<li>Second idea: an agent cannot write a rule. The pre-commit gate
+rejects a new <code>::BOUNDARY</code> or <code>A:</code> anti-pattern
+line without an owner source, and <code>repair</code> turns one into a
+tentative <code>advice_</code> fact rather than deleting it;
+<code>import</code> demotes everything from another store the same
+way.</li>
+<li>Biggest risk: <strong>the source the gate trusts is a string the
+writer types.</strong> <code>by:owner_confirmed</code> and
+<code>by:legacy</code> are in <code>OWNER_SOURCES</code> and are never
+asked for evidence, so an agent that stamps either passes the
+new-boundary rule, the owner-edit rule and the retire tombstone
+(<code>tools/brain.py:2295</code>, <code>:3864-3896</code>);
+<code>evidence confirm</code>, <code>grant</code> and
+<code>otp issue</code>, the owner's verbs, are shell commands the agent
+can run.</li>
+<li>Second risk: the gate sees edits and not removals. A deleted owner
+FACT, DECIDE or LESSON, or a deleted file under <code>memory/</code>,
+passes review (<code>:3867-3872</code>, <code>:3921-3926</code>); the
+hook is skippable with <code>--no-verify</code>, a hand-off change
+routed to the owner commits anyway, and no read path applies
+<code>conf</code> or <code>by</code>, so the claim that a bypassed hook
+"changes nothing" rests on the model.</li>
+<li>Most reusable component: <code>transcript_user_q</code> and
+<code>quote_q</code> in <code>tools/brain.py:3528-3603</code>, and
+<code>cmd_handoff_review</code> with <code>overlay_candidate</code> at
+<code>:2042-2277</code> for reviewing a partial write-back block by
+block.</li>
+<li>Maturity impression: MIT; 4,684 lines of standard-library Python in
+one engine file, a 675-line Hermes provider, 82 commits under five
+author names from 27 April to 24 November 2026 with nine tags; 43
+unittest methods and a 38-check Hermes script run by CI, none run here.
+A weekly workflow in every copy overwrites the engine and hooks from
+upstream <code>main</code>. No marks; the nearest, a test that
+<code>repair</code> removes an expired tentative fact from its file,
+asserts about a file rather than a read.</li>
+<li>Study when: you want plain-text memory you can diff and carry
+between coding tools, and want a commit-time check that stops a model
+from inventing rules about you.</li>
+<li>Do not copy when: the gate must hold against the agent it governs,
+an owner's facts must survive deletion, or more than one person writes
+to the memory.</li>
 </ul>
         </article>
       </div>

@@ -275,6 +275,8 @@ new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
 
 **[Praxi-Bot](../../systems/praxi-bot/) checks the quote in code, twice, against two different texts.** Each extracted candidate must carry a quote that is a whitespace-normalised span of the excerpt the model was shown, or it is dropped with a reason (`crates/memory-store/src/pipeline.rs:236-257`). The model's own `memory_save` tool is held to a narrower text: the quote must appear in a user message of the current run that is not marked untrusted, never in a tool output or an assistant message (`crates/memory-store/src/tools.rs:566-585`). The background path's excerpt includes the assistant's final answer, so a quote from the model's own reply passes there and would not pass the tool. The quote and source chat are stored on the row.
 
+[Mem-Forever](../../systems/mem-forever/) checks an owner quote against the transcript by hash. `evidence add --transcript` stores a quote as `owner_verbatim` only when the first eight hex characters of its SHA-256 match a `type: user` turn of a Claude Code JSONL, or one of its paragraphs; without a match it is `owner_claimed`, and `provenance repair` downgrades any `by:owner_verbatim` block whose `q:` is unbacked (`tools/brain.py:3528-3603`, `:3621-3642`, `:3702-3705`). The check covers one source value of three: `by:owner_confirmed` needs no quote at all, and `evidence confirm`, the owner's backing, is a command the agent can run (`:3643-3678`).
+
 ### Related: admission gates rather than evidence
 
 These decide what may become a belief — a shared derivation, a confirmation turn,

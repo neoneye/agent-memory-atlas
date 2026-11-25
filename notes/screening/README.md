@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 864 of 865 screened at the report's current pin.**
+**Progress: 865 of 866 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 412 |
+| Repositories with an auto-run surface (`RUNS`) | 413 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 393 |
 | Repositories with build-time execution (`EXEC`) | 622 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
@@ -236,6 +236,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`matrix-os`](../../content/systems/matrix-os.md) | `.agents/skills/clerk-custom-ui/.claude-plugin/plugin.json`, `.agents/skills/clerk-nextjs-patterns/.claude-plugin/plugin.json`, `.agents/skills/clerk-orgs/.claude-plugin/plugin.json`, `.agents/skills/clerk-setup/.claude-plugin/plugin.json`, `.agents/skills/clerk-testing/.claude-plugin/plugin.json`, `.agents/skills/clerk-webhooks/.claude-plugin/plugin.json`, `.agents/skills/clerk/.claude-plugin/plugin.json`, `.claude-plugin/` |
 | [`mcp-context-server`](../../content/systems/mcp-context-server.md) | `server.json` |
 | [`mcp-memory-service`](../../content/systems/mcp-memory-service.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitattributes`, `claude-hooks/.claude-plugin/hooks.json`, `claude-hooks/.claude-plugin/plugin.json`, `claude-hooks/.mcp.json` |
+| [`mem-forever`](../../content/systems/mem-forever.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.cursorrules`, `.github/copilot-instructions.md` |
 | [`mem-mastero`](../../content/systems/mem-mastero.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `hooks/`, `hooks/hooks.json` |
 | [`mem0`](../../content/systems/mem0.md) | `.claude-plugin/`, `.gitmodules`, `integrations/claude-code-plugin/.claude-plugin/plugin.json`, `integrations/claude-code-plugin/.mcp.json`, `integrations/claude-code-plugin/hooks/`, `integrations/claude-code-plugin/hooks/hooks.json` |
 | [`mem9`](../../content/systems/mem9.md) | `.claude-plugin/`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/hooks/`, `claude-plugin/hooks/hooks.json` |
