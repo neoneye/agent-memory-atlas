@@ -455,6 +455,20 @@ which a worker indexes into a long-memory archive that
 <code>long_query</code> interleaves with current results, so a line the
 bank retired is still served one tier further out, labelled only by its
 capture time.</p>
+<p><a href="../../systems/mongodb-agent-memory/">agent-memory (MongoDB
+partners)</a> has a promotion rule with no input.
+<code>_promote_to_ltm</code> moves short-term documents with importance
+of at least 0.6, two accesses and an age over an hour
+(<code>agent_memory/services/consolidation.py:133-180</code>);
+<code>store_stm</code> writes every short-term document at 0.5 and
+nothing in the library rescores one, so the only producer of a
+qualifying document is the demo seed, which sets importance and access
+count directly (<code>examples/memory-ui/demo/seed.py:282-292</code>).
+Long-term memory is filled another way: every human message of 31
+characters or more is written as a long-term candidate at store time, a
+length rule standing in for the promotion decision. The test pinning
+that promotion re-stamps the expiry runs on fixtures with importance
+0.9.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>State the rule, then compute it by hand for ten promoted records and

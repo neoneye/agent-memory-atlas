@@ -860,6 +860,24 @@ memory. A near-identical write counts as a use: the new text is dropped
 and the old row gets an access (<code>retrieval.ts:1270-1278</code>).
 <strong>Before scheduling a decay pass, find the read it
 changes.</strong></p>
+<p><strong><a href="../../systems/mongodb-agent-memory/">agent-memory
+(MongoDB partners)</a> sets its forgetting threshold at its scorer's
+floor.</strong> The consolidation pass soft-deletes long-term memories
+with importance <code>&lt; 0.1</code>
+(<code>agent_memory/services/consolidation.py:113-131</code>), and the
+LLM parser returns at least 0.1 while the local scorer clamps to
+<code>MIN_IMPORTANCE = 0.1</code>
+(<code>agent_memory/providers/base.py:51</code>,
+<code>agent_memory/services/importance.py:48</code>), so at the defaults
+nothing scored is forgotten and memories leave by a 90-day expiry
+stamped at creation that reinforcement does not move. Reinforcement is a
+near-duplicate write: above <code>vectorSearchScore</code> 0.85 the
+older memory's importance is multiplied by 1.1 and the newer is retired
+(<code>agent_memory/services/memory.py:591-619</code>), and that score
+is Atlas's <code>(1 + cosine) / 2</code>, so the threshold is raw cosine
+0.70. <strong>Test a decay threshold against the scorer's real output
+range, and a similarity threshold against the engine's real
+score.</strong></p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

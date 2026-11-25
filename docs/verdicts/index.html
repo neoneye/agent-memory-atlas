@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 877 reports.</strong></p>
+<p><strong>This page covers all 879 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36204,6 +36204,96 @@ person's memory between machines.</li>
 memories need a reviewed or trusted state before injection, or the store
 will grow past a few hundred rows under the shipped maintenance
 passes.</li>
+</ul>
+<h3 id="mongodb-agent-memory"><a
+href="../systems/mongodb-agent-memory/"><code>mongodb-agent-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>the user key is a pre-filter in both branches of
+the fused search.</strong> <code>recall</code> puts <code>user_id</code>
+and <code>deleted_at</code> in the <code>$vectorSearch</code> filter and
+<code>hybrid_search</code> puts the same restriction in the vector
+pre-filter and the Atlas Search <code>compound.filter</code>, each path
+declared on the index, so the engine applies scope before any limit; a
+unit test pins both branches.</li>
+<li>Second idea: identity from the token, with the <code>user_id</code>
+argument kept for single-tenant callers and refused when it names
+someone else, and a runner that will not bind a routable address with
+auth off unless a flag says so on every start.</li>
+<li>Biggest risk: <strong>duplicate detection reads Atlas's normalised
+score as cosine.</strong> <code>evolve_memory</code> compares
+<code>vectorSearchScore</code>, which is <code>(1 + cosine) / 2</code>,
+with 0.85 and 0.70, so a new memory within raw cosine 0.70 of an older
+one is retired as its duplicate and the older reinforced, and down to
+raw cosine 0.40 a model merges the two and soft-deletes the older. A
+correction phrased like the fact it corrects does not survive.</li>
+<li>Second risk: the lifecycle thresholds have no input. Forgetting
+needs importance below 0.1 and both scorers return at least 0.1; STM
+promotion needs 0.6 and STM is written at 0.5 and never rescored;
+<code>memory_type</code> and three of four retention tiers have no
+writer. MCP auto-capture stores recall output as STM, and deleting the
+id <code>add()</code> returns leaves the LTM copy.</li>
+<li>Most reusable component: <code>rank_fusion_pipeline</code>,
+<code>agent_memory/services/search_pipeline.py:31-140</code>, with
+<code>tests/unit/test_search_filter_contract.py</code>, and
+<code>resolve_caller</code>,
+<code>agent_memory/auth/identity.py:80-133</code>.</li>
+<li>Maturity impression: Apache-2.0; 10,664 lines of library Python in
+104 commits from May 2025 to 17 November 2026, nearly all from one
+author and 77 of them in July 2026; 1,396 mocked unit test functions in
+CI and 26 integration functions that need a live cluster, none run here;
+no retrieval evaluation. One mark: <code>scope_enforced</code>.</li>
+<li>Study when: you are putting per-user memory on Atlas Vector Search
+and Atlas Search and need scope inside the query.</li>
+<li>Do not copy when: memories must be correctable, or the dedup and
+forgetting thresholds have to mean what their names say.</li>
+</ul>
+<h3 id="contextdb-atomsai"><a
+href="../systems/contextdb-atomsai/"><code>contextdb-atomsai</code></a></h3>
+<ul>
+<li>Best idea: <strong>contest, do not overwrite.</strong> When an
+independent speaker writes a different value into an occupied entity and
+attribute slot, both rows are marked <code>contested</code> and stay
+current, <code>recall_for_action</code> returns neither, and a
+confirmation closes the rival; a lower-trust source writing over a
+first-party fact contests it instead of replacing it.</li>
+<li>Second idea: validity from the caller beside record time.
+<code>remember</code> takes <code>event_time</code>, a same-speaker
+correction closes the old row at the new row's validity start, and an
+MCP-level eval requires <code>as_of</code> recall to return the January
+value and not the June one.</li>
+<li>Biggest risk: <strong>the speaker is whoever the caller
+says.</strong> <code>source</code> and <code>confidence</code> are MCP
+and HTTP arguments, a <code>user_stated</code> write at 0.7 or more is
+action-trusted on arrival, and <code>confirm</code> is an MCP tool under
+the same credential, so the model can author, assert and confirm a fact
+the gate passes.</li>
+<li>Second risk: on a client built without a user, the documented shape
+for multi-user HTTP, graph neighbours are fetched with
+<code>get_raw</code> under the construction-time scope only and no
+status check, the entity table is shared across users, and consolidation
+of fast writes stores extracted facts with no user and matches slots
+across users. Default redaction keeps each PII span in plaintext in the
+stored annotation, and <code>verify_forgotten</code> reads the oldest
+1,000 audit entries for the newest FORGET.</li>
+<li>Most reusable component: <code>TrustEngine._write_locked</code> and
+<code>_supersede</code>,
+<code>contextdb/dynamics/trust.py:209-373</code>, and the scope-first
+vector allowlist in
+<code>contextdb/store/sqlite_store.py:818-894</code>.</li>
+<li>Maturity impression: Apache-2.0 with a profile-capped commercial
+licence announced for 1.0; 13,876 lines of Python in 82 commits between
+21 April and 15 November 2026, 37 of them by Cursor Agent; 243 test
+functions with 45 acceptance evals and a benchmark whose control arm
+must fail, none run here. The isolation tests run with the graph
+overlays off. Five marks: <code>trust_state</code>,
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Study when: you need a wish and a confirmed fact to be different
+objects before an agent books, pays or prescribes, and the host knows
+who is speaking.</li>
+<li>Do not copy when: the model drives the memory tools on a shared
+multi-user server, or a person must approve a fact before an action can
+rely on it.</li>
 </ul>
         </article>
       </div>

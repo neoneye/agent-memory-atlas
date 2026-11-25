@@ -931,6 +931,24 @@ Only the owner may request verification (<code>:397-398</code>), so the
 state cannot hide another owner's unit, and nothing independent of the
 author moves it; the method names itself
 <code>submitted-evidence-weight-v1</code>.</p>
+<p><a href="../../systems/contextdb-atomsai/">ContextDB (atomsai)</a>
+makes disagreement a state. A different value written into an occupied
+entity and attribute slot by an independent speaker, or by a lower-trust
+source over a first-party fact, sets <code>contested</code> on both rows
+and leaves both current
+(<code>contextdb/dynamics/trust.py:294-328</code>);
+<code>TrustPolicy.is_trusted</code> refuses a contested, unconfirmed
+row, and <code>recall_for_action</code> and the
+<code>VerifyBeforeAct</code> host gate keep only rows it passes
+(<code>contextdb/core/policy.py:77-102</code>,
+<code>contextdb/memory/factual.py:166-191</code>). <code>confirm</code>
+clears the contest and closes the rival. The withholding covers action
+and not recall, which returns every row with its flags, and both ends of
+the machine are reachable by the model: <code>source</code> and
+<code>confidence</code> are <code>remember</code> arguments, so a
+<code>user_stated</code> write at 0.7 or more is trusted on arrival, and
+<code>confirm</code> is an MCP tool
+(<code>contextdb/mcp.py:76-90</code>, <code>:429-433</code>).</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

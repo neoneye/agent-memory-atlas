@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 876 of 877 screened at the report's current pin.**
+**Progress: 878 of 879 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 421 |
+| Repositories with an auto-run surface (`RUNS`) | 422 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 397 |
-| Repositories with build-time execution (`EXEC`) | 629 |
+| Repositories with build-time execution (`EXEC`) | 631 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -112,6 +112,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`context-mem`](../../content/systems/context-mem.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`context-mode`](../../content/systems/context-mode.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/`, `hooks/hooks.json` |
 | [`contextcore`](../../content/systems/contextcore.md) | `server.json` |
+| [`contextdb-atomsai`](../../content/systems/contextdb-atomsai.md) | `.cursor/rules/`, `.github/copilot-instructions.md` |
 | [`contextlattice`](../../content/systems/contextlattice.md) | `.envrc` |
 | [`contextstream-mcp`](../../content/systems/contextstream-mcp.md) | `server.json` |
 | [`continuity-v2`](../../content/systems/continuity-v2.md) | `hooks/` |

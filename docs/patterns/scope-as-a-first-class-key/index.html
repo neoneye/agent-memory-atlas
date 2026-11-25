@@ -1921,6 +1921,26 @@ one and requires recall to return exactly that one. The coupling has a
 failure mode: a fact citing a deleted document fails the test for every
 reader, and forget, which requires every version visible, refuses
 it.</p>
+<p><a href="../../systems/contextdb-atomsai/">ContextDB (atomsai)</a>
+applies the key in every store query and drops it at the graph.
+<code>_scope_sql</code> adds <code>user_id</code>,
+<code>tenant_id</code> and <code>agent_id</code> to the vector candidate
+allowlist before ranking, to text search, slot lookup, list and count,
+with a populated test that twenty aligned foreign vectors cannot
+displace one in-scope hit
+(<code>contextdb/store/sqlite_store.py:378-392</code>,
+<code>:830-861</code>,
+<code>tests/unit/test_vector_scope.py:73-102</code>). Graph expansion
+then fetches neighbour ids with <code>get_raw</code>, which checks only
+the scope the client was built with and no status
+(<code>contextdb/dynamics/retrieval.py:307-309</code>,
+<code>contextdb/store/sqlite_store.py:777-784</code>). On a client built
+without a user, the documented shape for multi-user HTTP, the entity
+table is shared across users and a query the classifier sends to the
+entity graph returns another user's memory naming the same entity; the
+project's own eval asserts that cross-user edge exists
+(<code>tests/evals/test_trust_model.py:840</code>). Every scope test
+runs with the graph overlays off.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

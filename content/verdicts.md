@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 877 reports.**
+**This page covers all 879 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8093,3 +8093,23 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0, stated as v3.0 in the README and or-later in the manifests; 17,824 lines of Python and 6,841 of TypeScript; 291 commits from 17 June to 16 November 2026 under three author identities, 31 tags to v0.18.0; 764 Python test functions and 46 web test cases run in CI on three operating systems and not run here. Two marks: `scope_enforced` and `negative_eval`.
 - Study when: you want hook injection that labels memory as data, a recall floor in CI, or a small commutative merge for syncing one person's memory between machines.
 - Do not copy when: a correction must replace what it corrects, memories need a reviewed or trusted state before injection, or the store will grow past a few hundred rows under the shipped maintenance passes.
+
+### [`mongodb-agent-memory`](../systems/mongodb-agent-memory/)
+- Best idea: **the user key is a pre-filter in both branches of the fused search.** `recall` puts `user_id` and `deleted_at` in the `$vectorSearch` filter and `hybrid_search` puts the same restriction in the vector pre-filter and the Atlas Search `compound.filter`, each path declared on the index, so the engine applies scope before any limit; a unit test pins both branches.
+- Second idea: identity from the token, with the `user_id` argument kept for single-tenant callers and refused when it names someone else, and a runner that will not bind a routable address with auth off unless a flag says so on every start.
+- Biggest risk: **duplicate detection reads Atlas's normalised score as cosine.** `evolve_memory` compares `vectorSearchScore`, which is `(1 + cosine) / 2`, with 0.85 and 0.70, so a new memory within raw cosine 0.70 of an older one is retired as its duplicate and the older reinforced, and down to raw cosine 0.40 a model merges the two and soft-deletes the older. A correction phrased like the fact it corrects does not survive.
+- Second risk: the lifecycle thresholds have no input. Forgetting needs importance below 0.1 and both scorers return at least 0.1; STM promotion needs 0.6 and STM is written at 0.5 and never rescored; `memory_type` and three of four retention tiers have no writer. MCP auto-capture stores recall output as STM, and deleting the id `add()` returns leaves the LTM copy.
+- Most reusable component: `rank_fusion_pipeline`, `agent_memory/services/search_pipeline.py:31-140`, with `tests/unit/test_search_filter_contract.py`, and `resolve_caller`, `agent_memory/auth/identity.py:80-133`.
+- Maturity impression: Apache-2.0; 10,664 lines of library Python in 104 commits from May 2025 to 17 November 2026, nearly all from one author and 77 of them in July 2026; 1,396 mocked unit test functions in CI and 26 integration functions that need a live cluster, none run here; no retrieval evaluation. One mark: `scope_enforced`.
+- Study when: you are putting per-user memory on Atlas Vector Search and Atlas Search and need scope inside the query.
+- Do not copy when: memories must be correctable, or the dedup and forgetting thresholds have to mean what their names say.
+
+### [`contextdb-atomsai`](../systems/contextdb-atomsai/)
+- Best idea: **contest, do not overwrite.** When an independent speaker writes a different value into an occupied entity and attribute slot, both rows are marked `contested` and stay current, `recall_for_action` returns neither, and a confirmation closes the rival; a lower-trust source writing over a first-party fact contests it instead of replacing it.
+- Second idea: validity from the caller beside record time. `remember` takes `event_time`, a same-speaker correction closes the old row at the new row's validity start, and an MCP-level eval requires `as_of` recall to return the January value and not the June one.
+- Biggest risk: **the speaker is whoever the caller says.** `source` and `confidence` are MCP and HTTP arguments, a `user_stated` write at 0.7 or more is action-trusted on arrival, and `confirm` is an MCP tool under the same credential, so the model can author, assert and confirm a fact the gate passes.
+- Second risk: on a client built without a user, the documented shape for multi-user HTTP, graph neighbours are fetched with `get_raw` under the construction-time scope only and no status check, the entity table is shared across users, and consolidation of fast writes stores extracted facts with no user and matches slots across users. Default redaction keeps each PII span in plaintext in the stored annotation, and `verify_forgotten` reads the oldest 1,000 audit entries for the newest FORGET.
+- Most reusable component: `TrustEngine._write_locked` and `_supersede`, `contextdb/dynamics/trust.py:209-373`, and the scope-first vector allowlist in `contextdb/store/sqlite_store.py:818-894`.
+- Maturity impression: Apache-2.0 with a profile-capped commercial licence announced for 1.0; 13,876 lines of Python in 82 commits between 21 April and 15 November 2026, 37 of them by Cursor Agent; 243 test functions with 45 acceptance evals and a benchmark whose control arm must fail, none run here. The isolation tests run with the graph overlays off. Five marks: `trust_state`, `bitemporal`, `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you need a wish and a confirmed fact to be different objects before an agent books, pays or prescribes, and the host knows who is speaking.
+- Do not copy when: the model drives the memory tools on a shared multi-user server, or a person must approve a fact before an action can rely on it.

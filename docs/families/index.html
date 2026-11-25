@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="The 877
+    <meta name="description" content="The 879
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -13,7 +13,7 @@ here.">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="System
 Families — Agent Memory Atlas">
-    <meta property="og:description" content="The 877
+    <meta property="og:description" content="The 879
 systems grouped by eight architectural commitments, the categories
 almost nothing models, and the boundaries of what counts as memory
 here.">
@@ -22,7 +22,7 @@ here.">
     <meta name="twitter:title" content="System
 Families — Agent Memory Atlas">
     <meta name="twitter:description" content="The
-877 systems grouped by eight architectural
+879 systems grouped by eight architectural
 commitments, the categories almost nothing models, and the boundaries of
 what counts as memory here.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
@@ -46,7 +46,7 @@ what counts as memory here.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "System Families",
-      "description": "The 877 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
+      "description": "The 879 systems grouped by eight architectural commitments, the categories almost nothing models, and the boundaries of what counts as memory here.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -103,7 +103,7 @@ what counts as memory here.">
         <div class="document-hero-inner">
           <p class="eyebrow">Taxonomy</p>
           <h1>System Families</h1>
-          <p class="document-deck">The 877 systems
+          <p class="document-deck">The 879 systems
 grouped by eight architectural commitments, the categories almost
 nothing models, and the boundaries of what counts as memory here.</p>
                                                 </div>
@@ -120,7 +120,7 @@ nothing models, and the boundaries of what counts as memory here.</p>
           </div>
         </aside>
         <article class="prose" id="article">
-<p>877 systems do not fall into 182 categories. They
+<p>879 systems do not fall into 182 categories. They
 cluster around eight architectural commitments, and most systems belong
 to more than one — a coding-agent memory can also be verification-first,
 and a host runtime's plugin can also be a hosted service. The families
@@ -194,7 +194,8 @@ href="../systems/wax/"><code>wax</code></a>, <a
 href="../systems/rakho/"><code>rakho</code></a>, <a
 href="../systems/ctxvault/"><code>ctxvault</code></a>, <a
 href="../systems/lmc-5/"><code>lmc-5</code></a>, <a
-href="../systems/llmslim/"><code>llmslim</code></a></p>
+href="../systems/llmslim/"><code>llmslim</code></a>, <a
+href="../systems/mongodb-agent-memory/"><code>mongodb-agent-memory</code></a></p>
 <p>Called from an application that owns the agent loop. Easy to adopt;
 weak authority over when memory is written or how recall is used.</p>
 <p><strong>AI Workflow Workspace is the family's clearest case of
@@ -1106,6 +1107,25 @@ commits before the pin. A separate Neo4j store keeps caller-supplied
 validity beside record time, but nothing wired calls it and its expiry
 has no record time. Marks: <code>scope_enforced</code>,
 <code>negative_eval</code>.</p>
+<p><strong><a href="../systems/mongodb-agent-memory/">agent-memory
+(MongoDB partners)</a> puts the user key inside every Atlas search and
+compares its duplicate thresholds with a score Atlas has
+halved.</strong> An Apache-2.0 Python library with MCP and REST shells,
+it keeps short-term messages, long-term memories, an episodic turn log
+and a response cache in one MongoDB Atlas cluster, embedding through
+Bedrock by default. <code>user_id</code> sits in the
+<code>$vectorSearch</code> pre-filter and the Atlas Search filter of
+both <code>$rankFusion</code> branches, taken from the token when auth
+is on and from the caller when it is off, the default. Each human
+message of 31 characters or more is stored twice, and a worker scores it
+and checks the user's live memories: above score 0.85 the newer is
+retired as a duplicate and the older reinforced, between 0.70 and 0.85 a
+model merges them. Atlas scores cosine as <code>(1 + cos) / 2</code>, so
+a correction within raw cosine 0.70 of the old fact is dropped.
+Forgetting below importance 0.1 meets a scorer floor of 0.1, short-term
+promotion needs an importance only the demo seed writes, and MCP
+auto-capture stores recall output as new memory. Marks:
+<code>scope_enforced</code>.</p>
 <h2 id="hosted-and-service-memory">Hosted and service memory</h2>
 <p><a href="../systems/openlore/"><code>openlore</code></a>, <a
 href="../systems/honcho/"><code>honcho</code></a>, <a
@@ -12779,7 +12799,8 @@ href="../systems/mnemosyne-28naem-del/"><code>mnemosyne-28naem-del</code></a>,
 href="../systems/noosphere-lite-mcp/"><code>noosphere-lite-mcp</code></a>,
 <a href="../systems/severian/"><code>severian</code></a>, <a
 href="../systems/resimind/"><code>resimind</code></a>, <a
-href="../systems/attested-memory/"><code>attested-memory</code></a></p>
+href="../systems/attested-memory/"><code>attested-memory</code></a>, <a
+href="../systems/contextdb-atomsai/"><code>contextdb-atomsai</code></a></p>
 <p>These treat memory as a trust problem before a retrieval problem.
 <strong>Areev is the family's most complete account of the
 <em>process</em> by which a memory changes, and it governs the result at
@@ -14037,6 +14058,24 @@ finishes the misses, linking a <code>created</code> receipt by content
 hash alone; the ledger's attest capability appends to any memory id for
 any hub buyer with a reference. No unit can be edited or deleted. Marks:
 <code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</p>
+<p><strong><a href="../systems/contextdb-atomsai/">ContextDB
+(atomsai)</a> holds a slot two speakers disagree on out of action until
+one value is confirmed, and takes the speaker's word for who it
+is.</strong> An Apache-2.0 Python SDK over SQLite or PostgreSQL whose
+facts carry <code>user_stated</code>, <code>agent_inferred</code> or
+<code>third_party</code>, a list of corroborating speakers and an
+optional entity and attribute slot. A slot-locked write corroborates,
+supersedes at the new fact's caller-stated validity start, or marks both
+rows <code>contested</code>; <code>recall_for_action</code> and a
+<code>VerifyBeforeAct</code> host gate drop contested, injection-suspect
+and unbacked rows, while plain recall returns everything with flags.
+Source and confidence are MCP arguments and <code>confirm</code> is an
+MCP tool, so a model can write a fact the gate passes and clear a
+contest itself. Scope is in the store's SQL, but on a shared client
+entity-graph neighbours are fetched by id without the per-call user,
+from an entity table every user shares. Marks: <code>trust_state</code>,
+<code>bitemporal</code>, <code>scope_enforced</code>,
 <code>audit_log</code>, <code>negative_eval</code>.</p>
 <h2 id="research-lineage">Research lineage</h2>
 <p><a

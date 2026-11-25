@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-877, generated from each report's frontmatter —
+879, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-877, generated from each report's frontmatter —
+879, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-877, generated from each report's frontmatter —
+879, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 877, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 879, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-877, generated from each report's frontmatter —
+879, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 877 systems by the seven mechanisms
+filters all 879 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -7164,6 +7164,62 @@ tests</td>
 accepts an agent's user_confirmed and origin_authority, so it can
 supersede a protected decision; assemble_context ranks across projects;
 edit_memory skips the admission gate</td>
+</tr>
+<tr>
+<td><a
+href="../systems/contextdb-atomsai/"><code>contextdb-atomsai</code></a></td>
+<td>A MemoryItem row: redacted content, embedding, memory type,
+epistemic source, confidence, corroborating speakers, an optional entity
+and attribute slot with a canonical value, contested and confirmed
+flags, an injection flag, a validity window and superseded_by, and user,
+tenant, agent and session keys</td>
+<td>One SQLite file by default, or PostgreSQL with pgvector; the vector
+index is in-process NumPy or FAISS rebuilt from the table; edge and
+entity tables for four graph overlays and a hash-chained audit_log table
+in the same database</td>
+<td>Cosine over a scope-filtered allowlist fused by reciprocal rank with
+BM25 over LIKE matches, whole-token identifier matches and graph
+neighbours chosen by query keywords, multiplied by salience; filtered to
+rows valid now or at as_of; recall_for_action keeps only rows the trust
+policy passes, or reads one slot exactly</td>
+<td>SDK, MCP or HTTP calls with a caller-declared source, confidence and
+optional event_time; PII redaction and an injection screen run first; a
+write with a slot goes through a per-slot lock that corroborates,
+supersedes, contests or no-ops; add_fast stores raw text at 0.5 for a
+later LLM extraction pass</td>
+<td>A same-speaker correction closes the old row and keeps it; an
+independent speaker contests instead; confirm resolves a contest; forget
+hard-deletes by id, slot, age or entity, and forget_user deletes a
+user's rows and derived summaries, severs graph edges and writes a
+FORGET entry with the id set</td>
+<td>user_id, tenant_id and agent_id stored on every row and applied in
+the store's SQL; fixed at construction or passed per call on a shared
+client, where HTTP binds it through an optional auth hook and MCP takes
+it from the tool argument; the entity graph is shared and graph
+neighbours skip the per-call user</td>
+<td>An async Python SDK; seven MCP tools over stdio or HTTP; a Starlette
+HTTP API with a bearer token; adapters for LangChain, CrewAI, AutoGen,
+OpenAI tools, Pipecat and LiveKit; a VerifyBeforeAct interceptor that
+classifies a turn as act, ask or abstain</td>
+<td>An optional consolidation loop that drains add_fast rows through LLM
+extraction every five seconds; consolidate, prune and retention
+enforcement run when the host calls them</td>
+<td>epistemic_source of user_stated, agent_inferred or third_party, a
+corroborating-speaker list, contested, confirmed and injection_suspect,
+judged per read by a TrustPolicy; the action read excludes what fails
+it, plain recall returns everything with flags; the model declares
+source and confidence on MCP and can call confirm</td>
+<td>A second speaker's different value contests a slot instead of
+overwriting it, and an action read excludes both until confirmed;
+validity time from the caller beside ingestion time, with an MCP-level
+as-of test; scope in the SQL of the vector allowlist with a populated
+test; a hash-chained audit with decision snapshots on every recall</td>
+<td>Provenance and confidence are tool arguments, so a model can write a
+fact the action read passes at once, and confirm is on the same MCP
+surface; on a shared client graph neighbours are fetched without the
+per-call user and with no status check; default redaction keeps the
+plaintext span in the stored annotation; consolidation on a shared
+client writes facts with no user</td>
 </tr>
 <tr>
 <td><a href="../systems/contextdb/"><code>contextdb</code></a></td>
@@ -24255,6 +24311,64 @@ relies on the agent pulling rules, and corrections are supersession
 recurrence</td>
 </tr>
 <tr>
+<td><a
+href="../systems/mongodb-agent-memory/"><code>mongodb-agent-memory</code></a></td>
+<td>A MongoDB document per message: text, embedding, tier (stm or ltm),
+user_id, conversation_id, message type, tags, importance, access count,
+an LLM summary, an enrichment status, a retention tier and expires_at;
+beside it episodic turn documents, semantic-cache entries and key-value
+decisions</td>
+<td>One MongoDB Atlas database: memories, episodes and
+episodes_counters, semantic_cache, decisions, audit_log,
+governance_profiles, rate_limits and prompts; Atlas Vector Search and
+Atlas Search indexes ensured at startup; TTL indexes on expires_at,
+deleted_at, episode ts, cache creation and audit timestamp</td>
+<td>recall: $vectorSearch pre-filtered on user_id and deleted_at, STM
+and LTM copies of one message collapsed, re-ranked by 0.2 recency, 0.3
+importance times access and 0.5 vector score; search: $rankFusion of a
+vector and an Atlas Search branch weighted 1.0 and 0.7 under the same
+filters; episodic search the same fusion over turn text; the cache
+returns its nearest entry at score 0.95</td>
+<td>add() embeds every message in one call, inserts each as a 24-hour
+STM document and each human message of 31 characters or more as a second
+LTM document with enrichment pending, no model on the caller's path; an
+enrichment worker every 30 seconds scores importance, summarises and
+checks for near-duplicates; MCP auto-capture stores the output of
+recall, search and decision calls as STM</td>
+<td>Soft delete by id, tags or time range sets deleted_at, purged after
+30 days; deleting the id add() returns leaves the LTM copy live; a
+near-duplicate above score 0.85 retires the newer memory, and between
+0.70 and 0.85 an LLM merge rewrites the newer and soft-deletes the
+older; wipe_user_data hard-deletes a user across collections; every LTM
+document expires 90 days after it was written</td>
+<td>user_id on every document, in the vector pre-filter and the
+full-text filter of every search; taken from a verified token when auth
+is on and from the caller's argument when it is off, the default; no
+agent or project key</td>
+<td>An async Python facade and a synchronous twin; a FastMCP server over
+streamable HTTP with 16 tools, each taking user_id; a FastAPI REST
+shell; a demo chat UI that recalls into the system prompt</td>
+<td>In-process asyncio workers: enrichment every 30 seconds,
+consolidation every 24 hours (compress STM, forget below an importance
+threshold, promote STM), audit flush, and a bounded episodic writer that
+drops the oldest queued turn when full</td>
+<td>No epistemic status: enrichment_status records processing (pending,
+merge_pending, complete, failed, not_applicable) and no read filters on
+it; importance is a 0.1 to 1.0 score used in ranking and in the
+forgetting and promotion thresholds</td>
+<td>The user key sits inside every Atlas search, in both branches of the
+fusion; identity bound to the token when auth is on, and a refusal to
+bind a routable address without it; denials and throttles audited; an
+erasure that drains queues, deletes across collections and checks what
+is left</td>
+<td>Duplicate thresholds are compared with Atlas's normalised score, so
+a correction within raw cosine 0.70 of the old fact is retired as its
+duplicate; the forgetting threshold sits at the importance floor and STM
+promotion needs an importance no library path writes; auto-capture
+stores recall output as new memory; deleting a returned id leaves its
+long-term copy</td>
+</tr>
+<tr>
 <td><a href="../systems/monomem/"><code>monomem</code></a></td>
 <td>A note row: title, body, tags, namespace, kind (note, observation or
 session summary), server-stamped written_by and created_by, a
@@ -39478,7 +39592,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>85 of 877:</em> <a
+<p><em>85 of 879:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -39567,7 +39681,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>226 of 877:</em> <a
+<p><em>227 of 879:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -39611,7 +39725,8 @@ href="../systems/cognicore/"><code>cognicore</code></a>, <a
 href="../systems/cogz/"><code>cogz</code></a>, <a
 href="../systems/context-keeper/"><code>context-keeper</code></a>, <a
 href="../systems/contextcore/"><code>contextcore</code></a>, <a
-href="../systems/contextlattice/"><code>contextlattice</code></a>, <a
+href="../systems/contextdb-atomsai/"><code>contextdb-atomsai</code></a>,
+<a href="../systems/contextlattice/"><code>contextlattice</code></a>, <a
 href="../systems/cortana/"><code>cortana</code></a>, <a
 href="../systems/cortex-hypermnesia/"><code>cortex-hypermnesia</code></a>,
 <a href="../systems/counterparts/"><code>counterparts</code></a>, <a
@@ -39801,7 +39916,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>149 of 877:</em> <a
+<p><em>150 of 879:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -39825,7 +39940,8 @@ href="../systems/claude-total-memory/"><code>claude-total-memory</code></a>,
 href="../systems/clickhouse-loom/"><code>clickhouse-loom</code></a>, <a
 href="../systems/compartment/"><code>compartment</code></a>, <a
 href="../systems/connapse/"><code>connapse</code></a>, <a
-href="../systems/contextlattice/"><code>contextlattice</code></a>, <a
+href="../systems/contextdb-atomsai/"><code>contextdb-atomsai</code></a>,
+<a href="../systems/contextlattice/"><code>contextlattice</code></a>, <a
 href="../systems/core-redplanet/"><code>core-redplanet</code></a>, <a
 href="../systems/cortex-hub/"><code>cortex-hub</code></a>, <a
 href="../systems/cortexdb/"><code>cortexdb</code></a>, <a
@@ -39960,7 +40076,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>377 of 877:</em> <a
+<p><em>379 of 879:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -40039,7 +40155,8 @@ href="../systems/connapse/"><code>connapse</code></a>, <a
 href="../systems/context-keeper/"><code>context-keeper</code></a>, <a
 href="../systems/context-mode/"><code>context-mode</code></a>, <a
 href="../systems/contextcore/"><code>contextcore</code></a>, <a
-href="../systems/contextlattice/"><code>contextlattice</code></a>, <a
+href="../systems/contextdb-atomsai/"><code>contextdb-atomsai</code></a>,
+<a href="../systems/contextlattice/"><code>contextlattice</code></a>, <a
 href="../systems/contextmeld/"><code>contextmeld</code></a>, <a
 href="../systems/contextstream-mcp/"><code>contextstream-mcp</code></a>,
 <a href="../systems/core-memory/"><code>core-memory</code></a>, <a
@@ -40204,7 +40321,8 @@ href="../systems/mnesio/"><code>mnesio</code></a>, <a
 href="../systems/mobius/"><code>mobius</code></a>, <a
 href="../systems/moltbrain/"><code>moltbrain</code></a>, <a
 href="../systems/monet/"><code>monet</code></a>, <a
-href="../systems/monomem/"><code>monomem</code></a>, <a
+href="../systems/mongodb-agent-memory/"><code>mongodb-agent-memory</code></a>,
+<a href="../systems/monomem/"><code>monomem</code></a>, <a
 href="../systems/muninn/"><code>muninn</code></a>, <a
 href="../systems/muninndb/"><code>muninndb</code></a>, <a
 href="../systems/musclememory/"><code>musclememory</code></a>, <a
@@ -40355,7 +40473,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>297 of 877:</em> <a
+<p><em>298 of 879:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -40412,7 +40530,8 @@ href="../systems/commonground/"><code>commonground</code></a>, <a
 href="../systems/compartment/"><code>compartment</code></a>, <a
 href="../systems/connapse/"><code>connapse</code></a>, <a
 href="../systems/contextcore/"><code>contextcore</code></a>, <a
-href="../systems/contextlattice/"><code>contextlattice</code></a>, <a
+href="../systems/contextdb-atomsai/"><code>contextdb-atomsai</code></a>,
+<a href="../systems/contextlattice/"><code>contextlattice</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/cortex-engine/"><code>cortex-engine</code></a>, <a
 href="../systems/cortexdb/"><code>cortexdb</code></a>, <a
@@ -40665,7 +40784,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>107 of 877:</em> <a
+<p><em>107 of 879:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -40776,7 +40895,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>570 of 877:</em> <a
+<p><em>571 of 879:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -40886,7 +41005,8 @@ href="../systems/context-engineering/"><code>context-engineering</code></a>,
 href="../systems/context-mode/"><code>context-mode</code></a>, <a
 href="../systems/contextcore/"><code>contextcore</code></a>, <a
 href="../systems/contextdb/"><code>contextdb</code></a>, <a
-href="../systems/contextlattice/"><code>contextlattice</code></a>, <a
+href="../systems/contextdb-atomsai/"><code>contextdb-atomsai</code></a>,
+<a href="../systems/contextlattice/"><code>contextlattice</code></a>, <a
 href="../systems/contextmeld/"><code>contextmeld</code></a>, <a
 href="../systems/core-memory/"><code>core-memory</code></a>, <a
 href="../systems/cortana/"><code>cortana</code></a>, <a
@@ -41383,8 +41503,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-570 repositories of
-877 assert that particular material must
+571 repositories of
+879 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -41457,7 +41577,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 877 is the real figure for the second kind, and
+of 879 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

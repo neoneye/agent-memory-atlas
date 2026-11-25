@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Apache-2.0 Python memory SDK on
+SQLite or Postgres that types each fact's provenance and gates
+action-shaped recall on a trust policy.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ContextDB
+(atomsai) — Agent Memory Atlas">
+    <meta property="og:description" content="An Apache-2.0 Python memory
+SDK on SQLite or Postgres that types each fact's provenance and gates
+action-shaped recall on a trust policy.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ContextDB
+(atomsai) — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Apache-2.0 Python
+memory SDK on SQLite or Postgres that types each fact's provenance and
+gates action-shaped recall on a trust policy.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ContextDB (atomsai) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ContextDB (atomsai)",
+      "description": "An Apache-2.0 Python memory SDK on SQLite or Postgres that types each fact's provenance and gates action-shaped recall on a trust policy.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A slot two speakers disagree on is held
+back from action until confirmed, and the caller names the speaker</p>
+          <h1>ContextDB (atomsai)</h1>
+          <p class="document-deck">An Apache-2.0 Python memory SDK on
+SQLite or Postgres that types each fact's provenance and gates
+action-shaped recall on a trust policy.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/atomsai/contextdb">
+              <span>Source</span>
+              <strong>atomsai/contextdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/atomsai/contextdb/commit/df0b52a26fa188aa137f2baba052a7bb4531ff60" title="df0b52a26fa188aa137f2baba052a7bb4531ff60">
+              <span>Analyzed revision</span>
+              <code>df0b52a2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/atomsai--contextdb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>atomsai--contextdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE, NOTICE and pyproject.toml; COMMERCIAL.md announces a
+commercial licence above 10,000 active profiles a month from 1.0, and
+the CLA lets Atoms AI relicense contributions</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>13,876
+lines of Python in 60 files under contextdb/, of which client.py holds
+2,206 and the SQLite and Postgres stores 1,161 and 1,354; 7,039 lines in
+37 test files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>82
+commits from 21 April to 15 November 2026: 37 by Cursor Agent, 23 as
+AtomsAi and 22 by Gaurav Sharma; 15 tags, the pin is
+v0.4.9</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>243
+test functions in 31 files, 45 of them in
+tests/evals/test_trust_model.py; ci.yml runs the suite on Python 3.10 to
+3.12 and five files against Postgres 16; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ContextDB is an async Python SDK that stores agent memory in SQLite
+or PostgreSQL and types every fact by who vouches for it:
+<code>user_stated</code>, <code>agent_inferred</code> or
+<code>third_party</code>. What is notable is the slot model: a second
+speaker asserting a different value in the same entity and attribute
+slot contests it rather than overwriting it, and an action-shaped read
+returns neither value until someone confirms one. What is weak is that
+the speaker, the provenance and the confidence are what the caller says
+they are, and the confirm verb sits on the agent's own tool surface.</p>
+<p>A write runs PII redaction and an injection screen, then a per-slot
+lock that corroborates, supersedes, contests or does nothing. Recall
+fuses cosine, BM25, exact identifiers and graph neighbours, and keeps
+rows valid at the moment asked. <code>recall_for_action</code> and the
+<code>VerifyBeforeAct</code> interceptor keep only rows the active
+<code>TrustPolicy</code> passes. Every write and read appends to a
+hash-chained audit table in the same database.</p>
+<p>The scope keys are applied in the store's SQL, and the isolation
+tests pass. They run with the entity and temporal graph overlays
+switched off. With them on, a shared multi-user client fetches graph
+neighbours by id under the construction-time scope only, and the entity
+graph is one table for every user.</p>
+<p><strong>Licence.</strong> The grant at this commit is Apache-2.0 and
+is not the issue. The issue is what follows it:
+<code>COMMERCIAL.md</code> states that <em>"Production use of 1.0 and
+later requires a commercial license from Atoms AI above 10,000 active
+profiles in a month"</em>, with the text of that licence still to be
+written. The CLA grants Atoms AI <em>"the right to relicense your
+contributions, including under a different open-source or commercial
+license"</em> and promises Apache-2.0 permanence only <em>"through
+commit <code>2554dae</code>"</em> (17 August 2026), 50 commits before
+this pin, while <code>COMMERCIAL.md</code> names <code>9c6389c</code>
+(15 November 2026) for the same promise. The two documents disagree on
+where the permanent grant ends.</p>
+<p>Five marks are earned: <code>trust_state</code>,
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code>. Section 9 gives
+the reasons, and the reasons the other two are withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a claim with a speaker and an optional
+slot</strong>. Without a slot it is a row that is stored and recalled.
+With an entity and attribute slot, from the caller or from the
+deterministic slotter in <code>contextdb/core/slots.py</code>, it joins
+a small state machine
+(<code>contextdb/dynamics/trust.py:209-345</code>):</p>
+<ul>
+<li><strong>Same value, new speaker:</strong> the existing row gains a
+speaker in <code>corroborated_by</code>. A speaker is the session, else
+the user, else the agent (<code>:120-137</code>).</li>
+<li><strong>Same value, same speaker:</strong> nothing changes, and a
+NOOP is audited.</li>
+<li><strong>New value, same speaker, equal or higher trust:</strong> the
+old row is closed with <code>valid_until</code> and
+<code>superseded_by</code>, and kept.</li>
+<li><strong>New value, independent speaker, or lower trust over a
+first-party fact:</strong> both rows are marked <code>contested</code>
+and both stay current.</li>
+</ul>
+<p>A fact is believed for conversation from the moment it is stored. It
+is believed for action only when <code>TrustPolicy.is_trusted</code>
+passes it (<code>contextdb/core/policy.py:77-102</code>):
+action-relevant, not injection-suspect, not contested unless confirmed,
+and then confirmed, or corroborated by enough independent speakers for
+its class, or <code>user_stated</code> at confidence 0.7 or more. The
+decision is computed at read time from stored fields.
+<code>contested</code>, <code>confirmed</code>,
+<code>epistemic_source</code> and <code>injection_suspect</code> are the
+stored part.</p>
+<p><code>confirm</code> moves a fact to <code>confirmed</code>, rewrites
+its source to <code>user_stated</code>, raises confidence to at least
+0.95 and closes every rival in the slot (<code>trust.py:753-821</code>).
+A memory dies by supersession, which keeps the row, or by
+<code>forget</code>, which deletes it. Nothing records a rejected
+value.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — callers declare source, confidence and validity; a keyed write corroborates, supersedes or contests; the action read drops contested and untrusted rows until confirm, which the agent can call; plain recall returns everything valid; on a shared client, graph neighbours bypass the per-call user</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: callers declare source, confidence and validity; a keyed write corroborates, supersedes or contests; the action read drops contested and untrusted rows until confirm, which the agent can call; plain recall returns everything valid; on a shared client, graph neighbours bypass the per-call user
+flowchart TD
+    subgraph W[&quot;Writers&quot;]
+        direction TB
+        M[&quot;MCP remember, HTTP, SDK&lt;br/&gt;source, confidence,&lt;br/&gt;event_time from caller&quot;]
+        F[&quot;add_fast, Pipecat, LiveKit&lt;br/&gt;user_stated at 0.5,&lt;br/&gt;pending extraction&quot;]
+        M ~~~ F
+    end
+    W --&gt; S[&quot;PII redaction,&lt;br/&gt;injection screen,&lt;br/&gt;slot inference&quot;]
+    S --&gt; T{&quot;entity/attribute&lt;br/&gt;slot occupied?&quot;}
+    T --&gt;|&quot;same value,&lt;br/&gt;new speaker&quot;| C[&quot;speaker added to&lt;br/&gt;corroborated_by&quot;]
+    T --&gt;|&quot;new value,&lt;br/&gt;same speaker&quot;| U[&quot;old row closed at&lt;br/&gt;new valid_from&quot;]
+    T --&gt;|&quot;new value,&lt;br/&gt;other speaker&quot;| K[&quot;both rows&lt;br/&gt;contested&quot;]
+    U -.-&gt; B[&quot;correction dated before&lt;br/&gt;the current start&lt;br/&gt;closes nothing&quot;]
+    C --&gt; R[(&quot;memories row&lt;br/&gt;validity window, source,&lt;br/&gt;contested, confirmed&quot;)]
+    U --&gt; R
+    K --&gt; R
+    X[&quot;confirm: MCP tool&lt;br/&gt;and HTTP route&quot;] --&gt; R
+    R --&gt; Q[&quot;recall, search&lt;br/&gt;valid now or at as_of,&lt;br/&gt;every source&quot;]
+    R --&gt; A[&quot;recall_for_action&lt;br/&gt;drops contested,&lt;br/&gt;suspect, unbacked&quot;]
+    Q -.-&gt; G[&quot;graph neighbours by id:&lt;br/&gt;no per-call user,&lt;br/&gt;no status check&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One package, <code>contextdb</code>, imported as a library.
+<code>ContextDB</code> in <code>contextdb/client.py</code> builds lazily
+on first use: a store from <code>contextdb/store/factory.py</code>, an
+embedder, a lazy LLM, a PII detector, a semantic graph always, an entity
+graph by default, temporal and causal graphs when
+<code>enable_multi_graph</code> is set (<code>client.py:161-298</code>).
+The audit logger and graphs create their tables in the same database as
+the memories.</p>
+<p>The SQLite store keeps the vector index in process, NumPy by default
+and FAISS optionally, and rebuilds it when a revision counter in
+<code>contextdb_meta</code> moves, so two instances over one file see
+each other's writes
+(<code>contextdb/store/sqlite_store.py:95-120</code>,
+<code>:467-540</code>). The Postgres store translates the same SQL,
+takes advisory locks per slot and for audit appends, and is the
+documented choice for more than one process.</p>
+<p><code>contextdb serve</code> starts a Starlette app with REST routes
+and a <code>/mcp</code> call route; <code>serve_stdio</code> in
+<code>contextdb/mcp.py</code> wraps the same tools for a stdio MCP host
+and has no CLI command.</p>
+<p><strong>The open-core boundary.</strong> <code>OPEN_CORE.md</code>
+and <code>.cursor/rules/open-core-boundary.mdc</code> reserve hosted
+gateway, tenancy, entitlements, organisation control plane,
+<em>"Organization Action Ledger, signed compliance exports, or retention
+service"</em> and <em>"Policy rollout/canary/approval controllers"</em>
+for a private ContextDB Cloud.
+<code>scripts/check_open_core_boundary.py</code> fails CI on an import
+of <code>contextdb_cloud</code> or on paid-tier tokens. No code in this
+tree imports a private module or calls a hosted endpoint; the memory
+mechanisms this report credits are all here. What the private edition
+adds is not readable, and the marks are judged on this tree.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install pycontextdb</code> and
+<code>contextdb.init(...)</code> run against a local SQLite file with no
+service. Mock embedder and LLM settings make it run offline; with them
+the entity graph extracts nothing. Real recall needs an embedding
+provider, OpenAI by default or any OpenAI-compatible base URL, and
+extraction needs an LLM. The store is one SQLite table with readable
+columns; the audit table can be verified with
+<code>verify_chain</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Model and policy.</strong>
+<code>contextdb/core/models.py:188-374</code> (<code>MemoryItem</code>,
+<code>is_valid_at</code>),
+<code>contextdb/core/policy.py:22-140</code>.</li>
+<li><strong>Write.</strong> <code>ContextDB.add</code>
+<code>contextdb/client.py:488-616</code>, <code>add_fast</code>
+<code>:1252-1332</code>, <code>add_many</code> <code>:2022-2070</code>,
+<code>_apply_slot</code> <code>:379-441</code>,
+<code>_screen_item</code> <code>:367-377</code>;
+<code>TrustEngine.write</code> and <code>_write_locked</code>
+<code>contextdb/dynamics/trust.py:168-345</code>,
+<code>_supersede</code> <code>:347-373</code>.</li>
+<li><strong>Explicit evolution.</strong> <code>ContextDB.evolve</code>
+<code>client.py:618-850</code> and <code>TrustEngine.evolve_write</code>
+from <code>trust.py:375</code>; specified in
+<code>docs/memory_evolution.md</code>.</li>
+<li><strong>Consolidation.</strong> <code>consolidate_pending</code>
+<code>client.py:1355-1437</code>, the loop <code>:1439-1462</code>;
+<code>Consolidator</code> and <code>Pruner</code>
+<code>contextdb/dynamics/evolution.py:54-196</code>.</li>
+<li><strong>Recall.</strong> <code>ContextDB.search</code>
+<code>client.py:1090-1219</code>;
+<code>RetrievalEngine.search_scored</code>
+<code>contextdb/dynamics/retrieval.py:221-334</code>; BM25
+<code>:360-417</code>; <code>QueryClassifier</code>
+<code>:72-81</code>.</li>
+<li><strong>Action read.</strong>
+<code>FactualMemory.recall_for_action</code>
+<code>contextdb/memory/factual.py:166-191</code>;
+<code>slot_facts</code> <code>client.py:2103-2140</code>;
+<code>VerifyBeforeAct.decide</code>
+<code>contextdb/integrations/act.py:43-87</code>.</li>
+<li><strong>Confirm.</strong> <code>client.py:1334-1353</code>,
+<code>TrustEngine.confirm</code> <code>trust.py:753-821</code>.</li>
+<li><strong>Forget.</strong> <code>_forget_transactional</code>
+<code>client.py:1606-1704</code>,
+<code>_forget_user_transactional</code> <code>:1712-1778</code>,
+<code>verify_forgotten</code> <code>:1780-1812</code>.</li>
+<li><strong>Scope.</strong> <code>SQLiteStore._resolve_scope</code>,
+<code>_scope_allows</code>, <code>_scope_sql</code>
+<code>contextdb/store/sqlite_store.py:358-392</code>; Postgres
+<code>contextdb/store/postgres_store.py:364-387</code>,
+<code>:433-446</code>.</li>
+<li><strong>Audit.</strong>
+<code>contextdb/privacy/audit.py:81-208</code>.</li>
+<li><strong>Agent surfaces.</strong>
+<code>contextdb/mcp.py:58-450</code>,
+<code>contextdb/serve.py:90-360</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One <code>memories</code> table (<code>sqlite_store.py:33-87</code>)
+holds every type: <code>FACTUAL</code>, <code>EXPERIENTIAL</code> and
+<code>WORKING</code>. Beside content and embedding it carries
+<code>event_time</code> and <code>ingestion_time</code>,
+<code>created_at</code> and <code>updated_at</code>, a lifecycle
+<code>status</code> of <code>ACTIVE</code>, <code>ARCHIVED</code> or
+<code>DELETED</code>, and the trust columns:
+<code>epistemic_source</code>, <code>confidence</code>,
+<code>corroboration_count</code>, <code>corroborated_by</code>,
+<code>action_relevant</code>, <code>entity_key</code>,
+<code>attribute_key</code>, <code>slot_class</code>,
+<code>slot_value</code>, <code>negated</code>, <code>valid_from</code>,
+<code>valid_until</code>, <code>superseded_by</code>,
+<code>contested</code>, <code>confirmed</code>,
+<code>confirmed_at</code>, <code>injection_suspect</code>,
+<code>pending_consolidation</code> and <code>write_generation</code>.
+Scope is <code>user_id</code>, <code>tenant_id</code>,
+<code>agent_id</code> and <code>session_id</code>.</p>
+<p><strong>Two clocks.</strong> <code>event_time</code> and
+<code>valid_from</code> are validity time and come from the caller when
+given (<code>client.py:546-566</code>); <code>ingestion_time</code> and
+<code>created_at</code> are record time. <code>ingestion_time</code> is
+read by no code outside the store and the model.</p>
+<p><strong>Slots.</strong> <code>slot_value</code> is derived from the
+original utterance, before redaction, so two different emails stay
+different; when it contains detected PII it is stored as an HMAC
+fingerprint (<code>client.py:443-464</code>).</p>
+<p><strong>PII annotations.</strong> In the default <code>redact</code>
+mode the detector keeps each matched span in plaintext in
+<code>PIIAnnotation.original</code>
+(<code>contextdb/privacy/pii_detector.py:17-18</code>,
+<code>:156</code>), and the store writes the annotations to the row's
+<code>pii_annotations</code> column (<code>sqlite_store.py:586</code>).
+Only <code>encrypt</code> stores ciphertext there. The README states
+<em>"PII runs before content reaches storage"</em>; the content does,
+and the original span sits in the same row.</p>
+<p><strong>Graphs.</strong> <code>semantic_edges</code>,
+<code>temporal_edges</code>, causal edges, and an entity overlay of
+<code>entities</code> (unique on the lowercased name, one table for all
+users), <code>memory_entity_edges</code> and
+<code>entity_attribute_sources</code>
+(<code>contextdb/graphs/entity.py:22-52</code>). No graph table stores a
+user.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>search</code> redacts the query, embeds it and calls
+<code>search_scored</code> (<code>client.py:1125-1137</code>). The
+engine:</p>
+<ol type="1">
+<li>Asks the store for cosine seeds over an allowlist built in SQL from
+<code>status = 'ACTIVE'</code>, the scope predicate and, with
+<code>as_of</code>, the validity window
+(<code>sqlite_store.py:830-869</code>).</li>
+<li>Expands the top seeds through each graph whose keyword weight is
+non-zero: <em>when, before, after</em> weight the temporal graph,
+<em>why, because</em> the causal graph, <em>who, whose, what
+company</em> the entity graph (<code>retrieval.py:72-81</code>,
+<code>:244-255</code>).</li>
+<li>Adds whole-token matches for up to three identifier-like tokens and
+a BM25 ranking over LIKE matches of up to eight keywords
+(<code>:257-279</code>).</li>
+<li>Fuses by reciprocal rank with k=60 and multiplies by salience:
+recency, recurrence and a criticality boost for health, legal and
+financial content (<code>:281-334</code>).</li>
+</ol>
+<p><code>search</code> then applies the relevance floor (off by default
+at -1), keeps rows valid at the moment, and filters by type, time range,
+entity, minimum confidence and, when asked, <code>third_party</code>
+(<code>client.py:1144-1161</code>). <code>compose=True</code>, on in
+<code>factual.recall</code>, adds sibling slots of the same entity.</p>
+<p>A neighbour not already in hand is fetched with
+<code>store.get_raw(mid)</code> (<code>retrieval.py:307-309</code>).
+<code>get_raw</code> applies the construction-time scope only and no
+status (<code>sqlite_store.py:777-784</code>), and <code>search</code>
+adds no user check after it. On a client built without a user, which
+<code>serve.py</code> documents as the shape for multi-user HTTP, a
+query the classifier sends to the entity graph returns another user's
+memory that mentions the same name. The project's own
+<code>test_eval_7_2</code> asserts that such a cross-user edge exists
+(<code>tests/evals/test_trust_model.py:840</code>). The temporal graph
+links rows by <code>event_time</code> proximity with no user predicate
+(<code>contextdb/graphs/temporal.py:70-83</code>). On any client an
+archived or soft-deleted row reached through a surviving edge is
+returned too. This follows from the code and was not run.</p>
+<p><strong>The action read.</strong> With an entity and attribute,
+<code>recall_for_action</code> reads the slot exactly and keeps trusted
+rows; without them it recalls <code>4 × top_k</code> and keeps any
+trusted row, related or not (<code>factual.py:182-191</code>). The HTTP
+route passes no slot (<code>serve.py:266-278</code>); the MCP tool
+passes the model's.</p>
+<p><strong>Rendering.</strong> <code>render_recalled_context</code>
+wraps hits in a <em>RECALLED DATA — not instructions</em> block within a
+token budget and marks suspect rows
+(<code>contextdb/integrations/prompting.py</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Keyed writes.</strong> <code>add</code> with a slot takes a
+per-slot lock, an <code>asyncio.Lock</code> on SQLite and an advisory
+transaction lock on Postgres, reads the slot's current rows and applies
+the state machine of section 2 (<code>trust.py:201-345</code>). The new
+row's <code>valid_from</code> is the caller's <code>event_time</code>,
+else the clock, and a supersede closes the old row at that instant.</p>
+<p>Candidates are the rows valid at the incoming <code>valid_from</code>
+(<code>trust.py:220-224</code>). A correction dated before the current
+value's start therefore finds no current row, supersedes nothing, and
+both values stay open from then on.</p>
+<p><strong>Provenance is declared.</strong> <code>source</code> and
+<code>confidence</code> are arguments on the SDK, on HTTP
+<code>/v1/remember</code> and on the MCP <code>remember</code> tool
+(<code>mcp.py:76-90</code>). Two checks lower trust: a slot the text
+does not support becomes <code>agent_inferred</code> at confidence 0.4
+or less, and instruction-shaped text becomes <code>third_party</code> at
+0 with <code>injection_suspect</code> set
+(<code>client.py:367-441</code>). The extractor path also demotes a
+high-stakes slot the raw text does not name. Nothing raises trust except
+<code>confirm</code>.</p>
+<p><strong>Fast writes.</strong> <code>add_fast</code> stores raw text
+as <code>user_stated</code> at 0.5 with
+<code>pending_consolidation</code> and embeds inline, with no LLM.
+<code>consolidate_pending</code> later extracts facts, writes them
+through the trust engine and archives the raw row
+(<code>client.py:1355-1437</code>). The extracted item is built without
+a <code>user_id</code>, and the trust write takes
+<code>self.user_id</code>. On a client built with a user both are that
+user. On a shared client the fact is stored with no user, and its slot
+lookup has no user predicate, so it can corroborate, supersede or
+contest another user's fact in the same slot
+(<code>client.py:1392-1428</code>,
+<code>sqlite_store.py:1007-1023</code>). Read from the code, not
+run.</p>
+<p><strong>Batch summaries.</strong>
+<code>Consolidator.consolidate</code> merges semantic clusters of five
+or more into an LLM summary that takes the least trusted source and
+confidence of its inputs, and archives the inputs
+(<code>evolution.py:72-130</code>).</p>
+<p><strong>Deletion.</strong> <code>forget</code> hard-deletes by id,
+slot, age or entity. <code>forget_user</code> also finds derived
+summaries through <code>consolidated_from</code> to a fixpoint, severs
+graph edges and rebuilds shared entity attributes from the remaining
+sources (<code>client.py:1712-1778</code>,
+<code>entity.py:195-224</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Under the default configuration <code>add</code> blocks on one
+embedding call, one LLM call for entity extraction through the
+auto-linker, and the slot transaction; the optional RL manager adds a
+second LLM call. <code>add_fast</code> blocks on the embedding alone. A
+fast write is retrievable at once as raw text; its extracted facts
+appear after the next consolidation pass, five seconds by default when
+the loop runs. <code>consolidate</code> walks the whole store in 500-row
+pages and calls the LLM per cluster. Recall returns <code>top_k</code>
+items, five by default on MCP, rendered within 512 tokens.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Seven MCP tools: <code>remember</code>, <code>recall</code>,
+<code>recall_for_action</code>, <code>pending_confirmations</code>,
+<code>confirm</code>, <code>forget</code> and <code>remember_many</code>
+(<code>mcp.py:58-308</code>). <code>remember</code> requires
+<code>source</code>. Every tool takes <code>user_id</code>, which on a
+client built without a user selects the partition; omitted, no user
+predicate applies.</p>
+<p>The HTTP server runs those tools at <code>/mcp</code> and as REST
+routes. With an <code>auth_hook</code> the hook's user wins and a
+conflicting user anywhere in the request is a 400; with the bearer token
+alone, which is what <code>contextdb serve</code> configures
+(<code>contextdb/cli.py:105-113</code>), the request names the user
+(<code>serve.py:135-188</code>). <code>docs/multi_tenant.md</code> and
+the module docstring say that without an authenticated user this is not
+an authorisation boundary.</p>
+<p><code>VerifyBeforeAct</code> is the host-side gate for Pipecat,
+LiveKit and MCP hosts: act on trusted facts, otherwise ask with the
+pending ids, otherwise abstain, and audit the decision; a user's yes
+goes to <code>confirm_pending</code> (<code>act.py:43-125</code>).
+Adapters for LangChain, CrewAI, AutoGen and OpenAI function calling are
+thin wrappers. <code>ai-tools/</code> ships opt-in instruction files for
+coding assistants.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-speaker-is-whoever-the-caller-says">The speaker is whoever
+the caller says</h3>
+<p>The design separates a wish from a fact by provenance, and the
+provenance is an argument. An MCP <code>remember</code> with
+<code>source='user_stated'</code>, a slot and confidence 0.9 is
+action-trusted on arrival, and
+<code>test_eval_8_1b_mcp_server_and_livekit_smoke</code> asserts exactly
+that (<code>tests/evals/test_trust_model.py:907-918</code>).
+Corroboration counts speakers, and a speaker is derived from the
+session, user or agent the client was built with or the call names. A
+model holding the MCP surface can state a fact as the user's, confirm a
+contested one, and clear a slot with <code>forget</code>.</p>
+<p>The protections that do not depend on the caller are real: the
+injection screen, the extractor bound, and the rule that a lower-trust
+write cannot replace a first-party fact but only contest it
+(<code>trust.py:144-152</code>,
+<code>test_trust_model.py:1435-1476</code>).</p>
+<h3 id="policy-shown-and-policy-applied-differ">Policy shown and policy
+applied differ</h3>
+<p><code>recall_for_action</code> judges rows with the client's policy.
+The <code>requires_confirmation</code> field that MCP and HTTP return is
+a computed property under <code>DEFAULT_TRUST_POLICY</code>
+(<code>models.py:350-360</code>, <code>mcp.py:322</code>,
+<code>serve.py:60</code>). Under <code>TrustPolicy.hospital()</code> a
+first-party health fact is untrusted for action and is reported to the
+model as not requiring confirmation.</p>
+<h3 id="scope">Scope</h3>
+<p>The SQL predicate is consistent across the store's reads, and the
+vector allowlist is built from it before ranking, with a test that
+twenty foreign vectors cannot starve one in-scope hit. The gaps sit
+outside the store's SQL: the graph overlay of section 6, consolidation
+on a shared client in section 7, and the opt-in RL manager, which reads
+<code>list_memories(limit=20)</code> with no user and may update or
+delete the id the LLM names (<code>client.py:529-540</code>).</p>
+<h3 id="forgetting">Forgetting</h3>
+<p><code>forget_user</code> is thorough about rows, derived summaries,
+vectors and graph edges. Three things survive it. SUPERSEDE and CONFLICT
+audit entries carry <code>old_value</code> and <code>new_value</code>
+content (<code>trust.py:308-309</code>, <code>:369-370</code>), and the
+audit table is never pruned. Names and addresses are not redacted by
+default (<code>contextdb/core/config.py:81-89</code>). And
+<code>verify_forgotten</code> reads the user's audit history oldest
+first with a limit of 1,000 (<code>client.py:1795</code>,
+<code>audit.py:146-166</code>), so once a user has more than 1,000
+entries, which 1,000 recalls produce, it does not see the newest FORGET
+entry and returns on the row count alone.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code> — earned.</strong>
+<code>contested</code>, <code>confirmed</code>,
+<code>injection_suspect</code> and <code>epistemic_source</code> are
+stored; a conflicting independent write moves a slot into
+<code>contested</code>, <code>confirm</code> moves it out, and
+<code>recall_for_action</code> and <code>VerifyBeforeAct</code> exclude
+contested, suspect and unbacked rows. The exclusion is from action, not
+from recall, and the model can call <code>confirm</code>.</li>
+<li><strong><code>bitemporal</code> — earned.</strong> Validity comes
+from the caller's <code>event_time</code> through the SDK,
+<code>remember</code> and <code>remember_many</code>, record time is
+kept apart, and <code>as_of</code> filters every arm on the window, with
+an MCP-level test. <code>evolve</code> and <code>confirm</code> stamp
+the clock, and a backdated correction closes nothing.</li>
+<li><strong><code>scope_enforced</code> — earned,</strong> with the
+graph and consolidation gaps above.</li>
+<li><strong><code>audit_log</code> — earned.</strong> The hash-chained
+table records every keyed mutation and every delete; archival by
+consolidation and pruning, and <code>add_conversation</code>'s per-item
+writes, leave no entry of their own (<code>client.py:1431-1435</code>,
+<code>evolution.py:127</code>, <code>:176</code>, <code>:185</code>,
+<code>:194</code>, <code>client.py:1575-1583</code>). The chain is per
+database and unsigned, so a database writer can rewrite it from any
+point and recompute the hashes.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Section
+10.</li>
+<li><strong><code>tombstone</code> — withheld.</strong>
+<code>forget</code> hard-deletes, and the ERASE and FORGET entries hold
+ids. The same text written again is a new row.</li>
+<li><strong><code>human_review</code> — withheld.</strong>
+<code>confirm</code> is an MCP tool and an HTTP route under the same
+credential as the writes, and a <code>user_stated</code> write needs no
+confirmation. <code>OPEN_CORE.md</code> lists approval controllers among
+the private edition's features; nothing of that shape is in this
+tree.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites; the counts are from reading. CI runs the
+full suite on Python 3.10, 3.11 and 3.12 and a Postgres 16 job over five
+files (<code>.github/workflows/ci.yml</code>). The Postgres cases skip
+without <code>CONTEXTDB_TEST_POSTGRES_URL</code>
+(<code>tests/pg_util.py:19-23</code>); the SQLite parameter of each runs
+everywhere.</p>
+<p><code>tests/evals/test_trust_model.py</code> holds 45 acceptance
+evals. The cases that assert absence from a populated result:</p>
+<ul>
+<li><code>test_store_scopes_vector_candidates_before_ranking</code>:
+twenty foreign vectors aligned with the query and one in-scope vector;
+the in-scope search must equal <code>[mine.id]</code>
+(<code>tests/unit/test_vector_scope.py:73-102</code>).</li>
+<li><code>test_decide_scopes_per_call_user_on_shared_client</code>:
+alice's decision must be non-empty and contain no row of bob's in the
+same slot (<code>tests/unit/test_decision_scope.py:33-66</code>).</li>
+<li><code>test_eval_2_1_contradiction_supersedes</code>: recall must
+contain 4pm and not 3pm (<code>test_trust_model.py:435-465</code>).</li>
+<li><code>test_eval_8_1b</code>: an MCP <code>recall</code> as of 1
+February 2026 must contain the budget dated January and not the one
+dated June (<code>:935-962</code>).</li>
+<li><code>test_backdated_event_time_and_pre_truncation_as_of</code>:
+thirty rows dated 25 April and one dated 15 March; recall as of 1 April
+must return exactly the March row
+(<code>tests/unit/test_retrieval.py:114-157</code>).</li>
+</ul>
+<p>Two isolation evals assert
+<code>all("7788" not in h.content ...)</code> over a recall whose result
+is not checked for content, so they would pass on an empty result
+(<code>test_trust_model.py:1015-1016</code>, <code>:1312-1313</code>);
+the point-read and count assertions beside them carry the case. The
+scope and isolation tests set <code>enable_entity_graph=False</code> and
+<code>enable_multi_graph=False</code>
+(<code>tests/conftest.py:51-52</code>,
+<code>test_trust_model.py:69-70</code>,
+<code>test_decision_scope.py:22-23</code>,
+<code>test_serve.py:24-25</code>, <code>test_host_api.py:26-27</code>),
+while the default enables the entity graph (<code>config.py:131</code>).
+The <code>client_full</code> fixture that turns both overlays on
+(<code>tests/conftest.py:65-84</code>) is used by no test. Two forget
+evals do build a shared client with the entity graph on, and
+<code>test_eval_7_2</code> asserts that alice's memory's only entity
+neighbour is bob's (<code>test_trust_model.py:840</code>). The
+cross-user edge is tested as intended; no test searches through it.</p>
+<p><code>benchmarks/trust_bakeoff.py</code> runs eight synthetic traps
+against the trust arm and an untyped control arm, and
+<code>test_eval_bakeoff_trust_arm_beats_raw_store_on_fabrication</code>
+requires the control to fabricate on at least three traps, which makes
+the gate able to fail (<code>test_trust_model.py:1062-1095</code>). The
+README describes it as regression evidence inside the harness.
+<code>benchmarks/run_benchmarks.py</code> measures latency with the mock
+embedder.</p>
+<p><strong>The paper.</strong> The README cites a Zenodo preprint,
+<em>ContextDB: A Unified Context Layer for AI Agents</em> (record
+19647089, 19 April 2026, one author). Its abstract describes an
+RL-trained memory manager and an evaluation on LoCoMo, LongMemEval and
+three domain benchmarks, and gives figures of up to 18% retrieval
+precision gain and up to 90% token savings. The tree ships the RL
+manager's inference prompt only; its docstring says training <em>"lives
+in a separate research harness — not shipped with the library"</em>
+(<code>contextdb/agents/rl_manager.py:9-10</code>). No LoCoMo or
+LongMemEval harness or result is committed. I read the record's
+abstract, not the PDF.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Contest instead of last-write-wins.</strong> Two independent
+speakers asserting different values in one slot both stay current and
+neither gates an action; a confirmation closes the loser. It is one
+branch in a slot-locked write.</li>
+<li><strong>Let a lower-trust source contest a first-party fact but
+never replace it.</strong> It closes the commonest laundering path, a
+document the agent stored on the user's behalf.</li>
+<li><strong>Close the old row at the new fact's validity start</strong>,
+not at the write clock, when the caller knows when the change
+happened.</li>
+<li><strong>Build the vector allowlist from the scope SQL before
+ranking</strong>, so a large foreign tenant cannot fill the candidate
+budget.</li>
+<li><strong>Audit the decision, not only the score.</strong> Each recall
+logs the trust flags as they stood, because computed properties change
+after a confirm.</li>
+<li><strong>Keep a control arm in your own benchmark</strong> that must
+fail the traps, so the gate can go red.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Provenance as a tool argument.</strong> If the model can
+write <code>user_stated</code>, the wish-versus-fact distinction holds
+against a careful host and not against the model.</li>
+<li><strong>A confirm verb in the same registry as the write.</strong>
+The person's yes should arrive on a channel the model does not
+hold.</li>
+<li><strong>Graph expansion that re-fetches by id.</strong> Every id
+that enters a result from a side table needs the same scope and status
+predicate as the primary arm.</li>
+<li><strong>A shared entity table keyed on the name</strong> in a
+multi-user store.</li>
+<li><strong>A verification read capped oldest first.</strong> The proof
+is the newest entry.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team building a voice or support agent for one end user
+per client, where the host knows who is speaking and calls
+<code>confirm</code> itself when the person says yes. Built that way,
+scope is fixed at construction, the graph gaps do not apply, and the
+trust policy does what its name says.</p>
+<p>It does not suit a shared multi-user server where the model drives
+the MCP tools. There the scope is a request field unless the operator
+writes an auth hook, the graph overlays cross users, and the model can
+author, assert and confirm a fact by itself. A reader who needs a person
+between a write and an action gets no review surface from this tree, and
+the boundary document says approval controllers stay private.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the hosted edition apply the per-call user to graph neighbours
+and consolidation, and is the entity graph partitioned there?</li>
+<li>What does ContextDB Cloud's approval controller gate, and would it
+take <code>confirm</code> off the agent's surface?</li>
+<li>Which of the abstract's figures come from this code, and is the RL
+training harness published anywhere?</li>
+<li>Is the disagreement between the CLA's <code>2554dae</code> and
+<code>COMMERCIAL.md</code>'s <code>9c6389c</code> deliberate?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>contextdb/core/models.py</code></td>
+<td><code>MemoryItem</code>, trust fields, validity check</td>
+</tr>
+<tr>
+<td><code>contextdb/core/policy.py</code></td>
+<td><code>TrustPolicy.is_trusted</code> and the hospital and restaurant
+presets</td>
+</tr>
+<tr>
+<td><code>contextdb/dynamics/trust.py</code></td>
+<td>Slot-locked corroborate, supersede, contest, confirm</td>
+</tr>
+<tr>
+<td><code>contextdb/client.py</code></td>
+<td>Write paths, search, consolidation, forget, verify_forgotten</td>
+</tr>
+<tr>
+<td><code>contextdb/dynamics/retrieval.py</code></td>
+<td>Classifier, RRF, BM25, graph expansion</td>
+</tr>
+<tr>
+<td><code>contextdb/store/sqlite_store.py</code></td>
+<td>Schema, scope SQL, vector allowlist</td>
+</tr>
+<tr>
+<td><code>contextdb/store/postgres_store.py</code></td>
+<td>Postgres store, advisory locks</td>
+</tr>
+<tr>
+<td><code>contextdb/graphs/entity.py</code>, <code>temporal.py</code>,
+<code>semantic.py</code></td>
+<td>Graph overlays</td>
+</tr>
+<tr>
+<td><code>contextdb/privacy/audit.py</code></td>
+<td>Hash-chained audit table</td>
+</tr>
+<tr>
+<td><code>contextdb/privacy/pii_detector.py</code></td>
+<td>Redaction and annotation originals</td>
+</tr>
+<tr>
+<td><code>contextdb/memory/factual.py</code></td>
+<td><code>recall_for_action</code>, <code>confirm</code></td>
+</tr>
+<tr>
+<td><code>contextdb/integrations/act.py</code></td>
+<td><code>VerifyBeforeAct</code></td>
+</tr>
+<tr>
+<td><code>contextdb/mcp.py</code>, <code>contextdb/serve.py</code></td>
+<td>MCP tools and HTTP routes</td>
+</tr>
+<tr>
+<td><code>tests/evals/test_trust_model.py</code></td>
+<td>Acceptance evals</td>
+</tr>
+<tr>
+<td><code>tests/unit/test_vector_scope.py</code>,
+<code>test_decision_scope.py</code>, <code>test_retrieval.py</code></td>
+<td>Scope and as-of cases</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No graph table or query carries a user.</strong>
+<code>git grep -n 'user_id' -- contextdb/graphs</code> returns only
+<code>contextdb/graphs/semantic.py:59</code>, the link-time similarity
+search.</li>
+<li><strong>The audit table is never updated or deleted.</strong>
+<code>git grep -n -i -E '(delete from|update) +audit_log'</code> returns
+only the tamper case in <code>tests/unit/test_audit.py:30</code>;
+<code>git grep -n 'audit_log' -- contextdb ':!contextdb/privacy/audit.py'</code>
+returns nothing.</li>
+<li><strong>Archival writes no audit entry.</strong>
+<code>git grep -n -E 'status=MemoryStatus.ARCHIVED' -- contextdb</code>
+returns <code>client.py:1434</code>, <code>evolution.py:127</code>,
+<code>:176</code>, <code>:185</code>, <code>:194</code> and
+<code>retention.py:72</code>; only the retention site logs.</li>
+<li><strong>Record time is not read.</strong>
+<code>git grep -n 'ingestion_time' -- contextdb ':!contextdb/store'</code>
+returns the two field lines in
+<code>contextdb/core/models.py</code>.</li>
+<li><strong>The HTTP routes take no as_of.</strong>
+<code>git grep -n 'as_of' -- contextdb/serve.py</code> returns nothing;
+<code>git grep -n 'as_of' -- contextdb/mcp.py</code> matches
+<code>:6</code>, <code>:138</code> and <code>:381</code>.</li>
+<li><strong>Confirm callers.</strong>
+<code>git grep -n -E '\.confirm\(|confirm_pending\(' -- contextdb</code>
+returns <code>client.py:1351</code>, <code>act.py:124</code>,
+<code>mcp.py:430</code>, <code>factual.py:195</code> and
+<code>serve.py:285</code>.</li>
+<li><strong>No value-keyed rejection record.</strong>
+<code>git grep -n -i -E 'tombstone|rejected' -- contextdb</code> returns
+vector-index deletion markers and docstrings.</li>
+<li><strong>No private module imported.</strong>
+<code>git grep -n -i -E 'contextdb_cloud'</code> returns the boundary
+script and its test.</li>
+<li><strong>No LoCoMo or LongMemEval artifact.</strong>
+<code>git grep -n -i -E 'locomo|longmemeval'</code> returns nothing;
+<code>git grep -n -i 'benchmark' -- benchmarks</code> matches.</li>
+<li><strong>Paper reference.</strong>
+<code>git grep -n -i 'zenodo'</code> returns
+<code>COMMERCIAL.md:71</code> and <code>README.md:549</code>,
+<code>:616</code>;
+<code>git grep -n -i -E 'arxiv|bibtex|doi\.org|CITATION'</code> returns
+an example string in <code>docs/prompts.md:250</code>.</li>
+<li><strong>Scope tests run without graph overlays.</strong>
+<code>git grep -n -E 'enable_multi_graph|enable_entity_graph' -- tests</code>
+returns <code>False</code> in every test config and <code>True</code>
+only in <code>tests/conftest.py:73-74</code> and two forget evals,
+<code>test_trust_model.py:823</code> and <code>:1788</code>;
+<code>git grep -n 'client_full' -- tests</code> returns only the
+fixture's definition at <code>tests/conftest.py:66</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/atomsai/contextdb/commit/df0b52a26fa188aa137f2baba052a7bb4531ff60"><code class="commit-id" title="df0b52a26fa188aa137f2baba052a7bb4531ff60">df0b52a2…</code></a>.
+First reading, read only, from a full clone at the head of
+<code>main</code>, tagged v0.4.9; triage selected the same commit.
+Screened first: two auto-run surfaces, <code>.cursor/rules/</code>
+(<code>open-core-boundary.mdc</code>,
+<code>publication-content.mdc</code>) and
+<code>.github/copilot-instructions.md</code>, injected into an agent's
+context and read as data; nothing inside the seven-day cooldown; one
+build-time execution point, <code>tests/conftest.py</code>; one unpinned
+manifest, <code>pyproject.toml</code>. Nothing was installed, built or
+run, and the 243 test functions were not run. Five marks (<a
+href="#9-reliability-safety-and-trust">section 9</a>). Provenance is a
+caller argument and <code>confirm</code> is an MCP tool; graph
+neighbours skip the per-call user.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
