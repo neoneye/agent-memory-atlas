@@ -1002,16 +1002,19 @@ signatures over the new root
 (<code>provenance-ledger/src/provenance_ledger/store.py:134-220</code>).
 <code>verify</code> requires the ledger's own key and a newest receipt
 equal to the <code>receipt_heads</code> row, which is not rebuilt after
-a one-time backfill (<code>:110-132</code>, <code>:269-319</code>); a
+a one-time backfill (<code>:110-132</code>, <code>:269-322</code>); a
 database writer who deletes receipts and moves the head with them passes
 it. The market keeps the receipt id and root each append returned, and
 <code>reconcile_provenance --check</code> requires that receipt to be in
-the chain with that root
-(<code>memory-market/src/memory_market/reconcile_provenance.py:57-92</code>),
-with a test against a real ledger. It verifies one receipt per unit, and
-the bundled compose keeps both stores in one database. The log covers
-creation through either write path, verification and settled payments;
-grants and revocations append nothing.</p>
+the chain with that root and the chain to verify from genesis
+(<code>memory-market/src/memory_market/reconcile_provenance.py:66-124</code>,
+<code>provenance-ledger/src/provenance_ledger/store.py:324-350</code>),
+with tests against a real ledger. The bundled compose keeps both stores
+in one database, so a suffix removed with its head is caught only by
+<code>--check --against</code> heads exported and kept elsewhere. The
+log covers creation through either write path, verification and settled
+payments; grants and revocations append nothing to it, and the owner's
+go to a separate market table.</p>
 <p><a href="../../systems/willder/">Willder</a> makes append-only a
 property of the table and splits one mutation into three rows.
 <code>check()</code> writes the authorization before any store is

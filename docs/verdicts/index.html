@@ -35056,36 +35056,42 @@ it.</strong> The catalogue lists paid and team units by title and tag
 and matches content only for the owner, a grantee or a team member, so a
 priced document cannot be probed by substring; a test requires zero hits
 for the body and one for the title.</li>
-<li>Second idea: keep the root the ledger returned and compare. The
-market stores each unit's receipt id and chain root, and
+<li>Second idea: keep the root the ledger returned, compare, and walk
+the chain. The market stores each unit's receipt id and chain root, and
 <code>reconcile_provenance --check</code> requires that receipt to be in
-the ledger's chain with that root and to verify, which catches a
-truncation with the head moved that the ledger's own checks pass; a test
-runs it against a real ledger.</li>
-<li>Biggest risk: <strong>the cross-check covers less than it
-looks.</strong> It verifies one receipt per unit, so a receipt appended
-after the recorded one, or deleted two or more places before it, goes
-unseen; in the bundled compose the market's roots and the ledger's
-receipts sit in one PostgreSQL database under one role, so the database
-writer it targets can rewrite both. The systemd units that run it are
-installed by hand.</li>
-<li>Second risk: receipts of non-public units carry unsalted SHA-256
-hashes, so a hashed parent id is named by hashing the catalogue's ids;
-grants and revocations write no receipt, and a re-grant overwrites the
-revocation. The actor who started a chain can append any event type to
-it through the hub. Truth status is arithmetic over the owner's own
-stance and quality numbers, and the ledger signs it.</li>
+the ledger's chain with that root and has the ledger verify every
+receipt from genesis, which catches a truncation with the head moved
+that the ledger's own checks pass and a break anywhere in the chain;
+tests run both against a real ledger.</li>
+<li>Biggest risk: <strong>the cross-check's anchor sits beside what it
+checks.</strong> In the bundled compose the market's roots and the
+ledger's receipts sit in one PostgreSQL database under one role, so the
+database writer it targets can rewrite both, and a suffix past the
+market's recorded receipt, removed with its head, passes the hourly
+check. <code>--export-heads</code> writes the verified heads for the
+operator to keep elsewhere, and <code>--check --against</code> that file
+catches the cut; the timer runs neither.</li>
+<li>Second risk: receipts of non-public units written by earlier
+versions keep unsalted SHA-256 hashes, so a hashed parent id is named by
+hashing the catalogue's ids. Grants and revocations write no receipt;
+the owner's go to a market table nothing reads, and a paid grant and its
+reorg removal go nowhere. The actor who started a chain can append any
+event type to it through the hub. Truth status is arithmetic over the
+owner's own stance and quality numbers, and the ledger signs it.</li>
 <li>Most reusable component: the access, search and truth clauses of
 <code>catalog</code>,
-<code>memory-market/src/memory_market/store.py:330-371</code>, the actor
+<code>memory-market/src/memory_market/store.py:341-382</code>, the actor
 proofs in <code>memory-market/src/memory_market/actor_auth.py</code>,
-and <code>check</code> in
-<code>memory-market/src/memory_market/reconcile_provenance.py:57-92</code>.</li>
-<li>Maturity impression: Apache-2.0 with MIT product shells; 7,978 lines
-of Python published as 28 sync commits from a private monorepo between 9
-October and 25 November 2026; 111 test functions, thirteen on the ledger
-and four running the market against a real ledger, none run here. No
-memory can be edited or deleted. Four marks: <code>trust_state</code>,
+<code>check</code> in
+<code>memory-market/src/memory_market/reconcile_provenance.py:66-124</code>,
+and the full-chain walk in
+<code>provenance-ledger/src/provenance_ledger/store.py:324-350</code>.</li>
+<li>Maturity impression: Apache-2.0 with MIT product shells; 8,283 lines
+of Python published as 29 sync commits from a private monorepo between 9
+October and 25 November 2026; 114 test functions, thirteen on the
+ledger, six running the market against a real ledger and one running the
+market and the truth layer together, none run here. No memory can be
+edited or deleted. Four marks: <code>trust_state</code>,
 <code>scope_enforced</code>, <code>audit_log</code>,
 <code>negative_eval</code>.</li>
 <li>Study when: you are building access control for memory that is sold

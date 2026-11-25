@@ -3422,25 +3422,27 @@ href="../systems/attested-memory/"><code>attested-memory</code></a></td>
 visibility (private, shared, public, paid), optional price, source
 references and parent ids, with a truth state and a provenance pointer
 attached</td>
-<td>Three stores with separate DSNs: memories, grants, ratings and
-payment orders in the market; evidence packs in the truth layer;
-receipts, chain heads and a migration flag in the ledger. The bundled
-compose points all three at one PostgreSQL database and role; SQLite for
-development and tests</td>
+<td>Three stores with separate DSNs: memories, grants, owner grant and
+revocation events, ratings and payment orders in the market; evidence
+packs in the truth layer; receipts, chain heads and a migration flag in
+the ledger. The bundled compose points all three at one PostgreSQL
+database and role; SQLite for development and tests</td>
 <td>Case-folded substring match over title, tags and readable content,
 newest first, with limit and offset, leaving out rejected units unless
 the caller names statuses or any; fetch by id returns any status; the
-evidence pack id is shown only to callers who may read the unit; no
-ranking in the service, and a product shell re-ranks by truth,
-provenance, ratings and age</td>
+evidence pack id is shown only to callers who may read the unit, and the
+hub returns a pack tied to a market unit only to them; no ranking in the
+service, and a product shell re-ranks by truth, provenance, ratings and
+age</td>
 <td>A full unit by an authenticated actor over REST or the hub
 capability, stored at once; both paths then ask the ledger for a created
 receipt, best-effort, and a reconcile command attests the units left
 unattested, linking only a created receipt in the owner's name</td>
 <td>No route edits or deletes a memory; an owner revokes a grant they
-gave by setting revoked_at, which a later grant clears; truth state and
-the provenance pointer are overwritten in place by later verifications
-and receipts</td>
+gave by setting revoked_at, which a later grant clears, and each owner
+grant and revocation appends an event row; truth state and the
+provenance pointer are overwritten in place by later verifications and
+receipts</td>
 <td>owner_id, revocable per-grantee grants, four visibility values and a
 team tag, applied in can_read and in the catalog SQL; paid content is
 listed and not readable or searchable without a grant, and a paid grant
@@ -3451,8 +3453,8 @@ invoke; a Python client and CLI with share and revoke; three product
 shells that proxy to the market</td>
 <td>A payment poller that scans Base for USDC transfers and issues
 grants; no pass over memories; systemd unit files for an hourly
-reconcile and cross-check ship under scripts/systemd and are installed
-by hand</td>
+reconcile and full-chain cross-check ship under scripts/systemd with a
+root install script for the standard compose path</td>
 <td>truth.status of unverified, supported, contested or rejected,
 computed from the stance and quality numbers the owner attaches to their
 own evidence; rejected is left out of the catalogue and search by
@@ -3461,15 +3463,17 @@ unattested, set to attested only by a created receipt</td>
 <td>Paid content cannot be probed through search, with a populated test;
 request-bound actor proofs with replay protection; verify accepts only
 the ledger's own keys and a chain head that is never rebuilt; a
-cross-check against the chain root the market kept, tested against a
-real ledger; receipts of non-public units carry hashes rather than
-sources</td>
-<td>The cross-check verifies one receipt per unit and misses receipts
-appended after it and deletions further back; in the bundled compose the
-market's roots and the ledger share one database and role; receipt
-commitments are unsalted hashes; a grant or revocation leaves no receipt
-and a re-grant erases the revocation; truth is the owner's own evidence
-weights</td>
+cross-check that requires the root the market kept and verifies the
+chain from genesis, tested against a real ledger, with an export of
+verified heads to retain elsewhere; new receipts of non-public units
+omit sources, parents and pack id</td>
+<td>A suffix past the market's recorded receipt, removed with its head,
+passes the hourly check and is caught only against an export kept
+outside the database; in the bundled compose the market's roots and the
+ledger share one database and role; receipts written by earlier versions
+keep unsalted hashes of non-public sources; the grant events have no
+reader and leave out payment grants and their reorg removal; truth is
+the owner's own evidence weights</td>
 </tr>
 <tr>
 <td><a href="../systems/attune-ai/"><code>attune-ai</code></a></td>
