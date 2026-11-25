@@ -763,6 +763,23 @@ candidates as a question for a person, filters on
 <code>is_deleted</code> only, so the retired row keeps its rank. The
 route has no authentication and records the resolver as the literal
 <code>human_resolve</code>.</p>
+<p><a href="../../systems/yggdrasil/">Yggdrasil</a> detects three ways
+and has one disposition: the oldest wins. <code>ygg review</code> groups
+duplicates by content hash, by equal opening text and by embeddings at
+cosine 0.95 within project and type, keeps the oldest of each group and
+archives the rest with a <code>SUPERSEDES</code> edge from the keeper,
+asking per group on a terminal or archiving groups at 0.97 unattended
+under <code>--yes</code> (<code>yggdrasil/ygg.py:723-741</code>,
+<code>:809-818</code>). A daily local-model pass labels a pair
+<code>DUPLICATE</code> or <code>SUPERSEDES_A</code>/<code>_B</code> and
+on a duplicate also archives the newer row
+(<code>yggdrasil/ygg_writepath.py:146-158</code>). Stale markers are a
+content regex a person must archive by hand. Requirement 2 fails by
+construction, since keep-newer and keep-both are not offered for a
+duplicate, and requirement 3 fails one step earlier: a write within
+cosine 0.92 of a live memory is never stored, so the pair a reviewer
+would need to see does not exist. The <code>CONTRADICTS</code> edge the
+agent may record for review is read by no review path.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert

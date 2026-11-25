@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local SQLite memory daemon
+shared by Claude Code, Codex and other MCP hosts, with hook injection,
+optional embeddings, review-driven archiving and peer sync.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Yggdrasil — Agent Memory Atlas">
+    <meta property="og:description" content="A local SQLite memory
+daemon shared by Claude Code, Codex and other MCP hosts, with hook
+injection, optional embeddings, review-driven archiving and peer sync.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Yggdrasil — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local SQLite memory
+daemon shared by Claude Code, Codex and other MCP hosts, with hook
+injection, optional embeddings, review-driven archiving and peer sync.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Yggdrasil — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Yggdrasil",
+      "description": "A local SQLite memory daemon shared by Claude Code, Codex and other MCP hosts, with hook injection, optional embeddings, review-driven archiving and peer sync.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Curated by a cosine threshold: a
+near-identical write is dropped, not merged, and review keeps the oldest
+twin</p>
+          <h1>Yggdrasil</h1>
+          <p class="document-deck">A local SQLite memory daemon shared
+by Claude Code, Codex and other MCP hosts, with hook injection, optional
+embeddings, review-driven archiving and peer sync.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/VonderVuflya/Yggdrasil">
+              <span>Source</span>
+              <strong>VonderVuflya/Yggdrasil</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/VonderVuflya/Yggdrasil/commit/4a1a6163b31023853569aa2cbd587da18fd1ba70" title="4a1a6163b31023853569aa2cbd587da18fd1ba70">
+              <span>Analyzed revision</span>
+              <code>4a1a6163…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/VonderVuflya--Yggdrasil" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>VonderVuflya--Yggdrasil</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0
+in LICENSE; the plugin manifests, the skill and the PyPI classifier say
+or-later and the README says v3.0; the bundled Manrope font is OFL-1.1
+with its licence file</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>17,824
+lines of Python in 46 files under yggdrasil/, 2,627 of them the engine
+in ygg_memory_server.py; 9,369 lines of Python tests; 6,841 lines of
+TypeScript for the workspace UI under web/src, shipped prebuilt in
+yggdrasil/workspace_static</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>291
+commits from 17 June to 16 November 2026 under three author identities
+(vuflya, and Sergey Cherkashin in Latin and Cyrillic script), 229 of
+them in June and July; 31 tags, the pin is v0.18.0</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>764
+Python test functions in 56 files and 46 web test cases in 15 files;
+ci.yml runs the unit tests on Linux, macOS and Windows, four end-to-end
+gates against a real engine, and a lexical recall@1 floor of 0.77; none
+run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Yggdrasil is a local memory daemon that Claude Code, Codex, OpenCode
+and any MCP host share: one SQLite file, six MCP tools, and plugin hooks
+that inject a project's memories at session start and cross-project hits
+on every prompt. Its notable part is the zero-dependency path. The
+default engine is standard-library Python over FTS5, injected memory is
+fenced as reference data with its origin, and CI holds lexical recall to
+a published floor. Its weak part is what "curated and semantically
+de-duped" means in code: with an embedding model configured, a write
+within cosine 0.92 of a live memory in the same project and type is
+dropped, not merged, so a correction phrased like the fact it corrects
+is never stored.</p>
+<p>Curation is done by the agent and by rules, not by a person in the
+write path. The injected directive tells the model to save decisions and
+lessons with <code>ygg_remember</code>; an exact content hash and, with
+an embedding model, the cosine threshold decide whether the write lands.
+A person can run <code>ygg review</code> to archive duplicates and stale
+markers after the fact, and an optional daily local-LLM pass proposes
+the same.</p>
+<p><strong>Licence.</strong> The README grants <em>"GNU AGPL v3.0"</em>
+while the plugin manifests, the skill and the PyPI classifier grant
+AGPL-3.0-or-later, and <code>LICENSE</code> is the bare FSF text with no
+copyright line naming a holder or stating either version. Section 14 of
+that text lets a recipient pick any published version when the program
+names none, so which terms bind turns on which file a reader trusts.
+Section 13 is live here rather than theoretical: the tree ships a
+Streamable-HTTP MCP facade documented for exposure through a public
+tunnel, and a modified engine or facade served that way must offer its
+source to remote users.</p>
+<p>Two marks: <code>scope_enforced</code> on the user, namespace and
+project keys in search and the workspace queries, and
+<code>negative_eval</code> on populated workspace and sync tests.
+Section 9 gives the reason for each of the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>one atomic fact about a project</strong>, written
+by the agent or distilled from text by a local model, and live the
+moment it is stored. It carries a type from a seven-value enum on the
+MCP schema, a project, a source, an optional confidence and pin, and an
+archived flag (<code>yggdrasil/ygg_mcp_server.py:50</code>,
+<code>yggdrasil/ygg_memory_server.py:382-402</code>). There is no
+candidate state: a stored row is searchable at once and stays so until
+it is archived or deleted.</p>
+<p>A fact becomes a memory through three gates, all in code and none
+involving a person (<code>yggdrasil/ygg.py:331-381</code>):</p>
+<ul>
+<li><strong>Secrets.</strong> Eighteen patterns refuse keys, tokens,
+JWTs and credentialed URLs in the content or metadata on the client, and
+nine refuse them again in the engine's <code>/add</code> route
+(<code>yggdrasil/ygg.py:41-67</code>,
+<code>yggdrasil/ygg_memory_server.py:186-198</code>,
+<code>:2260-2271</code>).</li>
+<li><strong>Exact duplicates.</strong> A SHA-256 of the content is
+looked up among live rows with the same user, project and type; a hit
+returns the existing id (<code>yggdrasil/ygg.py:365</code>,
+<code>yggdrasil/ygg_memory_server.py:923-933</code>).</li>
+<li><strong>Near duplicates.</strong> With an embedding model
+configured, the engine embeds the text and compares it with every live
+embedded row in the same user, project and type; at cosine 0.92 or more
+the new text is discarded and the existing record comes back marked
+<code>SEMANTIC_DUPLICATE</code>
+(<code>yggdrasil/ygg_memory_server.py:625-630</code>,
+<code>:935-961</code>).</li>
+</ul>
+<p>The near-duplicate gate is the system's meaning of "semantically
+de-duped", and it decides by discarding the newer text. Nothing from the
+incoming write is merged into the survivor. <code>remember</code>
+returns on a duplicate before it writes the <code>solves</code>,
+<code>supersedes</code> or <code>contradicts</code> edges the caller
+passed (<code>yggdrasil/ygg.py:403-414</code>), so
+<code>ygg_remember(content=&lt;correction&gt;, supersedes=&lt;old id&gt;)</code>
+whose correction embeds within 0.92 of the old text stores nothing and
+leaves the old memory active. The tool's description says
+<em>"Near-duplicates are merged automatically"</em>
+(<code>yggdrasil/ygg_mcp_server.py:202</code>). The response does name
+the surviving id and the similarity, so the agent is told; its only way
+through is to reword, because no MCP tool edits a memory.</p>
+<p>A memory stops counting in three ways. <code>supersede</code>, a
+<code>SUPERSEDES</code> edge, <code>ygg review</code> and the optional
+classifier set <code>archived = 1</code>, which every search excludes
+and <code>ygg unarchive</code> reverses
+(<code>yggdrasil/ygg_memory_server.py:1072-1073</code>,
+<code>:1530</code>). <code>ygg delete</code> and <code>ygg reset</code>
+remove the row and write an id tombstone so a linked machine does not
+send it back (<code>:963-983</code>). Nothing decays: recency and usage
+change rank, never membership.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write lands live unless a secret, an exact hash or a cosine of 0.92 stops it; the cosine gate drops the newer text and the edges it carried, review keeps the oldest twin, and a deleted fact is a new row when it is distilled again</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write lands live unless a secret, an exact hash or a cosine of 0.92 stops it; the cosine gate drops the newer text and the edges it carried, review keeps the oldest twin, and a deleted fact is a new row when it is distilled again
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    W1[&quot;agent: ygg_remember&lt;br/&gt;told to by a directive&quot;]
+    W2[&quot;opt-in local LLM:&lt;br/&gt;ygg seed, Stop hook&quot;]
+    W3[&quot;person: ygg remember,&lt;br/&gt;ygg import&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  writers --&gt; SEC{&quot;secret pattern?&quot;}
+  SEC --&gt;|&quot;yes&quot;| REF[&quot;refused&quot;]
+  SEC --&gt;|&quot;no&quot;| HASH{&quot;same hash in a live row&lt;br/&gt;of this user, project,&lt;br/&gt;type, any namespace?&quot;}
+  HASH --&gt;|&quot;yes&quot;| SKIP1[&quot;skipped,&lt;br/&gt;existing id returned&quot;]
+  HASH --&gt;|&quot;no&quot;| SEM{&quot;embeddings on and&lt;br/&gt;cosine 0.92 or more&lt;br/&gt;to such a row?&quot;}
+  SEM --&gt;|&quot;yes&quot;| SKIP2[&quot;new text dropped and&lt;br/&gt;its supersedes edge too:&lt;br/&gt;a close correction is lost&quot;]
+  SEM --&gt;|&quot;no&quot;| LIVE[&quot;live row: FTS5 entry,&lt;br/&gt;vector, outbox entry&quot;]
+  LIVE --&gt; READ[&quot;search: user, namespace,&lt;br/&gt;project if given,&lt;br/&gt;archived = 0&quot;]
+  LIVE --&gt; REV{&quot;ygg review, or the&lt;br/&gt;daily LLM classifier&quot;}
+  REV --&gt;|&quot;duplicate group&quot;| ARCH[&quot;oldest kept,&lt;br/&gt;newer archived&quot;]
+  REV --&gt;|&quot;stale marker&quot;| TTY[&quot;person at a terminal&lt;br/&gt;archives or skips&quot;]
+  READ ~~~ DEL[&quot;ygg delete: row removed,&lt;br/&gt;id tombstone for peers&quot;]
+  DEL --&gt; AGAIN[&quot;re-distilled text has&lt;br/&gt;no hash to match:&lt;br/&gt;stored as a new row&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The engine is one standard-library Python process.
+<code>ygg_memory_server.py</code> runs a
+<code>ThreadingHTTPServer</code> on <code>127.0.0.1:42069</code> behind
+a bearer token kept 0600 in <code>~/.yggdrasil/token</code>, with every
+write serialized under one lock on one SQLite connection in WAL mode
+(<code>yggdrasil/ygg_memory_server.py:329-340</code>,
+<code>:2565</code>). It refuses requests when no token is configured and
+rejects non-loopback <code>Host</code> headers while bound to loopback
+(<code>:2069-2086</code>).</p>
+<p>Around it:</p>
+<ul>
+<li><strong>The MCP facade</strong> (<code>ygg_mcp_server.py</code>)
+answers stdio JSON-RPC and runs the CLI's own command functions
+in-process under a lock, so the tools and the CLI share one write path
+(<code>yggdrasil/ygg_mcp_server.py:294-324</code>).
+<code>ygg_http_mcp.py</code> serves the same tools over Streamable HTTP
+on port 42071; with no token file and no <code>YGG_MCP_TOKEN</code> it
+runs open (<code>yggdrasil/ygg_http_mcp.py:39-53</code>,
+<code>:75-77</code>).</li>
+<li><strong>Hooks</strong> are standalone scripts that read config and
+call the engine over HTTP, so a session never imports the package.</li>
+<li><strong>Sync</strong> has two transports sharing one merge module:
+<code>ygg sync</code> exports JSON files to a git repository, and
+<code>ygg link</code> pairs machines over TLS with each other's
+certificate pinned, binding a port only after pairing.</li>
+<li><strong>The workspace</strong> is a local web UI over
+<code>/workspace/query</code>, a read-only query module that runs inside
+the engine, plus a catalogue of CLI jobs.</li>
+<li><strong>Service managers</strong>: launchd, systemd or schtasks, or
+a lazy start on first use; <code>ygg consolidate</code> schedules the
+classifier on macOS only (<code>yggdrasil/cli.py:165-171</code>).</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing needs to be installed beyond Python 3.10:
+<code>pyproject.toml</code> declares no dependencies. The default store
+is lexical; an embedding model is an Ollama or OpenAI-compatible
+endpoint the person configures, and the background classifier and
+distiller need a chat model on such an endpoint. No API key is needed to
+store anything. A hosted embedding or distill endpoint is allowed, and
+<code>distill_text</code> redacts secrets before text leaves the machine
+(<code>yggdrasil/ygg_seed.py:1027-1032</code>).</p>
+<p>The Claude Code plugin's manifest starts the MCP server as
+<code>uvx --from yggdrasil-memory ygg mcp</code>, a PyPI package whose
+name matches <code>pyproject.toml</code>, with no version pinned, while
+the hooks run from the plugin checkout
+(<code>.claude-plugin/plugin.json</code>,
+<code>hooks/hooks.json</code>). The tools and the hooks can therefore be
+different versions. The store is one SQLite file a person can open, and
+a single memory can be exported to an Obsidian note with
+<code>ygg_materialize</code>; editing that note changes nothing in the
+store.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>ygg_remember</code> →
+<code>call_tool</code> → <code>remember</code> →
+<code>write_memory</code>: secret scan, <code>/find_hash</code>, then
+<code>POST /add</code> with <code>dedupe_threshold</code> 0.92
+(<code>yggdrasil/ygg_mcp_server.py:377-394</code>,
+<code>yggdrasil/ygg.py:331-424</code>). <code>MemoryStore.add</code>
+embeds outside the lock, runs <code>find_similar</code>, then inserts
+the row, the FTS entry and an outbox entry in one transaction
+(<code>yggdrasil/ygg_memory_server.py:610-659</code>).</li>
+<li><strong>After a write.</strong> <code>_warn_related</code> searches
+the same project and type and prints up to two similar memories with a
+<code>ygg supersede</code> hint, which the MCP facade folds into the
+tool output (<code>yggdrasil/ygg.py:206-231</code>).</li>
+<li><strong>Distillation.</strong> <code>distill_text</code> redacts,
+keeps the newest window of the text, asks the model for zero to six
+typed lessons, drops truncated or wrong-language ones, and writes each
+through <code>write_memory</code> with confidence 0.6 and tag
+<code>seed</code> (<code>yggdrasil/ygg_seed.py:1027-1095</code>). The
+Stop hook spawns it detached on the session transcript
+(<code>yggdrasil/hooks/ygg_stop.py:35-74</code>).</li>
+<li><strong>Search.</strong> <code>POST /search</code> →
+<code>MemoryStore.search</code>, then <code>record_access</code> on
+every returned id
+(<code>yggdrasil/ygg_memory_server.py:2432-2442</code>,
+<code>:1516-1683</code>). <code>ygg_search</code> and
+<code>ygg_bootstrap</code> filter one project; <code>ygg_recall</code>
+filters none (<code>yggdrasil/ygg.py:427-541</code>).</li>
+<li><strong>Injection.</strong> The SessionStart hook searches the git
+toplevel's basename as project and adds a status block from
+<code>/get_all</code>
+(<code>yggdrasil/hooks/ygg_session_start.py:136-211</code>); the
+UserPromptSubmit hook searches every project with the prompt text
+(<code>yggdrasil/hooks/ygg_user_prompt.py:115-177</code>).</li>
+<li><strong>Archive and supersede.</strong> <code>supersede</code>,
+<code>relate</code> and <code>unarchive</code> go through
+<code>PUT /update</code> and <code>POST /relate</code>; a
+<code>SUPERSEDES</code> edge archives its target in SQL
+(<code>yggdrasil/ygg.py:234-293</code>,
+<code>yggdrasil/ygg_memory_server.py:1032-1074</code>).</li>
+<li><strong>Review.</strong> <code>review</code> gathers exact,
+text-signature and embedding duplicate groups and stale markers, and
+with <code>--apply</code> archives
+(<code>yggdrasil/ygg.py:757-846</code>,
+<code>yggdrasil/ygg_review_queue.py:66-226</code>).</li>
+<li><strong>Classifier.</strong> <code>ygg_writepath.py</code> compares
+each unseen memory with its nearest peer above cosine 0.6 and asks a
+local model for <code>DUPLICATE</code>, <code>SUPERSEDES_A</code>,
+<code>SUPERSEDES_B</code>, <code>RELATED</code> or
+<code>UNRELATED</code> (<code>yggdrasil/ygg_writepath.py:53-82</code>,
+<code>:92-170</code>).</li>
+<li><strong>Delete.</strong> <code>delete_by_id</code> and
+<code>purge</code> remove rows, FTS entries and edges and write
+tombstones in the same transaction
+(<code>yggdrasil/ygg_memory_server.py:963-1030</code>).</li>
+<li><strong>Sync.</strong> <code>apply_remote</code> applies tombstones
+first, then merges by id under <code>ygg_sync_merge.merge_memory</code>
+(<code>yggdrasil/ygg_memory_server.py:1288-1380</code>,
+<code>yggdrasil/ygg_sync_merge.py:103-156</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The row.</strong> <code>memories</code> holds
+<code>seq</code>, a text <code>id</code> (<code>ygg_</code> plus a
+UUID), <code>user_id</code>, <code>namespace</code>, <code>scope</code>,
+<code>project</code>, <code>type</code>, <code>content</code>,
+<code>content_hash</code>, <code>source</code>, <code>confidence</code>,
+<code>importance</code>, <code>created_at</code>,
+<code>access_count</code>, <code>archived</code>,
+<code>metadata_json</code>, and by migration
+<code>last_accessed_at</code>, <code>embedding_blob</code>,
+<code>embed_model</code> and <code>updated_at</code>
+(<code>yggdrasil/ygg_memory_server.py:382-450</code>). The embedding
+lives in the row as packed float32 with the model's name, so a model
+switch is detected and the rows are re-embedded at startup.</p>
+<p><strong>Scope.</strong> <code>user_id</code> defaults to
+<code>local</code> and <code>namespace</code> to <code>personal</code>,
+resolved from env, then <code>~/.yggdrasil/config.json</code>
+(<code>yggdrasil/ygg_config.py:38-39</code>, <code>:270-280</code>).
+<code>project</code> is a free string: the model's tool argument, or the
+basename of the git toplevel in the hooks, so two repositories with the
+same directory name share a project. <code>scope</code> is
+<code>project</code> or <code>global</code>.</p>
+<p><strong>Provenance.</strong> <code>source</code> defaults to
+<code>ygg-mcp</code> for tool writes and is a field the model may set
+(<code>yggdrasil/ygg_mcp_server.py:228-232</code>); distillers write
+<code>stop-hook</code> or the seed source. No message or session id is
+stored.</p>
+<p><strong>Time.</strong> <code>created_at</code>,
+<code>updated_at</code> and <code>last_accessed_at</code> are record
+times. <code>archived_changed_at</code> in metadata stamps the archive
+decision for sync merges
+(<code>yggdrasil/ygg_sync_merge.py:52-55</code>).</p>
+<p><strong>Relations.</strong> <code>relations</code> holds
+<code>(from_id, to_id, rel_type)</code> unique, with
+<code>SOLVES</code>, <code>SUPERSEDES</code> and
+<code>CONTRADICTS</code>, and is hard-deleted with either endpoint
+(<code>yggdrasil/ygg_memory_server.py:416-425</code>,
+<code>:975-976</code>). <code>relation_tombstones</code> records unlinks
+for sync.</p>
+<p><strong>Tombstones and outbox.</strong> <code>tombstones</code> maps
+a deleted id to its earliest deletion time and origin;
+<code>outbox</code> holds one row per changed entity until a peer
+acknowledges it (<code>:458-490</code>). <code>gc_tombstones</code> has
+no caller outside the tests, so tombstone rows accumulate, and
+<code>tombstone_wins</code> stops honouring one after 90 days
+(<code>yggdrasil/ygg_sync_merge.py:45</code>,
+<code>:166-177</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The predicate.</strong> <code>search</code> builds one
+<code>WHERE</code> for both arms: <code>user_id</code>,
+<code>archived = 0</code>, then project, unassigned, scope, type, a JSON
+tag and a namespace list when given
+(<code>yggdrasil/ygg_memory_server.py:1530-1553</code>).</p>
+<p><strong>Lexical.</strong> FTS5 with the Porter tokenizer over content
+expanded so <code>snake_case</code> and <code>camelCase</code>
+identifiers match their parts; the query's terms are ORed, capped at
+<code>max(limit × 10, 50)</code> by BM25 inside SQLite
+(<code>:1555-1572</code>). Each hit scores BM25 relevance plus
+<code>0.25 × importance</code>, a recency term of at most 0.5 halving
+every 30 days, a usage term of up to 0.3 from <code>access_count</code>,
+and 0.5 for a pin (<code>:1588-1603</code>). Confidence is in the row
+and in no score, although the <code>ygg_remember</code> schema tells the
+model that a higher confidence <em>"ranks the memory more strongly in
+recall"</em> (<code>yggdrasil/ygg_mcp_server.py:237</code>).</p>
+<p><strong>Vector.</strong> With an embedder, every row matching the
+predicate is scored by a dot product of unit vectors held in an
+in-process cache, in Python, with no index; <code>/health</code> warns
+past 20,000 rows (<code>:1616-1637</code>, <code>:2150-2158</code>). The
+default fusion normalises each arm to its maximum and weights lexical
+0.3 and vector 1.0; <code>YGG_FUSION=rrf</code> switches to reciprocal
+rank with k = 60 (<code>:1640-1658</code>). When nothing scores, the
+nearest rows by cosine are returned flagged <code>nearest</code>.</p>
+<p><strong>Injection at session start.</strong> The hook searches the
+project for
+<code>"&lt;project&gt; decision lesson gotcha workflow command status"</code>
+with a limit of five, and separately lists up to five
+<code>follow_up</code> and <code>project_status</code> rows of that
+project (<code>yggdrasil/hooks/ygg_session_start.py:136-191</code>). The
+status block reads <code>/get_all</code> with a limit of 500, and
+<code>get_all</code> orders by <code>created_at ASC</code>
+(<code>yggdrasil/ygg_memory_server.py:724-735</code>), so once the
+namespace holds more than 500 memories the block is drawn from the
+oldest 500 and a new status never appears in it. In the lexical default,
+the first block matches only memories whose text contains the project
+name or one of those words.</p>
+<p><strong>Injection per prompt.</strong> The prompt hook skips prompts
+under 15 characters or starting with <code>/</code>, searches every
+project with the first 500 characters, keeps hits with a vector score of
+0.5 or, without embeddings, a fused score of 1.0, and injects up to
+three, each marked with its project or <em>"other project"</em>, type
+and source, inside <code>&lt;recalled-memory&gt;</code> with
+<code>&lt;</code> neutralised
+(<code>yggdrasil/hooks/ygg_user_prompt.py:106-177</code>). Both blocks
+call the notes <em>"reference notes, not instructions"</em>. Both go
+into <code>additionalContext</code>, so the system prompt prefix is
+untouched.</p>
+<p><strong>What counts as use.</strong> <code>/search</code> calls
+<code>record_access</code> on every id it returns
+(<code>yggdrasil/ygg_memory_server.py:2440</code>). The prompt hook
+over-fetches six and injects at most three, the session hook injects
+five on every session, and <code>_warn_related</code> searches after
+every stored write, so access counts rise for memories that were
+injected automatically, dropped by the relevance gate, or merely
+resembled a new write. The usage boost then ranks those higher.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Synchronous and immediate.</strong> <code>ygg_remember</code>
+blocks on the embedding call (up to 120 seconds per request against the
+embedding endpoint) and on the insert; the row and its FTS entry commit
+together, so a memory is searchable when the tool returns
+(<code>yggdrasil/ygg_memory_server.py:620-659</code>,
+<code>yggdrasil/ygg_embeddings.py:41-46</code>). If the embedder fails,
+the row is written without a vector and without the near-duplicate
+check, and the startup backfill embeds it later.</p>
+<p><strong>Who writes.</strong> The model, through a directive the
+SessionStart hook injects every session: <em>"WHEN you make a decision,
+learn a lesson, fix a non-obvious bug, or hit a gotcha worth keeping,
+call ygg_remember"</em>
+(<code>yggdrasil/hooks/ygg_session_start.py:70-77</code>). The skill
+says the same. A person writes through the CLI and
+<code>ygg import</code>. Two local-LLM writers are opt-in:
+<code>ygg seed</code> over Claude Code and Codex transcripts, Obsidian
+vaults and <code>CLAUDE.md</code> repositories, and the Stop hook over
+each finished session (<code>yggdrasil/service.py:840-859</code>).</p>
+<p><strong>Near duplicates decide against the newcomer.</strong> The
+threshold is <code>YGG_SEMDEDUP_AT</code>, default 0.92
+(<code>yggdrasil/ygg.py:39</code>). The comparison set is live embedded
+rows of the same user, project and type, with no namespace term
+(<code>yggdrasil/ygg_memory_server.py:945-946</code>), and the
+exact-hash lookup has none either (<code>:929-930</code>). A distilled
+lesson at 0.93 to an older one is dropped, which is the intent. A
+correction such as <em>"the retry limit is now 5"</em> against <em>"the
+retry limit is 3"</em> differs in one token, and whether it clears 0.92
+depends on the embedder; nothing in the tree measures it, and no test
+calls <code>add</code> with a threshold.</p>
+<p><strong>Review keeps the oldest.</strong> <code>ygg review</code>
+groups duplicates three ways: equal content hashes, equal opening text,
+and embedding groups at 0.95 or more within project, type and model. For
+each group the oldest record is kept and the rest archived with a
+<code>SUPERSEDES</code> edge from the keeper
+(<code>yggdrasil/ygg.py:723-728</code>, <code>:809-818</code>). Without
+<code>--apply</code> it only reports; with <code>--apply</code> on a
+terminal it asks per group; with <code>--apply --yes</code> it archives
+exact groups and single-type groups at 0.97 or more unattended and flags
+the rest (<code>:731-741</code>). Stale and conflict markers are a regex
+over content and <code>status</code> and are never archived unattended
+(<code>yggdrasil/ygg_review_queue.py:203-226</code>). When two
+near-identical memories disagree, the earlier one survives.</p>
+<p><strong>The classifier.</strong> <code>ygg_writepath.py</code> reads
+<code>get_all</code> with a default limit of 200, ordered oldest first,
+skips rows marked <code>writepath_seen</code>, and marks every row it
+examines seen in dry-run as well as apply
+(<code>yggdrasil/ygg_writepath.py:96</code>, <code>:111-132</code>). The
+launchd job passes no limit and no <code>--apply</code> unless
+<code>YGG_CONSOLIDATE_APPLY=1</code>
+(<code>yggdrasil/install.sh:183-193</code>). Two consequences follow
+from the code. Once the namespace passes 200 memories, rows after the
+200th are never examined. A switch from the default dry-run to apply
+re-examines nothing already seen. At confidence 0.7 a
+<code>DUPLICATE</code> verdict archives the newer row and a
+<code>SUPERSEDES</code> verdict archives whichever the model names; each
+verdict is appended to <code>reports/writepath-audit.jsonl</code>.</p>
+<p><strong>Deletion.</strong> Hard, by id or by filter, with the row,
+FTS entry, vector cache and edges removed and a tombstone written in one
+transaction. The tombstone is keyed on the id; the hash check reads live
+rows only, so the same text distilled again from a retained transcript
+is a new memory.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model runs on the write path in the default tier. With embeddings,
+each write costs one embedding call and a Python scan of the project and
+type's vectors, then one extra search for <code>_warn_related</code>.
+The classifier makes one model call per unseen memory with a peer above
+cosine 0.6, once a day when scheduled. Every injection is bounded: five
+memories and five statuses at session start, at most three per prompt,
+each truncated to 180 to 220 characters.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP surface is six tools: <code>ygg_health</code>,
+<code>ygg_recall</code>, <code>ygg_bootstrap</code>,
+<code>ygg_search</code>, <code>ygg_remember</code> and
+<code>ygg_materialize</code>
+(<code>yggdrasil/ygg_mcp_server.py:57-291</code>). The agent can write
+and can archive through <code>supersedes</code>; it has no edit, delete,
+review or unarchive tool. A coding agent with a shell can run the
+<code>ygg</code> CLI, which has all of them.</p>
+<p>Retrieval does not depend on the agent choosing to use it: the plugin
+registers SessionStart and UserPromptSubmit hooks
+(<code>hooks/hooks.json</code>). The prompt hook asks the model to mark
+reused notes as <code>"🌳 from memory: &lt;gist&gt;"</code>. Codex and
+OpenCode get the MCP tools through <code>ygg install</code>, and Codex
+through its own plugin manifest; the hooks are Claude Code's.</p>
+<p>The update notice is appended to the first tool result of a session
+with an instruction to relay it verbatim
+(<code>yggdrasil/ygg_mcp_server.py:441-466</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="corrections-can-be-refused">Corrections can be refused</h3>
+<p>The near-duplicate skip in section 7 runs before any relation is
+written, so the <code>supersedes</code> argument the tool offers for
+corrections is discarded exactly when the correction resembles its
+target most. The response names the existing id, and nothing tells the
+model that the edge was dropped as well. Review then prefers the older
+of any near-identical pair, and the optional classifier keeps the older
+on <code>DUPLICATE</code>. Each step is defensible for duplicates;
+together they make "newer and nearly the same" the case the system
+handles worst.</p>
+<h3 id="injected-material-is-labelled-and-labelled-only">Injected
+material is labelled, and labelled only</h3>
+<p>Both hooks frame memory as data and name its source and project, and
+the memory blocks neutralise <code>&lt;</code>
+(<code>yggdrasil/hooks/ygg_user_prompt.py:73-75</code>,
+<code>:152-173</code>). The session-start status block does not
+(<code>yggdrasil/hooks/ygg_session_start.py:154-157</code>). Nothing
+separates a memory a person stated from one the model inferred or a
+distiller extracted from a transcript, except a <code>source</code>
+string the writer chooses.</p>
+<h3 id="sync">Sync</h3>
+<p><code>merge_memory</code> is commutative by construction: content
+goes to the later <code>updated_at</code> and then the longer text,
+confidence and importance to the maximum, pins are ORed, and the
+archived flag to the later archive decision
+(<code>yggdrasil/ygg_sync_merge.py:103-156</code>). A live tombstone
+always beats an edit, so a delete racing an edit on another machine
+discards the edit, as the README says. The engine accepts any
+<code>user_id</code> in a request body under the one token, and a paired
+peer's records are merged whatever their user and namespace.</p>
+<h3 id="the-markdown-claim">The Markdown claim</h3>
+<p>The README says <em>"every memory doubles as a plain-Markdown note
+you can read, edit, and grep"</em>. A note exists only after
+<code>ygg_materialize</code> for one id, and the only writer of note
+text is that command (<code>yggdrasil/ygg.py:560-606</code>). An edit to
+the note is not read back.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong>
+<code>user_id</code>, <code>namespace</code> and <code>project</code>
+are stored on every row and appended to the search <code>WHERE</code>
+(<code>yggdrasil/ygg_memory_server.py:1530-1553</code>), and the
+workspace query requires user and namespace and applies the project to
+every operation (<code>yggdrasil/ygg_workspace_data.py:59-71</code>).
+The keys come from client config and from the model's
+<code>project</code> argument; cross-project recall is the product's
+purpose, and the write-time duplicate checks leave out the
+namespace.</li>
+<li><strong><code>negative_eval</code> — earned.</strong>
+<code>tests/test_workspace_data.py:38-44</code> stores the same word
+unassigned and in project B and requires the unassigned search to return
+only its row, with the unscoped search returning both;
+<code>tests/test_sync.py:193-208</code> requires a row found by search
+to vanish once an archived copy is synced in.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>archived</code> is a lifecycle flag with no unverified state,
+<code>CONTRADICTS</code> keeps both rows live and is read only by the
+relations display and the workspace graph, and <code>confidence</code>
+filters and ranks nothing.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> No table records
+mutations: the outbox keeps one row per entity and drops it on
+acknowledgement, tombstones keep an id and a time, and
+<code>writepath-audit.jsonl</code> is the classifier's own verdict file
+outside the store.</li>
+<li><strong><code>tombstone</code> — withheld.</strong>
+<code>tombstones</code> is a delete-sync marker keyed on the id with a
+90-day effect; no write path consults it.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> Only record
+times exist.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No memory
+waits: every write is live. <code>ygg review</code> and the proposal
+flow in <code>ygg_review_actions.py</code> act after the fact, and the
+latter records an approver from an <code>--actor</code> argument.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI runs <code>python -m unittest discover -s tests</code> on Ubuntu,
+macOS and Windows, <code>scripts/run_gates.sh</code> against a fresh
+engine on Ubuntu and macOS, the web suite, and a lexical recall floor
+(<code>.github/workflows/ci.yml</code>). I ran nothing from the
+repository.</p>
+<p>Covered, by reading:</p>
+<ul>
+<li>the engine's add, update, archive exclusion, project and namespace
+filters, tags, pins, usage ranking, delete and purge
+(<code>tests/test_ygg_memory_server.py</code>);</li>
+<li><code>find_similar</code> thresholds and its project and type
+isolation with hand-set vectors
+(<code>tests/test_semantic_dedup.py</code>);</li>
+<li>near-duplicate grouping, oldest-first ordering, the 0.97 unattended
+rule and mixed-type refusal
+(<code>tests/test_near_duplicates.py</code>);</li>
+<li>sync merge properties, tombstone propagation and non-resurrection
+across git and two live peers (<code>tests/test_sync_merge.py</code>,
+<code>tests/test_sync.py</code>,
+<code>tests/test_sync_e2e.py</code>);</li>
+<li>the workspace read path's scope, including the populated cases cited
+in section 9 (<code>tests/test_workspace_data.py</code>);</li>
+<li>the hooks' framing and failure behaviour with a stubbed engine.</li>
+</ul>
+<p>Not covered:</p>
+<ul>
+<li>No test calls <code>add</code> with <code>dedupe_threshold</code>,
+and none sends a correction with <code>supersedes</code> through
+<code>remember</code>.</li>
+<li>The engine-level scope and archive tests assert <code>[]</code> over
+a store holding one row
+(<code>tests/test_ygg_memory_server.py:94-131</code>), and the quality
+gate's cross-project check searches test-b with terms its fixture does
+not contain (<code>yggdrasil/ygg_quality_gate.py:173-187</code>,
+<code>yggdrasil/ygg_seed_demo.py:51-60</code>). Both pass against a
+search that returns nothing.</li>
+<li>Nothing tests the classifier's selection of rows or the
+session-start status block past 500 memories.</li>
+<li>No test deletes a memory and re-runs distillation over the same
+text.</li>
+</ul>
+<p><code>eval/ygg_eval.py</code> scores search directly on a committed
+232-memory, 110-query corpus (<code>eval/corpus_large.py</code>) with a
+dev and holdout split and bootstrap intervals, and CI asserts lexical
+recall@1 of at least 0.77. The embedding figures in
+<code>BENCHMARKS.md</code> need a model and are not run in CI. Its
+4,799-memory store, where the default embedder falls to 0.550, is
+described and not committed. The eval calls <code>search</code> without
+hooks, so it measures neither the injection gate nor the usage feedback.
+No paper is cited.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Fence injected memory as data and say where it came
+from.</strong> Origin, project and a foreign-project marker beside every
+line, an escaped closing tag, and a sentence telling the model not to
+take orders from it.</li>
+<li><strong>A recall floor in CI.</strong> A deterministic lexical eval
+with a published number that the build must meet turns a README badge
+into a regression test.</li>
+<li><strong>Commutative merge rules in one pure module.</strong> Two
+transports cannot disagree when both import the same
+<code>merge_memory</code> and its property tests.</li>
+<li><strong>Tombstone and outbox in the delete's own
+transaction.</strong> A crash cannot leave a delete that a peer
+undoes.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Dropping the newer of two near-identical writes.</strong> A
+threshold on embeddings cannot tell a restatement from a correction that
+changes one number. Store the newcomer as a candidate linked to its
+twin, or carry its edges through, rather than returning the old
+row.</li>
+<li><strong>Keep-oldest as the duplicate rule.</strong> It is safe for
+paraphrases and wrong for updates; prefer the newer, or ask.</li>
+<li><strong>A bounded <code>ORDER BY created_at ASC</code> behind a
+maintenance pass.</strong> A capped read of the oldest rows starves
+everything written after the cap.</li>
+<li><strong>Counting injection as use.</strong> Bump usage on what the
+agent cites or opens, not on every row a hook fetched.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a single developer who works across several repositories
+and agents on one or two machines and wants a memory that installs in
+one command and runs without a model. The store is small by design; the
+vector arm is a Python scan and the maintenance passes read capped
+windows, so it is built for hundreds to a few thousand memories. Walk
+away if a correction must reliably replace what it corrects, if memories
+need a reviewed or trusted state before they are injected, or if more
+than one person shares an engine.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the PyPI <code>yggdrasil-memory</code> package the plugin's
+<code>uvx</code> fetches matches this tree; <code>pyproject.toml</code>
+and <code>server.json</code> say 0.18.0 and the plugin pins no
+version.</li>
+<li>Whether the near-duplicate skip is meant to swallow the
+<code>supersedes</code> edge, or the edge was meant to apply before the
+dedup check.</li>
+<li>Whether keep-oldest is a deliberate policy for updates or a default
+chosen for paraphrases.</li>
+<li>What the 4,799-memory store behind <code>BENCHMARKS.md</code>
+contains.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Engine, schema, write, search, delete, sync primitives:
+<code>yggdrasil/ygg_memory_server.py</code></li>
+<li>Client write path, review, supersede, export:
+<code>yggdrasil/ygg.py</code>, <code>yggdrasil/ygg_core.py</code>,
+<code>yggdrasil/ygg_config.py</code></li>
+<li>MCP: <code>yggdrasil/ygg_mcp_server.py</code>,
+<code>yggdrasil/ygg_http_mcp.py</code></li>
+<li>Hooks: <code>yggdrasil/hooks/ygg_session_start.py</code>,
+<code>yggdrasil/hooks/ygg_user_prompt.py</code>,
+<code>yggdrasil/hooks/ygg_stop.py</code>,
+<code>hooks/hooks.json</code></li>
+<li>Distillation: <code>yggdrasil/ygg_seed.py</code></li>
+<li>Review and consolidation:
+<code>yggdrasil/ygg_review_queue.py</code>,
+<code>yggdrasil/ygg_review_actions.py</code>,
+<code>yggdrasil/ygg_writepath.py</code>,
+<code>yggdrasil/install.sh</code></li>
+<li>Sync: <code>yggdrasil/ygg_sync_merge.py</code>,
+<code>yggdrasil/ygg_sync.py</code>,
+<code>yggdrasil/ygg_sync_node.py</code>,
+<code>yggdrasil/ygg_sync_protocol.py</code></li>
+<li>Workspace: <code>yggdrasil/ygg_workspace_data.py</code>,
+<code>yggdrasil/ygg_workspace.py</code>,
+<code>yggdrasil/ygg_workspace_chat.py</code>, <code>web/src</code></li>
+<li>Service and plugin: <code>yggdrasil/service.py</code>,
+<code>yggdrasil/cli.py</code>, <code>.claude-plugin/plugin.json</code>,
+<code>server.json</code>, <code>pyproject.toml</code></li>
+<li>Tests and evals: <code>tests/</code>,
+<code>scripts/run_gates.sh</code>,
+<code>yggdrasil/ygg_quality_gate.py</code>,
+<code>eval/ygg_eval.py</code>, <code>eval/corpus_large.py</code>,
+<code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- . ':!web/package-lock.json' ':!yggdrasil/workspace_static'</code>
+returns nothing;
+<code>git grep -n -i -E 'arxiv|citation' -- CHANGELOG.md</code> matches
+line 243.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_until|validity|effective_at|expires_at' -- yggdrasil ':!yggdrasil/workspace_static'</code>
+returns nothing;
+<code>git grep -n -i -E 'valid_from|created_at' -- yggdrasil/ygg_memory_server.py</code>
+matches line 395.</li>
+<li><strong>No mutation log table.</strong>
+<code>git grep -n 'CREATE TABLE' -- yggdrasil ':!yggdrasil/workspace_static'</code>
+returns <code>memories</code>, <code>relations</code>,
+<code>tombstones</code>, <code>relation_tombstones</code> and
+<code>outbox</code> in <code>ygg_memory_server.py</code> and
+<code>chats</code> and <code>messages</code> in
+<code>ygg_workspace_chat.py</code>.</li>
+<li><strong>No pending or approval state in the engine.</strong>
+<code>git grep -n -i -E 'pending|approv|quarantin' -- yggdrasil/ygg_memory_server.py</code>
+returns only <code>outbox_pending</code> at line 1204.</li>
+<li><strong>Confidence reaches no score.</strong>
+<code>git grep -n confidence -- yggdrasil/ygg_memory_server.py</code>
+returns lines 393, 536, 617, 639, 644, 1374, 1426, 1432, 1449 and 1455,
+none inside <code>search</code> (lines 1516-1683).</li>
+<li><strong>No test drives the near-duplicate skip.</strong>
+<code>git grep -n -E 'dedupe_threshold|SEMANTIC_DUPLICATE' -- tests</code>
+returns nothing; the same pattern over <code>yggdrasil</code> returns
+nine lines.</li>
+<li><strong>Write paths do not consult tombstones.</strong>
+<code>git grep -n -i tombstone -- yggdrasil/ygg.py yggdrasil/ygg_seed.py yggdrasil/hooks</code>
+returns nothing;
+<code>git grep -n -i tombstone -- yggdrasil/ygg_sync.py</code> matches
+line 12.</li>
+<li><strong>Tombstone collection has no product caller.</strong>
+<code>git grep -n -E 'gc_|expired_tombstones' -- yggdrasil tests</code>
+returns the definition at <code>ygg_memory_server.py:1187</code>, two
+uses in <code>ygg_sync.py</code> over the git transport's file, and test
+lines.</li>
+<li><strong>Review does not read relations.</strong>
+<code>git grep -n -i -E 'relation|contradict' -- yggdrasil/ygg_review_queue.py yggdrasil/ygg_review_actions.py</code>
+returns two regex lines in
+<code>find_stale_or_conflict_markers</code>.</li>
+<li><strong>The plugin does not register the Stop hook.</strong>
+<code>git grep -n ygg_stop -- hooks .claude-plugin .codex-plugin .cursor-plugin</code>
+returns nothing; the same search in <code>yggdrasil/service.py</code>
+matches line 837.</li>
+<li><strong>Notes are written only by materialize.</strong>
+<code>git grep -n -E 'note_for_record|materialize\(' -- yggdrasil ':!yggdrasil/workspace_static'</code>
+returns the definitions at <code>ygg.py:560</code> and <code>:597</code>
+and one call at <code>:606</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/VonderVuflya/Yggdrasil/commit/4a1a6163b31023853569aa2cbd587da18fd1ba70"><code class="commit-id" title="4a1a6163b31023853569aa2cbd587da18fd1ba70">4a1a6163…</code></a>.
+First reading, from a full clone at the head of <code>main</code> (tag
+v0.18.0); no submodules. Screened first: five auto-run surfaces — the
+plugin manifests, <code>.claude-plugin/plugin.json</code> and
+<code>server.json</code> starting the MCP server from the PyPI package
+<code>yggdrasil-memory</code> through <code>uvx</code> (the name
+<code>pyproject.toml</code> declares, version unpinned in the plugin
+manifest), and <code>hooks/hooks.json</code> registering SessionStart
+and UserPromptSubmit scripts from the tree; nothing inside the seven-day
+cooldown; no build-time execution; two unpinned surfaces. The hooks were
+read and never run; skills and prompts were read as data. Nothing was
+installed, built or run, and the test suites were not run. Two marks:
+<code>scope_enforced</code> and <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). A near-identical
+correction is dropped at write with its <code>supersedes</code> edge,
+and review keeps the oldest twin.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

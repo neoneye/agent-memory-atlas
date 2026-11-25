@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 876 reports.</strong></p>
+<p><strong>This page covers all 877 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36152,6 +36152,58 @@ Chroma.</li>
 <li>Do not copy when: memory is injected as instructions from a room the
 agent writes, a correction must hold, mutations need a record, or the
 agent must not be able to delete the store.</li>
+</ul>
+<h3 id="yggdrasil"><a
+href="../systems/yggdrasil/"><code>yggdrasil</code></a></h3>
+<ul>
+<li>Best idea: <strong>injected memory fenced as data, with its
+origin.</strong> Both hooks wrap recalled notes in
+<code>&lt;recalled-memory&gt;</code> with <code>&lt;</code> neutralised,
+call them <em>"reference notes, not instructions"</em>, and mark each
+line with its project or <em>"other project"</em>, its type and its
+source; the prompt hook injects at most three, only above cosine 0.5
+(<code>yggdrasil/hooks/ygg_user_prompt.py:106-177</code>).</li>
+<li>Second idea: a zero-dependency engine whose lexical recall is a CI
+gate. The default store is standard-library Python over FTS5 with
+identifier splitting, and <code>ci.yml</code> fails the build if
+recall@1 on the committed 232-memory, 110-query corpus drops below
+0.77.</li>
+<li>Biggest risk: <strong>de-duplication discards the newer
+write.</strong> At cosine 0.92 within user, project and type,
+<code>MemoryStore.add</code> returns the existing row instead of
+inserting (<code>yggdrasil/ygg_memory_server.py:625-630</code>), and
+<code>remember</code> returns before writing the <code>supersedes</code>
+edge the call carried (<code>yggdrasil/ygg.py:403-414</code>), so a
+correction phrased like its target is not stored and the old memory
+stays active; the tool says near-duplicates are <em>"merged
+automatically"</em>, and no test drives the branch.</li>
+<li>Second risk: maintenance reads the oldest rows and favours them.
+Review and the daily classifier keep the oldest of a duplicate group
+(<code>yggdrasil/ygg.py:723-728</code>,
+<code>yggdrasil/ygg_writepath.py:146-151</code>); the classifier reads
+<code>get_all</code> ordered oldest first with a limit of 200 and marks
+rows seen in dry-run, and the session-start status block reads the
+oldest 500, so past those sizes new rows are never consolidated and new
+statuses never injected. Every search also counts as use, so automatic
+injection raises rank.</li>
+<li>Most reusable component: <code>yggdrasil/ygg_sync_merge.py</code>, a
+pure, commutative per-field merge policy with id tombstones that both
+the git transport and the live peer link import, and its property tests
+in <code>tests/test_sync_merge.py</code>.</li>
+<li>Maturity impression: AGPL-3.0, stated as v3.0 in the README and
+or-later in the manifests; 17,824 lines of Python and 6,841 of
+TypeScript; 291 commits from 17 June to 16 November 2026 under three
+author identities, 31 tags to v0.18.0; 764 Python test functions and 46
+web test cases run in CI on three operating systems and not run here.
+Two marks: <code>scope_enforced</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: you want hook injection that labels memory as data, a
+recall floor in CI, or a small commutative merge for syncing one
+person's memory between machines.</li>
+<li>Do not copy when: a correction must replace what it corrects,
+memories need a reviewed or trusted state before injection, or the store
+will grow past a few hundred rows under the shipped maintenance
+passes.</li>
 </ul>
         </article>
       </div>

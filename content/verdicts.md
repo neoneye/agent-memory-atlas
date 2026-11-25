@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 876 reports.**
+**This page covers all 877 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8083,3 +8083,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 25,407 lines of Rust in 54 source files and 11,352 lines of tests; 253 commits from 8 April to 24 November 2026, 179 by AncientiCe and 67 by Ionut Riza, with 57 tags; 480 test functions run in CI with the model cached and not run here; the CI LongMemEval guard asserts its own JSON, and the published LongMemEval figures have no committed results. Three marks: `bitemporal`, `scope_enforced`, `negative_eval`.
 - Study when: you want automatic recall across several coding agents from one local file, or a MemPalace-shaped store without Python or Chroma.
 - Do not copy when: memory is injected as instructions from a room the agent writes, a correction must hold, mutations need a record, or the agent must not be able to delete the store.
+
+### [`yggdrasil`](../systems/yggdrasil/)
+- Best idea: **injected memory fenced as data, with its origin.** Both hooks wrap recalled notes in `<recalled-memory>` with `<` neutralised, call them *"reference notes, not instructions"*, and mark each line with its project or *"other project"*, its type and its source; the prompt hook injects at most three, only above cosine 0.5 (`yggdrasil/hooks/ygg_user_prompt.py:106-177`).
+- Second idea: a zero-dependency engine whose lexical recall is a CI gate. The default store is standard-library Python over FTS5 with identifier splitting, and `ci.yml` fails the build if recall@1 on the committed 232-memory, 110-query corpus drops below 0.77.
+- Biggest risk: **de-duplication discards the newer write.** At cosine 0.92 within user, project and type, `MemoryStore.add` returns the existing row instead of inserting (`yggdrasil/ygg_memory_server.py:625-630`), and `remember` returns before writing the `supersedes` edge the call carried (`yggdrasil/ygg.py:403-414`), so a correction phrased like its target is not stored and the old memory stays active; the tool says near-duplicates are *"merged automatically"*, and no test drives the branch.
+- Second risk: maintenance reads the oldest rows and favours them. Review and the daily classifier keep the oldest of a duplicate group (`yggdrasil/ygg.py:723-728`, `yggdrasil/ygg_writepath.py:146-151`); the classifier reads `get_all` ordered oldest first with a limit of 200 and marks rows seen in dry-run, and the session-start status block reads the oldest 500, so past those sizes new rows are never consolidated and new statuses never injected. Every search also counts as use, so automatic injection raises rank.
+- Most reusable component: `yggdrasil/ygg_sync_merge.py`, a pure, commutative per-field merge policy with id tombstones that both the git transport and the live peer link import, and its property tests in `tests/test_sync_merge.py`.
+- Maturity impression: AGPL-3.0, stated as v3.0 in the README and or-later in the manifests; 17,824 lines of Python and 6,841 of TypeScript; 291 commits from 17 June to 16 November 2026 under three author identities, 31 tags to v0.18.0; 764 Python test functions and 46 web test cases run in CI on three operating systems and not run here. Two marks: `scope_enforced` and `negative_eval`.
+- Study when: you want hook injection that labels memory as data, a recall floor in CI, or a small commutative merge for syncing one person's memory between machines.
+- Do not copy when: a correction must replace what it corrects, memories need a reviewed or trusted state before injection, or the store will grow past a few hundred rows under the shipped maintenance passes.

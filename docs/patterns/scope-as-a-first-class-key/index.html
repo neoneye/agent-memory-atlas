@@ -1873,6 +1873,21 @@ omit the other
 (<code>tests/integration/test_issue_127_owner_scoping_pg.py:189-212</code>,
 <code>:365-385</code>). Every credential of a user still reaches the
 whole vault.</p>
+<p><a href="../../systems/yggdrasil/">Yggdrasil</a> filters reads on the
+namespace and leaves it out of the duplicate check. Search appends
+<code>user_id</code> always, <code>namespace IN (...)</code> when the
+caller passes namespaces and <code>project</code> when it names one, and
+the workspace query refuses a call without user and namespace, with a
+populated test (<code>yggdrasil/ygg_memory_server.py:1530-1553</code>,
+<code>yggdrasil/ygg_workspace_data.py:59-71</code>,
+<code>tests/test_workspace_data.py:38-44</code>). The two write-time
+checks, the exact hash and the 0.92 cosine, match on user, project and
+type only (<code>yggdrasil/ygg_memory_server.py:929-930</code>,
+<code>:945-946</code>), so a write in one namespace is dropped as a
+duplicate of a memory in another and the id returned names a row the
+writer's own searches never show. Project is the model's tool argument
+or a git directory's basename, and cross-project recall is the default
+on the per-prompt hook by design.</p>
 <p><a href="../../systems/palace-rs/">Palace (palace-rs)</a> has the
 predicate on the path the model drives and a deny-list on the path that
 fires by itself. <code>palace_search</code> puts the model's wing and

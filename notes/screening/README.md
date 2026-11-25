@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 875 of 876 screened at the report's current pin.**
+**Progress: 876 of 877 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 420 |
+| Repositories with an auto-run surface (`RUNS`) | 421 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 397 |
 | Repositories with build-time execution (`EXEC`) | 629 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
@@ -442,6 +442,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`windvane`](../../content/systems/windvane.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`yantrik-mind`](../../content/systems/yantrik-mind.md) | `.codex/config.toml` |
 | [`yantrikdb-mcp`](../../content/systems/yantrikdb-mcp.md) | `.mcp.json`, `mcp.json`, `server.json` |
+| [`yggdrasil`](../../content/systems/yggdrasil.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`yourmemory`](../../content/systems/yourmemory.md) | `server.json` |
 | [`zcode`](../../content/systems/zcode.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`zep`](../../content/systems/zep.md) | `.cursor/mcp.json` |

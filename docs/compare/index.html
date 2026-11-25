@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-876, generated from each report's frontmatter —
+877, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-876, generated from each report's frontmatter —
+877, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-876, generated from each report's frontmatter —
+877, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 876, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 877, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-876, generated from each report's frontmatter —
+877, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 876 systems by the seven mechanisms
+filters all 877 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -38961,6 +38961,59 @@ the right idea, cheaply computed</td>
 the confirmation the trust gate depends on</td>
 </tr>
 <tr>
+<td><a href="../systems/yggdrasil/"><code>yggdrasil</code></a></td>
+<td>One row holding a single fact the agent or a distiller wrote, typed
+decision, lesson, convention, fix, project_status, follow_up or
+reference, with project, source, confidence, importance, pin, access
+count and an archived flag; typed SOLVES, SUPERSEDES and CONTRADICTS
+edges between rows</td>
+<td>One SQLite file under ~/.yggdrasil: memories with a float32
+embedding blob per row, an FTS5 table, relations, id-keyed tombstones
+for deletes and unlinks, and a sync outbox; Markdown notes only when a
+memory is exported one at a time</td>
+<td>BM25 over FTS5 with importance, a 30-day recency half-life, access
+count and pin added; with an embedding model, an in-Python cosine over
+every row in scope fused by normalised weighted sum (0.3 lexical, 1.0
+vector); session-start injection of up to five project memories and five
+open statuses, and per-prompt cross-project injection of up to three
+hits at cosine 0.5</td>
+<td>The agent calls ygg_remember, told to by an injected directive;
+opt-in local-LLM distillation of transcripts, vaults and CLAUDE.md
+files, and of each finished session through an opt-in Stop hook; secret
+patterns refused; an exact content hash, then (with embeddings) cosine
+0.92 within user, project and type, drops the new text and returns the
+existing row</td>
+<td>No edit on the agent's surface; supersede, review and an optional
+daily LLM classifier archive rows reversibly; review and the classifier
+keep the oldest of a duplicate group; ygg delete and reset hard-delete
+and leave an id tombstone that blocks peer re-insertion for 90 days</td>
+<td>user_id, namespace and project on every row; search filters user
+always, namespace when passed and project when given; ygg_recall and the
+prompt hook span every project by design; write-time dedup ignores the
+namespace</td>
+<td>Six MCP tools over stdio or Streamable HTTP, a ygg CLI, Claude Code
+plugin hooks for SessionStart and UserPromptSubmit, a skill, slash
+commands, a local workspace UI, git sync and pinned-TLS peer
+linking</td>
+<td>Embedding backfill at engine start; an optional macOS launchd job
+runs the LLM duplicate and supersession classifier daily, propose-only
+by default; optional nightly seed; sync pushes on write and reconciles
+on read</td>
+<td>No epistemic status: archived is a lifecycle flag, CONTRADICTS edges
+leave both rows live and no reader acts on them, and confidence is
+stored and read by no ranking; injected memory is framed as reference
+notes with source and a foreign-project marker</td>
+<td>Zero-dependency engine with lexical recall measured in CI against a
+floor; injection fenced as data with its origin; scope keys in SQL on
+search and on every workspace query, with populated tests there; delete
+propagation designed and tested across peers</td>
+<td>A correction near-identical to the memory it corrects is dropped at
+write together with its supersedes edge; review and the classifier keep
+the oldest twin; the classifier and the session-start status block read
+only the oldest 200 and 500 rows; injection and writes count as use;
+edited Markdown never returns to the store</td>
+</tr>
+<tr>
 <td><a href="../systems/yourmemory/"><code>yourmemory</code></a></td>
 <td>A memory row with an importance, a recall count and a type-dependent
 decay rate</td>
@@ -39425,7 +39478,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>85 of 876:</em> <a
+<p><em>85 of 877:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -39514,7 +39567,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>226 of 876:</em> <a
+<p><em>226 of 877:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -39748,7 +39801,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>149 of 876:</em> <a
+<p><em>149 of 877:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -39907,7 +39960,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>376 of 876:</em> <a
+<p><em>377 of 877:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -40293,6 +40346,7 @@ href="../systems/yantrik-mind/"><code>yantrik-mind</code></a>, <a
 href="../systems/yantrikdb/"><code>yantrikdb</code></a>, <a
 href="../systems/yantrikdb-hermes-plugin/"><code>yantrikdb-hermes-plugin</code></a>,
 <a href="../systems/yesmem/"><code>yesmem</code></a>, <a
+href="../systems/yggdrasil/"><code>yggdrasil</code></a>, <a
 href="../systems/yourmemory/"><code>yourmemory</code></a>, <a
 href="../systems/zep/"><code>zep</code></a>, <a
 href="../systems/zeroshot/"><code>zeroshot</code></a>, <a
@@ -40301,7 +40355,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>297 of 876:</em> <a
+<p><em>297 of 877:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -40611,7 +40665,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>107 of 876:</em> <a
+<p><em>107 of 877:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -40722,7 +40776,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>569 of 876:</em> <a
+<p><em>570 of 877:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -41305,6 +41359,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 href="../systems/yantrikdb-hermes-plugin/"><code>yantrikdb-hermes-plugin</code></a>,
 <a href="../systems/yantrikdb-mcp/"><code>yantrikdb-mcp</code></a>, <a
 href="../systems/yesmem/"><code>yesmem</code></a>, <a
+href="../systems/yggdrasil/"><code>yggdrasil</code></a>, <a
 href="../systems/zer0dex/"><code>zer0dex</code></a>, <a
 href="../systems/zeroshot/"><code>zeroshot</code></a>, <a
 href="../systems/zerostack/"><code>zerostack</code></a>, <a
@@ -41328,8 +41383,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-569 repositories of
-876 assert that particular material must
+570 repositories of
+877 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -41402,7 +41457,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 876 is the real figure for the second kind, and
+of 877 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not
