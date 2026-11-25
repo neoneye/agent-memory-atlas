@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted FastAPI and
+PostgreSQL memory server for a Hermes agent, with four-channel recall,
+write-time conflict flags and a human verdict route.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mnemosyne
+OS — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted FastAPI and
+PostgreSQL memory server for a Hermes agent, with four-channel recall,
+write-time conflict flags and a human verdict route.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mnemosyne
+OS — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted FastAPI and
+PostgreSQL memory server for a Hermes agent, with four-channel recall,
+write-time conflict flags and a human verdict route.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mnemosyne OS — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mnemosyne OS",
+      "description": "A self-hosted FastAPI and PostgreSQL memory server for a Hermes agent, with four-channel recall, write-time conflict flags and a human verdict route.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A conflict queue whose verdict the main
+recall never reads</p>
+          <h1>Mnemosyne OS</h1>
+          <p class="document-deck">A self-hosted FastAPI and PostgreSQL
+memory server for a Hermes agent, with four-channel recall, write-time
+conflict flags and a human verdict route.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/gymaira1990-jpg/Mnemosyne-OS">
+              <span>Source</span>
+              <strong>gymaira1990-jpg/Mnemosyne-OS</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/gymaira1990-jpg/Mnemosyne-OS/commit/57633b36b80044832c793e5f588eb0a9e0b2415e" title="57633b36b80044832c793e5f588eb0a9e0b2415e">
+              <span>Analyzed revision</span>
+              <code>57633b36…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/gymaira1990-jpg--Mnemosyne-OS" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>gymaira1990-jpg--Mnemosyne-OS</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE and the README; no manifest names a licence; the card
+generator and butler jobs the README describes are kept in a private
+repository</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>21,697
+lines of Python in 120 files, 5,001 of them in tests; main.py holds
+2,352, api/memory_os.py 790 and the Hermes provider 1,361;
+docs/schema.sql is 1,619 lines of PostgreSQL DDL</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>366
+commits from 1 June to 9 November 2026, 357 under the owner's G-CAT and
+gymaira1990-jpg identities, eight by Dependabot and one under the name
+hermes; 75 tags, the latest v9.1.3</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>367
+test functions in 44 files; ten files open a real PostgreSQL database,
+which test.yml provisions from pgvector/pgvector:pg16 and
+docs/schema.sql; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mnemosyne OS is a self-hosted memory server for one person's Hermes
+agent: a FastAPI process over PostgreSQL and pgvector that stores turns,
+saved facts, distilled summaries and formatted outcome cards, and
+recalls them through four fused channels. What is notable is the
+correction path, where a write that contradicts a near neighbour is
+flagged for a person instead of overwriting it. What is weak is that the
+headline recall never reads the verdict.</p>
+<p>The four-channel recall at <code>/api/v1/memory-os/recall</code>
+filters on <code>is_deleted</code> and a duplicate mark, and not on
+<code>valid_to</code>. When a person resolves a conflict with
+<code>invalidate_old</code>, the old row leaves
+<code>/memories/search</code> and the injection plan and stays in the
+four-channel recall and the TMT recall.</p>
+<p>A deleted memory keeps its fingerprint, and the fingerprint lookup
+ignores deletion. Writing the same text, category and user again returns
+<code>"status": "duplicate"</code> with the deleted row's id and stores
+nothing.</p>
+<p>The catalog card the README leads with, a seven-line text carrying a
+<code>K·</code> archive number, entities, evidence and a session
+pointer, has no producer in this tree beyond a reference script that
+prints to stdout. The production generator and the polish, dedupe and
+diary jobs are listed in <code>deploy/prod-manifest.json</code> as
+<code>prod_only</code>, kept in a private repository.</p>
+<p>No route authenticates a caller. Scope is a <code>user_id</code> the
+caller supplies.</p>
+<p><strong>Licence.</strong> The MIT grant in <code>LICENSE</code>
+covers a tree from which the mechanisms the README sells are withheld:
+<code>deploy/prod-manifest.json:51-75</code> lists
+<code>diary_daily.py</code>, <code>jobs/steward_dedupe.py</code>,
+<code>jobs/steward_polish.py</code> and three further jobs as
+<em>"源头在 diary-book 私有仓，不上公开仓"</em> (sourced from the
+private diary-book repository, not published). The README's <em>Make it
+yours</em> table points readers at two of those files to change the card
+format and the diary voice. No manifest carries a licence field. The
+grant itself is plain MIT and restricts nothing.</p>
+<p>Two marks are earned, <code>scope_enforced</code> and
+<code>negative_eval</code>, both on the <code>user_id</code> predicate
+and its test. Section 9 gives the reason for each of the five
+withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a row of text with a user, a category and two
+floats</strong>. The text is whatever the writer sent: a user message
+prefixed <code>用户提问:</code>, an assistant reply, a fact the agent
+chose to save, a compression insight, a card whose first line is
+<code>[结果卡] 档号：K·…</code>, a fact a model extracted from a
+session, or a diary entry. A card is a text format, recognised by its
+prefix, not a type (<code>api/memory_os.py:40</code>,
+<code>:273</code>).</p>
+<p>A row is believed, in the sense of being served, from the moment it
+is inserted. Nothing gates it. Three things can later change how it is
+treated:</p>
+<ul>
+<li><strong>Ranking floats.</strong> <code>reliability</code> moves by
+0.10 on explicit feedback, on a person's label and on a two-model LLM
+audit; <code>heat_score</code> rises on every search hit and decays on
+reflect. Both are ranking terms.</li>
+<li><strong>A conflict flag.</strong> A non-session write that is
+semantically close to a live row and textually far from it is stored
+with <code>metadata.conflict_type = "pending_review"</code> and
+<code>conflicts_with</code> naming the old row. Both stay live. A
+person's <code>invalidate_old</code> sets the old row's
+<code>valid_to</code> and writes a <code>superseded</code> trace
+(<code>main.py:1274-1316</code>).</li>
+<li><strong>Removal.</strong> Soft delete, the heat-threshold cleanup
+and the short-retention lifecycle set <code>is_deleted</code>; purify
+also replaces the text with its SHA-256. Compaction later hard-deletes
+into <code>memories_archive</code>, text included.</li>
+</ul>
+<p>Which state hides a row depends on the read.
+<code>/memories/search</code> and <code>api/injection.py</code> honour
+<code>valid_to</code>; <code>/memory-os/recall</code> and
+<code>/tmt/recall</code> honour only <code>is_deleted</code>, and the
+four-channel recall also skips rows whose
+<code>metadata.dup_verdict</code> is <code>same</code>, a mark no code
+in this tree writes.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every write is served at once; a conflicting write is flagged and both rows stay live; a person's invalidate_old sets valid_to, which the search route and injection read and the four-channel recall and TMT recall do not; a deleted row's fingerprint turns a deliberate rewrite of the same text into a duplicate</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every write is served at once; a conflicting write is flagged and both rows stay live; a person&#39;s invalidate_old sets valid_to, which the search route and injection read and the four-channel recall and TMT recall do not; a deleted row&#39;s fingerprint turns a deliberate rewrite of the same text into a duplicate
+flowchart TD
+    subgraph W[&quot;Writers&quot;]
+        direction TB
+        P[&quot;Hermes provider hooks&lt;br/&gt;every turn, mirror,&lt;br/&gt;pre-compress&quot;]
+        M[&quot;MCP store_memory&lt;br/&gt;user_id from the model&quot;]
+        X[&quot;Card and butler jobs&lt;br/&gt;private, not in tree&quot;]
+        P ~~~ M ~~~ X
+    end
+    W --&gt; F{&quot;Fingerprint seen?&lt;br/&gt;content, category, user&lt;br/&gt;deleted rows included&quot;}
+    F --&gt;|yes| D[&quot;status duplicate&lt;br/&gt;nothing stored, even&lt;br/&gt;when that row is deleted&quot;]
+    F --&gt;|no| C{&quot;Not session layer and&lt;br/&gt;close but worded apart&lt;br/&gt;from a live row?&quot;}
+    C --&gt;|no| S[(&quot;memories row&lt;br/&gt;served at once&quot;)]
+    C --&gt;|yes| Q[&quot;Stored and served&lt;br/&gt;flagged pending_review&lt;br/&gt;old row stays live&quot;]
+    Q --&gt; R[&quot;POST conflicts/resolve&lt;br/&gt;no auth, by human_resolve&lt;br/&gt;invalidate_old&lt;br/&gt;sets valid_to&quot;]
+    R --&gt; S
+    S --&gt; A[&quot;/memories/search&lt;br/&gt;and injection plan&lt;br/&gt;skip valid_to rows&quot;]
+    S --&gt; B[&quot;/memory-os/recall E C T S&lt;br/&gt;and /tmt/recall&lt;br/&gt;skip deleted rows only&quot;]
+    B --&gt; G[&quot;A superseded row&lt;br/&gt;still ranks here&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One FastAPI application, <code>main.py</code>, serves memory CRUD,
+search, conflicts, beliefs and the palace taxonomy itself, and mounts
+six routers: the 9.0 memory-OS router (<code>api/memory_os.py</code>),
+TMT consolidation (<code>tmt/router.py</code>), skills, an injection
+planner, agent identity cards and a security router.
+<code>uvicorn</code> runs it with four workers on
+<code>MNEMOSYNE_HOST</code>, default <code>127.0.0.1</code>, port 8010
+(<code>main.py:2341-2348</code>, <code>config.py</code>).</p>
+<p>PostgreSQL 16 with pgvector holds everything.
+<code>docs/schema.sql</code> defines 24 tables; <code>memories</code>
+has a 1024-dimension HNSW index (<code>docs/schema.sql:1280</code>), and
+<code>memory_keywords</code> holds jieba tokens written at insert time.
+Every write calls an embedding API first: Volcano Engine ARK by default,
+or any OpenAI-compatible endpoint under
+<code>MODEL_BACKEND=openai</code> (<code>config.py</code>). The LLM jobs
+call the same providers.</p>
+<p>Three clients ship in the tree.
+<code>integrations/hermes-provider</code> is a Hermes
+<code>MemoryProvider</code> that writes through a local SQLite queue.
+<code>integrations/hermes-mcp/mnemosyne_mcp.py</code> is a stdio MCP
+bridge defaulting to <code>127.0.0.1:18010</code>, an SSH tunnel to the
+server. <code>integrations/sdk.py</code> is a standard-library
+client.</p>
+<p>Background work is cron calling the API: TMT consolidation daily,
+weekly and monthly (<code>cron/tmt-consolidate.sh</code>), health
+checks, and a Hermes prompt that archives its own memory file.
+<code>reflect</code>, <code>jobs/compaction.py</code> and
+<code>palace/lifecycle</code> are run by hand or by schedules outside
+this tree.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>An operator stands up PostgreSQL with pgvector as a superuser,
+imports <code>docs/schema.sql</code>, fills <code>.env</code> with a
+model key and database credentials, and runs
+<code>python3 main.py</code>. <code>scripts/bootstrap.sh</code> and
+<code>scripts/doctor.py</code> script and check those steps. Nothing is
+stored without a working embedding endpoint, because the vector is
+computed before the insert.</p>
+<p>There is no authentication. The README's <em>Add auth /
+multi-tenant</em> row says so in its own words: <em>"Not built
+(single-tenant, <code>user_id=default</code>)"</em>. The private-site
+recipe puts a passkey wall in front of a reverse proxy
+(<code>docs/DEPLOY-PRIVATE.md</code>); anything that reaches the port
+reaches every route.</p>
+<p>The store is SQL and repairable by hand. Cards are plain text in
+<code>content</code>, so a person can read and fix them with
+<code>psql</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>POST /api/v1/memories</code>,
+<code>create_memory</code> (<code>main.py:867-996</code>): empty and NUL
+content refused, embedding computed, category normalised, five user
+names folded into <code>default</code> (<code>:885</code>), layer
+classified (<code>core/layers.py:105-139</code>), fingerprint lookup
+(<code>:902-908</code>), conflict detection for non-L0 layers
+(<code>:909-937</code>), insert with
+<code>ON CONFLICT (dedup_fingerprint)</code> (<code>:958-981</code>),
+entities and tokens in the same transaction.</li>
+<li><strong>Conflict detection.</strong> <code>detect_conflict</code>
+(<code>main.py:221-241</code>): the five nearest live rows with
+<code>valid_to IS NULL</code>; cosine distance under 0.15 and
+<code>difflib</code> ratio over 0.85 merges, distance under 0.12 and
+ratio under 0.5 flags.</li>
+<li><strong>Conflict listing and resolution.</strong>
+<code>list_conflicts</code> (<code>main.py:424-462</code>),
+<code>resolve_pending_conflict</code> (<code>:1274-1316</code>).</li>
+<li><strong>Four-channel recall.</strong> <code>api/memory_os.py</code>:
+<code>_exact</code> <code>:213-234</code>, <code>_multi_kw</code>
+<code>:256-293</code>, <code>_recent</code> <code>:296-316</code>,
+<code>_semantic</code> <code>:363-397</code>, fusion and confirmation in
+<code>recall</code> <code>:414-529</code>, the label route
+<code>:545-636</code>, <code>trace</code> <code>:678-703</code>,
+<code>diary</code> <code>:730-784</code>.</li>
+<li><strong>Search.</strong> <code>search_memories</code>
+(<code>main.py:1008-1157</code>) with the weights in
+<code>core/ranking.py</code>.</li>
+<li><strong>Update, delete, restore, purify, cleanup.</strong>
+<code>update_memory</code> (<code>main.py:1376-1475</code>),
+<code>delete_memory</code> (<code>:1356-1366</code>),
+<code>restore_memory</code> (<code>:2260-2267</code>),
+<code>soft_delete_memory</code>
+(<code>security/purifier.py:32-80</code>), <code>cleanup</code>
+(<code>main.py:1835-1839</code>).</li>
+<li><strong>Extraction and consolidation.</strong>
+<code>tmt/router.py</code> consolidation routes <code>:417-491</code>;
+<code>tmt/factextract.py</code>;
+<code>palace.extract_facts_pipeline</code>
+(<code>palace.py:434-490</code>); <code>reflect</code>
+(<code>main.py:1626-1833</code>).</li>
+<li><strong>Compaction.</strong> <code>jobs/compaction.py</code>:
+candidate gates <code>:71-108</code>, archive <code>:122-144</code>,
+hard delete <code>:232</code>, restore <code>:267-324</code>.</li>
+<li><strong>Agent hooks.</strong>
+<code>integrations/hermes-provider/__init__.py</code>:
+<code>prefetch</code> <code>:694-714</code>, <code>queue_prefetch</code>
+<code>:716-795</code>, <code>sync_turn</code> <code>:797-883</code>,
+<code>on_memory_write</code> <code>:939-985</code>,
+<code>get_tool_schemas</code> <code>:987-1004</code>.</li>
+<li><strong>MCP bridge.</strong>
+<code>integrations/hermes-mcp/mnemosyne_mcp.py:283-398</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> (<code>docs/schema.sql:242-285</code>) carries
+<code>user_id</code>, <code>content</code>, a <code>category</code>
+limited by <code>CHECK</code> to ten values,
+<code>embedding vector(1024)</code>, <code>importance</code>,
+<code>reliability</code>, <code>heat_score</code>, <code>tier</code>,
+<code>is_deleted</code>, <code>forgotten_at</code>,
+<code>metadata jsonb</code>, <code>created_at</code>,
+<code>updated_at</code>, <code>valid_from</code>, <code>valid_to</code>,
+<code>invalid_at</code>, <code>tmt_level</code>,
+<code>session_id</code>, <code>hall</code>,
+<code>parent_memory_id</code>, <code>verification_status</code>,
+<code>archive_no</code>, <code>temp_drawer</code>,
+<code>time_drawer</code>, <code>dedup_fingerprint</code>, storage and
+retrieval strengths and a <code>rank_score</code>.</p>
+<p>Most of the epistemic state lives in <code>metadata</code>, not in
+columns: <code>conflicts_with</code>, <code>conflict_type</code>,
+<code>conflict_resolved_as</code>, <code>dup_verdict</code>,
+<code>forget_candidate</code>, <code>fact_extracted</code>,
+<code>layer</code>, <code>pinned</code>, <code>source</code>.</p>
+<p>Three declared fields have no producer in this tree:</p>
+<ul>
+<li><strong><code>verification_status</code></strong>, with a
+<code>CHECK</code> over <code>pending</code>, <code>passed</code> and
+<code>failed</code>, appears only in the schema.</li>
+<li><strong><code>metadata.dup_verdict</code></strong> is read by all
+four recall channels and written by no code here; the README attributes
+it to the weekly dedupe job, which is private.</li>
+<li><strong>The <code>K·</code> archive number</strong> inside card text
+is parsed by <code>_exact</code>, <code>_multi_kw</code> and
+<code>trace</code> and produced only by
+<code>integrations/card-builder/build_cards.py</code>, which prints to
+stdout, and by <code>scripts/seed_demo.py --cards</code>, which loads
+the 40 demo cards. The palace's own <code>archive_no</code> column uses
+a different scheme (<code>palace.py:162</code>, <code>:462</code>).</li>
+</ul>
+<p><code>memory_traces</code> records four actions:
+<code>conflict_flagged</code>, <code>superseded</code>,
+<code>update</code> with the old and new lengths only, and
+<code>feedback</code> (<code>main.py:931</code>, <code>:1301</code>,
+<code>:1454</code>, <code>:1491</code>). Its foreign key is
+<code>ON DELETE CASCADE</code>. <code>memory_labels</code>
+(<code>docs/schema.sql:316-327</code>) records a person's choice among
+recall candidates. <code>beliefs</code> holds a separate claim table
+with a confidence and a status.</p>
+<p>Temporal fields: <code>valid_from</code> is set to <code>NOW()</code>
+on insert (<code>main.py:960</code>) and no caller supplies it;
+<code>valid_to</code> and <code>invalid_at</code> are set to
+<code>NOW()</code> together by the resolve route. Both are record
+times.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Four channels, one call.</strong> <code>recall</code> runs
+the exact channel when the query matches an archive number, task id,
+commit hash or path; a keyword channel over a single PostgreSQL regex
+alternation with up to 5,000 candidates; a time channel when the query
+holds a recency word or a <code>days</code> value; and a semantic
+channel with a similarity floor of 0.40 by default
+(<code>api/memory_os.py:414-453</code>).</p>
+<p>Fusion is a fixed credit per channel, E 100, C 60, T 45, S 40, summed
+per candidate key. The keyword credit is scaled by the IDF weight of the
+matched terms against the top three weights, using a corpus
+document-frequency table from <code>memory_keywords</code> cached for
+ten minutes (<code>:148-205</code>, <code>:462-485</code>). The semantic
+credit is scaled by cosine similarity. Ties go to cards, then to higher
+ids.</p>
+<p>Each candidate gets an <code>answerability</code> score, the share of
+query terms found in its head. When <code>confirm_margin</code> is set
+and the top two scores are close, the response carries a question and
+three options for a person to choose from. Both are signals; neither
+filters (<code>:514-528</code>).</p>
+<p><strong>Search.</strong> The <code>/memories/search</code> route is
+the one the agent integrations use. It ranks live, valid, embedded rows
+by
+<code>0.50·cosine + 0.15·token frequency + 0.15·recency + 0.10·reliability + 0.10·heat</code>
+(<code>core/ranking.py</code>), first within the hot, normal and cool
+drawers, then across the whole store if short. It then embeds the query
+and every returned document again to rerank by cosine
+(<code>main.py:741-770</code>), and bumps heat and access counts on the
+top five hits.</p>
+<p><strong>TMT recall.</strong> <code>/tmt/recall</code> takes nearest
+neighbours from <code>memories</code> at <code>tmt_level = 1</code> and
+from the session, daily and weekly summary tables, then asks a model to
+pick indices when more than ten survive
+(<code>tmt/router.py:493-596</code>).</p>
+<p><strong>Failure modes.</strong> The read that names itself the memory
+OS is the one without the validity filter. <code>grep -c valid_to</code>
+returns nothing for <code>api/memory_os.py</code>,
+<code>tmt/router.py</code> and <code>palace.py</code>. Rows written by
+fact extraction get no tokens, so the token arm of search does not see
+them, and an edited row keeps the tokens of its old text, because only
+insert and session archive call <code>_tokenize_on_write</code>
+(<code>main.py:987</code>, <code>:2305</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>The fingerprint.</strong> Every <code>POST /memories</code>
+computes <code>sha256(content|category|user_id)</code>, with the session
+id and source added for the session layer, or an hourly bucket when
+neither is given (<code>main.py:838-865</code>). The lookup is
+<code>SELECT id FROM memories WHERE dedup_fingerprint=$1</code> with no
+deletion test (<code>:902-908</code>), and the partial unique index
+covers deleted rows too (<code>docs/schema.sql:1175</code>).</p>
+<p>Neither delete nor update touches the column. So:</p>
+<ul>
+<li>writing a deleted memory's exact text again returns
+<code>duplicate</code> with the deleted id, increments its
+<code>access_count</code>, and stores nothing;</li>
+<li>writing the old text of an edited memory returns
+<code>duplicate</code> with the id of the row that now holds the new
+text.</li>
+</ul>
+<p>The provider's mirror of Hermes's own memory tool meets the first
+case. A <code>replace</code> soft-deletes the old mirror and stores the
+new text
+(<code>integrations/hermes-provider/__init__.py:939-985</code>);
+replacing B back with A finds A's deleted row and leaves no live mirror.
+This follows from the code and was not run.</p>
+<p><strong>Conflicts.</strong> For categories outside the session layer,
+the five nearest live rows are compared. A near-identical text merges
+into the existing row and returns its id. A close but differently worded
+text is stored with the flag, and the response tells the caller how to
+resolve it (<code>main.py:989-995</code>). The session archive route
+calls the same detector and handles only the merge branch
+(<code>main.py:2276-2335</code>).</p>
+<p><strong>The agent's writes.</strong> <code>sync_turn</code> queues
+each turn that is not a short acknowledgement: up to 2,000 characters of
+the user message and 3,000 of the reply, category <code>session</code>,
+or <code>chat</code> for a short reply, which normalises to
+<code>session</code>; the session layer skips conflict detection
+(<code>integrations/hermes-provider/__init__.py:797-883</code>).
+<code>on_pre_compress</code> stores a <code>[压缩洞察]</code> summary of
+the messages about to be dropped.</p>
+<p><strong>Model writes.</strong> Fact extraction reads unprocessed
+<code>default</code> sessions and worklogs of 80 characters or more and
+inserts up to five facts each. The CLI path checks a cosine duplicate at
+0.92 against live knowledge rows (<code>tmt/factextract.py:163</code>);
+the <code>/palace/extract</code> path inserts without that check
+(<code>palace.py:434-490</code>). Neither sets a fingerprint.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A REST write blocks on one embedding call, a nearest-neighbour query
+and the transaction; the provider's writes are queued and sent in a
+background thread, so the agent does not wait. A memory is retrievable
+when the transaction commits.</p>
+<p><code>reflect</code> updates every live row of a user on each call:
+heat decay, tier and drawer moves, strengths and rank. That is a
+whole-store pass without a model. The TMT jobs call a model once per
+session, day, week and month. Every search writes: heat, access count,
+strengths and a repetition counter on the top five hits.</p>
+<p>Prefetch injects at most three memories of 160 characters each,
+skipping heat below 0.3, ahead of the next turn
+(<code>integrations/hermes-provider/__init__.py:763-781</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP bridge exposes 15 tools, among them
+<code>store_memory</code>, <code>search_memories</code>,
+<code>delete_memory</code>, <code>restore_memory</code>,
+<code>store_belief</code> and <code>search_beliefs</code>. Each call
+takes <code>user_id</code> from the model's arguments with default
+<code>default</code>
+(<code>integrations/hermes-mcp/mnemosyne_mcp.py:283-284</code>). None
+calls <code>/memory-os/recall</code>, the label route or the resolve
+route.</p>
+<p>The Hermes provider's eleven tool schemas are off unless
+<code>HERMES_MNEMOSYNE_PROVIDER_TOOLS</code> is set
+(<code>:987-1004</code>). Its hooks are always on: prefetch, a
+system-prompt block with store statistics, turn sync, pre-compression
+capture, delegation capture, the mirror, and session-end consolidation
+in a background thread.</p>
+<p>The four-channel recall is called from
+<code>scripts/context_pack.py</code> and
+<code>scripts/eval_recall.py</code>.
+<code>grep memory-os -- integrations</code> returns nothing.</p>
+<p>Adapting this to another agent means calling the REST API; the SDK
+and MCP bridge are thin.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-verdict-does-not-reach-the-recall-that-asks-for-it">The
+verdict does not reach the recall that asks for it</h3>
+<p>The conflict design is careful at the write: the new row is flagged,
+the old row is untouched, the listing tells the person what to call, and
+the resolve route clears the flag, records how it was resolved and
+writes a <code>superseded</code> trace in one transaction.
+<code>tests/test_v9_conflict_flag.py:78-142</code> holds that behaviour
+against a real database.</p>
+<p>The read side does not follow. <code>invalidate_old</code> sets
+<code>valid_to</code>, and the four recall channels, the TMT recall and
+palace summon do not read it. The four-channel recall is also the one
+that asks a person to choose between close candidates.
+<code>tests/test_temporal_validity.py:50-65</code> counts thirteen
+validity filters in <code>main.py</code> and two in
+<code>api/injection.py</code>, and reads no other file.</p>
+<h3 id="deletion-keeps-the-text-and-blocks-the-same-text">Deletion keeps
+the text and blocks the same text</h3>
+<p>A soft delete keeps the content. Compaction moves it, with its
+traces, entities, tokens and card, into <code>memories_archive</code>
+and records a CSV voucher path in <code>gc_log</code>; restore brings
+the batch back. Only purify replaces the text, and it leaves the
+fingerprint, so the purified value is still refused as a duplicate.
+Restoring a purified row makes the hash string a live memory
+(<code>main.py:2260-2267</code>).</p>
+<p><code>POST /api/v1/cleanup</code> soft-deletes every row of a user
+under a heat threshold, with no pin check
+(<code>main.py:1835-1839</code>). It is unauthenticated.</p>
+<h3 id="scope">Scope</h3>
+<p>The <code>user_id</code> predicate is on every recall query. Who
+supplies it is the weakness: the request body, the model's MCP argument
+or the provider's environment variable, with no authentication on any
+route. <code>trace</code>, <code>diary</code>, <code>stats</code>,
+<code>/memories/{id}/traces</code> and <code>/wiki/{page_id}</code> read
+across users. <code>create_memory</code> folds <code>g-cat</code>,
+<code>noah</code>, <code>system</code>, <code>test</code> and
+<code>audit</code> into <code>default</code>, and fact extraction and
+card refinement read only <code>default</code>.</p>
+<h3 id="documents-that-disagree-with-the-code">Documents that disagree
+with the code</h3>
+<ul>
+<li>The README's <em>Two-hop trace</em> and the card format depend on
+<code>K·</code> cards that only the demo seeder writes into the
+store.</li>
+<li>The README's <em>Butler on the server</em> rows describe private
+jobs.</li>
+<li>The README's <em>Add a recall channel</em> row names
+<code>sandbox/mem9/recall.py</code>, which is not in the tree.</li>
+</ul>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong>
+<code>user_id</code> is stored on every row and applied in SQL on every
+recall path; the caller supplies it.</li>
+<li><strong><code>negative_eval</code> — earned.</strong>
+<code>tests/test_recall_scope.py:81-86</code> requires each user's
+populated keyword result to omit the other user's card.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>memory_traces</code> is append-only and records four actions.
+Creation, deletion, purify, restore, cleanup, label and audit
+reliability changes, reflect and fact extraction write nothing to it,
+and an edit records two lengths. <code>memory_labels</code> records
+recall verdicts and <code>gc_log</code> compaction batches; neither
+records what a memory became.</li>
+<li><strong><code>human_review</code> — withheld.</strong> The pending
+flag withholds nothing: the new row and the old row are both served
+while the flag stands. The resolve route is off the MCP and provider
+tool surfaces and unauthenticated, and its effect is not read by the
+four-channel recall.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>reliability</code> is a float used in ranking.
+<code>beliefs.status</code> is set by the creator or bucketed from
+confidence (<code>main.py:1592-1624</code>), and only the monthly
+consolidation filters on it (<code>tmt/router.py:283-286</code>).
+<code>dup_verdict</code> filters and has no producer here;
+<code>verification_status</code> has neither reader nor writer.</li>
+<li><strong><code>tombstone</code> — withheld, and the near-miss is an
+accident.</strong> The fingerprint refuses an exact rewrite of a deleted
+value. It is an idempotency key: it refuses the person's deliberate
+re-add the same way, a paraphrase or a new category passes, the session
+layer adds the session id, and extracted facts carry no fingerprint at
+all.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>valid_from</code> and <code>valid_to</code> are both set to
+<code>NOW()</code> by the code.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading.</p>
+<p>367 test functions in 44 files. Ten files open a database named by
+<code>MNEMOSYNE_ITEST_DSN</code> or <code>MNEMOSYNE_V8TEST_DSN</code>
+and skip when it is unreachable; <code>.github/workflows/test.yml</code>
+provisions <code>pgvector/pgvector:pg16</code>, imports
+<code>docs/schema.sql</code> into both and checks that a fixture table
+exists before running pytest, so in CI those files run.</p>
+<p>A large share of the suite is source-contract tests that parse
+<code>main.py</code> or <code>api/memory_os.py</code> with
+<code>ast</code> and assert a string is or is not in a SQL literal:
+<code>tests/test_channel_coverage.py:78-116</code>,
+<code>tests/test_temporal_validity.py</code>,
+<code>tests/test_v9_conflict_flag.py:29-55</code>. Their docstrings name
+the defect each one replaced, and
+<code>tests/test_temporal_validity.py</code> records the removal of
+three always-true assertions. They cannot see a read path in a file they
+do not open.</p>
+<p>Database tests that bear on memory: cross-user isolation on the
+keyword and exact channels (<code>tests/test_recall_scope.py</code>),
+non-card rows reaching the keyword channel
+(<code>tests/test_channel_coverage.py:70-75</code>), conflict resolution
+(<code>tests/test_v9_conflict_flag.py:78-142</code>), thirteen label
+cases including forged archive numbers and other users' ids
+(<code>tests/test_labels.py</code>), the fingerprint and partial index
+(<code>tests/test_v8_write_path.py:95-140</code>), and compaction
+(<code>tests/test_v8_compaction.py</code>).</p>
+<p>No test deletes a memory and writes its text again, recalls after an
+<code>invalidate_old</code>, or asserts that a <code>dup_verdict</code>
+row is skipped.</p>
+<p><strong>Evals.</strong> <code>scripts/eval_recall.py</code> scores
+recall@k against <code>evals/demo_cases.jsonl</code>: twelve positive
+questions over the 40 demo cards and four negatives whose
+<code>forbid</code> words must not appear in the top k. Four raw outputs
+are committed: 11 of 12 and 12 of 12 at k 10, 12 of 12 at k 5, and 13 of
+16 with the negatives (<code>evals/eval_ect_20261107.txt</code>). The 15
+of 16 rows in <code>docs/VERIFICATION.md</code> and the 74% on the
+owner's corpus have no output file in <code>evals/</code>; the README
+says the real-corpus cases are not published.</p>
+<p><strong>Paper.</strong> <code>tmt/router.py:1-3</code> names <a
+href="https://arxiv.org/abs/2601.02845">arXiv:2601.02845</a>, <em>TiMem:
+Temporal-Hierarchical Memory Consolidation for Long-Horizon
+Conversational Agents</em>, submitted 6 January 2026, as the basis of
+the five-level time tree. The paper is not this project's and reports no
+result for this code. <code>docs/AUDIT-20261108.md</code> records an
+external audit with fixed findings, read as the project's own
+document.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Flag a contradiction at the write and leave both rows
+live.</strong> Store the new value with a pointer to the old one, list
+the pending pairs, and let a person choose between keeping both and
+superseding, with a trace of which.</li>
+<li><strong>Make the idempotency key layer-aware.</strong> An
+append-only log needs the session or an hourly bucket in its key, or a
+repeated "OK" in two sessions collapses to one.</li>
+<li><strong>Refuse a client-supplied identifier on the label
+path.</strong> The label route takes the archive number from the stored
+row and rejects a mismatch, because that label later becomes an
+evaluation answer.</li>
+<li><strong>Return a question instead of a guess.</strong> A margin test
+on the top two scores, returned as options rather than as a filter.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>One validity filter written into each query by
+hand.</strong> A filter carried query by query is missing from whichever
+query was written last; put it in a view or one function every read path
+calls.</li>
+<li><strong>An idempotency key that outlives deletion.</strong> Release
+or rewrite it on delete and on edit, or decide it is a tombstone and say
+so; leaving it in place makes a forget refuse the person and pass the
+paraphrase.</li>
+<li><strong>A test that counts filters in one file.</strong> It protects
+that file.</li>
+<li><strong>Publishing the reader of a mark and keeping its writer
+private.</strong> The duplicate filter and the archive-number channel
+run against data the public code cannot produce.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person running one Hermes agent who wants a PostgreSQL
+store they can read with <code>psql</code>, with recall tuned to Chinese
+work logs. It assumes an embedding API on every write and an operator
+who keeps the port private.</p>
+<p>It does not suit a team, a multi-user deployment or anyone who needs
+a correction to stick. Scope is advisory without authentication, and a
+superseded fact stays in the recall the system is named for. A reader
+drawn by the cards and the diary should know that the code producing
+them is not here.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the private dedupe job write <code>dup_verdict</code> on both
+generations of a duplicate or only the older one?</li>
+<li>Do the private card jobs write through <code>POST /memories</code>,
+and with which category? The card-builder README says
+<code>session</code>, which skips conflict detection.</li>
+<li>Is <code>reflect</code> scheduled in production? No cron file in the
+tree calls it.</li>
+<li>What is <code>verification_status</code> for?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>main.py</code></td>
+<td>App, memory CRUD, search, conflicts, beliefs, reflect, cleanup,
+session archive</td>
+</tr>
+<tr>
+<td><code>api/memory_os.py</code></td>
+<td>Four-channel recall, labels, exact, keywords, trace, stats,
+diary</td>
+</tr>
+<tr>
+<td><code>core/ranking.py</code></td>
+<td>Search weights and the recency expression</td>
+</tr>
+<tr>
+<td><code>core/layers.py</code></td>
+<td>Category-to-layer classification</td>
+</tr>
+<tr>
+<td><code>security/purifier.py</code>,
+<code>security/audit.py</code></td>
+<td>Purify by hash; two-model reliability audit</td>
+</tr>
+<tr>
+<td><code>tmt/router.py</code>, <code>tmt/factextract.py</code>,
+<code>tmt/distill.py</code></td>
+<td>Time-tree consolidation, fact extraction, distillation</td>
+</tr>
+<tr>
+<td><code>palace.py</code></td>
+<td>Taxonomy, archive numbers, tome cards, summon, lifecycle</td>
+</tr>
+<tr>
+<td><code>jobs/compaction.py</code></td>
+<td>Hard delete into <code>memories_archive</code> and restore</td>
+</tr>
+<tr>
+<td><code>integrations/hermes-provider/__init__.py</code></td>
+<td>Hermes hooks, prefetch, turn sync, mirror</td>
+</tr>
+<tr>
+<td><code>integrations/hermes-mcp/mnemosyne_mcp.py</code></td>
+<td>MCP stdio bridge</td>
+</tr>
+<tr>
+<td><code>integrations/card-builder/build_cards.py</code></td>
+<td>Reference card generator, stdout only</td>
+</tr>
+<tr>
+<td><code>deploy/prod-manifest.json</code></td>
+<td>Files deployed from the private repository</td>
+</tr>
+<tr>
+<td><code>docs/schema.sql</code></td>
+<td>Full schema</td>
+</tr>
+<tr>
+<td><code>tests/test_recall_scope.py</code>,
+<code>tests/test_v9_conflict_flag.py</code></td>
+<td>Scope and conflict tests</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No validity filter in the four-channel recall, TMT or
+palace.</strong>
+<code>git grep -n -c 'valid_to' -- api/memory_os.py tmt/router.py palace.py</code>
+returns nothing; the same command on
+<code>main.py api/injection.py</code> returns 17 and 2.</li>
+<li><strong>No server-side authentication.</strong>
+<code>git grep -n -i -E 'Header\(|x-api-key|request\.headers|APIKey|Security\(' -- main.py api tmt</code>
+returns nothing;
+<code>git grep -n -i 'x-api-key' -- integrations/hermes-provider/__init__.py</code>
+matches the client header at <code>:156</code>.</li>
+<li><strong>No writer of <code>dup_verdict</code>.</strong>
+<code>git grep -n dup_verdict -- '*.py' ':!api/memory_os.py'</code>
+returns nothing; the same search in <code>api/memory_os.py</code>
+returns five lines.</li>
+<li><strong>No agent integration calls the four-channel recall.</strong>
+<code>git grep -n memory-os -- integrations</code> returns nothing;
+<code>git grep -n 'memory-os/recall' -- scripts</code> matches
+<code>context_pack.py:53</code>.</li>
+<li><strong>Delete and update leave the fingerprint.</strong>
+<code>git grep -n -E 'dedup_fingerprint *(=|IS NULL *,)|SET dedup_fingerprint' -- '*.py'</code>
+returns the two lookups at <code>main.py:903</code>, <code>:976</code>
+and two test lines.</li>
+<li><strong>Four trace actions.</strong>
+<code>git grep -n 'INSERT INTO memory_traces' -- '*.py'</code> returns
+<code>main.py:931</code>, <code>:1301</code>, <code>:1454</code>,
+<code>:1491</code> and one test fixture.</li>
+<li><strong>The palace extraction skips the duplicate check.</strong>
+<code>git grep -n dedup_check -- palace.py tmt/factextract.py</code>
+matches only <code>tmt/factextract.py:25</code> and
+<code>:163</code>.</li>
+<li><strong>Two callers of the tokenizer.</strong>
+<code>git grep -n _tokenize_on_write -- '*.py'</code> returns the
+definition and <code>main.py:987</code>, <code>:2305</code>.</li>
+<li><strong><code>verification_status</code> is schema only.</strong>
+<code>git grep -n verification_status -- . ':!CHANGELOG.md'</code>
+returns three lines of <code>docs/schema.sql</code>.</li>
+<li><strong>The butler and diary jobs are absent.</strong>
+<code>git ls-files</code> lists no <code>diary_daily.py</code>,
+<code>jobs/steward_polish.py</code>, <code>jobs/steward_dedupe.py</code>
+or <code>sandbox/</code>;
+<code>git grep -n steward_polish -- deploy</code> matches the
+<code>prod_only</code> entry.</li>
+<li><strong>One paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|doi\.org|CITATION|@article|@misc' -- .</code>
+returns <code>tmt/router.py:3</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/gymaira1990-jpg/Mnemosyne-OS/commit/57633b36b80044832c793e5f588eb0a9e0b2415e"><code class="commit-id" title="57633b36b80044832c793e5f588eb0a9e0b2415e">57633b36…</code></a>.
+First reading, from a full clone at the head of <code>main</code>.
+Screened first: no auto-run surface, nothing inside the seven-day
+cooldown, two build-time execution points (<code>Makefile</code>,
+<code>tests/conftest.py</code>), two unpinned dependency surfaces
+(<code>pyproject.toml</code>, <code>requirements.txt</code>), and an
+<code>AGENTS.md</code> addressed to reading agents, read as data.
+Nothing was installed, built or run, and the 367 test functions were not
+run. Two marks: <code>scope_enforced</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). The four-channel
+recall ignores a person's supersession, a deleted row's fingerprint
+refuses the same text, and the card and butler jobs are private.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

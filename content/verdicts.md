@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 868 reports.**
+**This page covers all 869 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8003,3 +8003,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 36,581 lines of Python, 413 commits by essentially one author from 16 June to 22 November 2026; 1,855 Python test functions with a 90% coverage floor in CI and Docker runs against Postgres and MongoDB, none run here; round 3 benchmark output committed and its LoCoMo row recomputes. Two marks: `scope_enforced`, `negative_eval`. Withheld: `bitemporal`, `tombstone`, `trust_state`, `audit_log`, `human_review`.
 - Study when: you want conversational recall with no model on either side and need a deterministic selector that fills a token budget well.
 - Do not copy when: users must be able to make the system forget, or several tenants share one `llmslim serve`.
+
+### [`mnemosyne-os`](../systems/mnemosyne-os/)
+- Best idea: **flag a contradiction at the write instead of overwriting.** A non-session write within cosine distance 0.12 of a live row and under 0.5 `difflib` ratio is stored with `conflict_type = pending_review` and a pointer to the old row, both stay live, and `POST /api/v1/memories/conflicts/resolve` takes `keep_both` or `invalidate_old` in one transaction with a `superseded` trace and the resolution recorded on the new row.
+- Second idea: a layer-aware idempotency key. Knowledge rows are keyed on content, category and user; session rows add the session id and source, or an hourly bucket, so an append-only log keeps legitimate repeats while a retry is still absorbed.
+- Biggest risk: **the headline recall ignores the verdict.** `invalidate_old` sets `valid_to`; `/memories/search` and the injection plan filter on it, and `/api/v1/memory-os/recall`, `/tmt/recall` and palace summon do not, so a superseded memory keeps ranking in the four-channel recall that also asks a person to choose between candidates. The source-contract test counts validity filters in `main.py` and `api/injection.py` only.
+- Second risk: a deleted row keeps its fingerprint and the lookup ignores deletion, so writing the same text, category and user again returns `duplicate` with the deleted id and stores nothing, which turns the provider's replace-back mirror into a silent loss. No route authenticates, `user_id` is the caller's or the model's argument, and `POST /api/v1/cleanup` soft-deletes everything under a heat threshold.
+- Most reusable component: `resolve_pending_conflict` and `detect_conflict`, `main.py:221-241` and `:1274-1316`, and `compute_write_fingerprint`, `main.py:838-865`.
+- Maturity impression: MIT; 21,697 lines of Python in 366 commits between 1 June and 9 November 2026, almost all by the owner; 367 test functions, ten files against a real PostgreSQL that CI provisions, none run here; the card generator and butler jobs the README leads with are private. Two marks: `scope_enforced`, `negative_eval`.
+- Study when: you want write-time contradiction handling that hands the decision to a person, or a fused exact, keyword, time and vector recall over Chinese work logs.
+- Do not copy when: more than one user shares the server, or a correction or a forget has to hold on every read path.

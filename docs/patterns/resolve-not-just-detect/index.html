@@ -747,6 +747,22 @@ question can be overwritten with no record of the earlier value
 (<code>:501-536</code>). Requirement 3 holds only because nothing is
 flagged, and a rebuild from the operator outputs repeats both
 outcomes.</p>
+<p><a href="../../systems/mnemosyne-os/">Mnemosyne OS</a> detects at the
+write, resolves by a person, and the resolution misses the read that
+asks. A non-session write close in meaning and far in wording from one
+of the five nearest live rows is stored with <code>pending_review</code>
+and a pointer to the old row; both stay live, the response names the
+resolve route, and <code>invalidate_old</code> sets the old row's
+<code>valid_to</code> and writes a <code>superseded</code> trace in one
+transaction, with a real-database test (<code>main.py:221-241</code>,
+<code>:1274-1316</code>,
+<code>tests/test_v9_conflict_flag.py:78-142</code>). The search route
+and the injection plan filter on <code>valid_to</code>. The four-channel
+recall in <code>api/memory_os.py</code>, which also returns close
+candidates as a question for a person, filters on
+<code>is_deleted</code> only, so the retired row keeps its rank. The
+route has no authentication and records the resolver as the literal
+<code>human_resolve</code>.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert
