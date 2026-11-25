@@ -111,14 +111,14 @@ earlier tasks' findings, and can receive rule-built lessons.</p>
               <strong>BaaRai/ARTEX</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/BaaRai/ARTEX/commit/c65034c50f946e80f89489d32dd92981f883cb1d" title="c65034c50f946e80f89489d32dd92981f883cb1d">
+            <a class="meta-pill revision-pill" href="https://github.com/BaaRai/ARTEX/commit/3cb06383fd99ffe7686abe1d375de11da7cfad54" title="3cb06383fd99ffe7686abe1d375de11da7cfad54">
               <span>Analyzed revision</span>
-              <code>c65034c5…</code>
+              <code>3cb06383…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-11-21</strong>
+              <strong>2026-11-25</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/BaaRai--ARTEX" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -130,16 +130,16 @@ earlier tasks' findings, and can receive rule-built lessons.</p>
             <div class="meta-pill fact-pill"><span>Licence</span><strong>AGPL-3.0,
 with use restrictions the README adds as terms from the maintainers; the
 web UI template and one vendored script are MIT</strong></div>
-            <div class="meta-pill fact-pill"><span>Size</span><strong>183,548
-lines of Go in 670 files, 86,068 of them tests; db/ is 44,687 lines,
-server/ 62,244, agent/ 23,919. The lessons subsystem is 689
+            <div class="meta-pill fact-pill"><span>Size</span><strong>193,621
+lines of Go in 730 files, 92,734 of them tests; db/ is 45,524 lines,
+server/ 66,492, agent/ 26,617. The lessons subsystem is 689
 lines</strong></div>
-            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,284
-commits from 26 July to 21 November 2026. The original author's 381 end
-on 7 October 2026 and the fork's maintainer's 682 begin the next day;
-v0.7.0 plus 25 commits</strong></div>
-            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,668
-Go test functions in 389 test files, run in CI against PostgreSQL 16;
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>1,450
+commits from 26 July to 24 November 2026. The original author's 381 end
+on 7 October 2026 and the fork's maintainer's 782 begin the next day;
+v0.7.0 plus 191 commits</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,874
+Go test functions in 430 test files, run in CI against PostgreSQL 16;
 thirty-one cover lessons. I ran none; the lesson selection, retraction
 and revival were re-derived outside the tree</strong></div>
           </div>
@@ -170,22 +170,22 @@ across turns and tasks.</p>
 <p><strong>Licence and provenance.</strong> <code>LICENSE</code> is the
 unmodified AGPL-3.0 text. The README then adds permitted and prohibited
 uses, calls them additional terms from the maintainers, and says use of
-the project means agreement (<code>README.md:809-844</code>); code
+the project means agreement (<code>README.md:1006-1041</code>); code
 review and academic research are listed as permitted. <code>web/</code>
-is MIT, a third party's UI template. The repository is an English
-translation and continuation of a project whose original repository is
-no longer public (<code>README.md:785</code>), and its history holds the
-original author's commits to 7 October 2026. The Go module path and the
-agent SDK dependency carry the original owner's name, and the SDK was
-not opened for this reading.</p>
+is MIT, a third party's UI template. The README describes the repository
+as the maintained community continuation of a project whose original
+repository is no longer public (<code>README.md:982</code>), and its
+history holds the original author's commits to 7 October 2026. The Go
+module path and the agent SDK dependency carry the original owner's
+name, and the SDK was not opened for this reading.</p>
 <p><strong>Cross-task memory has three forms, and the oldest is the
 soundest.</strong></p>
 <ul>
 <li><strong>Inheritance.</strong> A task may name up to eight source
 tasks. Its agents then read the sources' facts, findings and finished
 intents, tagged as inherited, through one hop of live relations
-(<code>db/exploration_sources.go:16-41</code>). Writes cannot cross:
-every mutation carries the receiving task's
+(<code>db/exploration_sources.go:16-41</code>). Graph writes cannot
+cross: every node mutation carries the receiving task's
 <code>exploration_id</code>.</li>
 <li><strong>The asset graph.</strong> One table for the installation. An
 agent inside a task sees only assets matched by the scope rows of that
@@ -212,7 +212,7 @@ it.</strong> The disposition is copied into the finding node's payload
 in the same transaction, every finding list an agent reads carries it,
 and <code>prove_goal</code> refuses a finding marked
 <code>false_positive</code>, <code>duplicate</code> or
-<code>ignored</code> (<code>agent/tools.go:1448-1453</code>). Writing
+<code>ignored</code> (<code>agent/tools.go:1453-1458</code>). Writing
 one of those statuses also sets a goal the finding had proved back to
 <code>open</code>, unless another valid proof remains
 (<code>db/notification.go:590-625</code>).</p>
@@ -226,13 +226,22 @@ checked.</p>
 holds <code>add_task_scope</code>, which writes a company, domain or
 address row into its own task's scope. The asset query and the lesson
 selection both follow every row of the task, whoever wrote it.</p>
+<p><strong>A model can decline a finding before it is stored.</strong>
+When the operator names a decision-model profile,
+<code>report_finding</code> first asks that model whether the candidate
+repeats a registered finding. A confident yes returns the matched ids
+and writes nothing. The caller can repeat the call with
+<code>force_register</code>. The check is off until the profile is set,
+and every failure registers the finding as before.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A lesson is a triaged finding restated by rule, kept while its
 evidence stands.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — a finding's disposition is copied onto the node agents read, refused as goal proof when false positive, and gates which lesson a string rule builds; a changed disposition, in one transaction, reopens a goal the finding had proved, marks the lesson's evidence withdrawn and retires the lesson at zero live rows; the selection serves unretired lessons of the task's companies, or company-less lessons to a company-less task, inside a nonce frame</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a finding&#39;s disposition is copied onto the node agents read, refused as goal proof when false positive, and gates which lesson a string rule builds; a changed disposition, in one transaction, reopens a goal the finding had proved, marks the lesson&#39;s evidence withdrawn and retires the lesson at zero live rows; the selection serves unretired lessons of the task&#39;s companies, or company-less lessons to a company-less task, inside a nonce frame
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an optional decision-model check can drop a reported finding as a duplicate before it is stored; a finding's disposition is copied onto the node agents read, refused as goal proof when false positive, and gates which lesson a string rule builds; a changed disposition, in one transaction, reopens a goal the finding had proved, marks the lesson's evidence withdrawn and retires the lesson at zero live rows; the selection serves unretired lessons of the task's companies, or company-less lessons to a company-less task, inside a nonce frame</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an optional decision-model check can drop a reported finding as a duplicate before it is stored; a finding&#39;s disposition is copied onto the node agents read, refused as goal proof when false positive, and gates which lesson a string rule builds; a changed disposition, in one transaction, reopens a goal the finding had proved, marks the lesson&#39;s evidence withdrawn and retires the lesson at zero live rows; the selection serves unretired lessons of the task&#39;s companies, or company-less lessons to a company-less task, inside a nonce frame
 flowchart TD
     T[&quot;target response&lt;br/&gt;(untrusted)&quot;] --&gt; W[&quot;worker: report_finding&lt;br/&gt;(vulnclass, summary)&quot;]
-    W --&gt; F[(&quot;findings row&lt;br/&gt;status = pending&quot;)]
+    W --&gt; DUP{&quot;duplicate check: decision model,&lt;br/&gt;off unless a profile is set&quot;}
+    DUP --&gt;|&quot;off, error, distinct, low&lt;br/&gt;confidence, or force_register&quot;| F[(&quot;findings row&lt;br/&gt;status = pending&quot;)]
+    DUP --&gt;|&quot;confident match&quot;| DROP[&quot;not stored: matched ids&lt;br/&gt;returned, log line only&quot;]
     OP[&quot;operator: PATCH or bulk&lt;br/&gt;status route (JWT)&quot;] --&gt; F
     RT[&quot;completed retest&lt;br/&gt;(a person opens it)&quot;] --&gt; F
     F --&gt;|&quot;same transaction&quot;| N[&quot;finding node payload:&lt;br/&gt;status label&quot;]
@@ -255,10 +264,11 @@ flowchart TD
     SEL --&gt; R[&quot;render, stop at 1,800&lt;br/&gt;characters, nonce-framed&quot;]
     R --&gt;|&quot;inject mode&quot;| SYS[&quot;planner and worker&lt;br/&gt;SYSTEM prompt&quot;]
     style FA fill:#7f1d1d,color:#fff
-    style PL fill:#7f1d1d,color:#fff</code></pre></details></figure>
+    style PL fill:#7f1d1d,color:#fff
+    style DROP fill:#7f1d1d,color:#fff</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A Go server, a PostgreSQL schema of 57 tables in one idempotent file
-with thirteen numbered migrations beside it, an agent package (planner,
+with fourteen numbered migrations beside it, an agent package (planner,
 worker, main agent, retester, compactor) on an external SDK, and a
 Next.js UI. There is one operator: a single JWT subject, bound to a
 password version, guards every API route but the auth routes and the
@@ -317,8 +327,8 @@ health and readiness probes (<code>server/auth.go:188-203</code>,
 </table></div>
 <p>Each planner round is rebuilt from a graph overview, the coverage
 line and the planner's own todo list. The todo list lives in a Go map on
-the planner struct (<code>agent/planner.go:49-54</code>,
-<code>:123-132</code>).</p>
+the planner struct (<code>agent/planner.go:51-56</code>,
+<code>:125-134</code>).</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p>Docker Compose with PostgreSQL, or a single binary with the UI
 embedded. The lessons flag appears in <code>RSI.md</code> and
@@ -374,13 +384,13 @@ Paths</h2>
 </tr>
 <tr>
 <td>Lesson tables</td>
-<td><code>db/schema.sql:1545-1587</code>,
+<td><code>db/schema.sql:1547-1589</code>,
 <code>db/migrations/0012_lesson_withdrawn.sql</code>,
 <code>0013_lesson_evidence_history.sql</code></td>
 </tr>
 <tr>
 <td>Scoped asset read</td>
-<td><code>db/asset_dsl.go:577-655</code>,
+<td><code>db/asset_dsl.go:597-675</code>,
 <code>db/task_assets_context.go:65-90</code></td>
 </tr>
 <tr>
@@ -395,11 +405,23 @@ Paths</h2>
 </tr>
 <tr>
 <td>Fact write, labels and provenance</td>
-<td><code>agent/tools.go:1629-1819</code></td>
+<td><code>agent/tools.go:1662-1854</code></td>
+</tr>
+<tr>
+<td>Duplicate check on <code>report_finding</code></td>
+<td><code>agent/tools.go:1576-1601</code>,
+<code>agent/triage.go:324-375</code>, <code>:398-480</code>,
+<code>db/finding_dedup_pool.go:25-71</code>,
+<code>server/triage.go:24-42</code></td>
+</tr>
+<tr>
+<td>Fact-only block</td>
+<td><code>db/exploration.go:1235-1266</code>,
+<code>agent/planner.go:418-453</code></td>
 </tr>
 <tr>
 <td>Goal proof refusals</td>
-<td><code>agent/tools.go:1392-1467</code>,
+<td><code>agent/tools.go:1397-1472</code>,
 <code>db/finding_traffic.go:528</code></td>
 </tr>
 <tr>
@@ -408,7 +430,7 @@ Paths</h2>
 </tr>
 <tr>
 <td>Graph overview windows</td>
-<td><code>agent/tools.go:488-727</code></td>
+<td><code>agent/tools.go:493-732</code></td>
 </tr>
 <tr>
 <td>Data envelope</td>
@@ -425,7 +447,7 @@ Paths</h2>
 </tr>
 <tr>
 <td>Finding disposition routes</td>
-<td><code>server/server.go:2602</code>, <code>:2706</code></td>
+<td><code>server/server.go:2667</code>, <code>:2771</code></td>
 </tr>
 <tr>
 <td>Disposition write and node mirror</td>
@@ -453,20 +475,20 @@ string, a <code>confidence</code> of <code>observed</code> or
 <code>inferred</code>, and a <code>source</code> from a fixed list that
 includes <code>target_response</code>, <code>tool_output</code>,
 <code>operator_input</code> and <code>inference</code>
-(<code>agent/tools.go:1629-1640</code>). The agent declares both. The
+(<code>agent/tools.go:1662-1673</code>). The agent declares both. The
 server adds a <code>provenance</code>: <code>recorded_activity</code>
 when the evidence line appears verbatim in the recorded activity of the
 fact's intent, <code>captured_traffic</code> when the same bytes also
 came back through the capture proxy, <code>operator_input</code>, or
-<code>unverified</code> (<code>:1642-1651</code>,
-<code>:1702-1729</code>). An unverified fact is stored with its source
+<code>unverified</code> (<code>:1675-1684</code>,
+<code>:1737-1764</code>). An unverified fact is stored with its source
 lowered to <code>inference</code> and its confidence to
 <code>inferred</code>, and a captured one is relabelled
 <code>target_response</code> whatever the agent wrote
-(<code>:1777-1789</code>).</p>
+(<code>:1812-1824</code>).</p>
 <p><strong>Finding.</strong> A node plus a <code>findings</code> row
 whose <code>status</code> starts at <code>pending</code>
-(<code>db/schema.sql:1203</code>) and is the person's disposition:
+(<code>db/schema.sql:1205</code>) and is the person's disposition:
 <code>confirmed</code>, <code>false_positive</code>,
 <code>duplicate</code>, <code>ignored</code>, <code>risk_accepted</code>
 and others. A second column, <code>report_state</code>, tracks the
@@ -474,10 +496,14 @@ report stage after triage and feeds no lesson. Evidence binds a finding
 to content-addressed snapshots of captured requests and responses.</p>
 <p><strong>Scope row.</strong> A <code>task_scope</code> row is a
 company, root domain, subdomain, address, range, registration number or
-keyword (<code>db/schema.sql:781-782</code>), with a <code>source</code>
+keyword (<code>db/schema.sql:783-784</code>), with a <code>source</code>
 of <code>auto</code>, <code>agent</code> or <code>manual</code>. An
 agent's addition that widens a declared scope is stored with
-<code>expanded</code> set (<code>db/task_scope.go:225-233</code>).</p>
+<code>expanded</code> set (<code>db/task_scope.go:225-233</code>). A
+line written <code>*.example.com</code> is stored as the
+<code>example.com</code> domain rule, and a wildcard on anything but a
+registrable domain is refused
+(<code>db/company_scope.go:256-263</code>).</p>
 <p><strong>Lesson.</strong> <code>kind</code> (<code>positive</code>,
 <code>negative</code>, <code>caution</code>), <code>cue</code>,
 <code>action</code>, optional category and company, a
@@ -485,12 +511,12 @@ agent's addition that widens a declared scope is stored with
 kind, scope, cue and action. Support is not stored; it is the count of
 evidence rows with no <code>withdrawn_at</code>, taken at read time. A
 partial unique index allows one live row per lesson and source and any
-number of withdrawn ones (<code>db/schema.sql:1566-1577</code>). The
+number of withdrawn ones (<code>db/schema.sql:1568-1579</code>). The
 status column accepts <code>candidate</code>, <code>adopted</code> and
 <code>retired</code>. Product code writes <code>retired</code> and
 returns a row to <code>candidate</code>; <code>adopted</code> appears
 only in the CHECK constraint and in tests that set it with SQL
-(<code>db/schema.sql:1555-1556</code>).</p>
+(<code>db/schema.sql:1557-1558</code>).</p>
 <p>The company comes from the task's <code>task_scope</code> rows of
 kind <code>company</code>. A task with exactly one gets that id on its
 lessons, and a task with none gets NULL
@@ -504,14 +530,20 @@ task</h3>
 <p><code>graphOverviewData</code> is injected into every planner round
 as windows over the graph, each newest first: thirty open intents,
 twelve recent finished ones, ten findings, twenty facts not folded into
-a digest, fifteen digests (<code>agent/tools.go:488-727</code>). Each
+a digest, fifteen digests (<code>agent/tools.go:493-732</code>). Each
 finding in the window carries its triage status, and
 <code>findings_total</code> counts the findings not marked
 <code>false_positive</code>, <code>duplicate</code> or
-<code>ignored</code> (<code>:588</code>, <code>:613-618</code>). The
+<code>ignored</code> (<code>:593</code>, <code>:618-623</code>). The
 rest stay reachable. <code>list_facts</code> pages by cursor,
 <code>list_findings</code> lists up to 500, and a folded region opens
 with <code>expand_digest</code>.</p>
+<p>After the overview comes a block naming up to ten finished intents
+that yielded facts and no finding, newest first, each with its fact
+count and 140 characters of its summary inside the nonce frame
+(<code>db/exploration.go:1235-1266</code>,
+<code>agent/planner.go:418-453</code>). It asks the planner to register
+each as a finding or say why it is not one.</p>
 <h3 id="other-tasks">Other tasks</h3>
 <p><code>…WithSources</code> readers append the direct source tasks'
 nodes, tagged with the source task id. An inherited intent is visible
@@ -519,17 +551,21 @@ only once it is terminal, so a running source task's in-flight work
 never enters another task's frontier
 (<code>db/exploration_sources.go:74-81</code>). The overview's share for
 related tasks is capped at 48,000 runes, 8,000 per source
-(<code>agent/tools.go:737-738</code>).</p>
+(<code>agent/tools.go:742-743</code>).</p>
 <h3 id="assets">Assets</h3>
 <p><code>list_assets</code> inside a task goes through
 <code>scopeTargetCTE</code>: the task and its direct sources, joined to
 their scope rows by company, root domain, subdomain, IP range or
 registration number, and the query adds
 <code>id IN (SELECT id FROM target)</code>
-(<code>db/asset_dsl.go:602</code>). Membership is by scope row, not by
+(<code>db/asset_dsl.go:622</code>). Membership is by scope row, not by
 which task produced the asset, and the join takes every row whatever its
 <code>source</code>. With no task id, the platform and chat agents get
-the unscoped query (<code>:578-580</code>).</p>
+the unscoped query (<code>:598-600</code>).</p>
+<p>The operator's asset list takes a company id, and
+<code>QueryDSLForCompany</code> appends <code>company_id = $n</code>
+outside the compiled expression (<code>db/asset_dsl.go:543-569</code>).
+No agent tool calls it.</p>
 <p>The query language compiles a disjunction inside one pair of
 parentheses, so the scope clause appended with <code>AND</code> binds
 the whole expression (<code>db/asset_dsl.go:305-309</code>). Until <a
@@ -567,15 +603,62 @@ task's agents are built.</p>
 and <code>record_coverage</code>. A fact is created
 <code>confirmed</code> with its origin stamped by the server and its
 provenance computed before the node is written
-(<code>agent/tools.go:1749-1819</code>); no tool or route edits or
+(<code>agent/tools.go:1784-1854</code>); no tool or route edits or
 deletes one. A fact's asset anchors must name existing assets, checked
 under a row lock before the node is created. A coverage write that
 exceeds a field limit is refused instead of truncated
 (<code>db/coverage_ledger.go:41-52</code>).</p>
+<h3 id="the-duplicate-check-on-report_finding">The duplicate check on
+<code>report_finding</code></h3>
+<p>A setting names a model profile that serves a closed-list decision
+endpoint (<code>server/triage.go:24-42</code>). It is empty by default,
+and the worker and planner are then built with no client. With one,
+<code>report_finding</code> assembles a candidate pool before it stores
+anything (<code>agent/triage.go:324-375</code>):</p>
+<ul>
+<li>the task's findings and those of its direct source tasks, up to
+500;</li>
+<li>findings of <strong>any other task</strong> anchored to one of the
+candidate's asset ids, newest ten, with no task relation, scope row or
+company in the query (<code>db/finding_dedup_pool.go:25-71</code>).</li>
+</ul>
+<p>The pool is cut to ten by vulnerability class, a shared endpoint
+token and recency (<code>:436-480</code>). The model is sent the
+candidate and the ten, each with class, severity, name and 400
+characters of summary, and answers with one id or <code>none</code>. An
+id it was not offered counts as <code>none</code>.</p>
+<p>A match at or above the threshold, 0.5 unless the operator's setting
+changes it, ends the call. The tool returns the matched finding's two
+ids and the confidence, and the candidate's summary, evidence and
+traffic references are written nowhere. A log line is the only trace
+(<code>agent/tools.go:1576-1601</code>). No client, an empty pool, a
+transport error, a status other than 200 and a low confidence all fall
+through to the normal write.</p>
+<p>Three properties of the path:</p>
+<ul>
+<li><strong>The writer overrides the verdict.</strong>
+<code>force_register</code> on a second call skips the check, and the
+tool description advertises it. The suppressed agent and the overriding
+agent are the same agent.</li>
+<li><strong>The pool ignores triage status.</strong> No query or filter
+on the path reads a finding's status, so a finding marked
+<code>false_positive</code> is offered as a duplicate target like any
+other. A report absorbed into it is dropped with no row for a person to
+review.</li>
+<li><strong>The advice names a tool the caller lacks by
+default.</strong> The answer tells the agent to extend the matched
+finding with <code>update_finding_report</code>. That tool is bound to
+the reporter and Auto agents
+(<code>server/orchestration.go:528-539</code>, <code>:908-913</code>),
+and its write is keyed on the node id with no task check
+(<code>:446-449</code>, <code>db/finding_traffic.go:700</code>). For a
+match from the cross-task pool, the id handed back belongs to another
+task.</li>
+</ul>
 <h3 id="assets-1">Assets</h3>
 <p>Eight upsert functions. On conflict the last non-null writer wins per
 scalar column and arrays are unioned
-(<code>db/assets.go:754-778</code>). When two tasks disagree about a
+(<code>db/assets.go:773-797</code>). When two tasks disagree about a
 status code or a page title, the later one replaces the earlier and
 nothing keeps the old value.</p>
 <h3 id="scope-rows">Scope rows</h3>
@@ -583,7 +666,7 @@ nothing keeps the old value.</p>
 the rows have three writers: the operator's route, the automatic row for
 each host a worker inserts, and <code>add_task_scope</code>, which the
 planner and the operator's chat agent hold
-(<code>agent/tools.go:2556</code>,
+(<code>agent/tools.go:2591</code>,
 <code>agent/tools_insert.go:739</code>). The tool accepts every kind,
 including <code>company</code> by name or id, and its description calls
 the result a coverage scope that is not enforced
@@ -629,7 +712,7 @@ an extraction error rolls the verdict back
 (<code>db/notification.go:512</code>, <code>:550</code>,
 <code>db/finding_retests.go:286</code>). A terminal task status and
 <code>POST /api/tasks/{id}/lessons/extract</code> run it on its own
-(<code>server/manager.go:1644-1646</code>,
+(<code>server/manager.go:1687-1689</code>,
 <code>server/lessons.go:104</code>).</p>
 <p>A finding's status has three writers in product code, all through
 <code>SetFindingStatusTx</code>: the operator's authenticated
@@ -657,14 +740,15 @@ the worker and to no other agent. <code>frameLessonsBlock</code> wraps
 it in the nonce-framed envelope with a fresh nonce per assembly and the
 marker stem rewritten inside the content
 (<code>agent/data_envelope.go:59-68</code>,
-<code>agent/planner.go:534</code>, <code>agent/worker.go:580</code>).
+<code>agent/planner.go:577</code>, <code>agent/worker.go:584</code>).
 Every other derived field goes in the user message inside the same
 frame: recent facts, findings, digests, related-task data, intent
 summaries, the assets an intent targets, and hints and credentials
-written by an agent (<code>:72</code>, <code>:82-95</code>,
-<code>:107-230</code>). The file's own comment prices it: the frame
-marks data and cannot stop a model from following it. The lessons block
-is the one framed field placed in the system prompt.</p>
+written by an agent (<code>agent/data_envelope.go:72</code>,
+<code>:82-95</code>, <code>:107-230</code>). The file's own comment
+prices it: the frame marks data and cannot stop a model from following
+it. The lessons block is the one framed field placed in the system
+prompt.</p>
 <p><strong><code>human_review</code> is withheld.</strong> A person's
 disposition is what admits most lessons, and the agent that wrote the
 finding holds no tool that sets it. Two things keep the mark off. A
@@ -682,16 +766,16 @@ verdict gates goal proof and undoes it</h3>
 transaction (<code>db/notification.go:661-674</code>). Every finding
 read an agent has carries it: <code>list_findings</code>, the
 related-task overview, <code>node_detail</code>, and the list injected
-into each planner round (<code>agent/tools.go:1079-1096</code>,
-<code>:1237</code>, <code>:613-618</code>). An inheriting task reads the
+into each planner round (<code>agent/tools.go:1084-1101</code>,
+<code>:1242</code>, <code>:618-623</code>). An inheriting task reads the
 same node and sees the same label.</p>
 <p><code>prove_goal</code> refuses a finding whose status is
 <code>false_positive</code>, <code>duplicate</code> or
 <code>ignored</code>, and the round overview's
 <code>findings_total</code> leaves those three out
-(<code>agent/tools.go:1448-1453</code>, <code>:1098-1120</code>). A
+(<code>agent/tools.go:1453-1458</code>, <code>:1103-1125</code>). A
 finding must also hold captured traffic whose host matches its asset,
-checked on the server (<code>:1457-1465</code>,
+checked on the server (<code>:1462-1470</code>,
 <code>db/finding_traffic.go:528</code>).</p>
 <p>Writing one of the three statuses reopens what the finding had
 closed. In the same transaction, each goal the finding's node
@@ -726,22 +810,22 @@ declared as operator input is not checked</h3>
 <p><code>factProvenance</code> returns <code>operator_input</code> for
 any fact whose declared source is <code>operator_input</code>, before it
 looks at the evidence or the intent
-(<code>agent/tools.go:1703-1705</code>). The source is a field of the
+(<code>agent/tools.go:1738-1740</code>). The source is a field of the
 tool call. A fact written with that source and
 <code>confidence: observed</code> therefore carries no activity tie, is
 not <code>unverified</code>, and passes every fact check in
-<code>prove_goal</code> (<code>:1421-1446</code>). The reopen query
+<code>prove_goal</code> (<code>:1426-1451</code>). The reopen query
 counts it as a remaining valid proof.</p>
 <p>A committed case records exactly this from a worker's tool set, with
 no evidence line, and expects the provenance <code>operator_input</code>
 (<code>agent/fact_provenance_test.go:129</code>). Facts written before
 provenance existed carry no key and keep their declared labels
-(<code>agent/tools.go:1424-1428</code>).</p>
+(<code>agent/tools.go:1429-1433</code>).</p>
 <h3 id="the-planner-writes-the-rows-its-reads-are-scoped-by">The planner
 writes the rows its reads are scoped by</h3>
 <p><code>add_task_scope</code> is in the planner's tool list, and
 <code>AddAgentScope</code> inserts what it is given once a named company
-exists (<code>agent/tools.go:2556</code>,
+exists (<code>agent/tools.go:2591</code>,
 <code>db/task_scope.go:154-238</code>). Neither scoped read asks who
 wrote a row. <code>scopeTargetCTE</code> joins every scope row of the
 task, so one call with <code>kind=company</code> brings that company's
@@ -783,7 +867,7 @@ No migration rescopes them, and the dedupe key includes the company, so
 a new extraction writes a scoped twin beside the old row.</li>
 <li><strong>A deleted company or category.</strong> Both foreign keys
 are <code>ON DELETE SET NULL</code>
-(<code>db/schema.sql:1553-1554</code>). On the scratch database,
+(<code>db/schema.sql:1555-1556</code>). On the scratch database,
 deleting the second company raised the company-less task's selection
 from four lessons to seven.</li>
 </ul>
@@ -832,14 +916,17 @@ ids and has no reader outside one test.</p>
 <h3 id="why-three-marks-are-withheld">Why three marks are withheld</h3>
 <p><code>human_review</code> and <code>bitemporal</code> are covered
 above.</p>
-<p><strong><code>tombstone</code>.</strong> Two near-misses. The
+<p><strong><code>tombstone</code>.</strong> Three near-misses. The
 negative lesson is a line of prompt text that the write path never
 consults: a re-reported finding lands as a new <code>pending</code> row.
-The retired lesson is keyed on a hash of its text, and the upsert does
-consult it, but a retired row with no live evidence is exactly the row
-it revives. The branch that keeps a retired row retired applies when
-live evidence remains, a state only hand-written SQL produces
-(<code>db/lessons.go:316-326</code>,
+The duplicate check does consult stored findings on the write path, and
+a dismissed one can absorb a re-report, but the match is a model's
+judgement over every status alike, off by default, and lifted by the
+caller's own <code>force_register</code>. The retired lesson is keyed on
+a hash of its text, and the upsert does consult it, but a retired row
+with no live evidence is exactly the row it revives. The branch that
+keeps a retired row retired applies when live evidence remains, a state
+only hand-written SQL produces (<code>db/lessons.go:316-326</code>,
 <code>db/lessons_test.go:790</code>).</p>
 <p><strong><code>trust_state</code> rests on three fields.</strong> The
 lesson status filters the selection. The finding's triage status filters
@@ -852,11 +939,12 @@ declaration, corrected downward by the provenance check, with
 <code>operator_input</code> as the exception above.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>1,668 <code>func Test</code> in 389 test files. CI starts PostgreSQL
+<p>1,874 <code>func Test</code> in 430 test files. CI starts PostgreSQL
 16 and runs <code>go test -p 1 ./...</code> with <code>gofmt</code>,
 <code>go build</code> and <code>go vet</code>, a race-detector pass over
-named packages, and an advisory job on the newest Go release
-(<code>.github/workflows/ci.yml:9-117</code>). I ran none of it.</p>
+named packages, an advisory job on the newest Go release, and
+<code>govulncheck</code> (<code>.github/workflows/ci.yml:9-129</code>).
+I ran none of it.</p>
 <p><strong>The boundary tests are the strong part.</strong>
 <code>TestExplorationDirectSourceReadView</code> asserts that a source
 of a source is invisible, that a live source intent is absent from the
@@ -867,10 +955,13 @@ fact cannot be mutated through the receiving store
 five read paths do not return a reopened intent (<code>:8</code>).
 <code>TestQueryDSLInScopeMembership</code> tags in-scope assets with a
 foreign producer task, to show membership is by scope, and asserts
-out-of-scope ids are absent (<code>db/assets_test.go:1160</code>).
+out-of-scope ids are absent (<code>db/assets_test.go:1161</code>).
 <code>TestQueryDSLInScopeOrDoesNotEscape</code> runs a query whose first
 branch matches an asset on each side of the boundary and fails if the
-outside one returns (<code>db/asset_dsl_or_scope_test.go:29</code>).</p>
+outside one returns (<code>db/asset_dsl_or_scope_test.go:29</code>).
+<code>TestQueryDSLForCompanyOrDoesNotEscape</code> does the same for the
+operator's company filter, with a disjunction naming two companies
+(<code>:90</code>).</p>
 <p><strong>Lessons have thirty-one tests</strong>: twenty-six in
 <code>db/lessons_test.go</code>, three in
 <code>server/lessons_test.go</code>, one on the frame and one on the
@@ -915,10 +1006,25 @@ second finding or an observed tool-output fact remains
 (<code>agent/fact_provenance_test.go:335</code>, <code>:437</code>).
 <code>TestGraphOverviewFindingListCarriesStatus</code> checks the label
 and the count (<code>agent/tools_overview_test.go:56</code>).</p>
+<p><strong>The duplicate check has twenty-one tests</strong>, nineteen
+in three files under <code>agent/</code> and two in
+<code>server/triage_review_test.go</code>. They cover the client's
+parsing, an unoffered id, the threshold, the relevance cut, rune-safe
+truncation, the endpoint guard on the profile's address, and one path
+through the tool:
+<code>TestReportFindingForceRegisterOverridesSuppression</code> stores a
+finding, expects the same report suppressed with one row left, then
+expects <code>force_register</code> to store a second
+(<code>agent/triage_override_test.go:37</code>). The client in that test
+answers "duplicate" to everything.</p>
+<p><code>TestFactOnlyIntents</code> requires an intent with a finding
+beside its facts to be absent from the fact-only list
+(<code>db/fact_only_intents_test.go:9</code>).</p>
 <p>No lesson test deletes a company or adds a scope row through the
 planner's tool. No test proves a goal with an
 <code>operator_input</code> fact, and none reads a task's status after
-its goal reopens.</p>
+its goal reopens. No test calls the cross-task pool query, and no
+duplicate-check test sets a finding's status.</p>
 <p><code>RSI.md</code> cites six arXiv papers as the source of the
 design's ideas, and the identifiers resolve to the titles it names. The
 lesson admission rule is taken from <a href="../harness2/">Harness²</a>,
@@ -932,7 +1038,7 @@ Nothing in the tree measures whether lessons help.</p>
 <p><strong>Make cross-task inheritance explicit, one hop and
 live.</strong> A named relation, a cap, a query on every read so a
 deleted source disappears, and only finished work visible. Read-only
-falls out of scoping every write to the receiver.</p>
+falls out of scoping every graph write to the receiver.</p>
 <p><strong>Frame stored text when it re-enters a prompt.</strong> A
 per-message random nonce on both markers, and the marker stem
 neutralised inside the content.</p>
@@ -964,6 +1070,10 @@ row on each side.</p>
 the renderer return the ids that fitted.</p>
 <p><strong>Stamp the writer on the server.</strong> A fact's
 <code>origin</code> is never taken from the tool's input.</p>
+<p><strong>Give a model's refusal to store a way back, in the
+refusal.</strong> The suppressed call returns the matched ids and the
+flag that overrides it, an id the model was not offered counts as no
+match, and every failure of the model stores.</p>
 <p><strong>Let summaries hide and never delete.</strong> A digest covers
 its members while they stay cold, a revived member reappears, and a
 re-compression starts from the source nodes.</p>
@@ -977,6 +1087,10 @@ pool that every company-less task reads.</p>
 <p><strong>Do not let the agent name its own exemption.</strong> A
 source label that skips the check is the label a confused agent will
 reach for.</p>
+<p><strong>Do not drop a suppressed write without a row.</strong> A
+duplicate verdict that leaves only a log line gives a person nothing to
+overturn, and matching against dismissed findings makes the loss
+likeliest where triage has already said no.</p>
 <p><strong>Do not let one status mean two things.</strong>
 <code>risk_accepted</code> proves a goal and writes a lesson that says
 not to report it.</p>
@@ -1001,6 +1115,13 @@ reopens?</strong> The reopen writes the goal node and nothing else.</li>
 worker and the operator's chat agent hold the same
 <code>record_fact</code> schema, and no check ties the label to an
 operator message.</li>
+<li><strong>Should a dismissed finding be a duplicate target?</strong>
+The pool is built without reading status, and the code does not say
+whether that is intended.</li>
+<li><strong>Is <code>update_finding_report</code> meant to cross
+tasks?</strong> Its write is keyed on the node id alone, and the
+duplicate check hands out ids from tasks the caller has no relation
+to.</li>
 <li><strong>Is <code>expanded</code> meant to gate a read?</strong> The
 flag is written and returned, and nothing consults it.</li>
 <li><strong>Is the outcome card's company meant to come from
@@ -1037,7 +1158,7 @@ and transcripts live in a dependency this reading did not open.</li>
 </tr>
 <tr>
 <td><code>db/schema.sql</code>, <code>db/migrations/</code></td>
-<td>57 tables and thirteen migrations</td>
+<td>57 tables and fourteen migrations</td>
 </tr>
 <tr>
 <td><code>db/asset_dsl.go</code>,
@@ -1066,6 +1187,19 @@ and transcripts live in a dependency this reading did not open.</li>
 <tr>
 <td><code>agent/tools.go</code>, <code>db/finding_traffic.go</code></td>
 <td>Graph overview, facts, findings, goal proof</td>
+</tr>
+<tr>
+<td><code>agent/triage.go</code>, <code>db/finding_dedup_pool.go</code>,
+<code>server/triage.go</code></td>
+<td>The duplicate check on <code>report_finding</code>, its cross-task
+pool and its settings</td>
+</tr>
+<tr>
+<td><code>agent/triage_test.go</code>,
+<code>agent/triage_override_test.go</code>,
+<code>agent/triage_review_test.go</code>,
+<code>server/triage_review_test.go</code></td>
+<td>The duplicate-check tests</td>
 </tr>
 <tr>
 <td><code>agent/data_envelope.go</code>,
@@ -1101,7 +1235,7 @@ reopen</td>
 commit.</p>
 <ul>
 <li><code>git grep -c -E '^func Test' -- '*.go'</code>, summed —
-1,668.</li>
+1,874.</li>
 <li><code>git grep -n -E 'UPDATE rsi_|DELETE FROM rsi_' -- . ':!*_test.go'</code>
 — <code>db/lessons.go:339</code>, <code>:363</code> and
 <code>:408</code>: two evidence withdrawals and the retirement update;
@@ -1111,7 +1245,7 @@ no statement edits or deletes a lesson row.</li>
 lesson.</li>
 <li><code>git grep -n -E "'retired'|'adopted'" -- . ':!*_test.go'</code>
 — <code>db/lessons.go:319</code>, <code>:409</code>, <code>:411</code>,
-<code>:448</code> and the CHECK at <code>db/schema.sql:1556</code>;
+<code>:448</code> and the CHECK at <code>db/schema.sql:1558</code>;
 <code>adopted</code> only in the CHECK.</li>
 <li><code>git grep -n -E 'FROM rsi_lesson_usage|JOIN rsi_lesson_usage' -- .</code>
 — <code>db/lessons_test.go:470</code> only.</li>
@@ -1133,9 +1267,9 @@ names it.</li>
 comment excluding <code>risk_accepted</code> and the list.</li>
 <li><code>git grep -n -E 'factSourceOperatorInput' -- 'agent/*.go' ':!*_test.go'</code>
 — the constant, the list of sources and
-<code>agent/tools.go:1703</code>; no other branch reads it.</li>
+<code>agent/tools.go:1738</code>; no other branch reads it.</li>
 <li><code>git grep -n -E 'SetNodeState\(' -- '*.go'</code> — one product
-call, with <code>met</code>, at <code>agent/tools.go:1467</code>;
+call, with <code>met</code>, at <code>agent/tools.go:1472</code>;
 <code>dismissed</code> is passed only at
 <code>db/exploration_sources_test.go:212</code>.</li>
 <li><code>git grep -n -E "SET state *= *'open'" -- '*.go' ':!*_test.go'</code>
@@ -1156,8 +1290,41 @@ nothing.</li>
 — nothing.</li>
 <li><code>git grep -n -i -E 'CREATE TABLE IF NOT EXISTS (users|accounts|tenants|orgs)' -- '*.sql' '*.go'</code>
 — nothing.</li>
+<li><code>git grep -n -i -E 'status|false_positive|disposition' -- agent/triage.go db/finding_dedup_pool.go</code>
+— <code>agent/triage.go:183</code> and <code>:184</code> only, the HTTP
+status of the model's reply.</li>
+<li><code>git grep -n -E 'duplicate_not_registered' -- '*.go' ':!*_test.go'</code>
+— <code>agent/tools.go:1593</code> only; the suppression branch writes
+no row.</li>
+<li><code>git grep -n -E 'FindingsSharingAssets' -- '*_test.go'</code> —
+nothing.</li>
+<li><code>git grep -n -E 'false_positive|FindingFalsePositive|SetFindingStatus' -- agent/triage_test.go agent/triage_override_test.go agent/triage_review_test.go server/triage_review_test.go</code>
+— nothing.</li>
+<li><code>git grep -n -E 'triageDuplicate\(|FindingsSharingAssets\(' -- '*.go' ':!*_test.go'</code>
+— one caller each: <code>agent/tools.go:1588</code> and
+<code>agent/triage.go:338</code>.</li>
+<li><code>git grep -n -E '(Query|Count)DSLForCompany\(' -- '*.go' ':!*_test.go'</code>
+— the definitions, the two unfiltered wrappers and
+<code>server/assets.go:382</code> and <code>:384</code>.</li>
+<li><code>git grep -n -i -E 'systemone|triage_profile|decision model' -- README.md docs CHANGELOG.md</code>
+— nothing.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/BaaRai/ARTEX/commit/3cb06383fd99ffe7686abe1d375de11da7cfad54"><code class="commit-id" title="3cb06383fd99ffe7686abe1d375de11da7cfad54">3cb06383…</code></a>
+— 166 commits, 21 to 24 November 2026. The lessons, scope, provenance
+and goal-reopen code is unchanged, every recorded search returns what it
+did, and the four marks stand. One addition touches the write path: an
+optional decision-model duplicate check on <code>report_finding</code>,
+whose pool includes findings of unrelated tasks on a shared asset and
+ignores triage status, and whose suppression leaves no row. <a
+href="#7-write-mechanics">Section 7</a> has it. Also new: a planner
+block of finished intents with facts and no finding, a company filter on
+the operator's asset list, and wildcard scope lines. Earlier readings
+said writes cannot cross tasks; that holds for graph nodes, while
+<code>update_finding_report</code> writes a finding's report by node id
+with no task check, at this pin and the last. Screen: five manifests
+inside the cooldown, no auto-run hook. Nothing was built or run.</p>
 <p><strong>2026-11-21</strong> — <a
 href="https://github.com/BaaRai/ARTEX/commit/c65034c50f946e80f89489d32dd92981f883cb1d"><code class="commit-id" title="c65034c50f946e80f89489d32dd92981f883cb1d">c65034c5…</code></a>
 — 25 commits on 21 November 2026, after the maintainer's <a

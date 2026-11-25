@@ -3299,7 +3299,9 @@ status, capped at eight rows with no cursor</td>
 <td>Agent tools write assets, facts, findings and coverage; a person
 sets a finding's disposition over an authenticated route; lessons are
 extracted by rule when a disposition changes, a retest completes or the
-task ends, with no model call</td>
+task ends, with no model call. With a decision-model profile set, a
+confident duplicate verdict drops a <code>report_finding</code> call
+unless the caller passes <code>force_register</code></td>
 <td>Asset upserts overwrite scalars and union arrays with no history;
 facts are append-only; cold regions are folded into digests that keep
 their members; a changed disposition marks a lesson's evidence row
@@ -3333,7 +3335,8 @@ the transaction that reverses the verdict behind them</td>
 <td>The planner holds a tool that writes the scope rows its own asset
 and lesson reads follow; lessons of tasks declared by domain alone form
 one pool shared by every such task; a fact the agent labels as operator
-input skips the provenance check and can prove a goal; no lesson can be
+input skips the provenance check and can prove a goal; a finding dropped
+by the duplicate check leaves a log line and no row; no lesson can be
 edited or deleted</td>
 </tr>
 <tr>
