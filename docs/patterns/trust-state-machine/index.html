@@ -915,6 +915,22 @@ them as model tools (<code>sgme/mcp_server.py:1065-1275</code>,
 Auto-resolve takes its age threshold from the caller. A pending row is
 also returned by search, so the gate governs what is pushed into a
 session and not what the model can look up.</p>
+<p><a href="../../systems/attested-memory/">Attested Memory</a> lets
+only a memory's owner move it into <code>rejected</code>, on the owner's
+own evidence. The truth layer sums the stance and quality numbers
+submitted with a claim, and the market stores the result as
+<code>truth_status</code>; the catalogue SQL behind the REST catalogue
+and <code>memory.search@v1</code> appends
+<code>truth_status IN (...)</code> with every status but
+<code>rejected</code> as the default
+(<code>memory-market/src/memory_market/store.py:24-26</code>,
+<code>:363-365</code>). <code>truth=any</code> lifts it, an unknown
+status is a 422, and a read by id returns a rejected unit with its
+status (<code>memory-market/src/memory_market/app.py:288-308</code>).
+Only the owner may request verification (<code>:397-398</code>), so the
+state cannot hide another owner's unit, and nothing independent of the
+author moves it; the method names itself
+<code>submitted-evidence-weight-v1</code>.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

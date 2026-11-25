@@ -13971,18 +13971,22 @@ records. Three marks: <code>tombstone</code>, <code>trust_state</code>,
 <code>negative_eval</code>.</p>
 <p><strong><a href="../systems/attested-memory/">Attested Memory</a>
 signs a hash-chained receipt for each memory event and checks it against
-the key stored in the receipt.</strong> Three self-hosted services
-around one Memory Unit: a market with owner, grant, visibility and team
-scoping, where paid content is listed and cannot be read or probed
-through search; a truth layer that sums the stance and quality numbers a
-submitter attaches to their own evidence; and a ledger of Ed25519 and
-ML-DSA-65 receipts chained per memory. <code>verify</code> recomputes
-the hashes and the link and takes the public key from the row, so a row
-rewritten and re-signed with another key passes, and a truncated chain
-verifies. A REST write requests a receipt, best-effort with no retry; a
-write through the hub capability requests none, and the ledger's own
-attest capability appends to any memory id for any caller. No unit can
-be edited or deleted. Marks: <code>scope_enforced</code>,
+keys and a chain head kept in the ledger's own database.</strong> Three
+self-hosted services around one Memory Unit: a market with owner, grant,
+visibility and team scoping, where paid content is listed and cannot be
+read or probed through search; a truth layer that sums the stance and
+quality numbers the owner attaches to their own evidence, whose
+<code>rejected</code> result takes a unit out of the catalogue and
+search by default; and a ledger of Ed25519 and ML-DSA-65 receipts
+chained per memory. <code>verify</code> recomputes the hashes and the
+link, accepts only the ledger's own or environment-listed keys, and
+requires the newest receipt to match the recorded head, a row a database
+writer can move along with the chain. Both write paths request a
+receipt, best-effort, and a reconcile command that nothing schedules
+finishes the misses, linking a <code>created</code> receipt by content
+hash alone; the ledger's attest capability appends to any memory id for
+any hub buyer with a reference. No unit can be edited or deleted. Marks:
+<code>trust_state</code>, <code>scope_enforced</code>,
 <code>audit_log</code>, <code>negative_eval</code>.</p>
 <h2 id="research-lineage">Research lineage</h2>
 <p><a

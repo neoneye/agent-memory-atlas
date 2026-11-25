@@ -3424,12 +3424,14 @@ payment orders in the market; evidence packs in the truth layer;
 receipts and chain heads in the ledger. SQLite for development and
 tests, PostgreSQL 16 required in production</td>
 <td>Case-folded substring match over title, tags and readable content,
-newest first, with limit and offset; fetch by id; no ranking in the
-service, and a product shell re-ranks by truth, provenance, ratings and
-age</td>
-<td>POST of a full unit by an authenticated actor, stored at once; the
-market then asks the ledger for a created receipt and records its id and
-chain root; a write through the hub capability asks for none</td>
+newest first, with limit and offset, leaving out rejected units unless
+the caller names statuses or any; fetch by id returns any status; no
+ranking in the service, and a product shell re-ranks by truth,
+provenance, ratings and age</td>
+<td>A full unit by an authenticated actor over REST or the hub
+capability, stored at once; both paths then ask the ledger for a created
+receipt, best-effort, and a reconcile command finishes the units left
+unattested when someone runs it</td>
 <td>None: no route or store method edits or deletes a memory, and
 nothing sets a grant's revoked_at; truth state and the provenance
 pointer are overwritten in place by later verifications and
@@ -3442,19 +3444,23 @@ published to an AIMarket hub whose MCP endpoint exposes search and
 invoke; a Python client and CLI; three product shells that proxy to the
 market</td>
 <td>A payment poller that scans Base for USDC transfers and issues
-grants; no pass over memories</td>
+grants; no pass over memories; the provenance reconcile command is run
+by hand, with no timer in the tree</td>
 <td>truth.status of unverified, supported, contested or rejected,
-computed from the stance and quality numbers the submitter attaches to
-their own evidence; shown and ranked on, never filtered on; provenance
-status of attested or unattested</td>
+computed from the stance and quality numbers the owner attaches to their
+own evidence; rejected is left out of the catalogue and search by
+default and returned by a read by id; provenance status of attested or
+unattested</td>
 <td>Paid content cannot be probed through search, with a populated test;
 request-bound actor proofs with replay protection; receipts chained per
-memory with the head row locked on append; a scorer that names itself
+memory with the head row locked on append; verify accepts only the
+ledger's own keys; a scorer that names itself
 submitted-evidence-weight</td>
-<td>Receipt verification checks the signature against the public key
-stored in the same row, so whoever can rewrite a row can re-sign it; hub
-writes are never attested; any hub caller can append receipts to any
-memory id with any hash; truth is the owner's own evidence weights</td>
+<td>The chain head that verify compares against lives in the ledger's
+own database, so a database writer who moves it truncates a chain
+unseen; any named hub buyer can append receipts to any memory id with
+any hash, and the reconcile command links such a created receipt by hash
+alone; truth is the owner's own evidence weights</td>
 </tr>
 <tr>
 <td><a href="../systems/attune-ai/"><code>attune-ai</code></a></td>
@@ -39403,7 +39409,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>225 of 874:</em> <a
+<p><em>226 of 874:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -39428,6 +39434,7 @@ href="../systems/areev/"><code>areev</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
 href="../systems/artesian/"><code>artesian</code></a>, <a
 href="../systems/artex/"><code>artex</code></a>, <a
+href="../systems/attested-memory/"><code>attested-memory</code></a>, <a
 href="../systems/aura/"><code>aura</code></a>, <a
 href="../systems/autobot-ai/"><code>autobot-ai</code></a>, <a
 href="../systems/beever-atlas/"><code>beever-atlas</code></a>, <a

@@ -35050,33 +35050,34 @@ for the body and one for the title.</li>
 <li>Second idea: request-bound actor proofs. An Ed25519 signature covers
 audience, method, path, query and body hash, small-order keys are
 refused, and each nonce is spent once in the database.</li>
-<li>Biggest risk: <strong>receipt verification trusts the key in the
-row.</strong> <code>verify</code> recomputes two hashes, checks the link
-to the previous row and validates both signatures against the public key
-stored in the receipt being checked. Whoever can rewrite the row can
-re-sign it, and deleting the newest receipts leaves the rest valid. The
-committed tamper test edits one column and leaves the hashes alone.</li>
-<li>Second risk: the agent-facing write path is the unattested one.
-<code>memory.write@v1</code> stores a unit and requests no receipt, the
-REST path's receipt is best-effort with no retry, and the ledger's
-<code>memory.attest@v1</code> appends to any memory id with any hash for
-any hub caller, anonymous included. Truth status is arithmetic over the
-owner's own stance and quality numbers, and the ledger signs it.</li>
-<li>Most reusable component: the access and search clauses of
+<li>Biggest risk: <strong>the ledger checks its database against
+itself.</strong> <code>verify</code> requires the ledger's own key and a
+newest receipt equal to the <code>receipt_heads</code> row, and the head
+row sits in the same database: a writer who deletes the newest receipts
+and moves the head truncates a chain unseen, and a deleted head row is
+rebuilt from the remaining receipts at the next start. The market keeps
+each unit's last chain root, and nothing compares the two.</li>
+<li>Second risk: <code>memory.attest@v1</code> appends to any memory id
+with any hash and event type for any hub buyer with a reference, and the
+reconcile command links a <code>created</code> receipt by content hash
+without checking who wrote it; nothing schedules the command. Truth
+status is arithmetic over the owner's own stance and quality numbers,
+and the ledger signs it.</li>
+<li>Most reusable component: the access, search and truth clauses of
 <code>catalog</code>,
-<code>memory-market/src/memory_market/store.py:325-359</code>, and
+<code>memory-market/src/memory_market/store.py:330-371</code>, and
 <code>memory-market/src/memory_market/actor_auth.py</code>.</li>
-<li>Maturity impression: Apache-2.0 with MIT product shells; 6,871 lines
-of Python published as 26 sync commits from a private monorepo between 9
-October and 23 November 2026; 91 test functions, seven on the ledger,
-none run here. Three marks: <code>scope_enforced</code>,
-<code>audit_log</code>, <code>negative_eval</code>. No memory can be
-edited or deleted.</li>
+<li>Maturity impression: Apache-2.0 with MIT product shells; 7,266 lines
+of Python published as 27 sync commits from a private monorepo between 9
+October and 25 November 2026; 99 test functions, eleven on the ledger,
+none run here. No memory can be edited or deleted. Four marks:
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
 <li>Study when: you are building access control for memory that is sold
 or shared between agents.</li>
 <li>Do not copy when: a receipt has to convince someone who does not
-trust the ledger's database, or a memory has to be corrected or
-withdrawn.</li>
+trust the ledger's database, or a memory has to be corrected rather than
+left out of search.</li>
 </ul>
 <h3 id="datamind"><a
 href="../systems/datamind/"><code>datamind</code></a></h3>
