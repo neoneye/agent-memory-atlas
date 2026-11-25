@@ -19751,6 +19751,44 @@ unpinned dependency surfaces, the root <code>package.json</code> with a
 lockfile and the <code>packages/core</code> and
 <code>packages/dsh</code> manifests with none beside them; nothing was
 installed, built or run.</li>
+<li><strong><code>redis-developer/adk-redis</code> was examined and has
+no report: it implements Google ADK's memory, session and tool
+interfaces against two remote services, the managed Redis Agent Memory
+service and <a href="../systems/redis-agent-memory-server/">Redis Agent
+Memory Server</a>, and the store, the index, extraction and the read
+predicate are theirs.</strong> Apache-2.0, 6,772 lines of Python under
+<code>src/</code> and 24 test files, 85 commits between 16 December 2025
+and 6 November 2026, read at <a
+href="https://github.com/redis-developer/adk-redis/commit/5f4c177e58795a6021c7b24b0beb540f0da559fe"><code class="commit-id" title="5f4c177e58795a6021c7b24b0beb540f0da559fe">5f4c177e…</code></a>
+(release 0.0.11). The two backends are the only memory paths
+(<code>src/adk_redis/memory/_backends.py:21-29</code>): the
+<code>redis-agent-memory</code> SDK, locked at 0.2.1, and
+<code>agent-memory-client</code>, locked at 0.14.0, against the server
+image 0.13.2 in the examples. The tree turns ADK sessions and events
+into records with deterministic sha256 ids, builds
+<code>namespace</code> and <code>ownerId</code> filter clauses the
+server applies (<code>long_term_memory.py:699-706</code>,
+<code>:765-781</code>), and forwards extraction, deduplication and
+recency settings as configuration (<code>:318-334</code>). The search
+tools query an index the adopter built, and the caches wrap RedisVL's
+<code>SemanticCache</code> and <code>LangCacheSemanticCache</code>,
+which hold model and tool responses, not memory the agent recalls. Its
+one check of its own, <code>_require_memory_scope</code> before delete
+and update (<code>tools/memory/_base.py:223</code>), takes the model's
+optional <code>user_id</code> argument ahead of the ADK invocation user
+(<code>:211</code>, <code>:215</code>), so a model that names a record's
+owner passes it, and <code>GetMemoryTool</code> returns any record by id
+with no check. Searches run at this pin with <code>git grep</code>:
+<code>-n -E 'Redis\.from_url|redis\.Redis|\.hset\(|\.json\(\)\.set|\.set\(|\.zadd\(|FT\.CREATE|SearchIndex\(' -- src</code>
+(two docstring and error-message hits on <code>FT.CREATE</code>, no
+write; control <code>-n -E 'SemanticCache|import_module' -- src</code>,
+found);
+<code>-n -E 'require_memory_scope' -- src/adk_redis/tools/memory/get.py</code>
+(nothing). Screened before reading: no auto-run surface, three
+build-time execution points (<code>Makefile</code> and two
+<code>conftest.py</code>), nothing unpinned; <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> were treated as data; nothing was installed,
+built or run.</li>
 <li><strong><a
 href="https://arxiv.org/abs/2510.22732"><code>arXiv:2510.22732</code></a>
 was examined and has no report: it releases no code, and its memory is a
