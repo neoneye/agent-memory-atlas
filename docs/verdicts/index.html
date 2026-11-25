@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 870 reports.</strong></p>
+<p><strong>This page covers all 871 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35849,6 +35849,56 @@ files.</li>
 <li>Do not copy when: the server must keep stale facts out of answers,
 keep withdrawn values withdrawn, or separate an agent's inference about
 a person from what the person said.</li>
+</ul>
+<h3 id="sgme"><a href="../systems/sgme/"><code>sgme</code></a></h3>
+<ul>
+<li>Best idea: <strong>inject by SQL over typed columns.</strong>
+Extraction stores modality, subject, route, lifecycle and a review flag
+on each row, and <code>query_section</code> excludes rejected, pending,
+forget-request, other-person, archived and anchor-tier rows in one query
+per template section, with core cards that a token budget never trims
+(<code>sgme/data/memory_dao.py:741-857</code>,
+<code>sgme/profile/inject.py:82-104</code>). No model runs at session
+start.</li>
+<li>Second idea: a purge that tells the truth. It needs the admin key
+and the phrase 彻底删除, writes a full snapshot to
+<code>deletion_audit</code>, removes the row from every table that
+references it, and returns the copies it could not remove: backups and
+the L0 transcript (<code>sgme/operations/memory.py:404-488</code>).</li>
+<li>Biggest risk: <strong>a rejected fact returns on its next
+mention.</strong> The exact-text check reads
+<code>status='active'</code>, the near-duplicate vector search and the
+verdict pool read <code>status != 'rejected'</code>, so a restatement,
+even word for word, finds no match and is stored as a new active row
+(<code>sgme/engine/l3_adjudicate.py:784-798</code>,
+<code>:405-470</code>,
+<code>sgme/data/search/vector.py:341</code>).</li>
+<li>Second risk: the 2.0 fields are computed and dropped.
+<code>valid_to</code> for plans and wishes and the forget topic never
+reach the row, because <code>records_to_items</code> and
+<code>normalize_memories</code> copy fixed key lists without them, and
+<code>occurred_at</code> is replaced with the message time
+(<code>sgme/engine/l2_extract.py:405-418</code>,
+<code>sgme/engine/refine.py:324-352</code>). Review, quarantine release
+and unreject are MCP tools any agent key holds, and
+<code>review_auto_resolve</code> clears every pending row older than a
+number of days the caller chooses.</li>
+<li>Most reusable component: <code>list_memories_by_dimension</code>
+with its injection predicates,
+<code>sgme/data/memory_dao.py:741-857</code>, and the two-state delete
+in <code>sgme/operations/memory.py:404-488</code>.</li>
+<li>Maturity impression: MIT; 65,459 lines of Python under
+<code>sgme/</code> and 89,070 of tests, in 988 commits between 14 August
+and 20 November 2026, 969 under one name; 4,312 Python test functions in
+<code>tests/</code> and 618 under <code>adapters/</code>, run by CI,
+none run here; design documents gitignored. Three marks:
+<code>trust_state</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</li>
+<li>Study when: you want a single-user profile injected at session start
+without a model call, or a deletion flow that admits what it leaves
+behind.</li>
+<li>Do not copy when: a correction has to survive the next extraction,
+or the agents writing memory must not be the ones approving it.</li>
 </ul>
         </article>
       </div>

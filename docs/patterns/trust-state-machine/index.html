@@ -900,6 +900,21 @@ one to matching. The facts themselves carry no status, and the only
 callers of the certify and deprecate writer sit in a route module that
 is gitignored and survives only as build output, so no
 <code>trust_state</code> mark follows.</p>
+<p><a href="../../systems/sgme/">SGME</a> filters on both of its states
+and lets the agent move them. <code>status = 'rejected'</code> is
+excluded from the BM25, LIKE-fallback and vector arms, the injection
+query and the extraction pool, and a parse with no dimension stores the
+row with <code>needs_review = 1</code>, which injection and persona
+evidence skip (<code>sgme/data/memory_dao.py:797</code>,
+<code>:812-814</code>, <code>sgme/engine/l2_extract.py:186-196</code>).
+<code>review_approve</code>, <code>memory_reject</code>,
+<code>memory_unreject</code> and <code>review_auto_resolve</code> are
+MCP tools behind the ordinary agent key, and the DSH plugin registers
+them as model tools (<code>sgme/mcp_server.py:1065-1275</code>,
+<code>adapters/dsh/sgme-bridge/src/tools.ts:456-510</code>).
+Auto-resolve takes its age threshold from the caller. A pending row is
+also returned by search, so the gate governs what is pushed into a
+session and not what the model can look up.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 870 reports.**
+**This page covers all 871 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8023,3 +8023,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 27,990 lines of TypeScript outside tests, about a third of it an admin UI; 117 commits from 21 October to 24 November 2026 by one person under two names and a coding agent, tags to v0.9.1; 448 test calls run in CI against in-memory fakes, none run here. Two marks: `scope_enforced`, `negative_eval`.
 - Study when: several agents should share one person's private notes under permissions the person sets, and the store should stay readable as files.
 - Do not copy when: the server must keep stale facts out of answers, keep withdrawn values withdrawn, or separate an agent's inference about a person from what the person said.
+
+### [`sgme`](../systems/sgme/)
+- Best idea: **inject by SQL over typed columns.** Extraction stores modality, subject, route, lifecycle and a review flag on each row, and `query_section` excludes rejected, pending, forget-request, other-person, archived and anchor-tier rows in one query per template section, with core cards that a token budget never trims (`sgme/data/memory_dao.py:741-857`, `sgme/profile/inject.py:82-104`). No model runs at session start.
+- Second idea: a purge that tells the truth. It needs the admin key and the phrase 彻底删除, writes a full snapshot to `deletion_audit`, removes the row from every table that references it, and returns the copies it could not remove: backups and the L0 transcript (`sgme/operations/memory.py:404-488`).
+- Biggest risk: **a rejected fact returns on its next mention.** The exact-text check reads `status='active'`, the near-duplicate vector search and the verdict pool read `status != 'rejected'`, so a restatement, even word for word, finds no match and is stored as a new active row (`sgme/engine/l3_adjudicate.py:784-798`, `:405-470`, `sgme/data/search/vector.py:341`).
+- Second risk: the 2.0 fields are computed and dropped. `valid_to` for plans and wishes and the forget topic never reach the row, because `records_to_items` and `normalize_memories` copy fixed key lists without them, and `occurred_at` is replaced with the message time (`sgme/engine/l2_extract.py:405-418`, `sgme/engine/refine.py:324-352`). Review, quarantine release and unreject are MCP tools any agent key holds, and `review_auto_resolve` clears every pending row older than a number of days the caller chooses.
+- Most reusable component: `list_memories_by_dimension` with its injection predicates, `sgme/data/memory_dao.py:741-857`, and the two-state delete in `sgme/operations/memory.py:404-488`.
+- Maturity impression: MIT; 65,459 lines of Python under `sgme/` and 89,070 of tests, in 988 commits between 14 August and 20 November 2026, 969 under one name; 4,312 Python test functions in `tests/` and 618 under `adapters/`, run by CI, none run here; design documents gitignored. Three marks: `trust_state`, `audit_log`, `negative_eval`.
+- Study when: you want a single-user profile injected at session start without a model call, or a deletion flow that admits what it leaves behind.
+- Do not copy when: a correction has to survive the next extraction, or the agents writing memory must not be the ones approving it.

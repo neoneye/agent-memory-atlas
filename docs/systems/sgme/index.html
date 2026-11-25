@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Python and SQLite
+memory server for one person, shared across agents, holding
+LLM-distilled memories, core profile cards, a wiki and a skill
+library.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="SGME — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Python and
+SQLite memory server for one person, shared across agents, holding
+LLM-distilled memories, core profile cards, a wiki and a skill
+library.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SGME — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Python and
+SQLite memory server for one person, shared across agents, holding
+LLM-distilled memories, core profile cards, a wiki and a skill
+library.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>SGME — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "SGME",
+      "description": "A self-hosted Python and SQLite memory server for one person, shared across agents, holding LLM-distilled memories, core profile cards, a wiki and a skill library.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A rejected memory leaves every read path,
+including the one that would stop it coming back</p>
+          <h1>SGME</h1>
+          <p class="document-deck">A self-hosted Python and SQLite
+memory server for one person, shared across agents, holding
+LLM-distilled memories, core profile cards, a wiki and a skill
+library.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/freehul/sgme">
+              <span>Source</span>
+              <strong>freehul/sgme</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/freehul/sgme/commit/127095e80e12ae4095434611c833e55e371ef0ab" title="127095e80e12ae4095434611c833e55e371ef0ab">
+              <span>Analyzed revision</span>
+              <code>127095e8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/freehul--sgme" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>freehul--sgme</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE and pyproject.toml; the dsh-sgme npm package under
+adapters/dsh/sgme-bridge carries an identical LICENSE</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>65,459
+lines of Python in 199 files under sgme/; 89,070 lines of Python tests
+in 320 files; 29,373 lines of Python under adapters/, mirrored under
+skills/, and 12,688 lines of TypeScript in the DSH bridge; a Vue WebUI
+of 14,015 lines</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>988
+commits from 14 August to 20 November 2026, 969 of them under freehul
+and 19 under three other names; 50 tags, the latest v2.0.18 on 9
+November, while pyproject.toml says 2.0.28</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>4,312
+Python test functions in tests/ and 618 under adapters/, plus 24 vitest
+files for the DSH bridge; tests.yml runs pytest on Python 3.12 on every
+push to main; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>SGME (ShiGuang Memory Engine, 拾光记忆引擎) is a self-hosted memory
+server for one person. Several agents share it: they append
+conversations to it, it distils them into tagged memories with an LLM,
+and it injects a profile at the start of each session. Its notable part
+is that injection makes no model call: typed columns decide what a
+session sees. Its weak part is correction. A rejected memory is excluded
+from search and injection, and also from the three reads that decide
+whether a new extraction is a duplicate, so the same fact said again is
+stored again as active.</p>
+<p>The server is a FastAPI process on port 9910 with an MCP server on
+9913, four SQLite files and a directory of Markdown transcripts.
+Adapters under <code>adapters/</code> connect Claude Code, Codex,
+Hermes, WorkBuddy, Doubao, MiMo, Z Code and DeepSeek Harness. The DSH
+adapter is the npm package <code>dsh-sgme</code> under
+<code>adapters/dsh/sgme-bridge</code>. A wiki and a skill library live
+beside the memory pool and share the search route.</p>
+<p>Much of the 2.0 write path is declared and not delivered.
+<code>valid_to</code> for plans and wishes, the topic of a forget
+request and the model's own event time are computed during parsing and
+dropped by a field whitelist before the row is written. Each half is
+tested on its own. The hop between them is not.</p>
+<p>The licence is MIT, in <code>LICENSE</code> and
+<code>pyproject.toml</code>.</p>
+<p>Three marks: <code>trust_state</code> on <code>status</code> and the
+<code>needs_review</code> gate, <code>audit_log</code> on the core-card
+history, and <code>negative_eval</code> on search cases that keep a
+rejected row out beside a live twin. Section 9 gives the reasons for the
+four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>one distilled statement about the user</strong>,
+tagged with one or more of the thirteen dimensions in
+<code>sgme/resources/registry/dimensions.yaml</code> (identity, family,
+skills, preferences, status and so on); the README says fourteen. The
+row also carries a type, a subject, a certainty, a derivation
+(<code>fact</code>, <code>reconstructed</code> or
+<code>inferred</code>), a modality (<code>done</code>,
+<code>planned</code>, <code>wished</code>, <code>quoted</code>,
+<code>unknown</code>) and a route that decides whether it belongs in
+memory, the wiki or the skill library
+(<code>sgme/data/db.py:55-72</code>, <code>:1681-1729</code>).</p>
+<p>The raw conversation is the evidence and is never deleted. Each turn
+is appended to an L0 Markdown file with a
+<code># {ISO time} {role}</code> header
+(<code>sgme/raw/store.py:1-30</code>). Memories point back to it through
+<code>memory_sources</code>, and search returns a trace to the file.</p>
+<p>A statement becomes a memory in four steps.</p>
+<ol type="1">
+<li><strong>Extraction.</strong> A refine pass sends new turns to an LLM
+chain with the L1 prompt, and the 2.0 parser turns each scene unit into
+a main record and side facts
+(<code>sgme/engine/l2_extract.py:153-305</code>).</li>
+<li><strong>Normalisation.</strong> Dimension names are mapped to
+registered ids, and the time of the source messages becomes
+<code>occurred_at</code>
+(<code>sgme/engine/refine.py:290-357</code>).</li>
+<li><strong>Duplicate checks.</strong> A candidate whose text equals an
+active row is skipped, and one within cosine 0.92 of a non-rejected row
+goes to <code>near_dup_quarantine</code>, where by default it is
+discarded (<code>sgme/engine/l3_adjudicate.py:784-798</code>,
+<code>:731-737</code>, <code>:880-930</code>).</li>
+<li><strong>Verdict.</strong> An LLM compares the candidate with up to
+50 vector neighbours and the 50 most recently updated rows sharing a
+dimension, none of them rejected, and chooses store, skip, update or
+merge. Update and merge move the old rows to <code>memory_archive</code>
+(<code>sgme/engine/l3_adjudicate.py:1-16</code>,
+<code>:405-470</code>).</li>
+</ol>
+<p>A stored row can be in one of three epistemic positions.</p>
+<ul>
+<li><strong>Pending.</strong> <code>needs_review = 1</code> when the
+unit had no usable dimension or the parse degraded. The row is
+searchable and kept out of injection
+(<code>sgme/engine/l2_extract.py:186-196</code>,
+<code>sgme/data/memory_dao.py:812-814</code>).</li>
+<li><strong>Active.</strong> The default.</li>
+<li><strong>Rejected.</strong> <code>status = 'rejected'</code> with a
+reason, set by a user correction or a logical delete. Search, injection
+and the extraction pool exclude it, and it can be restored
+(<code>sgme/data/memory_dao.py:400-425</code>,
+<code>:503-516</code>).</li>
+</ul>
+<p>A second axis, <code>lifecycle</code>, decides injection only:
+<code>active</code>, <code>sleeping</code> after a TTL disposition, or
+<code>archived</code> after supersession
+(<code>sgme/data/memory_dao.py:427-446</code>). An archived row leaves
+injection and stays in search.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a statement reaches the pool through an LLM verdict over the live rows it shares a dimension with; rejection takes a row out of that pool too, so the same fact extracted again meets nothing and is stored as new</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a statement reaches the pool through an LLM verdict over the live rows it shares a dimension with; rejection takes a row out of that pool too, so the same fact extracted again meets nothing and is stored as new
+flowchart TD
+  A[&quot;turn appended to an&lt;br/&gt;L0 Markdown file&quot;] --&gt; B[&quot;refine: LLM chain,&lt;br/&gt;L2 scene parse&quot;]
+  B --&gt; N[&quot;normalise whitelist:&lt;br/&gt;valid_to, forget_topic,&lt;br/&gt;model event time dropped&quot;]
+  N --&gt; D{&quot;same text as an active&lt;br/&gt;row, or cosine 0.92 to&lt;br/&gt;a non-rejected one?&quot;}
+  D --&gt;|&quot;yes&quot;| Q[&quot;skipped, or quarantined&lt;br/&gt;and auto-discarded&lt;br/&gt;by default&quot;]
+  D --&gt;|&quot;no&quot;| J{&quot;LLM verdict against&lt;br/&gt;vector and dimension&lt;br/&gt;neighbours, none rejected&quot;}
+  J --&gt;|&quot;skip&quot;| S[&quot;nothing stored&quot;]
+  J --&gt;|&quot;update or merge&quot;| AR[&quot;old rows moved&lt;br/&gt;to memory_archive&quot;]
+  J --&gt;|&quot;store&quot;| R{&quot;dimension found,&lt;br/&gt;clean parse?&quot;}
+  AR --&gt; R
+  R --&gt;|&quot;no&quot;| P[&quot;needs_review = 1:&lt;br/&gt;out of injection,&lt;br/&gt;still in search&quot;]
+  R --&gt;|&quot;yes&quot;| ACT[&quot;active row&quot;]
+  P --&gt;|&quot;review_approve by any&lt;br/&gt;agent key, or 7 days&lt;br/&gt;on request&quot;| ACT
+  ACT --&gt;|&quot;memory_reject or&lt;br/&gt;logical delete&quot;| REJ[&quot;status rejected:&lt;br/&gt;out of search, injection&lt;br/&gt;and the verdict pool&quot;]
+  REJ --&gt; GAP[&quot;the same fact said again&lt;br/&gt;meets no candidate and&lt;br/&gt;no near-duplicate&quot;]
+  GAP --&gt; ACT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Python process holds everything. <code>python -m sgme</code>
+starts the FastAPI app on 9910, which mounts an MCP streamable-HTTP
+server on 9913 in a daemon thread behind an API-key middleware, a
+request-size limit and a rate-limiting security gate
+(<code>sgme/mcp_server.py:505-571</code>).</p>
+<ul>
+<li><strong>Stores.</strong> <code>memory.db</code>,
+<code>session.db</code>, <code>wiki.db</code> and
+<code>skills.db</code>, each opened with its own schema migration
+(<code>sgme/data/db.py:759-837</code>). <code>memory.db</code> holds
+memories, tags, sources, vectors, edges, the archive, cards, quarantine,
+audit tables and signal events.</li>
+<li><strong>Raw layer.</strong> One Markdown file per session under the
+data directory, indexed by <code>raw_files</code> in
+<code>session.db</code>.</li>
+<li><strong>Search.</strong> FTS5 over <code>content_seg</code>, a jieba
+segmentation written by the data layer, with a bigram fallback when
+jieba is missing (<code>sgme/segment.py:1-15</code>). Vectors come from
+<code>BAAI/bge-m3</code> through SiliconFlow and are searched by
+sqlite-vec or a numpy scan.</li>
+<li><strong>Models.</strong> The extraction chain is Agnes
+<code>agnes-2.5-flash</code>, then Zhipu <code>glm-4-flash</code>, then
+SiliconFlow GLM-4-9B, then a rule that drops the batch, as the README's
+quick start lists.</li>
+<li><strong>Background.</strong> An async refine worker per trigger, a
+nightly dream job, backups, a cost meter, persona calibration and a
+care-signal engine with SSE delivery
+(<code>sgme/engine/dream.py:1-40</code>).</li>
+</ul>
+<p>The WebUI under <code>ui/</code> is a Vue app served by the same
+process. The <code>skills/</code> directory carries copies of each
+adapter as installable skills.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Storage needs nothing beyond Python and SQLite. Extraction needs a
+model key: the free tiers named in the README, or the rule fallback,
+which drops the batch. Without a reachable embedding endpoint the vector
+arm and the near-duplicate check are skipped, and the shipped
+<code>fallback: skip_conflict</code> skips the verdict too, so every
+candidate is stored (<code>sgme/resources/config/sgme.yaml:9-14</code>,
+<code>sgme/engine/l3_adjudicate.py:432-446</code>). A Dockerfile and a
+compose file are provided.</p>
+<p>Two keys guard the API, <code>SGME_ADMIN_KEY</code> and
+<code>SGME_AGENT_KEY</code>, plus registered <code>agt_*</code> keys.
+Without configuration the server uses built-in default keys and warns.
+The store is readable with any SQLite client, and the raw transcripts
+are plain Markdown. The design documents the code cites by decision
+number (D-23, D-56 and so on) are under <code>/docs/design/</code>,
+which <code>.gitignore:105</code> excludes.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>POST /v1/append</code> and the MCP
+<code>append</code> tool write a turn into the session's L0 file
+(<code>sgme/server/routes_memory.py:97</code>,
+<code>sgme/mcp_server.py:852</code>). The DSH plugin buffers a turn's
+events and appends at <code>turn/end</code>, then triggers refine with
+the admin key
+(<code>adapters/dsh/sgme-bridge/src/session-sync.ts:281-348</code>).</li>
+<li><strong>Extraction.</strong> <code>refine_file</code> reads new
+messages, calls the chain, parses with <code>parse_scene_output</code>
+and <code>records_to_items</code>, and normalises
+(<code>sgme/engine/refine.py:361</code>,
+<code>sgme/engine/l2_extraction.py:1065-1085</code>,
+<code>sgme/engine/l2_extract.py:325-436</code>).</li>
+<li><strong>Verdict and store.</strong> The L1.5 stage, in
+<code>l3_adjudicate.py</code>, builds the candidate pool from
+<code>vector_search</code> and <code>list_memories_by_dimension</code>
+(<code>sgme/engine/l3_adjudicate.py:405-470</code>), runs the
+near-duplicate guard, asks for verdicts and inserts through
+<code>memory_dao.insert_memory</code>
+(<code>sgme/engine/l3_adjudicate.py:1221-1244</code>). When the stage is
+unavailable, <code>pipeline.py</code> stores each memory directly
+(<code>sgme/engine/pipeline.py:290-340</code>).</li>
+<li><strong>Supersession.</strong> A memory that names a superseded
+subject archives every active row sharing a dimension whose content
+contains that subject
+(<code>sgme/engine/l3_adjudicate.py:1354-1413</code>).</li>
+<li><strong>Injection.</strong> <code>POST /v1/inject</code> and the MCP
+<code>inject</code> tool load a template by mode and run
+<code>query_section</code> per section, then add the core cards and an
+anchor block (<code>sgme/operations/inject.py:1-45</code>,
+<code>sgme/profile/inject.py:48-104</code>).</li>
+<li><strong>Search.</strong> <code>search_memories</code> runs
+<code>recall_routes</code> for BM25 and vectors, adds graph neighbours,
+fuses by reciprocal rank and filters
+(<code>sgme/data/search/__init__.py:485-600</code>).</li>
+<li><strong>Correction.</strong> <code>reject_memory</code>,
+<code>unreject_memory</code> and <code>delete_memory</code> in
+<code>sgme/operations/memory.py:340-488</code>, on HTTP routes and MCP
+tools.</li>
+<li><strong>Review.</strong> <code>sgme/operations/review.py</code>
+lists, approves, rejects and auto-resolves pending rows, and lists,
+discards and restores quarantined candidates;
+<code>sgme/server/routes_review.py</code> and
+<code>sgme/mcp_server.py:1164-1275</code> expose them.</li>
+<li><strong>Cards.</strong> <code>upsert_slot</code> writes a card slot
+and its history row (<code>sgme/data/memory_card_dao.py:103-197</code>);
+<code>card_update</code> on MCP and
+<code>POST /v1/admin/cards/{card_id}/slots/{slot_key}</code> call
+it.</li>
+<li><strong>Lifecycle.</strong> The dream job runs
+<code>ttl_disposition.dispose</code>, which renews, anchors, demotes or
+puts rows to sleep and logs each disposition
+(<code>sgme/engine/dream.py:577</code>,
+<code>sgme/engine/ttl_disposition.py:108-225</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The row.</strong> <code>memories</code> has
+<code>memory_id</code>, <code>content</code>, <code>content_seg</code>,
+<code>memory_type</code>, <code>priority</code>,
+<code>time_velocity</code>, <code>ttl_days</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>agent_tag</code>, <code>prompt_version</code>,
+<code>status</code>, <code>rejected_at</code>,
+<code>reject_reason</code>, <code>my_notes</code>,
+<code>occurred_at</code>, the five lifecycle columns and
+<code>superseded_by</code> (<code>sgme/data/db.py:55-72</code>).
+Migrations add <code>notes</code>, <code>facts_json</code>,
+<code>valid_from</code>, <code>valid_to</code> and the 2.0 columns
+<code>type</code>, <code>subject</code>, <code>certainty</code>,
+<code>derivation</code>, <code>modality</code>, <code>route</code>,
+<code>feeling</code>, <code>trait</code>, <code>scene_key</code>,
+<code>needs_review</code>, <code>surprise</code>,
+<code>forget_topic</code> and <code>forget_kind</code>
+(<code>:1494-1520</code>, <code>:1652-1729</code>).</p>
+<p><strong>Scope.</strong> <code>agent_tag</code> records the agent
+whose session produced a memory
+(<code>sgme/engine/pipeline.py:110-114</code>). It is a label. Section 9
+covers the filter that reads it.</p>
+<p><strong>Time.</strong> <code>created_at</code> and
+<code>updated_at</code> are record time. <code>occurred_at</code> is the
+latest timestamp of the source messages, or of the chunk, and falls back
+to <code>created_at</code> (<code>sgme/engine/refine.py:324-333</code>,
+<code>sgme/data/memory_dao.py:306</code>). It is when the thing was
+said, not when it held. <code>valid_from</code> has no writer.
+<code>valid_to</code> is filtered on search and injection; section 7
+shows why no shipped path fills it.</p>
+<p><strong>History.</strong> Update and merge copy the old row into
+<code>memory_archive</code> and delete it from <code>memories</code>, so
+the chain is followed through <code>superseded_by</code>
+(<code>sgme/data/memory_dao.py:650-715</code>). Supersession by subject
+keeps the row in place with <code>lifecycle = 'archived'</code>.</p>
+<p><strong>Cards.</strong> Six cards (identity, family, routine,
+preferences, principles, goals) with fixed slots, a 120-character slot
+limit and a 400-character card limit; every write appends to
+<code>memory_card_history</code> (<code>sgme/data/db.py:658-700</code>).
+Cards are injected at every session start.</p>
+<p><strong>Quarantine and audit tables.</strong>
+<code>near_dup_quarantine</code> holds a candidate, the row it matched,
+the score and a <code>pending</code>, <code>discarded</code> or
+<code>restored</code> status (<code>sgme/data/db.py:201-218</code>).
+<code>deletion_audit</code> and <code>ttl_disposition</code> are
+append-only logs (<code>:228-253</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Injection is SQL.</strong> <code>query_section</code> calls
+<code>list_memories_by_dimension</code> with every 2.0 predicate on: not
+rejected, within TTL, <code>needs_review = 0</code>, route
+<code>memory</code>, not a forget request, subject self, lifecycle
+active, not an anchor row, and not an expired plan or wish, a predicate
+that receives no input (section 7)
+(<code>sgme/profile/inject.py:82-104</code>,
+<code>sgme/data/memory_dao.py:741-857</code>). The template decides
+which dimensions each section reads and how many rows. An optional
+<code>max_tokens</code> trims the persona block first, then sections
+from the tail, and never the core cards. No model is called.</p>
+<p><strong>Search fuses three arms.</strong></p>
+<ul>
+<li>BM25 over FTS5 with <code>status != 'rejected'</code> in the SQL,
+and a LIKE fallback that re-checks status before returning
+(<code>sgme/data/search/__init__.py:914-970</code>,
+<code>:972-1060</code>).</li>
+<li>A vector search over <code>memory_vectors</code> joined to
+<code>memories</code> with the same predicate
+(<code>sgme/data/search/vector.py:330-380</code>).</li>
+<li>One-hop neighbours over <code>memory_edges</code>, excluding
+<code>contradicts</code> edges and archived rows
+(<code>sgme/data/search/__init__.py:358-440</code>).</li>
+</ul>
+<p>The lists are fused by reciprocal rank with k = 60. Then
+<code>valid_to</code> filters expired rows, a route filter and a
+guardrail run when configured, rows with identical content are
+collapsed, and the list is cut to <code>limit</code>
+(<code>:552-578</code>). <code>since</code> and <code>until</code>
+filter on <code>occurred_at</code>.</p>
+<p><strong>What search returns that injection does not.</strong> The
+BM25 and vector arms do not read <code>lifecycle</code> or
+<code>needs_review</code>. A row superseded by subject, and a pending
+row, come back from <code>/v1/search</code> and from the model's
+<code>memory_search</code> tool. The result carries content, priority,
+times and facts, and no field saying the row was superseded
+(<code>:443-480</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Capture is a file append and does not block the agent. Refine runs
+when an agent triggers it, by default asynchronously, or in the nightly
+dream job. A memory is retrievable when its batch commits; the delay is
+one refine run after the trigger. Each run costs an extraction call per
+chunk and a verdict call per batch of candidates. Chunk results are
+cached by prompt and model fingerprint
+(<code>sgme/data/db.py:151-163</code>). No pass rewrites the whole
+store; the nightly dream job scans the TTL and validity columns of the
+pool.</p>
+<p><strong>The whitelist drops three 2.0 fields.</strong>
+<code>_base_record</code> computes <code>valid_to</code> for planned and
+wished units (<code>sgme/engine/l2_extract.py:74-104</code>,
+<code>:229-234</code>, <code>:262-267</code>).
+<code>records_to_items</code> then builds a fresh item without it
+(<code>:405-418</code>). <code>normalize_memories</code> copies a fixed
+list of keys that also omits <code>valid_to</code>,
+<code>forget_topic</code> and <code>forget_kind</code>, and replaces the
+model's <code>occurred_at</code> with the message time
+(<code>sgme/engine/refine.py:324-352</code>). The L3 insert passes no
+<code>valid_to</code>
+(<code>sgme/engine/l3_adjudicate.py:1221-1244</code>). The direct-store
+path passes <code>m.get("valid_to")</code>, which the normalised dict
+does not hold (<code>sgme/engine/pipeline.py:324</code>).
+<code>tests/test_valid_to.py</code> tests <code>_valid_to_for</code> and
+<code>insert_memory</code> separately, and
+<code>tests/test_forget_chain.py:99-120</code> inserts
+<code>forget_topic</code> directly.</p>
+<p><strong>Forget requests.</strong> When the model marks a unit as a
+request to stop mentioning something, the parser replaces the content
+with a fixed sentence, keeps the topic for <code>forget_topic</code> and
+types the row <code>forget_request</code>, which injection excludes
+(<code>sgme/engine/l2_extraction.py:358-410</code>,
+<code>:520-548</code>). With the topic dropped at normalisation, the
+stored row says that something was forgotten and not what.</p>
+<p><strong>Duplicates.</strong> <code>_exact_dup_check</code> skips a
+candidate whose text equals a row with <code>status='active'</code>
+(<code>sgme/engine/l3_adjudicate.py:784-798</code>). The near-duplicate
+guard embeds the candidate, searches non-rejected vectors, and above
+0.92 writes the candidate to quarantine as <code>discarded</code> with
+<code>auto:score&gt;=0.92</code>; <code>auto_discard</code> is on by
+default. Below that, between 0.85 and 0.92, it only counts. The check
+fails open when embedding is unavailable
+(<code>sgme/engine/l3_adjudicate.py:880-930</code>).</p>
+<p><strong>Supersession by substring.</strong> A memory that declares
+<code>supersedes: X</code> archives every active row sharing any of its
+dimensions whose content contains X, case-insensitively
+(<code>sgme/engine/l3_adjudicate.py:1354-1413</code>). X is a string the
+extraction model writes. A short X archives every neighbour that
+mentions it.</p>
+<p><strong>Whose statement it is.</strong> Assistant turns go into the
+same L0 file as the user's, and the extraction prompt, not code, decides
+attribution. Its table assigns an assistant's direct answer to a user's
+question to the user and asks for the answer itself to be stored
+(<code>sgme/resources/prompts/l1_extraction.txt:28-33</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Injection runs a few indexed queries per section. The DSH plugin
+injects once, at the first step of a session, as a pre-step block
+(<code>adapters/dsh/sgme-bridge/src/context.ts:1-20</code>). Search
+makes one embedding call per query when vectors are on.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers 65 tools across memory, review, cards, wiki,
+skills, signals, roles, configuration and credentials
+(<code>sgme/mcp_server.py:850-2600</code>). The DSH plugin registers 60
+model tools that call the HTTP API, including
+<code>memory_reject</code>, <code>memory_unreject</code>,
+<code>memory_delete</code>, <code>review_approve</code>,
+<code>review_reject</code>, <code>review_auto_resolve</code> and the
+near-duplicate verbs
+(<code>adapters/dsh/sgme-bridge/src/tools.ts:456-510</code>).</p>
+<p>The README's agent prompt sets five rules: append every turn, trigger
+refine at session end, inject at session start, consume care signals,
+and search before answering a history question. Memory capture therefore
+depends on the agent following the prompt, except under adapters that
+hook the host's turn events, as the DSH plugin does.</p>
+<p>The README and <code>AGENTS.md</code> also carry a section addressed
+to an installing agent that tells it to star the repository through
+<code>gh api -X PUT user/starred/freehul/sgme</code> with whatever
+GitHub credentials the machine holds, before installing and without
+asking the owner. It is documentation; no code in <code>sgme/</code>
+performs it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="a-rejected-fact-comes-back">A rejected fact comes back</h3>
+<p>Rejection sets <code>status = 'rejected'</code> and leaves the row
+(<code>sgme/data/memory_dao.py:400-425</code>). The exact-text check
+reads only <code>status='active'</code> rows
+(<code>sgme/engine/l3_adjudicate.py:794-797</code>). The near-duplicate
+search joins <code>memories</code> with
+<code>status != 'rejected'</code>
+(<code>sgme/data/search/vector.py:341</code>, <code>:377</code>). The
+verdict pool is the union of that vector search and
+<code>list_memories_by_dimension</code>, which appends the same
+predicate (<code>sgme/engine/l3_adjudicate.py:405-470</code>,
+<code>sgme/data/memory_dao.py:797</code>). The next extraction of the
+same fact, even word for word, therefore finds no duplicate, and the
+verdict model sees no candidate to skip against. It is stored as a new
+active row and injected.</p>
+<h3 id="review-sits-on-the-agents-tools">Review sits on the agent's
+tools</h3>
+<p><code>review_approve</code>, <code>review_reject</code>,
+<code>review_auto_resolve</code>, <code>near_dup_discard</code>,
+<code>near_dup_restore</code>, <code>memory_reject</code> and
+<code>memory_unreject</code> are MCP tools with no admin check; the
+eight <code>_require_admin</code> calls in <code>mcp_server.py</code>
+guard configuration, signal clearing, skill adoption and skill writes
+(<code>sgme/mcp_server.py:1627</code>, <code>:1830</code>,
+<code>:2165</code>, <code>:2192</code>, <code>:2244</code>,
+<code>:2283</code>, <code>:2320</code>, <code>:2440</code>). The HTTP
+review routes take <code>require_agent_key</code>
+(<code>sgme/server/routes_review.py:40-228</code>).
+<code>auto_resolve_expired</code> takes <code>days</code> from the
+caller and clears every pending row older than that, marking
+<code>notes</code> with <em>未经人工确认</em> ("not confirmed by a
+person") (<code>sgme/operations/review.py:299-345</code>).</p>
+<h3 id="deletion">Deletion</h3>
+<p>A logical delete is a rejection with reason <code>user_delete</code>
+and one <code>deletion_audit</code> row. <code>memory_unreject</code>
+reverses it and writes nothing. The MCP <code>memory_delete</code>
+stamps <code>triggered_by="user"</code> for whichever agent called it,
+and records the caller's agent id beside it
+(<code>sgme/mcp_server.py:1126-1134</code>). Purge requires the admin
+key and the phrase 彻底删除 ("delete completely"), removes the row from
+the main and archive tables, tags, sources, vectors and edges, and
+returns the remaining copies: the L0 transcript and the backups
+(<code>sgme/operations/memory.py:404-488</code>,
+<code>sgme/data/memory_dao.py:547-614</code>). The snapshot in
+<code>deletion_audit</code> keeps the full text.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code> — earned.</strong>
+<code>status</code> holds active or rejected, and every BM25, LIKE and
+vector read, the injection query and the verdict pool exclude rejected
+rows. <code>needs_review</code> holds a candidate out of injection until
+it is approved. The limits: any agent key can move both, a pending row
+is searchable, and deletion and disbelief share one value.</li>
+<li><strong><code>audit_log</code> — earned, on the core cards.</strong>
+<code>upsert_slot</code> is the only writer of <code>memory_cards</code>
+and appends a history row with old and new value on every call
+(<code>sgme/data/memory_card_dao.py:172-191</code>). In the memory pool,
+<code>deletion_audit</code> records deletes and
+<code>ttl_disposition</code> records lifecycle moves; creation,
+rejection, unrejection, content updates, supersession and review release
+leave no row.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> The
+LIKE-fallback cases store a rejected row and a live row with identical
+content and require exactly the live one back; a vector case does the
+same for the nearest neighbour
+(<code>tests/test_search_like_fallback_hardening.py:86-138</code>,
+<code>tests/test_search_v04.py:187-209</code>).</li>
+<li><strong><code>tombstone</code> — withheld.</strong> A rejected row
+is excluded from all three reads the write path consults, so nothing
+refuses its value, not even an identical restatement. The skill
+library's <code>tombstone</code> status marks a renamed skill by name
+(<code>sgme/data/skill_meta_dao.py:5-32</code>) and is not about memory
+content.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>valid_to</code> is read and never written by a shipped path,
+<code>valid_from</code> has no writer, and <code>occurred_at</code> is
+the time of the source message.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong>
+<code>_filter_agent_scope</code> keeps rows whose <code>agent_tag</code>
+is null, <code>default</code> or the caller's, and runs only when
+<code>agent_scope.enabled</code> is true; the default is false
+(<code>sgme/data/search/__init__.py:710-740</code>,
+<code>sgme/config.py:659-661</code>). Injection never applies it. The
+store is one person's by design.</li>
+<li><strong><code>human_review</code> — withheld.</strong> The pending
+queue and the quarantine are real and are consulted, and the producer's
+own tool surface holds the verbs that clear them.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI installs the package and runs <code>pytest -q</code>, then each
+adapter's tests in its own process
+(<code>.github/workflows/tests.yml:13-46</code>). I ran nothing from the
+repository.</p>
+<p>The memory tests cover the injection predicates one by one
+(<code>tests/test_inject_lifecycle.py:76-136</code>), rejection on each
+search arm, the two-state delete with its audit rows and the admin gate
+on purge (<code>tests/test_memory_delete.py:64-193</code>), card history
+(<code>tests/test_memory_cards.py:33-43</code>), the agent-scope filter
+when enabled (<code>tests/test_agent_scope.py</code>), and the
+forget-request parser and its exclusion from injection
+(<code>tests/test_forget_chain.py</code>).</p>
+<p>Not covered:</p>
+<ul>
+<li>No test runs extraction twice on a fact rejected in between.</li>
+<li>No test drives a planned or forget unit from the parser to the row,
+which is where <code>valid_to</code> and <code>forget_topic</code> are
+lost.</li>
+<li>No test asserts that a superseded row is absent from search, and the
+BM25 and vector arms return it.</li>
+</ul>
+<p><code>eval/</code> holds a LongMemEval harness that runs retrieval on
+raw sessions or through the full refine chain and scores session recall,
+a DeepSeek-judged answer score and token F1
+(<code>eval/longmemeval_eval.py:1-15</code>), plus an extraction F1
+harness and A/B scripts for the graph arm and the stoplist. No result
+file is committed, and the README states no number. The tree cites no
+paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Injection as SQL over typed columns.</strong> Store
+modality, subject, route and lifecycle at extraction and let the
+session-start query exclude by them. It costs nothing per turn and is
+testable predicate by predicate.</li>
+<li><strong>A budget that drops the least durable block first.</strong>
+Core profile never trimmed, persona block first, sections from the
+tail.</li>
+<li><strong>Purge with a receipt.</strong> Snapshot in the audit, the
+admin key plus a typed phrase, and a response that lists the copies
+still on disk.</li>
+<li><strong>Test a filter with a live twin.</strong> Seeding a rejected
+row beside an identical live row turns a vacuous <code>not in</code>
+into a real exclusion.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A rejection the deduplicator cannot see.</strong> Excluding
+rejected rows from the near-duplicate and verdict reads lets the next
+extraction re-add the fact. Keep them visible to the write path, keyed
+by content.</li>
+<li><strong>A field whitelist between parser and writer.</strong> Three
+fields were computed and lost at one copy. Test from parser output to
+stored row.</li>
+<li><strong>Approve verbs on the agent's tool list.</strong> A queue the
+producer can clear is a delay, not review.</li>
+<li><strong>Supersession by substring.</strong> Archiving every row that
+mentions a model-supplied subject removes neighbours along with the
+target.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who runs several agents on one machine or a
+home server and wants a shared profile injected cheaply, especially in
+Chinese, with a WebUI to inspect it. It assumes a free model tier and an
+embedding key. The codebase is large, fast-moving and governed by design
+documents that are not in the repository. Walk away if a correction has
+to hold, if more than one person shares the server, or if the agents
+should not be able to approve their own memories.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the normalisation whitelist is meant to carry
+<code>valid_to</code>, <code>forget_topic</code> and
+<code>forget_kind</code>, given that <code>pipeline.py</code> already
+lists the last two.</li>
+<li>Whether <code>lifecycle = 'archived'</code> is meant to stay out of
+the BM25 and vector arms, as the graph arm's comment implies.</li>
+<li>How the deployed instance sets <code>agent_scope</code> and
+<code>near_dup.auto_discard</code>.</li>
+<li>What the 2.0 design documents under <code>docs/design/</code> decide
+about review authority.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and migrations: <code>sgme/data/db.py</code>,
+<code>migrations/</code></li>
+<li>Memory data access: <code>sgme/data/memory_dao.py</code>,
+<code>sgme/data/memory_card_dao.py</code>,
+<code>sgme/data/near_dup_dao.py</code></li>
+<li>Extraction: <code>sgme/engine/refine.py</code>,
+<code>sgme/engine/l2_extraction.py</code>,
+<code>sgme/engine/l2_extract.py</code>,
+<code>sgme/resources/prompts/l1_extraction.txt</code></li>
+<li>Verdict and storage: <code>sgme/engine/l3_adjudicate.py</code>,
+<code>sgme/engine/pipeline.py</code></li>
+<li>Search: <code>sgme/data/search/__init__.py</code>,
+<code>sgme/data/search/vector.py</code>,
+<code>sgme/segment.py</code></li>
+<li>Injection: <code>sgme/operations/inject.py</code>,
+<code>sgme/profile/inject.py</code>,
+<code>sgme/profile/core_cards.py</code></li>
+<li>Correction and review: <code>sgme/operations/memory.py</code>,
+<code>sgme/operations/review.py</code>,
+<code>sgme/server/routes_review.py</code></li>
+<li>Lifecycle: <code>sgme/engine/dream.py</code>,
+<code>sgme/engine/ttl_disposition.py</code></li>
+<li>Entry points: <code>sgme/server/routes_memory.py</code>,
+<code>sgme/mcp_server.py</code></li>
+<li>DSH plugin: <code>adapters/dsh/sgme-bridge/src/</code></li>
+<li>Tests: <code>tests/</code>, <code>adapters/*/tests/</code>,
+<code>.github/workflows/tests.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No shipped writer of <code>valid_to</code> or
+<code>valid_from</code>.</strong>
+<code>git grep -n -E 'valid_to=|valid_from=' -- sgme</code> returns
+<code>sgme/engine/l2_extract.py:231</code> and <code>:264</code>, both
+into <code>_base_record</code>, and
+<code>sgme/engine/pipeline.py:324</code>, which reads a key the
+normalised dict does not carry.</li>
+<li><strong>Nothing reads <code>forget_topic</code>.</strong>
+<code>git grep -n 'forget_topic' -- sgme ':!sgme/resources'</code>
+returns the column definition, the insert column list, the parser at
+<code>l2_extraction.py:389</code> and <code>:547</code>, and the
+direct-store key list at <code>pipeline.py:328</code>.</li>
+<li><strong>The review and correction tools carry no admin
+check.</strong>
+<code>grep -n '_require_admin(ctx)' sgme/mcp_server.py</code> returns
+lines 1627, 1830, 2165, 2192, 2244, 2283, 2320 and 2440, none inside the
+tools at 1067-1275.</li>
+<li><strong>Mutation logs in the store.</strong>
+<code>git grep -n -E "INSERT INTO (deletion_audit|memory_card_history|ttl_disposition)" -- sgme</code>
+returns <code>memory_card_dao.py:184</code>,
+<code>memory_dao.py:538</code> and <code>:604</code>,
+<code>dream.py:236</code> and <code>recall_aging.py:152</code>.</li>
+<li><strong>Only the graph arm reads <code>lifecycle</code>.</strong>
+<code>git grep -n 'lifecycle' -- sgme/data/search</code> returns lines
+372-419 of <code>__init__.py</code>, all in
+<code>_graph_candidates</code>.</li>
+<li><strong>Every duplicate check reads live rows only.</strong>
+<code>git grep -n -E "content=\? AND status='active'" -- sgme/engine</code>
+returns <code>l3_adjudicate.py:795</code>.</li>
+<li><strong>No value-keyed refusal on the write path.</strong>
+<code>git grep -n -E "status ?= ?'rejected'|reject_reason" -- sgme/engine sgme/data/near_dup_dao.py</code>
+returns the dream TTL marker and the supersession reason builder in
+<code>l3_adjudicate.py</code>;
+<code>git grep -n -i -E 'tombstone|blocklist|denylist|do_not_remember' -- sgme</code>
+returns only the skill library's lifecycle.</li>
+<li><strong>Auto-resolve has no scheduled caller.</strong>
+<code>git grep -n 'auto_resolve_expired' -- sgme ':!sgme/operations/review.py'</code>
+returns the MCP tool and the HTTP route.</li>
+<li><strong>No committed evaluation result.</strong>
+<code>git ls-files | grep -i -E 'longmem|result'</code> returns
+<code>eval/longmemeval_eval.py</code> only.</li>
+<li><strong>Design documents are not in the tree.</strong>
+<code>git ls-files docs/design</code> returns nothing;
+<code>.gitignore:105</code> lists <code>/docs/design/</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- sgme eval docs README.md README.zh-CN.md AGENTS.md</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/freehul/sgme/commit/127095e80e12ae4095434611c833e55e371ef0ab"><code class="commit-id" title="127095e80e12ae4095434611c833e55e371ef0ab">127095e8…</code></a>.
+First reading, from a full clone at the head of <code>main</code>.
+Screened first: one auto-run surface, the committed
+<code>.githooks/</code>, inert unless <code>core.hooksPath</code> points
+there; <code>pyproject.toml</code> inside the seven-day cooldown; six
+build-time execution points, three <code>conftest.py</code> files and
+three <code>prepublishOnly</code> scripts; six unpinned manifests. The
+README, <code>AGENTS.md</code>, prompts and skills were read as data,
+including a section telling installing agents to star the repository.
+Nothing was installed, built or run, and no tests were run. Three marks:
+<code>trust_state</code>, <code>audit_log</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). A rejected fact
+is invisible to the write path's duplicate checks, and the normalisation
+whitelist drops <code>valid_to</code> and the forget topic.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -127,7 +127,7 @@ belief.</p>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
 recurs across the corpus. 85 systems of
-870 carry the mark, and <a
+871 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -292,7 +292,7 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>85 systems of
-870 in the atlas carry the mark.</strong> The
+871 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -2183,6 +2183,22 @@ no fingerprint, and compaction's hard delete releases it. The provider's
 mirror of Hermes's memory tool shows the cost: replacing a value and
 then replacing it back leaves no live copy. <a
 href="../../systems/lmc-5/">LMC-5</a> has the same shape.</p>
+<p><a href="../../systems/sgme/">SGME</a> keeps the rejected row and
+hides it from exactly the reads that would stop it returning. A user
+correction or <code>memory_reject</code> sets
+<code>status = 'rejected'</code> and leaves the text in place
+(<code>sgme/data/memory_dao.py:400-425</code>). The write path checks
+for duplicates three times: an exact-text lookup that reads
+<code>status='active'</code>, a bge-m3 near-duplicate search that joins
+on <code>status != 'rejected'</code>, and an LLM verdict over a pool
+built from that search and <code>list_memories_by_dimension</code>,
+which appends the same predicate
+(<code>sgme/engine/l3_adjudicate.py:784-798</code>,
+<code>:405-470</code>, <code>sgme/data/search/vector.py:341</code>). The
+next extraction of the same statement, even word for word, finds nothing
+and is stored as a new active row. The record a tombstone needs is
+present; turning it into one means dropping the status filter from the
+write path's three reads, not from the read path's.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

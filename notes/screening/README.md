@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 869 of 870 screened at the report's current pin.**
+**Progress: 870 of 871 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 415 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 394 |
-| Repositories with build-time execution (`EXEC`) | 624 |
+| Repositories with an auto-run surface (`RUNS`) | 416 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 395 |
+| Repositories with build-time execution (`EXEC`) | 625 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -383,6 +383,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`selvedge`](../../content/systems/selvedge.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`serena`](../../content/systems/serena.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `.vscode/settings.json`, `server.json` |
 | [`session-recall`](../../content/systems/session-recall.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `mcp.json` |
+| [`sgme`](../../content/systems/sgme.md) | `.githooks/` |
 | [`shisad`](../../content/systems/shisad.md) | `.gitattributes` |
 | [`shodh-memory`](../../content/systems/shodh-memory.md) | `.claude/hooks/`, `.claude/settings.json`, `.mcp.json`, `hooks/` |
 | [`signetai`](../../content/systems/signetai.md) | `.githooks/` |
