@@ -192,6 +192,25 @@ dead-letter path.</p>
 <p><strong>Skip it if</strong> capture is synchronous and cheap. The
 pattern exists to protect work that happens away from the user.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<h3 id="read-these-first">Read these first</h3>
+<ul>
+<li><a href="../../systems/nanobot/">nanobot</a> — the cheapest correct
+form: a consumption cursor over an append-only archive that advances
+only when the run completes, so failed work is simply read again.</li>
+<li><a href="../../systems/claude-mem/">Claude-Mem</a> — the durable
+hook queue: canonical SQLite before acknowledgement, failures returned
+to pending, the vector index a best-effort projection.</li>
+<li><a href="../../systems/marm-memory/">marm-memory</a> — the outbox in
+the memory row's own transaction, so a memory cannot exist without its
+indexing task.</li>
+<li><a href="../../systems/heimdall/">Heimdall</a> — idempotency by
+taking the payload out of the job: a queued path is a hint to recompute,
+and the projection lands before the journal row.</li>
+<li><a href="../../systems/sesa/">SESA</a> — the counterexample: the
+failure queue is cleared before the remote call that was meant to
+consume it.</li>
+</ul>
+<h3 id="every-instance">Every instance</h3>
 <p><a href="../../systems/nanobot/">nanobot</a> contributes the cheapest
 correct mechanism on this page, and it is worth trying before any retry
 queue. Its <code>Dream</code> consolidation runs against an append-only
@@ -518,6 +537,21 @@ projects compaction snapshots into long memory keeps a durable pending
 record, resumes after restart, and pauses a capture after three invalid
 model outputs with its sources retained, waiting for an operator
 retry.</p>
+<p><a href="../../systems/everything-claude-codex/">ECX
+(everything-claude-codex)</a> repaired the acknowledgement and not the
+input. Its LightRAG ingest records why: "LightRAG logs extraction errors
+without raising, so earlier runs left docs FAILED while this script
+marked them done." It now reprocesses failed and pending documents
+before new work, saves a file's mtime only when the document reads back
+<code>processed</code>, and exits 1 when a real failure remains
+(<code>vault-search/lightrag_ingest.py:91-96</code>,
+<code>:131-135</code>, <code>:144-148</code>). The input is the note on
+disk, so a retry costs a rerun and loses nothing. What the job cannot do
+is retract: an edited note is inserted as a new document beside the old
+one and nothing in <code>vault-search/</code> deletes from the graph, so
+a complete run is also a stale one. <strong>A retry that makes the index
+whole needs a delete beside it, or whole means every
+version.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>

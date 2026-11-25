@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 866 reports.</strong></p>
+<p><strong>This page covers all 867 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35655,6 +35655,54 @@ from inventing rules about you.</li>
 <li>Do not copy when: the gate must hold against the agent it governs,
 an owner's facts must survive deletion, or more than one person writes
 to the memory.</li>
+</ul>
+<h3 id="everything-claude-codex"><a
+href="../systems/everything-claude-codex/"><code>everything-claude-codex</code></a></h3>
+<ul>
+<li>Best idea: <strong>share memory across two vendors' agents with one
+boot list.</strong> The vault's <code>AGENTS.md</code> tells Codex to
+read <code>CLAUDE.md</code>, <code>.remember/hot.md</code>, the session
+logs and Claude Code's memory folder in order, read only, so Codex
+starts from what Claude's SessionStart hook injects without a server or
+a sync protocol.</li>
+<li>Second idea: a hand-curated hot file with one block code owns.
+<code>memory/update_hot.py</code> replaces only the
+<code>## LAST SESSION (auto-updated)</code> section of
+<code>hot.md</code> with the compaction summary and leaves the person's
+deadlines, tracks and hard rules alone.</li>
+<li>Biggest risk: <strong>the compaction updater fails on ordinary
+text.</strong> From the second compaction the summary is the replacement
+template of <code>re.sub</code>
+(<code>memory/update_hot.py:48-53</code>), so a <code>\d</code>, a
+Windows path or a <code>\1</code> raises outside any <code>try</code>
+and <code>hot.md</code> keeps the previous session's block; a summary
+holding a Markdown rule leaves its tail behind at the next run.</li>
+<li>Second risk: forgetting differs by index and by agent. The Chroma
+ingest removes deleted files, while LightRAG inserts an edited note as a
+new document beside the old one and has no delete call, and the CLIP
+ingest never removes a deleted image; Codex's <code>(via Codex)</code>
+notes go to <code>now.md</code>, which Claude's Stop hook moves into a
+day log that no hook in the tree injects, though <code>AGENTS.md</code>
+says Claude reads it.</li>
+<li>Most reusable component: <code>vault-search/ingest.py:62-113</code>,
+the mtime state file and the delete-by-source resync, and the status
+check before recording a file done in
+<code>vault-search/lightrag_ingest.py:91-96</code>,
+<code>:131-135</code>.</li>
+<li>Maturity impression: MIT; 8,586 lines of Python, about 1,730 of them
+on the memory paths, in 77 commits from 28 October to 22 November 2026
+under six names; 215 unittest methods in CI on Ubuntu and macOS, none of
+them on the indexes or the hot.md updater, none run here. No marks; the
+nearest, a <code>/catchup</code> test that a keyword search omits the
+live session's matching transcript, is a window rule over transcripts
+rather than material that must not be recalled.</li>
+<li>Study when: you want Claude Code and Codex to start from the same
+personal context with nothing but Markdown files, hooks and an
+instructions file.</li>
+<li>Do not copy when: a deleted or corrected note must stop being
+returned by every search, several people share the vault, or the second
+agent's memory has to be loaded by code rather than by the model
+following instructions.</li>
 </ul>
         </article>
       </div>

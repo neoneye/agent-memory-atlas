@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **866 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **867 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -254,6 +254,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/ean-agentos/"><span class="az-id">EAN AgentOS</span><span class="az-what">A fix that failed, ranked not removed</span><code class="az-repo">eanai-ro/ean-agentos</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/ecc/"><span class="az-id">ECC</span><span class="az-what">A vault that stays unreviewed</span><code class="az-repo">affaan-m/ECC</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/echo-agent/"><span class="az-id">Echo Agent</span><span class="az-what">Provenance-ranked contradiction memory</span><code class="az-repo">fuyuxiang/echo-agent</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/everything-claude-codex/"><span class="az-id">ECX (everything-claude-codex)</span><span class="az-what">One hot.md for two agents, and three nightly indexes that forget unevenly</span><code class="az-repo">saksham10arora-dotcom/everything-claude-codex</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/edda/"><span class="az-id">Edda</span><span class="az-what">An approval cannot be banked before the gate opens</span><code class="az-repo">fagemx/edda</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/egc/"><span class="az-id">EGC</span><span class="az-what">One brain, stored in two places</span><code class="az-repo">Fmarzochi/EGC</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/elai/"><span class="az-id">ELAI</span><span class="az-what">Wire-dark temporal facts in an abandoned harness</span><code class="az-repo">DITlieD/ELAI-archive</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>

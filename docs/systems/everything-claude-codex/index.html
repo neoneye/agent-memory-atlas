@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Claude Code and Codex share a
+Markdown hot.md and Claude's memory folder, with nightly Chroma,
+LightRAG and CLIP indexes over a notes vault.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ECX
+(everything-claude-codex) — Agent Memory Atlas">
+    <meta property="og:description" content="Claude Code and Codex share
+a Markdown hot.md and Claude's memory folder, with nightly Chroma,
+LightRAG and CLIP indexes over a notes vault.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ECX
+(everything-claude-codex) — Agent Memory Atlas">
+    <meta name="twitter:description" content="Claude Code and Codex
+share a Markdown hot.md and Claude's memory folder, with nightly Chroma,
+LightRAG and CLIP indexes over a notes vault.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ECX (everything-claude-codex) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ECX (everything-claude-codex)",
+      "description": "Claude Code and Codex share a Markdown hot.md and Claude's memory folder, with nightly Chroma, LightRAG and CLIP indexes over a notes vault.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One hot.md for two agents, and three
+nightly indexes that forget unevenly</p>
+          <h1>ECX (everything-claude-codex)</h1>
+          <p class="document-deck">Claude Code and Codex share a
+Markdown hot.md and Claude's memory folder, with nightly Chroma,
+LightRAG and CLIP indexes over a notes vault.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/saksham10arora-dotcom/everything-claude-codex">
+              <span>Source</span>
+              <strong>saksham10arora-dotcom/everything-claude-codex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/saksham10arora-dotcom/everything-claude-codex/commit/130905006c35cb03b70d8845785b236d64a74fc0" title="130905006c35cb03b70d8845785b236d64a74fc0">
+              <span>Analyzed revision</span>
+              <code>13090500…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/saksham10arora-dotcom--everything-claude-codex" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>saksham10arora-dotcom--everything-claude-codex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT,
+the unmodified text, in LICENSE; no package manifest states a
+licence</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>8,586
+lines of Python in 82 files, of which 2,708 are tests, 2,229 the duo
+orchestrator and 586 a SWE-bench harness and its tasks; about 1,730
+lines on the memory paths (agent-sync, the hot.md updater, the session
+hooks, the phone sync, vault-search and catchup); 407 lines of skill
+prompts in 19 files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>77
+commits from 28 October to 22 November 2026, 65 by Saksham Arora and the
+rest from five other names; tags v1.0.0 (10 November) and
+install-count</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>215
+unittest methods in 22 files; .github/workflows/test.yml runs them on
+Ubuntu 24.04 and macOS under Python 3.9 and 3.12; none touch
+vault-search or memory/update_hot.py; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ECX is an installer and a set of hooks, skills and scripts that let
+Claude Code and Codex work from one notes vault. Its memory is files: a
+hand-curated <code>.remember/hot.md</code> that both agents read at the
+start of a session, session logs, Claude Code's own memory folder, and
+the vault's notes, indexed nightly into ChromaDB, LightRAG and a CLIP
+image collection behind three MCP servers. What is notable is how little
+machinery the sharing needs: the same Markdown is injected into one
+agent by a hook and listed for the other in <code>AGENTS.md</code>. What
+is weak is upkeep: the compaction updater raises on ordinary summary
+text and keeps the old block, the Codex-to-Claude note path ends in a
+file nothing injects, and two of the three indexes never forget a
+deleted note.</p>
+<p>The headline feature, "two agents from two different labs share one
+memory and see each other's latest messages"
+(<code>README.md:20</code>), is two mechanisms, and only one of them is
+memory. <code>agent-sync/sync.py</code> is a relay. Before each prompt
+it reads the new lines of the other agent's session transcripts and the
+agent mailbox and injects them as context. It holds nothing that could
+later turn out false, and <a href="#scope">section 9</a> keeps it out of
+the marks. The memory is the shared files and the indexes beside
+them.</p>
+<p><strong>Licence.</strong> MIT, the unmodified text, in
+<code>LICENSE</code>, with no package manifest to disagree with it. Two
+files the session hooks inject, <code>.remember/recent.md</code> and
+<code>.remember/archive.md</code>, are written by the separately
+installed <code>remember</code> plugin, whose code and terms are not in
+this tree.</p>
+<p>No mark is earned. The nearest is a <code>/catchup</code> test that a
+keyword search leaves out the live session's matching text, which is a
+window rule over transcripts rather than material that must not be
+recalled. Section 9 gives the reason for each of the seven withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a Markdown file an agent is told to read, or a
+chunk of one returned by a search</strong>. Nothing is extracted into
+facts, and nothing carries a state. A file is believed from the moment
+it is written and stops being believed when someone edits it, or, for an
+index, when the next nightly run notices the change.</p>
+<p>Five things persist, with different writers:</p>
+<ul>
+<li><strong><code>hot.md</code></strong>, "the source of truth for right
+now" (<code>templates/CLAUDE.md:7</code>): WHO, strongest signals,
+tracks, hard dates, open loops and hard rules
+(<code>templates/hot.md:5-28</code>). The <code>/tldr</code> skill
+updates it with "any new deadline, project state or hard rule"
+(<code>skills/tldr/SKILL.md:10</code>), the user edits it, and
+<code>memory/update_hot.py</code> replaces a
+<code>## LAST SESSION (auto-updated)</code> block with up to 2,500
+characters of each compaction summary
+(<code>memory/update_hot.py:24-57</code>).</li>
+<li><strong>Session logs</strong> in <code>.remember/</code>.
+<code>recent.md</code> and <code>archive.md</code> come from the
+<code>remember</code> plugin, which
+<code>phone-vault/remember_on_stop.sh:6-12</code> triggers after each
+reply; no file in the tree writes either. <code>now.md</code> takes
+Codex's notes: <code>AGENTS.md</code> tells Codex to "append one dated
+line to <code>./.remember/now.md</code> starting with
+<code>(via Codex)</code>" (<code>templates/AGENTS.md:38</code>).
+Claude's Stop hook moves <code>now.md</code> into
+<code>today-YYYY-MM-DD.md</code> after every reply
+(<code>hooks/archive_now.sh:5-6</code>).</li>
+<li><strong>Claude Code's own memory folder</strong>, written by Claude
+Code and outside the tree. Codex is told to read <code>MEMORY.md</code>
+and every file beside it and never to edit them
+(<code>templates/AGENTS.md:12</code>, <code>:37</code>).</li>
+<li><strong>Vault notes</strong>, including phone captures that land as
+one file in <code>inbox/</code> and are filed by the laptop agent later
+(<code>hooks/inbox_nudge.sh:10-12</code>), and wiki articles the
+<code>/wiki</code> skill compiles from the inbox before moving the raw
+file to <code>archive/raw/</code>
+(<code>skills/wiki/SKILL.md:28</code>).</li>
+<li><strong>Three indexes</strong> over those notes, rebuilt for changed
+files each evening.</li>
+</ul>
+<p>Conflict resolution is prose. Codex is told that "when sources
+disagree, the newer one wins" and that "Memory marked SUPERSEDED is
+history, not current state" (<code>templates/AGENTS.md:14</code>); no
+code reads either rule.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — hot.md and the session logs reach Claude through one SessionStart hook and Codex through its AGENTS.md boot list; Codex's own notes end in a dated log nothing injects; the nightly indexes differ in what an edit or a delete removes</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: hot.md and the session logs reach Claude through one SessionStart hook and Codex through its AGENTS.md boot list; Codex&#39;s own notes end in a dated log nothing injects; the nightly indexes differ in what an edit or a delete removes
+flowchart TD
+  T[&quot;the /tldr skill or&lt;br/&gt;the user edits hot.md&quot;] --&gt; HOT[&quot;.remember/hot.md&quot;]
+  PC[&quot;PostCompact hook&lt;br/&gt;passes the summary&quot;] --&gt; UH{&quot;update_hot.py:&lt;br/&gt;backslash escape&lt;br/&gt;in the summary?&quot;}
+  UH --&gt;|&quot;no&quot;| HOT
+  UH --&gt;|&quot;yes, from the&lt;br/&gt;second compaction&quot;| KEEP[&quot;re.error: the old&lt;br/&gt;LAST SESSION block&lt;br/&gt;stays in hot.md&quot;]
+  HOT --&gt; SS[&quot;SessionStart injects&lt;br/&gt;hot.md, recent.md and&lt;br/&gt;archive.md head,&lt;br/&gt;cut at 10,000 chars&quot;]
+  RP[&quot;remember plugin,&lt;br/&gt;outside the tree&quot;] --&gt; REC[&quot;recent.md, archive.md&quot;]
+  REC --&gt; SS
+  SS --&gt; CL[&quot;Claude in the vault&quot;]
+  HOT --&gt; CXB[&quot;Codex reads the same&lt;br/&gt;files by AGENTS.md&quot;]
+  CL ~~~ CX
+  CX[&quot;Codex appends a&lt;br/&gt;(via Codex) line&quot;] --&gt; NOW[&quot;.remember/now.md&quot;]
+  NOW --&gt; AN[&quot;Claude&#39;s Stop hook&lt;br/&gt;moves it into&lt;br/&gt;today-DATE.md&quot;]
+  AN --&gt; NR[&quot;no hook injects&lt;br/&gt;today-DATE.md&quot;]
+  NR ~~~ VN
+  VN[&quot;vault Markdown notes,&lt;br/&gt;images and PDFs&quot;] --&gt; NI[&quot;nightly cron&quot;]
+  NI --&gt; CH[&quot;Chroma: chunks of&lt;br/&gt;changed and deleted&lt;br/&gt;files replaced&quot;]
+  NI --&gt; LR[&quot;LightRAG: an edit adds&lt;br/&gt;a new document, the&lt;br/&gt;old one stays&quot;]
+  NI --&gt; CP[&quot;CLIP: a deleted image&lt;br/&gt;is never removed&quot;]
+  CH --&gt; MCP[&quot;MCP search tools&quot;]
+  LR --&gt; MCP
+  CP --&gt; MCP</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>ECX is a directory the user clones and an installer that wires it
+into two agents. <code>scripts/install.py</code> creates the vault
+skeleton and renders <code>CLAUDE.md</code>, <code>AGENTS.md</code> and
+<code>.remember/hot.md</code> from <code>templates/</code> without
+overwriting (<code>scripts/install.py:143-149</code>). It symlinks every
+folder under <code>skills/</code> into <code>~/.claude/skills</code> and
+<code>~/.agents/skills</code> (<code>:151-162</code>). It then adds
+hooks:</p>
+<ul>
+<li><strong>Every Claude Code project</strong> gets the danger guard,
+MCP health checks, a read-only auto-approval, usage tracking, a desktop
+notification and the tests-before-done Stop hook, plus a statusline
+(<code>:165-182</code>).</li>
+<li><strong>Claude Code in the vault</strong> gets the memory hooks:
+<code>session_context.sh</code> and <code>inbox_nudge.sh</code> at
+SessionStart, the doctor at startup, <code>agent-sync</code> at
+UserPromptSubmit, the AI-tell guard, <code>archive_now.sh</code> and
+<code>remember_on_stop.sh</code> at Stop, and <code>update_hot.py</code>
+at PostCompact (<code>:185-196</code>). <code>--with-phone</code> adds a
+background <code>phone-vault/sync.sh</code> at Stop
+(<code>:197-198</code>).</li>
+<li><strong>Codex in the vault</strong> gets <code>agent-sync</code> at
+UserPromptSubmit, the doctor at startup and, with phone mode, the sync
+(<code>:203-210</code>). It gets no memory hook; its memory is the boot
+list in <code>AGENTS.md</code>.</li>
+</ul>
+<p><code>vault-search/</code> holds three stdio MCP servers registered
+in the vault's <code>.mcp.json</code> (<code>:226-234</code>):
+<code>vault-rag</code> (<code>mcp_server.py</code>, Chroma text and CLIP
+image search), <code>vault-graph</code>
+(<code>lightrag_mcp_server.py</code>) and <code>vault-router</code>
+(<code>smart_router_mcp_server.py</code>). <code>--with-search</code>
+installs their dependencies into <code>~/.ecx/venv</code> with
+lower-bound pins (<code>vault-search/requirements.txt:2-10</code>).
+<code>--with-cron</code> adds four crontab lines
+(<code>scripts/install.py:251-256</code>).</p>
+<p>Phone mode makes the vault a git repository with a private GitHub
+remote. After every reply <code>sync.sh</code> copies
+<code>hot.md</code>, <code>recent.md</code>, the newest day log and
+<code>now.md</code>, the <code>.remember/</code> Markdown and Claude's
+memory folder into <code>context/</code>, commits every changed
+<code>.md</code> file, pulls with rebase and pushes
+(<code>phone-vault/sync.sh:35-63</code>).
+<code>inbox-automerge.yml</code> squash-merges any same-repo pull
+request whose files are all <code>inbox/*.md</code>
+(<code>phone-vault/inbox-automerge.yml:16</code>,
+<code>:25-32</code>).</p>
+<p><code>duo/</code> runs Claude Code and Codex on one goal with a local
+web page, approval cards and an action log. It reads memory at start
+(<code>duo/context.py:112-122</code>) and writes none, and its agents
+run with <code>--no-session-persistence</code> and hooks disabled
+(<code>duo/claude_agent.py:13</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Running:</strong> nothing for the files and the relay;
+Python 3.9 or later and bash. The search stack needs ChromaDB,
+sentence-transformers, open_clip with torch, PyMuPDF and LightRAG, and
+LightRAG needs an Ollama host.</li>
+<li><strong>Local and offline:</strong> the files, the relay and the
+Chroma and CLIP indexes run locally. LightRAG's default model is
+<code>gemma4:31b-cloud</code>
+(<code>vault-search/lightrag_ingest.py:24</code>), so note text leaves
+the machine during graph indexing and graph queries unless
+<code>ECX_LLM_MODEL</code> names a local model, which the README says
+(<code>README.md:189</code>).</li>
+<li><strong>API key:</strong> none for storage. Phone mode needs a
+GitHub remote and, for Codex in the ChatGPT app, a one-time account
+setup.</li>
+<li><strong>Install:</strong> <code>./install.sh</code>, which asks
+three questions and can print its plan with <code>--dry-run</code>.</li>
+<li><strong>Repair by hand:</strong> every memory is a Markdown file.
+The indexes are derived and can be rebuilt; LightRAG has to be rebuilt
+to lose anything.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>hot.md refresh at compaction.</strong>
+<code>memory/update_hot.py</code> reads <code>summary</code> from the
+hook's stdin, always writes it to
+<code>.remember/tmp/last-compaction.md</code> (<code>:24-28</code>),
+truncates it to 2,500 characters (<code>:34</code>), rewrites the
+<code># Updated:</code> line (<code>:44</code>), and either replaces the
+existing LAST SESSION block with <code>re.sub</code>
+(<code>:47-53</code>) or inserts it before <code>\n## WHO</code>
+(<code>:54-55</code>).</li>
+<li><strong>Session-start injection.</strong>
+<code>hooks/session_context.sh:5-19</code> concatenates
+<code>hot.md</code>, <code>recent.md</code> and
+<code>head -60 archive.md</code> under headings and emits the first
+10,000 characters as <code>additionalContext</code>.</li>
+<li><strong>Codex's notes.</strong> <code>templates/AGENTS.md:38</code>
+is the writer; <code>hooks/archive_now.sh</code> appends
+<code>now.md</code> to the day log and truncates it on every Claude
+Stop. Its readers are the phone mirror, which copies it into
+<code>context/today.md</code> (<code>phone-vault/sync.sh:40-42</code>),
+and any agent that opens the file.</li>
+<li><strong>Codex boot.</strong> <code>templates/AGENTS.md:7-14</code>
+lists <code>CLAUDE.md</code>, <code>hot.md</code>,
+<code>recent.md</code>, <code>archive.md</code>, the newest
+<code>today-*.md</code> and Claude's memory folder; in cloud mode the
+same list under <code>context/</code> (<code>:44</code>).</li>
+<li><strong>duo boot.</strong> <code>context_files</code> returns
+<code>hot.md</code>, <code>recent.md</code> and Claude's
+<code>MEMORY.md</code> (<code>duo/context.py:18-29</code>);
+<code>catchup</code> adds six hours of both agents' transcripts, newest
+first, up to 12,000 characters (<code>:32-56</code>).</li>
+<li><strong>Chroma ingest.</strong> <code>vault-search/ingest.py</code>
+walks the vault skipping <code>SKIP_DIRS</code> (<code>:19-21</code>,
+<code>:49-59</code>), compares each file's mtime with
+<code>chroma_sync_state.json</code> (<code>:66-67</code>), deletes
+chunks whose <code>source</code> is changed or deleted
+(<code>:86-88</code>), splits changed files at headings into 400-word
+chunks with ids <code>rel::i</code> (<code>:36-46</code>,
+<code>:100-107</code>), and saves the new state
+(<code>:111-112</code>).</li>
+<li><strong>LightRAG ingest.</strong>
+<code>vault-search/lightrag_ingest.py</code> retries failed and pending
+documents first (<code>:91-96</code>), selects changed files from the
+given folders (<code>:98-116</code>), inserts each as
+<code>Source: &lt;path&gt;</code> plus its text (<code>:129-130</code>),
+and records the mtime only when the document's status is
+<code>processed</code> (<code>:131-135</code>).</li>
+<li><strong>CLIP ingest.</strong>
+<code>vault-search/multimodal_ingest.py:95</code> selects changed images
+and PDFs; each is deleted by <code>source</code> and re-added page by
+page or as one image (<code>:110-133</code>).</li>
+<li><strong>Search.</strong> <code>search_vault</code> queries the
+<code>vault</code> collection for five hits and returns 400 characters
+of each (<code>vault-search/mcp_server.py:31-39</code>);
+<code>search_images</code> embeds the query with CLIP, takes 20
+candidates, deduplicates by file name and page and lists notes that
+mention each image (<code>:61-101</code>);
+<code>graph_search_vault</code> calls <code>rag.aquery</code>
+(<code>lightrag_mcp_server.py:108-121</code>); the router classifies and
+dispatches (<code>smart_router_mcp_server.py:40-47</code>,
+<code>:163-187</code>).</li>
+<li><strong>Relay (not memory).</strong> <code>inject</code> in
+<code>agent-sync/sync.py:266-307</code>, <code>send</code> and
+<code>unread</code> at <code>:203-228</code>.</li>
+<li><strong>Tests.</strong>
+<code>tests/test_hooks_and_install.py:52-68</code> for the session
+hooks, <code>tests/test_agent_sync.py</code> for the relay,
+<code>tests/test_catchup.py</code> for <code>/catchup</code>,
+<code>tests/test_duo_context.py</code> for duo's boot.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Nothing is typed. <code>hot.md</code> is a template of headings with
+a <code># Updated:</code> line, the only date in the file
+(<code>templates/hot.md:2</code>). A phone capture carries three
+frontmatter keys, <code>captured_at</code>, <code>source</code> and
+<code>agent</code> (<code>templates/AGENTS.md:47-53</code>), which no
+script reads. A Codex note is one line with a date the model writes.</p>
+<p>The indexes store paths, not records. A Chroma chunk carries
+<code>source</code>, the vault-relative path, and <code>chunk</code>,
+its position (<code>vault-search/ingest.py:105</code>); a visual entry
+adds <code>type</code> and <code>page</code>
+(<code>multimodal_ingest.py:120</code>, <code>:131</code>). The LightRAG
+document prefixes the path to the text, and its id is LightRAG's hash of
+that whole string (<code>lightrag_ingest.py:129-131</code>), so an
+edited file has a new id.</p>
+<p>Scope is physical. One vault per install decides what every index and
+hook sees. Inside it nothing is partitioned: <code>inbox/</code>,
+personal notes, the hot file and the mirror are one collection.</p>
+<p>Claude's memory folder is located by a path derived from the vault,
+and the three places that derive it do not agree.
+<code>scripts/install.py:41</code> and
+<code>phone-vault/sync.sh:11</code> replace every non-alphanumeric
+character of the resolved path with <code>-</code>, while
+<code>duo/context.py:27</code> replaces only <code>/</code>. For a vault
+at <code>~/my_vault</code> the first gives
+<code>-Users-ada-my-vault</code> and duo looks for
+<code>-Users-ada-my_vault</code>, so for any vault path holding a
+character other than letters, digits and <code>/</code>, at most one of
+them names the folder Claude Code uses. <code>context_files</code> drops
+paths that do not exist (<code>:29</code>), so when it is duo that
+misses, duo starts without the memory index and says nothing.</p>
+<p>There are no temporal fields beyond file mtimes, no version chain, no
+status and no deletion record.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval at session start is a fixed list of files. Claude in the
+vault gets <code>hot.md</code>, then <code>recent.md</code>, then 60
+lines of <code>archive.md</code>, and the whole is cut at 10,000
+characters (<code>hooks/session_context.sh:19</code>), so a long
+<code>recent.md</code> crowds out the archive and can cut itself. The
+day logs and <code>now.md</code> are not on the list. Claude Code
+outside the vault gets none of it, since the hook is registered only in
+the vault's settings (<code>scripts/install.py:185-189</code>).</p>
+<p>Codex's retrieval is the model following <code>AGENTS.md</code>: read
+four groups of files "fully, in this order"
+(<code>templates/AGENTS.md:7-12</code>). Nothing checks that it did, and
+the README's phone instructions tell the user to open every Codex Cloud
+chat with a line asking it to read <code>AGENTS.md</code> first
+(<code>README.md:137</code>).</p>
+<p>Search is three tools and a router. <code>search_vault</code> is a
+plain top-5 cosine query over MiniLM embeddings with no filter.
+<code>graph_search_vault</code> passes the query and a mode to
+LightRAG's <code>aquery</code> with no other parameters, so by
+LightRAG's default it returns an answer the configured model writes from
+the graph rather than source excerpts. The router counts matches of two
+regexes of signal words, such as "relate to" and "compare" against
+"find" and "what is", and picks the larger, or both on a tie
+(<code>smart_router_mcp_server.py:28-47</code>). On "hybrid" it
+concatenates the two outputs under headings with no fusion,
+deduplication or budget (<code>:168-182</code>).</p>
+<p>Three retrieval defects follow from the code:</p>
+<ul>
+<li><strong>The router's vector arm is text only.</strong> Its tool
+description says "vector RAG (text+visual)"
+(<code>smart_router_mcp_server.py:120-121</code>), and
+<code>vector_search</code> queries the <code>vault</code> collection
+alone (<code>:62-71</code>); <code>vault_visual</code> is read only by
+<code>search_images</code> (recorded searches). <code>AGENTS.md</code>
+tells Codex to use the router first
+(<code>templates/AGENTS.md:18</code>).</li>
+<li><strong>The graph covers three folders.</strong> The cron line
+indexes <code>research personal projects</code>
+(<code>scripts/install.py:253</code>), and the script's default is
+<code>research</code> (<code>lightrag_ingest.py:57-60</code>), so
+<code>wiki/</code>, <code>daily/</code>, <code>inbox/</code> and
+<code>content/</code> never enter it. A relationship question about a
+compiled wiki article goes to an index that never held it.</li>
+<li><strong>The meaning index skips the archive and keeps the
+mirror.</strong> <code>SKIP_DIRS</code> excludes <code>archive</code>
+and the agent tool folders, not <code>.remember</code> or
+<code>context</code> (<code>vault-search/ingest.py:19-20</code>). Raw
+captures that <code>/wiki</code> moves into <code>archive/raw/</code>
+leave the index, while with phone mode on every <code>.remember/</code>
+file is indexed twice, once in place and once under
+<code>context/remember/</code>, and Claude's individual memory files
+enter it through <code>context/memory/</code> (only
+<code>MEMORY.md</code> is skipped, <code>:21</code>).</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write to the shared files is a model or a person editing
+Markdown, except the compaction block and the day-log move. There is no
+extraction, deduplication or conflict check.</p>
+<p><strong>The compaction updater fails on ordinary text.</strong> On
+the first compaction the block is inserted with
+<code>str.replace</code>, which treats the summary literally
+(<code>memory/update_hot.py:55</code>). From the second, the new block
+is the replacement template of <code>re.sub</code>
+(<code>:48-53</code>), which interprets backslash escapes. A scratch
+reproduction of that call under Python 3.15 raised
+<code>bad escape \d</code> for a summary containing <code>\d+</code>,
+<code>bad escape \U</code> for <code>C:\Users</code>, and
+<code>invalid group reference</code> for <code>\1</code>. The call is
+outside the script's only <code>try</code>, so the script exits before
+<code>HOT.write_text</code> (<code>:57</code>), and <code>hot.md</code>
+keeps the previous session's block while <code>last-compaction.md</code>
+holds the new one.</p>
+<p>Two quieter failures share the function. The pattern stops at the
+first <code>---</code> followed by a blank line (<code>:49</code>), so a
+summary containing a Markdown rule leaves its tail below the next block,
+where it accumulates. If the user renames the <code>## WHO</code>
+heading before the first compaction, the insert is a no-op while the
+<code># Updated:</code> line is still rewritten with <code>(auto)</code>
+(<code>:44</code>, <code>:55</code>).</p>
+<p><strong>Codex's notes stop at a log nobody is shown.</strong>
+<code>AGENTS.md</code> says of <code>now.md</code> "Claude reads that
+file, so both agents stay in sync"
+(<code>templates/AGENTS.md:38</code>). No hook in the tree reads
+<code>now.md</code> or a <code>today-*.md</code> file into Claude's
+context. <code>archive_now.sh</code> moves the line on Claude's next
+Stop, and it reaches Claude only if the external <code>remember</code>
+plugin's daily rotation folds the day log into <code>recent.md</code>,
+as the sync script's comment assumes
+(<code>phone-vault/sync.sh:39</code>). The move is
+<code>cat &gt;&gt; today &amp;&amp; : &gt; now</code> with no lock
+(<code>hooks/archive_now.sh:6</code>), so a line Codex appends between
+the two commands is lost.</p>
+<p>Phone captures write one <code>inbox/</code> file each, merged by the
+Action without a person when the pull request touches nothing else. The
+nightly Chroma run indexes <code>inbox/</code> like any folder, so a
+capture is searchable by meaning before anyone files it.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing blocks the agent for long. The vault hooks carry timeouts of
+5 to 15 seconds (<code>scripts/install.py:189-198</code>), and
+<code>sync.py</code> exits 0 with no output on any error
+(<code>agent-sync/sync.py:364-366</code>).</p>
+<ul>
+<li><strong>Lag.</strong> A <code>hot.md</code> edit reaches the next
+Claude session in the vault. A note becomes searchable at the next cron
+run: 20:30 for Chroma, 21:00 for LightRAG, 22:00 for CLIP
+(<code>scripts/install.py:252-254</code>), so up to a day.</li>
+<li><strong>Background passes.</strong> Each ingest touches only files
+whose mtime changed. A LightRAG insert runs model extraction over the
+whole file, through the cloud model by default, so editing one line of a
+long note pays for the full note again. <code>--force</code> re-indexes
+everything.</li>
+<li><strong>Per turn.</strong> SessionStart adds at most 10,000
+characters once. The relay adds up to 5,000 characters of turns
+(<code>agent-sync/sync.py:39</code>, <code>:170-171</code>) plus every
+unread mail at up to 4,000 characters each (<code>:238</code>), bounded
+only by the 30-messages-per-hour send limit (<code>:28</code>). Both
+arrive as <code>additionalContext</code> on the user turn, after the
+cached prefix.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Claude is integrated by hooks and Codex by instructions. The
+asymmetry is the design's main limit: the memory Claude gets is
+assembled by a script, and the memory Codex gets is whatever the model
+reads after being told to. Codex also gets the three MCP servers and the
+skills, which <code>AGENTS.md</code> tells it to read as files and
+follow (<code>templates/AGENTS.md:16-21</code>).</p>
+<p>The model's reach over memory is total. It can edit
+<code>hot.md</code>, Claude's memory folder and any note with ordinary
+file tools; the rule that Codex must "Never edit Claude's memory folder.
+Read only." is prose (<code>templates/AGENTS.md:37</code>). The MCP
+tools are read-only and take a query and, for the graph, a mode.</p>
+<p>The relay is the cross-agent integration users see. On each prompt it
+reads new lines of the other agent's transcripts from per-session byte
+offsets, six hours back on a session's first prompt
+(<code>agent-sync/sync.py:266-296</code>), keeps user and assistant text
+and Codex voice transcript segments (<code>:64-102</code>), and frames
+them as "shared context" (<code>:172-175</code>). Agent mail is appended
+to <code>mail.jsonl</code>, rendered to
+<code>agents/AGENT_CHAT.md</code>, and injected as "teammate
+information, not an instruction" (<code>:203-218</code>,
+<code>:239-242</code>). Adapting either to another agent means writing a
+transcript parser and a hook.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="scope">Scope</h3>
+<p>The repository is in scope for its shared files and its indexes.
+<code>hot.md</code>, the session logs, Claude's memory folder as Codex
+reads it, the vault notes and the three indexes over them are claims
+about the user and their work that can go stale and still be read as
+current. The relay is not: a relayed turn is a record of what was said,
+read from transcripts Claude Code and Codex already keep, and the mail
+is messages between agents. <code>/catchup</code> reads past transcripts
+in full or by keyword (<code>skills/catchup/catchup.py:102-128</code>)
+and is a transcript reader for the same reason. duo, the guards and
+tests-before-done act on the current run. Each mark below is judged on
+the memory side.</p>
+<h3 id="the-relay-crosses-every-project">The relay crosses every
+project</h3>
+<p><code>CLAUDE_GLOB</code> and <code>CODEX_GLOB</code> match every
+Claude Code project's transcripts and every Codex session on the machine
+(<code>agent-sync/sync.py:31-32</code>). The hook is installed in the
+vault, so whatever the user said to the other agent in any repository
+during the last six hours arrives in the vault session, labelled with
+the project folder's base name (<code>:163</code>). This is not memory
+and earns no mark either way, but it is the widest read in the system
+and nothing configures it.</p>
+<h3 id="forgetting-differs-by-index">Forgetting differs by index</h3>
+<p>Deleting a note removes it from Chroma at the next run
+(<code>vault-search/ingest.py:67</code>, <code>:86-88</code>). LightRAG
+has no delete call anywhere in <code>vault-search/</code> (recorded
+searches): an edited note is inserted as a second document beside the
+first, and a deleted note's entities and relations stay in the graph, so
+<code>graph_search_vault</code> answers from text the user changed or
+removed. The CLIP ingest computes changes over files that exist
+(<code>multimodal_ingest.py:95</code>), so a deleted image keeps its
+vector and its path in <code>search_images</code> results. With phone
+mode, every committed version of every note, including the mirror of
+Claude's memory folder, stays in the GitHub repository's history;
+<code>rsync --delete</code> removes files from <code>context/</code>
+only in the next commit (<code>phone-vault/sync.sh:44-48</code>).</p>
+<h3 id="the-lightrag-retry">The LightRAG retry</h3>
+<p>The LightRAG ingest is the one piece built for failure. Its comment
+records that "LightRAG logs extraction errors without raising, so
+earlier runs left docs FAILED while this script marked them done"
+(<code>lightrag_ingest.py:91-92</code>). It now reprocesses failed and
+pending documents before new work, records a file as indexed only when
+its document reads back <code>processed</code>, and exits 1 when a
+failure other than duplicate content remains (<code>:93-96</code>,
+<code>:131-135</code>, <code>:144-148</code>). The retry makes the graph
+complete; the missing delete keeps it stale.</p>
+<h3 id="provenance-and-injection">Provenance and injection</h3>
+<p>No memory records who wrote it. A phone capture names
+<code>source</code> and <code>agent</code> in frontmatter that nothing
+reads. A note captured by a cloud agent is merged unreviewed into
+<code>inbox/</code>, indexed that night, and summarised into the wiki by
+a model. Mail carries a sender name the sending agent passes as
+<code>--from</code> (<code>sync.py:247-255</code>).
+<code>AGENTS.md</code> tells Codex that the user's own notes in
+<code>AGENT_CHAT.md</code> are instructions
+(<code>templates/AGENTS.md:62</code>), a file both agents append to.</p>
+<h3 id="documents-that-disagree-with-the-code">Documents that disagree
+with the code</h3>
+<ul>
+<li><code>AGENTS.md:38</code> says Claude reads <code>now.md</code>; no
+hook does.</li>
+<li>The router's description promises visual results; its vector arm
+reads text only.</li>
+<li>The router's docstring says its ChromaDB side uses
+<code>nomic-embed-text</code>
+(<code>smart_router_mcp_server.py:5-6</code>); the code embeds with
+<code>all-MiniLM-L6-v2</code> (<code>:50-58</code>), matching the
+ingest.</li>
+<li>The README says all of search "re-indexes every night"
+(<code>README.md:129</code>); the graph indexes three folders.</li>
+</ul>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>negative_eval</code> — withheld.</strong> The
+near-miss is
+<code>test_keyword_search_returns_only_matching_other_sessions</code>,
+which seeds three transcripts, two mentioning "pineapple", and requires
+the keyword search to return the older one and omit both the
+non-matching session and the live session's matching text
+(<code>tests/test_catchup.py:64-70</code>). The live session is excluded
+because the tool is defined as reading other sessions
+(<code>skills/catchup/catchup.py:108</code>), not because its content is
+wrong or out of scope, and it is a transcript, not memory. The relay
+tests require injected <code>AGENTS.md</code>, developer, thinking,
+tool-result and sidechain text absent from a populated relay
+(<code>tests/test_agent_sync.py:42-68</code>), which is context
+assembly. No test touches the indexes or the hot.md updater.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> One vault
+per install is a physical partition. No chunk carries a scope key, the
+only <code>where=</code> filters in <code>vault-search/</code> are the
+two delete calls, and no MCP tool takes a scope argument.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No file or
+chunk carries a status. The SUPERSEDED rule is a sentence the model
+reads.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> A deleted or
+edited note leaves no record keyed on its text, and LightRAG keeps the
+old text itself.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>captured_at</code> is the capture time and is never read;
+everything else is file mtime.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>mail.jsonl</code> is append-only and holds agent messages, not
+memory changes. The phone sync's commits are git history, a different
+mechanism. The ingest logs report runs.</li>
+<li><strong><code>human_review</code> — withheld.</strong> An inbox-only
+capture merges with no person. A phone pull request touching other files
+is left open for GitHub review, but <code>AGENTS.md</code> also tells
+the phone agent it may "Push to the default branch"
+(<code>templates/AGENTS.md:54</code>), so the producer can skip the
+gate. <code>/wiki-health</code> only reports, and duo's approvals are of
+plans and actions, not memory.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is 215 unittest methods, most of them on duo, the guards,
+the installer and the doctor. CI runs it on Ubuntu 24.04 and macOS under
+Python 3.9 and 3.12 (<code>.github/workflows/test.yml</code>). The
+memory-facing cases are few and shallow:</p>
+<ul>
+<li><code>test_session_context_injects_hot</code> requires a
+<code>hot.md</code> line in the SessionStart output
+(<code>tests/test_hooks_and_install.py:52-55</code>).</li>
+<li><code>test_archive_moves_now_into_today</code> requires
+<code>now.md</code> empty and one <code>today-*</code> file after the
+Stop hook, not the moved text (<code>:62-68</code>).</li>
+<li><code>test_inbox_nudge_lists_files</code> requires an inbox file
+name in the nudge (<code>:57-60</code>).</li>
+<li>The doctor tests require a missing <code>hot.md</code> to be
+reported and a five-day-old index directory to be reported with its age
+(<code>:224-256</code>).</li>
+<li><code>tests/test_duo_context.py</code> requires a context file's
+text in duo's brief and the catch-up to leave the relay's cursors
+alone.</li>
+</ul>
+<p>Nothing tests <code>memory/update_hot.py</code>, any ingest, any MCP
+server, the router's classifier or <code>phone-vault/sync.sh</code>
+(recorded searches). The <code>bad escape</code> failure in <a
+href="#7-write-mechanics">section 7</a> is the kind a single
+second-compaction case would catch.</p>
+<p>The README's benchmark is of duo on six SWE-bench Verified issues,
+with committed results under <code>bench/duo/</code>; it measures
+orchestration and was not checked here. No memory benchmark is claimed.
+No paper is cited in the tree; the README links a blog post about how
+the system was built, which was not read.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give the hot file a heading the updater owns.</strong> A
+fixed <code>## LAST SESSION (auto-updated)</code> block that code
+replaces and people do not edit lets a hand-curated file carry an
+automatic part without merge rules.</li>
+<li><strong>Point the second agent at the first one's files, read
+only.</strong> One boot list in the second agent's instructions shares
+memory across vendors with no server; keep the instruction that the
+second agent never edits the first one's folder.</li>
+<li><strong>Record a background job done only when its output reads back
+done.</strong> The LightRAG ingest's check of document status before
+saving the mtime is the smallest version of a recoverable job.</li>
+<li><strong>Delete by source before re-adding.</strong> Chunk ids of
+<code>path::i</code> and a delete on <code>source</code> for changed and
+deleted files keep a vector index in step with the files.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Model text as a regex replacement.</strong> Pass a function
+to <code>re.sub</code>, or use string slicing, wherever the replacement
+is a summary, a note or a transcript.</li>
+<li><strong>A write path whose reader is an instruction.</strong> If one
+agent leaves notes for another, the reader should be a hook or a test,
+not a sentence saying the other agent reads the file.</li>
+<li><strong>An insert-only graph over editable notes.</strong> An index
+that cannot delete answers from text the user removed; key documents on
+the path and delete before re-inserting.</li>
+<li><strong>Deriving one path in three places.</strong> Compute the
+memory folder's location once and import it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who already lives in Claude Code and Codex,
+keeps an Obsidian-style vault, and wants both agents to start knowing
+the same things without running a service. It assumes that person
+curates <code>hot.md</code> and reads what the agents write; nothing in
+it decides whether a note is still true. Walk away if notes must be
+forgettable on request, if several people share the vault, or if the
+search results must not include text the user deleted.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether Claude Code's PostCompact payload carries a
+<code>summary</code> field, which <code>update_hot.py</code> depends on;
+the tree has no fixture of it.</li>
+<li>Whether the <code>remember</code> plugin's rotation folds
+<code>today-*.md</code> into <code>recent.md</code>, which is the only
+route by which a Codex note reaches Claude's session start.</li>
+<li>Whether the remember plugin also writes <code>now.md</code>, and in
+what order its background save and <code>archive_now.sh</code> run at
+the same Stop event.</li>
+<li>What the README's "under 0.1 s" figure for the relay
+(<code>README.md:65</code>) was measured on; nothing in the tree
+measures it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Shared files and templates: <code>templates/hot.md</code>,
+<code>templates/CLAUDE.md</code>, <code>templates/AGENTS.md</code></li>
+<li>Write path: <code>memory/update_hot.py</code>,
+<code>hooks/archive_now.sh</code>,
+<code>phone-vault/remember_on_stop.sh</code>,
+<code>skills/tldr/SKILL.md</code>, <code>skills/wiki/SKILL.md</code>,
+<code>jobs/tracker_staleness.py</code></li>
+<li>Context assembly: <code>hooks/session_context.sh</code>,
+<code>hooks/inbox_nudge.sh</code>, <code>duo/context.py</code></li>
+<li>Indexes and search: <code>vault-search/ingest.py</code>,
+<code>vault-search/lightrag_ingest.py</code>,
+<code>vault-search/multimodal_ingest.py</code>,
+<code>vault-search/mcp_server.py</code>,
+<code>vault-search/lightrag_mcp_server.py</code>,
+<code>vault-search/smart_router_mcp_server.py</code></li>
+<li>Phone sync: <code>phone-vault/sync.sh</code>,
+<code>phone-vault/inbox-automerge.yml</code></li>
+<li>Relay and transcripts: <code>agent-sync/sync.py</code>,
+<code>skills/catchup/catchup.py</code>,
+<code>statusline/statusline.sh</code></li>
+<li>Installer and checks: <code>scripts/install.py</code>,
+<code>scripts/doctor.py</code></li>
+<li>Tests: <code>tests/test_hooks_and_install.py</code>,
+<code>tests/test_agent_sync.py</code>,
+<code>tests/test_catchup.py</code>,
+<code>tests/test_duo_context.py</code>,
+<code>.github/workflows/test.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No test touches the memory writers or the indexes.</strong>
+<code>git grep -n -E 'update_hot|vault-search|classify_query|phone-vault|sync\.sh' -- 'tests/*.py'</code>
+returns nothing; the same form with <code>agent-sync</code> returns
+<code>tests/test_agent_sync.py:11</code> and
+<code>tests/test_duo_context.py:48</code>.</li>
+<li><strong>Only <code>search_images</code> reads the visual
+collection.</strong> <code>git grep -n 'vault_visual' -- .</code>
+returns <code>vault-search/mcp_server.py:85</code> and
+<code>vault-search/multimodal_ingest.py:4</code>, <code>:26</code>.</li>
+<li><strong>Nothing injects <code>now.md</code>.</strong>
+<code>git grep -n -E 'now\.md' -- .</code> returns
+<code>hooks/archive_now.sh:2</code>, <code>:5</code>,
+<code>phone-vault/sync.sh:42</code>, <code>templates/AGENTS.md:38</code>
+and <code>tests/test_hooks_and_install.py:63</code>.</li>
+<li><strong>No writer of <code>recent.md</code> or
+<code>archive.md</code> in the tree.</strong>
+<code>git grep -n -E 'recent\.md|archive\.md' -- .</code> returns
+readers and docs only: <code>hooks/session_context.sh</code>,
+<code>phone-vault/sync.sh:38-39</code>, <code>duo/context.py:26</code>,
+<code>templates/AGENTS.md:11</code>, <code>:44</code> and the duo plan
+and spec under <code>docs/</code>.</li>
+<li><strong>No delete in the LightRAG paths.</strong>
+<code>git grep -n -E 'adelete|delete' -- vault-search</code> returns
+lines of <code>vault-search/ingest.py</code> and
+<code>vault-search/multimodal_ingest.py:110</code> only.</li>
+<li><strong>No scope filter on a read.</strong>
+<code>git grep -n -E 'where=' -- vault-search</code> returns the two
+delete calls, <code>ingest.py:88</code> and
+<code>multimodal_ingest.py:110</code>.</li>
+<li><strong>No status, tombstone or validity field in the memory
+code.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|superseded|deprecated|retired|valid_from|valid_to|expires|status' -- '*.py' '*.sh'</code>,
+outside <code>duo/</code>, <code>bench/</code> and <code>tests/</code>,
+returns git status checks, the statusline and LightRAG's
+<code>doc_status</code>;
+<code>git grep -n -E 'SUPERSEDED|superseded' -- .</code> returns
+<code>templates/AGENTS.md:14</code> alone.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- .</code>
+returns nothing; <code>git grep -n -i -E 'swebench' -- README.md</code>
+returns <code>README.md:166</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/saksham10arora-dotcom/everything-claude-codex/commit/130905006c35cb03b70d8845785b236d64a74fc0"><code class="commit-id" title="130905006c35cb03b70d8845785b236d64a74fc0">13090500…</code></a>.
+First reading, from a full clone at the head of <code>main</code>;
+triage selected <code>fb0f12536835</code>, an earlier commit, and the
+pin is the head. Screened first: one auto-run surface,
+<code>hooks/</code> with 12 hook scripts, which were not run; nothing
+inside the seven-day cooldown; no build-time execution; two unpinned
+manifests, <code>vault-search/requirements.txt</code> and
+<code>watch-notes/requirements.txt</code>; no submodules. Templates,
+skills and docs were read as data. Nothing was installed, built or run,
+and the 215 test methods were not run; two scratch scripts reproduced
+the <code>re.sub</code> call and the memory-folder path derivations. No
+marks; the <code>/catchup</code> live-session test is the
+<code>negative_eval</code> near-miss (<a href="#marks">section
+9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

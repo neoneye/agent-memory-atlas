@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 866 reports.**
+**This page covers all 867 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -7983,3 +7983,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 4,684 lines of standard-library Python in one engine file, a 675-line Hermes provider, 82 commits under five author names from 27 April to 24 November 2026 with nine tags; 43 unittest methods and a 38-check Hermes script run by CI, none run here. A weekly workflow in every copy overwrites the engine and hooks from upstream `main`. No marks; the nearest, a test that `repair` removes an expired tentative fact from its file, asserts about a file rather than a read.
 - Study when: you want plain-text memory you can diff and carry between coding tools, and want a commit-time check that stops a model from inventing rules about you.
 - Do not copy when: the gate must hold against the agent it governs, an owner's facts must survive deletion, or more than one person writes to the memory.
+
+### [`everything-claude-codex`](../systems/everything-claude-codex/)
+- Best idea: **share memory across two vendors' agents with one boot list.** The vault's `AGENTS.md` tells Codex to read `CLAUDE.md`, `.remember/hot.md`, the session logs and Claude Code's memory folder in order, read only, so Codex starts from what Claude's SessionStart hook injects without a server or a sync protocol.
+- Second idea: a hand-curated hot file with one block code owns. `memory/update_hot.py` replaces only the `## LAST SESSION (auto-updated)` section of `hot.md` with the compaction summary and leaves the person's deadlines, tracks and hard rules alone.
+- Biggest risk: **the compaction updater fails on ordinary text.** From the second compaction the summary is the replacement template of `re.sub` (`memory/update_hot.py:48-53`), so a `\d`, a Windows path or a `\1` raises outside any `try` and `hot.md` keeps the previous session's block; a summary holding a Markdown rule leaves its tail behind at the next run.
+- Second risk: forgetting differs by index and by agent. The Chroma ingest removes deleted files, while LightRAG inserts an edited note as a new document beside the old one and has no delete call, and the CLIP ingest never removes a deleted image; Codex's `(via Codex)` notes go to `now.md`, which Claude's Stop hook moves into a day log that no hook in the tree injects, though `AGENTS.md` says Claude reads it.
+- Most reusable component: `vault-search/ingest.py:62-113`, the mtime state file and the delete-by-source resync, and the status check before recording a file done in `vault-search/lightrag_ingest.py:91-96`, `:131-135`.
+- Maturity impression: MIT; 8,586 lines of Python, about 1,730 of them on the memory paths, in 77 commits from 28 October to 22 November 2026 under six names; 215 unittest methods in CI on Ubuntu and macOS, none of them on the indexes or the hot.md updater, none run here. No marks; the nearest, a `/catchup` test that a keyword search omits the live session's matching transcript, is a window rule over transcripts rather than material that must not be recalled.
+- Study when: you want Claude Code and Codex to start from the same personal context with nothing but Markdown files, hooks and an instructions file.
+- Do not copy when: a deleted or corrected note must stop being returned by every search, several people share the vault, or the second agent's memory has to be loaded by code rather than by the model following instructions.

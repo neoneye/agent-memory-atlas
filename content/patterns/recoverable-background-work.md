@@ -77,6 +77,16 @@ work that happens away from the user.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [nanobot](../../systems/nanobot/) — the cheapest correct form: a consumption cursor over an append-only archive that advances only when the run completes, so failed work is simply read again.
+- [Claude-Mem](../../systems/claude-mem/) — the durable hook queue: canonical SQLite before acknowledgement, failures returned to pending, the vector index a best-effort projection.
+- [marm-memory](../../systems/marm-memory/) — the outbox in the memory row's own transaction, so a memory cannot exist without its indexing task.
+- [Heimdall](../../systems/heimdall/) — idempotency by taking the payload out of the job: a queued path is a hint to recompute, and the projection lands before the journal row.
+- [SESA](../../systems/sesa/) — the counterexample: the failure queue is cleared before the remote call that was meant to consume it.
+
+### Every instance
+
 [nanobot](../../systems/nanobot/) contributes the cheapest correct mechanism on
 this page, and it is worth trying before any retry queue. Its `Dream`
 consolidation runs against an append-only archive tracked by a **consumption
@@ -218,6 +228,8 @@ columns does this pass have no input for, and what happens to them.
 [Synap Core](../../systems/maximem-synap-core/) puts the outbox inside the retirement's own transaction and leaves one store outside it. `retire_memory_with_audit` updates the memory row and inserts a `graph_sync_pending` row and the changelog row in one Postgres transaction (`synap/cloud/agents/ingestion/storage/sqlalchemy_rdbms_wrapper.py:737-875`). Stage 4 drains its own rows after the graph write, the delete route drains inline after its commit, and a worker started at boot takes the rest with a 120-second lease and a backoff from 5 seconds to an hour that never gives up (`synap/cloud/agents/ingestion/storage/graph_sync_outbox.py:32-57`). Its docstring records why an ingestion's rows wait 300 seconds: the worker took a row before Stage 4's graph write and held the lease while Stage 4 looked for it. Releasing an absent id changes nothing, so every retry is safe. The memory-vector delete at supersession is not in the outbox. It is called once and logged as non-fatal on failure (`synap/cloud/agents/ingestion/storage/coordinator.py:1169-1182`), and the vector arm does no liveness check, so a failed delete leaves the superseded text servable with nothing queued to retry it.
 
 [Hivemind (Lesur)](../../systems/hivemind-lesur/) keeps the input and loses the queue. Notes stay in S3 until a consolidation job that accounted for them has applied its edits, so a crash or a refused plan costs a rerun and not the notes, while the job queue itself is in process memory and its acknowledgement says `in_memory_best_effort`. Compaction persists a verified full-space backup before writing and rolls back within bounds; normal consolidation has no batch-wide rollback, and a storage failure can leave earlier writes of a batch applied. The archive worker that projects compaction snapshots into long memory keeps a durable pending record, resumes after restart, and pauses a capture after three invalid model outputs with its sources retained, waiting for an operator retry.
+
+[ECX (everything-claude-codex)](../../systems/everything-claude-codex/) repaired the acknowledgement and not the input. Its LightRAG ingest records why: "LightRAG logs extraction errors without raising, so earlier runs left docs FAILED while this script marked them done." It now reprocesses failed and pending documents before new work, saves a file's mtime only when the document reads back `processed`, and exits 1 when a real failure remains (`vault-search/lightrag_ingest.py:91-96`, `:131-135`, `:144-148`). The input is the note on disk, so a retry costs a rerun and loses nothing. What the job cannot do is retract: an edited note is inserted as a new document beside the old one and nothing in `vault-search/` deletes from the graph, so a complete run is also a stale one. **A retry that makes the index whole needs a delete beside it, or whole means every version.**
 
 ## Tests to require
 

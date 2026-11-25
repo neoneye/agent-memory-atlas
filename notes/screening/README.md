@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 865 of 866 screened at the report's current pin.**
+**Progress: 866 of 867 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 413 |
+| Repositories with an auto-run surface (`RUNS`) | 414 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 393 |
 | Repositories with build-time execution (`EXEC`) | 622 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
@@ -155,6 +155,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`engraphis`](../../content/systems/engraphis.md) | `.claude-plugin/`, `.githooks/` |
 | [`enquire-mcp`](../../content/systems/enquire-mcp.md) | `scripts/` |
 | [`everos`](../../content/systems/everos.md) | `.claude/settings.json` |
+| [`everything-claude-codex`](../../content/systems/everything-claude-codex.md) | `hooks/` |
 | [`exomem`](../../content/systems/exomem.md) | `.claude-plugin/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json`, `plugins/hosted/generated/claude/.claude-plugin/plugin.json`, `plugins/hosted/generated/claude/.mcp.json`, `server.json` |
 | [`farm`](../../content/systems/farm.md) | `.gitmodules` |
 | [`fava-trails`](../../content/systems/fava-trails.md) | `.vscode/settings.json` |

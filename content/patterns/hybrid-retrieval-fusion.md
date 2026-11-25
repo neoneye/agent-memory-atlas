@@ -257,6 +257,8 @@ between a retriever that degrades and one that degrades silently.
 
 **[LRC](../../systems/lrc/) applies its privacy filter on every arm and its lifecycle filter on two of three.** `is_visible` runs in the TF-IDF, geometric and sentence-vector arms alike, while `lifecycle_allows`, which drops `Superseded` and `Suppressed` memories before the top-k cut, is called by the first two and not by `semantic_recall` (`src/memory_store.rs:6260`, `:7276`, `:6647-6703`). The release build fuses all three by default, so a memory a user asked to forget can return through the vector arm. Its negative test calls the TF-IDF arm alone (`src/memory_store_tests.rs:7547-7586`). **Put the exclusion in the filter every arm shares, and assert it against the fused result.**
 
+[ECX (everything-claude-codex)](../../systems/everything-claude-codex/) routes instead of fusing. Its `smart_search_vault` tool counts matches of two regexes of signal words, "relate to" and "compare" for the graph and "find" and "what is" for vectors, and runs the larger arm, or both on a tie (`vault-search/smart_router_mcp_server.py:28-47`). On a tie it concatenates the two outputs under headings with no fusion, deduplication or budget (`:168-182`), and one of them is a model-written LightRAG answer rather than ranked passages. The description promises "vector RAG (text+visual)" while the vector arm queries the text collection only (`:62-71`, `:120-121`). **A router decides which arm a query never reaches; test the arm it skips, not only the one it picks.**
+
 ## Tests to require
 
 - Exact identifiers, paraphrases, dates, negation, and typo cases.

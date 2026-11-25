@@ -541,6 +541,19 @@ through the vector arm. Its negative test calls the TF-IDF arm alone
 (<code>src/memory_store_tests.rs:7547-7586</code>). <strong>Put the
 exclusion in the filter every arm shares, and assert it against the
 fused result.</strong></p>
+<p><a href="../../systems/everything-claude-codex/">ECX
+(everything-claude-codex)</a> routes instead of fusing. Its
+<code>smart_search_vault</code> tool counts matches of two regexes of
+signal words, "relate to" and "compare" for the graph and "find" and
+"what is" for vectors, and runs the larger arm, or both on a tie
+(<code>vault-search/smart_router_mcp_server.py:28-47</code>). On a tie
+it concatenates the two outputs under headings with no fusion,
+deduplication or budget (<code>:168-182</code>), and one of them is a
+model-written LightRAG answer rather than ranked passages. The
+description promises "vector RAG (text+visual)" while the vector arm
+queries the text collection only (<code>:62-71</code>,
+<code>:120-121</code>). <strong>A router decides which arm a query never
+reaches; test the arm it skips, not only the one it picks.</strong></p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exact identifiers, paraphrases, dates, negation, and typo
