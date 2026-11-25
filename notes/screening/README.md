@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 879 of 880 screened at the report's current pin.**
+**Progress: 880 of 881 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 422 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 397 |
-| Repositories with build-time execution (`EXEC`) | 631 |
+| Repositories with an auto-run surface (`RUNS`) | 423 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 398 |
+| Repositories with build-time execution (`EXEC`) | 632 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -82,6 +82,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`binder`](../../content/systems/binder.md) | `.vscode/settings.json` |
 | [`brain-db`](../../content/systems/brain-db.md) | `.devcontainer/devcontainer.json` |
 | [`brain-mcp`](../../content/systems/brain-mcp.md) | `server.json` |
+| [`brainlayer`](../../content/systems/brainlayer.md) | `.claude-plugin/`, `.githooks/`, `extensions/brainlayer-plugin/.claude-plugin/plugin.json`, `extensions/brainlayer-plugin/.mcp.json`, `extensions/brainlayer-plugin/hooks/`, `extensions/brainlayer-plugin/hooks/hooks.json`, `hooks/`, `server.json` |
 | [`browsentic`](../../content/systems/browsentic.md) | `server.json` |
 | [`buzz`](../../content/systems/buzz.md) | `.vscode/settings.json` |
 | [`byterover`](../../content/systems/byterover.md) | `.claude/settings.json`, `.github/copilot-instructions.md`, `.gitmodules` |

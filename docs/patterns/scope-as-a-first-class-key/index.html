@@ -1921,6 +1921,23 @@ one and requires recall to return exactly that one. The coupling has a
 failure mode: a fact citing a deleted document fails the test for every
 reader, and forget, which requires every version visible, refuses
 it.</p>
+<p><a href="../../systems/brainlayer/">BrainLayer</a> applies a named
+project in SQL on two search paths with two rules for a chunk that has
+none. When <code>brain_search</code> names a project, the Python helper
+runs as consumer <code>worker</code> and appends
+<code>c.project IN (...)</code> over the project and its configured
+worktrees to the vector and FTS arms, leaving NULL-project chunks out; a
+missing or unknown role becomes <code>worker</code>, and a worker with
+no project gets <code>0 = 1</code>
+(<code>src/brainlayer/scoping.py:163-178</code>,
+<code>src/brainlayer/search_repo.py:464-478</code>). When the helper is
+busy or past its 6 s budget, BrainBar's Swift fallback appends
+<code>(c.project = ? OR c.project IS NULL)</code>
+(<code>brain-bar/Sources/BrainBar/BrainDatabase.swift:1623</code>), and
+each rule has a committed test requiring it. Every tool call the Claude
+Code plugin captures is stored with no project, so whether it reaches a
+scoped search depends on latency, and the prompt hook searches every
+project.</p>
 <p><a href="../../systems/contextdb-atomsai/">ContextDB (atomsai)</a>
 applies the key in every store query and drops it at the graph.
 <code>_scope_sql</code> adds <code>user_id</code>,

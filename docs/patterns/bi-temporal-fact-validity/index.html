@@ -724,6 +724,22 @@ six months
 (<code>tests/Connapse.Integration.Tests/Memory/MemoryLeakTests.cs:223-231</code>).
 No read asks what memory held at a past record time, and a fact saved
 without <code>validFrom</code> is true at every date.</p>
+<p><a href="../../systems/brainlayer/">BrainLayer</a> has the columns
+and the history table and no production writer for either.
+<code>chunks</code> carries <code>valid_from</code>,
+<code>invalid_at</code> and
+<code>sys_period_start</code>/<code>_end</code>; <code>valid_from</code>
+defaults to the insert time and no caller passes another
+(<code>src/brainlayer/chunk_write.py:309-314</code>), and
+<code>invalid_at</code> has one setter. <code>bitemporal.py</code>
+defines triggers that copy a full row image into
+<code>_chunks_history</code> on every update and delete, stamped from a
+monotonic clock table, and the migration that installs them has no
+caller outside tests
+(<code>src/brainlayer/bitemporal.py:104-161</code>). The read paths
+filter <code>invalid_at IS NULL</code>, which every row passes, and
+correction goes through <code>superseded_by</code>, a pointer with no
+time on it.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

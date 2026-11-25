@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A macOS-centred memory layer for
+coding agents: transcripts and agent notes in one SQLite file, hybrid
+search, a knowledge graph, and a Swift MCP daemon.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="BrainLayer — Agent Memory Atlas">
+    <meta property="og:description" content="A macOS-centred memory
+layer for coding agents: transcripts and agent notes in one SQLite file,
+hybrid search, a knowledge graph, and a Swift MCP daemon.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="BrainLayer — Agent Memory Atlas">
+    <meta name="twitter:description" content="A macOS-centred memory
+layer for coding agents: transcripts and agent notes in one SQLite file,
+hybrid search, a knowledge graph, and a Swift MCP daemon.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>BrainLayer — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "BrainLayer",
+      "description": "A macOS-centred memory layer for coding agents: transcripts and agent notes in one SQLite file, hybrid search, a knowledge graph, and a Swift MCP daemon.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Two search paths that disagree about
+memories with no project, beside a bitemporal history no write path
+installs</p>
+          <h1>BrainLayer</h1>
+          <p class="document-deck">A macOS-centred memory layer for
+coding agents: transcripts and agent notes in one SQLite file, hybrid
+search, a knowledge graph, and a Swift MCP daemon.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/EtanHey/brainlayer">
+              <span>Source</span>
+              <strong>EtanHey/brainlayer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/EtanHey/brainlayer/commit/3e25ceeef6496cd39ae2eb269d35824cc4fd9e90" title="3e25ceeef6496cd39ae2eb269d35824cc4fd9e90">
+              <span>Analyzed revision</span>
+              <code>3e25ceee…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/EtanHey--brainlayer" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>EtanHey--brainlayer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE and pyproject.toml; CONTRIBUTING.md licenses contributions
+under the same terms</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>109,688
+lines of Python in 252 files under src/ and 53,007 lines of Swift in 124
+files under brain-bar/Sources, plus 58 Swift symlinks shared by the app
+and daemon targets; 768.6 MB tracked, of which brain-bar/docs holds 625
+MB (261 PNG renders of the menu-bar UI) and tests/fixtures 89.5 MB of
+SQLite files, fifteen of them copies of one 5.2 MB
+database</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>4,441
+commits on main from 19 February to 24 November 2026, counted through
+the GitHub API; the contributors endpoint attributes 4,401 to Etan
+Heyman under four identities and 15 to seven others, two of them agent
+accounts; 126 tags, the latest v1.6.12</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>8,227
+Python functions named test_ in 601 files and 2,104 Swift test cases in
+156 files, against a README badge of 4,386 and 890; CI runs the Python
+unit suite on Ubuntu without the integration, live and crash-sweep
+marks, and the Swift suite on macOS when brain-bar changes; none run for
+this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>BrainLayer is a local memory layer for Claude Code and other MCP
+clients. A Python package indexes every Claude Code, Codex and T3
+transcript line into one SQLite file with FTS5, sqlite-vec vectors and a
+knowledge graph. BrainBar, a macOS Swift menu-bar app with a headless
+daemon, is the only MCP server and writes the same file. What is notable
+is the project scope on search: a stored key in SQL on both arms, with a
+role policy tested against exact populated sets. What is weak is
+correction, a pointer on a row that nothing records, and a search whose
+treatment of chunks with no project depends on which of two code paths
+answered.</p>
+<p>Most of what the store holds is transcript, not curated memory. The
+watcher ingests every message of every session under
+<code>~/.claude/projects/</code>. Agent notes through
+<code>brain_store</code> are a small share. The README describes a live
+database of about 360,000 chunks; that is the author's install, read as
+a claim.</p>
+<p>The schema carries more than the code wires. <code>chunks</code> has
+<code>valid_from</code>, <code>invalid_at</code> and
+<code>sys_period_start</code>/<code>_end</code>, and
+<code>bitemporal.py</code> defines a trigger-kept
+<code>_chunks_history</code> table; the only callers of its migration
+are tests. <code>epistemic_level</code> has no filtering reader and
+<code>user_verified</code> no producer of 1.</p>
+<p>Two marks: <code>scope_enforced</code> and
+<code>negative_eval</code>. Section 9 gives the reasons for the five
+withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a chunk</strong>: a transcript message, a tool
+observation, a note an agent stored, or a digested document. It is
+served from the moment it is written. There is no candidate or pending
+state.</p>
+<p>A chunk leaves default retrieval in three ways, each a column rather
+than a status:</p>
+<ul>
+<li><strong>Superseded.</strong> <code>brain_supersede</code> sets
+<code>superseded_by</code> to a newer chunk's id and
+<code>status = 'superseded'</code>
+(<code>brain-bar/Sources/BrainBar/BrainDatabase.swift:6052-6064</code>).</li>
+<li><strong>Aggregated.</strong> Write-time de-duplication folds a loser
+into a survivor through <code>aggregated_into</code>.</li>
+<li><strong>Archived.</strong> <code>brain_archive</code> stamps
+<code>archived_at</code> (<code>BrainDatabase.swift:6034-6050</code>),
+and the weekly decay job stamps it on any chunk whose score falls below
+0.1 (<code>src/brainlayer/decay_job.py:10</code>,
+<code>:117-127</code>).</li>
+</ul>
+<p>Every read path drops all three through one predicate
+(<code>src/brainlayer/archive_lifecycle.py:10-17</code>), and
+<code>include_archived</code> brings them back. Nothing records who
+moved a chunk or why: the archive reason is accepted and discarded
+(<code>BrainDatabase.swift:6035-6036</code>). The text survives, so the
+same claim stored again, or said again in a transcript, is a new active
+chunk.</p>
+<p>Two signals look like belief and are not. Chunks tagged
+<code>quarantine</code> are multiplied by 0.05 and still returned
+(<code>src/brainlayer/search_repo.py:82</code>,
+<code>:2629-2633</code>). Chunks from desktop apps and agents' thinking
+are stored and kept out of default search by <code>source_class</code>,
+a provenance rule rather than a judgement of truth.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three writers fill one chunks table that serves at once; supersede, archive and decay set lifecycle columns every read drops, recording nothing; brain_search filters a named project in SQL, but whether chunks with no project come back depends on whether the Python helper answered within 6 s; the prompt hook searches every project; the bitemporal history trigger is installed only by tests</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three writers fill one chunks table that serves at once; supersede, archive and decay set lifecycle columns every read drops, recording nothing; brain_search filters a named project in SQL, but whether chunks with no project come back depends on whether the Python helper answered within 6 s; the prompt hook searches every project; the bitemporal history trigger is installed only by tests
+flowchart TD
+    subgraph W[&quot;Writers&quot;]
+        direction TB
+        WA[&quot;Watcher: every transcript&lt;br/&gt;line, project from path&quot;]
+        WB[&quot;brain_store, brain_digest:&lt;br/&gt;project from the model&quot;]
+        WC[&quot;Plugin Stop hook:&lt;br/&gt;tool calls, no project&quot;]
+        WA ~~~ WB ~~~ WC
+    end
+    W --&gt; C[(&quot;chunks&lt;br/&gt;one SQLite file&lt;br/&gt;served at once&quot;)]
+    L[&quot;brain_supersede,&lt;br/&gt;brain_archive,&lt;br/&gt;weekly decay below 0.1&quot;] --&gt; C
+    L -.-&gt; N[&quot;No row records who&lt;br/&gt;or why; same text&lt;br/&gt;can be stored again&quot;]
+    C --&gt; F[&quot;Every read drops&lt;br/&gt;superseded, aggregated&lt;br/&gt;and archived chunks&quot;]
+    F --&gt; S{&quot;brain_search&lt;br/&gt;names a project?&quot;}
+    S --&gt;|&quot;no&quot;| O[&quot;Whole corpus&quot;]
+    S --&gt;|&quot;helper within 6 s&quot;| H[&quot;project IN (project,&lt;br/&gt;worktrees)&lt;br/&gt;NULL project dropped&quot;]
+    S --&gt;|&quot;helper slow or down&quot;| B[&quot;project = ? OR NULL&lt;br/&gt;NULL project kept&quot;]
+    F --&gt; P[&quot;Prompt hook: up to 3&lt;br/&gt;chunks, every project&quot;]
+    X[&quot;_chunks_history trigger,&lt;br/&gt;invalid_at setter:&lt;br/&gt;called only by tests&quot;] -.-&gt; C</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Four kinds of process share the database file:</p>
+<ul>
+<li><strong>BrainBar</strong> (<code>brain-bar/</code>, Swift 6, macOS
+14 and later). Two executables from one package: <code>BrainBar</code>,
+the menu-bar UI, and <code>BrainBarDaemon</code>, which owns the MCP
+server on <code>/tmp/brainbar.sock</code>, a single writer queue and a
+pub/sub stream (<code>brain-bar/Package.swift</code>). Fifty-eight of
+the daemon's source files are symlinks to the app's.</li>
+<li><strong>The hybrid search helper</strong>, a long-lived Python
+subprocess (<code>python -m brainlayer.brainbar_hybrid_helper</code>)
+that BrainBar starts and asks for every eligible
+<code>brain_search</code>
+(<code>brain-bar/Sources/BrainBar/HybridSearchHelperClient.swift:289</code>).
+It holds the embedding model.</li>
+<li><strong>launchd agents</strong> rendered from
+<code>scripts/launchd/</code>: the watcher, a drain that writes queued
+rows every 500 ms, an embedding hot lane, decay, maintenance, FTS
+repair, WAL checkpoints, watchdogs and backups.</li>
+<li><strong>Claude Code hooks</strong>, Python scripts under
+<code>hooks/</code> wired into <code>~/.claude/settings.json</code>, and
+a plugin under <code>extensions/brainlayer-plugin/</code> whose hooks
+call BrainBar through <code>socat</code>.</li>
+</ul>
+<p>Vectors are <code>BAAI/bge-large-en-v1.5</code>, 1024 dimensions,
+computed locally (<code>src/brainlayer/embeddings.py:25</code>) and
+stored as float and binary <code>vec0</code> tables
+(<code>src/brainlayer/vector_store.py:1174-1192</code>). LLM enrichment,
+which filled summaries and <code>epistemic_level</code> with Gemini, is
+retired; its columns remain.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Storing and searching need no API key and no network once the model
+is cached. The MCP server needs macOS: the PyPI package's only MCP entry
+point is <code>brainlayer-mcp-stdio-bridge</code>, which connects to
+BrainBar's socket (<code>pyproject.toml</code>,
+<code>server.json</code>), and the README directs MCP clients to a
+Homebrew keg path. On Linux the CLI, watcher and search run without an
+agent surface. A full install is a Homebrew keg,
+<code>bash brain-bar/build-app.sh</code>, which builds, signs and
+installs two LaunchAgents, and <code>brainlayer setup --launchd</code>
+for the rest. The store is a SQLite file and inspectable by hand.</p>
+<p>The 1.3 GB checkout is 545 MB of <code>.git</code> and 768.6 MB of
+tracked files. Code is a small part: 14.1 MB of Python and 5.4 MB of
+Swift. <code>brain-bar/docs/ui-renders</code> holds 261 PNG screenshots
+of the menu-bar UI, 2.4 MB each on average and 625 MB in all, and
+<code>tests/fixtures/observability/db/</code> holds 89.5 MB of SQLite
+fixtures, fifteen of them the same 5.2 MB blob.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema.</strong>
+<code>src/brainlayer/vector_store.py</code>: <code>chunks</code>
+<code>:899-928</code>, added columns from <code>:955</code>, vectors
+<code>:1174-1192</code>, FTS tables and triggers from
+<code>:1235</code>, <code>chunk_events</code> <code>:1719-1731</code>,
+KG tables <code>:1767-1910</code>. BrainBar creates <code>chunks</code>
+if absent
+(<code>brain-bar/Sources/BrainBar/BrainDatabase.swift:1055</code>).</li>
+<li><strong>MCP write.</strong>
+<code>brain-bar/Sources/BrainBar/MCPRouter.swift</code>: dispatch
+<code>:824-860</code>, <code>handleBrainStore</code>
+<code>:1158-1269</code>; <code>BrainDatabase.store</code>
+<code>:1702-1841</code>, exact-content reuse <code>storedChunk</code>
+<code>:5199-5248</code>.</li>
+<li><strong>Transcript write.</strong>
+<code>src/brainlayer/watcher.py</code> tails files;
+<code>src/brainlayer/watcher_bridge.py:333-351</code> derives the
+project from the path; <code>src/brainlayer/drain.py</code> writes;
+<code>src/brainlayer/chunk_write.py:309-314</code> fills
+<code>valid_from</code> and <code>sys_period_*</code> from the insert
+time.</li>
+<li><strong>Search.</strong> <code>handleBrainSearch</code>
+<code>MCPRouter.swift:863-1022</code>, helper arguments
+<code>:1123-1150</code>; <code>BrainDatabase.search</code>
+<code>:1508-1595</code>, <code>runFTSSearch</code>
+<code>:1598-1695</code>, <code>searchableChunkWhereClause</code>
+<code>:2685-2717</code>;
+<code>src/brainlayer/brainbar_hybrid_helper.py:404-438</code>;
+<code>src/brainlayer/mcp/search_handler.py:922-980</code>;
+<code>src/brainlayer/search_repo.py</code>: <code>search</code>
+<code>:1158</code>, <code>hybrid_search</code> <code>:1877</code>,
+project clause <code>:464-478</code>.</li>
+<li><strong>Scope policy.</strong>
+<code>src/brainlayer/scoping.py:151-279</code>.</li>
+<li><strong>Lifecycle.</strong> <code>MCPRouter.swift:1656-1721</code>;
+<code>BrainDatabase.swift:6034-6064</code>; Python twins at
+<code>src/brainlayer/vector_store.py:3025</code>,
+<code>:3045-3060</code>;
+<code>src/brainlayer/decay_job.py:29-155</code>.</li>
+<li><strong>Injection.</strong>
+<code>hooks/brainlayer-prompt-search.py:990-1125</code>,
+<code>:1344</code>;
+<code>hooks/brainlayer-session-start.py:241-310</code>;
+<code>extensions/brainlayer-plugin/scripts/brainbar-hook.py:141-240</code>.</li>
+<li><strong>Unwired history.</strong>
+<code>src/brainlayer/bitemporal.py:104-183</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>chunks</code> carries the content and around seventy columns.
+The ones that decide behaviour: <code>project</code>,
+<code>source</code>, <code>source_class</code>,
+<code>content_type</code>, <code>tags</code>, <code>importance</code>,
+<code>conversation_id</code>, <code>content_hash</code> and
+<code>dedupe_hash</code>, the three lifecycle columns,
+<code>status</code> (<code>active</code> or <code>superseded</code>),
+and <code>decay_score</code>, <code>half_life_days</code>,
+<code>retrieval_count</code>, <code>last_retrieved</code> and
+<code>pinned</code> for decay.</p>
+<p><strong>Time.</strong> <code>created_at</code> is the insert time.
+<code>valid_from</code> defaults to <code>created_at</code> and
+<code>sys_period_start</code> to now
+(<code>chunk_write.py:309-314</code>;
+<code>src/brainlayer/store.py:328-331</code>). <code>invalid_at</code>
+has one setter, <code>bitemporal.supersede_chunk</code>
+(<code>src/brainlayer/bitemporal.py:164-183</code>), with no caller
+outside tests. The read paths filter <code>invalid_at IS NULL</code>
+(<code>search_repo.py:510-512</code>), which every row passes. KG
+entities and relations carry <code>valid_from</code>,
+<code>valid_until</code> and <code>expired_at</code>, and no caller
+passes <code>valid_from</code> or <code>valid_until</code> to
+<code>add_relation</code>.</p>
+<p><strong>Scope.</strong> One key, <code>project</code>, nullable.
+Watcher rows take it from the transcript path. MCP rows take it from the
+model's argument. Plugin observations have none, because the hook sends
+the working directory as <code>context</code>, which
+<code>brain_store</code> does not read
+(<code>extensions/brainlayer-plugin/scripts/brainbar-hook.py:180-196</code>).</p>
+<p><strong>Provenance.</strong> BrainBar stamps every MCP write
+<code>chunk_origin = 'user_explicit'</code>,
+<code>content_type = 'user_message'</code> and
+<code>source = 'mcp'</code>
+(<code>BrainDatabase.swift:1740-1743</code>). That covers a note the
+agent chose to store and a tool call the plugin captured.
+<code>caller_model</code> is the caller's own claim, kept in
+metadata.</p>
+<p><strong>Declared without effect.</strong>
+<code>epistemic_level</code> (<code>hypothesis</code>,
+<code>substantiated</code>, <code>validated</code>) was filled by the
+retired enrichment and no search reads it. <code>user_verified</code> on
+KG entities is read by the entity cache and KG cleanup, and nothing in
+the tree sets it to 1.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>brain_search</code> first checks whether the query is a chunk
+id. Otherwise BrainBar sends it to the helper unless the call names
+<code>agent_id</code>, <code>unread_only</code> or the unadvertised
+<code>include_hidden_source_classes</code>
+(<code>MCPRouter.swift:954</code>). It passes
+<code>consumer: orchestrator</code> when no project is named and
+<code>worker</code> when one is (<code>:1140</code>).</p>
+<p><strong>The helper path.</strong> <code>hybrid_search</code> runs a
+vector arm, binary first with a float rerank, and an FTS5 arm, fuses
+them by reciprocal rank, and applies importance, recency, KG-link (×1.3)
+and agent-profile boosts. Quarantine and pre-compact signals are
+multiplied by 0.05, then MMR removes near-duplicates
+(<code>search_repo.py:2580-2640</code>). The worker scope appends
+<code>c.project IN (...)</code> to both arms and leaves NULL-project
+chunks out (<code>:464-478</code>, <code>:1209-1212</code>). Results are
+cached for 60 s, keyed on the reader's connection state so a write from
+another process invalidates them (<code>:40</code>,
+<code>:1979-1994</code>).</p>
+<p><strong>The fallback.</strong> When the helper is not ready, busy,
+past its 6 s budget or empty, BrainBar answers itself with FTS5 BM25 and
+then trigram FTS (<code>BrainDatabase.swift:1508-1595</code>). Its
+project clause is <code>(c.project = ? OR c.project IS NULL)</code>
+(<code>:1623</code>). The two are tested apart:
+<code>testProjectScopedSearchIncludesGlobalChunks</code> requires a
+NULL-project chunk in a project-scoped fallback search
+(<code>brain-bar/Tests/BrainBarTests/DatabaseTests.swift:1079-1094</code>),
+and
+<code>test_worker_consumer_scope_closes_null_project_fts_only_leak</code>
+requires the helper to drop one
+(<code>tests/test_consumer_scoping.py:374-391</code>). Every plugin tool
+observation has a NULL project, so it reaches a scoped search only when
+the helper was too slow.</p>
+<p><strong>Automatic injection.</strong> The prompt hook runs on every
+user prompt with a 450 ms deadline. It embeds the prompt, searches
+vectors and FTS with no project filter beyond excluding
+<code>eval-sandbox</code>, and injects up to three chunks within 600
+characters (<code>hooks/brainlayer-prompt-search.py:79</code>,
+<code>:948</code>, <code>:990-1050</code>, <code>:1287</code>). The
+session-start hook searches by the working directory's name as an FTS
+term across all projects unless <code>~/.golems/config.yaml</code> marks
+the project as scoped
+(<code>hooks/brainlayer-session-start.py:263-302</code>); its alias
+tables name the author's own repositories (<code>:69-101</code>). The
+plugin's session-start hook recalls by session id, which a new session
+has nothing under.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Agent notes.</strong> <code>brain_store</code> scrubs secrets
+from content, tags and metadata before anything is derived
+(<code>BrainDatabase.swift:1724-1731</code>), then inserts. The only
+de-duplication is exact content within the same project, content type
+and server-assigned conversation, returned as <code>DUPLICATE</code>
+(<code>:5199-5248</code>). A busy database queues the write to a file
+and answers <code>DEFERRED</code>. The tool description lists
+<code>MERGED</code> as an outcome; only the Python handler, which no
+agent reaches, produces it.</p>
+<p><strong>Transcripts.</strong> The watcher polls
+<code>~/.claude/projects/</code> at 30 s or more, applies content
+filters and a path denylist, and queues rows for the drain.
+De-duplication in <code>src/brainlayer/dedupe.py</code> folds
+near-copies and records each merge in <code>dedupe_audit</code>
+(<code>:259-266</code>, <code>:635-655</code>).</p>
+<p><strong>Tool observations.</strong> The plugin's PostToolUse hook
+appends each non-BrainLayer tool call, input and response, to a JSONL
+queue, and the Stop hook stores each through <code>brain_store</code> at
+importance 5, or 8 for a failure
+(<code>brainbar-hook.py:141-200</code>). It then calls
+<code>brain_sleep</code>, which BrainBar does not serve; the hook
+reports it unavailable.</p>
+<p><strong>Correction.</strong> The agent stores the new chunk and calls
+<code>brain_supersede</code> with both ids. For an old chunk of type
+journal, note or bookmark, or containing one of seven keywords, the tool
+asks for <code>safety_check: "confirm"</code> and
+<code>confirm: true</code> from the same caller
+(<code>MCPRouter.swift:1674-1692</code>, <code>:1750-1759</code>).
+Neither supersede nor archive checks the chunk's project.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>An MCP write blocks on one SQLite insert and returns; FTS triggers
+make it searchable by text at once. Its vector waits for the hot-lane
+job, a <code>KeepAlive</code> process with no stated lag. Transcript
+lines lag by the poll interval plus the drain. The decay job walks every
+unarchived chunk each Sunday at 04:15
+(<code>scripts/launchd/com.brainlayer.decay.plist</code>), arithmetic
+only. Injection costs at most 600 characters per prompt, placed in the
+user turn, so it does not touch the system-prompt prefix.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>BrainBar defines 16 tools with MCP tool annotations. A session starts
+with five, <code>brain_search</code>, <code>brain_store</code>,
+<code>brain_recall</code>, <code>brain_expand</code> and
+<code>expand_palette</code>, and calling a gated tool before expanding
+returns an error saying so. <code>brain_ack</code> is advertised and
+throws <code>notImplemented</code>
+(<code>MCPRouter.swift:1740-1748</code>). <code>brain_recall</code>
+serves stats, one session's chunks or injection events, and names any
+other mode as unimplemented (<code>:1494-1533</code>).</p>
+<p>The model drives every memory verb: store, digest, update, supersede
+and archive, and two maintenance tools that write a backup to a path it
+names or rebuild the trigram index. The Python package keeps a second
+palette of handlers under <code>src/brainlayer/mcp/</code> with legacy
+<code>brainlayer_*</code> names; its module docstring calls it
+library-only, and no entry point serves it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope is enforced on the tool path and not on the automatic
+one.</strong> The watcher's project is derived, and the model's is a
+string it may omit or choose. Hooks inject from every project. Supersede
+and archive take any id.</p>
+<p><strong>Writes are trusted on arrival.</strong> Nothing distinguishes
+a tool response the plugin captured from an instruction the user gave:
+both become <code>user_explicit</code> <code>user_message</code> chunks,
+and a prompt-injected line in a tool response is a chunk the next prompt
+hook may inject. The secret scrubber is the one filter on content.</p>
+<p><strong>Four records each cover one kind of change, and none covers
+correction.</strong> <code>chunk_events</code> is written only by the
+Python digest pipeline with a fixed <code>by_whom</code>
+(<code>src/brainlayer/pipeline/digest.py:317-330</code>), which
+BrainBar's own <code>brain_digest</code> does not call.
+<code>dedupe_audit</code> records merges. <code>kg_cleanup_log</code>
+records a KG cleanup run (<code>src/brainlayer/kg_cleanup.py:79</code>).
+<code>_chunks_history</code>, a full row image per update and delete
+kept by trigger, would cover all of it, and
+<code>apply_bitemporal_migration</code> has no caller outside tests
+(<code>src/brainlayer/bitemporal.py:131-161</code>).</p>
+<p><strong>KG review.</strong> <code>kg_review_session.py</code> and
+<code>scripts/kg_cleanup_apply.py</code> let a person decide merge or
+keep for flagged duplicate entities, by dashboard or voice, and apply
+the decisions with a rollback log. The flagged entities are live
+meanwhile, and it covers the graph, not chunks.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong>
+<code>project</code> is stored on each chunk and applied in SQL on both
+arms of the helper and on the fallback, when the caller names it.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Three
+populated tests require a foreign-project or superseded chunk absent
+with a positive control present (section 10).</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>status</code> holds <code>active</code> or
+<code>superseded</code>, a lifecycle pointer. Quarantine is a ranking
+factor, <code>epistemic_level</code> is read by no search, and
+<code>user_verified</code> has no producer of 1.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> No append-only
+record covers supersede, archive, update or MCP writes; the history
+trigger that would is unwired.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>valid_from</code> defaults to the insert time and no caller passes
+another; <code>invalid_at</code> is set only in tests.</li>
+<li><strong><code>tombstone</code> — withheld.</strong>
+<code>tag_tombstones</code> holds tag names and the watcher's tombstones
+hold file offsets. A superseded text stored again is a new active
+chunk.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Every chunk
+is served at once, the supersede confirmation is a flag the caller sets,
+and KG review acts on live entities after the fact.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites; counts are from <code>git grep</code>. The
+README badge says 4,386 Python and 890 Swift tests. CI runs the Python
+suite on Ubuntu with
+<code>-m "not integration and not live and not crash_sweep"</code>, a
+doctor fixture gate and hook routing tests, the Swift suite on macOS 15
+only when <code>brain-bar/</code> changes, and TLA+ model checks of the
+backup verdict and ingest coverage
+(<code>.github/workflows/ci.yml</code>). A committed pre-push hook runs
+<code>scripts/run_tests.sh</code> once <code>core.hooksPath</code>
+points at <code>.githooks</code>.</p>
+<p>The negative cases that carry the mark:</p>
+<ul>
+<li><code>test_worker_worktree_consumer_scope_includes_worktree_and_main_only</code>
+writes one sentence under five projects into a real
+<code>VectorStore</code> and requires the worker's hybrid search to
+return exactly the two allowed ids
+(<code>tests/test_consumer_scoping.py:343-371</code>).</li>
+<li><code>test_superseded_excluded_from_text_search</code> requires the
+superseded chunk absent and its replacement present
+(<code>tests/test_chunk_lifecycle.py:175-183</code>).</li>
+<li><code>testSearchFiltersByProject</code> requires one
+<code>alpha</code> result where a <code>beta</code> chunk also matches
+(<code>DatabaseTests.swift:1682-1688</code>).</li>
+</ul>
+<p><code>test_worker_consumer_scope_blocks_foreign_and_null_projects_across_rrf</code>
+asserts only absences and a subset, which an empty result passes
+(<code>tests/test_consumer_scoping.py:264-297</code>), and the
+NULL-project FTS case asserts an empty list. Neither carries the
+mark.</p>
+<p><code>tests/test_bitemporal_phase1.py</code> installs the history
+trigger itself, so the history it checks is one no production database
+has. No test drives <code>brain_store</code> from the plugin and then a
+scoped search.</p>
+<p>There is no retrieval benchmark with committed results named in the
+README, and no paper. <code>src/brainlayer/eval/</code> scores the
+retired enrichment.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A role policy that fails closed.</strong> An unknown or
+missing consumer role becomes <code>worker</code>, and a worker with no
+project gets <code>0 = 1</code> (<code>scoping.py:163-178</code>,
+<code>:243-253</code>, <code>search_repo.py:468-469</code>).</li>
+<li><strong>One lifecycle predicate, imported everywhere.</strong>
+<code>archive_lifecycle.py</code> is the single definition the helper,
+the hooks and de-duplication import, and the Swift
+<code>searchableChunkWhereClause</code> repeats it.</li>
+<li><strong>Scrub before deriving.</strong> Secrets leave the text
+before the row, its FTS copies, the preview and the content hash are
+computed, so de-duplication keys on what is stored.</li>
+<li><strong>Name each write outcome.</strong> <code>STORED</code>,
+<code>DUPLICATE</code> and <code>DEFERRED</code> tell the agent whether
+to retry, and a committed row is never reported as failed.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two read paths with two scope rules.</strong> A fallback
+that widens scope makes the leak depend on latency. Share the predicate,
+or fail the search.</li>
+<li><strong>Schema ahead of producers.</strong> Columns named for
+validity time and a history trigger that only tests install read as
+bitemporal and audited to anyone who opens the database.</li>
+<li><strong>Capturing tool output as the user's word.</strong> A
+hook-captured response stamped <code>user_explicit</code> loses the one
+distinction an injection defence needs.</li>
+<li><strong>Shipping UI renders in the source tree.</strong> 625 MB of
+screenshots make every clone of a memory library a 1.3 GB download.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is one developer's working memory system, built around his Mac,
+his repositories and his launchd jobs, and it is unusually instrumented
+for that: watchdogs, model-checked backup rules, a pre-push gate. It
+suits a reader on macOS who wants every Claude Code session indexed and
+searchable, and who will run a dozen background agents to have it.</p>
+<p>It does not suit a reader who needs memory to be corrected and to
+stay corrected, to know who changed it, or to run an agent surface off
+macOS. Someone who wants a small curated store should take the scope
+policy and leave the rest.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>apply_bitemporal_migration</code> run against live
+databases by a script or hand step outside this tree? Nothing inside it
+calls it.</li>
+<li>What lag does the hot lane add before a BrainBar write is searchable
+by vector?</li>
+<li>How often does the helper miss its 6 s budget in practice, and so
+how often does a scoped search return NULL-project chunks?</li>
+<li>Is the plugin's <code>context</code> argument meant to become a
+project? BrainBar ignores it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/brainlayer/vector_store.py</code></td>
+<td>Schema, migrations, Python supersede and archive,
+<code>record_event</code></td>
+</tr>
+<tr>
+<td><code>src/brainlayer/search_repo.py</code></td>
+<td><code>search</code>, <code>hybrid_search</code>, project and
+lifecycle clauses, cache</td>
+</tr>
+<tr>
+<td><code>src/brainlayer/scoping.py</code></td>
+<td>Consumer roles and project sets</td>
+</tr>
+<tr>
+<td><code>src/brainlayer/brainbar_hybrid_helper.py</code></td>
+<td>The helper BrainBar calls for search</td>
+</tr>
+<tr>
+<td><code>src/brainlayer/bitemporal.py</code></td>
+<td>History table, triggers and <code>invalid_at</code> setter,
+unwired</td>
+</tr>
+<tr>
+<td><code>src/brainlayer/chunk_write.py</code></td>
+<td>Row preparation, <code>valid_from</code> default</td>
+</tr>
+<tr>
+<td><code>src/brainlayer/decay_job.py</code></td>
+<td>Weekly decay and auto-archive</td>
+</tr>
+<tr>
+<td><code>src/brainlayer/dedupe.py</code></td>
+<td>Write-time de-duplication and <code>dedupe_audit</code></td>
+</tr>
+<tr>
+<td><code>brain-bar/Sources/BrainBar/MCPRouter.swift</code></td>
+<td>The 16 MCP tools</td>
+</tr>
+<tr>
+<td><code>brain-bar/Sources/BrainBar/BrainDatabase.swift</code></td>
+<td>Swift store, fallback search, supersede, archive</td>
+</tr>
+<tr>
+<td><code>hooks/brainlayer-prompt-search.py</code></td>
+<td>Per-prompt injection</td>
+</tr>
+<tr>
+<td><code>hooks/brainlayer-session-start.py</code></td>
+<td>Session-start injection</td>
+</tr>
+<tr>
+<td><code>extensions/brainlayer-plugin/scripts/brainbar-hook.py</code></td>
+<td>Plugin capture and recall</td>
+</tr>
+<tr>
+<td><code>tests/test_consumer_scoping.py</code></td>
+<td>Scope tests</td>
+</tr>
+<tr>
+<td><code>tests/test_chunk_lifecycle.py</code></td>
+<td>Lifecycle tests</td>
+</tr>
+<tr>
+<td><code>brain-bar/Tests/BrainBarTests/DatabaseTests.swift</code></td>
+<td>Swift search tests</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>The history migration has no production caller.</strong>
+<code>git grep -n 'apply_bitemporal_migration' -- . ':!*.md'</code>
+returns its definition at <code>src/brainlayer/bitemporal.py:131</code>,
+a list entry in <code>scripts/prepush_unmapped_legacy.json</code> and
+test files only.</li>
+<li><strong>No code outside <code>bitemporal.py</code> creates the
+history table or trigger.</strong>
+<code>git grep -n -E '_chunks_history|chunks_bitemporal_update' -- src brain-bar/Sources hooks scripts ':!*.md'</code>
+returns <code>bitemporal.py</code> and three reads in
+<code>scrub_at_rest.py</code>.</li>
+<li><strong>One setter for <code>invalid_at</code>.</strong>
+<code>git grep -n -E 'SET invalid_at|invalid_at = COALESCE' -- src brain-bar/Sources hooks scripts</code>
+returns <code>bitemporal.py:174</code>.</li>
+<li><strong>No caller states a validity time.</strong>
+<code>git grep -n -E '(valid_from|valid_until)=' -- src scripts hooks</code>
+returns nothing;
+<code>git grep -n -E 'importance=' -- src/brainlayer/pipeline/digest.py</code>
+matches.</li>
+<li><strong>One producer of <code>chunk_events</code>, and none in
+BrainBar.</strong>
+<code>git grep -n 'record_event(' -- src scripts hooks brain-bar/Sources</code>
+returns <code>pipeline/digest.py:325</code> and the definition;
+<code>git grep -n 'chunk_events' -- brain-bar</code> returns nothing,
+while
+<code>git grep -n 'injection_events' -- brain-bar/Sources/BrainBar/BrainDatabase.swift</code>
+matches.</li>
+<li><strong>Nothing sets <code>user_verified</code> to 1.</strong>
+<code>git grep -n -E 'user_verified[^,]{0,6}(1|True|true)' -- . ':!tests' ':!*.md'</code>
+returns three comparisons in the KG cleanup scripts and one in
+<code>src/brainlayer/kg_cleanup.py:49</code>.</li>
+<li><strong>No search reads <code>epistemic_level</code>.</strong>
+<code>git grep -n 'epistemic_level' -- src/brainlayer/search_repo.py src/brainlayer/mcp/search_handler.py brain-bar/Sources/BrainBar hooks</code>
+returns nothing;
+<code>git grep -n 'archived_at IS NULL' -- src/brainlayer/search_repo.py</code>
+matches.</li>
+<li><strong>No value-keyed tombstone.</strong>
+<code>git grep -n -i -E 'tombstone|rejected_value|do_not_remember|never_store' -- src brain-bar/Sources hooks</code>
+returns <code>tag_tombstones</code> in <code>tag_normalization.py</code>
+and file-offset tombstones in <code>watcher.py</code>.</li>
+<li><strong>BrainBar does not serve <code>brain_sleep</code>.</strong>
+<code>git grep -n 'brain_sleep' -- brain-bar/Sources</code> returns
+nothing;
+<code>git grep -n '"brain_ack"' -- brain-bar/Sources/BrainBar/MCPRouter.swift</code>
+matches.</li>
+<li><strong>BrainBar never reports <code>MERGED</code>.</strong>
+<code>git grep -n -E 'outcome: \.' -- brain-bar/Sources/BrainBar</code>
+returns one line, <code>.duplicate</code> at
+<code>BrainDatabase.swift:5241</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|doi\.org|CITATION' -- .</code>
+returns citations of other papers in <code>docs/archive/</code> only,
+and no <code>CITATION</code> file is tracked.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/EtanHey/brainlayer/commit/3e25ceeef6496cd39ae2eb269d35824cc4fd9e90"><code class="commit-id" title="3e25ceeef6496cd39ae2eb269d35824cc4fd9e90">3e25ceee…</code></a>.
+First reading, at the head of <code>main</code> (v1.6.12); triage
+selected <code>983d28262294</code>, an earlier commit. The clone was
+shallow because the repository is about 716 MB packed, so commit counts,
+dates and authors come from the GitHub API. No submodules. Screened
+first: eight auto-run surfaces (marketplace and plugin manifests, plugin
+<code>.mcp.json</code> and hooks, <code>hooks/</code>,
+<code>server.json</code>, a committed <code>.githooks/pre-push</code>),
+three manifests inside the cooldown, four build-time execution points
+and two unpinned surfaces; a SwiftPM build-tool plugin also runs a
+script at build. Docs read as data. Nothing installed, built or run;
+test counts not run. Two marks: <code>scope_enforced</code>,
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

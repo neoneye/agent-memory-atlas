@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 880 reports.**
+**This page covers all 881 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8123,3 +8123,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 287 commits from 7 September to 9 November 2026 under two author names on one account; 29,800 lines of Python outside tests, 3,718 of them on memory paths, wrapping MemPalace 3.11.0 and Pi 1.4.0; 1,019 Python test functions, run in CI on Ubuntu and Windows, none run here. No marks.
 - Study when: you want retrieval held to a reviewed, hash-bound claim set, or a lesson that cannot be written without a host receipt.
 - Do not copy when: projects must stay apart in recall, or a memory has to be corrected or forgotten.
+
+### [`brainlayer`](../systems/brainlayer/)
+- Best idea: **a consumer role policy that fails closed.** A missing or unknown role becomes `worker`, a worker sees its project and that project's configured worktrees with NULL-project chunks excluded, and a worker with no project gets `0 = 1` on both arms (`src/brainlayer/scoping.py:163-178`, `:243-253`, `src/brainlayer/search_repo.py:464-478`); a populated test requires exactly two of five same-text chunks back (`tests/test_consumer_scoping.py:343-371`).
+- Second idea: one lifecycle predicate and scrub-before-derive. `archive_lifecycle.py` is the one definition of superseded, aggregated and archived that the helper, the hooks and de-duplication import, and BrainBar's `brain_store` removes secrets before the row, its FTS copies, its preview and its content hash exist.
+- Biggest risk: **two scope rules on one tool.** A project-scoped `brain_search` answered by the Python helper drops chunks with no project; the same search answered by BrainBar's Swift fallback, when the helper is busy or past its 6 s budget, keeps them (`brain-bar/Sources/BrainBar/BrainDatabase.swift:1623`), and each rule has a test requiring it. Every tool call the plugin captures is stored with no project, and the prompt and session-start hooks search every project regardless.
+- Second risk: correction leaves no trace and the schema claims more than the code does. Supersede and archive set columns and record nothing, the archive reason is discarded, and the same text stored again is active. `valid_from` defaults to the insert time, `invalid_at` and the `_chunks_history` trigger are set up only by tests, `epistemic_level` is read by no search, and plugin-captured tool output is stamped `user_explicit` `user_message`.
+- Most reusable component: `src/brainlayer/scoping.py` with `_project_scope_where` in `src/brainlayer/search_repo.py`, and `tests/test_consumer_scoping.py` as the test shape.
+- Maturity impression: Apache-2.0; 109,688 lines of Python and 53,007 of Swift, in a 768.6 MB tree of which 625 MB is UI screenshots; 4,441 commits from 19 February to 24 November 2026, counted through the GitHub API and nearly all by one author, with 126 tags to v1.6.12; 8,227 Python test functions and 2,104 Swift test cases, run in CI and not run here. Two marks: `scope_enforced` and `negative_eval`.
+- Study when: you want project and worktree scoping with roles that fail closed, an MCP server that keeps a five-tool default palette, or a full-transcript index for Claude Code on a Mac.
+- Do not copy when: memory must stay corrected or show who changed it, the agent surface must run off macOS, or captured tool output must stay distinguishable from what the user said.

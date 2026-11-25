@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 880 reports.</strong></p>
+<p><strong>This page covers all 881 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36338,6 +36338,57 @@ Windows, none run here. No marks.</li>
 set, or a lesson that cannot be written without a host receipt.</li>
 <li>Do not copy when: projects must stay apart in recall, or a memory
 has to be corrected or forgotten.</li>
+</ul>
+<h3 id="brainlayer"><a
+href="../systems/brainlayer/"><code>brainlayer</code></a></h3>
+<ul>
+<li>Best idea: <strong>a consumer role policy that fails
+closed.</strong> A missing or unknown role becomes <code>worker</code>,
+a worker sees its project and that project's configured worktrees with
+NULL-project chunks excluded, and a worker with no project gets
+<code>0 = 1</code> on both arms
+(<code>src/brainlayer/scoping.py:163-178</code>, <code>:243-253</code>,
+<code>src/brainlayer/search_repo.py:464-478</code>); a populated test
+requires exactly two of five same-text chunks back
+(<code>tests/test_consumer_scoping.py:343-371</code>).</li>
+<li>Second idea: one lifecycle predicate and scrub-before-derive.
+<code>archive_lifecycle.py</code> is the one definition of superseded,
+aggregated and archived that the helper, the hooks and de-duplication
+import, and BrainBar's <code>brain_store</code> removes secrets before
+the row, its FTS copies, its preview and its content hash exist.</li>
+<li>Biggest risk: <strong>two scope rules on one tool.</strong> A
+project-scoped <code>brain_search</code> answered by the Python helper
+drops chunks with no project; the same search answered by BrainBar's
+Swift fallback, when the helper is busy or past its 6 s budget, keeps
+them (<code>brain-bar/Sources/BrainBar/BrainDatabase.swift:1623</code>),
+and each rule has a test requiring it. Every tool call the plugin
+captures is stored with no project, and the prompt and session-start
+hooks search every project regardless.</li>
+<li>Second risk: correction leaves no trace and the schema claims more
+than the code does. Supersede and archive set columns and record
+nothing, the archive reason is discarded, and the same text stored again
+is active. <code>valid_from</code> defaults to the insert time,
+<code>invalid_at</code> and the <code>_chunks_history</code> trigger are
+set up only by tests, <code>epistemic_level</code> is read by no search,
+and plugin-captured tool output is stamped <code>user_explicit</code>
+<code>user_message</code>.</li>
+<li>Most reusable component: <code>src/brainlayer/scoping.py</code> with
+<code>_project_scope_where</code> in
+<code>src/brainlayer/search_repo.py</code>, and
+<code>tests/test_consumer_scoping.py</code> as the test shape.</li>
+<li>Maturity impression: Apache-2.0; 109,688 lines of Python and 53,007
+of Swift, in a 768.6 MB tree of which 625 MB is UI screenshots; 4,441
+commits from 19 February to 24 November 2026, counted through the GitHub
+API and nearly all by one author, with 126 tags to v1.6.12; 8,227 Python
+test functions and 2,104 Swift test cases, run in CI and not run here.
+Two marks: <code>scope_enforced</code> and
+<code>negative_eval</code>.</li>
+<li>Study when: you want project and worktree scoping with roles that
+fail closed, an MCP server that keeps a five-tool default palette, or a
+full-transcript index for Claude Code on a Mac.</li>
+<li>Do not copy when: memory must stay corrected or show who changed it,
+the agent surface must run off macOS, or captured tool output must stay
+distinguishable from what the user said.</li>
 </ul>
         </article>
       </div>
