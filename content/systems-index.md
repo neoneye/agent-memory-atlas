@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **872 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **873 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -479,6 +479,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/lossless-context-mcp/"><span class="az-id">lossless-context-mcp</span><span class="az-what">It publishes the number where it loses</span><code class="az-repo">NORTHTEKDevs/lossless-context-mcp</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/lrc/"><span class="az-id">LRC (Loong Recall)</span><span class="az-what">Open shell, private engine</span><code class="az-repo">zhibaiYingChuan/LRC</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/lucid/"><span class="az-id">LUCID</span><span class="az-what">Self-grades capped by what the query did</span><code class="az-repo">MohammadAsadolahi/Memory-Reward-Inflation-in-Self-Improving-LLM-Agents</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/lucid-memory/"><span class="az-id">Lucid Memory</span><span class="az-what">ACT-R recency and cubed similarity over every prompt, with a write path that overwrites a similar memory in place</span><code class="az-repo">JasonDocton/lucid-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/luna-local-agent/"><span class="az-id">Luna</span><span class="az-what">A local agent whose forget sweeps every store and leaves a fingerprint</span><code class="az-repo">fswolf/luna-local-agent</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/llm-wiki-cli/"><span class="az-id">LWC</span><span class="az-what">Recall hands back the replacement, not the superseded memory</span><code class="az-repo">JanYork/llm-wiki-cli</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 872 reports.**
+**This page covers all 873 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8043,3 +8043,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 1,212 commits from April 2023, 1,106 of them from August 2026 on, under two names of one author plus an opencode identity and dependabot; about 3,300 Jest cases and 94 Python tests with 26 CI verify scripts, none run here; the project's `LIMITATIONS.md` states the trust boundary and the unauthenticated agent id plainly. Four marks: `bitemporal`, `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you want one person's memory replicated across devices without a server, and want signed, content-addressed events and validity-window correction to copy.
 - Do not copy when: memory must be isolated between agents or people, erased on request, or approved by a person before it is used.
+
+### [`lucid-memory`](../systems/lucid-memory/)
+- Best idea: **embedding caches keyed on model and width, dropped by a trigger when the text changes.** `embeddings` carries a unique index on `(memory_id, model, length(vector))`, and an `AFTER UPDATE OF content` trigger deletes a memory's vectors (`packages/lucid-server/src/storage.ts:624-670`), so a provider switch, an endpoint change or an edit never mixes vector spaces; stale rows are skipped at recall and rebuilt in the background, with 50 test cases on the three embedding files.
+- Second idea: a small injection that can say nothing. The prompt hook keeps candidates at similarity 0.3 or more and fills at most 200 tokens with extractive gists, printing nothing when none clears the floor (`packages/lucid-server/src/retrieval.ts:2095-2189`), and every recall returns a `method` and a `warning` when it fell back to recency.
+- Biggest risk: **a similar write replaces a memory.** `store()` matches the nearest memory in the project; for a fresh memory, above about cosine 0.94 the new text is dropped and the old row reinforced, and from about 0.69 the old row's content and gist are overwritten in place with its id, type and creation time kept and no copy (`packages/lucid-server/src/retrieval.ts:1200-1293`, `packages/lucid-server/src/storage.ts:833-850`). A user prompt or an OpenCode assistant reply can rewrite an agent's stored decision, and no test drives the branch.
+- Second risk: the README's numbers do not measure the product. Every benchmark uses synthetic vectors; its "Pinecone" is an in-process cosine sort returning full text against 150-character gists, so the 82.5% against 55.3% recall is text length; the Pinecone latency and "10-20x faster" are printed constants (`benchmarks/quality/rag-comparison.ts:543-545`); 2.7 ms is the Rust kernel over in-memory vectors; no output is committed. The prompt hook also stores its stdin unparsed.
+- Most reusable component: the embedding cache table, index and trigger in `packages/lucid-server/src/storage.ts:624-670`; for the cognitive model itself, `crates/lucid-core/src/activation.rs` and `spreading.rs`, pure Rust with no I/O.
+- Maturity impression: GPL-3.0; 12,272 lines of TypeScript and 9,872 of Rust; 193 commits from 29 January to 4 November 2026 by one author and a CI bot, none between 20 February and 3 November; 258 `it` or `test` call sites and 95 Rust tests run in CI and not run here; 124 MB of compiled addons committed, the pin itself a bot commit replacing them. One mark: `scope_enforced`.
+- Study when: you want a working ACT-R and MINERVA 2 ranker over agent memory, or careful handling of several embedding models in one store.
+- Do not copy when: a stored memory must keep its words, a correction needs a record, projects must not see each other's visual memories, or a benchmark has to stand up to a reader.

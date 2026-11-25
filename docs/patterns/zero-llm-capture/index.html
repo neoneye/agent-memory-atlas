@@ -593,6 +593,21 @@ statements into sections (<code>llmslim/memory/_turns.py:1-27</code>,
 which scans every turn of the scope on every query. A correction is
 never written as one, so it reaches the model only when the linking rule
 finds it.</p>
+<p><a href="../../systems/lucid-memory/">Lucid Memory</a> captures
+without a model and then lets an embedding decide what the capture
+replaces. The Claude Code prompt hook stores every prompt of five
+characters or more through the CLI, and <code>Stop</code> and Codex
+hooks store replies under an id hashed from session, prompt and text, so
+a replayed hook is a no-op
+(<code>packages/lucid-server/hooks/user-prompt-submit.sh:184</code>,
+<code>packages/lucid-server/src/storage.ts:718-748</code>). The prompt
+path runs <code>store()</code>, which compares the new text with the
+nearest memory in the same project and, in a middle band of similarity,
+overwrites that memory's content in place instead of adding a row
+(<code>packages/lucid-server/src/retrieval.ts:1200-1293</code>). Capture
+is cheap and deterministic; what survives it depends on a cosine
+threshold no test exercises. The hook also stores its stdin unparsed,
+and Claude Code delivers that as a JSON object.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>

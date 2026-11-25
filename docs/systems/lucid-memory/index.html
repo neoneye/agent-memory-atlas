@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local SQLite memory server for
+Claude Code, Codex and OpenCode that captures every prompt and ranks
+recall with ACT-R recency and cubed similarity.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Lucid
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A local SQLite memory
+server for Claude Code, Codex and OpenCode that captures every prompt
+and ranks recall with ACT-R recency and cubed similarity.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Lucid
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local SQLite memory
+server for Claude Code, Codex and OpenCode that captures every prompt
+and ranks recall with ACT-R recency and cubed similarity.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Lucid Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Lucid Memory",
+      "description": "A local SQLite memory server for Claude Code, Codex and OpenCode that captures every prompt and ranks recall with ACT-R recency and cubed similarity.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">ACT-R recency and cubed similarity over
+every prompt, with a write path that overwrites a similar memory in
+place</p>
+          <h1>Lucid Memory</h1>
+          <p class="document-deck">A local SQLite memory server for
+Claude Code, Codex and OpenCode that captures every prompt and ranks
+recall with ACT-R recency and cubed similarity.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/JasonDocton/lucid-memory">
+              <span>Source</span>
+              <strong>JasonDocton/lucid-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/JasonDocton/lucid-memory/commit/8ccb7ff2b9960ccf8432fa3a9e1d0e69761bca2c" title="8ccb7ff2b9960ccf8432fa3a9e1d0e69761bca2c">
+              <span>Analyzed revision</span>
+              <code>8ccb7ff2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/JasonDocton--lucid-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>JasonDocton--lucid-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>GPL-3.0
+in LICENSE, the Cargo workspace and all three package manifests; the
+eight committed native addons hold statically linked third-party code
+with no notice in the tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>12,272
+lines of TypeScript in 17 server source files and 5,613 in 12 test
+files; 9,872 lines of Rust in 21 files, 5,058 of them in lucid-core;
+eight committed native addons of 124 MB; of the 279 MiB pack, about 149
+MB is a Rust target/ directory committed and deleted on 29 January 2026
+and about 143 MB is 74 revisions of the addons</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>193
+commits from 29 January to 4 November 2026, 164 by Jason Docton and 29
+by github-actions[bot] replacing the native addons; none between 20
+February and 3 November; 18 tags, v0.3.0 to v0.6.6</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>258
+it or test call sites in 12 bun test files, some inside loops, and 95
+Rust #[test] functions; the CHANGELOG reports 307 tests at 0.6.0; ci.yml
+runs both; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Lucid Memory is a local memory server for Claude Code, Codex and
+OpenCode that stores every user prompt in SQLite and ranks recall with a
+cognitive model: cosine similarity cubed after MINERVA 2, an ACT-R base
+level from each memory's access history, and spreading activation over
+an association graph, computed in a Rust addon. What is notable is how
+much of that model is wired in and running. What is weak is the write
+path: a new store that resembles an existing memory either overwrites it
+in place, keeping no copy, or is discarded in favour of it, and the
+README's headline numbers do not come from anything that measured the
+product.</p>
+<p>The memory model lives in TypeScript.
+<code>packages/lucid-server</code> owns the schema, every write, delete
+and background pass, the MCP server, the CLI and the hooks. The Rust
+crates hold arithmetic: <code>lucid-core</code> scores, spreads and
+decides prediction-error zones, and with its <code>embedding</code>
+feature runs BGE-base through ONNX Runtime.
+<code>lucid-perception</code> extracts video frames and transcribes
+audio. Neither crate opens the database.</p>
+<p>Capture is automatic. The installer registers a Claude Code
+<code>UserPromptSubmit</code> hook that stores each prompt and prints a
+<code>&lt;lucid-context&gt;</code> block of gists within 200 tokens. A
+<code>Stop</code> hook stores the final reply. Codex and OpenCode get
+the same through a notifier and a plugin.</p>
+<p><strong>Reconsolidation replaces memories.</strong> Before inserting,
+<code>store()</code> finds the most similar memory in the same project.
+Near-identical text is dropped and the old row reinforced; a middle band
+overwrites the old row's content with the new text. Section 7 gives the
+arithmetic.</p>
+<p><strong>The benchmark claims are simulations.</strong> The "Pinecone"
+in the README is a cosine sort over the same synthetic vectors, its
+latency is a string printed by the benchmark, and the recall gap is the
+length of what each strategy returns. Section 10 has the detail.</p>
+<p><strong>Licence.</strong> The tree ships eight compiled native
+addons, 124 MB, that the server loads at run time, and the GPL-3.0 text
+in <code>LICENSE</code> is the only licence text in the tree. Each addon
+carries thousands of <code>onnxruntime</code> symbol strings, consistent
+with the <code>ORT_STRATEGY: download</code> build in
+<code>.github/workflows/build-native.yml:91</code>, and no notice names
+ONNX Runtime or any other bundled component. Nothing ties a given binary
+to the source beside it; the pinned commit is itself a bot commit that
+replaced them. The installer downloads the BGE and Whisper weights from
+Hugging Face <code>resolve/main</code> with a size check and no revision
+or checksum (<code>install.sh:1085-1086</code>, <code>:1137</code>), so
+the models the product runs are neither in the tree nor fixed by it.
+Code built from the tree carries GPL-3.0 copyleft.</p>
+<p>One mark, <code>scope_enforced</code>, on the project key of text
+recall. Section 9 gives the reasons for the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a piece of text with a strength that rises when
+it is used</strong>. There is no notion of a memory being true or false.
+A prompt, an agent's <code>memory_store</code> call and a captured
+assistant reply all become the same kind of row, differing only in
+<code>type</code> and tags, and all are served from the moment they are
+written.</p>
+<p>What changes a memory's standing is use. Every retrieval appends an
+<code>access_history</code> row for each returned memory, and the ACT-R
+base level <code>ln Σ t^-d</code> over those times is one of the ranking
+terms (<code>packages/lucid-server/src/storage.ts:862-877</code>,
+<code>packages/lucid-server/src/retrieval.ts:930-940</code>).
+Co-retrieved memories strengthen their association, and unused
+associations decay and are pruned. A memory therefore gets more
+retrievable by being retrieved.</p>
+<p>The documented lifecycle
+<code>fresh → consolidating → consolidated</code>, with
+<code>reconsolidating</code> after an update, is advanced by the hourly
+pass on a clock
+(<code>packages/lucid-server/src/consolidation.ts:141-176</code>). No
+recall reads it. It is counted for
+<code>memory_consolidation_status</code> and nothing else, so the
+"consolidated — stable, harder to modify" of
+<code>HOW_IT_WORKS.md</code> describes no gate in the code.</p>
+<p>A memory stops existing in three ways, none of which leaves a record:
+the model calls <code>memory_forget</code> with its id; the hourly pass
+deletes the least recently accessed rows once the store exceeds 50,000;
+or a later, similar store overwrites its text.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every write except a captured reply goes through store(), which compares it with the nearest memory in the same project; near-identical text is dropped, a middle band overwrites the old row in place, and only distant text becomes a new row; recall then raises whatever it returns</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every write except a captured reply goes through store(), which compares it with the nearest memory in the same project; near-identical text is dropped, a middle band overwrites the old row in place, and only distant text becomes a new row; recall then raises whatever it returns
+flowchart TD
+    subgraph W[&quot;Through store()&quot;]
+        direction TB
+        H[&quot;Prompt hook&lt;br/&gt;every prompt, cwd project&quot;]
+        M[&quot;memory_store tool&lt;br/&gt;model sets projectPath&quot;]
+        O[&quot;OpenCode plugin&lt;br/&gt;no project&quot;]
+        H ~~~ M ~~~ O
+    end
+    W --&gt; S[&quot;Embed, find nearest&lt;br/&gt;memory in same project&lt;br/&gt;cosine 0.4 or more&quot;]
+    S --&gt; Z{&quot;Prediction-error&lt;br/&gt;zone&quot;}
+    Z --&gt;|&quot;near-identical&quot;| RF[&quot;Reinforce: new text&lt;br/&gt;dropped, old row&lt;br/&gt;gets an access&quot;]
+    Z --&gt;|&quot;middle band&quot;| RC[&quot;Reconsolidate: old&lt;br/&gt;content overwritten,&lt;br/&gt;no copy kept&quot;]
+    Z --&gt;|&quot;distant&quot;| NT[&quot;Insert new row&quot;]
+    C[&quot;Stop and Codex capture&lt;br/&gt;replies, fixed ids&quot;] --&gt; NT
+    RF --&gt; DB[(&quot;memories&lt;br/&gt;content, gist,&lt;br/&gt;project_id&quot;)]
+    RC --&gt; DB
+    NT --&gt; DB
+    DB --&gt; R[&quot;Recall loads every row&lt;br/&gt;of the project: sim³,&lt;br/&gt;base level, spreading&quot;]
+    R --&gt; A[&quot;Each returned row&lt;br/&gt;gets an access row,&lt;br/&gt;so ranks higher next&quot;]
+    A --&gt; DB
+    R ~~~ F[&quot;memory_forget by id,&lt;br/&gt;or LRU delete past&lt;br/&gt;50,000: no record&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Bun process per client runs
+<code>packages/lucid-server/src/server.ts</code> as a stdio MCP server;
+the hooks invoke the CLI (<code>src/cli.ts</code>) as a separate process
+for each prompt. Both open the same SQLite file through
+<code>bun:sqlite</code> with WAL and a five-second busy timeout
+(<code>packages/lucid-server/src/storage.ts:354-393</code>).</p>
+<p>The native addon <code>@lucid-memory/native</code> is the
+<code>lucid-napi</code> crate compiled for four platforms and committed
+under <code>packages/lucid-native/</code>. It declares 66
+<code>#[napi]</code> items: retrieval, base level, spreading,
+prediction-error zones, decay and the BGE embedder. The server falls
+back to TypeScript implementations when the addon fails to load.
+<code>@lucid-memory/perception</code> is the same arrangement for
+video.</p>
+<p>Embeddings come from the first provider that answers: a configured
+OpenAI-compatible endpoint, the in-process BGE model, OpenAI with
+<code>OPENAI_API_KEY</code>, then Ollama. With none, recall ranks by
+recency alone and says so in a <code>warning</code> field.</p>
+<p>The background passes run inside the MCP server only, on
+<code>setInterval</code>
+(<code>packages/lucid-server/src/server.ts:132-242</code>): pending
+embeddings every five seconds, micro-consolidation every five minutes,
+and full consolidation, file-familiarity decay and session pruning every
+hour. A client with the hooks and no running MCP server gets capture and
+recall without any of them.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>curl -fsSL https://lucidmemory.dev/install | bash</code>
+installs Bun if needed, copies the server into <code>~/.lucid</code>,
+downloads about 110 MB of BGE weights and a 74 MB Whisper model, and
+edits the chosen clients' configuration. The README asks for 5 GB free.
+Nothing has to be running beyond the client, no API key is needed, and
+it works offline once the models are present. The store is one SQLite
+file a person can open; the <code>content</code> column is plain text.
+Automatic updates from published GitHub releases are opt-in at
+install.</p>
+<p><code>packages/lucid-server/package.json</code> declares a
+<code>postinstall</code> running <code>scripts/legacy-update.ts</code>.
+It returns at once unless the package directory is the installed
+<code>~/.lucid/server</code>; there, it looks for a v0.6.5 self-update
+in progress and, if it finds one, asks GitHub for the latest release and
+applies it
+(<code>packages/lucid-server/src/upgrade.ts:443-498</code>).</p>
+<p>The repository is large for what it holds. The working tree is 124 MB
+of the eight addons and under 1 MB of everything else. History adds 74
+revisions of those addons and a Rust <code>target/</code> directory
+committed in the first commit and deleted in the second, both on 29
+January 2026, which together make up nearly all of the 279 MiB pack. No
+model weights are committed.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema.</strong>
+<code>packages/lucid-server/src/storage.ts</code>: <code>memories</code>
+<code>:398-409</code>, <code>associations</code> <code>:412-420</code>,
+<code>access_history</code> <code>:432-437</code>, visual memories
+<code>:519-535</code>, episodes and temporal links
+<code>:567-608</code>, the embedding caches and their invalidation
+trigger <code>:624-670</code>, added columns <code>:678-705</code>.</li>
+<li><strong>Prompt capture and injection.</strong>
+<code>packages/lucid-server/hooks/user-prompt-submit.sh</code>: stdin
+read whole <code>:35</code>, project from
+<code>CLAUDE_PROJECT_PATH</code> or <code>pwd</code> <code>:46</code>,
+background <code>lucid store</code> <code>:184</code>,
+<code>lucid context</code> <code>:194</code>. The CLI side is
+<code>packages/lucid-server/src/cli.ts:263-350</code>.</li>
+<li><strong>Reply capture.</strong>
+<code>packages/lucid-server/src/claude-stop.ts:5-42</code>,
+<code>packages/lucid-server/src/codex-notify.ts:39-45</code>, both into
+<code>storeCapturedMessage</code> (<code>storage.ts:718-748</code>),
+which skips reconsolidation.</li>
+<li><strong>Store and reconsolidation.</strong>
+<code>LucidRetrieval.store</code>,
+<code>packages/lucid-server/src/retrieval.ts:1186-1466</code>: nearest
+match and zone <code>:1200-1293</code>, reinforce
+<code>:1270-1278</code>, overwrite <code>:1280-1289</code>, insert
+<code>:1314-1324</code>, embedding and auto-association
+<code>:1351-1373</code>, episode links <code>:1375-1463</code>.
+<code>findMostSimilarMemory</code> <code>storage.ts:1310-1378</code>;
+<code>reconsolidateMemory</code> <code>storage.ts:833-850</code>.</li>
+<li><strong>Recall.</strong> <code>retrieveTextWithProbe</code>,
+<code>retrieval.ts:618-976</code>: candidates <code>:629</code>, recency
+fallbacks <code>:645-748</code>, native scoring <code>:982-1064</code>,
+instance noise <code>:881-904</code>, episode spreading
+<code>:336-428</code>, session boost <code>:915-928</code>, access
+recording <code>:930-940</code>, association reinforcement
+<code>:943-973</code>. The Rust pipeline is
+<code>crates/lucid-core/src/retrieval.rs:109-255</code>.</li>
+<li><strong>Context assembly.</strong>
+<code>getContextWithVisuals</code>,
+<code>retrieval.ts:2095-2189</code>.</li>
+<li><strong>Delete.</strong> <code>memory_forget</code>,
+<code>packages/lucid-server/src/server.ts:607-656</code>, calling
+<code>deleteMemory</code>, <code>storage.ts:854-857</code>.</li>
+<li><strong>Background.</strong>
+<code>packages/lucid-server/src/consolidation.ts:45-226</code>;
+<code>pruneOldMemories</code>, <code>storage.ts:3086-3120</code>.</li>
+<li><strong>MCP tools.</strong>
+<code>packages/lucid-server/src/server.ts</code>, from
+<code>:260</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memories</code> row is <code>id</code>, <code>type</code>
+(learning, decision, context, bug, solution, conversation),
+<code>content</code>, <code>gist</code>, <code>created_at</code>,
+<code>last_accessed</code>, <code>access_count</code>,
+<code>emotional_weight</code>, <code>project_id</code> and JSON
+<code>tags</code>, with <code>encoding_strength</code>,
+<code>encoding_context</code>, <code>consolidation_state</code> and
+<code>last_consolidated</code> added by migration
+(<code>storage.ts:398-409</code>, <code>:678-705</code>).</p>
+<p>Both <code>content</code> and <code>gist</code> are stored. The gist
+is extractive: the first sentence over 20 characters, plus key terms if
+they fit in 150 characters
+(<code>packages/lucid-server/src/gist.ts:14-48</code>). It is what the
+hook injects.</p>
+<p>Embeddings live in their own table keyed by memory, model and vector
+length, so several providers' vectors coexist, and a trigger deletes a
+memory's vectors whenever its content changes
+(<code>storage.ts:649-667</code>). This is the careful part of the
+schema, and the tests for it are the densest in the suite.</p>
+<p>The scope key is <code>project_id</code>, a UUID from
+<code>projects</code>, which maps a path string to an id by upsert
+(<code>storage.ts:1649-1658</code>). Every read that takes a
+<code>projectPath</code> therefore also writes a <code>projects</code>
+row. <code>store()</code> passes a project's id where
+<code>getOrCreateProject</code> expects a path, so each project's
+metadata accumulates on a second row whose path is the first one's UUID
+(<code>retrieval.ts:1332</code>).</p>
+<p>The only time is <code>created_at</code>. There is no supersession
+link, no source reference and no record of who wrote a row beyond the
+<code>conversation</code> type and the <code>claude</code>,
+<code>codex</code>, <code>assistant</code> and <code>user</code> tags on
+captured messages. The ids of captured messages encode their origin
+(<code>claude-response:&lt;sha256&gt;</code>,
+<code>codex-prompt:&lt;key&gt;</code>); a prompt captured by the Claude
+Code hook gets a random UUID like any other stored memory.</p>
+<p>Separate stores hold visual memories (a description written by the
+model, not the media), file-location familiarity with per-access
+activity contexts and pins, episodes, and sessions.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is a full scan. <code>getAllForRetrieval</code> selects every
+row of the project, or of the database when no project is given, then
+runs one <code>access_history</code> query per row
+(<code>storage.ts:939-957</code>); <code>getAllEmbeddings</code> loads
+the vectors for the current model. Rows without a vector in that space
+are skipped (<code>retrieval.ts:767</code>).</p>
+<p>The Rust <code>retrieve</code> computes, per memory, cosine
+similarity cubed, a base level from the access times with a
+session-aware decay rate, an emotional weight and a working-memory
+boost, then spreads activation from the top seeds through the
+association graph to depth 3 and drops candidates whose retrieval
+probability is under 0.1
+(<code>crates/lucid-core/src/retrieval.rs:109-255</code>). TypeScript
+then adds episode spreading from the top five, multiplies memories seen
+in the current session by 1.5, and slices.</p>
+<p>The hook path, <code>lucid context</code>, keeps text candidates with
+similarity 0.3 or more and fills a budget of 200 tokens, 30% of it
+reserved for visual memories, with gists in rank order
+(<code>cli.ts:263-325</code>, <code>retrieval.ts:2095-2189</code>). The
+output is a <code>&lt;lucid-context&gt;</code> block of lines like
+<code>- [conversation] Claude replied: …</code>. The block is bounded.
+It is recomputed for every prompt and printed by the prompt hook, so its
+content changes from turn to turn.</p>
+<p>Two properties follow from the code and were not run:</p>
+<ul>
+<li><strong>Recall writes.</strong> Each returned memory gets an access
+row and its <code>last_accessed</code> moved, and co-returned memories
+reinforce their association (<code>retrieval.ts:930-973</code>). The
+hook calls recall on every prompt, so what is injected today ranks
+higher tomorrow.</li>
+<li><strong>Cost grows with the store.</strong> Every query reads every
+row of the project and one history query per row. The 2.7 ms in the
+README is the Rust kernel alone (section 10).</li>
+</ul>
+<p>The encoding strength that micro-consolidation raises and decays
+every five minutes reaches recall only as an instance-noise probability
+written onto each candidate at <code>retrieval.ts:902</code>, which no
+caller reads. Its effect is on the reconsolidation threshold in section
+7.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Prompts.</strong> The prompt hook stores its whole stdin with
+<code>--type=conversation</code> in a background subshell and then runs
+<code>lucid context</code> on the same string
+(<code>user-prompt-submit.sh:35</code>, <code>:184</code>,
+<code>:194</code>). Claude Code delivers hook input as a JSON object,
+which is how the repository's own <code>Stop</code> handler reads it
+(<code>claude-stop.ts:7</code>). The script does not parse it, so the
+stored content and the recall query would be the JSON envelope rather
+than the prompt text. This was not run.</p>
+<p><strong>Replies.</strong> <code>captureStop</code> keys a reply on a
+hash of session, prompt id and text, truncates it to 2,000 characters
+and inserts it once under that key (<code>claude-stop.ts:23-41</code>,
+<code>storage.ts:718-748</code>). Codex prompts and replies take the
+same route. These skip reconsolidation and are excluded from it as
+targets (<code>storage.ts:1333</code>).</p>
+<p><strong>Everything else goes through <code>store()</code></strong>:
+the hook's prompt, the model's <code>memory_store</code>, and the
+OpenCode plugin, which stores user messages as <code>conversation</code>
+and assistant messages over 50 characters as <code>learning</code>
+(<code>packages/lucid-server/plugins/opencode-lucid-memory.ts:78-88</code>).</p>
+<p><code>store()</code> embeds the text, finds the most similar memory
+in the same project at cosine 0.4 or more, and computes a surprise. On
+the native path that is
+<code>(1 − cos) / (0.5 + 0.01·age_days + 0.2·strength)</code>, capped at
+1 (<code>crates/lucid-core/src/retrieval.rs:291-310</code>). The zone
+thresholds start at 0.1 and 0.55, the low one rising by 0.05 a day of
+age and the high one falling with access count
+(<code>crates/lucid-core/src/activation.rs:673-708</code>). For a memory
+at age 0, one access and strength 0.5, the arithmetic gives:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Cosine to nearest</th>
+<th>Zone</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>above about 0.94</td>
+<td>reinforce</td>
+<td>the new text is not stored; the old row gets an access and +0.05
+strength</td>
+</tr>
+<tr>
+<td>about 0.69 to 0.94</td>
+<td>reconsolidate</td>
+<td>the old row's <code>content</code> and <code>gist</code> are
+replaced by the new text and its vector, state set to
+<code>reconsolidating</code></td>
+</tr>
+<tr>
+<td>below about 0.69</td>
+<td>new trace</td>
+<td>a new row</td>
+</tr>
+</tbody>
+</table></div>
+<p>Reconsolidation keeps the old row's id, <code>type</code>, tags,
+emotional weight and creation time (<code>storage.ts:833-850</code>). It
+writes no copy of the text it replaces. A user prompt can therefore
+replace a <code>decision</code> the agent stored, and an OpenCode
+assistant reply can replace either, with the result still typed as the
+original. No test drives <code>store()</code> through the overwrite
+branch.</p>
+<p>Within that band, this is the system's only correction mechanism. No
+tool edits a memory: <code>updateMemory</code> has one caller,
+<code>reconsolidateMemory</code>.</p>
+<p><strong>Delete.</strong> <code>memory_forget</code> takes an id and
+runs <code>DELETE FROM memories</code>, which cascades to embeddings,
+associations, access history and episode events. The model needs the id
+first, and the injected block carries none. A repeated prompt or reply
+is stored again as a new row. <code>lucid backup</code> copies the main
+database file with <code>copyFileSync</code> and not its
+<code>-wal</code> file (<code>cli.ts:631-665</code>), so a backup can
+miss recent writes, and it keeps whatever is forgotten after it is
+taken.</p>
+<p><strong>Pruning.</strong> Above 50,000 rows the hourly pass deletes
+the excess, least recently accessed first, across all projects and
+types, with nothing kept (<code>storage.ts:3086-3120</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The prompt hook blocks the prompt on <code>lucid context</code>, a
+fresh Bun process that opens the database, detects an embedder with a
+3-second budget and scans the project (<code>cli.ts:82</code>). The
+store runs beside it in the background, and its new row is retrievable
+once it commits, with its vector written in the same call. No model is
+called on the write path apart from the embedder. The
+micro-consolidation pass touches at most one batch of recently accessed
+and stale rows every five minutes; nothing rewrites the store
+wholesale.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers 26 tools: <code>memory_store</code>,
+<code>memory_query</code>, <code>memory_narrative</code>,
+<code>memory_context</code>, <code>memory_forget</code>,
+<code>memory_stats</code> and <code>memory_consolidation_status</code>;
+four visual and two video tools; and thirteen <code>location_*</code>
+tools for file familiarity. The <code>memory_store</code> description
+tells the model to store <em>"proactively"</em> when it learns, fixes or
+decides something.</p>
+<p>Automatic capture and injection do not depend on the model: the hook
+stores and injects on every prompt. The model's own tools add explicit
+memories, search across projects when it omits <code>projectPath</code>,
+and delete by id.</p>
+<p>When a prompt names an image or video, the hook prints instructions
+to spawn a background task on a small model, describe the media and call
+<code>visual_store</code> (<code>user-prompt-submit.sh:137-173</code>).
+Visual memory is therefore written by the agent from a prompt the hook
+composed.</p>
+<p>Adapting this to another agent means a prompt hook and an MCP client.
+The CLI's <code>context</code> and <code>store</code> commands are the
+whole surface the hooks use.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-gets-injected">What gets injected</h3>
+<p>The context block mixes the user's prompts, the agent's stored notes
+and the agent's own previous replies, each shown as a gist with a type
+label (<code>cli.ts:306-321</code>). A reply that was wrong is captured,
+ranked like anything else, injected into a later prompt and, because
+recall writes an access, ranked higher the next time. Nothing marks a
+captured reply as less reliable than something the user said.</p>
+<p>The README says stored content may include source code or secrets. No
+code on either capture path redacts anything.</p>
+<h3 id="scope">Scope</h3>
+<p>Text recall is scoped by project when a project is given. The hook
+gives the working directory. The MCP tools take an optional
+<code>projectPath</code> from the model, and without it
+<code>memory_query</code> and <code>memory_context</code> search every
+project in the database (<code>server.ts:362-378</code>,
+<code>:548-557</code>). The OpenCode plugin stores and recalls with no
+project at all (<code>opencode-lucid-memory.ts:20</code>,
+<code>:31-32</code>).</p>
+<p>Visual memories carry <code>project_id</code> and are never filtered
+by it: <code>getAllVisualsForRetrieval</code> takes no argument
+(<code>storage.ts:2982-2990</code>),
+<code>retrieveVisualWithProbe</code> uses the project only for a +0.15
+weight (<code>retrieval.ts:1878-1886</code>), and the hook's context
+call passes <code>undefined</code> for it
+(<code>retrieval.ts:2130-2137</code>). A description of a screenshot
+from one project is injected into another.</p>
+<p>Database profiles give a stronger boundary: per-client or named
+files, chosen in <code>~/.lucid/config.json</code>
+(<code>packages/lucid-server/src/database-path.ts:30-44</code>).</p>
+<h3 id="the-headline-claims">The headline claims</h3>
+<p>The README's table and the GitHub description (<em>"13x faster than
+Pinecone, 5x leaner than RAG. Finds what RAG misses"</em>) rest on the
+benchmark scripts read in section 10. The 13x figure does not appear in
+the tree.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong>
+<code>project_id</code> is stored on each text row and applied as a SQL
+predicate on every text recall when given, and the automatic path always
+gives it. It does not cover visual memories, the model's unscoped calls
+or OpenCode.</li>
+<li><strong><code>tombstone</code> — withheld.</strong>
+<code>memory_forget</code> deletes the row; nothing keyed on the value
+remains, and the next prompt saying the same thing is stored again.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>consolidation_state</code> is a discrete field with a producer,
+and no read excludes on it; it is a lifecycle clock, not an epistemic
+status. Nothing else on a row could withhold it.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>created_at</code> is the only time.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>access_history</code> records retrievals, which the rubric
+excludes. Creation, reconsolidation, forget and pruning write no event,
+and reconsolidation destroys the text it replaces.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Every write
+takes effect at once and the agent holds the delete verb.</li>
+<li><strong><code>negative_eval</code> — withheld.</strong>
+<code>storage.test.ts:221-229</code> requires exactly the in-project row
+of two, but through <code>queryMemories</code>, which no product path
+calls. <code>embedding-endpoint.test.ts:204-241</code> requires a memory
+whose vector is in a stale embedding space to be absent from a populated
+result and then present after re-embedding; that guards index
+consistency, not a boundary on what may be retrieved.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites or benchmarks. The counts are from
+reading.</p>
+<p><strong>Tests.</strong> 258 <code>it</code> or <code>test</code> call
+sites, some inside loops, in 12 files under
+<code>packages/lucid-server/src</code>, and 95 Rust <code>#[test]</code>
+functions, 74 of them in <code>lucid-core</code>. <code>ci.yml</code>
+runs the server tests and typecheck on Linux, the Codex configuration
+tests and an upgrade-recovery script on Windows, a stock-v0.6.5 upgrade
+test, and <code>cargo test --features transcription</code>.</p>
+<p>The densest coverage is on embedding spaces
+(<code>embedding-endpoint.test.ts</code>,
+<code>embedding-migration.test.ts</code>,
+<code>embedding-cache.test.ts</code>, 50 cases): model, endpoint and
+width changes, stale vectors skipped and rebuilt, a different model's
+identical vector never reinforced. The capture tests run the real
+<code>Stop</code> handler against a temporary home and check
+deduplication, truncation and that replies are excluded from
+reconsolidation matching (<code>claude-stop.test.ts:87-140</code>).</p>
+<p>Not tested: <code>store()</code> overwriting a memory through the
+reconsolidate branch; the filter in <code>getAllForRetrieval</code>; the
+hook script's handling of its input; <code>memory_forget</code> followed
+by recall; visual recall across projects.
+<code>location-rust-integration.test.ts</code> prints
+<code>[skipped]</code> and returns when the addon does not load, so its
+cases pass without asserting on a machine without it.</p>
+<p><strong>Benchmarks.</strong> <code>benchmarks/quality/</code> holds
+six scripts and no output. <code>benchmarks/README.md</code>, the
+CHANGELOG and the README quote results; none of them recomputes from a
+committed artifact.</p>
+<ul>
+<li><strong>Every vector is synthetic.</strong> Each script builds
+embeddings from a seeded generator or a hand-set pattern with a chosen
+similarity to the query
+(<code>benchmarks/quality/realistic-dev.ts:45-69</code>,
+<code>benchmarks/quality/rag-comparison.ts:28-58</code>). No text is
+embedded, so no script measures whether the product finds anything in
+real prompts.</li>
+<li><strong>"Pinecone" is a cosine sort in the same process.</strong>
+<code>retrievePineconeRAG</code> sorts the same vectors by
+<code>cosineSimilarityBatch</code> and returns each memory's content up
+to 1,024 characters
+(<code>benchmarks/quality/token-efficiency.ts:312-352</code>).
+<code>ragRetrieve</code> in the other script is the same sort
+(<code>rag-comparison.ts:322-330</code>).</li>
+<li><strong>The recall gap is text length.</strong> In
+<code>token-efficiency.ts</code> the relevant memories are generated at
+cosine 0.85 to 0.95 and the rest at 0.1 to 0.5 (<code>:444</code>,
+<code>:458</code>), so all three strategies rank the relevant ones
+first. The difference at a fixed token budget is that Lucid's strategy
+returns a gist of at most 150 characters and the others return full
+content, and the "claude-mem" strategy is charged a fixed 250 tokens of
+index and timeline overhead before it returns anything
+(<code>:263-268</code>). The 82.5%, 55.3% and 28.9% recall figures
+measure that. The similarities and relevance labels are drawn from
+unseeded <code>Math.random()</code>, so the figures vary between
+runs.</li>
+<li><strong>"5x storage compression" is the gist ratio.</strong> The
+script prints "lucid-memory stores gists"
+(<code>token-efficiency.ts:690</code>); the store keeps the full content
+and the gist (<code>storage.ts:757-770</code>).</li>
+<li><strong>The Pinecone latency is a string.</strong>
+<code>rag-comparison.ts:543-545</code> prints "10-50ms latency,
+$70+/month" and "~10-20x faster" as constants. The 2.7 ms is a criterion
+benchmark of <code>retrieve</code> over 2,000 random 1,024-dimensional
+vectors held in memory
+(<code>crates/lucid-core/benches/retrieval.rs:61-102</code>). It
+excludes embedding the query, the SQLite scan and the per-row history
+queries, and the shipped BGE model produces 768 dimensions. A local
+kernel is compared with a hosted service's network round trip.</li>
+<li><strong>The workflow scenarios grade the features they
+test.</strong> In <code>realistic-dev.ts</code> the "RAG baseline" is
+the same cosine sort over the same vectors (<code>:1114-1127</code>),
+and scenarios such as episode retrieval define relevance by temporal
+links cosine cannot see. That is an ablation of the cognitive terms on
+authored data, which is what it can show; the README presents it as a
+comparison with RAG systems.</li>
+</ul>
+<p>There is no paper; the README cites the cognitive-science literature
+the model draws on.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Key cached vectors on model and width, and invalidate them
+with a trigger.</strong> A unique index on
+<code>(memory_id, model, length(vector))</code> and an
+<code>AFTER UPDATE OF content</code> trigger that deletes them make a
+provider switch or an edit safe without a migration step.</li>
+<li><strong>Keep the injected block small and gist-shaped.</strong> A
+200-token budget with a similarity floor of 0.3, and nothing printed
+when nothing clears it.</li>
+<li><strong>Give captured messages a deterministic id from their
+content.</strong> A hash of session, prompt id and text makes a replayed
+hook a no-op.</li>
+<li><strong>Return a <code>method</code> and a <code>warning</code> with
+every recall</strong>, so a caller can see that it got recency because
+the embedder was down.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Deduplication that edits the matched row.</strong> If a
+similar write must merge, write a new version and supersede the old one;
+overwriting content in place loses the text and leaves the old type,
+tags and time on new words.</li>
+<li><strong>Dropping a near-duplicate write.</strong> A restatement is
+evidence; a counter on the old row keeps it, discarding the text does
+not.</li>
+<li><strong>A recall that strengthens what it returns, on every
+prompt.</strong> Automatic injection then becomes self-reinforcing,
+including for wrong memories.</li>
+<li><strong>Storing a hook's stdin without parsing it.</strong></li>
+<li><strong>Benchmarks whose baseline is a simulation of a
+competitor.</strong> Name the arms for what they compute, embed real
+text, and commit the output.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants Claude Code or Codex to see
+snippets of earlier sessions with no setup beyond an installer, and who
+treats memory as a recency-weighted search over their own prompts. The
+cognitive model is coherent, and the embedding-space handling is
+careful.</p>
+<p>It does not suit anyone who needs a stored decision to stay as
+written, who needs to know why a memory says what it says, or who shares
+a database across projects with screenshots in it. A reader weighing it
+on the README's numbers should run it on their own prompts instead,
+because nothing in the tree has.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the installed Claude Code hook store the JSON envelope? The
+script reads stdin whole; running one prompt would settle it.</li>
+<li>Does the background store in the hook ever commit before
+<code>lucid context</code> runs, so that a prompt is recalled as context
+for itself?</li>
+<li>Do the committed addons correspond to the source at the pin? The pin
+is the bot commit that replaced them; a rebuild would answer it.</li>
+<li>How wide is the overwrite band with BGE-base on real prompts? The
+arithmetic is fixed, and the distribution of BGE similarities between
+related and unrelated prompts decides how often it fires.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/lucid-server/src/storage.ts</code></td>
+<td>Schema, inserts, reconsolidation update, delete, nearest match,
+pruning</td>
+</tr>
+<tr>
+<td><code>packages/lucid-server/src/retrieval.ts</code></td>
+<td><code>store()</code> with prediction-error zones, recall, context
+assembly</td>
+</tr>
+<tr>
+<td><code>packages/lucid-server/src/server.ts</code></td>
+<td>MCP tools and background timers</td>
+</tr>
+<tr>
+<td><code>packages/lucid-server/src/cli.ts</code></td>
+<td><code>context</code>, <code>store</code>, <code>backup</code> and
+configuration commands</td>
+</tr>
+<tr>
+<td><code>packages/lucid-server/src/consolidation.ts</code></td>
+<td>Micro and full consolidation, pruning call</td>
+</tr>
+<tr>
+<td><code>packages/lucid-server/src/claude-stop.ts</code>,
+<code>codex-notify.ts</code></td>
+<td>Reply capture</td>
+</tr>
+<tr>
+<td><code>packages/lucid-server/hooks/user-prompt-submit.sh</code></td>
+<td>Prompt capture and injection</td>
+</tr>
+<tr>
+<td><code>packages/lucid-server/plugins/opencode-lucid-memory.ts</code></td>
+<td>OpenCode capture and injection</td>
+</tr>
+<tr>
+<td><code>packages/lucid-server/src/config.ts</code></td>
+<td>Every threshold and feature flag</td>
+</tr>
+<tr>
+<td><code>crates/lucid-core/src/retrieval.rs</code>,
+<code>activation.rs</code>, <code>spreading.rs</code></td>
+<td>Scoring, surprise, zones, spreading</td>
+</tr>
+<tr>
+<td><code>crates/lucid-core/src/embedding.rs</code></td>
+<td>BGE-base through ONNX Runtime</td>
+</tr>
+<tr>
+<td><code>crates/lucid-core/benches/retrieval.rs</code></td>
+<td>The 2.7 ms benchmark</td>
+</tr>
+<tr>
+<td><code>benchmarks/quality/*.ts</code></td>
+<td>The quality and token-efficiency scripts</td>
+</tr>
+<tr>
+<td><code>packages/lucid-server/src/upgrade.ts</code></td>
+<td>Self-update and the <code>postinstall</code> legacy path</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>; <code>-I</code> skips the committed binaries.</p>
+<ul>
+<li><strong>No lexical arm.</strong>
+<code>git grep -n -I -i -E 'fts5|bm25' -- packages crates</code> returns
+nothing;
+<code>git grep -n -I -i cosine -- packages/lucid-server/src/storage.ts</code>
+matches.</li>
+<li><strong>No value-keyed refusal.</strong>
+<code>git grep -n -I -i -E 'tombstone|blocklist|denylist' -- packages crates</code>
+returns nothing; <code>git grep -n -I -i suppress -- crates</code>
+matches two comments.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -I -i -E 'valid_from|valid_to|validfrom|validuntil|valid_until|invalid_at' -- packages crates</code>
+returns nothing;
+<code>git grep -n -I 'created_at INTEGER' -- packages/lucid-server/src/storage.ts</code>
+matches.</li>
+<li><strong>No mutation log.</strong>
+<code>git grep -n -I -i -E 'audit|journal|mutation|event_log|changelog' -- packages/lucid-server/src ':!*.test.ts'</code>
+returns an activity keyword list in <code>storage.ts:1789</code> and the
+install recovery journal in <code>upgrade.ts</code>.</li>
+<li><strong>No review state.</strong>
+<code>git grep -n -I -i -E 'approv|pending|review' -- packages/lucid-server/src/storage.ts packages/lucid-server/src/server.ts packages/lucid-server/src/retrieval.ts</code>
+returns the pending-embedding queue and the <code>reviewing</code>
+activity type.</li>
+<li><strong>No recall reads the consolidation state.</strong>
+<code>git grep -n -I -E 'consolidation_state|consolidationState' -- packages/lucid-server/src ':!*.test.ts'</code>
+returns the column, its setter, the per-state batch query used by the
+consolidation pass, a count, the status tool and the row mapper.</li>
+<li><strong>The instance-noise probability is not read.</strong>
+<code>git grep -n '\.probability' -- packages/lucid-server/src ':!*.test.ts'</code>
+returns the assignment at <code>retrieval.ts:902</code> and two
+constructions.</li>
+<li><strong>No product caller of the scope-tested query.</strong>
+<code>git grep -n -I -E 'queryMemories\(' -- packages benchmarks ':!*.test.ts'</code>
+returns the definition at <code>storage.ts:895</code>.</li>
+<li><strong>No edit path but reconsolidation.</strong>
+<code>git grep -n -E 'updateMemory\(' -- packages ':!*.test.ts'</code>
+returns the definition and the call inside
+<code>reconsolidateMemory</code>.</li>
+<li><strong>No redaction on capture.</strong>
+<code>git grep -n -I -i -E 'redact|secret|password|api[_-]?key|sanitiz' -- packages/lucid-server/src packages/lucid-server/hooks ':!*.test.ts'</code>
+returns only the embedding provider's API key handling.</li>
+<li><strong>No checksum on model downloads.</strong>
+<code>git grep -n -I -i -E 'sha256sum|shasum|checksum' -- install.sh install.ps1</code>
+returns nothing; <code>git grep -n -I huggingface -- install.sh</code>
+matches.</li>
+<li><strong>No benchmark output committed.</strong>
+<code>git ls-files benchmarks</code> lists <code>README.md</code>,
+<code>package.json</code> and six <code>.ts</code> scripts.</li>
+<li><strong>The 13x figure is not in the tree.</strong>
+<code>git grep -n -I -E '13x' -- .</code> returns nothing;
+<code>git grep -n -I -E '10-50ms' -- .</code> matches the README and
+<code>rag-comparison.ts:543</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -I -i -E 'arxiv|bibtex|@article|@misc|doi\.org|CITATION' -- .</code>
+returns nothing; <code>git grep -n -I Hintzman -- README.md</code>
+matches.</li>
+<li><strong>The Rust crates do not open the database.</strong>
+<code>git grep -n -I -i -E 'rusqlite|sqlite' -- crates Cargo.toml</code>
+returns nothing; <code>git grep -n 'bun:sqlite' -- packages</code>
+matches.</li>
+<li><strong>No model weights in the tree or its history.</strong>
+<code>git rev-list --objects --all | grep -i -E '\.(onnx|gguf|safetensors)$'</code>
+returns nothing; <code>git ls-files | grep -i -E '\.node$'</code> lists
+the eight addons.</li>
+<li><strong>No submodules.</strong> <code>.gitmodules</code> is
+absent.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/JasonDocton/lucid-memory/commit/8ccb7ff2b9960ccf8432fa3a9e1d0e69761bca2c"><code class="commit-id" title="8ccb7ff2b9960ccf8432fa3a9e1d0e69761bca2c">8ccb7ff2…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, with
+no submodules. Screened first: no auto-run surface; nothing inside the
+seven-day cooldown; four build-time execution points, two
+<code>build.rs</code>, a <code>prepublishOnly</code>, and a
+<code>postinstall</code> running <code>scripts/legacy-update.ts</code>,
+which acts only inside an installed <code>~/.lucid/server</code>
+finishing a v0.6.5 self-update; six unpinned surfaces; a
+<code>CLAUDE.md</code> addressed to agents, read as data. Nothing was
+installed, built or run, and the test suites were not run. One mark:
+<code>scope_enforced</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). Reconsolidation
+overwrites a similar memory in place, and the README's benchmark figures
+come from synthetic vectors and a simulated Pinecone.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

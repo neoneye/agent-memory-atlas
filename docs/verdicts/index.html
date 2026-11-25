@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 872 reports.</strong></p>
+<p><strong>This page covers all 873 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -35948,6 +35948,59 @@ without a server, and want signed, content-addressed events and
 validity-window correction to copy.</li>
 <li>Do not copy when: memory must be isolated between agents or people,
 erased on request, or approved by a person before it is used.</li>
+</ul>
+<h3 id="lucid-memory"><a
+href="../systems/lucid-memory/"><code>lucid-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>embedding caches keyed on model and width,
+dropped by a trigger when the text changes.</strong>
+<code>embeddings</code> carries a unique index on
+<code>(memory_id, model, length(vector))</code>, and an
+<code>AFTER UPDATE OF content</code> trigger deletes a memory's vectors
+(<code>packages/lucid-server/src/storage.ts:624-670</code>), so a
+provider switch, an endpoint change or an edit never mixes vector
+spaces; stale rows are skipped at recall and rebuilt in the background,
+with 50 test cases on the three embedding files.</li>
+<li>Second idea: a small injection that can say nothing. The prompt hook
+keeps candidates at similarity 0.3 or more and fills at most 200 tokens
+with extractive gists, printing nothing when none clears the floor
+(<code>packages/lucid-server/src/retrieval.ts:2095-2189</code>), and
+every recall returns a <code>method</code> and a <code>warning</code>
+when it fell back to recency.</li>
+<li>Biggest risk: <strong>a similar write replaces a memory.</strong>
+<code>store()</code> matches the nearest memory in the project; for a
+fresh memory, above about cosine 0.94 the new text is dropped and the
+old row reinforced, and from about 0.69 the old row's content and gist
+are overwritten in place with its id, type and creation time kept and no
+copy (<code>packages/lucid-server/src/retrieval.ts:1200-1293</code>,
+<code>packages/lucid-server/src/storage.ts:833-850</code>). A user
+prompt or an OpenCode assistant reply can rewrite an agent's stored
+decision, and no test drives the branch.</li>
+<li>Second risk: the README's numbers do not measure the product. Every
+benchmark uses synthetic vectors; its "Pinecone" is an in-process cosine
+sort returning full text against 150-character gists, so the 82.5%
+against 55.3% recall is text length; the Pinecone latency and "10-20x
+faster" are printed constants
+(<code>benchmarks/quality/rag-comparison.ts:543-545</code>); 2.7 ms is
+the Rust kernel over in-memory vectors; no output is committed. The
+prompt hook also stores its stdin unparsed.</li>
+<li>Most reusable component: the embedding cache table, index and
+trigger in <code>packages/lucid-server/src/storage.ts:624-670</code>;
+for the cognitive model itself,
+<code>crates/lucid-core/src/activation.rs</code> and
+<code>spreading.rs</code>, pure Rust with no I/O.</li>
+<li>Maturity impression: GPL-3.0; 12,272 lines of TypeScript and 9,872
+of Rust; 193 commits from 29 January to 4 November 2026 by one author
+and a CI bot, none between 20 February and 3 November; 258
+<code>it</code> or <code>test</code> call sites and 95 Rust tests run in
+CI and not run here; 124 MB of compiled addons committed, the pin itself
+a bot commit replacing them. One mark: <code>scope_enforced</code>.</li>
+<li>Study when: you want a working ACT-R and MINERVA 2 ranker over agent
+memory, or careful handling of several embedding models in one
+store.</li>
+<li>Do not copy when: a stored memory must keep its words, a correction
+needs a record, projects must not see each other's visual memories, or a
+benchmark has to stand up to a reader.</li>
 </ul>
         </article>
       </div>
