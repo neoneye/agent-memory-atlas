@@ -14078,24 +14078,23 @@ no save and no revoke, and <code>freeze</code> drops the revoked
 records. Three marks: <code>tombstone</code>, <code>trust_state</code>,
 <code>negative_eval</code>.</p>
 <p><strong><a href="../systems/attested-memory/">Attested Memory</a>
-signs a hash-chained receipt for each memory event and checks it against
-keys and a chain head kept in the ledger's own database.</strong> Three
-self-hosted services around one Memory Unit: a market with owner, grant,
-visibility and team scoping, where paid content is listed and cannot be
-read or probed through search; a truth layer that sums the stance and
-quality numbers the owner attaches to their own evidence, whose
-<code>rejected</code> result takes a unit out of the catalogue and
-search by default; and a ledger of Ed25519 and ML-DSA-65 receipts
-chained per memory. <code>verify</code> recomputes the hashes and the
-link, accepts only the ledger's own or environment-listed keys, and
-requires the newest receipt to match the recorded head, a row a database
-writer can move along with the chain. Both write paths request a
-receipt, best-effort, and a reconcile command that nothing schedules
-finishes the misses, linking a <code>created</code> receipt by content
-hash alone; the ledger's attest capability appends to any memory id for
-any hub buyer with a reference. No unit can be edited or deleted. Marks:
-<code>trust_state</code>, <code>scope_enforced</code>,
-<code>audit_log</code>, <code>negative_eval</code>.</p>
+signs a hash-chained receipt for each memory event and cross-checks the
+ledger against the chain root the market kept.</strong> Three
+self-hosted services around one Memory Unit: a market with owner,
+revocable grant, visibility and team scoping, where paid content is
+listed and cannot be read or probed through search; a truth layer that
+sums the stance and quality numbers the owner attaches to their own
+evidence, whose <code>rejected</code> result takes a unit out of the
+catalogue and search by default; and a ledger of Ed25519 and ML-DSA-65
+receipts chained per memory, which accepts only its own keys, never
+rebuilds a deleted chain head, and lets a hub buyer extend only a chain
+they started. A reconcile command attests missed units in the owner's
+name, and <code>--check</code> requires each unit's recorded receipt to
+be in its chain with the stored root; it verifies one receipt per unit,
+and the bundled compose keeps both stores in one database. Grants and
+revocations write no receipt. Marks: <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</p>
 <p><strong><a href="../systems/contextdb-atomsai/">ContextDB
 (atomsai)</a> holds a slot two speakers disagree on out of action until
 one value is confirmed, and takes the speaker's word for who it

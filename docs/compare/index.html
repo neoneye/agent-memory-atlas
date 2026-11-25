@@ -3422,48 +3422,54 @@ href="../systems/attested-memory/"><code>attested-memory</code></a></td>
 visibility (private, shared, public, paid), optional price, source
 references and parent ids, with a truth state and a provenance pointer
 attached</td>
-<td>Three databases, one per service: memories, grants, ratings and
+<td>Three stores with separate DSNs: memories, grants, ratings and
 payment orders in the market; evidence packs in the truth layer;
-receipts and chain heads in the ledger. SQLite for development and
-tests, PostgreSQL 16 required in production</td>
+receipts, chain heads and a migration flag in the ledger. The bundled
+compose points all three at one PostgreSQL database and role; SQLite for
+development and tests</td>
 <td>Case-folded substring match over title, tags and readable content,
 newest first, with limit and offset, leaving out rejected units unless
-the caller names statuses or any; fetch by id returns any status; no
+the caller names statuses or any; fetch by id returns any status; the
+evidence pack id is shown only to callers who may read the unit; no
 ranking in the service, and a product shell re-ranks by truth,
 provenance, ratings and age</td>
 <td>A full unit by an authenticated actor over REST or the hub
 capability, stored at once; both paths then ask the ledger for a created
-receipt, best-effort, and a reconcile command finishes the units left
-unattested when someone runs it</td>
-<td>None: no route or store method edits or deletes a memory, and
-nothing sets a grant's revoked_at; truth state and the provenance
-pointer are overwritten in place by later verifications and
-receipts</td>
-<td>owner_id, per-grantee grants, four visibility values and a team tag,
-applied in can_read and in the catalog SQL; paid content is listed and
-not readable or searchable without a grant</td>
+receipt, best-effort, and a reconcile command attests the units left
+unattested, linking only a created receipt in the owner's name</td>
+<td>No route edits or deletes a memory; an owner revokes a grant they
+gave by setting revoked_at, which a later grant clears; truth state and
+the provenance pointer are overwritten in place by later verifications
+and receipts</td>
+<td>owner_id, revocable per-grantee grants, four visibility values and a
+team tag, applied in can_read and in the catalog SQL; paid content is
+listed and not readable or searchable without a grant, and a paid grant
+cannot be revoked by the owner</td>
 <td>Three FastAPI services with REST routes and twelve capabilities
 published to an AIMarket hub whose MCP endpoint exposes search and
-invoke; a Python client and CLI; three product shells that proxy to the
-market</td>
+invoke; a Python client and CLI with share and revoke; three product
+shells that proxy to the market</td>
 <td>A payment poller that scans Base for USDC transfers and issues
-grants; no pass over memories; the provenance reconcile command is run
-by hand, with no timer in the tree</td>
+grants; no pass over memories; systemd unit files for an hourly
+reconcile and cross-check ship under scripts/systemd and are installed
+by hand</td>
 <td>truth.status of unverified, supported, contested or rejected,
 computed from the stance and quality numbers the owner attaches to their
 own evidence; rejected is left out of the catalogue and search by
 default and returned by a read by id; provenance status of attested or
-unattested</td>
+unattested, set to attested only by a created receipt</td>
 <td>Paid content cannot be probed through search, with a populated test;
-request-bound actor proofs with replay protection; receipts chained per
-memory with the head row locked on append; verify accepts only the
-ledger's own keys; a scorer that names itself
-submitted-evidence-weight</td>
-<td>The chain head that verify compares against lives in the ledger's
-own database, so a database writer who moves it truncates a chain
-unseen; any named hub buyer can append receipts to any memory id with
-any hash, and the reconcile command links such a created receipt by hash
-alone; truth is the owner's own evidence weights</td>
+request-bound actor proofs with replay protection; verify accepts only
+the ledger's own keys and a chain head that is never rebuilt; a
+cross-check against the chain root the market kept, tested against a
+real ledger; receipts of non-public units carry hashes rather than
+sources</td>
+<td>The cross-check verifies one receipt per unit and misses receipts
+appended after it and deletions further back; in the bundled compose the
+market's roots and the ledger share one database and role; receipt
+commitments are unsalted hashes; a grant or revocation leaves no receipt
+and a re-grant erases the revocation; truth is the owner's own evidence
+weights</td>
 </tr>
 <tr>
 <td><a href="../systems/attune-ai/"><code>attune-ai</code></a></td>

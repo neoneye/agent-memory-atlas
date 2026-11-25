@@ -995,21 +995,23 @@ an erasure (<code>core/services/audit_chain.py:150-218</code>). The
 chain is unkeyed, a tombstone names no actor, and deleting an agent or
 an account removes its tombstones with it.</p>
 <p><strong><a href="../../systems/attested-memory/">Attested Memory</a>
-signs every entry and checks it against keys and a chain head held in
-the ledger's own database.</strong> The ledger chains receipts per
-memory, each carrying its event hash, the previous root and Ed25519 and
-ML-DSA-65 signatures over the new root
-(<code>provenance-ledger/src/provenance_ledger/store.py:102-162</code>).
-<code>verify</code> recomputes the hashes, checks the link to the
-previous row, requires the signing key to be the ledger's own or one
-listed in its environment, and requires the newest receipt to equal the
-<code>receipt_heads</code> row (<code>:191-253</code>). A re-signed row
-fails and a deleted newest receipt fails; a database writer who deletes
-receipts and moves the head with them passes. The log covers a create
-through REST or the hub capability, a verification and a settled
-payment; an owner's grant appends nothing, and a failed ledger call
-leaves a gap until a reconcile command that nothing schedules is
-run.</p>
+signs every entry and checks the ledger against the chain root the
+writer kept.</strong> The ledger chains receipts per memory, each
+carrying its event hash, the previous root and Ed25519 and ML-DSA-65
+signatures over the new root
+(<code>provenance-ledger/src/provenance_ledger/store.py:134-220</code>).
+<code>verify</code> requires the ledger's own key and a newest receipt
+equal to the <code>receipt_heads</code> row, which is not rebuilt after
+a one-time backfill (<code>:110-132</code>, <code>:269-319</code>); a
+database writer who deletes receipts and moves the head with them passes
+it. The market keeps the receipt id and root each append returned, and
+<code>reconcile_provenance --check</code> requires that receipt to be in
+the chain with that root
+(<code>memory-market/src/memory_market/reconcile_provenance.py:57-92</code>),
+with a test against a real ledger. It verifies one receipt per unit, and
+the bundled compose keeps both stores in one database. The log covers
+creation through either write path, verification and settled payments;
+grants and revocations append nothing.</p>
 <p><a href="../../systems/willder/">Willder</a> makes append-only a
 property of the table and splits one mutation into three rows.
 <code>check()</code> writes the authorization before any store is

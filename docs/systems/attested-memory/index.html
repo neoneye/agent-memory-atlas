@@ -99,8 +99,8 @@ evidence-weight scorer, and a hash-chained ledger of signed receipts.">
       <section class="document-hero">
         <div class="document-hero-inner">
           <p class="eyebrow">Signed, hash-chained receipts for memory
-events, checked against keys and a chain head held in the ledger's own
-database</p>
+events, checked by the ledger and against the chain root the market
+kept</p>
           <h1>Attested Memory</h1>
           <p class="document-deck">A self-hosted memory market of three
 services: a store with owner and grant scoping, an evidence-weight
@@ -111,9 +111,9 @@ scorer, and a hash-chained ledger of signed receipts.</p>
               <strong>alexar76/attested-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/alexar76/attested-memory/commit/25d6b1ab4f0983d2d3c3b35bf03c40535d9c91db" title="25d6b1ab4f0983d2d3c3b35bf03c40535d9c91db">
+            <a class="meta-pill revision-pill" href="https://github.com/alexar76/attested-memory/commit/84e7057bd2ed88344d99066f1827933a5cb6cda5" title="84e7057bd2ed88344d99066f1827933a5cb6cda5">
               <span>Analyzed revision</span>
-              <code>25d6b1ab…</code>
+              <code>84e7057b…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
@@ -130,17 +130,17 @@ scorer, and a hash-chained ledger of signed receipts.</p>
             <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
 in the root LICENSE and the Python client; the three product shells
 under apps/ each carry an MIT LICENSE file</strong></div>
-            <div class="meta-pill fact-pill"><span>Size</span><strong>7,266
-lines of Python in 67 files; the three services hold 2,391
-(memory-market), 937 (provenance-ledger) and 666 (truth-layer) lines of
-source</strong></div>
-            <div class="meta-pill fact-pill"><span>Activity</span><strong>27
+            <div class="meta-pill fact-pill"><span>Size</span><strong>7,978
+lines of Python in 69 files; the three services hold 2,566
+(memory-market), 1,013 (provenance-ledger) and 666 (truth-layer) lines
+of source</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>28
 commits by one author from 9 October to 25 November 2026, each a sync
 from a private monorepo; one tag, v1.0.0</strong></div>
-            <div class="meta-pill fact-pill"><span>Tests</span><strong>99
-test functions in 22 files, 46 of them in the three services and eleven
-on the ledger; ci.yml runs the service and client suites; none run for
-this reading</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>111
+test functions in 24 files, 53 of them in the three services and
+thirteen on the ledger; ci.yml runs the service, cross-service and
+client suites; none run for this reading</strong></div>
           </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
@@ -163,27 +163,29 @@ record, the Memory Unit: a market that stores and shares units, a truth
 layer that scores submitted evidence, and a provenance ledger that
 issues signed, hash-chained receipts. What is notable is the access
 model, where paid content is listed and cannot be read or probed through
-search. What is weak is that the ledger's integrity check compares the
-ledger's database with itself.</p>
+search, and a receipt check that compares the ledger with a chain root
+kept by the market. What is weak is how much that comparison covers: one
+receipt per unit, kept in the same database as the ledger in the bundled
+deployment.</p>
 <p>A unit is written whole by an authenticated actor, over REST or
 through the hub capability, and is readable at once. Both paths then ask
-the ledger for a <code>created</code> receipt. That call is best-effort,
-and a command, <code>reconcile_provenance</code>, finishes the units it
-missed when an operator runs it. Nothing in the tree schedules it.</p>
-<p>The ledger chains receipts per memory. Each receipt hashes its event,
-links to the previous root and is signed with Ed25519 and, when enabled,
-ML-DSA-65. <code>verify</code> recomputes the hashes, checks both
-signatures, checks the link, requires the signing key to be the ledger's
-own or one listed in its environment, and requires the memory's newest
-receipt to equal the recorded chain head. The head row is in the same
-database as the receipts.</p>
+the ledger for a <code>created</code> receipt, best-effort. A command,
+<code>reconcile_provenance</code>, attests the units the ledger missed,
+and with <code>--check</code> compares every attested unit's recorded
+receipt and root with the ledger. Systemd unit files run both hourly; an
+operator installs them by hand.</p>
+<p>The ledger chains receipts per memory. <code>verify</code> recomputes
+the hashes, checks both signatures and the link, requires the ledger's
+own signing key, and requires the memory's newest receipt to equal the
+recorded chain head. A deleted head row is not rebuilt, and the ledger
+refuses to extend a chain that has lost its head. Through the hub, a
+buyer extends only a chain whose first receipt is theirs and starts none
+under a market id.</p>
 <p>Truth status is arithmetic over the stance and quality numbers the
 owner attaches. The method names itself
 <code>submitted-evidence-weight-v1</code>. A <code>rejected</code> unit
 is left out of the catalogue and of search unless the caller asks for
 it, and stays readable by id.</p>
-<p>The ledger's own hub capability appends to any memory id for any
-buyer the hub names.</p>
 <p><strong>Licence.</strong> The root <code>LICENSE</code> is Apache-2.0
 and the README says so. The three product shells under
 <code>apps/</code> each ship their own <code>LICENSE</code> file with
@@ -205,21 +207,22 @@ hash, owner, tags, visibility, price, a <code>truth</code> object and a
 is stored. Nothing gates it. The two judgements arrive afterwards:</p>
 <ul>
 <li><strong>Provenance</strong> moves from <code>unattested</code> to
-<code>attested</code> when the ledger returns a receipt, and the unit
-keeps the latest receipt id and chain root
-(<code>memory-market/src/memory_market/store.py:405-410</code>). It is
-advisory.</li>
+<code>attested</code> when the ledger returns the unit's
+<code>created</code> receipt. Every later receipt the market requests
+replaces the recorded receipt id and chain root without touching the
+status (<code>memory-market/src/memory_market/store.py:440-449</code>).
+It is advisory.</li>
 <li><strong>Truth</strong> moves between <code>unverified</code>,
 <code>supported</code>, <code>contested</code> and <code>rejected</code>
 when the owner submits a claim with evidence
-(<code>memory-market/src/memory_market/app.py:388-410</code>).
+(<code>memory-market/src/memory_market/app.py:404-430</code>).
 <code>rejected</code> takes the unit out of search.</li>
 </ul>
 <p>No route edits or deletes a unit. A <code>rejected</code> unit leaves
 the catalogue and search, is returned by a read by id with its status,
 and returns to search if its owner submits evidence that moves it to
 another status.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — both writers store a unit at once and ask the ledger for a created receipt, best-effort, with a reconcile command nothing schedules; verify accepts only the ledger's keys and a chain whose newest row matches the recorded head, both held in the ledger's own database; any named hub buyer can append to any chain; an owner's rejected status removes a unit from search and the catalogue, not from a read by id</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: both writers store a unit at once and ask the ledger for a created receipt, best-effort, with a reconcile command nothing schedules; verify accepts only the ledger&#39;s keys and a chain whose newest row matches the recorded head, both held in the ledger&#39;s own database; any named hub buyer can append to any chain; an owner&#39;s rejected status removes a unit from search and the catalogue, not from a read by id
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — both writers store a unit at once and ask the ledger for a created receipt; a reconcile command run by an hourly unit an operator installs finishes the misses and cross-checks each attested unit's recorded receipt and root against the ledger; verify accepts only the ledger's keys and a head that is never rebuilt; a hub buyer extends only a chain they started; the cross-check sees one receipt per unit, and in the bundled compose both tables share one database</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: both writers store a unit at once and ask the ledger for a created receipt; a reconcile command run by an hourly unit an operator installs finishes the misses and cross-checks each attested unit&#39;s recorded receipt and root against the ledger; verify accepts only the ledger&#39;s keys and a head that is never rebuilt; a hub buyer extends only a chain they started; the cross-check sees one receipt per unit, and in the bundled compose both tables share one database
 flowchart TD
     subgraph W[&quot;Writers&quot;]
         direction TB
@@ -227,25 +230,33 @@ flowchart TD
         H[&quot;Hub memory.write@v1&lt;br/&gt;named buyer required&quot;]
         R ~~~ H
     end
-    W --&gt; M[(&quot;memories&lt;br/&gt;owner, visibility, grants&lt;br/&gt;served at once&quot;)]
+    W --&gt; M[(&quot;memories&lt;br/&gt;owner, grants, truth,&lt;br/&gt;recorded receipt + root&quot;)]
     W --&gt; A[&quot;Ask ledger for a&lt;br/&gt;created receipt&lt;br/&gt;best-effort, 4 s&quot;]
-    A -.-&gt;|&quot;call failed&quot;| C[&quot;reconcile_provenance&lt;br/&gt;run by hand,&lt;br/&gt;no timer in the tree&quot;]
+    A -.-&gt;|&quot;call failed&quot;| C[&quot;reconcile_provenance&lt;br/&gt;owner&#39;s created receipt&lt;br/&gt;only&quot;]
     A --&gt; L[(&quot;receipts + receipt_heads&lt;br/&gt;per-memory hash chain&lt;br/&gt;Ed25519 + ML-DSA-65&quot;)]
     C --&gt; L
-    X[&quot;Hub memory.attest@v1&lt;br/&gt;any named buyer,&lt;br/&gt;any memory id, any hash&quot;] --&gt; L
+    X[&quot;Hub memory.attest@v1&lt;br/&gt;chain&#39;s first actor only,&lt;br/&gt;no new chain on mem_ ids&quot;] --&gt; L
     L --&gt; V[&quot;verify(receipt_id)&lt;br/&gt;hashes, link, signatures,&lt;br/&gt;signer key, chain head&quot;]
-    V -.-&gt; F[&quot;A database writer who&lt;br/&gt;also moves receipt_heads&lt;br/&gt;truncates unseen&quot;]
+    M --&gt; K[&quot;reconcile --check&lt;br/&gt;recorded receipt in chain,&lt;br/&gt;same root, verifies&quot;]
+    K --&gt; V
+    K -.-&gt; G[&quot;Unseen: later receipts,&lt;br/&gt;deletions further back,&lt;br/&gt;a writer of both tables&quot;]
     O[&quot;Owner submits claim&lt;br/&gt;+ own stances, quality&quot;] --&gt; T[&quot;truth_status&quot;]
     T --&gt; M
-    M --&gt; S[&quot;catalog, memory.search&lt;br/&gt;leave out rejected&lt;br/&gt;unless truth names it&quot;]
-    M --&gt; B[&quot;read by id&lt;br/&gt;returns any status&quot;]</code></pre></details></figure>
+    M --&gt; S[&quot;catalog, memory.search&lt;br/&gt;leave out rejected&lt;br/&gt;unless truth names it&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
-<p>Three FastAPI services, each its own package, database and signing
-key: <code>memory-market</code> on 8810, <code>truth-layer</code> on
-8811, <code>provenance-ledger</code> on 8812. They talk over HTTP with a
+<p>Three FastAPI services, each its own package, store and signing key:
+<code>memory-market</code> on 8810, <code>truth-layer</code> on 8811,
+<code>provenance-ledger</code> on 8812. They talk over HTTP with a
 shared internal token. <code>docker-compose.yml</code> adds PostgreSQL
 16 and an AIMarket hub, and sets <code>AIFACTORY_PROD=1</code> on every
 service (<code>docker-compose.yml:140-146</code>).</p>
+<p>Each store reads its own DSN variable.
+<code>docs/production-postgres.md</code> says the stores may point at
+one database or at separate ones, and the bundled compose gives the
+market, the truth layer and the ledger the same database and role
+(<code>docker-compose.yml:139</code>, <code>:201</code>,
+<code>:243</code>). Section 9 says what that does to the
+cross-check.</p>
 <p>Production mode is the default. With neither variable set the
 services require strong secrets, a PostgreSQL DSN and both signature
 schemes
@@ -260,8 +271,13 @@ here.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p><code>./start.sh</code> generates secrets and starts the whole stack
 in Docker. An operator runs five containers and a database, and holds
-three signing keys in Docker volumes. The repository is a published copy
-of a private monorepo: every commit is a sync, so the history shows what
+three signing keys in Docker volumes. The reconcile and cross-check run
+from <code>scripts/systemd/attested-provenance-reconcile.service</code>
+and its timer, which the file's own comment says to copy into
+<code>/etc/systemd/system</code>; their working directory is a fixed
+path, <code>/opt/aicom/attested/attested-memory-hub</code>, and no
+script in the tree installs them. The repository is a published copy of
+a private monorepo: every commit is a sync, so the history shows what
 changed and not why.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
@@ -270,34 +286,50 @@ Paths</h2>
 <code>contracts/memory-unit.schema.json</code>;
 <code>memory-market/src/memory_market/store.py</code>: default truth
 filter <code>:24-26</code>, tables <code>:46-74</code>,
-<code>create</code> <code>:137-150</code>, <code>can_read</code>
-<code>:321-328</code>, <code>catalog</code> <code>:330-371</code>,
-<code>grant</code> <code>:373-390</code>, <code>set_provenance</code>
-<code>:405-410</code>, <code>unattested</code> <code>:412-418</code>,
-<code>set_truth</code> <code>:420-425</code>.</li>
+<code>create</code> <code>:137-150</code>, <code>has_grant</code>
+<code>:180-184</code>, <code>can_read</code> <code>:321-328</code>,
+<code>catalog</code> <code>:330-371</code>, <code>listing</code>
+<code>:373-380</code>, <code>grant</code> <code>:382-399</code>,
+<code>revoke</code> <code>:401-425</code>, <code>set_provenance</code>
+<code>:440-449</code>, <code>unattested</code> and <code>attested</code>
+<code>:451-465</code>, <code>set_truth</code>
+<code>:467-472</code>.</li>
 <li><strong>Market routes.</strong>
-<code>memory-market/src/memory_market/app.py</code>: actor and team
-checks <code>:117-203</code>, the <code>truth</code> parameter
-<code>:288-308</code>, catalogue <code>:311-319</code>, create
-<code>:335-343</code>, read <code>:346-367</code>, share
-<code>:370-377</code>, verify <code>:388-410</code>, hub capability
-dispatch <code>:537-585</code>.</li>
-<li><strong>Reconcile.</strong>
-<code>memory-market/src/memory_market/reconcile_provenance.py:24-45</code>.</li>
+<code>memory-market/src/memory_market/app.py</code>: payment receipt
+<code>:66-78</code>, actor and team checks <code>:121-207</code>, the
+<code>truth</code> parameter <code>:292-312</code>, catalogue
+<code>:315-336</code>, create <code>:339-347</code>, read
+<code>:350-371</code>, share and revoke <code>:374-393</code>, verify
+<code>:404-430</code>, hub capability dispatch
+<code>:557-611</code>.</li>
+<li><strong>Ledger calls and commitments.</strong>
+<code>memory-market/src/memory_market/clients.py</code>:
+<code>commitment</code>, <code>receipt_refs</code> and
+<code>receipt_parents</code> <code>:11-30</code>, <code>attest</code>
+<code>:36-61</code>, <code>lineage</code> <code>:63-77</code>,
+<code>verify_receipt</code> <code>:79-95</code>,
+<code>created_receipt</code> <code>:97-107</code>.</li>
+<li><strong>Reconcile and cross-check.</strong>
+<code>memory-market/src/memory_market/reconcile_provenance.py</code>:
+<code>reconcile</code> <code>:33-54</code>, <code>check</code> and
+<code>_mismatch</code> <code>:57-92</code>, <code>main</code>
+<code>:95-110</code>;
+<code>scripts/systemd/attested-provenance-reconcile.service</code> and
+<code>.timer</code>.</li>
 <li><strong>Ledger.</strong>
-<code>provenance-ledger/src/provenance_ledger/store.py</code>: tables
-<code>:40-66</code>, head rebuild <code>:91-100</code>,
-<code>append</code> <code>:102-162</code>, <code>lineage</code>
-<code>:184-189</code>, trusted keys <code>:191-203</code>,
-<code>verify</code> <code>:205-253</code>; signing in
+<code>provenance-ledger/src/provenance_ledger/store.py</code>: the
+market id pattern <code>:27-30</code>, tables <code>:55-84</code>,
+one-time head backfill <code>:110-132</code>, <code>append</code>
+<code>:134-220</code>, <code>lineage</code> <code>:241-246</code>,
+<code>chain_starter</code> <code>:248-253</code>, trusted keys
+<code>:255-267</code>, <code>verify</code> <code>:269-319</code>;
+signing in
 <code>provenance-ledger/src/provenance_ledger/crypto.py:89-147</code>;
 routes in
-<code>provenance-ledger/src/provenance_ledger/app.py:94-117</code> and
-<code>:164-209</code>.</li>
+<code>provenance-ledger/src/provenance_ledger/app.py:94-121</code> and
+<code>:168-220</code>.</li>
 <li><strong>Truth.</strong>
 <code>truth-layer/src/truth_layer/engine.py:20-85</code>.</li>
-<li><strong>The market's calls to the other two.</strong>
-<code>memory-market/src/memory_market/clients.py:13-74</code>.</li>
 </ul>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>The <code>memories</code> row holds the unit and both judgements in
@@ -311,13 +343,27 @@ content and its hash, <code>owner_id</code>, tags as JSON,
 <code>lineage_root</code>.</p>
 <p>Beside it sit <code>grants</code> (memory, grantee, grantor,
 <code>revoked_at</code>), <code>ratings</code> (one score of 1 to 5 per
-actor) and <code>payment_orders</code>.</p>
+actor) and <code>payment_orders</code>. A grant row is one per memory
+and grantee: a revocation sets <code>revoked_at</code>, and a later
+grant clears it and replaces <code>granted_by</code> and
+<code>created_at</code> (<code>store.py:382-399</code>), so the row
+keeps the latest state and not the history.</p>
 <p>The ledger's <code>receipts</code> row is the event: id, memory id,
 event type, content hash, actor, source references, parent ids,
 metadata, <code>previous_root</code>, <code>event_hash</code>,
 <code>chain_root</code>, both signatures and both public keys
-(<code>provenance-ledger/src/provenance_ledger/store.py:40-59</code>).
-<code>receipt_heads</code> holds the latest root per memory.</p>
+(<code>provenance-ledger/src/provenance_ledger/store.py:55-74</code>).
+<code>receipt_heads</code> holds the latest root per memory, and
+<code>ledger_meta</code> records that the one-time head backfill has
+run.</p>
+<p>What the market sends depends on visibility. For a public unit the
+receipt carries its source references and parent ids; for any other unit
+it carries the SHA-256 of each, and a verification receipt carries the
+SHA-256 of the evidence pack id instead of the id. A payment receipt is
+in the actor <code>memory-market:payment</code> and carries the SHA-256
+of the order id, the transaction hash and the buyer, joined
+(<code>memory-market/src/memory_market/clients.py:11-30</code>,
+<code>app.py:66-78</code>, <code>:420-428</code>).</p>
 <p>Three things the model declares that no code in the tree
 produces:</p>
 <ul>
@@ -325,10 +371,10 @@ produces:</p>
 <code>updated</code>.</strong> The ledger accepts six types
 (<code>provenance-ledger/src/provenance_ledger/models.py:10</code>). The
 market sends <code>created</code>, <code>verified</code> and
-<code>shared</code>. The ledger's hub capability takes the type from its
-caller, so a hub buyer can send any of the six.</li>
-<li><strong><code>revoked_at</code> on a grant.</strong> Reads honour
-it; the two writers set it to <code>NULL</code>.</li>
+<code>shared</code>. Through the hub the actor who started a chain can
+append any of the six to it.</li>
+<li><strong>A revocation receipt.</strong> Revoking a grant writes no
+<code>revoked</code> event.</li>
 <li><strong>Lineage between units.</strong>
 <code>parent_memory_ids</code> is stored and copied into the receipt. No
 code follows it.</li>
@@ -343,7 +389,7 @@ clause, ordered by <code>created_at</code> descending with limit and
 offset (<code>store.py:330-371</code>).</p>
 <p>The access clause depends on who asks: anyone sees
 <code>public</code> and <code>paid</code> rows; an actor also sees rows
-they own or hold a grant on; a team context sees rows tagged
+they own or hold an unrevoked grant on; a team context sees rows tagged
 <code>team:&lt;id&gt;</code> with visibility <code>shared</code>,
 <code>public</code> or <code>paid</code>.</p>
 <p>The search clause matches a case-folded substring against title and
@@ -358,15 +404,21 @@ in its body.</p>
 <code>memory.search@v1</code> take a <code>truth</code> parameter: empty
 keeps the default, <code>any</code> drops the clause, a comma-separated
 list replaces it, and an unknown status is a 422 rather than an empty
-result (<code>app.py:288-308</code>, <code>:311-319</code>,
-<code>:565-569</code>). The discoverable count in <code>stats</code>
-uses the same default (<code>store.py:428</code>). The three product
+result (<code>app.py:292-312</code>, <code>:315-323</code>,
+<code>:585-589</code>). The discoverable count in <code>stats</code>
+uses the same default (<code>store.py:475</code>). The three product
 shells, the console script and the Python client send no
 <code>truth</code>, so all of them get the default.</p>
+<p>Each entry passes through <code>listing</code>, which removes the
+evidence pack id for a caller who cannot read the unit
+(<code>store.py:373-380</code>); the single-entry route does the same
+(<code>app.py:326-336</code>). The truth layer's
+<code>evidence.pack@v1</code> returns the pack, claim included, to
+anyone holding its id.</p>
 <p><code>read_memory</code> fetches by id and applies
 <code>can_read</code> and no truth predicate. A paid unit the caller
 cannot read returns HTTP 402 with the price and the order URL
-(<code>app.py:346-367</code>). <code>memory.read@v1</code> and
+(<code>app.py:350-371</code>). <code>memory.read@v1</code> and
 <code>GET /v1/catalog/{id}</code> also return a unit whatever its
 status.</p>
 <p>There is no embedding, index or ranking in the services. The Expert
@@ -382,7 +434,7 @@ term is reached by no unit it lists.</p>
 API key and, in production, a request-bound actor proof: an Ed25519
 signature over the method, path, query and body hash, with a nonce spent
 once. <code>create</code> inserts the row and the handler asks the
-ledger for a <code>created</code> receipt (<code>app.py:335-343</code>).
+ledger for a <code>created</code> receipt (<code>app.py:339-347</code>).
 The actor in the receipt is the market's statement of who wrote; the
 actor's own signature is not stored in it.</p>
 <p><strong>Hub capability.</strong> <code>memory.write@v1</code>
@@ -390,37 +442,45 @@ requires a buyer reference from the hub, validates the same fields,
 calls <code>store().create</code> and asks the ledger for a
 <code>created</code> receipt under the actor
 <code>aimarket:&lt;buyer reference&gt;</code>
-(<code>app.py:545-559</code>).</p>
+(<code>app.py:565-579</code>).</p>
 <p><strong>Attestation is best-effort.</strong> <code>attest</code>
 posts with a four-second timeout and returns <code>None</code> on any
-HTTP error (<code>clients.py:13-38</code>). The unit is returned as
-<code>unattested</code>.</p>
+HTTP error (<code>clients.py:36-61</code>). The unit is returned as
+<code>unattested</code>. Only a <code>created</code> receipt sets
+<code>attested</code>; a payment or verification receipt that lands
+first moves the recorded receipt and root and leaves the unit for the
+reconcile command (<code>store.py:440-449</code>).</p>
 <p><strong>Reconcile.</strong>
 <code>python -m memory_market.reconcile_provenance</code> pages through
 units whose provenance is <code>unattested</code>, oldest id first. For
-each it first asks the ledger for the memory's lineage and takes the
-first <code>created</code> receipt whose content hash equals the unit's,
-so an attest that landed while its answer was lost is linked rather than
-doubled; otherwise it requests a new receipt under the owner's id.
-<code>--count</code> only counts, and the exit status is 1 when any unit
-stays unattested (<code>reconcile_provenance.py:24-57</code>,
-<code>clients.py:40-59</code>). No compose service, Dockerfile, workflow
-or timer in the tree runs it, and <code>docs/architecture.md:48</code>
-lists a timer as future work.</p>
-<p>The match in <code>created_receipt</code> is on event type and
-content hash, not on the actor. A content hash is computable by anyone
-who can read the content. A hub buyer who appends a <code>created</code>
-receipt for an unattested public unit's id and hash, before the command
-runs, has that receipt linked as the unit's own. This follows from the
-code and was not run.</p>
+each it asks the ledger for the memory's lineage and takes the first
+<code>created</code> receipt whose content hash equals the unit's and
+whose actor is the unit's owner; otherwise it requests a new receipt in
+the owner's name (<code>reconcile_provenance.py:33-54</code>,
+<code>clients.py:97-107</code>). <code>--count</code> only counts. The
+exit status is 1 when any unit stays unattested.</p>
+<p><strong>Cross-check.</strong> <code>--check</code> pages through
+<code>attested</code> units. For each it fetches the lineage and asks
+the ledger to verify the recorded receipt, and reports a mismatch when
+that receipt is missing from the chain, its root differs from the one
+the market stored, or the ledger does not verify it; a mismatch exits 2
+(<code>reconcile_provenance.py:57-92</code>, <code>:104-107</code>). The
+service file runs the reconcile with its failure ignored, then the
+check.</p>
 <p><strong>Sharing.</strong> An owner's grant inserts or revives a
-<code>grants</code> row and writes no receipt
-(<code>app.py:370-377</code>). A <code>shared</code> receipt is written
-only when a payment settles (<code>:66-74</code>).</p>
+<code>grants</code> row (<code>app.py:374-381</code>). The owner revokes
+it with <code>DELETE /v1/memories/{id}/grants/{grantee}</code> or
+<code>memory.share@v1</code> with <code>revoke: true</code>; a grant
+whose id a confirmed payment order holds is refused with 403
+(<code>store.py:401-425</code>, <code>app.py:384-393</code>,
+<code>:590-596</code>). Neither a grant nor a revocation writes a
+receipt. A <code>shared</code> receipt is written only when a payment
+settles (<code>:66-78</code>). The Python client 0.3.0 and the Personal
+Memory shell 1.1.0 add share and revoke calls.</p>
 <p><strong>Truth.</strong> The owner posts a claim and a list of
 evidence items, each with a source URI, an excerpt hash, a stance and a
 quality from 0 to 1. Only the owner may request it
-(<code>app.py:397-398</code>). The engine sums quality by stance and
+(<code>app.py:413-414</code>). The engine sums quality by stance and
 picks a status (<code>engine.py:20-32</code>). It fetches no source and
 checks no hash against anything. The evidence pack is stored whole with
 its own hash, the market overwrites the unit's status, and it writes a
@@ -428,9 +488,10 @@ its own hash, the market overwrites the unit's status, and it writes a
 <h3 id="operational-cost">Operational cost</h3>
 <p>A write on either path blocks on one insert and one HTTP call to the
 ledger, bounded at four seconds. A unit is retrievable when the insert
-commits. No background pass reads or rewrites memories. The only loop is
-the payment poller; the reconcile command walks every unattested unit
-when it is run.</p>
+commits. No background pass in the services reads or rewrites memories;
+the payment poller is the only loop. The hourly unit makes two ledger
+calls per attested unit for the check, and one or two per unattested
+unit for the reconcile.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>An agent reaches the stack three ways: the REST API with an actor
 key, the Python client and CLI in <code>clients/python</code>, or the
@@ -441,96 +502,116 @@ endpoint.</p>
 <p>Through the hub, identity is a buyer reference the hub attaches after
 it has authenticated a paying account. A caller without one may read and
 search public units and nothing else on the market
-(<code>app.py:545-547</code>), and may read lineage and verify receipts
-on the ledger.</p>
-<p>The ledger's attest capability refuses a caller without a buyer
-reference and accepts every caller with one. Section 9 covers it.</p>
-<p>The Python client has no receipt, lineage or verification call, and
-its search sends no <code>truth</code> parameter. A client that wants to
-check a receipt asks the ledger to check itself.</p>
+(<code>app.py:565-567</code>), and may read any memory's lineage and
+verify any receipt on the ledger.</p>
+<p>The Python client has share, revoke and an integrity check of content
+against its hash, and no receipt, lineage or verification call; its
+search sends no <code>truth</code> parameter.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
-<h3
-id="verification-checks-the-ledgers-database-against-itself">Verification
-checks the ledger's database against itself</h3>
+<h3 id="two-checks-of-the-ledger-one-inside-it-and-one-beside-it">Two
+checks of the ledger, one inside it and one beside it</h3>
 <p><code>verify</code> loads the receipt by id and runs seven checks
-(<code>provenance-ledger/src/provenance_ledger/store.py:205-253</code>):
-the event hash recomputes, the chain root recomputes, the Ed25519
-signature is valid, the ML-DSA-65 signature is valid,
-<code>previous_root</code> equals the previous row's root, the signing
-keys are trusted, and the chain head matches.</p>
-<p><code>signer_key</code> requires the receipt's Ed25519 key to be the
-ledger's own or one listed in
-<code>PROVENANCE_TRUSTED_PUBLIC_KEYS</code>, and its ML-DSA key, when
-present, to be the ledger's own or one in
-<code>PROVENANCE_TRUSTED_PQ_PUBLIC_KEYS</code> (<code>:191-203</code>,
-<code>:233-235</code>).
-<code>test_a_row_re_signed_with_another_key_is_rejected</code> rewrites
-a row, recomputes both hashes, signs the new root with another key,
-moves the head row to match, and requires <code>signer_key</code> to
-fail while the hash and signature checks pass
-(<code>provenance-ledger/tests/test_ledger.py:133-170</code>). An editor
-without the ledger's private key cannot re-sign a receipt.</p>
-<p><code>chain_head</code> requires the <code>receipt_heads</code> row
-for the memory to equal the newest stored receipt's root
-(<code>:240-247</code>). Deleting the newest receipt alone fails it,
-with a test (<code>test_ledger.py:187-201</code>). Deleting a receipt in
-the middle fails <code>previous_link</code> on the receipt after it
-(<code>:225-230</code>).</p>
-<p>What the checks do not reach:</p>
+(<code>provenance-ledger/src/provenance_ledger/store.py:269-319</code>).
+The event hash and the chain root recompute, the Ed25519 and ML-DSA-65
+signatures are valid, and <code>previous_root</code> equals the previous
+row's root. The signing keys are the ledger's own or listed in
+<code>PROVENANCE_TRUSTED_PUBLIC_KEYS</code> and
+<code>PROVENANCE_TRUSTED_PQ_PUBLIC_KEYS</code> (<code>:255-267</code>,
+<code>:297-299</code>), and the <code>receipt_heads</code> row equals
+the newest stored receipt's root (<code>:300-313</code>). A row
+re-signed with another key fails <code>signer_key</code>, with a test
+(<code>provenance-ledger/tests/test_ledger.py:166-203</code>).</p>
+<p>The head row is rebuilt from the receipts once, for a database from
+before <code>receipt_heads</code> existed, and <code>ledger_meta</code>
+records that it ran (<code>:110-132</code>). A head deleted later stays
+missing: <code>verify</code> fails <code>chain_head</code>, and
+<code>append</code> raises <code>ChainHeadMissing</code> instead of
+starting the chain again from genesis (<code>:139-147</code>), which the
+REST and hub routes return as 409.
+<code>test_a_deleted_head_is_not_rebuilt_and_the_chain_is_not_extended</code>
+deletes the newest receipt and the head, reopens the ledger and requires
+both (<code>test_ledger.py:63-85</code>). Deleting the
+<code>ledger_meta</code> row re-arms the backfill for the next
+start.</p>
+<p>A writer of the ledger's database who deletes the newest receipts and
+moves the head to match passes every one of the seven checks. The
+cross-check is the answer to that: the market stored the receipt id and
+root the ledger returned, and <code>--check</code> requires that receipt
+to be in the chain with that root and to verify.
+<code>test_check_finds_a_chain_truncated_with_its_head_moved</code> does
+exactly that truncation against a real <code>Ledger</code> object,
+requires the ledger's own <code>verify</code> to pass, and requires
+<code>--check</code> to name the unit
+(<code>tests/test_provenance_crosscheck.py:71-92</code>).</p>
+<p>What the cross-check does not reach:</p>
 <ul>
-<li><strong>Truncation by a database writer.</strong> The head row and
-the receipts are in one database. A writer who deletes the newest
-receipts and sets <code>receipt_heads</code> to the new last root passes
-every check, which the code's own comment states
-(<code>:236-239</code>). Deleting the head row works too, across a
-restart: <code>verify</code> fails while it is missing, and
-<code>_migrate</code> rebuilds it from the remaining receipts on the
-next start (<code>:91-100</code>), as
-<code>test_migration_backfills_chain_head</code> requires
-(<code>test_ledger.py:36-52</code>).</li>
-<li><strong>The root kept outside the ledger is compared with
-nothing.</strong> The comment recommends checking the chain root
-returned on append. The market stores exactly that as each unit's
-<code>lineage_root</code>, and no code reads it except the Expert
-shell's rank term.</li>
-<li><strong>The trusted keys are the operator's.</strong> The private
-key sits in a Docker volume on the host that runs the database, and the
-trusted set is extended by an environment variable read at verify time.
-A receipt convinces a caller who trusts the operator.</li>
-<li><strong>It verifies the stored copy.</strong> The request carries a
-receipt id. A caller holding a receipt cannot submit it for
-comparison.</li>
-<li><strong>The post-quantum check is read from the environment at
-verify time.</strong> A receipt with no ML-DSA signature passes unless
-<code>ATTESTED_PQC_REQUIRE</code> is set
-(<code>crypto.py:138-141</code>); the production config refuses to start
-without it.</li>
+<li><strong>Receipts after the recorded one.</strong> The market records
+the receipts it requested. A receipt the chain's starter appends through
+the hub comes later, and deleting it is invisible to the check; the
+module's docstring says so.</li>
+<li><strong>Deletions further back.</strong> The check verifies one
+receipt per unit, so <code>previous_link</code> covers only the receipt
+immediately before it. Deleting a receipt two or more places before it
+breaks the link of a receipt nothing in the tree verifies;
+<code>receipt.verify@v1</code> on that receipt would show it.</li>
+<li><strong>A writer of both tables.</strong> The market's
+<code>lineage_root</code> is a column in the market's store. In the
+bundled compose the market and the ledger use one PostgreSQL database
+and one role (<code>docker-compose.yml:139</code>, <code>:243</code>),
+so the database writer the check is meant to catch can also rewrite the
+roots it compares against. The check is independent only when the
+operator splits the DSNs.</li>
+<li><strong>Whether it runs.</strong> The units ship as files to copy by
+hand, with a fixed working directory, and a mismatch is a failed oneshot
+in the journal.</li>
 </ul>
-<h3 id="any-named-hub-buyer-can-write-to-any-chain">Any named hub buyer
-can write to any chain</h3>
+<p>Two limits of <code>verify</code> hold whatever runs it. It checks
+the stored copy: the request carries a receipt id, and a caller holding
+a receipt cannot submit it for comparison. And a receipt with no ML-DSA
+signature passes unless <code>ATTESTED_PQC_REQUIRE</code> is set
+(<code>crypto.py:138-141</code>); the production config refuses to start
+without it.</p>
+<h3 id="who-may-write-to-a-chain-through-the-hub">Who may write to a
+chain through the hub</h3>
 <p><code>memory.attest@v1</code> on the ledger refuses the actor
-<code>aimarket:anonymous</code> with a 403 and otherwise takes
-<code>memory_id</code>, <code>event_type</code>,
-<code>content_hash</code> and metadata from the caller and appends
-(<code>provenance-ledger/src/provenance_ledger/app.py:187-194</code>).
-The ledger does not know whether the memory exists, who owns it or what
-its hash is. The actor is the hub's buyer reference
-(<code>:164-173</code>).
-<code>test_hub_attest_refuses_an_anonymous_caller_but_reads_stay_open</code>
-requires the 403 and then requires a named buyer's append to a memory id
-it has no relation to to succeed
-(<code>test_ledger.py:204-230</code>).</p>
-<p>A paying hub account can therefore append a <code>verified</code> or
-<code>revoked</code> receipt, with any metadata, to another owner's
-memory. The receipt is validly signed by the ledger.
-<code>lineage.get@v1</code> returns it in the chain. The market's own
-<code>lineage_root</code> for that unit then names an older root, and a
-<code>created</code> receipt planted this way is linked by the reconcile
-command (section 7).</p>
-<p><code>docs/capabilities.md</code> says trial callers are refused too.
-The code refuses a missing or malformed buyer reference; whether the hub
+<code>aimarket:anonymous</code>, then calls <code>append</code> with
+<code>hub_caller=True</code>
+(<code>provenance-ledger/src/provenance_ledger/app.py:191-200</code>).
+Under the head-row lock, <code>append</code> refuses a chain whose first
+receipt is another actor's, and refuses to start a chain under an id of
+the form <code>mem_&lt;24 hex&gt;</code>, the shape the market gives its
+units (<code>store.py:27-30</code>, <code>:154-165</code>).
+<code>test_hub_buyers_extend_only_their_own_chains</code> covers a buyer
+extending their own chain, a second buyer refused, a market id refused
+to everyone, and the owner of a market unit extending its chain after
+the market started it (<code>test_ledger.py:266-297</code>).</p>
+<p>The rule binds the actor and not the event. The buyer whose reference
+wrote a unit through <code>memory.write@v1</code> started that unit's
+chain, and can append a <code>verified</code> receipt with any status in
+its metadata, under their own actor rather than
+<code>truth-layer</code>. Outside market ids the first buyer to attest
+an id owns its chain. The reconcile links only a <code>created</code>
+receipt whose actor is the unit's owner, which
+<code>tests/test_provenance_crosscheck.py:58-68</code> tests with a
+receipt planted under another actor.</p>
+<p><code>docs/capabilities.md</code> says trial callers are refused. The
+code refuses a missing or malformed buyer reference; whether the hub
 withholds one from trial callers cannot be read from this tree.</p>
+<h3 id="what-a-public-lineage-shows">What a public lineage shows</h3>
+<p><code>lineage.get@v1</code> returns any memory's chain to any hub
+caller, so the receipt is the public record. For a unit that is not
+public, the receipt carries SHA-256 hashes of its source references and
+parent ids, and of the evidence pack id; a payment receipt carries a
+hash over order id, transaction hash and buyer, with tests on each
+(<code>memory-market/tests/test_receipt_privacy_and_grants.py:94-151</code>).
+The hashes are unsalted, like the content hash. The payment commitment
+includes a random order id and hides its inputs. A parent id is a unit
+id, and every public and paid unit id is in the catalogue, so hashing
+the catalogue's ids names a hashed parent; a well-known source URL is
+confirmed the same way. A verifier without the plaintext checks the
+receipt's integrity, which the event hash covers, and learns nothing
+about its sources.</p>
 <h3 id="truth-is-what-the-owner-says-it-is">Truth is what the owner says
 it is</h3>
 <p>The status comes from numbers the owner supplies. One evidence item
@@ -538,8 +619,8 @@ with stance <code>supports</code> and quality 0.9 yields
 <code>supported</code>
 (<code>truth-layer/tests/test_engine.py:16-24</code>). The project is
 plain about this: the method string, a contradiction scanner labelled
-<em>"Indicators only"</em>, and a status section in the README that
-calls semantic verification an extension point.</p>
+<em>"Indicators only"</em>, and a README that says whether content is
+true is not something the service decides.</p>
 <p>Only the owner can request verification, so <code>rejected</code> is
 the owner's own retraction by evidence weight. No caller can take
 another owner's unit out of search this way, and the owner can move it
@@ -551,8 +632,10 @@ statement that the calculation ran.</p>
 audience, method, path, query and body, refuses small-order keys, and
 spends each nonce once in the database. Team access needs an HMAC
 assertion naming the team, the actor and an expiry
-(<code>app.py:117-140</code>). LIKE wildcards in a team id are escaped,
-with a test.</p>
+(<code>app.py:121-144</code>). LIKE wildcards in a team id are escaped,
+with a test. A grant the owner gave can be revoked and paid access
+cannot, with a test of both
+(<code>test_receipt_privacy_and_grants.py:154-187</code>).</p>
 <p>Two edges: any owner can tag a unit <code>team:&lt;id&gt;</code> and
 so publish into a team's catalogue, and a team member reads
 <code>paid</code> units carrying the team tag without a grant
@@ -566,20 +649,22 @@ REST catalogue, <code>memory.search@v1</code> and the discoverable
 count, with a producer that moves a unit into and out of it. A read by
 id returns it with its status, and <code>truth=any</code> lifts the
 filter. The producer is the owner's own evidence arithmetic.</li>
-<li><strong><code>scope_enforced</code> — earned.</strong> Owner, grant,
-visibility and team keys are stored and applied on both read paths.</li>
+<li><strong><code>scope_enforced</code> — earned.</strong> Owner,
+revocable grant, visibility and team keys are stored and applied on both
+read paths.</li>
 <li><strong><code>audit_log</code> — earned.</strong> The receipts table
 is an append-only record of creation through either write path,
-verification and paid sharing. It does not cover owner grants, and a
-failed ledger call leaves a gap until the reconcile command is run.</li>
+verification and paid sharing. It does not cover grants or revocations,
+and a failed ledger call leaves a gap until the reconcile command
+runs.</li>
 <li><strong><code>negative_eval</code> — earned.</strong> Four tests
 require particular paid, foreign-team or rejected content to be absent
 from a populated result, each with a positive control.</li>
 <li><strong><code>tombstone</code> — withheld.</strong>
 <code>rejected</code> is a status on a record. The same text written
 again is a new unit, <code>unverified</code> and served at once. A
-<code>revoked</code> event type exists with no producer in the
-tree.</li>
+<code>revoked</code> event type exists and the market never sends
+it.</li>
 <li><strong><code>bitemporal</code> — withheld.</strong>
 <code>created_at</code> and <code>updated_at</code> are record
 times.</li>
@@ -590,35 +675,45 @@ author.</li>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p>I ran none of the suites. The counts are from reading. CI runs the
-service suites and the client suite on Python 3.12
+service suites, the cross-service suite under <code>tests/</code> and
+the client suite on Python 3.12
 (<code>.github/workflows/ci.yml</code>).</p>
-<p>The ledger has eleven tests in one file. Seven bear on receipts:
-<code>test_append_chain_and_verify</code> appends two receipts and
-checks the link, both verifications and the head row;
-<code>test_tamper_is_detected</code> edits one column;
-<code>test_pq_requirement_fails_closed_for_classical_receipt</code> sets
-the requirement after a classical receipt; and four cover the re-signed
-row, a rotated key listed as trusted, a deleted newest receipt and the
-anonymous attest caller
-(<code>provenance-ledger/tests/test_ledger.py:13-33</code>,
-<code>:55-79</code>, <code>:133-230</code>). No test truncates a chain
-and moves its head, or deletes a middle receipt.</p>
-<p>The market has 28 tests in five files: access and search in
+<p>The ledger has thirteen tests in one file. Nine bear on receipts: the
+chain and its head, the one-time backfill, a deleted head that stays
+missing and blocks <code>append</code>, a tampered column, the
+post-quantum requirement, a re-signed row, a rotated key listed as
+trusted, a deleted newest receipt, and the hub rules for anonymous
+callers and for chain starters
+(<code>provenance-ledger/tests/test_ledger.py:14-112</code>,
+<code>:166-297</code>).</p>
+<p><code>tests/test_provenance_crosscheck.py</code> runs the market's
+<code>MemoryStore</code> against a real <code>Ledger</code>, each on its
+own SQLite file, through an adapter that calls the ledger's methods
+directly in place of HTTP. Its four tests cover a planted
+<code>created</code> receipt the reconcile refuses, a truncation with
+the head moved that <code>--check</code> reports, a rewritten column
+that <code>--check</code> reports, and a payment receipt landing before
+the creation receipt.</p>
+<p>The market has 33 tests in six files. Access and search are in
 <code>test_store.py</code>, actor proofs and production gates in
-<code>test_security.py</code>, eight on payment settlement, four on hub
-buyer identity, and four in <code>test_truth_and_provenance.py</code>.
-Those four cover the default truth filter on the store and the hub
-search, the REST <code>truth</code> parameter including the 422, a hub
-write requesting a receipt from a stub ledger, and the reconcile command
-against a stub ledger that has one landed receipt, one missing and one
-refusing, run twice
-(<code>memory-market/tests/test_truth_and_provenance.py:46-119</code>).
-The file's docstring attributes the two gaps it covers to a review of
-the previous revision by this atlas, dated 2026-11-24.</p>
-<p>Those tests set truth status with <code>set_truth</code> directly; no
-test drives the verify route to <code>rejected</code> and then searches.
-No test asserts the provenance state of a hub write whose ledger call
-fails. The truth layer has seven tests, three on the engine.</p>
+<code>test_security.py</code>; eight cover payment settlement, four hub
+buyer identity, and four the truth filter, the hub receipt and the
+reconcile against a stub ledger. Five are in
+<code>test_receipt_privacy_and_grants.py</code> on the created-only
+status, the payment commitment, hashed references and parents, the
+evidence pack id and revocation. The truth layer has seven tests, three
+on the engine.</p>
+<p>The docstrings of <code>tests/test_provenance_crosscheck.py</code>
+and of two ledger tests attribute the gaps they cover to this atlas's
+reading of 25 November 2026. The docstring of
+<code>test_receipt_privacy_and_grants.py</code> attributes its five to
+the project's own reading.</p>
+<p>No test deletes a receipt more than one place before the recorded
+one, runs <code>--check</code> with the market and the ledger in one
+database, or drives the verify route to <code>rejected</code> and then
+searches; the one test that calls the verify route stubs a truth layer
+that answers <code>supported</code>. No test asserts the provenance
+state of a hub write whose ledger call fails.</p>
 <p><code>docs/security-audit-2026-09-06.md</code> records a review with
 fixed findings. It is the project's own document and was read as a
 claim.</p>
@@ -635,32 +730,30 @@ for the title.</li>
 back.</strong> One default tuple in the store, an explicit
 <code>any</code> for an audit read, and a 422 for a status that does not
 exist rather than an empty list.</li>
+<li><strong>Keep the chain root the ledger returned, and
+compare.</strong> The writer's copy of each root is what makes a
+truncation with the head moved visible, and the test runs the comparison
+against a real ledger.</li>
+<li><strong>Refuse to extend a chain that lost its head.</strong>
+Restarting from genesis would hide the damage.</li>
 <li><strong>Bind the caller's signature to the request.</strong>
 Audience, method, path, query and body hash are signed, and the nonce is
 spent in the database.</li>
-<li><strong>Lock the chain head on append.</strong>
-<code>receipt_heads</code> is read <code>FOR UPDATE</code> on
-PostgreSQL, so two concurrent appends to one memory cannot share a
-previous root.</li>
-<li><strong>Name a weak method honestly.</strong>
-<code>submitted-evidence-weight-v1</code> in every result tells a
-consumer what the status is worth.</li>
 <li><strong>Fail closed on configuration.</strong> Unset means
 production, and production refuses weak secrets and SQLite.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>Checking a chain head stored beside the chain.</strong>
-Compare against a root held by a party the database writer cannot reach;
-here the market holds one and nothing reads it.</li>
-<li><strong>An attest endpoint that accepts any subject.</strong> A
-ledger that cannot check ownership should be reachable only from the
-service that can.</li>
-<li><strong>A repair that matches on content alone.</strong> A
-reconciler that links any receipt with the right hash adopts one written
-by someone else.</li>
-<li><strong>A retry nobody schedules.</strong> Until a timer runs it,
-the gap looks the same as a unit nobody tried to attest.</li>
+<li><strong>A cross-check that shares a database with what it
+checks.</strong> Keep the roots where the ledger's database writer
+cannot reach them.</li>
+<li><strong>Verifying one receipt per chain.</strong> A deletion behind
+it breaks a link nobody reads; walk the chain.</li>
+<li><strong>Unsalted hashes as privacy.</strong> A value drawn from a
+listable set, such as a unit id, is confirmed by hashing the list.</li>
+<li><strong>Access changes outside the audit trail.</strong> A
+revocation that writes no event, on a row a re-grant overwrites, leaves
+no record that access was withdrawn.</li>
 <li><strong>Signing the output of an unverified calculation</strong>
 with the same weight as a fact.</li>
 </ul>
@@ -668,25 +761,27 @@ with the same weight as a fact.</li>
 <p>This suits an operator who wants to sell or share documents between
 agents with real access control and a payment rail, and who treats the
 receipts as a tidy event history kept by a service they run and trust.
-For that reader the access model is the thing to study.</p>
+For that reader the access model is the thing to study, and the
+cross-check is a cheap way to notice a ledger that lost rows.</p>
 <p>It does not suit a reader who needs the ledger to convince a third
 party. The receipts prove what the ledger's database says, to a caller
-who trusts that database and its operator. A reader who needs memory to
-be corrected is served only in part: an owner can take a unit out of
-search by submitting refuting evidence, and nothing can edit or delete
-it.</p>
+who trusts that database and its operator, and the cross-check is
+independent only if the operator gives the market's store its own
+database. A reader who needs memory to be corrected is served only in
+part: an owner can take a unit out of search by submitting refuting
+evidence, and nothing can edit or delete it.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li>Does the hub restrict <code>memory.attest@v1</code> beyond requiring
-a buyer reference, and does it withhold one from trial callers? The
-provider route accepts any reference that matches its pattern.</li>
-<li>Does the hosted deployment run <code>reconcile_provenance</code> on
-a timer? The tree does not.</li>
+<li>Does the hub withhold a buyer reference from trial callers? The
+provider route refuses only a missing or malformed one.</li>
+<li>Is the cross-check meant to run with the market's store split from
+the ledger's? The bundled compose shares one database.</li>
 <li>Is receipt verification meant to be anchored outside the service? A
 branch of the repository records a Rekor log index for the registry
 manifest; the receipts have no such anchor in this tree.</li>
 <li>What are the <code>derived</code>, <code>revoked</code> and
-<code>updated</code> events for, given that a unit cannot change?</li>
+<code>updated</code> events for, given that a unit cannot change and a
+revocation sends none?</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <div class="table-wrap"><table>
@@ -703,8 +798,8 @@ manifest; the receipts have no such anchor in this tree.</li>
 </tr>
 <tr>
 <td><code>memory-market/src/memory_market/store.py</code></td>
-<td>Units, grants, ratings, payment orders, access, truth and catalogue
-SQL</td>
+<td>Units, grants and revocation, ratings, payment orders, access, truth
+and catalogue SQL</td>
 </tr>
 <tr>
 <td><code>memory-market/src/memory_market/app.py</code></td>
@@ -717,16 +812,21 @@ checks, hub capability dispatch</td>
 </tr>
 <tr>
 <td><code>memory-market/src/memory_market/clients.py</code></td>
-<td>Calls to the ledger and the truth layer, and the landed-receipt
-lookup</td>
+<td>Calls to the ledger and the truth layer, receipt commitments, the
+landed-receipt lookup</td>
 </tr>
 <tr>
 <td><code>memory-market/src/memory_market/reconcile_provenance.py</code></td>
-<td>The command that attests or links unattested units</td>
+<td>The reconcile command and the <code>--check</code> cross-check</td>
+</tr>
+<tr>
+<td><code>scripts/systemd/attested-provenance-reconcile.service</code></td>
+<td>The hourly reconcile and check, with its timer beside it</td>
 </tr>
 <tr>
 <td><code>provenance-ledger/src/provenance_ledger/store.py</code></td>
-<td>Receipts, chain heads, append, lineage, trusted keys, verify</td>
+<td>Receipts, chain heads, the hub append rule, lineage, trusted keys,
+verify</td>
 </tr>
 <tr>
 <td><code>provenance-ledger/src/provenance_ledger/crypto.py</code></td>
@@ -749,8 +849,17 @@ lookup</td>
 <td>The ledger tests</td>
 </tr>
 <tr>
+<td><code>tests/test_provenance_crosscheck.py</code></td>
+<td>The market against a real ledger</td>
+</tr>
+<tr>
 <td><code>memory-market/tests/test_truth_and_provenance.py</code></td>
 <td>The truth filter, hub receipt and reconcile tests</td>
+</tr>
+<tr>
+<td><code>memory-market/tests/test_receipt_privacy_and_grants.py</code></td>
+<td>Created-only status, commitments, pack id visibility and
+revocation</td>
 </tr>
 </tbody>
 </table></div>
@@ -761,24 +870,25 @@ lookup</td>
 <li><strong>Verify reaches the ledger's key only through the trusted
 set.</strong>
 <code>git grep -n -E 'signer\.public_key|self\.signer' -- provenance-ledger/src/provenance_ledger/store.py</code>
-returns <code>:32</code>, <code>:130</code> and <code>:144</code> in the
-constructor and <code>append</code>, and <code>:196</code> and
-<code>:202</code> in the two trusted-key sets.</li>
-<li><strong>Five callers of attest.</strong>
-<code>git grep -n 'attest(' -- '*.py'</code> returns
-<code>memory-market/src/memory_market/app.py:69</code>,
-<code>:340</code>, <code>:404</code> and <code>:555</code>,
-<code>reconcile_provenance.py:39</code>, the definition in
-<code>clients.py:13</code> and two test stubs.</li>
+returns <code>:47</code>, <code>:187</code> and <code>:201</code> in the
+constructor and <code>append</code>, and <code>:260</code> and
+<code>:266</code> in the two trusted-key sets.</li>
+<li><strong>Five callers of attest, none on a grant or
+revocation.</strong> <code>git grep -n 'attest(' -- '*.py'</code>
+returns <code>memory-market/src/memory_market/app.py:72</code>,
+<code>:344</code>, <code>:423</code> and <code>:575</code>,
+<code>reconcile_provenance.py:48</code>, the definition in
+<code>clients.py:36</code> and test code.</li>
 <li><strong>No memory edit or delete, and no receipt update.</strong>
-<code>git grep -n -E 'DELETE FROM|UPDATE receipts|UPDATE memories' -- '*.py'</code>
-returns a nonce clean-up, a grant removed on a chain reorganisation, the
-two setters for truth and provenance, and test fixtures.</li>
-<li><strong>Nothing revokes a grant.</strong>
-<code>git grep -n -E 'revoked_at *=' -- '*.py'</code> returns two
-upserts that set it to <code>NULL</code>.</li>
-<li><strong>Three event types have no producer.</strong>
-<code>git grep -n -E '"(derived|revoked|updated)"' -- '*.py' '*.js'</code>
+<code>git grep -n -E 'DELETE FROM|UPDATE receipts|UPDATE memories' -- '*.py' ':!*tests*'</code>
+returns a nonce clean-up, a grant removed on a chain reorganisation, and
+the two setters for provenance and truth.</li>
+<li><strong>One writer sets a grant's revocation.</strong>
+<code>git grep -n -E 'revoked_at *=' -- '*.py' ':!*tests*'</code>
+returns two upserts that set it to <code>NULL</code> and the update in
+<code>revoke</code> at <code>store.py:420</code>.</li>
+<li><strong>The market sends three event types.</strong>
+<code>git grep -n -E '"(derived|revoked|updated)"' -- '*.py' '*.js' ':!*tests*'</code>
 returns the <code>Literal</code> in
 <code>provenance-ledger/src/provenance_ledger/models.py:10</code>.</li>
 <li><strong>One read filters on truth status.</strong>
@@ -786,32 +896,37 @@ returns the <code>Literal</code> in
 returns the column, its mapping, the <code>IN</code> clause at
 <code>store.py:364</code>, its setter, a count in <code>stats</code> and
 a badge in the console script.</li>
-<li><strong>No test drives the verify route.</strong>
+<li><strong>No test drives the verify route to rejected.</strong>
 <code>git grep -n -E '/verify|verify_memory' -- memory-market/tests tests</code>
-returns nothing;
-<code>git grep -n 'set_truth' -- memory-market/tests tests</code>
-matches.</li>
+returns <code>test_receipt_privacy_and_grants.py:132</code>, whose stub
+truth layer answers <code>supported</code>.</li>
+<li><strong>No test deletes an older receipt.</strong>
+<code>git grep -n 'DELETE FROM receipts' -- '*tests*'</code> returns
+three deletions, at
+<code>provenance-ledger/tests/test_ledger.py:75</code> and
+<code>:230</code> and
+<code>tests/test_provenance_crosscheck.py:84</code>, each of the newest
+receipt of a two-receipt chain.</li>
 <li><strong>No hub-write test asserts provenance on a failed
 call.</strong>
 <code>git grep -n -E 'provenance|TrustClients|unattested' -- memory-market/tests/test_hub_buyer.py</code>
 returns nothing; <code>git grep -n 'memory.write@v1' -- '*tests*'</code>
 matches those writes and the stubbed one in
 <code>test_truth_and_provenance.py:88</code>.</li>
-<li><strong>No ledger test truncates a chain and moves its
-head.</strong>
-<code>git grep -n -E 'DELETE FROM receipts|receipt_heads' -- provenance-ledger/tests</code>
-returns head reads, the head deletion in the migration test at
-<code>:45</code>, the re-sign helper's head update at <code>:154</code>
-and the single receipt deletion at <code>:197</code>.</li>
-<li><strong>Nothing schedules the reconcile command.</strong>
-<code>git grep -n 'reconcile_provenance' -- .</code> returns the module,
-a comment in <code>app.py</code>, its test and
-<code>docs/architecture.md:24</code> and <code>:48</code>.</li>
-<li><strong>Nothing compares the market's lineage root with the
-ledger.</strong>
-<code>git grep -n 'lineage_root' -- '*.py' '*.js' ':!*tests*'</code>
-returns the model, the column, its mapping and setter, and the Expert
-shell's rank term.</li>
+<li><strong>The check verifies one receipt per unit.</strong>
+<code>git grep -n 'verify_receipt' -- memory-market/src</code> returns
+the definition in <code>clients.py:79</code> and one call in
+<code>reconcile_provenance.py:67</code>.</li>
+<li><strong>Nothing installs the systemd units.</strong>
+<code>git grep -n -E 'scripts/systemd|attested-provenance-reconcile' -- . ':!scripts/systemd'</code>
+returns <code>docs/architecture.md:24</code> and the module docstring at
+<code>reconcile_provenance.py:12</code>.</li>
+<li><strong>The backfill flag lives in the ledger's database.</strong>
+<code>git grep -n -E 'heads_backfilled|ledger_meta' -- '*.py'</code>
+returns the table at
+<code>provenance-ledger/src/provenance_ledger/store.py:81</code>, its
+read and write at <code>:114</code> and <code>:129</code>, and a test
+deleting it.</li>
 <li><strong>The client does not verify.</strong>
 <code>git grep -n -i -E 'receipt|verify|lineage' -- clients/python/src</code>
 returns nothing;
@@ -829,6 +944,22 @@ returns nothing; <code>git grep -n -i 'rekor' -- .github</code> matches
 a workflow.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/alexar76/attested-memory/commit/84e7057bd2ed88344d99066f1827933a5cb6cda5"><code class="commit-id" title="84e7057bd2ed88344d99066f1827933a5cb6cda5">84e7057b…</code></a>,
+one sync commit past 25d6b1a; full clone, the screen adds two client
+manifests inside the cooldown, nothing built or run. Stopped being true:
+nothing compared the market's chain root with the ledger
+(<code>reconcile_provenance --check</code> does, tested against a real
+ledger), and a deleted head was rebuilt at start (once only, then
+<code>append</code> refuses). Any hub buyer could append to any chain
+(only its starter, none on market ids), and reconcile linked a receipt
+by hash alone (owner only). Nothing scheduled it (systemd units,
+installed by hand), and no grant could be revoked. The storage line was
+wrong at both earlier pins: the bundled compose shares one database,
+which limits the check. The commit also closed gaps no reading here
+found: public payment receipts naming buyer and transaction, and paid
+units' evidence pack ids in the catalogue. Marks unchanged (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
 <p><strong>2026-11-25</strong> — <a
 href="https://github.com/alexar76/attested-memory/commit/25d6b1ab4f0983d2d3c3b35bf03c40535d9c91db"><code class="commit-id" title="25d6b1ab4f0983d2d3c3b35bf03c40535d9c91db">25d6b1ab…</code></a>,
 one sync commit past the previous pin; full clone, screen unchanged,
