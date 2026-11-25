@@ -11480,6 +11480,38 @@ The README's claim — 88.2% on LoCoMo across 1,540 questions, described
 as the highest score for a self-hosted memory system — is a product
 claim whose evidence lives on the vendor's own site, and this atlas has
 not checked it.</li>
+<li><strong>A repository was examined and is a client for a closed
+engine.</strong> <code>Dakera-AI/dakera-mcp</code>, read at <a
+href="https://github.com/Dakera-AI/dakera-mcp/commit/70c9cc2bdbddf8e602a4b65f2eed200a6dc0bb15"><code class="commit-id" title="70c9cc2bdbddf8e602a4b65f2eed200a6dc0bb15">70c9cc2b…</code></a>,
+is an MIT stdio MCP server in Rust, about 10,700 lines under
+<code>src/</code>, that exposes 106 <code>dakera_*</code> tools for the
+Dakera memory platform whose deployment files
+<code>Dakera-AI/dakera-deploy</code> holds. Every tool that touches
+memory is an HTTP call through one <code>reqwest</code> client to
+<code>DAKERA_API_URL</code> (default
+<code>http://localhost:3000</code>), or for entity extraction to a
+GLiNER sidecar at <code>DAKERA_ODE_URL</code>: <code>dakera_store</code>
+posts to <code>/v1/memory/store</code>, <code>dakera_recall</code> to
+<code>/v1/memory/recall</code>, <code>dakera_forget</code> to
+<code>/v1/memory/forget</code>, and extraction, decay, consolidation,
+the knowledge graph, namespaces and key scoping are each a route of the
+server. <code>Cargo.toml</code> names no storage or embedding crate,
+nothing under <code>src/</code> opens a database, and the only local
+file I/O is attachment upload and download. The engine is the image
+<code>ghcr.io/dakera-ai/dakera</code>, which the README and CI start
+with <code>docker run</code>; <code>tests/route_audit.rs</code> checks
+every tool path against a route list copied from the server's
+<code>crates/api/src/lib.rs</code>, a file that is not in the tree. What
+the tree does itself belongs to the MCP boundary: tool profiles that
+list 14 core tools by default and load the rest on demand, an
+<code>initialize</code> instruction telling the client that stored
+memory content is data and not instructions, and recall shaping that
+separates session neighbours from the ranked <code>top_k</code>. The
+attachment tools read any <code>file_path</code> and write any
+<code>save_to</code> the model names on the machine running the server,
+with no directory confinement. The README's 88.2% Recall@20 on LoCoMo is
+the engine's figure, published on the vendor's site with no results in
+this tree, and this atlas has not checked it.</li>
 <li><strong>Two repositories were examined and their memory belongs to
 something the atlas already reports.</strong>
 <code>letta-ai/trajectory</code> normalises agent transcripts from
@@ -19833,6 +19865,51 @@ build-time execution points (<code>Makefile</code> and two
 <code>conftest.py</code>), nothing unpinned; <code>AGENTS.md</code> and
 <code>CLAUDE.md</code> were treated as data; nothing was installed,
 built or run.</li>
+<li><strong><code>relatedb/relate</code> was examined and has no report:
+it is an embedded Cypher graph database whose agent-facing surface is a
+generic driver, with no memory schema, no write or recall verbs, no
+consolidation and no scoping in the tree.</strong> Apache-2.0, 677,064
+lines of Rust in 2,093 files, 720 commits between 6 November 2026 and 25
+November 2026, read at <a
+href="https://github.com/relatedb/relate/commit/c9c2ea54ebff6db7f9dc122ce11d7eea6d8b31b8"><code class="commit-id" title="c9c2ea54ebff6db7f9dc122ce11d7eea6d8b31b8">c9c2ea54…</code></a>
+(head of main; triage selected the v1.3.0 release commit 2bd5a4b45728).
+The product MCP server
+(<code>surfaces/relate-mcp/src/tools.rs:574</code>) lists three tools
+from the wire kit, <code>write_cypher</code>, <code>read_cypher</code>
+and <code>get_schema</code>
+(<code>extensions/relate-wire/src/mcp/tools.rs:118</code>,
+<code>:129</code>, <code>:139</code>), each taking Cypher text from the
+model, and adds only a tool-name prefix and the hiding of write tools
+under read-only; the installed agent skill teaches CLI flags and the
+Cypher dialect, <code>--agent-mode</code> caps printed rows, and
+"in-memory" in the README means RAM residence. "Agent memory" in the
+tree is intent only: a "Graph-Native Agent Memory" entry in the seed
+data of the hidden <code>relate-ideas</code> demo idea store
+(<code>extensions/relate-ideas/seed/ideas.json:49</code>), a design note
+sketching memory plugins over a future wasmtime host
+(<code>docs/design/plugin-system-analysis.md:47</code>,
+<code>:78</code>), an "agent memory" recipe in the cookbook ADR
+(<code>docs/adr/0130-cookbook-tested-recipes.md</code>), whose cookbook
+a proposed ADR moves to a separate repository, and a test comment naming
+an agent-memory vault conversion that is not in the tree
+(<code>relate/relate-storage/src/codec/markdown/tests/ontology_file.rs:17</code>).
+Searches run at this pin with <code>git grep</code>:
+<code>-n -i -E 'agent.?memory|plugin\.query|kv_put'</code> outside
+<code>docs/adr</code> and <code>docs/design</code> (only the seed entry
+and the test comment; the same pattern finding
+<code>seed/ideas.json:49</code> is the control);
+<code>-n -i -E 'agent memory|agent-memory|long-term memory|remember|recall|transactional filesystem|memory layer' -- ':!*.lock'</code>
+(ADR prose, the per-project state file that remembers a store path,
+vector-search recall figures, no memory verb); <code>git ls-files</code>
+filtered on <code>memor</code> outside <code>docs/adr</code> (RAM
+accounting, baselines and scripts only). Screened before reading: one
+auto-run surface (an <code>.opencode/</code> agents bundle), 18
+dependency surfaces inside the 7-day cooldown, three build-time
+execution points (<code>Makefile</code>,
+<code>relate/relate-storage/build.rs</code>,
+<code>surfaces/relate-python/python/tests/conftest.py</code>), three
+unpinned surfaces; <code>AGENTS.md</code> and <code>CLAUDE.md</code>
+were treated as data; nothing was installed, built or run.</li>
 <li><strong><a
 href="https://arxiv.org/abs/2510.22732"><code>arXiv:2510.22732</code></a>
 was examined and has no report: it releases no code, and its memory is a
