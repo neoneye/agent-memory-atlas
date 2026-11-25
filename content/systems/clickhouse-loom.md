@@ -143,8 +143,16 @@ for a try-out. Single-user mode runs with auth off, which the authorizer treats
 as allow-all (`server/auth/authz.py:239-240`). An operator stands up ClickHouse,
 an embedder and a model, and about 3 GB of images.
 
-Loom's operator docs cover [SQL reader setup and permissions](https://loom.clickhouse.com/docs/reference/sql-surface)
-and show how to [report active memories by agent and provenance](https://loom.clickhouse.com/docs/use-cases/self-hosted-clickhouse#count-active-memories-by-agent-and-source).
+For reporting, the operator documentation describes a read-only SQL surface:
+five views, `sql_v1_memories`, `sql_v1_memory_history`,
+`sql_v1_conversations`, `sql_v1_agent_events` and `sql_v1_usage_daily`, read by
+a ClickHouse user granted `SELECT` on those views alone under the
+`loom_sql_surface` settings profile
+([`docs/reference/sql-surface.md`](https://github.com/ClickHouse/loom/blob/47318f3c852096c1aa717cd72d9a23994e716cf9/docs/reference/sql-surface.md)).
+A worked report of active memories by agent and provenance class reached the
+self-hosted guide on 25 November 2026, after this pin
+([`docs/use-cases/self-hosted-clickhouse.md` at `eccfd7f`](https://github.com/ClickHouse/loom/blob/eccfd7f44fa7cc166f2e6bbd75d7f42b50b2f4d5/docs/use-cases/self-hosted-clickhouse.md#count-active-memories-by-agent-and-source));
+every column its query reads is on `sql_v1_memories` at this pin.
 
 ## 4. Essential Implementation Paths
 
