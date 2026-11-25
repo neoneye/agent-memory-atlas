@@ -18662,57 +18662,71 @@ tests; no licence</td>
 href="../systems/luna-local-agent/"><code>luna-local-agent</code></a></td>
 <td>A one-sentence fact about the user with an optional one-word
 subject, a trust state and an optional real date, in a SQLite row with
-record time beside it; around it episode notes, lessons, recipes,
-projects, subject pages, profiles, game feelings and per-person fact
-files</td>
-<td>agent/facts.db with an FTS5 index and a table of forgotten-fact
-fingerprints; agent/notebook.db for episodes, lessons, pages, profiles,
-play sessions and offer state; one JSON file per enrolled person;
+record time beside it; a per-person conclusion marked said or inferred
+with the transcript times of the exchanges behind it; around them
+episode notes, lessons, recipes, projects, subject pages, profiles, game
+feelings and per-person fact files</td>
+<td>agent/facts.db with an FTS5 index, a table of forgotten-fact
+fingerprints and a change log capped at 50,000 rows; agent/notebook.db
+for episodes, lessons, conclusions, pages, profiles, play sessions and
+offer state; one JSON file per enrolled person;
 history/conversation.json and transcript.jsonl; an embeddings.db vector
-cache; an old memory.json list read in once</td>
+cache</td>
 <td>Every fact while under context_facts, else embedding similarity
 above 0.35 with an optional reranker, FTS5 bm25 or word overlap, always
 plus the newest third; lessons, episodes and pages by embedding or
-shared words; a profile of the speaker; search_history, recall_episodes
-and recall_facts with past as tools</td>
+shared words; a profile of the speaker; ask_memory gathers the speaker's
+facts, conclusions, notes and exchanges and one model call answers;
+search_history, recall_episodes and recall_facts with past as tools</td>
 <td>The model calls remember_fact, update_fact, confirm_fact and
 forget_fact mid-turn; a background extractor answering NONE, NEW,
 REPLACE or CONFIRM runs when the model has no tool calling, or when the
-user asked to remember and no remember_fact ran; idle passes write
-episode notes, lessons, pages, profiles and game feelings</td>
+user asked to remember and no remember_fact ran; idle passes read
+conversations back into per-person conclusions and write episode notes,
+lessons, pages, profiles and game feelings</td>
 <td>update_fact retires the old row with an optional real end date
 unless the model sets mistake; forget deletes the row, buries a
-fingerprint and sweeps the sentences carrying it from every derived
-store; the memory page edits, confirms, retires, restores, deletes and
-lifts every fingerprint</td>
+fingerprint, empties the words from its change-log rows and sweeps the
+sentences carrying it from every derived store; a person marks a
+conclusion wrong or restores it; the memory page edits, confirms,
+retires, restores, deletes and lifts every fingerprint</td>
 <td>One file per enrolled person and per-session guest facts in memory,
-chosen by the turn's speaker; the owner's summary, episodes, projects,
-recipes, knowledge passages and profile stay out of anyone else's
-prompt; an enrolled housemate's tools read the shared transcript,
-episodes and documents</td>
-<td>In-process: a terminal and voice agent on LM Studio or llama.cpp
-with 53 registered tools (files, shell, mail, web, network, desktop,
-reminders, scheduled jobs, self-introspection) plus MCP servers, a
-localhost memory page, slash commands, relay stations and a Discord
-plugin</td>
+chosen by the turn's speaker; conclusions carry a person key that
+ask_memory filters on for anyone but the owner; the owner's summary,
+episodes, projects, recipes, knowledge passages and profile stay out of
+anyone else's prompt; an enrolled housemate's tools read the shared
+transcript, episodes and documents</td>
+<td>In-process: a terminal, web chat and voice agent on LM Studio or
+llama.cpp with 56 registered tools (files, shell, mail, web, network,
+desktop, reminders, scheduled jobs, self-introspection, ask_memory) plus
+MCP servers, a localhost memory page, slash commands, relay stations and
+a Discord plugin</td>
 <td>An idle loop every two minutes writes episode notes after 30 quiet
-minutes; a dream pass every 20 hours writes lessons, tidies fact pairs
-and rewrites pages and profiles; a worker folds old turns into the
-running summary; a forget's sweep runs on its own thread</td>
+minutes and reads a person's conversations back into conclusions once
+six exchanges or a quiet day are waiting; a night batch in quiet hours
+writes lessons, tidies fact pairs, merges, settles and fades conclusions
+and rewrites pages and profiles; a forget's sweep runs on its own
+thread</td>
 <td>Owner facts are confirmed or unconfirmed, and pages, profiles and
-the tidy pass read only confirmed ones; agent-noted lessons and recipes
-wait for an on-screen yes; dream-pass lessons and episodes land
-unreviewed; background prompts mark their inputs as records</td>
+the tidy pass read only confirmed ones; conclusions are said or inferred
+by the reading model's own label, said wins a contradiction and only
+inferred ones fade; agent-noted lessons and recipes wait for an
+on-screen yes; dream-pass lessons, episodes and conclusions land
+unreviewed</td>
 <td>A forget that buries a value fingerprint, sweeps the summary,
-transcript, notes, pages, profiles, thought log and vectors, and cleans
-everything she writes afterwards while keeping the user's own words; two
-clocks per fact; offers with persisted cooldowns and a mute; lesson and
-recipe writes behind an approval the agent cannot answer</td>
+transcript, notes, pages, profiles, conclusions, change log, thought log
+and vectors, and cleans everything she writes afterwards while keeping
+the user's own words; a per-fact change log whose forget rows keep the
+date and not the words; conclusions that keep their exchanges, fade when
+nothing backs them and stay suppressed when marked wrong; two clocks per
+fact; lesson and recipe writes behind an approval the agent cannot
+answer</td>
 <td>remember_fact's again flag lets the model lift a tombstone it was
 just refused by; the fingerprint reverses by dictionary to the forgotten
 words; a housemate's forget pops a list entry with no fingerprint and no
 sweep; the unconfirmed state is produced only on models without tool
-calling</td>
+calling; a conclusion's said label is the reading model's word, and it
+decides every contradiction and exempts the row from fading</td>
 </tr>
 <tr>
 <td><a href="../systems/m-flow/"><code>m-flow</code></a></td>
@@ -40190,7 +40204,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>380 of 881:</em> <a
+<p><em>381 of 881:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -40369,7 +40383,8 @@ href="../systems/local-memory-mcp/"><code>local-memory-mcp</code></a>,
 href="../systems/lorekit/"><code>lorekit</code></a>, <a
 href="../systems/lrc/"><code>lrc</code></a>, <a
 href="../systems/lucid-memory/"><code>lucid-memory</code></a>, <a
-href="../systems/m-flow/"><code>m-flow</code></a>, <a
+href="../systems/luna-local-agent/"><code>luna-local-agent</code></a>,
+<a href="../systems/m-flow/"><code>m-flow</code></a>, <a
 href="../systems/m3-memory/"><code>m3-memory</code></a>, <a
 href="../systems/magic-context/"><code>magic-context</code></a>, <a
 href="../systems/magicore/"><code>magicore</code></a>, <a

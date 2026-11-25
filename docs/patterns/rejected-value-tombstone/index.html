@@ -905,18 +905,23 @@ hashes of the fact's stemmed words, with stopwords and names removed.
 <code>add</code>, <code>replace</code>, <code>update</code> and the
 one-time import refuse a fact whose set equals it, contains it with at
 most two more words, or overlaps a long one by 0.8
-(<code>mind/factstore.py:541-553</code>,
+(<code>mind/factstore.py:646-661</code>,
 <code>mind/forgetting.py:104-114</code>). The same sets drive a sweep of
 the summary, history, transcript, episodes, lessons, pages, profiles,
-thought log and vector cache, and a guard on everything Luna writes
-afterwards; the user's own words stay as said
-(<code>mind/forgetting.py:255-421</code>). The extractor lifts a
+conclusions, thought log and vector cache, an erasure of the words in
+the fact's change log, and a guard on everything Luna writes afterwards;
+the user's own words stay as said
+(<code>mind/forgetting.py:260-443</code>). The extractor lifts a
 fingerprint only on a turn whose user words ask to remember.
 <code>remember_fact</code> takes an <code>again</code> flag that lifts
 it with no such check, and the refusal text names the flag
-(<code>tools/memory.py:34-43</code>,
-<code>mind/longterm.py:460-462</code>). A housemate's forget writes no
-fingerprint.</p>
+(<code>tools/memory.py:45-55</code>,
+<code>mind/longterm.py:461-463</code>); the lift is logged as
+<code>unforgotten</code> by her tools. A housemate's forget writes no
+fingerprint. Its per-person conclusions carry a second suppression a
+person sets: one marked wrong stays as a set-aside row, and every later
+read-back line and merge similar to it is dropped
+(<code>mind/conclusions.py:457-475</code>, <code>:611</code>).</p>
 <p><strong><a href="../../systems/clickhouse-loom/">Loom</a> keeps its
 tombstone as a pattern list every intake and restore path reads and no
 forget writes.</strong> <code>loom.blacklist</code> holds substring or

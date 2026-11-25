@@ -32762,39 +32762,45 @@ href="../systems/luna-local-agent/"><code>luna-local-agent</code></a></h3>
 <code>forget_fact</code> deletes the fact and its retired copies, buries
 a fingerprint of its meaning words that every fact writer consults,
 strips the sentences carrying it from the summary, history, transcript,
-episodes, lessons, pages, profiles, thought log and vector cache, and
-cleans everything Luna writes afterwards while keeping the user's own
-words.</li>
-<li>Second idea: two clocks per fact, with the real date taken only from
-what the user said and written as the old fact's end on a change; a
-guess the extractor makes lands unconfirmed and stays out of pages,
-profiles and the tidy pass's retirements; offers she raises unprompted
-keep persisted cooldowns and a mute.</li>
+episodes, lessons, pages, profiles, conclusions, thought log and vector
+cache, empties its words from the fact's change log while keeping a
+dated <code>forgotten</code> row, and cleans everything Luna writes
+afterwards while keeping the user's own words.</li>
+<li>Second idea: per-person conclusions read back from the transcript,
+each marked said or inferred and keeping the times of the exchanges
+behind it, merged and settled overnight, faded after 45 days with
+nothing backing them, and kept from coming back once a person marks one
+wrong; and two clocks per fact, with the real date taken only from what
+the user said.</li>
 <li>Biggest risk: <strong>the model holds the key to its own
 tombstone.</strong> <code>remember_fact</code> takes an
 <code>again</code> flag that lifts a fingerprint with no check on what
 the user said, and the refusal text names it.</li>
-<li>Second risk: the fingerprint hashes one dictionary word per entry
-under a constant salt and reverses to the forgotten words; a housemate's
-forget pops a list entry with no fingerprint and no sweep; the
-unconfirmed state has a producer only when the model has no tool
-calling.</li>
+<li>Second risk: a conclusion's <code>said</code> label is the reading
+model's word, unchecked against the exchanges it cites, and it wins
+every contradiction and never fades; the fingerprint reverses to the
+forgotten words; a housemate's forget pops a list entry with no
+fingerprint and no sweep.</li>
 <li>Most reusable component: <code>mind/forgetting.py</code>, the
 fingerprint, sweep and write guard, with
-<code>life/offers.py:184-306</code> for offer hysteresis.</li>
-<li>Maturity impression: MIT; 21,191 lines of Python in the memory code
-and the turn runtime, 66,214 outside tests; 336 commits from two
-authors, 30 July – 18 November 2026; 1,014 unittest methods run offline
-in CI, not run here. Five marks: <code>tombstone</code>,
-<code>trust_state</code>, <code>bitemporal</code>,
-<code>human_review</code> on agent-noted lessons and recipes, and
-<code>negative_eval</code>.</li>
+<code>mind/factstore.py:159-219</code> for a change log whose forget
+keeps the date and drops the words.</li>
+<li>Maturity impression: AGPL-3.0-or-later from 20 November 2026, MIT
+before; 23,523 lines of Python in the memory code and the turn runtime,
+74,589 outside tests; 391 commits from two authors, 30 July – 25
+November 2026; 1,431 unittest methods run offline in CI, not run here.
+Six marks: <code>tombstone</code>, <code>trust_state</code>,
+<code>bitemporal</code>, <code>scope_enforced</code> on the conclusions'
+person key, <code>human_review</code> on agent-noted lessons and
+recipes, and <code>negative_eval</code>.</li>
 <li>Study when: you are building a long-running single-user assistant
-where "forget that" must reach the notes and summaries built from the
-conversation, not only the fact row.</li>
+where "forget that" must reach the notes, summaries and conclusions
+built from the conversation, not only the fact row.</li>
 <li>Do not copy when: the forgotten words must not be recoverable from
 disk, several people share the device and each needs their own forget to
-hold, or the model must not be able to undo a forget on its own.</li>
+hold, the model must not be able to undo a forget on its own, or an
+inference must not become "they told you" on the word of the model that
+made it.</li>
 </ul>
 <h3 id="mnemos-mcp"><a
 href="../systems/mnemos-mcp/"><code>mnemos-mcp</code></a></h3>

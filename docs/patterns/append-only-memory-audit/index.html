@@ -908,6 +908,23 @@ add the rest. The default retention deletes every row older than ninety
 days, at startup and on each maintenance pass
 (<code>audit.rs:822-831</code>), so the report withholds the mark;
 <code>AUDIT_RETENTION_DAYS=0</code> keeps the whole log.</p>
+<p><strong><a href="../../systems/luna-local-agent/">Luna</a> writes the
+log in the change's own transaction, erases a forget's words from it,
+and caps it.</strong> Every writer in its fact store inserts a
+<code>fact_events</code> row — added, confirmed, dated, replaced,
+retired, restored, corrected, edited, forgotten, imported or unforgotten
+— with the fact's words then and an actor from a context variable each
+entry point sets: her tools, the extractor, the tidy pass, the memory
+page, the import and a forget's sweep
+(<code>mind/factstore.py:159-176</code>). A forget empties the words on
+every row about the deleted ids and appends a dated
+<code>forgotten</code> row with none, and the sweep empties any other
+row whose sentence is the fact again (<code>:179-215</code>,
+<code>:806-811</code>). That is the erasure this page asks for.
+<code>_trim_events</code> deletes rows past the newest 50,000 on each
+add and replace, and a committed test asserts the trim
+(<code>:218-219</code>), so the report withholds the mark; the log also
+covers the owner's facts and no other store.</p>
 <p><strong><a href="../../systems/bot-board/">Bot Board</a> makes the
 store its own log.</strong> <code>knowledge_docs</code> has no
 current-value table: a document is the row with the highest revision for
