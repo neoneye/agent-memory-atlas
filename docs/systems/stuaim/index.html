@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Linux harness that runs the Pi
+agent on a local model, captures each session into MemPalace and gates
+task closeouts on host-run predicate receipts.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="STUAIM (Low-VRAM Agentic
+Harness) — Agent Memory Atlas">
+    <meta property="og:description" content="A Linux harness that runs
+the Pi agent on a local model, captures each session into MemPalace and
+gates task closeouts on host-run predicate receipts.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="STUAIM (Low-VRAM Agentic
+Harness) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Linux harness that runs
+the Pi agent on a local model, captures each session into MemPalace and
+gates task closeouts on host-run predicate receipts.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>STUAIM (Low-VRAM Agentic
+Harness) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "STUAIM (Low-VRAM Agentic Harness)",
+      "description": "A Linux harness that runs the Pi agent on a local model, captures each session into MemPalace and gates task closeouts on host-run predicate receipts.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Source-bound retrieval over a claim
+registry that ships empty</p>
+          <h1>STUAIM (Low-VRAM Agentic Harness)</h1>
+          <p class="document-deck">A Linux harness that runs the Pi
+agent on a local model, captures each session into MemPalace and gates
+task closeouts on host-run predicate receipts.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/scruge1/stuaim">
+              <span>Source</span>
+              <strong>scruge1/stuaim</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/scruge1/stuaim/commit/c8eb2878f4fbe3daf2c5a3e2addaa98788496fbc" title="c8eb2878f4fbe3daf2c5a3e2addaa98788496fbc">
+              <span>Analyzed revision</span>
+              <code>c8eb2878…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/scruge1--stuaim" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>scruge1--stuaim</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE and pyproject.toml; adapters/project-board/native-utils.ts is
+an unchanged Hermes Agent file kept with its MIT licence in
+HERMES-LICENSE.txt; the packages the installer fetches (Pi, Hermes
+Agent, MemPalace, Claude-mem and others) keep their own
+licences</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>29,800
+lines of Python outside tests and 5,605 of TypeScript and JavaScript
+outside tests/, beside 11,871 lines of Markdown; the memory paths
+(transcript capture, validated query and policy, the MemPalace runtime
+wrapper, Dream review, project knowledge, closeout and claim candidate)
+are 3,718 lines</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>287
+commits from 7 September to 9 November 2026, 266 of them in October,
+under two author names, scruge1 (200) and Adam Vaughan (87), on one
+GitHub noreply address; no tags; the README and pyproject.toml still
+name the project lowvram-agentic-harness</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,019
+Python test functions in 93 files, 1,015 of them under tests/; 32 Node
+.mjs qualification scripts under tests/ that need an installed Pi
+package; offline-release.yml runs unittest discovery over tests/ through
+scripts/verify_ssot_release.py on Ubuntu with Python 3.11 and Windows
+with Python 3.13, which leaves out the .mjs scripts and
+adapters/pi/project-workflow/test_memory_claim_candidate.py; none run
+for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>STUAIM, published as the Low-VRAM Agentic Harness, is a Linux
+installer and controller that runs the Pi coding agent against an
+existing local model in a dedicated home folder, with MemPalace and the
+Hermes Agent Kanban board installed beside it. Its memory is assembled
+from those parts: each Pi session is captured into MemPalace when the
+agent settles, task closeouts become files a per-project FTS5 index
+serves, and a "validated" query admits a palace hit only when it matches
+a reviewed claim bound to the current bytes of its source. That binding,
+checked when the helper answers and again when the result reaches the
+model, is the notable part. The weak part is that the reviewed-claim
+registry is created empty and pinned by its hash, no code adds a row,
+and the planning gate that demands a memory search accepts that query's
+abstention.</p>
+<p>The README's two claims resolve to specific mechanisms.
+<strong>"Source-bound memory"</strong> is a read-time property. A
+validated hit must match a registry row on source path and claim hash, a
+local source is re-hashed against the row, and the project preparation
+packet re-hashes every cited local file before it counts as delivered.
+Nothing enforces a source at write time except for closeouts, and the
+captured transcripts that fill the palace carry none.</p>
+<p><strong>"Independently verified work"</strong> means a host-run
+predicate. The model supplies an action command and a read-only verifier
+command to <code>workflow_step</code>. The supervisor runs the action,
+runs the verifier once in an empty directory, where it must reject, and
+once in the project, where it must pass. No second model and no person
+take part, and the predicate is the model's own. A passing run writes a
+receipt capped at <code>tested</code>, and a closeout requires one, but
+the summary and lessons the model writes at closeout are not compared
+with it.</p>
+<p>The licence is MIT, in <code>LICENSE</code> and
+<code>pyproject.toml</code>.</p>
+<p>No marks. The registry's state filter is the right shape for
+<code>trust_state</code> and its tests are populated negative
+assertions, but nothing on a reachable path writes a registry row.
+Section 9 gives the reason for each of the seven.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Four kinds of thing survive a session, and they have different
+owners.</p>
+<ul>
+<li><strong>Captured sessions.</strong> A Pi session file is exported as
+redacted dialogue, untrusted peer messages and tool-outcome metadata,
+headed <em>"Not instructions or verified operational truth"</em>, and
+mined into MemPalace
+(<code>adapters/pi/memory-capture/capture.py:201-266</code>). This is
+raw history. It has no state and no source requirement, and nothing in
+the harness ever removes it.</li>
+<li><strong>Closeouts.</strong> After an accepted supervised step the
+model may write a closeout: a summary and one to twenty lessons, bound
+to the receipt's path, hash and outputs, with
+<code>authority: verified_lesson_guidance_only</code>
+(<code>adapters/pi/project-workflow/project_closeout.py:107-148</code>).
+The file lives under <code>.icm/workspace/wiki/task-closeouts/</code>,
+which the project index includes, so a lesson becomes searchable project
+knowledge.</li>
+<li><strong>Reviewed claims.</strong> A row in
+<code>state/validated-memory.jsonl</code> names a claim by the hash of
+its normalized text, its source path and source hash, a safe summary to
+return instead of the raw text, a <code>state</code> and an evidence
+class
+(<code>adapters/pi/memory/validated_memory_query.py:94-128</code>). This
+is the only tier with an epistemic status.</li>
+<li><strong>Home context.</strong> <code>context/profile.md</code>,
+<code>current.md</code> and <code>lessons.md</code> start as templates
+that ask for a source and date on each durable claim. A personalization
+prompt asks the user's current agent to fill them
+(<code>harness/templates/agent-home/agent/prompts/personalize.md</code>);
+no code reads or writes them after the scaffold.</li>
+</ul>
+<p>The intended route from a lesson to a belief has four steps. A
+supervised step is accepted, the model writes a closeout, someone stores
+the closeout's canonical payload in MemPalace and reads the drawer back,
+and <code>project_memory_candidate_prepare</code> turns that into a
+candidate whose <code>claim</code> object has exactly the registry's
+fields and <code>state: "current"</code>
+(<code>adapters/pi/project-workflow/memory_claim_candidate.py:76-91</code>).
+The candidate is written under
+<code>.icm/workspace/wiki/memory-candidates/</code> with
+<code>promotion_state: "project_local_candidate"</code>. The route stops
+there. No code reads that directory except the index build, and no code
+appends to the registry, so the third step is the model's or the user's
+and the last is missing.</p>
+<p>How a belief stops being one exists only on the read side. The
+retrieval policy drops any row whose state is <code>invalidated</code>,
+<code>obsolete</code>, <code>retired</code>, <code>superseded</code> or
+<code>failed</code>, and any row with a <code>valid_to</code> at all
+(<code>adapters/pi/memory/memory_retrieval_policy.py:19</code>,
+<code>:42-46</code>). A row also drops out when its source's current
+bytes no longer hash to the recorded value
+(<code>validated_memory_query.py:150-166</code>). No code writes any of
+those states.</p>
+<p>The Dream review (<code>harness/memory_dream.py:274-354</code>) is an
+analysis, not a transition. Given up to 64 caller-supplied evidence
+windows for an admitted project, it groups them by topic key, orders
+each group oldest-first and newest-first, and labels the group
+<code>CONTRADICTION_REVIEW_REQUIRED</code>,
+<code>SOURCE_REVIEW_REQUIRED</code> or
+<code>SOURCE_PINNED_CANDIDATE</code>. It stores nothing and returns
+<code>CANDIDATES_NOT_PROMOTED</code>.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — session transcripts land in one MemPalace wing shared by every project and are searched with no scope; a closeout becomes a candidate that no code promotes into the hash-pinned registry, which stays empty, so the validated query abstains and the planning gate accepts that abstention as a memory search</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: session transcripts land in one MemPalace wing shared by every project and are searched with no scope; a closeout becomes a candidate that no code promotes into the hash-pinned registry, which stays empty, so the validated query abstains and the planning gate accepts that abstention as a memory search
+flowchart TD
+    S[&quot;Pi session JSONL&quot;] --&gt; C[&quot;capture.py at settle&lt;br/&gt;and at shutdown&quot;]
+    C --&gt; P[(&quot;MemPalace palace&lt;br/&gt;wing pi-sessions,&lt;br/&gt;every project&quot;)]
+    P --&gt; MS[&quot;mempalace_search&lt;br/&gt;no scope from harness&quot;]
+    MS ~~~ W
+    W[&quot;workflow_step:&lt;br/&gt;model&#39;s action and&lt;br/&gt;model&#39;s predicate&quot;] --&gt; R[&quot;receipt accepted,&lt;br/&gt;authority_cap tested&quot;]
+    R --&gt; CL[&quot;project_closeout_prepare&lt;br/&gt;model&#39;s summary, lessons&quot;]
+    CL --&gt; K[(&quot;knowledge.db FTS5&lt;br/&gt;one per project&quot;)]
+    CL --&gt; CA[&quot;memory candidate&lt;br/&gt;state current&quot;]
+    CA -. &quot;no code moves it&quot; .-&gt; REG[(&quot;validated-memory.jsonl&lt;br/&gt;created empty,&lt;br/&gt;hash-pinned&quot;)]
+    REG --&gt; V[&quot;validated_memory_query&lt;br/&gt;abstains&quot;]
+    MS --&gt; G{&quot;Planning gate:&lt;br/&gt;memory queried?&quot;}
+    K --&gt; G
+    V --&gt; G</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The harness is a Python package (<code>harness/</code>,
+<code>ssot/</code>) and a set of Pi extensions
+(<code>adapters/pi/</code>). <code>harness/home.py</code> scaffolds an
+agent home with <code>agent/</code>, <code>context/</code>,
+<code>memory/</code>, <code>state/</code>, <code>projects/</code>,
+<code>envs/</code> and <code>runtime/</code>, installs pinned packages
+per profile, and writes Pi's settings and MCP configuration. The
+profiles are <code>core</code> (no packages), <code>pi</code>,
+<code>agent</code> (the default, adding research tools) and
+<code>full</code>, which adds Claude-mem, DeepSeek Harness and Google's
+harness2 (<code>harness/home.py:43-59</code>). The pins are exact:
+<code>@earendil-works/pi-coding-agent@1.4.0</code>,
+<code>mempalace==3.11.0</code>, Hermes Agent at a commit,
+<code>claude-mem@13.29.0</code>.</p>
+<p>What runs:</p>
+<ul>
+<li><strong>MemPalace</strong> in its own virtual environment, wrapped
+by <code>harness/memory_runtime.py</code>, which binds the palace,
+config and an ONNX MiniLM cache to the home, refuses any other
+<code>--palace</code> and any separate daemon, and starts the package's
+native single-writer hub as an owned process
+(<code>harness/memory_runtime.py:468-542</code>). Pi reaches it as a
+stdio MCP server through the same wrapper
+(<code>harness/home.py:446-458</code>).</li>
+<li><strong>The Hermes Kanban database</strong>, one board per project,
+through <code>adapters/pi/project-workflow/pi_kanban.py</code>.</li>
+<li><strong>Claude-mem</strong>, on the full profile only, as a Bun
+worker on a reserved loopback port with global hooks off
+(<code>harness/claude_memory.py</code>).</li>
+<li><strong>Per-project state</strong> at
+<code>~/.local/state/pi-projects/&lt;project_id&gt;</code>, or under
+<code>PI_PROJECT_STATE_BASE</code> when it is set, holding
+<code>knowledge.db</code>
+(<code>adapters/pi/project-workflow/project_identity.py:38-48</code>).</li>
+</ul>
+<p>Nothing is scheduled. Capture runs inside Pi's event handlers and the
+hub is started on demand.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The complete bootstrap is Linux x86_64 with glibc, and it attaches to
+a model endpoint the user already runs; it downloads no model. Capture
+and <code>workflow_step</code> are loaded only on Linux
+(<code>harness/home.py:429-431</code>), so on macOS and Windows there
+are no receipts, no closeouts and no captured sessions. The installer,
+<code>install.sh</code>, has a <code>--plan</code> mode that prints the
+plan without creating a home.</p>
+<p>Storing anything needs no API key. MemPalace embeds on the CPU with a
+local ONNX model that may be downloaded on first mining
+(<code>adapters/pi/memory-capture/README.md</code>). The palace is a
+Chroma store and not readable by hand. Closeouts, candidates, the
+registry and the home context are JSON, JSONL and Markdown, and the
+home's <code>doctor</code> command fails a home whose registry no longer
+matches its pinned hash (<code>harness/home.py:849-851</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong>
+<code>adapters/pi/memory-capture.ts:52-68</code> registers handlers on
+<code>agent_settled</code> and <code>session_shutdown</code>
+(<code>:91-92</code>) that serialize one call each through the guarded
+runtime wrapper with a 150-second budget and
+<code>CUDA_VISIBLE_DEVICES</code> empty. <code>capture.py:453</code>
+exports the selected session to
+<code>memory/pi-capture/exports/&lt;sha16&gt;-&lt;stem&gt;.md</code>
+(<code>:444-450</code>), with secrets redacted by three patterns
+(<code>:187-198</code>). <code>mine</code> (<code>:659-711</code>) runs
+<code>mempalace mine --mode projects --wing pi-sessions --agent pi-capture</code>,
+and <code>checked_mine</code> (<code>:614-657</code>) compares the
+drawers and closets the palace holds for each export with the chunks
+MemPalace's own chunker expects. A partial file has its mtime moved so
+the native miner does not skip it, and the run fails if coverage is
+still incomplete.</p>
+<p><strong>Closeout.</strong> The <code>project_closeout_prepare</code>
+tool (<code>adapters/pi/project-workflow/pi-kanban.ts:595-607</code>)
+calls <code>compile_closeout</code>
+(<code>project_closeout.py:107</code>). <code>_load_receipt</code>
+(<code>:80-104</code>) requires the caller's hash to equal the receipt
+file's, <code>receipt_type</code> <code>enforced_task</code>,
+<code>status</code> <code>accepted</code>, <code>authority_cap</code>
+<code>tested</code>, a receipt inside a <code>.pi-workflow</code> step
+directory, and every listed output to exist with its recorded size and
+hash. The closeout is written with <code>open("x")</code>, and an
+existing file with different bytes is refused (<code>:139-148</code>).
+The project index is rebuilt and the canonical memory payload returned
+(<code>:150-173</code>); the tool description says it <em>"does not
+write durable memory"</em>.</p>
+<p><strong>Candidate.</strong>
+<code>project_memory_candidate_prepare</code>
+(<code>pi-kanban.ts:627-635</code>) calls <code>compile_candidate</code>
+(<code>memory_claim_candidate.py:44-110</code>). It reads the closeout
+and a <code>drawer_snapshot_path</code> JSON file from inside the
+project, requires the snapshot's <code>content</code> to equal the
+canonical payload byte for byte, refuses a summary matching credential
+words or an email address, and writes the candidate
+exclusive-create.</p>
+<p><strong>Validated retrieval.</strong> The Pi tool
+(<code>adapters/pi/memory/validated-memory-query.ts:90-105</code>)
+re-hashes the helper, the policy and the registry against the hashes in
+its environment on every call, then spawns the helper with
+<code>--live</code> (<code>:39-48</code>).
+<code>live_validated_query</code>
+(<code>validated_memory_query.py:223-239</code>) returns an abstention
+without importing MemPalace when the query is sensitive or the registry
+is empty. Otherwise it searches the palace for
+<code>max(limit*4, 20)</code> hits, resolves each hit to a drawer, binds
+hits to registry rows (<code>:131-182</code>) and applies the
+policy.</p>
+<p><strong>Project knowledge.</strong> <code>build</code>
+(<code>adapters/pi/project-workflow/project_knowledge.py:169-249</code>)
+hashes every file matching the project's source policy
+(<code>:32-60</code>), writes a manifest and builds a fresh
+<code>knowledge.db</code> in a temporary file that replaces the old one.
+The agent's <code>project_knowledge_query</code> reaches
+<code>query</code> (<code>:253-289</code>, through
+<code>pi_kanban.py:553-557</code>), which reads the snapshot and labels
+its result <code>indexed_snapshot_not_current_validated</code>. The
+stricter <code>current</code> (<code>:377-559</code>), which withholds
+every result when any source, the manifest, the policy or the index has
+drifted, is reached only from the module's own command line and its
+tests.</p>
+<p><strong>Context assembly.</strong> <code>project_prepare</code>
+(<code>pi-kanban.ts:354-455</code>) executes
+<code>project_context</code>, <code>agent_capabilities</code>,
+<code>system_tool_query</code>, <code>validated_memory_query</code> and
+<code>project_knowledge_query</code> as nested tool calls, bounds each
+section at 32 KiB and the packet at 64 KiB, and collects each returned
+local file and hash. A <code>context</code> hook (<code>:457-482</code>)
+marks the discovery steps done only when the exact packet text reached
+the model and every collected file still hashes the same.</p>
+<p><strong>The gate.</strong> A <code>tool_call</code> hook
+(<code>pi-kanban.ts:720-745</code>) blocks
+<code>codex_plan_consult</code> and the execution tools
+<code>workflow_step</code>, <code>run_step</code>,
+<code>run_ledger</code> and <code>task_agent</code> (<code>:21</code>)
+until capabilities, a system-tool query, a memory query and a knowledge
+query have succeeded. A memory query is either a MemPalace search whose
+result is a JSON object with a <code>results</code> array and no
+<code>error</code> (<code>:141-156</code>), or a
+<code>validated_memory_query</code> result with the right schema, a
+<code>results</code> array and a reason other than
+<code>sensitive_query</code> (<code>:791-798</code>).</p>
+<p><strong>Supervision.</strong> <code>workflow_step</code>
+(<code>adapters/pi/project-workflow/everyday-workflow.ts:102</code>)
+passes the model's <code>action</code> and <code>verify</code> argv to
+<code>everyday_workflow.prepare</code>, which wraps the verifier so that
+its <code>--negative-control</code> run in an empty temporary directory
+passes only when the predicate exits 1
+(<code>everyday_workflow.py:30-38</code>).
+<code>harness/enforcement.py</code> runs the negative control and then
+the verifier, each between two project digests that must match
+(<code>:541-559</code>), and writes the receipt
+(<code>:736-760</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Registry row</strong>
+(<code>validated_memory_query.py:102-127</code>):
+<code>claim_sha256</code>, <code>source_path</code> (a local path or
+<code>mempalace://drawer/&lt;id&gt;</code>), <code>source_sha256</code>,
+<code>safe_text</code>, <code>safe_text_sha256</code>,
+<code>state</code>, <code>evidence_class</code>,
+<code>observed_at</code>, and optionally <code>claim_id</code>,
+<code>valid_to</code> and <code>registry_receipt_sha256</code>. The key
+is the pair of source path and claim hash, and a duplicate pair refuses
+the whole file. The four evidence classes rank
+<code>current_source</code> above <code>verified_closeout</code>,
+<code>validated_lesson</code> and <code>raw_history</code>
+(<code>memory_retrieval_policy.py:13-18</code>).</p>
+<p><strong>Closeout</strong> (<code>project_closeout.py:121-138</code>):
+schema, <code>project_id</code>, <code>board_id</code>,
+<code>task_id</code>, <code>card_id</code>, <code>summary</code>,
+<code>lessons</code>, the receipt's path, hash, run id, status,
+authority cap and outputs, and the authority string. There is no time
+field, no supersession reference and no version; one file per
+<code>task_id</code>, immutable.</p>
+<p><strong>Candidate</strong>
+(<code>memory_claim_candidate.py:76-91</code>): the registry fields with
+<code>state: "current"</code>,
+<code>evidence_class: "validated_lesson"</code>, the drawer's
+<code>filed_at</code> as <code>observed_at</code>, the closeout and
+receipt hashes, wrapped with <code>promotion_state</code>.</p>
+<p><strong>Project index</strong>
+(<code>project_knowledge.py:219-231</code>): <code>metadata</code>
+(schema, project id, manifest hash, build time), <code>sources</code>
+(path, hash, size), and an FTS5 <code>chunks</code> table of path, hash,
+line range and content, in chunks of at most 4,000 characters.</p>
+<p><strong>Capture receipts.</strong> <code>latest.json</code> and
+<code>sources.json</code> under <code>memory/pi-capture</code> record
+per-source size, mtime, raw-prefix and export hashes; the status route
+reads them without reading raw bodies (<code>capture.py:65</code>).</p>
+<p><strong>Scope.</strong> The project index is one file per project,
+and <code>query</code> and <code>current</code> refuse an index whose
+<code>project_id</code> differs from the project's identity
+(<code>project_knowledge.py:261-263</code>). That is a physical
+partition with a whole-file check, not a key on each row. The palace has
+no project key: every session from every project is mined into the
+<code>pi-sessions</code> wing, and an export's file name carries a hash
+of the session path and the session stem, not the project.</p>
+<p><strong>Time.</strong> Registry rows carry <code>observed_at</code>
+and an optional <code>valid_to</code>; neither is a validity interval in
+use, since any <code>valid_to</code> value excludes the row whether its
+date is past or future
+(<code>memory_retrieval_policy.py:42-46</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no automatic memory injection. Retrieval is tool-mediated,
+and the gate in section 4 makes one memory query and one knowledge query
+a precondition of planning and execution.</p>
+<p><strong>MemPalace search</strong> is whatever the installed package
+does; the harness registers its MCP server with
+<code>"exposure": "deferred"</code>, so the model finds
+<code>mcp__mempalace__mempalace_search</code> through
+<code>tool_search</code>, and the system prompt tells it to
+(<code>harness/templates/agent-home/agent/APPEND_SYSTEM.md:28-31</code>).
+The model supplies the arguments. The harness adds no scope and filters
+nothing on the result beyond checking its shape.</p>
+<p><strong>Validated query.</strong> Hits that match no registry row are
+kept as <code>unbound:</code> candidates with state <code>unknown</code>
+and rejected by the policy, as are rows whose source drifted. The
+surviving rows are sorted by evidence class, then the
+<code>observed_at</code> string, then the palace similarity, and cut to
+the limit (<code>memory_retrieval_policy.py:63-66</code>). The row
+returned carries the registry's <code>safe_text</code>, never the palace
+text. Two refusals run before any search: a query matching
+<code>plaintext|password|passcode|access code|api key|secret|token|credential</code>
+abstains, so a question about a token budget gets nothing, and a
+<code>safe_text</code> matching the same words is rejected
+(<code>:12</code>, <code>:27-34</code>, <code>:53-55</code>).</p>
+<p><strong>Project knowledge</strong> is FTS5 BM25 over quoted tokens,
+at most 32 of them, returning path, hash, line range and a 24-token
+snippet (<code>project_knowledge.py:265-289</code>).</p>
+<p><strong>Delivery.</strong> <code>project_prepare</code> records each
+local file and hash a result cites, and the <code>context</code> hook
+re-hashes them when the packet reaches the model
+(<code>pi-kanban.ts:426-433</code>, <code>:457-466</code>). Palace URIs
+are skipped there, on the comment that the validated query already
+verified them.</p>
+<p><strong>Failure modes.</strong> In an install, the validated query
+returns nothing for every query, so the model's memory is the unscoped
+palace search across every project's sessions and the per-project index.
+The palace search can return a session from another project whose words
+match; captured exports say they are not instructions, and the
+capability catalogue calls hits guidance
+(<code>harness/home.py:472</code>); that wording is the defence.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Transcripts</strong> are written without any model call. The
+export keeps user and assistant text, peer messages under an "untrusted"
+heading, and one line per tool result with name, time and error flag;
+thinking, tool arguments and tool outputs are left out
+(<code>capture.py:201-266</code>). Redaction is three regular
+expressions for bearer tokens, common key prefixes and
+<code>key=value</code> pairs. Capture of one session never imports
+another, and a repeated unchanged source does not refresh its capture
+time (<code>adapters/pi/memory-capture/README.md</code>). Deduplication
+is MemPalace's.</p>
+<p><strong>Closeouts</strong> are written by the model through a tool,
+gated on the receipt. The model chooses the summary and lessons freely
+within length limits; the check is that a supervised step was accepted
+and its outputs are unchanged, not that the lessons describe it.</p>
+<p><strong>Candidates</strong> are compiled from a closeout and a
+snapshot file the caller names. The compiler never opens the palace: the
+tool description says it binds the closeout <em>"to one exact MemPalace
+drawer readback"</em>, and the readback is whatever JSON the caller
+placed in the project. A fabricated snapshot with the canonical payload
+as <code>content</code> passes; the drawer would be checked only if the
+claim ever reached the registry, where <code>live_search</code> reads it
+back.</p>
+<p><strong>Correction and deletion.</strong> None in the harness. A
+closeout cannot be rewritten under the same <code>task_id</code>. A
+wrong lesson stays in the project index until a person deletes the file
+and the next rebuild drops it. Nothing in this tree deletes a palace
+drawer, and the MemPalace MCP server is registered whole, so whether the
+model can delete one is MemPalace's question.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Capture runs in an awaited handler on <code>agent_settled</code> with
+a 150-second budget plus 15 seconds of grace
+(<code>memory-capture.ts:37</code>, <code>:60</code>), followed by CPU
+mining; whether Pi holds the next turn while the handler runs is not
+established from this tree. A session is retrievable from the palace
+once mining finishes after the turn settles. The project index is
+rebuilt in full, every included file re-read and re-chunked into a new
+database, after every completed supervised step
+(<code>pi-kanban.ts:844</code>) and at every closeout, so its cost grows
+with the project rather than with the step. <code>project_prepare</code>
+delivers at most 64 KiB when called; nothing is injected otherwise.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent is Pi 1.4.0. Its default native tools are
+<code>read</code>, <code>ls</code>, <code>find</code> and
+<code>grep</code> (<code>harness/home.py:441</code>); file changes go
+through <code>workflow_step</code>. The extensions loaded for a non-core
+profile are the capability and system-tool tools, the Kanban and project
+workflow, <code>validated-memory-query.ts</code>,
+<code>everyday-workflow.ts</code> and <code>memory-capture.ts</code> on
+Linux, bounded compaction, and on the full profile
+<code>claude-memory.ts</code> and the harness lab
+(<code>harness/home.py:425-437</code>).</p>
+<p>Memory tools on the model's surface:
+<code>validated_memory_query</code>,
+<code>project_knowledge_query</code>,
+<code>project_knowledge_rebuild</code>,
+<code>project_closeout_prepare</code>,
+<code>project_memory_candidate_prepare</code>,
+<code>pi_memory_capture_status</code>, <code>project_prepare</code>, the
+whole MemPalace MCP server behind <code>tool_search</code>, and on the
+full profile <code>claude_memory_status</code> and
+<code>claude_memory_search</code>. A managed child agent gets a fixed
+allow-list that includes <code>validated_memory_query</code>,
+<code>project_knowledge_query</code> and
+<code>mcp__mempalace__mempalace_search</code> and no writer
+(<code>adapters/pi/project-workflow/managed-child.ts:8-10</code>).</p>
+<p>The home CLI adds <code>memory dream-preview --project</code>, which
+runs the Dream review under the home's consumer lease and refuses
+<code>--query</code> (<code>harness/home.py:1044-1048</code>,
+<code>:1158-1170</code>).</p>
+<p>Adapting this to another agent means re-implementing the Pi hooks:
+the gate, the delivery check and the capture triggers all use Pi's
+<code>tool_call</code>, <code>context</code>, <code>tool_result</code>,
+<code>agent_settled</code> and <code>session_shutdown</code> events. The
+SSOT controller (<code>ssot/</code>) is the part written to be
+harness-neutral, and it holds task state, not memory.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-registry-has-no-producer">The registry has no producer</h3>
+<p>The registry file is written empty when the home is created
+(<code>harness/home.py:417</code>), its hash is recorded as the SHA-256
+of the empty string (<code>:382</code>), and the Pi wrapper refuses to
+run when the file's hash differs from that recorded value
+(<code>validated-memory-query.ts:39-41</code>). Doctor reports any
+change as <em>"validated memory registry changed without reviewed
+promotion"</em> (<code>harness/home.py:849-851</code>). Nothing in the
+tree writes a row or updates <code>validated_registry_sha256</code>: a
+person must append rows by hand and edit <code>home.json</code>.
+<code>MEMORY-DREAM.md</code> lists <em>"explicit owner-reviewed
+promotion"</em> under the next necessary stage. The design is sound and
+declared: retrieval is held to reviewed claims, and promotion is kept
+out of the agent's reach. As shipped, the validated path abstains on
+every query, and the gate in <code>pi-kanban.ts:791-798</code> counts
+that abstention as the memory search the planner was required to
+make.</p>
+<h3 id="what-verified-covers">What "verified" covers</h3>
+<p>A closeout's authority comes from a receipt whose verifier the model
+wrote. The negative control proves only that the predicate rejects an
+empty directory. The supervisor digests the project around the verifier
+runs and not around the action
+(<code>harness/enforcement.py:541-559</code>), so the action is not
+confined to its declared outputs. The SSOT controller's "independent"
+acceptor is an owner string in the project file and a command-line
+argument compared with it (<code>ssot/control.py:576-584</code>,
+<code>:1216-1224</code>), and the controller refuses
+<code>blessed</code> outright (<code>:344-347</code>), which is honest
+about where local verification ends.</p>
+<h3 id="cross-project-recall">Cross-project recall</h3>
+<p>Every Pi session in the home is mined into one wing. The validated
+path would narrow hits to reviewed claims; the path that works in an
+install, the raw palace search, does not narrow them by project, and the
+gate accepts it.</p>
+<h3 id="documents-against-the-code">Documents against the code</h3>
+<p><code>adapters/pi/project-workflow/README.md</code> step 12 says to
+read the stored drawer back exactly and bind the closeout to it; the
+compiler reads a file the caller supplies and never the palace. The
+README lists "Source-bound memory retrieval" as available; it is
+available with an empty registry. The gate's refusal text asks the model
+to <em>"Search local Pi MemPalace for relevant validated lessons"</em>
+(<code>pi-kanban.ts:726</code>), and the palace search it accepts
+returns unvalidated transcript chunks.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code> — withheld.</strong> Nothing records
+a rejected value. The <code>superseded</code> state is a status on a
+registry row keyed by source and claim hash, and no code writes it.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> The
+<code>state</code> field and the five rejecting states are filtered on
+read (<code>memory_retrieval_policy.py:19</code>, <code>:44-46</code>),
+which is the shape the mark asks for. No path a user or the agent can
+reach writes a registry row, and the one compiler that produces the
+row's shape writes only <code>current</code>, into a candidate file
+nothing promotes. The Dream statuses are computed per call and stored
+nowhere; the capture and closeout records have no status.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>observed_at</code> is a record time and <code>valid_to</code> is
+treated as a flag, both on rows nothing writes.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> The project
+index is one SQLite file per project with a whole-file identity check, a
+physical partition. The palace rows carry no project key and the
+harness's own search passes no wing or room
+(<code>validated_memory_query.py:197</code>). The Kanban
+<code>tenant</code> predicate (<code>pi_kanban.py:630</code>) scopes
+task cards, which are work items, not memory.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> The SSOT
+controller keeps hash-chained append-only events and the supervisor an
+<code>events.jsonl</code> per run; both record task execution and
+verification, not memory changes. Capture receipts record what was
+exported and mined, by overwriting <code>latest.json</code>.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Candidates
+wait as <code>project_local_candidate</code> in a directory nothing
+drains, and the only route into the registry is hand-editing two files,
+which is authoring rather than a review surface. Every transcript and
+closeout is searchable as soon as it is written.</li>
+<li><strong><code>negative_eval</code> — withheld.</strong>
+<code>tests/test_validated_memory.py:53-66</code> is a real negative
+assertion: the same populated search result that returns the reviewed
+summary in the test at <code>:45-51</code> returns nothing once the
+registry row is <code>obsolete</code>, <code>superseded</code> or any
+other rejecting state, or once the source file changes. It asserts
+against a registry no code fills, so it establishes the filter and not
+anything a running home retrieves.
+<code>tests/test_project_library.py:64-81</code> requires a corrected
+word to leave the index after a rebuild, with the new word as a control;
+the index is a document index over project files, and the assertion is
+that it reflects them.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The Python suite is large and specific to its claims. The
+memory-relevant files: <code>tests/test_validated_memory.py</code> (10
+functions), <code>test_project_library.py</code> (21),
+<code>test_pi_memory_capture.py</code> (18),
+<code>test_memory_runtime.py</code> (20),
+<code>test_memory_dream.py</code> (23),
+<code>test_memory_dream_mempalace.py</code> (6),
+<code>test_claude_memory.py</code> (30) and
+<code>test_session_catalog.py</code> (16). CI runs them through unittest
+discovery over <code>tests/</code> on Ubuntu and Windows
+(<code>scripts/verify_ssot_release.py:39-49</code>).</p>
+<p>Checked for whether they can fail:</p>
+<ul>
+<li>The validated-memory negatives use one fixture with a positive
+control in the neighbouring test, so the abstentions are not vacuous.
+<code>test_complete_pi_wrapper_to_python_and_registry_drift</code>
+(<code>:132-178</code>) loads the TypeScript wrapper in a VM, confirms
+an empty registry abstains, then changes the registry file and requires
+the wrapper to refuse. It skips without Node 22.13.</li>
+<li><code>test_memory_dream_mempalace.py</code> drives the real
+validated query against a synthetic source and registry and requires the
+converter to refuse a superseded state, a <code>valid_to</code>, a
+remote source path and an injected <code>execution_authority</code>
+(<code>:169-202</code>).</li>
+<li><code>test_project_library.py:64-81</code> asserts the stale
+snapshot still answers through <code>query</code> while
+<code>current</code> withholds every result, which documents the gap
+between the path the agent uses and the strict one.</li>
+<li><code>adapters/pi/project-workflow/test_memory_claim_candidate.py</code>
+(four functions) sits outside <code>tests/</code> and is not discovered
+by the release gate.</li>
+<li>The 32 <code>.mjs</code> scripts are qualification runs against an
+installed Pi package and are not run by CI.</li>
+</ul>
+<p>There is no retrieval-quality evaluation.
+<code>MEMORY-DREAM.md</code> mentions a private local test in which a Q4
+model produced two proposals and says it is not proof of ranking or
+quality; nothing from it is committed. No paper is cited; the one
+<code>arXiv</code> match in the tree is in research-tool
+documentation.</p>
+<p>Before trusting the memory side I would want a test that a session
+captured in one project is not returned by the gate's memory query in
+another, and a test that a closeout whose lessons contradict its receipt
+is refused or marked.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Return the reviewed text, not the retrieved text.</strong> A
+hit that matches a reviewed claim is answered with the claim's stored
+safe summary, so an injected or noisy chunk cannot reach the model
+through a match.</li>
+<li><strong>Hash the cited source at delivery, not only at
+retrieval.</strong> The preparation packet counts as delivered only if
+every file it cites still hashes the same when the model sees it.</li>
+<li><strong>Bind a lesson to an accepted run.</strong> A closeout that
+cannot be written without a receipt whose outputs still hash the same is
+a cheap guard against lessons from work that never happened.</li>
+<li><strong>Verify the miner's coverage.</strong> Comparing stored
+chunks with the chunker's expected output, and forcing a re-mine of a
+partial file, catches a silent half-import.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A gate that accepts an abstention.</strong> If a memory
+query is a precondition, a query that cannot return anything should not
+satisfy it.</li>
+<li><strong>A trust tier with no door.</strong> A registry kept away
+from the agent needs a person-facing promotion command, or the tier
+stays empty and the unscoped path does the work.</li>
+<li><strong>Calling a self-written predicate independent.</strong>
+Process separation and a negative control are worth having; they do not
+make the model's own check a second opinion.</li>
+<li><strong>One recall pool for every project.</strong> Captured history
+needs the project key on the record if anything reads it across
+projects.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for one person running a local model on a Linux workstation
+who wants an agent that does supervised file work and keeps a durable
+record of it. The engineering effort is in process ownership, hashing
+and refusal paths, and it is thorough. As memory it is MemPalace plus a
+per-project text index plus a reviewed tier that is not yet reachable. A
+reader who wants the source-binding idea should take the policy and the
+delivery check and build the promotion step. A reader who needs memory
+that corrects itself or keeps projects apart in recall should not adopt
+it. The MemPalace layer has its own report, <a
+href="../mempalace/">MemPalace</a>, and so does the host, <a
+href="../pi/">Pi</a>.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether Pi 1.4.0 awaits an <code>agent_settled</code> handler before
+accepting the next prompt, which decides whether capture and mining
+block the user.</li>
+<li>Which MemPalace tools the deferred MCP surface exposes to the model,
+including any that write or delete drawers.</li>
+<li>How MemPalace's <code>--mode projects</code> assigns rooms to
+exports whose names are a path hash and a session stem, and whether
+anything recoverable about the project survives into drawer
+metadata.</li>
+<li>Whether the author's own deployment fills the registry by a process
+outside this tree; the adapter header says it was derived from a
+reviewed parent file in a private source.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Home, profiles, pins, settings, MCP config, doctor:
+<code>harness/home.py</code>, <code>harness/home_entry.py</code>,
+<code>harness/maintenance.py</code></li>
+<li>MemPalace runtime: <code>harness/memory_runtime.py</code></li>
+<li>Capture: <code>adapters/pi/memory-capture.ts</code>,
+<code>adapters/pi/memory-capture/capture.py</code>,
+<code>adapters/pi/memory-capture/verify.py</code></li>
+<li>Validated retrieval:
+<code>adapters/pi/memory/validated-memory-query.ts</code>,
+<code>adapters/pi/memory/validated_memory_query.py</code>,
+<code>adapters/pi/memory/memory_retrieval_policy.py</code></li>
+<li>Closeout, candidate, project knowledge, identity:
+<code>adapters/pi/project-workflow/project_closeout.py</code>,
+<code>adapters/pi/project-workflow/memory_claim_candidate.py</code>,
+<code>adapters/pi/project-workflow/project_knowledge.py</code>,
+<code>adapters/pi/project-workflow/project_identity.py</code></li>
+<li>Tools, gate, preparation, delivery:
+<code>adapters/pi/project-workflow/pi-kanban.ts</code>,
+<code>adapters/pi/project-workflow/pi_kanban.py</code>,
+<code>adapters/pi/project-workflow/managed-child.ts</code></li>
+<li>Supervision:
+<code>adapters/pi/project-workflow/everyday-workflow.ts</code>,
+<code>adapters/pi/project-workflow/everyday_workflow.py</code>,
+<code>harness/enforcement.py</code>; SSOT controller
+<code>ssot/control.py</code></li>
+<li>Dream review: <code>harness/memory_dream.py</code>,
+<code>MEMORY-DREAM.md</code>,
+<code>MEMORY-SOURCE-ADAPTERS.md</code></li>
+<li>Claude-mem: <code>harness/claude_memory.py</code>,
+<code>adapters/pi/claude-memory.ts</code></li>
+<li>Home context templates:
+<code>harness/templates/agent-home/</code></li>
+<li>Tests: <code>tests/test_validated_memory.py</code>,
+<code>tests/test_project_library.py</code>,
+<code>tests/test_pi_memory_capture.py</code>,
+<code>tests/test_memory_dream.py</code>,
+<code>tests/test_memory_dream_mempalace.py</code>,
+<code>adapters/pi/project-workflow/test_memory_claim_candidate.py</code>,
+<code>scripts/verify_ssot_release.py</code>,
+<code>.github/workflows/offline-release.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Nothing writes a registry row.</strong>
+<code>git grep -n -E 'validated-memory\.jsonl' -- . ':!tests'</code>
+returns <code>harness/home.py:206</code>, <code>:417</code> (the empty
+write), <code>:849</code> and <code>harness/maintenance.py:31</code>.
+<code>git grep -n validated_registry_sha256 -- . ':!tests'</code>
+returns <code>harness/home.py:259</code>, <code>:382</code> and
+<code>:850</code>.</li>
+<li><strong>Nothing reads the candidates directory except the
+index.</strong> <code>git grep -n 'memory-candidates' -- .</code>
+returns <code>memory_claim_candidate.py:93</code>, its test and the
+workflow README.</li>
+<li><strong>The harness writes or deletes no drawer.</strong>
+<code>git grep -n -E 'add_drawer|delete_drawer|tool_add|diary_write' -- .</code>
+returns nothing; the control
+<code>git grep -n -E 'tool_get_drawer|tool_list_drawers' -- . ':!tests'</code>
+matches <code>adapters/pi/memory/validated_memory_query.py:196</code>,
+<code>:207</code> and <code>:217</code>.</li>
+<li><strong>The harness passes no wing to a search.</strong>
+<code>git grep -n -E 'wing=' -- adapters harness</code> returns only
+<code>validated_memory_query.py:217</code>, a
+<code>tool_list_drawers</code> call.</li>
+<li><strong>No value-keyed refusal.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|do_not_remember' -- harness adapters ssot</code>
+returns nothing; adding <code>|supersed</code> to the pattern matches
+<code>memory_retrieval_policy.py:19</code> and unrelated lines in
+<code>adapters/pi/intake/request-intake-138.ts</code>,
+<code>harness/executor.py</code> and
+<code>harness/project.py</code>.</li>
+<li><strong>No delete in the memory paths.</strong>
+<code>git grep -n -i -E 'forget|unlink\(|DELETE FROM' -- adapters/pi/memory adapters/pi/memory-capture adapters/pi/project-workflow/project_knowledge.py adapters/pi/project-workflow/project_closeout.py adapters/pi/project-workflow/memory_claim_candidate.py harness/memory_runtime.py harness/memory_dream.py</code>
+returns five <code>unlink</code> calls on temporary or hub-owner files
+(<code>capture.py:493</code>, <code>:522</code>,
+<code>project_knowledge.py:238</code>,
+<code>memory_runtime.py:275</code>, <code>:435</code>).</li>
+<li><strong>The agent's knowledge query uses the snapshot path.</strong>
+<code>git grep -n -E 'from project_knowledge|knowledge\.current|_inspect_current' -- . ':!tests'</code>
+returns the <code>build</code> and <code>query</code> imports in
+<code>pi_kanban.py:31-32</code>, <code>build</code> imports in
+<code>project_closeout.py:14</code> and
+<code>project_skill_candidate.py:14</code>, and the definitions in
+<code>project_knowledge.py</code>.</li>
+<li><strong>No code writes the home context files.</strong>
+<code>git grep -n -E 'lessons\.md|profile\.md|current\.md' -- '*.py' '*.ts' '*.mjs' ':!tests'</code>
+returns only the template list at <code>harness/home.py:41</code>.</li>
+<li><strong>The <code>.mjs</code> scripts are not in the release
+gate.</strong>
+<code>git grep -n -E 'mjs|node' -- scripts/verify_ssot_release.py</code>
+returns nothing.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo|CITATION' -- .</code>
+returns <code>AGENT-HOME.md:593</code>, about arXiv pages in web
+research, and occurrences of "citation" in research and diagnostics
+documents.</li>
+<li><strong>No submodules.</strong> The clone has no
+<code>.gitmodules</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-25</strong> — <a
+href="https://github.com/scruge1/stuaim/commit/c8eb2878f4fbe3daf2c5a3e2addaa98788496fbc"><code class="commit-id" title="c8eb2878f4fbe3daf2c5a3e2addaa98788496fbc">c8eb2878…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, the
+commit triage selected; no submodules. Screened first: no auto-run
+surface, nothing inside the seven-day cooldown, no build-time execution,
+two unpinned surfaces (<code>pyproject.toml</code> with no lockfile,
+<code>requirements.txt</code> with two floating ranges).
+<code>AGENTS.md</code> is addressed to a reading agent and was read as
+data, as were the prompts and skills under
+<code>harness/templates</code>. Nothing was installed, built or run, and
+none of the tests were run. No marks: the reviewed-claim registry that
+would carry <code>trust_state</code> and <code>negative_eval</code> has
+no producer, and recall across projects is one palace wing (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

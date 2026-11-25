@@ -277,6 +277,8 @@ new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
 
 [Mem-Forever](../../systems/mem-forever/) checks an owner quote against the transcript by hash. `evidence add --transcript` stores a quote as `owner_verbatim` only when the first eight hex characters of its SHA-256 match a `type: user` turn of a Claude Code JSONL, or one of its paragraphs; without a match it is `owner_claimed`, and `provenance repair` downgrades any `by:owner_verbatim` block whose `q:` is unbacked (`tools/brain.py:3528-3603`, `:3621-3642`, `:3702-3705`). The check covers one source value of three: `by:owner_confirmed` needs no quote at all, and `evidence confirm`, the owner's backing, is a command the agent can run (`:3643-3678`).
 
+[STUAIM](../../systems/stuaim/) checks the source at read time, twice. `validated_memory_query` answers a MemPalace hit only through a reviewed registry row keyed on the source path and the hash of the claim's normalized text, re-hashes a local source against the row's `source_sha256`, and returns the row's `safe_text` rather than the retrieved chunk (`adapters/pi/memory/validated_memory_query.py:131-182`); the preparation packet re-hashes every cited local file when it reaches the model (`adapters/pi/project-workflow/pi-kanban.ts:426-433`, `:457-466`). A closeout carries the hash of the supervisor receipt it was written against. The evidence end is missing: the registry is created as an empty file with its hash pinned, no code adds a row, and every validated query abstains in an install.
+
 ### Related: admission gates rather than evidence
 
 These decide what may become a belief — a shared derivation, a confirmation turn,

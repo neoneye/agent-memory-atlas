@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 879 reports.**
+**This page covers all 880 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8113,3 +8113,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 with a profile-capped commercial licence announced for 1.0; 13,876 lines of Python in 82 commits between 21 April and 15 November 2026, 37 of them by Cursor Agent; 243 test functions with 45 acceptance evals and a benchmark whose control arm must fail, none run here. The isolation tests run with the graph overlays off. Five marks: `trust_state`, `bitemporal`, `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you need a wish and a confirmed fact to be different objects before an agent books, pays or prescribes, and the host knows who is speaking.
 - Do not copy when: the model drives the memory tools on a shared multi-user server, or a person must approve a fact before an action can rely on it.
+
+### [`stuaim`](../systems/stuaim/)
+- Best idea: **answer with the reviewed text, and only while the source is unchanged.** `validated_memory_query` binds a MemPalace hit to a registry row by source path and the hash of the normalized claim text, re-hashes a local source against the row, drops rows in five rejecting states or with any `valid_to`, and returns the row's `safe_text` instead of the palace chunk (`adapters/pi/memory/validated_memory_query.py:131-182`, `adapters/pi/memory/memory_retrieval_policy.py:19-66`).
+- Second idea: delivery is checked, not only retrieval. `project_prepare` collects every local file its results cite, and a `context` hook counts the discovery as done only when the exact packet reached the model and each file still hashes the same.
+- Biggest risk: **the reviewed tier cannot be filled.** The registry is written empty with its hash pinned in `home.json`; no code appends a row or re-pins the hash, candidates wait in a directory nothing reads, and the gate that requires a memory search before planning accepts the validated query's abstention, so the memory that works is an unscoped palace search.
+- Second risk: "independently verified" is the model's own predicate run in a separate process, with a negative control in an empty directory, and the supervisor digests the project around the verifier and not around the action. A closeout's lessons are free text checked only for credential words, and every project's sessions share one palace wing.
+- Most reusable component: `adapters/pi/memory/memory_retrieval_policy.py` with `bind_candidates` in `adapters/pi/memory/validated_memory_query.py`, and the delivery check in `adapters/pi/project-workflow/pi-kanban.ts:426-482`.
+- Maturity impression: MIT; 287 commits from 7 September to 9 November 2026 under two author names on one account; 29,800 lines of Python outside tests, 3,718 of them on memory paths, wrapping MemPalace 3.11.0 and Pi 1.4.0; 1,019 Python test functions, run in CI on Ubuntu and Windows, none run here. No marks.
+- Study when: you want retrieval held to a reviewed, hash-bound claim set, or a lesson that cannot be written without a host receipt.
+- Do not copy when: projects must stay apart in recall, or a memory has to be corrected or forgotten.
