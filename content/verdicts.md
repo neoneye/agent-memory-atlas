@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 901 reports.**
+**This page covers all 902 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8333,3 +8333,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: no licence; 13,886 lines of Python under `romem/`, a HippoRAG fork with a 3,893-line temporal KGE, and 17,814 under `benchmarks/`; four commits by one author between 25 May and 27 September 2026, all the code in the first; no tests; 57 committed result files from which the paper's tables recompute, one cell excepted. No marks.
 - Study when: you are deciding whether to rank temporal contradictions instead of resolving them, or want a relation-aware time decay for a reranker over dated facts.
 - Do not copy when: memory must accept writes between queries, retract a mistaken fact, keep repeated events apart, or ship under a licence.
+
+### [`ecodb`](../systems/ecodb/)
+- Best idea: **a view of what is in force, built from marks the server writes.** A save lists the memories it replaces, the API stamps `superseded_by`, a kind and who marked it on each old row and refuses a second mark, `PUT` cannot set or clear it, and `GET /decisiones/vigentes` follows each chain to its end, drops expired rows and reports cycles; populated tests require exactly the last link of a chain and the replacement alone.
+- Second idea: one SQL visibility function for every memory read. `check_visibility` resolves super, CEO, workspace lead, project lead, member and team grants per row from the key's user, and search, recent, read by id and the decisions route call the same function; a replacement the caller cannot read is reported as replaced without its id.
+- Biggest risk: **the boundary covers the memory table and nothing derived from it.** Entity names from every memory, private ones included, go into one AGE graph that every organization reads through `/graph/all`, `/graph/neighbors` and `/graph/search`, and any user can delete any triple; the cell worker selects an agent's memories with no visibility predicate and writes its tension and generic outputs as public rows in the common project.
+- Second risk: the quick start makes the MCP server's single key the super user's, so every connected agent bypasses scope as one principal, and audit rows never name the agent. A CEO reads every private memory in the organization without the audited override. A deleted memory survives in `trash`, whose 90-day retention nothing reads, and in cluster narratives. Clusters are written `active` though the README says each consolidation is reviewable before it is trusted.
+- Most reusable component: `check_visibility` in `sql/init.sql:696-748`, `vigentes()` in `api/vigentes.py:51-114`, the supersede validation and mark in `api/memories.py:455-479` and `:591-607`, and the paired isolation fixtures in `api/tests/test_multitenant.py`.
+- Maturity impression: PolyForm Noncommercial 1.0.0; 259 commits from 20 May to 24 November 2026, the first one v1.0.0, almost all by one author; 21,685 lines of API Python; 652 api and mcp test functions run in CI against a real Postgres with a 713-test floor, none run here. The LoCoMo K=20 figures recompute from the committed results; the K=10 column leaves out 95 failed queries. Four marks: `trust_state`, `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you need team memory where a decision can be replaced and an agent can ask what is in force, or a per-row visibility rule shared by every read.
+- Do not copy when: a second tenant shares the instance, derived structures must respect the source's scope, a deletion must remove the content, or the deployment is commercial.

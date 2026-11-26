@@ -2129,6 +2129,26 @@ pinning both facts
 <code>save_memory</code> still advertises it, so the model can write a
 row that prompt recall never returns (<code>:141</code>). No fixture
 holds a second user.</p>
+<p><a href="../../systems/ecodb/">EcoDB</a> shares one SQL predicate
+across every memory read and leaves the structures derived from those
+rows outside it. <code>check_visibility</code> resolves super, CEO,
+workspace lead, project lead, member and team grants per row from the
+key's user, and search, recent, read by id and the decisions route all
+call it, with populated cross-organization tests
+(<code>sql/init.sql:696-748</code>, <code>api/search.py:1437</code>,
+<code>:1474-1481</code>, <code>api/memories.py:1117-1131</code>,
+<code>api/tests/test_multitenant.py:299-318</code>). Entity linking runs
+on every memory, private ones included, into one AGE graph with no
+organization key, which every authenticated user reads and from which
+any user can delete a triple; the project's design note calls this
+<em>"Phase 0"</em> (<code>api/graph.py:722-756</code>,
+<code>:852-892</code>,
+<code>docs/design/graph-org-scoping.md:77</code>). The cell worker
+selects an agent's memories with no visibility predicate and writes its
+outputs as public rows in the common project
+(<code>api/cell_worker.py:405-411</code>, <code>:2704-2707</code>), and
+the documented MCP key is the super user's, for which the predicate
+returns true (<code>api/bootstrap_first_apikey.py:36-39</code>).</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

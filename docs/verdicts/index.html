@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 901 reports.</strong></p>
+<p><strong>This page covers all 902 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37392,6 +37392,57 @@ reranker over dated facts.</li>
 <li>Do not copy when: memory must accept writes between queries, retract
 a mistaken fact, keep repeated events apart, or ship under a
 licence.</li>
+</ul>
+<h3 id="ecodb"><a href="../systems/ecodb/"><code>ecodb</code></a></h3>
+<ul>
+<li>Best idea: <strong>a view of what is in force, built from marks the
+server writes.</strong> A save lists the memories it replaces, the API
+stamps <code>superseded_by</code>, a kind and who marked it on each old
+row and refuses a second mark, <code>PUT</code> cannot set or clear it,
+and <code>GET /decisiones/vigentes</code> follows each chain to its end,
+drops expired rows and reports cycles; populated tests require exactly
+the last link of a chain and the replacement alone.</li>
+<li>Second idea: one SQL visibility function for every memory read.
+<code>check_visibility</code> resolves super, CEO, workspace lead,
+project lead, member and team grants per row from the key's user, and
+search, recent, read by id and the decisions route call the same
+function; a replacement the caller cannot read is reported as replaced
+without its id.</li>
+<li>Biggest risk: <strong>the boundary covers the memory table and
+nothing derived from it.</strong> Entity names from every memory,
+private ones included, go into one AGE graph that every organization
+reads through <code>/graph/all</code>, <code>/graph/neighbors</code> and
+<code>/graph/search</code>, and any user can delete any triple; the cell
+worker selects an agent's memories with no visibility predicate and
+writes its tension and generic outputs as public rows in the common
+project.</li>
+<li>Second risk: the quick start makes the MCP server's single key the
+super user's, so every connected agent bypasses scope as one principal,
+and audit rows never name the agent. A CEO reads every private memory in
+the organization without the audited override. A deleted memory survives
+in <code>trash</code>, whose 90-day retention nothing reads, and in
+cluster narratives. Clusters are written <code>active</code> though the
+README says each consolidation is reviewable before it is trusted.</li>
+<li>Most reusable component: <code>check_visibility</code> in
+<code>sql/init.sql:696-748</code>, <code>vigentes()</code> in
+<code>api/vigentes.py:51-114</code>, the supersede validation and mark
+in <code>api/memories.py:455-479</code> and <code>:591-607</code>, and
+the paired isolation fixtures in
+<code>api/tests/test_multitenant.py</code>.</li>
+<li>Maturity impression: PolyForm Noncommercial 1.0.0; 259 commits from
+20 May to 24 November 2026, the first one v1.0.0, almost all by one
+author; 21,685 lines of API Python; 652 api and mcp test functions run
+in CI against a real Postgres with a 713-test floor, none run here. The
+LoCoMo K=20 figures recompute from the committed results; the K=10
+column leaves out 95 failed queries. Four marks:
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Study when: you need team memory where a decision can be replaced
+and an agent can ask what is in force, or a per-row visibility rule
+shared by every read.</li>
+<li>Do not copy when: a second tenant shares the instance, derived
+structures must respect the source's scope, a deletion must remove the
+content, or the deployment is commercial.</li>
 </ul>
         </article>
       </div>

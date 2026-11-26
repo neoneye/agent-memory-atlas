@@ -949,6 +949,28 @@ the machine are reachable by the model: <code>source</code> and
 <code>user_stated</code> write at 0.7 or more is trusted on arrival, and
 <code>confirm</code> is an MCP tool
 (<code>contextdb/mcp.py:76-90</code>, <code>:429-433</code>).</p>
+<p><a href="../../systems/ecodb/">EcoDB</a> has two layers of state and
+filters each in a different place. A save may mark older memories
+superseded with a kind of <code>total</code>, <code>parcial</code> or
+<code>nunca_valida</code>, which only the old memory's author or a
+person may set, and the server writes the mark
+(<code>api/memories.py:455-479</code>, <code>:591-607</code>). Search
+returns a superseded or expired memory with a warning and an unchanged
+score, by a decision its test records, and the injected context block
+drops the warning; only the decisions-in-force route and the
+consolidation prompt leave such rows out
+(<code>api/tests/test_search_vigencia.py:1-4</code>,
+<code>mcp/server.py:1080-1082</code>,
+<code>api/vigentes.py:51-114</code>,
+<code>api/cell_worker.py:1033-1065</code>). The clusters above them
+carry <code>candidate</code>, <code>active</code>, <code>rejected</code>
+and <code>superseded</code>, and every cluster read keeps
+<code>active</code> only; the owner retires a cluster off the MCP
+surface, and the worker inserts every cluster <code>active</code>, so
+the <code>candidate</code> state has no producer
+(<code>sql/migrate_09_metacognition.sql:29-30</code>,
+<code>api/clusters.py:1011-1041</code>,
+<code>api/cell_worker.py:1327</code>).</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>
