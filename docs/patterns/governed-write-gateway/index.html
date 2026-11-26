@@ -443,6 +443,23 @@ types either passes every rule (<code>:2295</code>,
 boundaries, so a deleted owner fact or a deleted memory file goes
 through (<code>:3867-3872</code>, <code>:3921-3926</code>), and
 <code>--no-verify</code> reaches history around it.</p>
+<p><a href="../../systems/atmem/">AtMem</a> puts a deterministic gateway
+between a model and the store and leaves a second door beside it. On the
+control plane, AtBot's proposals reach <code>submit_proposal</code>,
+which admits one <code>active</code> only when its source is a
+host-authenticated message, the action is an add, sensitivity is
+ordinary, no active record conflicts on the fact key and no related
+record is tainted, and otherwise stores it <code>quarantined</code> with
+taint labels; a secret or a "do not remember" signal is refused before
+anything is written (<code>atmem/memory.py:492-720</code>). The host's
+control MCP refuses every tool outside an eleven-name allow-list, so it
+cannot review or activate (<code>atmem/control/server.py:127-128</code>,
+<code>:358-374</code>). The engine's own <code>atmem mcp</code> server,
+offered for any MCP host, takes <code>source_type</code> from the model
+with <code>user_message</code> in its enum, <code>subject_id</code> as
+an argument, and registers <code>memory_promote</code>
+(<code>atmem/mcp/server.py:128-150</code>, <code>:214</code>,
+<code>:954-960</code>).</p>
 <p><a href="../../systems/vellis/">Vellis</a> has the single gateway and
 a parameter that lowers it. Every graph mutation goes through
 <code>_apply_normalized_change_batch</code>, which resolves references,

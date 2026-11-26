@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 894 reports.**
+**This page covers all 895 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8263,3 +8263,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 59,084 lines of Python and 393 commits from 3 May to 26 November 2026 under four author names and dependabot, at 0.12.0a1; 5,161 test functions with lint and type gates in CI, none run here. The 83.0% PrefEval headline has a harness that forces the preference's type into a fresh database per item and no committed result, and the README cites it to an astrophysics paper. Three ledgers, including a reflection queue with approval and rollback, are reached only from tests. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you want one local memory file shared by several MCP clients with a deterministic, model-free write path and a scope the model cannot name.
 - Do not copy when: the user's latest statement must win, several projects share one file with rules, or stored content is encrypted and must be searchable.
+
+### [`atmem`](../systems/atmem/)
+- Best idea: **deletion that proves the derived copies are gone.** `forget` clears the record's content and fact key, purges its source episode, FTS rows, graph objects, media links and vector entries in one transaction, refuses to commit if the vector index cannot report the ids absent, and returns a receipt hashed over the audit event that records only a digest of the selector.
+- Second idea: shadow mode before influence. Every integration records candidates and the context it would have injected, and `prepare` returns `inject` only once an operator activates the mode; the framework adapters inject nothing without it.
+- Biggest risk: **the simplest integration hands the trust inputs to the model.** On `atmem mcp` the model passes `subject_id`, chooses `source_type` from an enum that includes `user_message`, and holds `memory_promote`, so the quarantine, the scope key and the review of quarantined records are all decided by the writer.
+- Second risk: the dashboard's memory review, decision, exclude, forget and activate routes need only a CSRF token that `GET /api/session` returns without sign-in, and a missing Origin passes; the persona and context-pack prefix read active records without the exclusion list; a forgotten text fact said again through `remember` is stored active; a Hermes V3 profile auto-approves every pending typed proposal under a standing administrator principal.
+- Most reusable component: `_purge_record_ids` and `forget` in `atmem/memory.py:4039-4400`, `tombstone_records` in `atmem/store/sqlite.py:3843-3960`, `append_audit_event` at `:4442-4500`, and `authorized` in `atmem/retrieve/hybrid.py:24-34`.
+- Maturity impression: Apache-2.0; about 235,000 lines of Python, a hundred thousand of them in the package, from 582 commits between 9 July and 22 November 2026, all but one by the maintainer, and 93 tags; 3,300 test functions, many named for the invariant they hold, none run here; a self-tested DolphinBench run whose 479 passing tasks in 600 recomputes from the hosted per-task file. Five marks: `trust_state`, `scope_enforced`, `audit_log`, `human_review`, `negative_eval`.
+- Study when: you want shadow-mode adoption, quarantine by source, verified deletion with receipts or a digest-only audit chain on a single machine.
+- Do not copy when: the agent itself connects to the memory server, or a forgotten fact must stay forgotten on every write path.

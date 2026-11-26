@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Python memory engine and
+control plane for agent runtimes: SQLite records with quarantine,
+hash-chained audit, verified deletion and governed context injection.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AtMem — Agent Memory Atlas">
+    <meta property="og:description" content="A local Python memory
+engine and control plane for agent runtimes: SQLite records with
+quarantine, hash-chained audit, verified deletion and governed context
+injection.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AtMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Python memory
+engine and control plane for agent runtimes: SQLite records with
+quarantine, hash-chained audit, verified deletion and governed context
+injection.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AtMem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AtMem",
+      "description": "A local Python memory engine and control plane for agent runtimes: SQLite records with quarantine, hash-chained audit, verified deletion and governed context injection.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Untrusted sources wait in quarantine, and a
+forget purges every derived copy with a receipt</p>
+          <h1>AtMem</h1>
+          <p class="document-deck">A local Python memory engine and
+control plane for agent runtimes: SQLite records with quarantine,
+hash-chained audit, verified deletion and governed context
+injection.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/aetna000/atmem">
+              <span>Source</span>
+              <strong>aetna000/atmem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/aetna000/atmem/commit/681c70ee045de863ea7aee56d721bb9da965cc60" title="681c70ee045de863ea7aee56d721bb9da965cc60">
+              <span>Analyzed revision</span>
+              <code>681c70ee…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/aetna000--atmem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>aetna000--atmem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE, both Python manifests, the OpenClaw bridge, the TypeScript
+SDK and the ChatGPT plugin; vendored Hermes patches and benchmark result
+folders carry their own MIT files</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>234,843
+lines of Python in 1,336 files, 100,770 of them in the atmem package,
+where memory.py (5,754) and store/sqlite.py (7,873) hold the engine;
+2,218 in the AtBot companion package; 4,037 lines of TypeScript in the
+OpenClaw bridge and the TypeScript SDK</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>582
+commits from 9 July to 22 November 2026, 581 from the maintainer under
+two addresses and one from another contributor; 93 tags, the newest
+v2.3.16b2</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>3,300
+test functions in tests/ and 19 in packages/atbot/tests, plus 18 Node
+test files for the OpenClaw bridge; ci.yml runs pytest over the tree and
+the AtBot suite; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AtMem is a local Python memory engine for agents, wrapped in a
+control plane that decides whether its context reaches a model. Memory
+is one SQLite database of records, each derived from a stored episode.
+What is notable is how much of the correction lifecycle is code rather
+than prose. Untrusted sources land quarantined and every read arm
+filters them. Deletion purges the derived graph, media links and vector
+entries and returns a receipt. Every mutation lands in a hash-chained
+audit log that stores digests, and a typed unit the user excluded is
+refused when the same occurrence is formed again, though not when it is
+restated with a new timestamp. What is weak is the surface an agent
+holds in the simplest deployment: on <code>atmem mcp</code> the model
+chooses the subject, chooses whether its write is trusted, and can
+promote its own quarantined record.</p>
+<p>Around the engine sit a stdio MCP server, an OpenClaw bridge, Hermes,
+Pydantic AI and LangGraph adapters, a loopback dashboard and an "Agent
+Black Box" that records model and tool events. A forgotten text fact
+restated through <code>remember</code> is stored again, the persona
+block ignores retrieval exclusions, and the dashboard's memory routes
+accept a token any local process can fetch.</p>
+<p>The product has two layers that share one database. The memory engine
+(<code>atmem/memory.py</code>, <code>atmem/store/sqlite.py</code>) owns
+records, extraction, recall, supersession, deletion and audit. The
+control plane (<code>atmem/control/</code>) owns whether an integration
+is in shadow or active mode, a candidate review queue, topology of
+agents and workspaces, and the dashboard. A companion package, AtBot,
+proposes facts and ranks candidates through a local or hosted model;
+AtMem admits or refuses each proposal with deterministic policy.</p>
+<p><strong>Licence.</strong> Apache-2.0, in a root <code>LICENSE</code>
+that both Python manifests, the OpenClaw bridge, the TypeScript SDK and
+the ChatGPT plugin repeat. Vendored Hermes patches and five benchmark
+result folders carry their own MIT files from their upstreams, and the
+LoCoMo result file records the dataset's CC BY-NC 4.0 licence beside
+per-question rows. Nothing in the tree restricts use.</p>
+<p>Five marks are earned: <code>human_review</code> on the typed
+formation path, and <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code> on the canonical record store.
+<code>tombstone</code> and <code>bitemporal</code> are withheld. Section
+9 gives the reason for each and names the parts of the system that fail
+the same tests.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>record</strong>: one sentence, derived from an
+<strong>episode</strong> that holds the source message, with a source
+type, a trust tier, a status and an optional <code>fact_key</code> slot
+such as <code>preferred airport</code>
+(<code>atmem/store/sqlite.py:5120-5143</code>). A second unit sits
+beside it, a <strong>typed MemoryUnit</strong> of seven kinds with exact
+evidence spans into the source
+(<code>atmem/extract/models.py:216-233</code>). Records are what recall
+reads; typed units are stored as records once committed.</p>
+<p>How a thing becomes believed depends on who said it:</p>
+<ul>
+<li><strong>A user message</strong> classified as such becomes an
+<code>active</code> record at once. <code>classify_source</code> calls
+any message without an embedded <code>&lt;webpage&gt;</code> or
+<code>&lt;tool...&gt;</code> tag a user message
+(<code>atmem/core/policy.py:18-47</code>), and <code>remember</code>
+accepts a <code>source_type</code> argument that overrides it
+(<code>atmem/memory.py:3196</code>).</li>
+<li><strong>Embedded third-party content</strong> becomes a
+<code>quarantined</code> record. It is invisible to recall, list,
+persona and the governed candidate path until <code>promote</code> makes
+it <code>active</code> with trust tier <code>user_confirmed</code>
+(<code>atmem/core/policy.py:56-60</code>,
+<code>atmem/memory.py:4917-4994</code>).</li>
+<li><strong>An AtBot proposal</strong> through the control plane is
+<code>active</code> only when the source is a host-authenticated user or
+agent message, the suggested action is an add, sensitivity is ordinary,
+nothing conflicts on the fact key and no related record is tainted;
+otherwise it is <code>quarantined</code>
+(<code>atmem/memory.py:619-640</code>).</li>
+<li><strong>A typed unit</strong> is <code>committed</code>,
+<code>pending_review</code>, <code>noop</code> or <code>rejected</code>.
+Rules, gotchas and procedures always wait for review, and a unit whose
+occurrence identity matches an exclusion the user made earlier is
+rejected (<code>atmem/memory.py:880-935</code>).</li>
+</ul>
+<p>It stops being believed in four ways. A new active record on the same
+<code>fact_key</code> makes the old one <code>superseded</code> with a
+pointer. An exclusion hides a record from retrieval and, for a typed
+unit, remembers its occurrence. A forget makes it
+<code>tombstoned</code>, clears <code>content</code> and
+<code>fact_key</code>, and purges everything derived from it
+(<code>atmem/store/sqlite.py:3843-3960</code>). A reject purges a
+quarantined record outright (<code>atmem/memory.py:4996-5040</code>).
+Nothing decays.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three writers reach the record store; untrusted content and unsafe model proposals wait in quarantine, typed rules and procedures wait in a proposal queue decided on the dashboard or CLI, a user exclusion stores an occurrence identity of the typed unit so the same occurrence formed again is refused, and forget tombstones a row while remember will store the same words again</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three writers reach the record store; untrusted content and unsafe model proposals wait in quarantine, typed rules and procedures wait in a proposal queue decided on the dashboard or CLI, a user exclusion stores an occurrence identity of the typed unit so the same occurrence formed again is refused, and forget tombstones a row while remember will store the same words again
+flowchart TD
+    subgraph W[&quot;Writers&quot;]
+        direction TB
+        A[&quot;remember / memory_remember&lt;br/&gt;trust from a webpage tag&lt;br/&gt;or source_type argument&quot;]
+        B[&quot;control_capture&lt;br/&gt;AtBot or rules propose,&lt;br/&gt;policy admits&quot;]
+        C[&quot;form_episode&lt;br/&gt;typed units, encrypted&lt;br/&gt;household only&quot;]
+        A ~~~ B ~~~ C
+    end
+    W --&gt; X{&quot;Exclusion identity&lt;br/&gt;already stored?&quot;}
+    X --&gt;|&quot;typed unit matches&quot;| RJ[&quot;rejected&lt;br/&gt;previously_excluded&quot;]
+    X --&gt;|&quot;no&quot;| P{&quot;Trusted, no conflict,&lt;br/&gt;not a rule or procedure?&quot;}
+    P --&gt;|&quot;yes&quot;| ACT[&quot;active&quot;]
+    P --&gt;|&quot;untrusted or conflict&quot;| Q[&quot;quarantined&quot;]
+    P --&gt;|&quot;typed rule, procedure,&lt;br/&gt;gotcha, low confidence&quot;| PR[&quot;pending_review&lt;br/&gt;memory_proposals&quot;]
+    PR --&gt;|&quot;dashboard or CLI decide&quot;| ACT
+    Q --&gt;|&quot;promote: dashboard,&lt;br/&gt;operator, memory_promote&quot;| ACT
+    Q --&gt;|&quot;reject&quot;| T
+    ACT --&gt;|&quot;same fact_key&quot;| S[&quot;superseded&quot;]
+    ACT --&gt;|&quot;exclude on dashboard&quot;| E[&quot;excluded&lt;br/&gt;occurrence hash stored&quot;]
+    E -.-&gt; X
+    ACT --&gt;|&quot;forget, forget_record&quot;| T[&quot;tombstoned&lt;br/&gt;content and key cleared,&lt;br/&gt;graph and vectors purged&quot;]
+    T -.-&gt; N[&quot;same words through&lt;br/&gt;remember are stored again&quot;]
+    ACT --&gt; R[&quot;recall, list, governed&lt;br/&gt;candidates: active only&quot;]
+    E -.-&gt; PE[&quot;persona and context-pack&lt;br/&gt;prefix still include it&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs on one machine. <code>Memory(path)</code> opens a
+SQLite database through <code>SQLiteStore</code>, applies migrations
+numbered up to <code>0425</code> under a file lock, and creates a
+sibling <code>&lt;path&gt;.vectors.db</code> for the vector sidecar
+(<code>atmem/memory.py:166-218</code>,
+<code>atmem/semantic/index.py:42-46</code>). The default embedder is a
+256-dimension feature hash (<code>HashingEmbedder</code>,
+<code>atmem/semantic/providers.py:291</code>);
+<code>atmem openclaw install</code> offers an Ollama embedding model and
+the <code>semantic</code> extra adds sentence-transformers, each
+activated as a new epoch of the index.</p>
+<p>The control plane keeps its own store, a mode (off, shadow or active)
+and an agent topology, and serves the dashboard on 127.0.0.1:8768. AtBot
+runs as a separate process on a loopback protocol and is consulted for
+proposals, query expansion and ranking; when it or its model is down,
+capture falls back to the deterministic rules
+(<code>atmem/control/manager.py:1113-1220</code>). The Agent Black Box
+writes encrypted evidence of model and tool events to a separate vault
+under the same AtMem Home. A maintenance runner consolidates the graph,
+verifies the audit chain incrementally, optimizes the database and
+expires governed tasks (<code>atmem/maintenance.py:44-94</code>).</p>
+<p>Around the memory engine the repository carries much else that this
+reading did not cover in depth: a governed task-state plane, AtMem Code
+for coding agents, a retrieval-augmented document service, a feedback
+and rule system, delegated context providers that sign their output, a
+ChatGPT plugin backed by Firestore, and benchmark harnesses under
+<code>benchmarks/</code> and <code>research/</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>By the README, <code>pip install atmem</code> brings the AtMem and
+AtBot distributions, and <code>atmem init</code> creates the home and an
+Administrator account and, on first run, downloads a pinned Bun runtime
+for the AtFlows component, verified against a release-pinned SHA-256.
+Ordinary memory needs no network, no API key and no model: the rules
+extractor, FTS5, the hashing embedder and the graph rules are all local.
+A model improves extraction and ranking and is optional. The store is
+SQLite and can be opened by hand unless the household is migrated to
+SQLCipher, which the typed formation path requires
+(<code>atmem/memory.py:906-913</code>). The README's install section is
+long because the product is: an OpenClaw installer that copies, freezes
+and can restore the host's native memory files, a dashboard daemon, user
+accounts with four evidence roles, and a home-migration procedure.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema and store.</strong>
+<code>atmem/store/sqlite.py</code>: base tables <code>:5089-5600</code>,
+<code>records</code> <code>:5120-5143</code>,
+<code>retrieval_exclusions</code> <code>:5212-5221</code>,
+<code>media_artifacts</code> <code>:5223-5249</code>,
+<code>audit_log</code> <code>:5371-5384</code>, numbered migrations from
+<code>:5642</code>, <code>typed_exclusion_identities</code>
+<code>:7294-7308</code>.</li>
+<li><strong>Capture and write.</strong> <code>Memory.remember</code>
+<code>atmem/memory.py:3177-3456</code>; <code>extract_facts</code>
+<code>atmem/extract/rules.py:93-111</code>;
+<code>classify_source</code>, <code>trust_tier_for_source</code>,
+<code>initial_status</code> <code>atmem/core/policy.py:34-60</code>;
+model proposals <code>submit_proposal</code>
+<code>atmem/memory.py:492-720</code>; typed formation
+<code>form_episode</code> <code>:1549</code> calling
+<code>submit_extraction_proposal</code> <code>:751-1066</code>; media
+observations <code>remember_observation</code>
+<code>:3458-3650</code>.</li>
+<li><strong>Retrieval.</strong> <code>Memory.recall</code>
+<code>:3651-3888</code> over <code>recall_candidates</code>
+<code>atmem/store/sqlite.py:4078-4163</code> and
+<code>rank_records</code> <code>atmem/retrieve/rank.py:19-21</code>,
+<code>:400-410</code>; governed candidates
+<code>eligible_candidates</code> <code>atmem/memory.py:2389-2560</code>,
+the core-rrf-v1 path in <code>atmem/retrieve/hybrid.py</code> with
+<code>authorized</code> <code>:24-34</code> and
+<code>atmem/retrieve/fusion.py:1-16</code>.</li>
+<li><strong>Context assembly.</strong> <code>build_recall_block</code>
+<code>atmem/memory.py:4458</code>, <code>build_persona</code>
+<code>:4554-4616</code>, <code>build_context_pack</code>
+<code>:4618</code>; the control plane's <code>prepare</code> in
+<code>atmem/control/manager.py:4200-4260</code>.</li>
+<li><strong>Correction and deletion.</strong>
+<code>correct_record</code> <code>atmem/memory.py:3942-3995</code>,
+<code>set_retrieval_excluded</code> <code>:3902-3940</code>,
+<code>forget_record</code> <code>:3997-4037</code>, <code>forget</code>
+<code>:4039-4140</code>, <code>forget_artifact</code>
+<code>:4142-4300</code>, <code>_purge_record_ids</code>
+<code>:4303-4400</code>, <code>promote</code> <code>:4917-4994</code>,
+<code>reject</code> <code>:4996-5040</code>;
+<code>tombstone_records</code>
+<code>atmem/store/sqlite.py:3843-3960</code>.</li>
+<li><strong>Review.</strong> <code>ReviewService</code>
+<code>atmem/extract/review.py:164</code>;
+<code>decide_extraction_proposal</code>, <code>memory_reviews</code> and
+<code>review_memory</code>
+<code>atmem/control/manager.py:2821-2960</code>,
+<code>:3875-4000</code>; dashboard routes
+<code>atmem/control/web.py:979-1050</code>.</li>
+<li><strong>Audit.</strong> <code>append_audit_event</code>
+<code>atmem/store/sqlite.py:4442-4500</code>, chain verification
+<code>:4748</code>, <code>:4792</code>, <code>Memory.verify</code>
+<code>atmem/memory.py:5403</code>.</li>
+<li><strong>Agent surfaces.</strong> <code>atmem/mcp/server.py</code>
+(memory MCP, tool table <code>:128-150</code>),
+<code>atmem/control/server.py</code> (control MCP, host allow-list
+<code>:358-374</code>), <code>integrations/openclaw/index.ts</code>
+(bridge tools), <code>atmem/adapters/</code> (Hermes, Pydantic AI,
+LangGraph).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>records</code> carries <code>subject_id</code>,
+<code>content</code>, <code>content_normalized</code>,
+<code>source_type</code>, <code>trust_tier</code>, the source session,
+turn and episode, <code>created_at</code>, <code>updated_at</code>,
+<code>deleted_at</code>, <code>confidence</code>, a free-text
+<code>scope</code> label, <code>status</code>,
+<code>supersedes_id</code>, <code>fact_key</code> and a JSON
+<code>raw</code> (<code>atmem/store/sqlite.py:5120-5143</code>). Later
+migrations add <code>authority_workspace_id</code>,
+<code>authority_subject_id</code> and a <code>sensitivity_class</code>
+(<code>:5600-5611</code>). The <code>scope</code> column is a provenance
+label such as <code>atbot_model_proposal</code> or
+<code>host_agent_interpreted</code>, not an access key; the access key
+is <code>subject_id</code>, and the governed path's workspace lives in
+<code>raw.authority_scope</code>.</p>
+<p>Episodes keep the source message. A forget purges the linked episodes
+along with the record (<code>atmem/store/sqlite.py:3955-3990</code>), so
+the claim and the words it came from leave together. Entities, aliases
+and edges form a derived graph extracted by rules
+(<code>graph-rules-v1</code>) with their own status, mirrored from the
+record's. <code>memory_proposals</code>, <code>memory_reviews</code> and
+<code>memory_lineage</code> hold the typed pipeline; lineage rows are
+immutable by trigger (<code>:6592-6603</code>).
+<code>memory_lifecycle</code> and its immutable transition table add
+<code>valid_from</code>, <code>valid_to</code>, <code>expires_at</code>
+and <code>review_at</code> per record (<code>:6976-7020</code>).</p>
+<p>Temporal fields are system time. <code>created_at</code>,
+<code>updated_at</code> and <code>deleted_at</code> are stamped by the
+store. A typed unit has <code>observed_at</code>, <code>event_at</code>,
+<code>valid_from</code> and <code>valid_until</code>, and the formation
+code sets only <code>observed_at</code>, from the source part
+(<code>atmem/extract/formation.py:293</code>, <code>:568</code>).
+Section 9 says why that leaves <code>bitemporal</code> unearned.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There are two recall paths and they are not the same.</p>
+<p><strong><code>Memory.recall</code></strong>, behind
+<code>memory_recall</code>, <code>memory_recall_block</code> and the
+context pack, is lexical with an optional graph arm
+(<code>atmem/memory.py:3651-3760</code>). <code>recall_candidates</code>
+takes up to 200 records: FTS5 matches, active records whose
+<code>fact_key</code> shares a query term, then the most recent active
+records, each query filtered
+<code>subject_id = ? AND status = 'active'</code>
+(<code>atmem/store/sqlite.py:4078-4163</code>). Excluded ids are dropped
+next. With graph recall on, a seed-and-spread over entities may nominate
+further active records. <code>rank_records</code> scores
+<code>0.75 * text + 0.15 * trust + 0.10 * recency</code>
+(<code>atmem/retrieve/rank.py:19-21</code>), and every candidate's
+components are logged to <code>retrieval_events</code>. This path does
+not read the vector sidecar.</p>
+<p><strong><code>eligible_candidates</code></strong>, behind the control
+plane's <code>prepare</code> and <code>memory_recall_decision</code>,
+adds a vector arm when <code>semantic</code> is among the request's
+signals, as it is by default
+(<code>atmem/contracts/models.py:220</code>,
+<code>atmem/memory.py:2437-2480</code>). With
+<code>retrieval_strategy='core-rrf-v1'</code> it runs
+<code>hybrid.collect</code>, which fuses lexical, semantic and graph
+rankings by reciprocal rank at k 60
+(<code>atmem/retrieve/fusion.py:5-16</code>) and passes every nominee
+through <code>authorized</code>: same subject, status
+<code>active</code> (or <code>superseded</code> on request), not
+excluded, the same workspace when the record carries
+<code>raw.authority_scope</code>, and no <code>sensitive</code> or
+<code>restricted</code> record when the request's egress is remote
+(<code>atmem/retrieve/hybrid.py:24-34</code>). The control plane selects
+<code>core-rrf-v1</code> only for <code>context_version == "v2"</code>
+(<code>atmem/control/manager.py:4221-4223</code>).</p>
+<p>Context goes out in two halves. <code>build_context_pack</code> puts
+a deterministic persona of active records, keyed facts first, into
+<code>stable_context</code>, placed as a stable system prefix so a
+provider's prompt cache survives, and a query recall that skips ids
+already in the persona into <code>dynamic_context</code> at the turn
+tail (<code>atmem/memory.py:4618-4700</code>). The persona half reads
+<code>Memory.list</code>, which filters on status and not on retrieval
+exclusions (<code>:3890-3899</code>, <code>:4573</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>remember</code> screens the message, the interpreted fact and
+its metadata for secrets and "do not remember" signals and refuses
+before anything is stored, logging only a digest
+(<code>atmem/memory.py:3197-3236</code>). It then stores the episode and
+runs <code>extract_facts</code>, which returns at most one candidate per
+message from a set of statement patterns, with a fact key. Per candidate
+it dedupes by normalized content against active records, or active and
+quarantined ones for an untrusted candidate, then inserts the record and
+supersedes active records on the same fact key. It appends a
+<code>memory.record_created</code> or
+<code>memory.record_quarantined</code> event carrying a content digest
+and a record-integrity digest, and indexes the graph
+(<code>:3330-3440</code>). A trusted host can pass
+<code>interpreted_fact</code> instead; the OpenClaw bridge binds that to
+a user message its hook staged under session aliases, so the agent
+cannot invent the source text
+(<code>atmem/mcp/server.py:190-204</code>).</p>
+<p>The control plane's <code>capture</code> asks AtBot for proposals,
+keeps only those that share a four-letter term with the message, falls
+back to rule extraction, and submits each as a
+<code>MemoryProposal</code> with a host-authenticated source binding
+(<code>atmem/control/manager.py:1113-1310</code>).
+<code>submit_proposal</code> applies the admission policy in section
+2.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Every write is synchronous: one <code>BEGIN IMMEDIATE</code>
+transaction holds the episode, record, supersession, graph rows and
+audit events (<code>atmem/memory.py:128-146</code>). With no model the
+write is a regex pass and a few inserts. Through the control plane a
+capture waits on one AtBot proposal call before admission. A record is
+retrievable lexically when the call returns; the vector sidecar is
+resynchronized for dirty subjects when the <code>Memory</code> is closed
+(<code>:223-229</code>, <code>:372-400</code>), so the vector arm lags a
+long-lived process until then. No background pass rewrites record
+content. The context pack is bounded by character budgets, 600 for the
+persona and 1,200 for recall by default, and its stable half is designed
+not to move between turns.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four agent surfaces reach the same database, with different
+authority.</p>
+<ul>
+<li><strong><code>atmem mcp</code></strong>, the memory engine's stdio
+server, exposes 23 tools (<code>atmem/mcp/server.py:128-150</code>).
+<code>subject_id</code> is an optional argument on each, defaulting to
+<code>--subject</code> (<code>:178-179</code>).
+<code>memory_remember</code> advertises <code>source_type</code> as an
+enum including <code>user_message</code> and passes it through
+(<code>:214</code>, <code>:629-634</code>). <code>memory_promote</code>
+activates a quarantined record; its description says the host must
+enforce any human approval (<code>:954-960</code>).</li>
+<li><strong>The control MCP in host mode</strong> exposes eleven tools:
+capture, sync, prepare, exposure confirmation, task tools, flight events
+and status (<code>atmem/control/server.py:358-374</code>). It refuses
+every other name (<code>:127-128</code>), so the host cannot review
+memory, activate injection or export evidence. Operator mode, a separate
+command, exposes those.</li>
+<li><strong>The OpenClaw bridge</strong> registers
+<code>memory_remember</code>, <code>memory_search</code>,
+<code>memory_get</code>, <code>atmem_search</code>,
+<code>atmem_forget</code>, <code>atmem_observe</code> and
+<code>atmem_forget_artifact</code>
+(<code>integrations/openclaw/index.ts:1978-2523</code>), and no
+promote.</li>
+<li><strong>Framework adapters</strong> for Pydantic AI, LangGraph,
+CrewAI, Google ADK, OpenAI Agents, Microsoft Agent Framework and
+smolagents share a base that calls <code>prepare</code> and injects
+nothing unless the result carries <code>inject</code>
+(<code>atmem/adapters/base.py:179</code>, <code>:325</code>), which
+<code>prepare</code> sets only when the mode influences the agent
+(<code>atmem/control/manager.py:4365</code>, <code>:4528</code>).</li>
+</ul>
+<p>Shadow mode is the integration story's centre: a new integration
+records candidates and what it would have injected, and injects nothing
+until <code>atmem control activate</code>. The OpenClaw installer copies
+<code>MEMORY.md</code> and <code>memory/*.md</code>, freezes the native
+memory during takeover and restores it byte-for-byte on
+<code>atmem control restore</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="who-decides-trust-on-the-memory-mcp-server">Who decides trust on
+the memory MCP server</h3>
+<p>On the control plane and the OpenClaw bridge, trust is bound to the
+host: a capture requires <code>authenticated_user</code>, an interpreted
+fact must match a staged user message, and promotion is off the agent's
+tools. On <code>atmem mcp</code> the model sets all three. It can write
+any text as <code>source_type: user_message</code> and have it stored
+<code>active</code> with trust tier <code>trusted_user</code>; it can
+name another <code>subject_id</code> in the same database and read or
+write there; and it can promote a quarantined record with
+<code>memory_promote</code>. The quarantine, the scope key and the trust
+tier are real mechanisms whose inputs, on this server, come from the
+party they are meant to constrain.</p>
+<h3 id="the-dashboards-memory-routes">The dashboard's memory routes</h3>
+<p>The README says the dashboard requires a local AtMem account. The
+legacy memory routes — <code>/api/memory/review</code>,
+<code>/api/memory/proposal-decision</code> for non-procedure classes,
+<code>/api/memory/correct</code>, <code>/api/memory/exclude</code>,
+<code>/api/memory/forget</code> and <code>/api/mode</code> — check the
+Host header, an Origin header that passes when absent, and a server-wide
+CSRF token (<code>atmem/control/web.py:666-672</code>,
+<code>:1530-1539</code>). <code>GET /api/session</code> returns that
+token after only a Host check (<code>:96-98</code>). Any process on the
+machine can therefore fetch the token and approve, reject, exclude or
+forget memory, or activate injection, without signing in. The newer
+identity, evidence, code and feedback routes do require a session
+(<code>:675-690</code>, <code>:1410-1430</code>). The proposal decision
+records an <code>actor</code> taken from the request body
+(<code>:1002-1009</code>).</p>
+<h3 id="forgetting-leaves-no-record-of-the-value">Forgetting leaves no
+record of the value</h3>
+<p><code>forget</code> purges a record's content, fact key, episode, FTS
+rows, graph objects, media links and vector entries, verifies the vector
+purge before committing, and returns a receipt bound to an audit event
+(<code>atmem/memory.py:4039-4140</code>, <code>:4303-4400</code>). It
+leaves no record of the value. <code>remember</code> has no check
+against tombstoned content, so the same sentence said again is extracted
+and stored <code>active</code>. Two narrower refusals exist, and neither
+is keyed on the value alone: a typed unit's occurrence identity, and a
+forgotten media artifact's digest.</p>
+<h3 id="the-persona-ignores-exclusions">The persona ignores
+exclusions</h3>
+<p><code>set_retrieval_excluded</code> takes a record out of
+<code>recall</code>, the governed candidates and graph expansion.
+<code>build_persona</code> builds its block from
+<code>Memory.list</code>, which filters on status only, so an excluded
+active record still reaches <code>memory_persona</code> and the stable
+half of <code>memory_context_pack</code>
+(<code>atmem/memory.py:3890-3899</code>, <code>:4554-4616</code>). The
+search behind this is in the appendix.</p>
+<h3 id="marks">Marks</h3>
+<p><strong><code>trust_state</code> — earned.</strong>
+<code>records.status</code> has a state that withholds a memory,
+<code>quarantined</code>, and every read filters on it: the three arms
+of <code>recall_candidates</code>, <code>list</code>, the graph
+nomination check, and <code>authorized</code> on the governed path
+(<code>atmem/store/sqlite.py:4078-4163</code>,
+<code>atmem/retrieve/hybrid.py:24-34</code>). Producers are
+<code>remember</code> for embedded third-party content,
+<code>submit_proposal</code> for unsafe model proposals and
+<code>remember_observation</code> for media. <code>promote</code> is the
+only way out.</p>
+<p><strong><code>scope_enforced</code> — earned.</strong> Every record
+stores <code>subject_id</code> and every store read appends it; the
+governed path also matches the workspace. The control plane resolves the
+subject from the registered agent topology and refuses one outside it
+(<code>atmem/control/manager.py:334-380</code>). The memory MCP server
+takes it as a tool argument, which section 9 names as that surface's
+weakness.</p>
+<p><strong><code>audit_log</code> — earned.</strong>
+<code>audit_log</code> is appended inside the same transaction as each
+mutation, hash-linked per subject, and carries digests and ids rather
+than content (<code>atmem/store/sqlite.py:4442-4500</code>).
+<code>verify</code> recomputes the chain and, against anchored
+checkpoints, detects truncation. Triggers clear the verification state
+on any update or delete of a row (<code>:5586-5598</code>). The one
+<code>DELETE FROM audit_log</code> is in <code>reset_subject</code>
+(<code>:296</code>), reachable from <code>Memory.reset_subject</code>,
+which has callers only in tests.</p>
+<p><strong><code>tombstone</code> — withheld: the refusal is keyed on an
+occurrence, not a value.</strong> Excluding a typed record writes a
+SHA-256 into <code>typed_exclusion_identities</code>, and
+<code>submit_extraction_proposal</code> rejects any later unit with that
+hash as <code>typed_occurrence_previously_excluded</code> before review
+or commit (<code>atmem/memory.py:917-928</code>). The hash is what its
+docstring calls a <em>"claim occurrence identity"</em>: it keeps
+<code>observed_at</code>, <code>event_at</code>, <code>valid_from</code>
+and <code>valid_until</code>
+(<code>atmem/extract/models.py:317-330</code>). The memory MCP server
+and the service pass <code>observed_at</code> from the caller's row
+(<code>atmem/mcp/server.py:381</code>,
+<code>atmem/service/application.py:164</code>), so a host that
+timestamps its messages makes every later restatement a new identity
+that passes the exclusion. The committed test forms the same sentence
+twice and requires the rejection, and holds only because its episode
+helper sets no <code>observed_at</code>
+(<code>tests/test_memory_formation.py:147-166</code>,
+<code>:859-873</code>).</p>
+<p>Forget and reject write no identity, and <code>remember</code> reads
+none. The second near-miss, <code>remember_observation</code> refusing a
+forgotten artifact's byte-stream digest
+(<code>atmem/memory.py:3489-3497</code>), is a deletion guarantee for a
+byte stream rather than a rejected memory value, and no test pins
+it.</p>
+<p><strong><code>human_review</code> — earned, on typed
+proposals.</strong> A rule, gotcha, procedure or flagged unit waits as
+<code>pending_review</code> with no record, and
+<code>ReviewService.decide</code> is reached from the dashboard and the
+<code>atmem proposals decide</code> command only; procedures
+additionally need a one-use HMAC authorization issued in-process to a
+configured principal (<code>atmem/memory.py:303-375</code>). No MCP
+server or bridge in the tree registers a decide verb. Three things
+narrow it. The older quarantine queue fails the same test on
+<code>atmem mcp</code>, where <code>memory_promote</code> is a tool. A
+Hermes profile on the V3 engine can be provisioned only with an
+administrator's history-import authority, and from then on its observe
+path approves every pending typed proposal, procedures included, under
+that standing principal, so on that profile nothing waits
+(<code>atmem/memory.py:1887-1908</code>,
+<code>atmem/adapters/hermes/v3.py:63-104</code>,
+<code>atmem/adapters/hermes/service.py:365-375</code>). And the
+dashboard routes above accept any loopback caller holding the public
+CSRF token.</p>
+<p><strong><code>negative_eval</code> — earned.</strong>
+<code>test_correction_and_forgetting_remove_old_graph_paths</code>
+requires a corrected record present and its superseded predecessor
+absent from the same graph candidate set
+(<code>tests/test_retrieval_graph_fusion.py:136-145</code>).
+<code>test_webpage_is_not_promoted_to_memory</code> requires the user's
+stated preference in <code>list()</code> and the webpage's injected
+instruction absent (<code>tests/test_memory.py:80-104</code>). A
+seven-way parametrised case requires a denied bridge record not to
+change the graph arm's candidates
+(<code>tests/test_retrieval_graph_fusion.py:58-82</code>). Several
+quarantine and forget cases assert an empty recall over a store holding
+only the withheld row, which proves nothing on their own.</p>
+<p><strong><code>bitemporal</code> — withheld.</strong> Validity fields
+are declared twice and filled nowhere. On a typed unit,
+<code>valid_from</code> and <code>valid_until</code> are assigned only
+by <code>MemoryUnit.from_dict</code> copying a caller-supplied dict
+(<code>atmem/extract/models.py:470-471</code>). In
+<code>memory_lifecycle</code>, the insert names neither
+<code>valid_from</code> nor <code>valid_to</code> and the transition
+updates set the state and one of <code>replaced_at</code>,
+<code>archived_at</code> or <code>deleted_at</code>
+(<code>atmem/lifecycle/service.py:40</code>, <code>:74-88</code>). The
+eligibility check that reads them is reached from one inspection route
+(<code>atmem/service/application.py:378</code>) and not from recall.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is large and specific: 3,300 test functions under
+<code>tests/</code>, many named for the invariant they hold. The ones
+read for this report assert supersession, quarantine, promotion,
+rejection, exclusion and its reversal, correction with lineage, deletion
+receipts, digest-only audit payloads, typed re-formation refusal of the
+same occurrence, and graph arms that drop denied bridges. None were
+run.</p>
+<p>Three benchmark claims have committed artifacts, and each was
+checked.</p>
+<ul>
+<li><strong>DolphinBench, 479 passing tasks in 600 (79.83%).</strong>
+The README and
+<code>docs/benchmarks/dolphin-routed4-600-20261101.md</code> report it
+as self-tested against a frozen research artifact on 2.3.10b1, not the
+current wheel, with public tasks informing development. The tree commits
+only the aggregate
+(<code>docs/benchmarks/evidence/dolphin-routed4-20261101/action-summary.json</code>).
+The linked Hugging Face dataset holds <code>data/tasks.jsonl</code> with
+one row per task: 600 rows, 479 with <code>passed</code> true, so the
+headline recomputes. The benchmark grades task completion with a model
+judge, so it measures the whole agent and harness, not memory alone,
+which the report itself says.</li>
+<li><strong>LoCoMo retrieval, exploratory.</strong>
+<code>research/production_benchmarks/results/locomo-full-2026-09-19.json</code>
+records recall@1 0.3399, @5 0.576 and @10 0.6495 over 1,986 questions
+with the deterministic recall path. Recomputed from its per-question
+rows, these are the share of questions with at least one evidence id in
+the top k, over all 1,986 including four with no evidence: 675, 1,144
+and 1,290 hits. The fraction of evidence recovered at 5 is lower, 0.529
+over the 1,982 with evidence.</li>
+<li><strong>The offline gate.</strong> <code>benchmark.json</code> at
+the root records 16 deterministic cases passed with no model; the README
+describes 24 cases.</li>
+</ul>
+<p>No paper accompanies the project; <code>CITATION.cff</code> cites the
+software at version 2.3.2. Tests worth adding: a forget followed by
+<code>remember</code> of the same words, requiring the record to stay
+out; an excluded record absent from <code>build_persona</code>;
+<code>memory_remember</code> with <code>source_type: user_message</code>
+over webpage text; and an unauthenticated POST to
+<code>/api/memory/review</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Quarantine by source, filtered on every arm.</strong>
+Classify where content came from, store untrusted extractions with a
+withholding status, and put the status predicate on lexical, keyed,
+recency, graph and vector reads alike. AtMem's graph test parametrised
+over seven denial kinds is the shape of test to copy.</li>
+<li><strong>Deletion that proves its derived copies are gone.</strong>
+Purge content, slot name, source episode, graph and vector entries in
+one transaction, verify the vector index reports the ids absent before
+committing, and return a receipt hashed over the audit event.</li>
+<li><strong>An audit plane that stores digests.</strong> Hash-chain the
+events, put the content and record-integrity digests in the payload, and
+keep text out; the forget event carries the selector's digest, because
+the selector names what is being erased.</li>
+<li><strong>An identity on exclusion, consulted before
+admission.</strong> Hash the unit's canonical value when the user
+excludes the record and check it before review or commit; leave the time
+fields out of the hash, which AtMem does not.</li>
+<li><strong>A stable prefix and a dynamic tail.</strong> Split injected
+context so the persona does not move between turns and the query recall
+sits at the end.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Trust inputs on the tool schema.</strong> A
+<code>source_type</code> enum, a <code>subject_id</code> argument and a
+promote tool on the same server as the writer turn the quarantine and
+the scope key into suggestions.</li>
+<li><strong>A context builder with its own predicate.</strong> The
+persona builder filters on status and forgets the exclusion list every
+other read applies.</li>
+<li><strong>A CSRF token served to anyone.</strong> A token any local
+process can fetch is a replay guard against browsers, not
+authentication.</li>
+<li><strong>A refusal keyed on an occurrence.</strong> An exclusion hash
+that includes the observation time does not stop the same claim stated
+tomorrow, and a refusal on one write path leaves the older
+<code>remember</code> path, which every simple integration uses, storing
+a forgotten value again.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>AtMem suits a single operator running agents on one machine who wants
+to watch memory before it influences anything: shadow mode, a review
+queue, receipts and an audit trail are the product, and they work
+without a model or network. The cost is size. The repository is a
+quarter of a million lines with a task plane, a code-memory product, a
+RAG service, a feedback system and benchmark infrastructure beside the
+memory engine, and its README is a changelog. A team wanting only the
+memory semantics should read <code>memory.py</code> and
+<code>store/sqlite.py</code> and take the mechanisms. Anyone exposing
+<code>atmem mcp</code> directly to a model should treat its quarantine,
+scope and promotion as advisory until the host fixes those
+arguments.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Which integration is the intended default for a new user: the
+control plane with shadow mode, or <code>atmem mcp</code>? The README
+presents both.</li>
+<li>Is <code>GET /api/session</code> meant to hand the CSRF token to
+unauthenticated callers, given the README's account requirement?</li>
+<li>Does any host stamp <code>observed_at</code> on typed episode parts,
+and if so, is an excluded claim meant to be refused again when restated
+later?</li>
+<li>Is the typed formation path, gated on an encrypted household, on by
+default for OpenClaw or Hermes installs?</li>
+<li>What does the ChatGPT plugin's Firestore deployment store, and under
+which scope?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>atmem/memory.py</code></td>
+<td>The engine: remember, proposals, typed formation, recall, persona,
+context pack, exclusion, correction, forget, promote, reject,
+verify</td>
+</tr>
+<tr>
+<td><code>atmem/store/sqlite.py</code></td>
+<td>Schema and migrations, record queries, tombstone and purge, audit
+chain, exclusion identities</td>
+</tr>
+<tr>
+<td><code>atmem/core/policy.py</code></td>
+<td>Source classification, trust tier, initial status,
+normalization</td>
+</tr>
+<tr>
+<td><code>atmem/extract/rules.py</code></td>
+<td>Deterministic statement extraction</td>
+</tr>
+<tr>
+<td><code>atmem/extract/models.py</code></td>
+<td>Typed MemoryUnit, semantic and exclusion identities</td>
+</tr>
+<tr>
+<td><code>atmem/extract/review.py</code></td>
+<td>ReviewService queue, inspect and decide</td>
+</tr>
+<tr>
+<td><code>atmem/retrieve/hybrid.py</code>, <code>fusion.py</code>,
+<code>rank.py</code></td>
+<td>Governed candidate collection, reciprocal-rank fusion, lexical
+scoring</td>
+</tr>
+<tr>
+<td><code>atmem/semantic/index.py</code>, <code>providers.py</code></td>
+<td>Vector sidecar and embedders</td>
+</tr>
+<tr>
+<td><code>atmem/mcp/server.py</code></td>
+<td>The memory MCP server</td>
+</tr>
+<tr>
+<td><code>atmem/control/server.py</code>, <code>manager.py</code>,
+<code>web.py</code></td>
+<td>Control MCP, control-plane operations, dashboard</td>
+</tr>
+<tr>
+<td><code>integrations/openclaw/index.ts</code></td>
+<td>OpenClaw bridge tools</td>
+</tr>
+<tr>
+<td><code>atmem/maintenance.py</code></td>
+<td>Background maintenance runner</td>
+</tr>
+<tr>
+<td><code>tests/test_memory.py</code>,
+<code>test_retrieval_graph_fusion.py</code>,
+<code>test_memory_formation.py</code>,
+<code>test_benchmark_memory_integrity_contracts.py</code></td>
+<td>The tests cited above</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>Only typed formation reads an exclusion identity.</strong>
+<code>git grep -n 'has_typed_exclusion_identity' -- atmem</code> returns
+<code>atmem/memory.py:919</code> and the definition at
+<code>atmem/store/sqlite.py:6037</code>.</li>
+<li><strong><code>remember</code> reads no tombstone.</strong>
+<code>git grep -n tombston -- atmem/memory.py</code> returns lines 162,
+3494, 3516, 4005, 4178-4221, 4276, 4312-4325, 5388 and 5497-5500, none
+inside <code>remember</code> (<code>:3177-3456</code>).</li>
+<li><strong>No test pins the media digest refusal.</strong>
+<code>git grep -n -E 'previously tombstoned|not implicit' -- tests</code>
+returns nothing; the same pattern over <code>atmem</code> matches
+<code>atmem/memory.py:3494-3495</code>.</li>
+<li><strong>The persona builder applies no exclusion.</strong>
+<code>git grep -n excluded_record_ids -- atmem/memory.py</code> returns
+lines 847, 2607, 2963, 3042 and 3669, none inside
+<code>build_persona</code> (<code>:4554-4616</code>) or
+<code>list</code> (<code>:3890-3899</code>).</li>
+<li><strong>No MCP server or bridge registers a review
+decision.</strong>
+<code>git grep -n -E 'ReviewService|decide_extraction_proposal' -- atmem/mcp atmem/control/server.py atmem/adapters integrations/openclaw</code>
+returns only <code>atmem/mcp/governed.py:189</code> and
+<code>:196</code>, which call <code>propose</code>.</li>
+<li><strong>Promote is a tool only on the memory MCP server.</strong>
+<code>git grep -n -E '(memory|atmem)_promote' -- atmem integrations ':!*test*'</code>
+returns <code>atmem/mcp/server.py:144</code> and <code>:954</code>.</li>
+<li><strong>The only audit deletion has no product caller.</strong>
+<code>git grep -n -i -E '(DELETE FROM|UPDATE) audit_log' -- atmem</code>
+returns <code>atmem/store/sqlite.py:296</code>, inside
+<code>reset_subject</code>;
+<code>git grep -n 'reset_subject' -- ':!tests' ':!atmem/store/sqlite.py' ':!atmem/memory.py'</code>
+returns one line of a spec document.</li>
+<li><strong>No formation path sets validity time.</strong>
+<code>git grep -n -E 'valid_(from|until|to)=' -- atmem</code> returns
+<code>atmem/extract/models.py:470-471</code>, inside
+<code>from_dict</code>.</li>
+<li><strong>Nothing writes the lifecycle validity columns.</strong>
+<code>git grep -n memory_lifecycle -- atmem/lifecycle</code> returns two
+selects, the insert at <code>atmem/lifecycle/service.py:40</code> naming
+state, generation and two timestamps, the updates at <code>:81</code>
+and <code>:88</code>, whose column comes from the map at
+<code>:74-78</code>, and the transition table's insert and select at
+<code>:92</code> and <code>:99</code>.</li>
+<li><strong>Lifecycle eligibility is not on the recall path.</strong>
+<code>git grep -n -E '_eligibility\(|LifecycleService\(' -- atmem</code>
+returns the service's own call and two routes in
+<code>atmem/service/application.py:378</code>, <code>:388</code>.</li>
+<li><strong>The session route has no sign-in check.</strong>
+<code>git grep -n csrf_token -- atmem/control/web.py</code> returns the
+server token at <code>:50</code>, its return at <code>:97</code>, its
+comparison at <code>:669</code> and <code>:1138</code>, per-session
+tokens at <code>:1262</code>, <code>:1426</code> and <code>:1478</code>,
+and the page script fetching <code>/api/session</code> at
+<code>:1631</code>; <code>do_GET</code> reaches <code>:96</code> after
+only the Host check at <code>:59-61</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|doi\.org' -- README.md CITATION.cff docs</code>
+returns nothing; <code>CITATION.cff</code> cites the software.</li>
+<li><strong>One submodule-free tree.</strong>
+<code>git ls-files .gitmodules</code> returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/aetna000/atmem/commit/681c70ee045de863ea7aee56d721bb9da965cc60"><code class="commit-id" title="681c70ee045de863ea7aee56d721bb9da965cc60">681c70ee…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, 32
+commits past <code>ed9cbe7a5f8b</code>, the commit triage selected.
+Screened first: one auto-run surface,
+<code>.vscode/settings.json</code>; three surfaces inside the seven-day
+cooldown, <code>integrations/openclaw/package.json</code>, its lockfile
+and <code>pyproject.toml</code>; two build-time execution points,
+<code>tests/conftest.py</code> and
+<code>tests/chatgpt/conftest.py</code>; four unpinned surfaces.
+<code>AGENTS.md</code> and the speckit skills under
+<code>.agents/skills/</code> were read as data. Nothing was installed,
+built or run, and the 3,300 test functions were not run. Five marks (<a
+href="#9-reliability-safety-and-trust">section 9</a>);
+<code>tombstone</code> and <code>bitemporal</code> withheld.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
