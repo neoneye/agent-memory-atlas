@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted team knowledge base
+and agent registry over MCP, on PostgreSQL and pgvector, with profiles,
+memories, session summaries and boards.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Concilium — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted team
+knowledge base and agent registry over MCP, on PostgreSQL and pgvector,
+with profiles, memories, session summaries and boards.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Concilium — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted team
+knowledge base and agent registry over MCP, on PostgreSQL and pgvector,
+with profiles, memories, session summaries and boards.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Concilium — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Concilium",
+      "description": "A self-hosted team knowledge base and agent registry over MCP, on PostgreSQL and pgvector, with profiles, memories, session summaries and boards.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An agent's prompt change waits for a
+manager; its memories and notes land at once</p>
+          <h1>Concilium</h1>
+          <p class="document-deck">A self-hosted team knowledge base and
+agent registry over MCP, on PostgreSQL and pgvector, with profiles,
+memories, session summaries and boards.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/concilium-mcp/web-server">
+              <span>Source</span>
+              <strong>concilium-mcp/web-server</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/concilium-mcp/web-server/commit/60e308635fe9bb37bbe4d74f6b50e85a885699e6" title="60e308635fe9bb37bbe4d74f6b50e85a885699e6">
+              <span>Analyzed revision</span>
+              <code>60e30863…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/concilium-mcp--web-server" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>concilium-mcp--web-server</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE, pyproject.toml and the Claude Code plugin manifest; vendored
+dashboard libraries carry their own licences, listed in
+static/vendor/README.md</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>13,617
+lines of Python in 41 files under src/, 605 lines of SQL in fourteen
+migrations, 21,079 lines of dashboard JavaScript, CSS and HTML outside
+vendor/; core/memory.py is 304 lines</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>138
+commits by one author from 5 October to 25 November 2026; the last 21,
+from 28 October, are syncs titled with a date and the short sha of
+another repository; no tags</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>383
+test functions in 58 files, 196 unit and 187 integration; the
+integration suite is skipped without TEST_DATABASE_URL, and the one
+workflow builds a Docker image and runs no tests; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Concilium is a self-hosted team knowledge base for people and agents:
+a FastAPI server over one PostgreSQL database with pgvector, a notes
+dashboard with folders, wikilinks and a graph, and an MCP server through
+which agents search, read and write the same notes. Beside the notes
+sits an agent registry holding each agent's profile, its memories, its
+session summaries and its tasks. What is notable is the access boundary.
+Every document read applies the collections the server reads from the
+presented key or OAuth grant, and an agent's own proposal to change its
+prompt waits for an <code>agents:manage</code> principal that covers it.
+What is weak is everything below the profile. An agent's memories
+overwrite each other on a similarity threshold, keep no prior text, and
+are shared across collections with one flag. Nothing checks that the
+reviewer of a proposal is a person.</p>
+<p>Three stores carry what an agent knows. Documents are the team's
+notes, versioned on every edit and archived rather than deleted. Agent
+memories are short typed statements the agent writes with
+<code>remember</code>, recalled by cosine similarity and loaded fifteen
+at a time when a session starts. The profile is the agent's own system
+prompt, changed by the agent only through a proposal. A session ends
+with <code>save_session</code>, whose summary and next steps the next
+session is handed.</p>
+<p><strong>Licence.</strong> Apache-2.0, in <code>LICENSE</code> and in
+<code>pyproject.toml:7-8</code> and the plugin manifest. The dashboard's
+minified libraries under <code>src/mcp_rag_api/static/vendor/</code> are
+listed with origin, version and licence in that directory's README,
+except <code>force-graph.min.js</code>, whose entry names no licence and
+which ships none. No restriction on use.</p>
+<p>Three marks are earned: <code>scope_enforced</code> on agent ids and
+collections, <code>audit_log</code> on the <code>audit_log</code> table,
+and <code>negative_eval</code> on one folder-filter test. Section 9
+gives the reason for each of the four withheld,
+<code>human_review</code> on the profile proposals among them.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Each of the three stores turns something into a belief differently,
+and only one of them asks anyone first.</p>
+<p><strong>A document is believed from the moment it is saved.</strong>
+An agent with <code>write</code> or a dashboard editor adds it to a
+collection; it is chunked, embedded and searchable in the same call. A
+later edit writes a new version with a mandatory change note. Archiving
+takes it out of search, lists, links, the graph, the brief and duplicate
+detection, and nothing returns it to <code>active</code>
+(<code>src/mcp_rag_api/core/documents.py:438-449</code>).</p>
+<p><strong>A memory is believed from the moment it is written, and it
+has no history.</strong> <code>remember</code> stores one statement with
+a kind, an importance and an optional expiry. If the agent already holds
+a memory within cosine 0.90, that row's text is replaced by the new one
+(<code>src/mcp_rag_api/core/memory.py:123-148</code>). The previous text
+goes back to the caller once and is kept nowhere. <code>forget</code>
+either deletes by id or overwrites the text with a replacement. A memory
+dies by deletion, by overwrite, or by expiry, which the six-hourly
+cleanup turns into a delete.</p>
+<p><strong>A profile change is a candidate until someone applies
+it.</strong> The agent calls <code>propose_agent_update</code> with a
+new system prompt, description or config. The proposal waits as
+<code>proposed</code> in <code>agent_versions</code> and is not what
+<code>load_agent</code> serves. An <code>agents:manage</code> principal
+applies or rejects it, and applying writes the agents row and a new
+version. With <code>auto_apply_updates</code> on, which only a manager
+can set, the agent's proposal applies at once.</p>
+<p>Session start assembles all three. <code>load_agent</code> returns
+the applied profile, lifecycle instructions, fifteen memories, the last
+session's summary and next steps, open tasks, the brief of the agent's
+first collection with one, and the agent's board cards; the brief and
+the cards are added by the MCP tool, not the REST route
+(<code>src/mcp_rag_api/mcp_server.py:544-557</code>). The Claude Code
+plugin injects the brief when a session opens, before any tool is
+called, and the last session and the cards too when
+<code>.concilium.json</code> names an agent.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an agent's notes and memories land at once and a near-duplicate memory overwrites the older text, while a proposed profile change waits for an agents:manage reviewer unless autonomy is on; load_agent assembles what a session starts from and stamps last use on every memory it served</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an agent&#39;s notes and memories land at once and a near-duplicate memory overwrites the older text, while a proposed profile change waits for an agents:manage reviewer unless autonomy is on; load_agent assembles what a session starts from and stamps last use on every memory it served
+flowchart TD
+    A[&quot;Agent key&lt;br/&gt;read, write&quot;]
+    A --&gt; D[&quot;add, update, edit&lt;br/&gt;document&quot;]
+    A --&gt; M[&quot;remember&lt;br/&gt;kind, importance, shared&quot;]
+    A --&gt; P[&quot;propose_agent_update&lt;br/&gt;prompt, description, config&quot;]
+    D --&gt; DV[(&quot;documents + versions&lt;br/&gt;active or archived&quot;)]
+    M --&gt; MS{&quot;cosine 0.90 or more&lt;br/&gt;to an own memory?&quot;}
+    MS --&gt;|&quot;yes&quot;| MO[&quot;overwrite that row&lt;br/&gt;old text not kept&quot;]
+    MS --&gt;|&quot;no&quot;| MI[&quot;insert a row&quot;]
+    MO --&gt; AM[(&quot;agent_memories&quot;)]
+    MI --&gt; AM
+    P --&gt; AU{&quot;auto_apply_updates&lt;br/&gt;on?&quot;}
+    AU --&gt;|&quot;on&quot;| AP[&quot;applied&lt;br/&gt;new profile version&quot;]
+    AU --&gt;|&quot;off&quot;| PR[&quot;proposed&lt;br/&gt;not served&quot;]
+    PR --&gt; RV[&quot;review_agent_update&lt;br/&gt;agents:manage principal&lt;br/&gt;covering the agent&quot;]
+    RV --&gt; AP
+    RV --&gt; RJ[&quot;rejected&quot;]
+    AP --&gt; PF[(&quot;agents row&lt;br/&gt;the served profile&quot;)]
+    PF --&gt; L[&quot;load_agent&lt;br/&gt;profile, 15 memories,&lt;br/&gt;last session, tasks, brief&quot;]
+    AM --&gt; L
+    L --&gt; B[&quot;last_used_at = now&lt;br/&gt;on each memory served&quot;]
+    B -.-&gt; AM
+    DV --&gt; S[&quot;search_knowledge&lt;br/&gt;active, allowed&lt;br/&gt;collections only&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Python package, <code>mcp_rag_api</code>, runs the REST API, the
+dashboard and the MCP server in one FastAPI process
+(<code>src/mcp_rag_api/main.py</code>). The MCP server is mounted at
+<code>/mcp</code> behind a gate that resolves the bearer before
+<code>initialize</code> or <code>tools/list</code>
+(<code>main.py:224-262</code>), and also runs over stdio with the key
+from <code>KB_API_KEY</code>. All SQL is hand-written over asyncpg;
+migrations are numbered SQL files applied under an advisory lock at
+start (<code>src/mcp_rag_api/db.py:30-54</code>).</p>
+<p>Everything lives in one PostgreSQL 16 database with pgvector,
+<code>pg_trgm</code> and <code>pgcrypto</code>. Search needs pgvector
+0.8 for <code>hnsw.iterative_scan</code>
+(<code>src/mcp_rag_api/core/search.py:1-8</code>). Embeddings come from
+Voyage by default, or OpenAI, Hugging Face Inference or a local
+<code>BAAI/bge-m3</code>, all at 1024 dimensions
+(<code>src/mcp_rag_api/config.py:33</code>). OCR uses Tesseract, bundled
+in the image.</p>
+<p>Three background tasks start with the app: a six-hourly cleanup
+(<code>main.py:73-85</code>), a graph layout warm-up and a Trello mirror
+worker (<code>main.py:100-109</code>). None touches memory content
+beyond deleting expired rows.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>An operator runs the API container and PostgreSQL with pgvector. A
+public image is published to GHCR on every push to <code>main</code>,
+and the README's quick start is a <code>docker run</code> of each.
+Storing anything needs an embedding: with the default provider that is
+an API key, and with <code>local</code> a model of about 2 GB loaded at
+start (<code>main.py:94-96</code>). A first admin user and an API key
+are created from the CLI.</p>
+<p>The store is readable SQL. Document versions are full copies, so a
+bad edit is repaired from the dashboard's history. Agent memories are
+visible only through MCP or REST; the dashboard shows their count and
+not their content (<code>src/mcp_rag_api/dashboard_api.py:1163</code>).
+<code>KB_AUTH_DISABLED</code> makes every caller an admin and is refused
+unless the process binds loopback and the public URL is local
+(<code>config.py:196-209</code>).</p>
+<p>The repository is a published copy of another one. Since 28 October
+2026 each commit is a sync titled with a date and a short sha that is
+not in this history, so the history shows what changed and not why.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Identity.</strong> <code>src/mcp_rag_api/security.py</code>:
+<code>Principal</code> and <code>collection_filter</code>
+<code>:53-87</code>, <code>resolve_key</code> <code>:120-150</code>,
+<code>resolve_oauth_token</code> <code>:153-199</code>,
+<code>DEV_PRINCIPAL</code> <code>:90</code>. An agent key's scopes and
+collections come from the agents row; a human OAuth grant's from the
+grant, capped by the dashboard role (<code>:25-29</code>,
+<code>:176-178</code>).</li>
+<li><strong>Tool surface.</strong>
+<code>src/mcp_rag_api/mcp_server.py</code>: <code>TOOL_SCOPES</code>
+<code>:59-136</code>, <code>AGENT_CONTEXT_TOOLS</code> and
+<code>SELF_ONLY_TOOLS</code> <code>:139-149</code>,
+<code>tool_visible</code> <code>:153-159</code>, the <code>dev</code>
+profile <code>:166-194</code>, the filtered <code>tools/list</code>
+<code>:206-223</code>, <code>current_principal</code>
+<code>:229-249</code>.</li>
+<li><strong>Agent memory.</strong>
+<code>src/mcp_rag_api/core/memory.py</code>: <code>load_agent</code>
+<code>:26-70</code>, <code>recall</code> <code>:73-98</code>,
+<code>remember</code> <code>:101-164</code>, <code>forget</code>
+<code>:167-194</code>, <code>save_session</code> <code>:197-220</code>,
+<code>upsert_task</code> <code>:250-295</code>,
+<code>cleanup_memories</code> <code>:298-304</code>.</li>
+<li><strong>Agent registry.</strong>
+<code>src/mcp_rag_api/core/agents.py</code>: <code>resolve_agent</code>
+<code>:17-31</code>, <code>_check_grant</code>,
+<code>_check_collections</code> and <code>_check_reach</code>
+<code>:34-55</code>, <code>_apply</code> <code>:86-160</code>,
+<code>set_agent_autonomy</code> <code>:263-276</code>,
+<code>propose_agent_update</code> <code>:416-469</code>,
+<code>list_proposals</code> <code>:472-484</code>,
+<code>review_agent_update</code> <code>:487-510</code>.</li>
+<li><strong>Documents.</strong>
+<code>src/mcp_rag_api/core/documents.py</code>:
+<code>_find_similar</code> <code>:111-128</code>, <code>_load_doc</code>
+<code>:139-148</code>, <code>list_documents</code>
+<code>:159-187</code>, <code>add_document</code> <code>:190-254</code>,
+<code>update_document</code> <code>:257-348</code>,
+<code>edit_document</code> <code>:384-408</code>,
+<code>archive_document</code> <code>:438-449</code>,
+<code>move_document</code> <code>:452-474</code>.</li>
+<li><strong>Search.</strong>
+<code>src/mcp_rag_api/core/search.py:16-91</code>; the snippet layer in
+<code>src/mcp_rag_api/core/lean.py:131-175</code>; links and related
+documents in <code>src/mcp_rag_api/core/links.py:13-89</code>.</li>
+<li><strong>Session start.</strong>
+<code>src/mcp_rag_api/core/brief.py:71-195</code>; the
+<code>/context/brief</code> route
+<code>src/mcp_rag_api/api.py:242-252</code>; the hook
+<code>integrations/claude-code/hooks/session_start.py</code>.</li>
+<li><strong>Schema.</strong>
+<code>src/mcp_rag_api/migrations/001_init.sql</code> (documents
+<code>:15-35</code>, versions <code>:37-49</code>, chunks
+<code>:51-62</code>, agents <code>:66-80</code>, agent_versions
+<code>:83-101</code>, agent_memories <code>:103-118</code>, sessions
+<code>:120-129</code>, tasks <code>:131-141</code>, api_keys
+<code>:145-155</code>, audit_log <code>:157-165</code>); boards and
+<code>board_events</code> in <code>012_boards.sql</code>.</li>
+<li><strong>Audit.</strong> <code>db.audit</code> at
+<code>src/mcp_rag_api/db.py:116-123</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>agent_memories</code> holds one statement per row:
+<code>kind</code> in a five-value CHECK, <code>content</code>, a
+1024-dimension <code>embedding</code>, <code>importance</code> 1 to 5,
+<code>shared</code>, <code>source</code>, <code>expires_at</code>,
+<code>last_used_at</code> and record times
+(<code>001_init.sql:103-118</code>). There is no status column, no
+version table and no link to the session or document that produced the
+memory; <code>source</code> is a free string the caller sets.</p>
+<p><code>documents</code> carry <code>collection_id</code>, an optional
+<code>external_id</code> unique per collection for upserts,
+<code>content_hash</code>, JSONB <code>metadata</code>,
+<code>tags</code>, <code>version</code>, <code>status</code> in
+<code>('active','archived')</code>, and <code>created_by</code> and
+<code>updated_by</code> set from the principal.
+<code>document_versions</code> copies title, content, metadata and tags
+per version with <code>changed_by</code> and a <code>change_note</code>.
+<code>chunks</code> hold the embedding and a generated
+<code>tsvector</code> built with the <code>portuguese</code>
+configuration whatever the language (<code>:58</code>).</p>
+<p>The profile is the <code>agents</code> row: slug, system prompt,
+JSONB config, <code>allowed_collections</code> (empty means every
+collection) and <code>scopes</code>. Its history and the agent's
+proposals share <code>agent_versions</code>, whose status is
+<code>proposed</code>, <code>applied</code> or <code>rejected</code>,
+with <code>proposed_by</code>, <code>reviewed_by</code> and
+<code>review_note</code> (<code>:83-101</code>).</p>
+<p><code>agent_sessions</code> keep a summary, next steps and metadata;
+<code>agent_tasks</code> a title, details and four statuses. No path
+deletes a session, a task or an agent, which is archived. The scope keys
+are <code>agent_id</code> on these four tables and
+<code>collection_id</code> on documents. Folders organise documents
+inside a collection and are not an access boundary, as the migration
+says (<code>006_folders.sql:3</code>). Separate companies are meant to
+run separate instances.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>search_knowledge</code> is hybrid. One CTE restricts chunks to
+active documents in the effective collections, optional tags, metadata
+containment and folders
+(<code>src/mcp_rag_api/core/search.py:16-27</code>). A cosine arm and a
+<code>websearch_to_tsquery('portuguese', …)</code> arm each take
+<code>max(top_k * 4, 20)</code> candidates, fused by reciprocal rank
+with k 60, and the call sets
+<code>hnsw.iterative_scan = strict_order</code> so the HNSW index is
+used under the filter (<code>:72-78</code>). The MCP tool asks for three
+times <code>top_k</code> chunks and keeps one 120-word snippet per
+document, with <code>folder_path</code> and a count of further matching
+chunks, cut to an optional <code>max_tokens</code>
+(<code>lean.py:146-175</code>). <code>top_k</code> defaults to 5.</p>
+<p><code>recall</code> is cosine top-k over <code>agent_memories</code>
+where the row is the agent's own or, with <code>include_shared</code>
+true by default, any agent's shared row, minus the expired
+(<code>memory.py:80-93</code>). There is no threshold, so it always
+returns up to <code>limit</code> rows. Every row it returns gets
+<code>last_used_at = now()</code>.</p>
+<p><code>load_agent</code> takes no query. It orders the agent's live
+memories by
+<code>importance DESC, COALESCE(last_used_at, updated_at) DESC</code>
+and takes 15, then stamps <code>last_used_at</code> on the 15
+(<code>memory.py:33-61</code>). Within a tier the most recently served
+rows come first, and being served makes them the most recently served,
+so the same rows return every session until a newer one is written at
+equal or higher importance, or <code>recall</code> touches another. A
+memory written at importance 3 while 15 rows stand at 4 or 5 never
+reaches session start.</p>
+<p>The brief is one note a person or the agent marks per collection,
+trimmed to <code>BRIEF_MAX_TOKENS</code> (800), with a folder census,
+the agent's last session and up to fifteen open tasks, the agent's cards
+and the cards other sessions hold (<code>brief.py:71-183</code>). It
+reads the note only while <code>active</code> (<code>:86</code>), and
+after 60 days without an edit it carries a warning to check it before
+trusting it (<code>:132-139</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is a synchronous tool or REST call by the agent or a
+person. No model extracts, summarises or consolidates anything. The
+architecture note describes a periodic job that consolidates similar
+memories and demotes unused ones (<code>PLANO.md:360</code>); the only
+periodic memory job in the tree deletes the expired.</p>
+<p><strong>Documents.</strong> <code>add_document</code> normalises the
+text, chunks it at 450 words with 60 of overlap and embeds every chunk
+with the title before opening a transaction
+(<code>documents.py:82-89</code>). Unless <code>force</code> is set it
+refuses when the document's centroid is within 0.92 of an active
+document's in the same collection, returning that document and a hint to
+update it instead (<code>:208-219</code>). Updates require a change
+note, take an optimistic lock on the version read or on
+<code>base_version</code>, write a version row, and re-chunk only when
+the text hash changed (<code>:257-348</code>).
+<code>edit_document</code> applies exact-once string replacements and
+appends server-side (<code>:365-408</code>).</p>
+<p><strong>Memories.</strong> <code>remember</code> embeds the text,
+finds the agent's single nearest memory, and at cosine 0.90 or more
+overwrites its content, embedding and kind, raises importance to the
+larger of the two, ORs <code>shared</code>, and keeps the old expiry if
+none is given (<code>memory.py:123-148</code>). The overwritten text is
+in the response and nowhere else. A memory once shared stays shared
+through every later merge, and no verb unshares it. "The customer
+prefers WhatsApp" and "the customer no longer prefers WhatsApp" are
+close enough under most embedders for the second to replace the first,
+which is a correction when it is right and an erasure when the second
+was a misreading.</p>
+<p><strong>Profiles.</strong> <code>propose_agent_update</code> accepts
+a prompt, a description and config, drops
+<code>auto_apply_updates</code> from the config, and stores the proposal
+(<code>agents.py:416-469</code>). Approval applies the proposal's fields
+onto the agent's current version, not the version it was proposed
+against (<code>:507-510</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The agent blocks on one embedding call per <code>remember</code> and
+on all of a document's chunks per save. A write is retrievable when the
+call returns. Nothing rewrites the store in the background.
+<code>reindex</code> re-embeds everything and is run by hand after an
+embedding change.</p>
+<p>Per session, the plugin injects one brief of up to 800 tokens plus
+the session, task and card sections, at <code>SessionStart</code> and
+again after <code>/clear</code> or compaction
+(<code>hooks/hooks.json:3-14</code>). The README states that the MCP
+server under <code>?tools=dev</code> adds about 1,200 tokens per
+session; the measuring script is committed
+(<code>scripts/measure_tool_catalog.py</code>) and its output is not.
+The brief's date line changes only when the note is edited, so the
+injection is stable across sessions until then.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers 62 tools, the
+<code>agent://{slug}/context</code> resource and four prompts
+(<code>mcp_server.py:1085-1143</code>). <code>tools/list</code> is
+filtered per connection by the scope each tool's core function requires
+(<code>mcp_server.py:153-159</code>, <code>:206-223</code>); permission
+is still checked in the core, so a hidden tool called by name is refused
+the same way. <code>?tools=dev</code> lists 23 tools for coding agents
+(<code>:166-194</code>). It lists <code>remember</code> and
+<code>save_session</code> and leaves out <code>recall</code> and
+<code>forget</code>, so the dev catalogue carries the write verb and not
+its correction verb, though both stay callable.</p>
+<p>The server instructions and <code>load_agent</code>'s lifecycle text
+tell the model to load the agent at the start, <code>remember</code>
+whatever is durable, <code>save_session</code> at the end, propose
+prompt changes rather than make them, and treat retrieved content as
+information and not instruction (<code>memory.py:14-21</code>,
+<code>mcp_server.py:19-40</code>).</p>
+<p>People connect Claude, ChatGPT, Cursor or VS Code through OAuth with
+dynamic client registration limited to an allow-list of redirect hosts
+and schemes. On the Authorize screen the person picks the scopes, capped
+by their dashboard role, and the collections the client sees. An admin
+may instead connect the client as a named agent
+(<code>security.py:153-199</code>).</p>
+<h3 id="the-claude-code-plugin-read-as-data">The Claude Code plugin,
+read as data</h3>
+<p>The repository root carries a marketplace entry pointing at
+<code>integrations/claude-code</code>, whose <code>hooks.json</code>
+registers three hooks. None was installed or run for this reading.
+Installed, they would do the following.</p>
+<ul>
+<li><strong>SessionStart</strong> (<code>startup|clear|compact</code>,
+10 s timeout) runs <code>hooks/session_start.py</code>. It walks up from
+the session folder for <code>.concilium.json</code>, takes
+<code>url</code>, <code>collection</code> and optionally
+<code>agent</code> from it, reads the key from
+<code>CONCILIUM_API_KEY</code> or the variable <code>key_env</code>
+names, and refuses any URL that is not <code>https</code> or
+<code>http</code> on localhost (<code>:64-90</code>). It calls
+<code>GET &lt;url&gt;/context/brief</code> with the key as a bearer, the
+repository name and the Claude Code session id, and returns the text as
+<code>additionalContext</code>, adding which <code>session</code> value
+to pass to the card tools (<code>:93-128</code>). Any failure exits 0
+with one line on stderr.</li>
+<li><strong>Stop</strong> and <strong>SessionEnd</strong> (async, 20 s)
+run <code>hooks/report_usage.py</code>. It reads the session transcript
+from its last offset, sums the API usage fields once per message id,
+counts tool calls whose name matches <code>concilium</code> or
+<code>kb-</code>, estimates their result tokens at four characters a
+token, keeps its state in
+<code>~/.cache/concilium/usage/&lt;session&gt;.json</code>, and posts
+the counters to <code>&lt;url&gt;/usage/sessions</code> with the same
+key (<code>:67-138</code>). No prompt or result text is sent.</li>
+</ul>
+<p>The URL comes from the committed file before the environment
+(<code>session_start.py:67</code>), and <code>.concilium.json</code> is
+meant to be committed (<code>:14-17</code>). A cloned repository whose
+<code>.concilium.json</code> names another <code>https</code> host
+receives the user's <code>CONCILIUM_API_KEY</code> as a bearer on the
+next session start, and the text it returns enters the model's context.
+The guidance asks for a read-only agent key, which bounds what the key
+can do and not where it is sent.</p>
+<p>The two commands are prompts. <code>/concilium-init</code> asks for
+the URL, collection and agent, writes <code>.concilium.json</code> and
+offers a <code>CLAUDE.md</code>. <code>/concilium-brief</code> drafts
+the brief from the repository and the existing notes and tells the model
+to save only after the user approves, which is an instruction to the
+model and not a check.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-collection-boundary">The collection boundary</h3>
+<p>A principal's collections are set by the server: the agent row's
+<code>allowed_collections</code> for an agent key or agent-bound grant,
+and the grant's own list for a person's OAuth connection
+(<code>security.py:140-150</code>, <code>:184-199</code>).
+<code>collection_filter</code> turns a requested list into a check of
+each name, and no request into the allowed list (<code>:81-87</code>).
+It reaches the search SQL as <code>col.name = ANY($2)</code>
+(<code>search.py:23</code>), list as the same predicate
+(<code>documents.py:170-175</code>), and read by id, update, archive,
+version history and links through <code>_load_doc</code>, which checks
+the document's collection (<code>documents.py:139-148</code>). Related
+documents filter in SQL (<code>links.py:33-43</code>, <code>:86</code>),
+and links and backlinks are filtered in code. A wikilink resolved into a
+collection out of reach is shown as pending rather than dropped, so the
+difference does not reveal that the title exists there
+(<code>links.py:51-61</code>). The brief requires the collection
+(<code>brief.py:81</code>).</p>
+<p>Managers are held inside the same boundary. An
+<code>agents:manage</code> principal acts on another agent only if it
+covers that agent's scopes and collections, and only an admin grants
+<code>admin</code> or <code>agents:manage</code>
+(<code>agents.py:34-55</code>). Memories, sessions and tasks go through
+the same <code>resolve_agent</code> (<code>:17-31</code>), and a test
+walks nine memory and profile calls against an admin agent with two
+managers that do not cover it
+(<code>tests/integration/test_agents_privilege.py:86-112</code>).</p>
+<p>Three things the boundary does not hold:</p>
+<ul>
+<li><strong>Shared memories ignore collections.</strong>
+<code>recall</code> returns every agent's <code>shared</code> rows to
+every agent (<code>memory.py:85</code>), so an agent confined to one
+collection can place text in the recall of an agent confined to another,
+and any <code>write</code> key can set the flag.</li>
+<li><strong>Empty means everything.</strong> <code>create_agent</code>
+stores <code>allowed_collections</code> empty unless given, and empty is
+every collection (<code>agents.py:194</code>,
+<code>security.py:74-75</code>).</li>
+<li><strong>Dashboard users are unrestricted.</strong> Every dashboard
+route builds its principal from the role alone, with no collections
+(<code>dashboard_api.py:229-238</code>,
+<code>dashboard_boards.py:31</code>); viewers see every note.</li>
+</ul>
+<h3 id="memory-has-no-history">Memory has no history</h3>
+<p>Documents are the careful store. Every change is a version with an
+author and a note, edits take a version lock, and restore copies an old
+version forward. Memories have none of it. <code>remember</code>'s merge
+and <code>forget</code>'s replacement overwrite in place, and the audit
+entry names the memory id and not the text (<code>memory.py:147</code>,
+<code>:187-193</code>). An overwritten or deleted memory cannot be
+recovered except from a database backup.</p>
+<h3 id="the-proposal-queue-and-who-may-clear-it">The proposal queue and
+who may clear it</h3>
+<p>A proposal waits as <code>proposed</code> and the served profile does
+not change until <code>review_agent_update</code> applies it. That
+function needs <code>agents:manage</code> and refuses a reviewer who
+does not cover the agent (<code>agents.py:487-510</code>). A key with
+the default <code>read</code> and <code>write</code> scopes neither sees
+nor may call it, and the agent cannot set its own autonomy, which the
+proposal path strips (<code>agents.py:428-431</code>,
+<code>tests/integration/test_flows.py:140-178</code>). A non-admin agent
+holding <code>agents:manage</code> cannot review its own proposal,
+because it does not cover its own elevated scope.</p>
+<p>The reviewer is a principal, not a person. In the documented flow it
+is the admin's own Claude, connected through OAuth with
+<code>agents:manage</code>, approving in chat
+(<code>PLANO.md:358</code>). It can equally be a manager agent's key or
+any script with an <code>agents:manage</code> key. An agent granted
+<code>admin</code> can approve its own proposals.
+<code>reviewed_by</code> records the resolved actor. The dashboard shows
+how many proposals wait and a switch for autonomy, but neither the
+proposed text nor an approve control
+(<code>dashboard_api.py:776-791</code>, <code>:832-836</code>).</p>
+<p>The gate covers the profile and nothing else. An agent can write a
+<code>procedure</code> memory saying what its prompt would have said, at
+importance 5, and <code>load_agent</code> hands it to every later
+session beside the profile, ungated.</p>
+<h3 id="prompt-injection">Prompt injection</h3>
+<p>Documents and memories are written by whoever holds
+<code>write</code>, including text an agent read from the web or a file.
+The defence is the instruction that retrieved content is data
+(<code>mcp_server.py:36</code>). Nothing marks where a memory's text
+came from beyond the optional <code>source</code> string.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong>
+<code>agent_id</code> on memories, sessions and tasks and
+<code>collection_id</code> on documents are applied as predicates on
+every read path, with both values derived from the presented credential.
+Shared memories cross the collection boundary, and an empty list is
+every collection.</li>
+<li><strong><code>audit_log</code> — earned.</strong>
+<code>audit_log</code> is written inside the same transaction as every
+memory, document, session, task and profile mutation through one helper,
+and no code updates or deletes it. Three limits. The entries carry ids,
+not text, so an overwritten memory's old value is not in them. The
+expiry sweep deletes memories without an entry. And nothing in the tree
+reads the table, so it answers questions only over SQL. The boards'
+<code>board_events</code> table is the stricter log, append-only by
+trigger and readable through <code>board_log</code>, and it records
+cards, not memories.</li>
+<li><strong><code>negative_eval</code> — earned, narrowly.</strong> One
+populated test requires notes outside a folder subtree to be absent from
+a filtered search; the filter is reached from the dashboard's search
+tester, not from the agent's MCP search. Section 10 has the rest.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> Memories carry
+no status. A document's <code>archived</code> is a one-way soft delete.
+The proposal states are the review queue described below, and the served
+profile is a separate row rather than a filtered read of them.</li>
+<li><strong><code>tombstone</code> — withheld.</strong>
+<code>forget</code> deletes by id, and an archived document is outside
+duplicate detection, so the same text written again is stored again with
+no warning.</li>
+<li><strong><code>human_review</code> — withheld, and the near miss is
+the profile queue.</strong> A proposal waits in a state the served
+profile does not read, and a key at the default scopes neither sees nor
+may call the verb that clears it. The only reviewer check is the
+<code>agents:manage</code> scope. <code>review_agent_update</code> is a
+declared MCP tool beside a REST route
+(<code>mcp_server.py:751-754</code>, <code>api.py:394-396</code>),
+nothing checks that the reviewer is a person, and an admin-scoped agent
+can approve its own proposal. The dashboard shows neither the proposed
+text nor an approve control, so no surface is reserved for a person. And
+the gate covers the profile only: memories, sessions and documents are
+never gated.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>created_at</code>, <code>updated_at</code>, <code>ended_at</code>
+and <code>expires_at</code> are record times. A session's
+<code>started_at</code> is caller-supplied and dates the session, not a
+fact.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 383 test functions: 196 unit tests and 187 integration
+tests against a real PostgreSQL. The integration suite drops and
+recreates the <code>public</code> schema of
+<code>TEST_DATABASE_URL</code>, refuses a database whose name lacks
+<code>test</code>, uses a hashing bag-of-words embedder, and is marked
+skipped when the variable is unset
+(<code>tests/integration/conftest.py:22-65</code>,
+<code>src/mcp_rag_api/core/embeddings.py:292-308</code>). The only
+workflow builds and pushes the Docker image and runs no tests
+(<code>.github/workflows/docker.yml</code>). I ran nothing.</p>
+<p>What is tested well is authority. <code>test_flows.py:76-178</code>
+walks an agent's read-only refusals, memory dedup,
+<code>load_agent</code>, a refused cross-agent load, the proposal
+lifecycle with the protected field, autonomy, restore and archive
+revoking the key. <code>test_agents_privilege.py</code> covers managers
+that cannot widen collections, restore an elevated version, issue a key
+for an elevated agent or touch the memories of an agent out of reach.
+The boards suite proves <code>board_events</code> refuses
+<code>UPDATE</code>, <code>DELETE</code> and <code>TRUNCATE</code>
+(<code>test_boards.py:226-234</code>).</p>
+<p>Negative retrieval:</p>
+<ul>
+<li><strong>Earned on.</strong> <code>test_search_folder_filter</code>
+seeds five notes, requires a non-empty search restricted to the Setor A
+subtree and that every hit be one of its three notes, then requires the
+root note in an unfiltered search
+(<code>tests/integration/test_folder_filter.py:47-54</code>). The vector
+arm has no threshold, so a broken filter returns the root and Setor B
+notes and the subset fails.</li>
+<li><strong>Vacuous.</strong> After archiving,
+<code>test_flows.py:45</code> asserts
+<code>all(h["document_id"] != doc_id …)</code> over a search nothing
+requires to be non-empty; it passes against a search that returns
+nothing. <code>:110</code> asserts an agent with no memories recalls
+<code>[]</code>.</li>
+<li><strong>Not retrieval.</strong>
+<code>test_agents_privilege.py:112</code> requires an exact list of one
+memory after refused writes, which tests that the writes were refused.
+<code>test_links.py:94</code> checks every backlink's collection over a
+list it does not require to be non-empty.</li>
+</ul>
+<p>Missing: no test that agent B's <code>recall</code> excludes agent
+A's private memories beside a present one, none for shared memories
+across collections, none that a collection-restricted agent's unfiltered
+search excludes another collection, and none of the merge overwriting a
+contradicting memory. No paper is cited, and no retrieval evaluation is
+committed; <code>PLANO.md</code> lists rerank and a recall@k and MRR set
+as open. The README's with-and-without comparison over five questions
+has no committed result.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Resolve scope from the credential, then let a manager borrow
+only what it covers.</strong> One <code>Principal</code> carries scopes
+and collections from the key or the grant, and every cross-agent action
+checks that the actor covers the target's scopes and collections. A
+manager cannot mint a key, restore a version or plant a memory above its
+own reach.</li>
+<li><strong>Hide a cross-scope link as pending rather than dropping
+it.</strong> Showing an out-of-reach wikilink as unresolved keeps a link
+from leaking that the title exists in a collection the reader cannot
+see.</li>
+<li><strong>Stage the agent's self-edits in a separate row.</strong> The
+served profile is written only by the apply step, and the autonomy flag
+is stripped from proposals, so the agent cannot vote itself out of
+review.</li>
+<li><strong>Refuse a near-duplicate document with a pointer to the
+original.</strong> The write returns the similar document and a hint to
+update it, and <code>force</code> exists for the case the threshold gets
+wrong.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A similarity merge that overwrites.</strong> Above a cosine
+threshold the new text replaces the old with no version kept, so a
+contradiction erases what it contradicts. Keep the old row, link the new
+one, or ask.</li>
+<li><strong>Stamping recency on what you injected.</strong> Marking
+every row served at session start as used makes the next session's
+ranking a copy of this one.</li>
+<li><strong>A gate on one tier when the same content can enter through
+another.</strong> A reviewed prompt beside an unreviewed
+<code>procedure</code> memory in the same context package reviews the
+format, not the content.</li>
+<li><strong>Letting a committed config choose where a user's key is
+sent.</strong> A repository file should name a project, not a host for a
+credential held in the user's environment.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This fits a small company that wants one shared notes base for people
+and agents, runs PostgreSQL already, and trusts every agent it registers
+about as much as every employee with an editor role. The careful work is
+on who may read and change what: collections, managers and the profile
+gate. The memories are a lightweight scratchpad by comparison, without
+history or review. A team that needs agent-learned facts to be
+correctable, attributable or kept apart across projects should take the
+access layer and the document versioning and build the memory tier
+again. A reader looking for memory that extracts, consolidates or decays
+will find none here.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Who reviews proposals in running deployments: a person in chat, or a
+manager agent? The tree supports both and records only the actor
+string.</li>
+<li>Does the private repository behind the sync commits run the
+integration suite, and against which embedder?</li>
+<li>How do deployments set <code>allowed_collections</code>: per
+project, as the plugin assumes, or left empty, which is every
+collection?</li>
+<li>How often does the 0.90 merge replace a contradicting memory under
+the production <code>bge-m3</code> embedder?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/mcp_rag_api/security.py</code></td>
+<td>Principal, scopes, collection filter, key and OAuth resolution</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/core/memory.py</code></td>
+<td>load_agent, recall, remember, forget, sessions, tasks, expiry</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/core/agents.py</code></td>
+<td>Registry, reach checks, versions, proposals, review, autonomy,
+keys</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/core/documents.py</code></td>
+<td>Document CRUD, versions, duplicate detection, archive, move</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/core/search.py</code></td>
+<td>Hybrid search SQL</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/core/lean.py</code></td>
+<td>One snippet per document and token budgets</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/core/links.py</code></td>
+<td>Links, backlinks and related documents under the collection
+filter</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/core/brief.py</code></td>
+<td>The session-start brief</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/mcp_server.py</code></td>
+<td>MCP tools, visibility, dev profile, resource, prompts</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/api.py</code></td>
+<td>REST routes</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/dashboard_api.py</code></td>
+<td>Dashboard routes, search tester, autonomy switch</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/db.py</code></td>
+<td>Pool, migrations, the audit helper</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/main.py</code></td>
+<td>App, MCP gate, periodic cleanup</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/migrations/001_init.sql</code></td>
+<td>Documents, chunks, agents, memories, sessions, tasks, keys,
+audit_log</td>
+</tr>
+<tr>
+<td><code>src/mcp_rag_api/migrations/012_boards.sql</code></td>
+<td>Boards, cards and the trigger-guarded board_events</td>
+</tr>
+<tr>
+<td><code>integrations/claude-code/hooks/</code></td>
+<td>SessionStart brief hook and usage hooks</td>
+</tr>
+<tr>
+<td><code>tests/integration/test_flows.py</code></td>
+<td>Document, memory, agent and proposal flows</td>
+</tr>
+<tr>
+<td><code>tests/integration/test_agents_privilege.py</code></td>
+<td>Manager reach</td>
+</tr>
+<tr>
+<td><code>tests/integration/test_folder_filter.py</code></td>
+<td>The folder filter on search and graph</td>
+</tr>
+<tr>
+<td><code>PLANO.md</code></td>
+<td>Architecture plan and decisions</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Nothing reads the audit log.</strong>
+<code>git grep -n 'audit_log' -- src</code> returns the insert at
+<code>src/mcp_rag_api/db.py:118</code> and the table and index in
+<code>001_init.sql</code>.
+<code>git grep -n -E '(UPDATE|DELETE FROM) audit_log' -- src</code>
+returns nothing;
+<code>git grep -n -c 'INSERT INTO audit_log' -- src</code> matches
+<code>db.py</code>.</li>
+<li><strong>No consolidation or demotion job.</strong>
+<code>git grep -n -i -E 'rebaix|demot|consolid' -- src ':!src/mcp_rag_api/static'</code>
+returns five lines about demoting dashboard users' roles.</li>
+<li><strong>No memory version table.</strong>
+<code>git grep -n -E 'memory_versions|agent_memory_history' -- src</code>
+returns nothing;
+<code>git grep -n -c 'document_versions' -- src/mcp_rag_api/core/documents.py</code>
+returns 4.</li>
+<li><strong>One writer of a document's status, to archived.</strong>
+<code>git grep -n -E 'SET status' -- src/mcp_rag_api/core/documents.py</code>
+returns <code>:444</code>.</li>
+<li><strong>No proposer check in review.</strong>
+<code>git grep -n proposed_by -- src/mcp_rag_api/core/agents.py</code>
+returns the three inserts and two selects;
+<code>review_agent_update</code> at <code>:487-510</code> does not read
+it.</li>
+<li><strong>No approve control on the dashboard.</strong>
+<code>git grep -n -i -E 'approv|review' -- src/mcp_rag_api/dashboard_api.py src/mcp_rag_api/static/js/views/agents.js src/mcp_rag_api/static/js/api.js</code>
+returns two lines of <code>agents.js</code> labelling an agent under
+review or autonomous;
+<code>git grep -n review_agent_update -- src</code> matches the REST
+route, the core function and the MCP tool.</li>
+<li><strong>The folder filter reaches search only from the
+dashboard.</strong>
+<code>git grep -n -E 'search\.search_knowledge\(' -- src</code> returns
+<code>api.py:232</code>, <code>lean.py:147</code> and <code>:151</code>,
+none passing <code>folder_ids</code>, and
+<code>dashboard_api.py:1314</code>, which does.</li>
+<li><strong>No session, task or agent delete.</strong>
+<code>git grep -n -E 'DELETE FROM (agent_sessions|agent_tasks|agents)( |$)' -- src</code>
+returns nothing;
+<code>git grep -n -E 'DELETE FROM agent_memories' -- src</code> matches
+<code>memory.py:183</code> and <code>:301</code>.</li>
+<li><strong>One branch on an agent config key.</strong>
+<code>git grep -n -E "config\"?\]?\.get\(" -- src</code> returns
+<code>agents.py:456</code>, <code>auto_apply_updates</code>.</li>
+<li><strong>Dashboard principals carry no collections.</strong>
+<code>git grep -n 'Principal(' -- src/mcp_rag_api/dashboard_api.py src/mcp_rag_api/dashboard_boards.py</code>
+returns twelve constructions, each from the role alone;
+<code>git grep -n 'Principal(.*allowed_collections' -- src/mcp_rag_api/dashboard_api.py src/mcp_rag_api/dashboard_boards.py</code>
+returns nothing.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -w -E 'valid_from|valid_to|valid_until|valid_at' -- src</code>
+returns nothing;
+<code>git grep -n -c expires_at -- src/mcp_rag_api/core/memory.py</code>
+returns 9.</li>
+<li><strong>No value-keyed rejection record.</strong>
+<code>git grep -n -i -E 'tombstone|rejected_values|blocklist|denylist' -- src ':!src/mcp_rag_api/static'</code>
+returns nothing.</li>
+<li><strong>No test workflow.</strong> <code>ls .github/workflows</code>
+lists <code>docker.yml</code>;
+<code>git grep -n pytest -- .github</code> returns nothing.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|doi\.org|citation' -- . ':!uv.lock' ':!src/mcp_rag_api/static/vendor'</code>
+returns nothing; <code>git grep -n -i 'reciprocal rank' -- src</code>
+matches <code>search.py:1</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/concilium-mcp/web-server/commit/60e308635fe9bb37bbe4d74f6b50e85a885699e6"><code class="commit-id" title="60e308635fe9bb37bbe4d74f6b50e85a885699e6">60e30863…</code></a>.
+First reading, read only, from a full clone at the head of
+<code>main</code>, the commit triage selected. Screened first: four
+auto-run surfaces (<code>.claude-plugin/</code>,
+<code>integrations/claude-code/.claude-plugin/plugin.json</code>,
+<code>integrations/claude-code/hooks/</code> and its
+<code>hooks.json</code>), read as data and described in <a
+href="#8-agent-integration">section 8</a>; two build-time execution
+points (<code>tests/conftest.py</code>,
+<code>tests/integration/conftest.py</code>); nothing inside the
+cooldown; nothing unpinned, <code>uv.lock</code> present. Nothing was
+installed, built or run, and the 383 test functions were not run. Three
+marks: <code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>; <code>human_review</code> withheld on the
+profile proposals (<a href="#9-reliability-safety-and-trust">section
+9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

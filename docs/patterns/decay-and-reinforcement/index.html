@@ -935,6 +935,22 @@ reads again (<code>artel/archivist/synthesis.py:1667-1711</code>).
 <strong>A controller on regret events can find a setpoint; reinforcement
 on fetches the agent never saw feeds the ranker its own output, and a
 promotion out of decay makes that permanent.</strong></p>
+<p><strong><a href="../../systems/concilium/">Concilium</a> reinforces
+what it injected and has nothing that decays.</strong>
+<code>load_agent</code> orders an agent's live memories by
+<code>importance DESC, COALESCE(last_used_at, updated_at) DESC</code>,
+takes fifteen and sets <code>last_used_at = now()</code> on all fifteen,
+and <code>recall</code> stamps every row it returns the same way
+(<code>src/mcp_rag_api/core/memory.py:33-61</code>,
+<code>:80-97</code>). Within an importance tier the rows served at
+session start are therefore the most recently used at the next one, so
+the same fifteen return until a newer memory is written at equal or
+higher importance; one written at importance 3 beside fifteen at 4 or 5
+never reaches session start. The architecture note describes a periodic
+job that demotes unused memories (<code>PLANO.md:360</code>); the only
+periodic memory job deletes expired rows (<code>:298-304</code>).
+<strong>A use signal written by the injector measures what was injected,
+and ranking on it freezes the selection.</strong></p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

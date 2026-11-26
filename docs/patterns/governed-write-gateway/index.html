@@ -492,6 +492,23 @@ while the SQL scan of a bitemporal collection reads the history
 also skipped by <code>document_put_with_valid_time</code>, the batch
 path and <code>vector_insert</code>, so which writer was called decides
 both what a later read returns and what reaches the server.</p>
+<p><a href="../../systems/concilium/">Concilium</a> gates one tier and
+leaves the tier beside it open. An agent's change to its own profile
+goes through <code>propose_agent_update</code>, which strips the
+autonomy flag and stores a <code>proposed</code> row the served profile
+does not read, and only an <code>agents:manage</code> principal that
+covers the agent's scopes and collections applies it
+(<code>src/mcp_rag_api/core/agents.py:416-469</code>,
+<code>:487-510</code>). The same agent writes memories with
+<code>remember</code> at once, including a <code>procedure</code> at
+importance 5, and <code>load_agent</code> hands those to every later
+session beside the reviewed prompt
+(<code>src/mcp_rag_api/core/memory.py:26-70</code>,
+<code>:101-164</code>). The review verb is itself an MCP tool on every
+manager connection, so a manager agent can approve another agent's
+prompt with no person in the loop. A gateway on the instructions an
+agent may follow needs to cover every store that reaches the same
+context.</p>
 <h3 id="gates-on-something-other-than-a-write">Gates on something other
 than a write</h3>
 <p>These are analogies rather than instances. Each puts one gate, or one

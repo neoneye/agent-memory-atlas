@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 902 reports.**
+**This page covers all 903 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8343,3 +8343,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: PolyForm Noncommercial 1.0.0; 259 commits from 20 May to 24 November 2026, the first one v1.0.0, almost all by one author; 21,685 lines of API Python; 652 api and mcp test functions run in CI against a real Postgres with a 713-test floor, none run here. The LoCoMo K=20 figures recompute from the committed results; the K=10 column leaves out 95 failed queries. Four marks: `trust_state`, `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you need team memory where a decision can be replaced and an agent can ask what is in force, or a per-row visibility rule shared by every read.
 - Do not copy when: a second tenant shares the instance, derived structures must respect the source's scope, a deletion must remove the content, or the deployment is commercial.
+
+### [`concilium`](../systems/concilium/)
+- Best idea: **a manager may act only on the agents it covers.** One principal carries the scopes and collections the server reads from the key or the OAuth grant, and every edit, restore, key issue, proposal review and memory call on another agent first checks that the actor holds that agent's elevated scopes and every collection it reaches; a test walks nine memory and profile calls against an agent out of two managers' reach.
+- Second idea: stage the agent's own prompt changes. `propose_agent_update` writes a `proposed` row, strips the autonomy flag from the config, and the served profile is the agents row that only the apply step writes; the review verb is hidden from and refused to a key with the default scopes.
+- Biggest risk: **memories have no history.** `remember` overwrites the agent's nearest memory at cosine 0.90 or more and `forget` overwrites or deletes in place; the old text goes back to the caller once, the audit entry names only the id, and a contradiction erases what it contradicts.
+- Second risk: shared memories reach every agent's recall whatever collections either is confined to; `load_agent` stamps last use on the fifteen memories it serves, so the same fifteen return each session; the reviewer of a proposal is any `agents:manage` principal, a manager agent included, and an unreviewed `procedure` memory reaches the same session package; the plugin's brief hook sends the user's key to whatever `https` URL a repository's committed `.concilium.json` names.
+- Most reusable component: `_check_grant`, `_check_collections` and `_check_reach` in `src/mcp_rag_api/core/agents.py:34-55`, `Principal.collection_filter` in `src/mcp_rag_api/security.py:81-87`, and the pending-wikilink rule in `src/mcp_rag_api/core/links.py:51-61`.
+- Maturity impression: Apache-2.0; 13,617 lines of Python and a 21,079-line dashboard from one author between 5 October and 25 November 2026, the last 21 commits syncs from another repository; 383 test functions, the 187 integration tests skipped without a test database, and CI runs none; none run here. Documents are carefully versioned; memories are not. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you are giving a team's agents one shared knowledge base with per-agent collection limits and managers who must not exceed their own reach.
+- Do not copy when: agent-learned facts have to be correctable and attributable later, or kept apart across projects.

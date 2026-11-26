@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-902, generated from each report's frontmatter —
+903, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-902, generated from each report's frontmatter —
+903, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-902, generated from each report's frontmatter —
+903, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 902, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 903, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-902, generated from each report's frontmatter —
+903, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 902 systems by the seven mechanisms
+filters all 903 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -7245,6 +7245,75 @@ of the prompt it replaced</td>
 live records only, so a superseded claim can be stored again;
 supersession carries no time, so past belief cannot be
 reconstructed</td>
+</tr>
+<tr>
+<td><a href="../systems/concilium/"><code>concilium</code></a></td>
+<td>Three kinds: a document (title, Markdown content, tags, metadata,
+collection, folder, version, active or archived) chunked into 450-word
+embedded chunks; an agent memory (kind fact, preference, procedure,
+decision or lesson, content, embedding, importance 1-5, shared flag,
+source, optional expiry); and an agent profile (system prompt,
+description, config, scopes, allowed collections) with a version history
+and proposals; plus session summaries with next steps, tasks and Kanban
+cards</td>
+<td>One PostgreSQL 16 database with pgvector: documents,
+document_versions and chunks with an HNSW index and a Portuguese
+tsvector; agents, agent_versions, agent_memories with an HNSW index,
+agent_sessions and agent_tasks; api_keys, OAuth grants and tokens,
+dashboard users; audit_log; boards, cards and an append-only
+board_events table guarded by triggers</td>
+<td>search_knowledge fuses a cosine HNSW arm and a Portuguese full-text
+arm by reciprocal rank at k 60 over active documents in the caller's
+collections, then returns one 120-word snippet per document under an
+optional token budget; recall is cosine top-k over the agent's own and
+every shared memory, unthresholded; load_agent takes the top 15 memories
+by importance then last use, the last session, open tasks and the
+collection brief; a SessionStart hook injects the brief</td>
+<td>Synchronous tool or REST calls: a document is chunked and embedded
+before its transaction and refused as a suspected duplicate when its
+centroid is within 0.92 of an active document in the same collection
+unless forced; remember embeds the text and overwrites the agent's
+nearest memory at cosine 0.90 or more, else inserts; a profile change is
+a proposal; no model extraction anywhere</td>
+<td>Documents update with optimistic version locks and a full version
+row per change, restore by copying an old version forward, and archive
+one way; forget deletes a memory by id or overwrites its text, keeping
+no prior version; expired memories are deleted every six hours; sessions
+and tasks are never deleted; deleting an empty collection cascades its
+archived notes</td>
+<td>agent_id on memories, sessions and tasks, resolved from the key;
+allowed_collections on the agent row or the OAuth grant applied to every
+document read, empty meaning all; shared memories cross agents and
+collections; folders are organisation, not access; one database per
+company is the tenant boundary</td>
+<td>62 MCP tools, one resource and four prompts over streamable HTTP
+with API keys or OAuth with dynamic client registration, or stdio; a
+?tools=dev profile of 23 tools; 69 REST routes beside the dashboard's
+own; a vanilla JavaScript dashboard with editor, graph, boards and
+search tester; a Claude Code plugin with a SessionStart brief hook, Stop
+and SessionEnd usage hooks and two commands; Trello sync</td>
+<td>A six-hourly cleanup that deletes expired memories, sessions and
+OAuth leftovers; a graph layout warm-up; a Trello mirror worker; a
+reindex command run by hand after an embedding change; no consolidation,
+decay or extraction pass</td>
+<td>None on memories or documents beyond archived documents leaving
+every read but fetch by id; profile changes proposed by the agent wait
+as proposed until an agents:manage principal applies or rejects them,
+unless the agent's autonomy is on; tool descriptions tell the model that
+retrieved content is data, not instruction</td>
+<td>The collection boundary is applied on search, list, read, links,
+related documents and the brief, and a wikilink into a collection out of
+reach is shown as pending so its existence does not leak; managers
+cannot act on agents outside their own scopes and collections; documents
+keep every version with a change note and an optimistic lock; a
+populated folder-filter test</td>
+<td>remember overwrites the nearest memory at 0.90 and keeps no old
+text, and forget overwrites or deletes the same way; shared memories
+reach every agent across collections; load_agent stamps last use on the
+15 rows it serves, so the same rows are served each session; the brief
+hook sends the user's key to whatever URL a repository's committed
+.concilium.json names; nothing reads the audit log; CI runs no
+tests</td>
 </tr>
 <tr>
 <td><a href="../systems/coniso/"><code>coniso</code></a></td>
@@ -40893,7 +40962,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>87 of 902:</em> <a
+<p><em>87 of 903:</em> <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -40984,7 +41053,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>230 of 902:</em> <a
+<p><em>230 of 903:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -41223,7 +41292,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>152 of 902:</em> <a
+<p><em>152 of 903:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -41385,7 +41454,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>396 of 902:</em> <a
+<p><em>397 of 903:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -41469,6 +41538,7 @@ href="../systems/cognis/"><code>cognis</code></a>, <a
 href="../systems/commonground/"><code>commonground</code></a>, <a
 href="../systems/commonly/"><code>commonly</code></a>, <a
 href="../systems/compartment/"><code>compartment</code></a>, <a
+href="../systems/concilium/"><code>concilium</code></a>, <a
 href="../systems/connapse/"><code>connapse</code></a>, <a
 href="../systems/context-keeper/"><code>context-keeper</code></a>, <a
 href="../systems/context-mode/"><code>context-mode</code></a>, <a
@@ -41801,7 +41871,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>306 of 902:</em> <a
+<p><em>307 of 903:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
@@ -41861,6 +41931,7 @@ href="../systems/clickhouse-loom/"><code>clickhouse-loom</code></a>, <a
 href="../systems/cognee/"><code>cognee</code></a>, <a
 href="../systems/commonground/"><code>commonground</code></a>, <a
 href="../systems/compartment/"><code>compartment</code></a>, <a
+href="../systems/concilium/"><code>concilium</code></a>, <a
 href="../systems/connapse/"><code>connapse</code></a>, <a
 href="../systems/contextcore/"><code>contextcore</code></a>, <a
 href="../systems/contextdb-atomsai/"><code>contextdb-atomsai</code></a>,
@@ -42121,7 +42192,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>109 of 902:</em> <a
+<p><em>109 of 903:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -42234,7 +42305,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>587 of 902:</em> <a
+<p><em>588 of 903:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -42347,6 +42418,7 @@ href="../systems/cognis/"><code>cognis</code></a>, <a
 href="../systems/cogz/"><code>cogz</code></a>, <a
 href="../systems/commonly/"><code>commonly</code></a>, <a
 href="../systems/compartment/"><code>compartment</code></a>, <a
+href="../systems/concilium/"><code>concilium</code></a>, <a
 href="../systems/connapse/"><code>connapse</code></a>, <a
 href="../systems/context-engineering/"><code>context-engineering</code></a>,
 <a href="../systems/context-keeper/"><code>context-keeper</code></a>, <a
@@ -42860,8 +42932,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-587 repositories of
-902 assert that particular material must
+588 repositories of
+903 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -42934,7 +43006,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 902 is the real figure for the second kind, and
+of 903 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

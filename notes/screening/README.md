@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 901 of 902 screened at the report's current pin.**
+**Progress: 902 of 903 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 434 |
+| Repositories with an auto-run surface (`RUNS`) | 435 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 404 |
-| Repositories with build-time execution (`EXEC`) | 647 |
+| Repositories with build-time execution (`EXEC`) | 648 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -112,6 +112,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`commonground`](../../content/systems/commonground.md) | `.gitmodules` |
 | [`commonly`](../../content/systems/commonly.md) | `.claude-plugin/`, `.cursor/rules/`, `.gitmodules`, `plugins/commonly/.claude-plugin/plugin.json` |
 | [`compartment`](../../content/systems/compartment.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `mcp.json`, `server.json` |
+| [`concilium`](../../content/systems/concilium.md) | `.claude-plugin/`, `integrations/claude-code/.claude-plugin/plugin.json`, `integrations/claude-code/hooks/`, `integrations/claude-code/hooks/hooks.json` |
 | [`coniso`](../../content/systems/coniso.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`connapse`](../../content/systems/connapse.md) | `.claude/settings.json`, `server.json` |
 | [`context-engineering`](../../content/systems/context-engineering.md) | `.gitattributes` |
