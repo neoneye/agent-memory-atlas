@@ -274,6 +274,8 @@ falls under the KV-cache scope boundary in the
 
 **[Studio for Janas](../../systems/studio-for-janas/) is the plain counterexample: the recalled facts go in the system message.** `buildOptions` joins the fixed prompt, the user's prompt and a block of up to six facts chosen for the message being sent (`src/components/chat/ChatView.tsx:464-472`). The first message of the request therefore changes whenever the recalled set does. The engine behind it is a local `janas-server` or llama.cpp process, so the cost is re-evaluating the conversation from the top; nothing in the tree measures it.
 
+**[Ditto Harness](../../systems/ditto-harness/) keeps the system prompt stable and puts the recalled block right after it.** `insert_after_system` places a second system message, *"Relevant memory context for this turn"*, before the first non-system message, so it sits ahead of the whole conversation history, and `prepare` rebuilds it from each turn's user input (`crates/harness/src/chat.rs:136-181`, `:270-352`). Nothing bounds it in bytes: the first two of eight entries carry both texts of the exchange whole until a dream writes a summary, and the rest fall back to the full prompt as a title (`crates/harness/src/memory/prompt_context.rs:286-378`). The fixed system prompt stays cacheable, and the history behind the block does not.
+
 ## The same constraint, one layer down
 
 Everything above is about where a *memory system* puts its recall block. The same

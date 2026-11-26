@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 895 reports.</strong></p>
+<p><strong>This page covers all 896 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37095,6 +37095,52 @@ verified deletion with receipts or a digest-only audit chain on a single
 machine.</li>
 <li>Do not copy when: the agent itself connects to the memory server, or
 a forgotten fact must stay forgotten on every write path.</li>
+</ul>
+<h3 id="ditto-harness"><a
+href="../systems/ditto-harness/"><code>ditto-harness</code></a></h3>
+<ul>
+<li>Best idea: <strong>scope keys bound into the tool closure and kept
+out of every schema.</strong> The five memory tools close over the
+host's <code>user_id</code> and <code>kg_id</code>, every pair and
+subject read applies <code>user_id = ?</code> in SQL, and the model has
+no argument that names either
+(<code>crates/harness/src/memory/tools.rs:35-43</code>,
+<code>crates/harness/src/db/mod.rs:312-387</code>).</li>
+<li>Second idea: a ranker whose signals are each documented with their
+normalisation, including a warning that linear recency, subject
+frequency and neighbour density are pool-relative and move when the pool
+changes (<code>crates/harness/src/retrieval/mod.rs:5-27</code>).</li>
+<li>Biggest risk: <strong>nothing can be forgotten.</strong> The tree
+has no delete, forget, expiry or status, the schema's cascades follow
+deletes no statement issues, and an overwrite under the same public id
+keeps the old content's subject links. A wrong or retracted memory is
+recalled until someone edits the file.</li>
+<li>Second risk: the model's words become memory. The facade saves the
+final answer beside the user's input, the <code>save_memory</code> tool
+stores whatever the model writes in the <code>prompt</code> field, and
+the injected payload shows neither <code>source</code> nor who said
+what. The same tool still offers <code>sessionId</code>, so a model can
+save a memory that prompt recall for the current session never
+returns.</li>
+<li>Most reusable component:
+<code>crates/harness/src/memory/tools.rs</code> for the closure-bound
+scope, and <code>crates/harness/src/retrieval/mod.rs</code> for the
+composite scorer.</li>
+<li>Maturity impression: MIT; 12,296 lines of Rust, 4,134 of them inline
+tests; 33 commits from 5 June to 2 November 2026 under five author
+names; 100 test functions with CI on build, test, fmt and clippy, none
+run here; no benchmark result committed, and no in-tree entry point
+exercises the V2 ranker, the learned weights or the reranker. Two marks:
+<code>scope_enforced</code>, <code>negative_eval</code>. Withheld:
+<code>trust_state</code>, <code>tombstone</code>,
+<code>bitemporal</code>, <code>audit_log</code>,
+<code>human_review</code>.</li>
+<li>Study when: you want a small, readable composite ranker over
+embedded exchanges and a pattern for keeping scope out of the model's
+hands.</li>
+<li>Do not copy when: users must be able to make the system forget, or
+what the user said must stay distinguishable from what the model said
+back.</li>
 </ul>
         </article>
       </div>

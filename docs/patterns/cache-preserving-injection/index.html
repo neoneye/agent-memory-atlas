@@ -486,6 +486,19 @@ message of the request therefore changes whenever the recalled set does.
 The engine behind it is a local <code>janas-server</code> or llama.cpp
 process, so the cost is re-evaluating the conversation from the top;
 nothing in the tree measures it.</p>
+<p><strong><a href="../../systems/ditto-harness/">Ditto Harness</a>
+keeps the system prompt stable and puts the recalled block right after
+it.</strong> <code>insert_after_system</code> places a second system
+message, <em>"Relevant memory context for this turn"</em>, before the
+first non-system message, so it sits ahead of the whole conversation
+history, and <code>prepare</code> rebuilds it from each turn's user
+input (<code>crates/harness/src/chat.rs:136-181</code>,
+<code>:270-352</code>). Nothing bounds it in bytes: the first two of
+eight entries carry both texts of the exchange whole until a dream
+writes a summary, and the rest fall back to the full prompt as a title
+(<code>crates/harness/src/memory/prompt_context.rs:286-378</code>). The
+fixed system prompt stays cacheable, and the history behind the block
+does not.</p>
 <h2 id="the-same-constraint-one-layer-down">The same constraint, one
 layer down</h2>
 <p>Everything above is about where a <em>memory system</em> puts its

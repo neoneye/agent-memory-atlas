@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 895 reports.**
+**This page covers all 896 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8273,3 +8273,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; about 235,000 lines of Python, a hundred thousand of them in the package, from 582 commits between 9 July and 22 November 2026, all but one by the maintainer, and 93 tags; 3,300 test functions, many named for the invariant they hold, none run here; a self-tested DolphinBench run whose 479 passing tasks in 600 recomputes from the hosted per-task file. Five marks: `trust_state`, `scope_enforced`, `audit_log`, `human_review`, `negative_eval`.
 - Study when: you want shadow-mode adoption, quarantine by source, verified deletion with receipts or a digest-only audit chain on a single machine.
 - Do not copy when: the agent itself connects to the memory server, or a forgotten fact must stay forgotten on every write path.
+
+### [`ditto-harness`](../systems/ditto-harness/)
+- Best idea: **scope keys bound into the tool closure and kept out of every schema.** The five memory tools close over the host's `user_id` and `kg_id`, every pair and subject read applies `user_id = ?` in SQL, and the model has no argument that names either (`crates/harness/src/memory/tools.rs:35-43`, `crates/harness/src/db/mod.rs:312-387`).
+- Second idea: a ranker whose signals are each documented with their normalisation, including a warning that linear recency, subject frequency and neighbour density are pool-relative and move when the pool changes (`crates/harness/src/retrieval/mod.rs:5-27`).
+- Biggest risk: **nothing can be forgotten.** The tree has no delete, forget, expiry or status, the schema's cascades follow deletes no statement issues, and an overwrite under the same public id keeps the old content's subject links. A wrong or retracted memory is recalled until someone edits the file.
+- Second risk: the model's words become memory. The facade saves the final answer beside the user's input, the `save_memory` tool stores whatever the model writes in the `prompt` field, and the injected payload shows neither `source` nor who said what. The same tool still offers `sessionId`, so a model can save a memory that prompt recall for the current session never returns.
+- Most reusable component: `crates/harness/src/memory/tools.rs` for the closure-bound scope, and `crates/harness/src/retrieval/mod.rs` for the composite scorer.
+- Maturity impression: MIT; 12,296 lines of Rust, 4,134 of them inline tests; 33 commits from 5 June to 2 November 2026 under five author names; 100 test functions with CI on build, test, fmt and clippy, none run here; no benchmark result committed, and no in-tree entry point exercises the V2 ranker, the learned weights or the reranker. Two marks: `scope_enforced`, `negative_eval`. Withheld: `trust_state`, `tombstone`, `bitemporal`, `audit_log`, `human_review`.
+- Study when: you want a small, readable composite ranker over embedded exchanges and a pattern for keeping scope out of the model's hands.
+- Do not copy when: users must be able to make the system forget, or what the user said must stay distinguishable from what the model said back.

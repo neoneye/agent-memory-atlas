@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MIT Rust library extracted from
+the Ditto backend: conversation pairs in embedded Turso with vector
+search, a composite ranker and an offline subject graph.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Ditto
+Harness — Agent Memory Atlas">
+    <meta property="og:description" content="An MIT Rust library
+extracted from the Ditto backend: conversation pairs in embedded Turso
+with vector search, a composite ranker and an offline subject graph.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Ditto
+Harness — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MIT Rust library
+extracted from the Ditto backend: conversation pairs in embedded Turso
+with vector search, a composite ranker and an offline subject graph.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Ditto Harness — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Ditto Harness",
+      "description": "An MIT Rust library extracted from the Ditto backend: conversation pairs in embedded Turso with vector search, a composite ranker and an offline subject graph.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Every exchange kept whole, ranked on seven
+signals, and nothing forgotten</p>
+          <h1>Ditto Harness</h1>
+          <p class="document-deck">An MIT Rust library extracted from
+the Ditto backend: conversation pairs in embedded Turso with vector
+search, a composite ranker and an offline subject graph.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ditto-assistant/ditto-harness">
+              <span>Source</span>
+              <strong>ditto-assistant/ditto-harness</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ditto-assistant/ditto-harness/commit/8785d38b4aa64f7167860132204ec60c9cfece1b" title="8785d38b4aa64f7167860132204ec60c9cfece1b">
+              <span>Analyzed revision</span>
+              <code>8785d38b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ditto-assistant--ditto-harness" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ditto-assistant--ditto-harness</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+(Omni Aura LLC) in LICENSE and the workspace manifest, which every crate
+inherits; relicensed from AGPL-3.0 plus a commercial licence and a CLA
+on 7 July 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>12,296
+lines of Rust in 25 files, 4,134 of them in inline test modules: 11,088
+in crates/harness, 729 in the CLI and 479 in the Node binding, plus 918
+lines of binding JavaScript and TypeScript</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>33
+commits from 5 June to 2 November 2026 under five author names, 19 of
+them Peyton Spencer's; a Go implementation was removed on 18 June 2026
+and the Rust workspace promoted to the root; no tags</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>100
+Rust test functions in 15 files, all inline; two return early unless
+DITTO_HARNESS_OLLAMA=1; ci.yml runs cargo test, fmt and clippy on push
+and pull request; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Ditto Harness is the memory and agent library extracted from the
+Ditto assistant's backend. The Rust crate stores each user prompt and
+assistant reply as one embedded pair in a local Turso file and ranks
+pairs by a composite of cosine, recency and a model-built subject graph.
+It injects the top ones into the next turn and exposes the store as five
+agent tools. What is notable is the ranker's clarity and the scope
+discipline: every signal is documented with its normalisation, and the
+user and graph keys reach every SQL read from the host rather than from
+the model. What is weak is correction. Nothing in the tree deletes,
+forgets, expires or marks a memory, so a wrong pair is recalled until
+someone edits the database.</p>
+<p>The crate is the reference dependency for miners on Bittensor subnet
+118, who build against it through a separate starter kit. That kit, and
+the closed Ditto backend this was extracted from, are outside the tree.
+The memory itself is not: storage, ranking, extraction and injection are
+all here, in a local file.</p>
+<p>The production-parity path the README describes, the V2 composite
+with learned weights and a cross-encoder rerank, is reached by no entry
+point in this tree. The CLI and the Node binding run the V1 composite
+with fixed weights, no predictor and no reranker, and no model file is
+committed.</p>
+<p>Two marks: <code>scope_enforced</code> on the user and kg keys, and
+<code>negative_eval</code> on the session filter. Section 9 gives the
+reason for each of the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>one exchange</strong>: the user's prompt and the
+assistant's reply, stored whole with an optional title and summary and
+embedded as a single vector of <code>prompt\nresponse\nsummary</code>
+(<code>crates/harness/src/memory/mod.rs:217-221</code>). Nothing is
+extracted from it at write time. It also records which memories were in
+context when it was written (<code>seed_memories</code>) and the
+retrieval weights used to find them
+(<code>crates/harness/src/db/mod.rs:49-71</code>).</p>
+<p>A pair enters the store by three routes. The chat facade saves the
+user turn and the model's final answer after the loop, with source
+<code>chatv2</code> (<code>crates/harness/src/chat.rs:206-230</code>).
+The model's <code>save_memory</code> tool stores whatever prompt,
+response, summary, session and subjects it supplies, with source
+<code>agent_tool</code>
+(<code>crates/harness/src/memory/tools.rs:158-189</code>). A host, the
+CLI's <code>seed</code> and the Node binding call
+<code>Store::save_memory</code> directly, and may choose the public pair
+id (<code>crates/node/src/lib.rs:262-301</code>).</p>
+<p>The second layer is the <strong>subject graph</strong>. The dream
+pipeline, run by hand, asks a model for zero to five durable subjects
+per recent pair, merges each into the user's closest existing subject at
+cosine 0.75 or above by appending its description, links subjects to
+pairs, and has the model rename and rewrite any subject whose
+description accumulated merges
+(<code>crates/harness/src/dream.rs:138-277</code>). Subjects affect
+ranking, not what is true.</p>
+<p>No memory has a state. Every stored pair is equally a candidate on
+every read, whatever wrote it. A pair stops being recalled only by
+falling out of the ranking or by an overwrite under the same public id,
+which keeps the row's old subject links
+(<code>crates/harness/src/db/mod.rs:192-208</code>). Subjects change in
+place and keep no prior version.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three writers fill one table of whole exchanges; the dream builds a subject graph that is rewritten in place; the prompt path reads only the turn's session while the tools read all, and nothing marks, expires or deletes a row</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three writers fill one table of whole exchanges; the dream builds a subject graph that is rewritten in place; the prompt path reads only the turn&#39;s session while the tools read all, and nothing marks, expires or deletes a row
+flowchart TD
+  subgraph writers[&quot;Three writers&quot;]
+    direction TB
+    W1[&quot;chat run with save_memory:&lt;br/&gt;the user turn and the&lt;br/&gt;model&#39;s final answer&quot;]
+    W2[&quot;save_memory tool: any text&lt;br/&gt;the model writes, under&lt;br/&gt;any sessionId it names&quot;]
+    W3[&quot;host, Node or seed:&lt;br/&gt;a caller-chosen id&lt;br/&gt;overwrites in place&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  writers --&gt; ROW[&quot;memory_pairs row keyed on&lt;br/&gt;user, kg and session ids;&lt;br/&gt;prompt, response, summary&lt;br/&gt;embedded as one vector&quot;]
+  ROW --&gt; DREAM[&quot;dream, run by hand:&lt;br/&gt;0 to 5 subjects per pair&lt;br/&gt;named by the model, merged&lt;br/&gt;at cosine 0.75, renamed&quot;]
+  DREAM --&gt; GRAPH[&quot;subjects and links:&lt;br/&gt;rewritten in place,&lt;br/&gt;no prior version kept&quot;]
+  ROW --&gt; Q{&quot;which read?&quot;}
+  ROW ~~~ END[&quot;no forget, delete&lt;br/&gt;or status: a row stays&lt;br/&gt;retrievable for good&quot;]
+  Q --&gt;|&quot;prompt context&quot;| P[&quot;user, kg and the turn&#39;s&lt;br/&gt;session, main if blank;&lt;br/&gt;V1 composite in CLI, Node&quot;]
+  Q --&gt;|&quot;search tools&quot;| T[&quot;user and kg only,&lt;br/&gt;every session&quot;]
+  GRAPH -.-&gt; P
+  P --&gt; INJ[&quot;system message after the&lt;br/&gt;system prompt: two entries&lt;br/&gt;in full, six as titles&quot;]
+  P -.-&gt; MISS[&quot;a row saved under another&lt;br/&gt;session never reaches it&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The harness is a library crate with two thin shells. Nothing has to
+run except the embedder and the chat model: the store is one Turso file
+opened with <code>turso::Builder::new_local</code>, and the schema is
+five tables and six indexes, each an idempotent
+<code>IF NOT EXISTS</code> statement applied on every open
+(<code>crates/harness/src/db/mod.rs:43-157</code>).</p>
+<ul>
+<li><strong><code>crates/harness</code></strong> holds the store
+(<code>memory/</code>), the ranker (<code>retrieval/</code>), the dream
+pipeline (<code>dream.rs</code>), the agent loop (<code>agent/</code>),
+the chat facade (<code>chat.rs</code>), model and embedder clients over
+<code>rig-core</code> (<code>models/</code>) and the database layer
+(<code>db/</code>).</li>
+<li><strong><code>crates/cli</code></strong> builds a
+<code>ditto-harness</code> binary with <code>seed</code>,
+<code>dream</code>, <code>search</code>, <code>subjects</code> and
+<code>chat</code>, defaulting to <code>--db ditto-harness.db</code> and
+<code>--user local</code>
+(<code>crates/cli/src/main.rs:25-52</code>).</li>
+<li><strong><code>crates/node</code></strong> is a napi-rs binding with
+<code>open</code>, <code>seedUser</code>, <code>saveMemory</code>,
+<code>searchMemories</code>, <code>searchSubjects</code>,
+<code>dream</code> and <code>chat</code>
+(<code>crates/node/src/lib.rs:215-425</code>).</li>
+</ul>
+<p>Vector search is a brute-force scan of the user's rows with
+<code>vector_distance_cos</code>, deliberately with no HNSW index
+(<code>crates/harness/src/db/mod.rs:13-17</code>). The embedding
+contract is fixed at 768 dimensions, and a vector of any other length is
+refused on write and on query (<code>:543-563</code>). Each overlapping
+operation opens its own connection, because one Turso connection refuses
+concurrent use (<code>:119-165</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The CLI and the Node binding embed through a local Ollama server with
+<code>embeddinggemma</code>
+(<code>crates/cli/src/commands/util.rs:27-44</code>). Chat runs on
+Ollama by default, or on OpenRouter, vLLM or another OpenAI-compatible
+endpoint with a key. Storing a memory therefore needs an embedder; the
+Node binding's <code>embedder: "hash"</code> option substitutes a
+deterministic bag-of-words stub for tests
+(<code>crates/node/src/lib.rs:227-235</code>).</p>
+<p>Install is a Cargo build or a git dependency pinned to a commit; the
+README publishes no crate version. The store is an ordinary
+SQLite-dialect file and is readable with a SQL shell, which is also the
+only way to remove a memory from it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>Harness::run</code> calls
+<code>prepare</code>, runs the loop with
+<code>save_memory: false</code>, then calls
+<code>Store::save_memory</code> with the user input, the final text, the
+seed nodes and the retrieval metadata from preparation
+(<code>crates/harness/src/chat.rs:188-236</code>).
+<code>Store::save_memory</code> embeds once, upserts the user, upserts
+the pair, then embeds and upserts each non-blank subject and links it,
+each as its own statement
+(<code>crates/harness/src/memory/mod.rs:203-290</code>).</li>
+<li><strong>Extraction and consolidation.</strong>
+<code>Dreamer::dream</code> loads the newest 128 pairs and every subject
+of the user, runs one extraction prompt per pair at concurrency 2,
+writes the extracted summary onto pairs that have none, merges or
+inserts subjects in <code>dedup_or_create_subject</code>, links them,
+and runs <code>refine_subjects</code> over merged descriptions
+(<code>crates/harness/src/dream.rs:138-277</code>,
+<code>:307-510</code>).</li>
+<li><strong>Retrieval.</strong> <code>Store::search_memories</code> runs
+one vector query per query string and deduplicates
+(<code>crates/harness/src/memory/mod.rs:294-330</code>).
+<code>Store::search_composite_memories</code> predicts weights, calls
+<code>retrieval::composite_retrieve</code>, fetches the full rows and
+applies the optional reranker (<code>:337-421</code>).
+<code>composite_retrieve</code> pulls a candidate pool by cosine, pulls
+subject links and global link counts, and scores in Rust
+(<code>crates/harness/src/retrieval/mod.rs:308-357</code>,
+<code>:422-552</code>, <code>:558-699</code>).</li>
+<li><strong>Context assembly.</strong>
+<code>Store::get_prompt_memories</code> runs long-term retrieval, then
+lists recent memories of the session excluding what long-term returned,
+and builds the JSON payload
+(<code>crates/harness/src/memory/prompt_context.rs:149-245</code>).
+<code>memory_context_message</code> wraps it as a system message and
+<code>insert_after_system</code> places it before the first non-system
+message (<code>crates/harness/src/chat.rs:270-352</code>).</li>
+<li><strong>Update and delete.</strong>
+<code>Db::create_memory_pair</code> is an upsert on
+<code>(user_id, firestore_pair_id)</code> that rewrites every content
+column and keeps <code>id</code>
+(<code>crates/harness/src/db/mod.rs:182-240</code>). There is no delete
+path (appendix, <em>Recorded searches</em>).</li>
+<li><strong>Schema.</strong> <code>SCHEMA_STATEMENTS</code>
+(<code>crates/harness/src/db/mod.rs:43-117</code>).</li>
+<li><strong>Tools.</strong> <code>memory_tools_with</code> returns
+<code>save_memory</code>, <code>search_memories</code>,
+<code>search_subjects</code>, <code>search_memories_in_subjects</code>
+and <code>fetch_memories</code>, each closing over
+<code>ToolOptions</code>
+(<code>crates/harness/src/memory/tools.rs:35-101</code>).</li>
+<li><strong>Retrieval log.</strong> <code>log_event</code> inserts a
+<code>retrieval_events</code> row with the query text, its embedding,
+the returned ids and the weights when the caller sets
+<code>log_event</code>
+(<code>crates/harness/src/retrieval/mod.rs:719-748</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The pair.</strong> <code>memory_pairs</code> holds a row UUID
+<code>id</code>, a public <code>firestore_pair_id</code>,
+<code>user_id</code>, <code>kg_id</code>, <code>session_id</code>,
+<code>title</code>, <code>description</code> (the summary),
+<code>prompt</code>, <code>response</code>, <code>input</code> and
+<code>output</code> as JSON content parts, <code>source</code>,
+<code>source_context</code>, <code>timestamp</code>,
+<code>timezone_offset</code>, <code>seed_memories</code>,
+<code>retrieval_metadata</code>, <code>conversation_embedding</code>,
+<code>created_at</code> and <code>updated_at</code>, unique on
+<code>(user_id, firestore_pair_id)</code>
+(<code>crates/harness/src/db/mod.rs:49-71</code>). The module header
+warns that the link table references the row UUID while tools and
+exclusion lists speak the public id, and that custom SQL mixing them
+matches nothing (<code>:19-27</code>).</p>
+<p><strong>Subjects and links.</strong> <code>subjects</code> holds the
+text, a description, an <code>is_key_subject</code> flag and an
+embedding, unique on <code>(user_id, kg_id, subject_text)</code>;
+<code>subject_memory_pair_links</code> joins subject to pair row with
+the user and kg repeated (<code>:72-91</code>).
+<code>is_key_subject</code> is set on first link and returned to
+callers; no query filters or ranks on it.</p>
+<p><strong>Scope.</strong> <code>user_id</code> references
+<code>harness_users</code>, and <code>kg_id</code> defaults to
+<code>user_memories_&lt;user_id&gt;</code>
+(<code>crates/harness/src/types.rs:17-25</code>). A host may give one
+user several kg ids. <code>session_id</code> is nullable, and every
+session read treats null as <code>main</code>.</p>
+<p><strong>Time.</strong> <code>timestamp</code> is when the exchange
+happened and is set by the caller; seeds and the Node binding backdate
+it with <code>daysAgo</code>. <code>created_at</code> and
+<code>updated_at</code> are record times. No column records when a fact
+held.</p>
+<p><strong>Provenance.</strong> <code>source</code> names the writer
+(<code>chatv2</code>, <code>agent_tool</code>, <code>agent_loop</code>,
+<code>node</code>, or a host's value), and <code>seed_memories</code>
+and <code>retrieval_metadata</code> record what was in context. None of
+them is read by retrieval, and none reaches the injected payload.</p>
+<p><strong>Retrieval events.</strong> <code>retrieval_events</code>
+keeps the user, kg, session, request path, query text, query embedding,
+returned ids, weights and auxiliary features of each logged composite
+retrieval (<code>:92-104</code>). It is a record of reads, there for
+training the weight predictor, and nothing in the tree reads it outside
+tests.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Two readers, two session rules.</strong> The prompt path
+resolves a blank session to <code>main</code> and passes it to long-term
+retrieval, so automatic recall sees only the current session's pairs and
+pairs with no session
+(<code>crates/harness/src/memory/prompt_context.rs:156-158</code>,
+<code>:210-245</code>,
+<code>crates/harness/src/db/mod.rs:381-387</code>). The
+<code>search_memories</code> tool passes no session and searches all of
+the user's pairs. Its schema hides <code>sessionId</code> because a
+model that invents <code>default</code> or <code>main</code> gets
+nothing back from a corpus partitioned per transcript
+(<code>crates/harness/src/memory/tools.rs:222-227</code>, commit
+<code>f63422f</code>, 28 October 2026).</p>
+<p><strong>Plain search.</strong> Cosine similarity of at least 0.15,
+ordered by distance then newest, eight results by default
+(<code>crates/harness/src/memory/mod.rs:35-39</code>). This is the
+facade's default, since <code>use_composite</code> defaults to false
+(<code>crates/harness/src/chat.rs:62-71</code>). The CLI and Node chat
+set it true.</p>
+<p><strong>Composite search.</strong> A candidate pool of
+<code>max(32, limit × 4)</code> nearest pairs is scored as a weighted
+sum (<code>crates/harness/src/retrieval/mod.rs:5-27</code>):</p>
+<ul>
+<li>V1, the default variant: cosine 0.65, linear recency 0.20 and
+subject frequency 0.15 (<code>:130-133</code>). Recency is min-max over
+the pool, and frequency is the sum of global link counts of a pair's
+subjects over the pool maximum, so both scores move when the pool
+changes.</li>
+<li>V2 adds exponential recency with a 14-day time constant, the best
+cosine between the query and a linked subject, a binary session match,
+and the number of pool pairs sharing a subject, under a
+<code>scale</code> factor.</li>
+</ul>
+<p>A <code>WeightPredictor</code> may supply per-query weights;
+<code>MlpPredictor</code> loads a binary model from a path or reader,
+and a <code>Reranker</code> reorders a pool of 20
+(<code>crates/harness/src/retrieval/mod.rs:240</code>). No in-tree
+caller loads a model, implements a reranker or selects V2 (appendix,
+<em>Recorded searches</em>).</p>
+<p><strong>Subject tools.</strong> <code>search_subjects</code> is
+cosine over the user's subjects at 0.10.
+<code>search_memories_in_subjects</code> takes a subject id from the
+model and searches only the pairs linked to it, filtering the user but
+not the kg (<code>crates/harness/src/db/mod.rs:454-485</code>).</p>
+<p><strong>Injection.</strong> Long-term results go into
+<code>{"memories": [...]}</code>: the first two in detail, with the
+summary if any or else the full user and assistant text, and the rest as
+titles, where a title falls back to the summary and then the full prompt
+(<code>crates/harness/src/memory/prompt_context.rs:286-318</code>,
+<code>:334-378</code>). A chat-saved pair has no summary until a dream
+writes one, so the first two entries carry both texts whole and the
+other six carry whole prompts. Nothing truncates them. Short-term recall
+is off unless the caller sets <code>short_term_limit</code>
+(<code>:91-92</code>).</p>
+<p>The payload goes in a system message after the leading system block,
+ahead of the conversation history
+(<code>crates/harness/src/chat.rs:338-352</code>). It is recomputed from
+the user input on every turn.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous. <code>save_memory</code> calls the embedder
+and then writes, and the facade's save runs after the loop and before
+<code>run</code> returns. A pair is retrievable as soon as the call
+returns. The subject graph lags until someone runs the dream.</p>
+<p><strong>What gets stored.</strong> The facade stores the user input
+and the model's final answer, so the assistant's own statements are
+recalled later as part of the memory, under the key <code>ditto</code>.
+The <code>save_memory</code> tool stores text the model composes in both
+the <code>prompt</code> and <code>response</code> fields, so a model can
+write a user statement that the user never made. Neither path filters
+content, and the injected payload does not show <code>source</code>.</p>
+<p><strong>The session the model can choose.</strong>
+<code>save_memory</code> still advertises <code>sessionId</code>
+(<code>crates/harness/src/memory/tools.rs:141</code>). A memory saved
+under any session other than the current one, or <code>main</code> when
+the turn has none, is invisible to prompt recall and visible only
+through the search tool. The commit that hid the field from
+<code>search_memories</code> left it on the write.</p>
+<p><strong>Overwrite.</strong> An upsert on an existing public pair id
+rewrites the content, the embedding and the summary and keeps the row id
+(<code>crates/harness/src/db/mod.rs:192-208</code>). Subject links are
+keyed on the row id, so the old content's subjects stay linked to the
+new content. Only a direct library or Node caller can pass the id; the
+tool cannot.</p>
+<p><strong>The dream.</strong> Extraction asks for strict JSON with a
+summary and up to five subjects, and parsing skips malformed entries
+(<code>crates/harness/src/dream.rs:696-712</code>,
+<code>:740-780</code>). A subject merges into the nearest existing one
+at cosine 0.75 by appending its description after <code>" | "</code>.
+Refine asks the model for a 2-5 word name and a 1-3 sentence summary,
+keeps the old name if the new one is taken, re-embeds, and overwrites
+(<code>:398-510</code>). Two different entities within 0.75 become one
+subject, and the merge cannot be undone because the prior text is
+gone.</p>
+<p><strong>Partial writes.</strong> <code>save_memory</code> issues the
+user upsert, the pair upsert and each subject upsert and link as
+separate statements with no transaction, so a failure after the pair
+write leaves a pair without its subjects
+(<code>crates/harness/src/memory/mod.rs:228-287</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A turn with memory costs one query embedding and one brute-force
+cosine scan over the user's pairs, plus, for the composite, two link
+queries and in V2 one subject cosine query. A save costs one embedding,
+plus one batched embedding for subjects. The scan grows with the user's
+pairs, and nothing ever removes one. A dream run makes one model call
+per pair among the newest 128 and one per merged subject, and re-reads
+all of the user's subjects into memory. Because the injected block is
+unbounded and placed before the history, a changed recall set changes
+the prompt from the system message onward.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model holds five tools when the host sets
+<code>include_memory_tools</code>
+(<code>crates/harness/src/chat.rs:250-262</code>). It can write freely,
+search across sessions, list subjects and fetch full text by id. It
+cannot name a user or kg: those come from <code>ToolOptions</code>, set
+by the facade from the request
+(<code>crates/harness/src/memory/tools.rs:35-43</code>). It has no
+update, delete or forget tool.</p>
+<p>The search tools return 500-character previews, and
+<code>fetch_memories</code> returns truncated full text up to 8,000
+bytes (<code>crates/harness/src/memory/slim.rs:10-12</code>).</p>
+<p>Automatic recall happens in <code>prepare</code> whenever the store
+is set and the user input is non-empty. A host adapts the loop through
+four traits, <code>Model</code>, <code>Embedder</code>,
+<code>WeightPredictor</code> and <code>Reranker</code>, plus an
+<code>EventHandler</code> that can block a repeated identical tool call
+before it runs (<code>crates/harness/src/agent/mod.rs:76-98</code>). The
+loop's repetition handling is tool-call machinery and not memory.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="nothing-can-be-forgotten">Nothing can be forgotten</h3>
+<p>The tree has no delete statement, no forget verb, no expiry and no
+status column. The schema's <code>ON DELETE CASCADE</code> clauses would
+follow a deleted user, pair or subject, and no statement deletes any of
+them (<code>crates/harness/src/db/mod.rs:52</code>,
+<code>:85-87</code>). A memory the user asks to forget stays in the file
+and keeps being recalled. The README's statement that the harness
+<em>"stores and retrieves agent memories"</em> is exact: it does nothing
+else.</p>
+<h3 id="the-models-words-become-memory">The model's words become
+memory</h3>
+<p>The facade saves the final answer beside the user's words, and the
+tool saves text the model composes in a user-shaped field. Both are
+recalled into later turns as <code>user</code> and <code>ditto</code>
+text with no provenance in the payload. A wrong answer, once saved, is
+evidence for itself on the next related question.</p>
+<h3 id="scope">Scope</h3>
+<p>The user and kg keys are the boundary, and they hold on every read.
+Each query in <code>db/mod.rs</code>, <code>retrieval/mod.rs</code>,
+<code>dream.rs</code> and the CLI that selects pairs or subjects names
+<code>user_id</code>. The link and subject-similarity lookups inside
+composite scoring key on ids taken from the user-filtered pool
+(<code>crates/harness/src/retrieval/mod.rs:478-552</code>).
+<code>fetch_memories</code>, the subject-linked search and the CLI's
+subject listing filter the user and not the kg, so a host using several
+kg ids per user lets the model fetch across them by id
+(<code>crates/harness/src/db/mod.rs:312</code>, <code>:464</code>,
+<code>crates/cli/src/commands/dream.rs:64-77</code>). The host supplies
+the user; the library authenticates nothing.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> A stored user
+and kg key on every row, applied in SQL on every read, supplied by the
+host and never by the model. No committed case puts two users in one
+database.</li>
+<li><strong><code>negative_eval</code> — earned, on the session
+filter.</strong> A populated three-pair fixture requires the composite
+pool for one session to be exactly the one pair in it, leaving out the
+pair with cosine 1.0 to the query; the tool test requires zero rows for
+two invented sessions beside three positive controls. The user boundary
+has no such case.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No status
+field exists.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Nothing is
+deleted, so nothing is remembered as rejected.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>timestamp</code> is when the exchange happened,
+<code>created_at</code> and <code>updated_at</code> are record times,
+and no column holds validity.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>retrieval_events</code> records reads, and upserts and dream
+updates overwrite with no record.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No memory
+waits for anyone.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI runs <code>cargo build</code>, <code>cargo test</code>,
+<code>cargo fmt --check</code> and <code>cargo clippy</code> with
+warnings denied on push and pull request
+(<code>.github/workflows/ci.yml</code>). I ran nothing from the
+repository.</p>
+<p>What the memory tests cover, all against an in-memory Turso database
+with a hash or one-hot embedder:</p>
+<ul>
+<li>the vector query's threshold and order, the session resolution of
+<code>list</code>, fetch order, the upsert's null handling and the
+subject upsert's merge
+(<code>crates/harness/src/db/mod.rs:1140-1290</code>);</li>
+<li>V1 and V2 composite scores and order on a three-pair fixture, the
+session filter, the timestamp floor and event logging
+(<code>crates/harness/src/retrieval/mod.rs:909-1294</code>);</li>
+<li>save, search, subject search, subject-scoped search and fetch
+round-trips, and two regressions where a blank entry shifted later
+embeddings
+(<code>crates/harness/src/memory/mod.rs:751-1000</code>);</li>
+<li>the tools' shapes, a round-trip through all five, and the session
+sentinel (<code>crates/harness/src/memory/tools.rs:397-585</code>);</li>
+<li>a dream that extracts and links, re-runs without duplicating,
+survives malformed output, and merges and refines two subjects
+(<code>crates/harness/src/dream.rs:994-1222</code>).</li>
+</ul>
+<p><code>dream_ollama_integration</code> and its twin in
+<code>models/mod.rs</code> return early unless
+<code>DITTO_HARNESS_OLLAMA=1</code>, so CI passes them without a model
+(<code>crates/harness/src/dream.rs:1229-1233</code>).</p>
+<p>What is not covered: a second user or kg in any fixture; any case
+where a merge joins two distinct subjects; the prompt path's exclusion
+of a tool-saved memory under another session; and the <code>list</code>
+exclusion assertion at <code>crates/harness/src/db/mod.rs:1255</code>,
+which runs over a session whose only row is the one excluded.</p>
+<p>The README and comments name a DittoBench reference baseline and
+LongMemEval, and no result, harness or dataset for either is committed.
+The tree cites no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Scope keys bound into the tool closure.</strong> Building
+the tools over the host's user and kg ids, and leaving them out of every
+schema, removes the model from the scope decision without a check to
+forget.</li>
+<li><strong>Remove a filter from the model before you document
+it.</strong> The session field on search was a parameter the model could
+only guess, and every guess emptied the result. The fix and the test
+that pins it are a small model of how to retire a dangerous
+argument.</li>
+<li><strong>Document each ranking signal with its
+normalisation.</strong> The table at the top of
+<code>retrieval/mod.rs</code>, including its warning that three signals
+are pool-relative, is what makes the ranker auditable.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Storing the assistant's reply as memory with no
+marker.</strong> Once the answer is recalled as <code>ditto</code> text
+beside the user's words, the system cannot tell what the user said from
+what it said back.</li>
+<li><strong>A write tool that accepts a key the read path filters
+on.</strong> If the model can choose the session on save and the prompt
+reads one session, it can write memories that never come back.</li>
+<li><strong>Merging entities by appending text and letting a model
+rename them.</strong> With no prior version kept, a bad merge at the
+threshold is permanent.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team building a hosted assistant that will own deletion,
+consent and provenance in its own service and wants a ranker it can read
+and retrain. It is the reference engine of a benchmark competition,
+tuned for recall over transcripts, and its shape follows from that:
+exchanges in, ranked exchanges out. Walk away if users must be able to
+make it forget, if what the model said must be kept apart from what the
+user said, or if the store must stay small.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the closed Ditto backend deletes or expires pairs outside
+this crate, and whether the harness is meant to stay append-only.</li>
+<li>Whether <code>save_memory</code> keeping <code>sessionId</code> is
+deliberate, given that the search tool dropped it.</li>
+<li>What the DittoBench baseline scores with V1 against V2 and the
+learned weights, since neither result is committed.</li>
+<li>Whether hosts are meant to use several kg ids per user, which the
+two reads without a <code>kg_id</code> predicate would cross.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and queries: <code>crates/harness/src/db/mod.rs</code></li>
+<li>Store, save and search:
+<code>crates/harness/src/memory/mod.rs</code></li>
+<li>Prompt context:
+<code>crates/harness/src/memory/prompt_context.rs</code>,
+<code>crates/harness/src/memory/slim.rs</code></li>
+<li>Tools: <code>crates/harness/src/memory/tools.rs</code></li>
+<li>Ranking: <code>crates/harness/src/retrieval/mod.rs</code>,
+<code>crates/harness/src/retrieval/features.rs</code>,
+<code>crates/harness/src/retrieval/mlp.rs</code></li>
+<li>Dream: <code>crates/harness/src/dream.rs</code></li>
+<li>Chat facade and loop: <code>crates/harness/src/chat.rs</code>,
+<code>crates/harness/src/agent/mod.rs</code></li>
+<li>Models and embedders:
+<code>crates/harness/src/models/mod.rs</code></li>
+<li>CLI: <code>crates/cli/src/main.rs</code>,
+<code>crates/cli/src/commands/</code></li>
+<li>Node: <code>crates/node/src/lib.rs</code></li>
+<li>CI: <code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No delete or forget path.</strong>
+<code>git grep -n -i -E 'DELETE FROM|forget|delete_memor|remove_memor|fn delete' -- crates</code>
+returns nothing; <code>git grep -n -c -E 'INSERT INTO' -- crates</code>
+counts 9 in <code>crates/harness/src/db/mod.rs</code>.</li>
+<li><strong>No status or trust field in the memory code.</strong>
+<code>git grep -n -i -E 'status|pending|approv|verified|quarantin|trust' -- crates/harness/src/db crates/harness/src/memory crates/harness/src/retrieval crates/harness/src/dream.rs</code>
+returns a doc comment in <code>dream.rs</code>, a test string in
+<code>memory/mod.rs</code> and a comment in <code>slim.rs</code>.</li>
+<li><strong>No value-keyed refusal.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist|rejected|suppress' -- crates</code>
+returns one comment in <code>chat.rs</code> and two header-validation
+tests in <code>models/mod.rs</code>.</li>
+<li><strong>No validity time or expiry.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_until|expires_at|expiry' -- crates</code>
+and <code>git grep -n -i -w 'ttl' -- crates</code> return nothing;
+<code>git grep -n -E 'created_at|updated_at' -- crates/harness/src/db/mod.rs</code>
+matches the schema.</li>
+<li><strong>No second user in any test.</strong>
+<code>git grep -n -E '"u2"|"user-b"|"other-user"|"bob"|"alice"' -- crates</code>
+returns nothing;
+<code>git grep -c -F '"u1"' -- crates/harness/src/retrieval/mod.rs</code>
+counts 11.</li>
+<li><strong>No transaction around a save.</strong>
+<code>git grep -n -E 'BEGIN|transaction|COMMIT' -- crates/harness/src</code>
+returns nothing.</li>
+<li><strong>No in-tree entry point selects V2, a predictor or a
+reranker.</strong>
+<code>git grep -n -E 'Variant::V2' -- crates/cli crates/node</code> and
+<code>git grep -n -E 'predictor: Some|reranker: Some' -- crates</code>
+return nothing;
+<code>git grep -n -E 'MlpPredictor::load|impl Reranker for|impl retrieval::Reranker' -- crates ':!crates/harness/src/retrieval/mlp.rs'</code>
+returns nothing;
+<code>git grep -n -E 'use_composite: true' -- crates/cli crates/node</code>
+matches <code>crates/cli/src/commands/chat.rs:73</code> and
+<code>crates/node/src/lib.rs:397</code>.</li>
+<li><strong><code>source</code> is not in the injected payload.</strong>
+<code>git grep -n -E 'mem\.source' -- crates/harness/src/memory/prompt_context.rs crates/harness/src/chat.rs crates/harness/src/retrieval/mod.rs</code>
+returns only <code>prompt_context.rs:269</code>, in
+<code>summarize_prompt_memories</code>, whose output the facade returns
+to the host and does not inject.</li>
+<li><strong>No paper or benchmark result.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo|citation' -- . ':!Cargo.lock' ':!crates/node/package-lock.json'</code>
+returns nothing;
+<code>git grep -n -i -E 'LongMemEval|LoCoMo|DittoBench' -- .</code>
+returns two README lines, a comment in <code>chat.rs</code> and one in
+<code>tools.rs</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/ditto-assistant/ditto-harness/commit/8785d38b4aa64f7167860132204ec60c9cfece1b"><code class="commit-id" title="8785d38b4aa64f7167860132204ec60c9cfece1b">8785d38b…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, the
+commit triage selected. Screened first: no auto-run surface, nothing
+inside the seven-day cooldown, one build-time execution point
+(<code>crates/node/build.rs</code>), one unpinned surface
+(<code>crates/node/package.json</code>, with its lockfile beside it),
+<code>Cargo.lock</code> present. The agent skill and docs were read as
+data. Nothing was installed, built or run, and the 100 test functions
+were not run. Two marks: <code>scope_enforced</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). Nothing can be
+deleted, the model's answers are stored as memory, and the save tool's
+session field hides a row from prompt recall.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
