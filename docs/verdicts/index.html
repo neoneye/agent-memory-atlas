@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 903 reports.</strong></p>
+<p><strong>This page covers all 904 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37490,6 +37490,60 @@ with per-agent collection limits and managers who must not exceed their
 own reach.</li>
 <li>Do not copy when: agent-learned facts have to be correctable and
 attributable later, or kept apart across projects.</li>
+</ul>
+<h3 id="memos-markgatcha"><a
+href="../systems/memos-markgatcha/"><code>memos-markgatcha</code></a></h3>
+<ul>
+<li>Best idea: <strong>a withholding state that every leg honours, the
+graph walks included.</strong> A write the regex screen flags is stored
+with <code>quarantined = 1</code> and a reason, the FTS, structured and
+semantic SQL legs append <code>quarantined = 0</code>, and
+<code>pprInjectedNodePassesFilter</code> applies the same rule and the
+other structured filters to anything graph or PPR expansion injects, so
+a quarantined row does not ride in along an edge.</li>
+<li>Second idea: a tamper-evident log over the whole node state. Each
+store, import, update and forget appends a SHA-256 of content, metadata,
+provenance, validity and TTL chained to the previous entry inside one
+<code>BEGIN IMMEDIATE</code> transaction, and
+<code>memos log verify --expect</code> checks the tip against a value
+kept outside the database. Import stamps <code>validFrom</code> from
+each exported message's own time.</li>
+<li>Biggest risk: <strong>the verifier reads through the recall
+filter.</strong> <code>verifyTamperLog</code> lists live nodes with
+<code>queryNodes({ limit: 100_000 })</code>, which drops quarantined and
+historical rows, so every quarantined, superseded or decayed memory
+reports as <code>deleted_without_log</code>; the TTL sweep, eviction and
+the session-end archive move change rows with no entry at all, and
+<code>quarantined</code> and <code>trust_score</code> are outside the
+hash.</li>
+<li>Second risk: the scope key is the model's argument and the vector
+leg drops one form of it. A <code>namespaces</code> search runs the
+semantic leg with no namespace predicate, a scope prefix matches
+<code>u:bobby</code> for <code>u:bob</code>, session expansion forgets
+both, and unscoped reads, which the hooks run, span every namespace;
+agent writes take the <code>user</code> tier and may claim
+<code>user-verified</code>, and on Windows the hooks hand the prompt to
+<code>cmd.exe</code> unquoted.</li>
+<li>Most reusable component: the filter mirror in
+<code>src/memory.ts:9792-9870</code>, <code>nodeHash</code> and the
+chained append in <code>src/tamper-log.ts:72-104</code> and
+<code>src/storage/sqlite.ts:1482-1529</code>, and the import validity
+stamp at <code>src/memory.ts:4118-4134</code>.</li>
+<li>Maturity impression: MIT; 52,306 lines of TypeScript in
+<code>src/</code>, 10,353 of them in one class, and 2,781 lines of
+Python, in 483 commits from 20 March to 24 November 2026 by one author
+and dependabot, with five tags; 1,345 jest cases mostly against a stub
+embedder, none run here; the LongMemEval-S headline recomputes exactly
+from its committed rows, measured with Ollama's nomic-embed-text rather
+than the shipped default. Five marks: <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>bitemporal</code>, <code>negative_eval</code>.</li>
+<li>Study when: you want one SQLite file to hold a poisoned-write
+quarantine, a mutation hash chain and validity windows, and need to see
+which retrieval legs a filter has to reach.</li>
+<li>Do not copy when: projects or tenants that must not see each other
+share a database, or the tamper log has to stand as evidence before the
+verifier reads the table directly.</li>
 </ul>
         </article>
       </div>

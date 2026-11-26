@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-903, generated from each report's frontmatter —
+904, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-903, generated from each report's frontmatter —
+904, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-903, generated from each report's frontmatter —
+904, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 903, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 904, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-903, generated from each report's frontmatter —
+904, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 903 systems by the seven mechanisms
+filters all 904 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -22877,6 +22877,69 @@ line in <code>config.toml</code> or one environment variable makes every
 agent lesson retrievable the moment it is written</td>
 </tr>
 <tr>
+<td><a
+href="../systems/memos-markgatcha/"><code>memos-markgatcha</code></a></td>
+<td>A node: content, extractive summary, type, tags, namespace, pool
+(event, note, procedure), importance, source, provenance tier, trust
+score, confidence, quarantine flag and reason, validity window, optional
+TTL and authoring harness; typed edges with their own validity
+window</td>
+<td>One SQLite file in WAL mode (better-sqlite3, optional SQLCipher):
+nodes, edges, an FTS5 index kept by triggers, float32 vector BLOBs with
+an optional sqlite-vec index, image vectors, contradiction pairs,
+procedural lessons, recall feedback and a tamper_log hash chain; image
+bytes in a content-addressed blob directory beside it</td>
+<td>FTS5 BM25 and cosine over stored vectors from a local model2vec
+model by default, an entity-overlap leg, fused by reciprocal rank at k
+60 and weighted by provenance tier and trust; session-neighbour and
+one-hop graph-neighbour expansion on by default, PPR expansion and a
+local reranker opt-in; default recall drops quarantined and historical
+rows; token-budgeted context packs in JSON or TOON</td>
+<td>store() from the SDK, CLI, MCP and the Python HTTP server,
+synchronous; a regex screen and a gray-zone embedding screen quarantine
+instruction-like writes; entities, events and a fidelity cache stamped
+at write time; auto-link edges by token overlap; embeddings queued and
+drained before the next search; a prompt hook stores explicit
+remember-this phrasing</td>
+<td>update() rewrites a row in place and logs a state hash; supersede,
+set_validity and the decay pass close the validity window instead of
+deleting; forget deletes the row, its vectors and FTS entry and logs a
+forget entry from which a deletion certificate is built; ingest replaces
+a changed file's chunks; TTL sweep and eviction delete without a log
+entry</td>
+<td>A namespace string on every node, from a raw value or a
+user/agent/run scope, applied as a SQL predicate when the caller passes
+one; default unioned into every scoped read; unscoped reads span every
+namespace; the value is a tool argument the model supplies, and the
+MEMOS_NAMESPACE variable the manifests document is read by nothing in
+src</td>
+<td>TypeScript SDK, a CLI, an MCP server over stdio or loopback
+Streamable HTTP with 12 tools by default and 40 under
+MEMOS_MCP_TOOLS=all, a Python FastAPI server that drives the SDK over a
+Node subprocess, a Claude Code plugin with four hooks, adapters for
+OpenAI, Anthropic, Vercel, LangChain, CrewAI and Ollama</td>
+<td>A TTL sweep every 60 seconds in-process; a SessionEnd hook runs
+consolidate on the default namespace (dedupe at 0.92, archive after 90
+days below importance 0.3, decay to historical); the embedding queue; no
+scheduled pass outside a running process</td>
+<td>A quarantined flag, set by the write screen or a review-pending
+write, excluded from every recall leg by default and cleared by release
+or approve; five provenance tiers weighting fusion by up to 14% and
+flagging tool-output, imported and released rows untrusted on MCP
+results; a trust score and a confidence number that rank</td>
+<td>Quarantine applied to every retrieval leg, the expansions included;
+a hash-chained mutation log over the full node state with an external
+tip check; validity windows with an import path that stamps the source's
+own time; populated negative cases; a LongMemEval-S headline that
+recomputes exactly from its committed per-question rows</td>
+<td>The tamper check reads live rows through the default recall filter,
+so every quarantined or superseded memory reports as deleted without
+log; the semantic leg ignores a multi-namespace filter; scope prefixes
+have no separator; agent writes take the user tier and may claim
+user-verified; release and approve are agent tools under the full
+profile; on Windows the hooks pass the prompt to a shell</td>
+</tr>
+<tr>
 <td><a href="../systems/memos/"><code>memos</code></a></td>
 <td>Textual item, graph tier, preference/skill, KV cache, LoRA</td>
 <td>Configurable vector/graph stores, dumps, cache/model artifacts</td>
@@ -40962,7 +41025,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>87 of 903:</em> <a
+<p><em>87 of 904:</em> <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -41053,7 +41116,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>230 of 903:</em> <a
+<p><em>231 of 904:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -41189,7 +41252,8 @@ href="../systems/memory-ts/"><code>memory-ts</code></a>, <a
 href="../systems/memory-vault/"><code>memory-vault</code></a>, <a
 href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
 href="../systems/memorywhale/"><code>memorywhale</code></a>, <a
-href="../systems/memseek/"><code>memseek</code></a>, <a
+href="../systems/memos-markgatcha/"><code>memos-markgatcha</code></a>,
+<a href="../systems/memseek/"><code>memseek</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/memspec/"><code>memspec</code></a>, <a
 href="../systems/memvid/"><code>memvid</code></a>, <a
@@ -41292,7 +41356,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>152 of 903:</em> <a
+<p><em>153 of 904:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -41373,6 +41437,8 @@ href="../systems/memo-local/"><code>memo-local</code></a>, <a
 href="../systems/memoose/"><code>memoose</code></a>, <a
 href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
 href="../systems/memory-lancedb-pro/"><code>memory-lancedb-pro</code></a>,
+<a
+href="../systems/memos-markgatcha/"><code>memos-markgatcha</code></a>,
 <a href="../systems/mempalace/"><code>mempalace</code></a>, <a
 href="../systems/mempalace-code/"><code>mempalace-code</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
@@ -41454,7 +41520,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>397 of 903:</em> <a
+<p><em>398 of 904:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -41685,7 +41751,8 @@ href="../systems/memory-lancedb-pro/"><code>memory-lancedb-pro</code></a>,
 href="../systems/memorybear/"><code>memorybear</code></a>, <a
 href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
 href="../systems/memos/"><code>memos</code></a>, <a
-href="../systems/mempalace/"><code>mempalace</code></a>, <a
+href="../systems/memos-markgatcha/"><code>memos-markgatcha</code></a>,
+<a href="../systems/mempalace/"><code>mempalace</code></a>, <a
 href="../systems/mempalace-code/"><code>mempalace-code</code></a>, <a
 href="../systems/memseek/"><code>memseek</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
@@ -41871,7 +41938,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>307 of 903:</em> <a
+<p><em>308 of 904:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
@@ -42050,7 +42117,8 @@ href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
 href="../systems/memory-project/"><code>memory-project</code></a>, <a
 href="../systems/memorybear/"><code>memorybear</code></a>, <a
 href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
-href="../systems/mempalace/"><code>mempalace</code></a>, <a
+href="../systems/memos-markgatcha/"><code>memos-markgatcha</code></a>,
+<a href="../systems/mempalace/"><code>mempalace</code></a>, <a
 href="../systems/memseek/"><code>memseek</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/memspec/"><code>memspec</code></a>, <a
@@ -42192,7 +42260,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>109 of 903:</em> <a
+<p><em>109 of 904:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -42305,7 +42373,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>588 of 903:</em> <a
+<p><em>589 of 904:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -42646,7 +42714,8 @@ href="../systems/memory-lancedb-pro/"><code>memory-lancedb-pro</code></a>,
 href="../systems/memory-vault/"><code>memory-vault</code></a>, <a
 href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
 href="../systems/memorywhale/"><code>memorywhale</code></a>, <a
-href="../systems/mempalace/"><code>mempalace</code></a>, <a
+href="../systems/memos-markgatcha/"><code>memos-markgatcha</code></a>,
+<a href="../systems/mempalace/"><code>mempalace</code></a>, <a
 href="../systems/mempalace-code/"><code>mempalace-code</code></a>, <a
 href="../systems/memseek/"><code>memseek</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
@@ -42932,8 +43001,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-588 repositories of
-903 assert that particular material must
+589 repositories of
+904 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -43006,7 +43075,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 903 is the real figure for the second kind, and
+of 904 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

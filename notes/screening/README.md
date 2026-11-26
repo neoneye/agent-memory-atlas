@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 902 of 903 screened at the report's current pin.**
+**Progress: 903 of 904 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 435 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 404 |
-| Repositories with build-time execution (`EXEC`) | 648 |
+| Repositories with an auto-run surface (`RUNS`) | 436 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 405 |
+| Repositories with build-time execution (`EXEC`) | 649 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -275,6 +275,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`memory-project`](../../content/systems/memory-project.md) | `hooks/` |
 | [`memory-ts`](../../content/systems/memory-ts.md) | `hooks/` |
 | [`memory-vault`](../../content/systems/memory-vault.md) | `server.json` |
+| [`memos-markgatcha`](../../content/systems/memos-markgatcha.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.githooks/`, `mcp.json`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`mempalace`](../../content/systems/mempalace.md) | `.claude-plugin/`, `.claude-plugin/.mcp.json`, `.claude-plugin/hooks/`, `.claude-plugin/hooks/hooks.json`, `.claude-plugin/plugin.json`, `.devcontainer/devcontainer.json`, `.mcp.json`, `hooks/` |
 | [`mempalace-code`](../../content/systems/mempalace-code.md) | `.claude/settings.json`, `hooks/` |
 | [`memsearch`](../../content/systems/memsearch.md) | `.claude-plugin/`, `plugins/claude-code/.claude-plugin/plugin.json`, `plugins/claude-code/hooks/`, `plugins/claude-code/hooks/hooks.json` |

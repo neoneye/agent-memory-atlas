@@ -2129,6 +2129,24 @@ pinning both facts
 <code>save_memory</code> still advertises it, so the model can write a
 row that prompt recall never returns (<code>:141</code>). No fixture
 holds a second user.</p>
+<p><a href="../../systems/memos-markgatcha/">MemOS (Markgatcha)</a>
+builds the key in one helper and three legs go around it.
+<code>buildNamespaceCondition</code> turns an exact namespace, a list or
+a <code>u:/a:/r:</code> scope prefix into the WHERE clause of the FTS
+and structured legs and ORs in <code>default</code>
+(<code>src/storage/sqlite.ts:3453-3480</code>). The semantic leg writes
+its own predicate and has no branch for the list, so a
+<code>namespaces</code> search, which <code>memos_search</code> exposes,
+takes vector hits from every namespace
+(<code>src/storage/sqlite.ts:2448-2460</code>,
+<code>src/mcp.ts:618-624</code>). Session expansion, on by default,
+fetches siblings with <code>namespace</code> alone, and the prefix has
+no separator, so <code>u:bob</code> matches <code>u:bobby</code>
+(<code>src/memory.ts:10053-10060</code>,
+<code>src/scope.ts:77-79</code>). The value is the model's argument, an
+unscoped read spans every namespace, and the committed scope cases use a
+zero-vector embedder, so they test the keyword leg only
+(<code>__tests__/scoped-spaces.test.ts:21-28</code>).</p>
 <p><a href="../../systems/ecodb/">EcoDB</a> shares one SQL predicate
 across every memory read and leaves the structures derived from those
 rows outside it. <code>check_visibility</code> resolves super, CEO,

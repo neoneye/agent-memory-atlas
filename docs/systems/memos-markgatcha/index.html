@@ -1,0 +1,1143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first TypeScript memory
+layer in one SQLite file: hybrid FTS5 and vector recall, a quarantine
+gate, a hash-chained mutation log and validity windows.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MemOS
+(Markgatcha) — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first TypeScript
+memory layer in one SQLite file: hybrid FTS5 and vector recall, a
+quarantine gate, a hash-chained mutation log and validity windows.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MemOS
+(Markgatcha) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first TypeScript
+memory layer in one SQLite file: hybrid FTS5 and vector recall, a
+quarantine gate, a hash-chained mutation log and validity windows.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MemOS (Markgatcha) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MemOS (Markgatcha)",
+      "description": "A local-first TypeScript memory layer in one SQLite file: hybrid FTS5 and vector recall, a quarantine gate, a hash-chained mutation log and validity windows.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One SQLite file with a regex quarantine
+gate, a hash-chained mutation log and validity windows</p>
+          <h1>MemOS (Markgatcha)</h1>
+          <p class="document-deck">A local-first TypeScript memory layer
+in one SQLite file: hybrid FTS5 and vector recall, a quarantine gate, a
+hash-chained mutation log and validity windows.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Markgatcha/memos">
+              <span>Source</span>
+              <strong>Markgatcha/memos</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Markgatcha/memos/commit/78a796bb951732b84be80975b5b7ae94a8627f17" title="78a796bb951732b84be80975b5b7ae94a8627f17">
+              <span>Analyzed revision</span>
+              <code>78a796bb…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Markgatcha--memos" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Markgatcha--memos</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in the root LICENSE and every manifest; a vendored LoCoMo dataset under
+scripts/dataset/locomo carries its own CC BY-NC 4.0
+licence</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>52,306
+lines of TypeScript in 79 files under src/, 10,353 of them in memory.ts;
+2,781 lines of Python in the memos/ HTTP server and adapters; 29,936
+lines of tests</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>483
+commits from 20 March to 24 November 2026: 427 by one author under two
+spellings and 56 by dependabot; five tags, the latest
+v1.6.27</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,345
+jest cases in 95 files under <strong>tests</strong> and 18 Python test
+functions in 4 files; ci.yml runs the jest suite and a retrieval eval
+with --check; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MemOS (Markgatcha) is a local-first TypeScript memory layer that
+keeps an agent's memory in one SQLite file and serves it to Claude Code,
+Cursor and other MCP clients, a CLI, a Python HTTP server and an SDK.
+What is notable is a write gate that quarantines instruction-shaped
+content and keeps it out of every recall leg, a hash-chained log of node
+mutations with an externally anchored tip, and validity windows that an
+import fills from the source's own timestamps. What is weak is that the
+guarantees stop at the edges of the main search path. The tamper check
+reads live rows through the recall filter and reports every quarantined
+or superseded memory as deleted without a log. The scope key is a
+model-supplied string that a multi-namespace search drops on its vector
+leg.</p>
+<p>This is not <a href="../memos/">MemOS by MemTensor</a>, and none of
+its code comes from there. That project is a Python package under
+<code>src/memos/</code> built around <code>MOSCore</code> and
+<code>GeneralMemCube</code>. None of those identifiers, nor
+<code>TextualMemoryItem</code>, <code>TreeTextMemory</code> or
+<code>mem_scheduler</code>, appears in <code>src/</code> or
+<code>memos/</code> here. The engine is TypeScript published as
+<code>@mem-os/sdk</code>, and the Python package
+<code>mem-os-python</code> is a FastAPI wrapper that drives it over a
+Node subprocess (<code>memos/__init__.py</code>). The two share a name
+and, for Python, the import name <code>memos</code>. The project's own
+website names MemTensor's MemOS as unrelated
+(<code>website/app/blogs/ai-memory-landscape-2026/page.tsx:160-161</code>).
+It is not a GitHub fork, and it is also unrelated to <a
+href="../usememos/">usememos</a>.</p>
+<p>A write is stored at once. <code>storeInner</code> screens it,
+resolves a namespace and a provenance tier, stamps entities and event
+metadata, saves the row, logs a mutation entry, queues an embedding and
+links the node to similar ones by token overlap
+(<code>src/memory.ts:1340-1700</code>). Retrieval fuses FTS5 BM25,
+cosine over local model2vec vectors and an entity leg by reciprocal
+rank. It adds session and graph neighbours by default and drops
+quarantined and historical rows on every leg. Correction is add-only by
+default: supersede, <code>set_validity</code> and a decay pass close a
+validity window, and <code>forget</code> deletes the row and logs a
+forget entry.</p>
+<p>The Claude Code plugin registers four hooks. SessionStart injects an
+800-token handoff brief, UserPromptSubmit injects up to five memories
+and stores explicit "remember this" phrasing, and SessionEnd runs a
+consolidation pass. Each shells out to <code>npx -y @mem-os/sdk</code>
+with no version, so each hook runs whatever npm serves that day, while
+the MCP manifest pins 1.6.27.</p>
+<p><strong>Licence.</strong> The root <code>LICENSE</code> is MIT, and
+<code>package.json</code>, <code>pyproject.toml</code> and the four
+plugin manifests say MIT. The one restriction sits in the benchmark
+data: <code>scripts/dataset/locomo/</code> vendors the LoCoMo
+conversations and its generation code with their own
+<code>LICENSE.txt</code>, <em>Attribution-NonCommercial 4.0
+International</em>. Beside it,
+<code>scripts/dataset/beam/data/beam_100k.json</code> (13.9 MB) and
+<code>scripts/dataset/hotpotqa/hotpot_dev_distractor_500.json</code>
+(3.2 MB) are committed with no licence file. None of that data is in the
+published npm package, whose <code>files</code> list is
+<code>dist</code>, <code>README.md</code>, <code>LICENSE</code> and
+<code>UPGRADING.md</code>.</p>
+<p>Five marks are earned: <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>bitemporal</code> and <code>negative_eval</code>. Section 9 gives
+the reasons for the two withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a node holding one statement</strong>, written
+verbatim. The engine does not rewrite it on the way in: it adds an
+extractive summary, entities, a detected event and a fidelity cache in
+metadata, and leaves <code>content</code> alone. There is no model in
+the write path unless the operator configures an
+<code>enrichMemory</code> hook
+(<code>src/memory.ts:1520-1528</code>).</p>
+<p>A node becomes something the agent is told in one step, unless the
+screen flags it:</p>
+<ul>
+<li><strong>Live.</strong> Stored, recallable at once once its embedding
+drains, ranked by relevance times a provenance multiplier and a trust
+score.</li>
+<li><strong>Quarantined.</strong> <code>screenWrite</code> scored the
+text at or above the flag threshold, or the semantic screen escalated a
+gray-zone write, or the caller asked for review. The row is stored with
+<code>quarantined = 1</code> and a reason and is absent from recall
+until released or approved (<code>src/memory.ts:1424-1462</code>,
+<code>:1538-1550</code>).</li>
+<li><strong>Released.</strong> <code>releaseFromQuarantine</code> clears
+the flag and stamps <code>releasedFromQuarantine</code> in metadata. The
+row is recallable again and MCP results carry
+<code>untrusted_source: true</code> for it
+(<code>src/memory.ts:4666-4685</code>,
+<code>src/provenance.ts:159-171</code>).</li>
+<li><strong>Historical.</strong> <code>valid_to</code> is at or before
+now. Supersede, <code>set_validity</code> and the decay pass put it
+there, and default recall drops it while <code>searchTemporal</code>
+still returns it (<code>src/storage/sqlite.ts:1711-1723</code>).</li>
+<li><strong>Archived.</strong> Consolidation moves a stale,
+low-importance row into the namespace <code>archived</code>. Nothing
+excludes that namespace, so an unscoped search still returns it
+(<code>src/memory.ts:6004-6030</code>).</li>
+<li><strong>Gone.</strong> <code>forget</code> deletes the row and logs
+a forget entry. The TTL sweep and eviction delete without one.</li>
+</ul>
+<p>Belief has two other dials that rank and never exclude. Provenance
+has five tiers, from <code>user-verified</code> to
+<code>imported</code>, weighting fused scores by at most 14%
+(<code>src/provenance.ts:48-54</code>, <code>:73-88</code>). A
+confidence number moves under an opt-in evidence machine. Contradiction
+pairs are recorded at write time with status <code>unresolved</code>,
+and read-time resolution demotes the older member
+(<code>src/storage/sqlite.ts:577-584</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every write passes a regex screen and is stored live or quarantined; default recall keeps only unquarantined rows whose validity has not ended, an operator or a full-profile agent tool releases a quarantined row, and four exits take a row out of recall, two of them without a tamper-log entry</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every write passes a regex screen and is stored live or quarantined; default recall keeps only unquarantined rows whose validity has not ended, an operator or a full-profile agent tool releases a quarantined row, and four exits take a row out of recall, two of them without a tamper-log entry
+flowchart TD
+    subgraph W[&quot;Writers&quot;]
+        direction TB
+        W1[&quot;memos_store, CLI store&lt;br/&gt;tier user by default&quot;]
+        W2[&quot;ingest, import,&lt;br/&gt;auto-capture hook&quot;]
+        W1 ~~~ W2
+    end
+    W --&gt; S[&quot;screenWrite regex,&lt;br/&gt;embedding screen in&lt;br/&gt;the gray zone&quot;]
+    S --&gt;|&quot;flagged&quot;| Q[&quot;quarantined = 1&lt;br/&gt;reason kept&quot;]
+    S --&gt;|&quot;clean&quot;| L[&quot;live row&lt;br/&gt;namespace, validity&quot;]
+    RV[&quot;store with review: true&lt;br/&gt;SDK callers only&quot;] --&gt; Q
+    Q --&gt;|&quot;release or approve&quot;| L
+    L --&gt; RC[&quot;default recall:&lt;br/&gt;quarantined = 0 and&lt;br/&gt;valid_to after now;&lt;br/&gt;archived rows stay in&lt;br/&gt;unscoped search&quot;]
+    L --&gt; E
+    subgraph E[&quot;Ways out of recall&quot;]
+        direction TB
+        HI[&quot;historical:&lt;br/&gt;supersede, set_validity,&lt;br/&gt;decay pass&quot;]
+        AR[&quot;archived namespace:&lt;br/&gt;session-end move,&lt;br/&gt;no tamper entry&quot;]
+        F[&quot;forget: row deleted,&lt;br/&gt;forget entry logged&quot;]
+        X[&quot;TTL sweep, eviction:&lt;br/&gt;deleted, not logged&quot;]
+        HI ~~~ AR ~~~ F ~~~ X
+    end</code></pre></details></figure>
+<p>Memory is agent-controlled with background help. The agent writes
+through <code>memos_store</code> and the prompt hook writes for the
+user; consolidation runs at session end. The store treats a live row as
+ground truth to be ranked and a quarantined one as withheld.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs in one process around one <code>MemOS</code> instance
+(<code>src/memory.ts</code>), which holds an in-memory
+<code>GraphEngine</code> mirror of every node and edge, an embedding
+queue, and a <code>SQLiteStorage</code> adapter
+(<code>src/storage/sqlite.ts</code>). The surfaces are thin over it:</p>
+<ul>
+<li><strong>MCP server</strong> (<code>src/mcp.ts</code>), stdio by
+default, Streamable HTTP on 127.0.0.1:8788 with <code>--http</code>. It
+registers 12 tools unless <code>MEMOS_MCP_TOOLS</code> is
+<code>all</code>, which registers 40 (<code>src/mcp.ts:323-366</code>).
+The HTTP transport has no authentication, and the CLI says so when bound
+beyond loopback (<code>src/cli.ts:1172-1176</code>).</li>
+<li><strong>CLI</strong> (<code>src/cli.ts</code>), which also writes
+harness MCP configs with
+<code>memos connect &lt;harness&gt; --write</code>.</li>
+<li><strong>Python server</strong> (<code>memos/server/main.py</code>,
+<code>routes.py</code>), FastAPI on 127.0.0.1:7400, which writes a
+bridge script and starts Node with the database path
+(<code>memos/server/main.py:231-248</code>).</li>
+<li><strong>Plugin</strong> (<code>plugin/</code>): an MCP entry pinned
+to <code>@mem-os/sdk@1.6.27</code>, four hooks, slash commands and two
+skills.</li>
+</ul>
+<p>Retrieval needs no external service. The default embedder is
+model2vec's <code>potion-base-8M</code>, a static table in an npm
+package (<code>src/embeddings.ts:215-245</code>, <code>:594-601</code>);
+Ollama, OpenAI-compatible, Voyage, Cohere, fastembed and transformers
+providers are configurable. Vectors are float32 BLOBs scanned in
+process, with an optional sqlite-vec index.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> nothing beyond Node and the SQLite
+file. The Python server additionally needs Node at run time.</li>
+<li><strong>Offline:</strong> fully. The default embedder ships in the
+package.</li>
+<li><strong>API key:</strong> none to store anything.</li>
+<li><strong>First run:</strong>
+<code>npx -y @mem-os/sdk init --yes</code>, or
+<code>memos connect claude-code --write</code>, or the plugin
+marketplace entry in <code>.claude-plugin/marketplace.json</code>.</li>
+<li><strong>Repair by hand:</strong> the store is ordinary SQLite. A
+direct edit is what the tamper check exists to detect; a direct edit of
+<code>quarantined</code>, <code>trust_score</code>, <code>pool</code> or
+<code>harness</code> is not detected, because <code>nodeHash</code>
+covers neither (<code>src/tamper-log.ts:72-104</code>).</li>
+</ul>
+<p>Three configuration paths do not do what the manifests say.
+<code>server.json</code> documents <code>MEMOS_NAMESPACE</code> as the
+<em>"Namespace for reads and writes"</em>, and
+<code>llms-install.md:212</code> repeats it. Nothing in
+<code>src/</code> reads it except the <code>trio</code> command, which
+passes it to a sibling process (<code>src/cli.ts:4525-4532</code>).
+<code>connect --db &lt;path&gt;</code> writes the path into the harness
+config as <code>MEMOS_DB_PATH</code> (<code>src/cli.ts:570-590</code>),
+which <code>memos mcp</code> does not read; it opens <code>--db</code>,
+then <code>~/.memos/config.json</code>, then
+<code>~/.memos/memos.db</code> (<code>src/cli.ts:266-269</code>,
+<code>src/storage/sqlite.ts:55-58</code>). <code>MEMOS_API_KEY</code> in
+<code>server.json</code> is described as the bearer token for the
+Streamable HTTP transport, and only the Python server reads it
+(<code>memos/server/main.py:286-291</code>).</p>
+<p>The Python server's routes are open when <code>MEMOS_API_KEY</code>
+is unset, and its CORS middleware allows every origin, method and header
+(<code>memos/server/main.py:307-313</code>). On the default loopback
+bind, a web page open in the user's browser can therefore call
+<code>/api/mem/search</code>, <code>/store</code> and
+<code>/forget</code> on 127.0.0.1:7400 and read the responses.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>store()</code> and
+<code>remember()</code> call <code>storeInner</code>
+(<code>src/memory.ts:1237</code>, <code>:1253</code>,
+<code>:1340</code>), which runs these steps in order:</p>
+<ol type="1">
+<li>A strictly monotonic timestamp, and the namespace from
+<code>scope</code> or <code>namespace</code>, else <code>default</code>
+(<code>:1357-1359</code>).</li>
+<li>Optional salience triage, then deterministic event updates ("the
+meeting got moved") resolved before the write
+(<code>:1400-1409</code>).</li>
+<li>The provenance tier from the explicit option or the source
+(<code>:1419-1422</code>), then the quarantine screen
+(<code>:1440</code>).</li>
+<li>Entity, triple, event and context stamping, the review hold
+(<code>:1538-1550</code>) and the opt-in evidence machine
+(<code>:1566-1580</code>).</li>
+<li>The node (<code>:1583</code>), <code>saveNode</code> and
+<code>logMutation("store")</code> (<code>:1626-1627</code>), and a
+queued embedding.</li>
+<li>Auto-link edges at token similarity 0.3 to any node in the graph
+(<code>:1661-1678</code>, <code>src/graph.ts:374-404</code>), and
+eviction when <code>maxMemories</code> is set (<code>:1683</code>).</li>
+</ol>
+<p><strong>Document and export ingestion.</strong> <code>ingest()</code>
+chunks Markdown, text, HTML and PDF at 1,200 characters, skips files
+whose hash is unchanged, replaces a changed file's chunks and stores
+each through <code>store()</code> with no source, so every chunk takes
+the <code>user</code> tier (<code>src/ingest.ts:307-322</code>).
+<code>importExternal</code> parses ChatGPT, Claude and Slack exports and
+stores each item as <code>external_data</code>, tier
+<code>imported</code>, with <code>validFrom</code> set to the item's own
+time (<code>src/memory.ts:4118-4134</code>).</p>
+<p><strong>Retrieval.</strong> <code>search()</code> drains the
+embedding queue, resolves scope into <code>namespace</code>,
+<code>namespaces</code> or <code>namespacePrefix</code>
+(<code>src/memory.ts:2429-2460</code>, <code>:3184-3228</code>) and
+calls <code>hybridSearch</code> (<code>:8973</code>). Three legs run in
+parallel: <code>semanticSearch</code> over
+<code>querySimilarEmbeddings</code> at a cosine floor of 0.05,
+<code>queryNodes</code> over FTS5, and <code>fetchEntityLeg</code>
+(<code>:9025-9046</code>). After fusion come graph expansion, PPR
+expansion, session-neighbour expansion, rerank, dedupe, ranking
+modulators, an optional relevance gate, MMR and multi-hop
+(<code>:9122-9178</code>).</p>
+<p><strong>Context assembly.</strong> <code>contextPack</code> runs the
+same hybrid search, strips filler, ranks by relevance times trust and
+cuts at the token budget, then serializes to JSON, TOON or TOON-compact
+(<code>src/memory.ts:5511-5743</code>,
+<code>src/context-pack.ts</code>). <code>handoff</code> composes a
+profile, a context pack, procedural lessons, reminders and harness
+counts (<code>src/memory.ts:2843</code>).</p>
+<p><strong>Correction.</strong> <code>update()</code>
+(<code>:5370</code>), <code>supersede()</code> (<code>:6803</code>),
+<code>setValidity()</code> (<code>:6737</code>), <code>revert()</code>
+(<code>:7024</code>), <code>forget()</code> (<code>:3617</code>) and
+<code>forgetSource()</code> (<code>:3653</code>).
+<code>reviewApprove</code> and <code>reviewReject</code> act on
+<code>review:pending</code> rows; <code>releaseFromQuarantine</code> on
+any quarantined row (<code>:4634-4685</code>).</p>
+<p><strong>Background.</strong> <code>startSweep</code> deletes expired
+rows every 60 seconds by default
+(<code>src/memory.ts:10241-10272</code>, <code>:1053</code>).
+<code>consolidate</code> runs dedupe, archive, optional cluster
+summaries and decay on one namespace (<code>:6307-6361</code>). The
+SessionEnd hook calls it with <code>--no-summarize</code>.</p>
+<p><strong>Integration.</strong> MCP tools in <code>src/mcp.ts</code>
+(<code>registerTools</code> from <code>:384</code>), the CLI dispatcher
+in <code>src/cli.ts</code>, the Python routes in
+<code>memos/server/routes.py</code>, the hooks under
+<code>plugin/hooks/</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>nodes</code> began with ten columns
+(<code>src/storage/sqlite.ts:505-516</code>) and migrations add
+<code>expires_at</code>, <code>tags</code>, <code>namespace</code>,
+<code>valid_from</code>, <code>valid_to</code>, <code>source</code>,
+<code>trust_score</code>, <code>pool</code>, <code>provenance</code>,
+<code>quarantined</code>, <code>quarantined_at</code>,
+<code>quarantine_reason</code> and <code>harness</code>
+(<code>:672-715</code>). <code>confidence</code> and
+<code>evidenceCount</code> are folded into the metadata JSON.
+<code>edges</code> carries a
+<code>UNIQUE(source_id, target_id, relation)</code>, a
+<code>created_at</code> the schema comment names the transaction-time
+axis, and <code>valid_from</code>/<code>valid_to</code> added later
+(<code>:518-530</code>, <code>:719-720</code>). Beside them:
+<code>embeddings</code> keyed by node with model, dimensions and the
+document prefix that produced the vector (<code>:539-551</code>,
+<code>:726</code>), <code>image_embeddings</code>,
+<code>contradictions</code>, <code>procedural_lessons</code>,
+<code>recall_batches</code> and <code>recall_feedback</code>,
+<code>node_tags</code>, and <code>tamper_log</code>
+(<code>:638-648</code>).</p>
+<p><strong>Scope</strong> is one string. <code>composeScope</code> joins
+whichever of user, agent and run are present as
+<code>u:&lt;v&gt;/a:&lt;v&gt;/r:&lt;v&gt;</code>
+(<code>src/scope.ts:29-44</code>). A raw <code>namespace</code> such as
+<code>project:alpha</code> is equally valid.</p>
+<p><strong>Provenance</strong> is two fields. <code>source</code> is one
+of five channels and <code>provenance</code> one of five tiers, derived
+from the source unless the caller names one; an explicit tier always
+wins (<code>src/provenance.ts:135-143</code>). The module header says
+<code>user-verified</code> is <em>"never assigned automatically — only
+via an explicit <code>provenance</code> opt"</em>.
+<code>memos_store</code> accepts it as an argument
+(<code>src/mcp.ts:439-446</code>), so the model can stamp the top tier
+on its own write. An agent's write with no tier, through MCP or the CLI,
+takes <code>source: user_input</code> and the tier <code>user</code>,
+the same as a user's statement.</p>
+<p><strong>Temporal fields.</strong> Record time is
+<code>created_at</code> and <code>updated_at</code>; validity is
+<code>valid_from</code> and <code>valid_to</code>, unix ms,
+<code>NULL</code> meaning open; <code>expires_at</code> is a TTL in unix
+seconds. History lives in two places: a SHA-256 of each state in
+<code>tamper_log</code>, and up to 2,000 full node snapshots in process
+memory for <code>replayAt</code>, lost on restart
+(<code>src/memory.ts:349</code>, <code>:983-1001</code>,
+<code>:6211-6214</code>).</p>
+<p><strong>Pools</strong> separate raw events, consolidated notes and
+procedures for retrieval. Procedural lessons live in their own table
+with success and failure counts
+(<code>src/storage/sqlite.ts:592-608</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Fusion is reciprocal rank at k 60 over the keyword and semantic legs,
+then the provenance multiplier and trust weighting
+(<code>ARCHITECTURE.md</code>, <code>src/retrieval.ts</code>). The
+keyword leg tokenizes the query into quoted terms, tries AND and falls
+back to OR (<code>src/storage/sqlite.ts:1750-1765</code>). The semantic
+leg scans stored vectors for the configured model and prefix.</p>
+<p>Every leg applies the quarantine rule. The SQL legs append
+<code>quarantined = 0</code>
+(<code>src/storage/sqlite.ts:1704-1708</code>, <code>:1861-1865</code>,
+<code>:2499-2506</code>), the entity leg calls
+<code>quarantineVisible</code> (<code>src/memory.ts:8963</code>), and
+graph and PPR expansion pass each injected neighbour through
+<code>pprInjectedNodePassesFilter</code>, which checks quarantine, type,
+pool, tags, metadata, importance, trust and validity
+(<code>src/memory.ts:9792-9870</code>, <code>:9655</code>). This is the
+part of the design that holds: a quarantined row does not ride into
+results along an edge.</p>
+<p>The namespace rule is applied unevenly across the same legs.</p>
+<ul>
+<li><strong>The semantic leg ignores <code>namespaces</code>.</strong>
+<code>querySimilarEmbeddings</code> handles <code>namespace</code> and
+<code>namespacePrefix</code> and has no branch for the list form
+(<code>src/storage/sqlite.ts:2448-2460</code>), and
+<code>hybridSearch</code> applies no namespace filter after fusion. A
+search with <code>namespaces: ["project:alpha"]</code>, an argument
+<code>memos_search</code> exposes (<code>src/mcp.ts:618-624</code>),
+takes vector hits from every namespace above a cosine of 0.05.</li>
+<li><strong>A scope prefix has no separator.</strong>
+<code>{ user: "bob" }</code> becomes <code>LIKE 'u:bob%'</code>, which
+matches <code>u:bobby/...</code>
+(<code>src/storage/sqlite.ts:3469-3472</code>,
+<code>src/scope.ts:77-79</code>). The entity leg uses
+<code>startsWith</code> with the same effect
+(<code>src/memory.ts:385-390</code>).</li>
+<li><strong>Session expansion forgets the prefix and the list.</strong>
+It is on by default and fetches siblings sharing a seed's
+<code>sessionId</code> with <code>namespace: filter.namespace</code> and
+nothing else (<code>src/memory.ts:10014-10017</code>,
+<code>:10053-10060</code>). Under a <code>scope</code> or
+<code>namespaces</code> search that field is unset, so a sibling from
+any namespace with the same session id is injected.</li>
+<li><strong><code>default</code> joins every scoped read.</strong> A
+scoped search ORs in the <code>default</code> namespace unless the
+caller passes <code>includeSharedScope: false</code>
+(<code>src/storage/sqlite.ts:3476-3477</code>), and
+<code>memos_search</code> exposes no way to pass it.</li>
+</ul>
+<p>An unscoped search, which is what both prompt hooks run, spans every
+namespace, <code>archived</code> included
+(<code>src/memory.ts:2443-2446</code>).</p>
+<p>Injection is bounded. The prompt hook takes five results, drops
+scores below 0.15 and stops at 1,500 characters, and prefixes them with
+<em>"Use only if genuinely relevant"</em>
+(<code>plugin/hooks/user-prompt-submit.mjs:20-26</code>,
+<code>:86-112</code>). The SessionStart brief asks for 800 tokens. The
+SessionStart output is fixed for the session and the prompt hook's
+context is attached to its own turn, so neither rewrites a prefix a
+provider has cached.</p>
+<p>Some reads bypass every filter. <code>retrieve(id)</code> returns any
+row (<code>src/memory.ts:1827-1830</code>). <code>memos_graph</code>
+returns the in-memory graph (<code>:5398-5404</code>).
+<code>memos_context</code> walks graph neighbours from an id with no
+namespace, quarantine or validity check, and auto-link edges cross
+namespaces (<code>:5321-5361</code>). <code>summarize()</code>
+concatenates the summary of every node in the graph
+(<code>:3859-3866</code>), and the SessionStart hook falls back to it
+when <code>handoff</code> fails or returns nothing
+(<code>plugin/hooks/session-start.mjs:26-65</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous, hot-path and model-free. The screen is regex
+scoring with a semantic tier that embeds only gray-zone and low-trust
+writes (<code>src/quarantine.ts:1055-1101</code>,
+<code>src/memory.ts:4519-4538</code>). Tier-aware rules for dormant
+instructions and trigger phrases run only on <code>tool-output</code>
+and <code>imported</code> writes. Ingested documents and agent writes
+take the <code>user</code> tier, so neither gets them unless the caller
+passes a tier.</p>
+<p><code>extractFacts</code> is the one inferential writer in the tree.
+It runs a rule-based extractor over conversation messages and, with
+<code>autoStore</code>, stores each fact above a confidence of 0.6
+directly, with no <code>review: true</code>
+(<code>src/memory.ts:7188-7251</code>). The review queue the types
+describe for inferred memories has no producer on any shipped surface;
+only an SDK caller can fill it.</p>
+<p>Deduplication is a background pass, not a write-time merge, unless
+the operator enables <code>evidenceLearning</code>, which reinforces a
+confirmed memory or supersedes a contradicted one at write time
+(<code>src/memory.ts:1565-1580</code>, <code>:8359-8486</code>).
+Contradiction candidates are recorded when the embedding is persisted,
+so the scan costs a bounded neighbour search per write
+(<code>:8623-8668</code>).</p>
+<p>Delete is real. <code>forget</code> removes the row, its vectors, its
+FTS entry by trigger and its recall attributions, then logs a forget
+entry (<code>src/memory.ts:3617-3643</code>,
+<code>src/storage/sqlite.ts:1463-1476</code>). <code>proveForget</code>
+turns that entry into a certificate of id, time, state hash and chain
+position (<code>src/proof-of-forgetting.ts</code>). The certificate's
+<code>contentHash</code> field holds the full-state
+<code>nodeHash</code>. Neither <code>secure_delete</code> nor
+<code>VACUUM</code> appears in <code>src/</code>, so deleted text stays
+in free pages and the WAL until SQLite overwrites them.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Blocking:</strong> the agent waits for the screen, the row
+write, the log append and auto-linking. Auto-link compares the new
+node's token set with every node in the graph, linear in the store.</li>
+<li><strong>Lag:</strong> embedding is queued. <code>search()</code>
+drains the queue first, so a memory is retrievable by vector on the next
+search.</li>
+<li><strong>Whole-store passes:</strong> <code>consolidate</code> on one
+namespace at each SessionEnd. <code>forgetByDecay</code> reads up to a
+million rows of the namespace (<code>src/memory.ts:6389-6393</code>).
+The cluster-summary step is off in the hook.</li>
+<li><strong>Per prompt:</strong> one <code>npx</code> start, one hybrid
+search, at most 1,500 characters injected.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The plugin manifest (<code>plugin/.claude-plugin/plugin.json</code>)
+points at <code>plugin/hooks/hooks.json</code>, which registers, when
+installed:</p>
+<ul>
+<li><strong>SessionStart</strong> runs
+<code>npx -y @mem-os/sdk handoff "session start in &lt;cwd basename&gt;" --token-budget 800 --json</code>
+and prints the markdown, or the output of <code>summarize --json</code>
+on failure.</li>
+<li><strong>UserPromptSubmit</strong>, two hooks.
+<code>user-prompt-submit.mjs</code> reads the prompt, skips slash and
+<code>!</code> prompts and anything under 12 characters, runs
+<code>search</code> with the first 500 characters and emits up to five
+hits as <code>additionalContext</code>. <code>auto-capture.mjs</code>
+matches five "remember this" phrasings, drops anything that looks like a
+credential assignment, and runs <code>store</code> with a project and
+session context header.</li>
+<li><strong>SessionEnd</strong> runs
+<code>consolidate --no-summarize --json</code> unless
+<code>MEMOS_SKIP_SESSION_CONSOLIDATE</code> is set.</li>
+</ul>
+<p>Every hook calls
+<code>execFile("npx", args, { shell: process.platform === "win32" })</code>
+(<code>plugin/hooks/user-prompt-submit.mjs:76-84</code>,
+<code>plugin/hooks/auto-capture.mjs:67-72</code>). With
+<code>shell: true</code>, Node joins the arguments into one command line
+for <code>cmd.exe</code> without quoting, and two of the hooks put the
+user's prompt text in those arguments. On Windows, a prompt containing
+<code>&amp;</code> or <code>|</code> followed by a command, typed or
+pasted, would run it. The hooks name no version, so they fetch
+<code>@mem-os/sdk</code> from npm at whatever version is current, while
+<code>plugin/.mcp.json</code> pins 1.6.27.</p>
+<p>The hooks run in the session's working directory. <code>store</code>
+there applies a project scope from the nearest <code>.memos.json</code>
+(<code>src/cli.ts:1502-1507</code>); <code>search</code> and
+<code>handoff</code> apply none, so the hook writes into the project and
+reads across every project.</p>
+<p>The other auto-run surfaces are inert until a person acts.
+<code>.githooks/pre-commit</code> formats staged files with
+<code>bun fmt</code> and <code>oxlint --fix</code> once
+<code>core.hooksPath</code> points at it.
+<code>.devcontainer/devcontainer.json</code> runs
+<code>apt-get upgrade</code>, <code>npm install -g pnpm@latest</code>,
+<code>pnpm install</code> and <code>uv sync</code> on container
+creation. <code>mcp.json</code>, <code>server.json</code>,
+<code>plugin/mcp.json</code>, <code>.cursor-plugin/mcp.json</code> and
+<code>gemini-extension.json</code> start the pinned npm package; the
+root <code>plugin.json</code> is metadata only.</p>
+<p>The two skills under <code>plugin/skills/</code> tell the model when
+to store and when to run maintenance, and to preview consolidation with
+<code>dryRun: true</code> first.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-tamper-log-and-what-it-cannot-see">The tamper log and what
+it cannot see</h3>
+<p>The log is the most carefully built mechanism in the tree. One
+transaction takes the write lock, reads the tip, inserts the row,
+computes an entry hash over seq, time, operation, node id, state hash
+and previous hash, and commits
+(<code>src/storage/sqlite.ts:1482-1529</code>). The state hash covers
+content, summary, type, sorted tags, importance, namespace, canonical
+metadata, source, provenance, validity, TTL and both timestamps
+(<code>src/tamper-log.ts:72-104</code>). The module header states the
+threat model in its own words: tamper-<em>evident</em>, not
+tamper-<em>proof</em>, and a full rewrite is caught only against a tip
+kept outside the database and checked with
+<code>memos log verify --expect</code>
+(<code>src/tamper-log.ts:1-24</code>).</p>
+<p>Three things weaken it.</p>
+<ul>
+<li><strong>The deep check reads through the recall filter.</strong>
+<code>verifyTamperLog</code> builds its list of live nodes with
+<code>storage.queryNodes({ limit: 100_000 })</code>
+(<code>src/tamper-log.ts:346</code>). That call excludes quarantined
+rows and rows whose <code>valid_to</code> has passed, by the defaults in
+<code>src/storage/sqlite.ts:1861-1880</code>. So every quarantined,
+superseded or decayed memory that has a log entry is reported as
+<code>deleted_without_log</code>
+(<code>src/tamper-log.ts:363-370</code>). On a store past 100,000 rows
+the check reports the rest the same way. No case in
+<code>__tests__/tamper-log.test.ts</code> quarantines or supersedes a
+node.</li>
+<li><strong>Writers outside the log.</strong> The TTL sweep and eviction
+delete with SQL directly (<code>src/storage/sqlite.ts:1360-1372</code>,
+<code>:3035-3042</code>), the archive move updates
+<code>namespace</code> with <code>setNodeNamespace</code>
+(<code>:2304-2308</code>, <code>src/memory.ts:6024</code>),
+<code>mergeHarnessDb</code> saves imported rows with
+<code>saveNode</code> alone (<code>src/memory.ts:4824</code>), and
+<code>clear()</code> deletes every node
+(<code>src/storage/sqlite.ts:3127-3146</code>). The sweep runs every 60
+seconds by default and the archive move at each SessionEnd, so a store
+in normal use produces mismatches the check reports as tampering.</li>
+<li><strong>Fields outside the hash.</strong> <code>quarantined</code>,
+<code>trust_score</code>, <code>pool</code> and <code>harness</code> are
+not in <code>nodeHash</code>. An edit that releases a row from
+quarantine directly in the database passes verification.</li>
+</ul>
+<p>The append is fail-open by design: a logging error is swallowed and
+the mutation stands (<code>src/tamper-log.ts:170-188</code>).</p>
+<h3 id="quarantine">Quarantine</h3>
+<p>The screen has a producer on every write path, the state has a reader
+on every recall leg, and release preserves the original reason. Its
+limits sit on the tool surface. <code>memos_store</code> lets the model
+choose the tier that decides how strict the screen is. Release and
+approve are registered tools under the full profile, and
+<code>memos_search</code> takes <code>includeQuarantined: true</code>
+from the model.</p>
+<h3 id="scope">Scope</h3>
+<p>The boundary the store enforces is a string the caller chooses. No
+server path resolves a namespace from an identity, and the MCP and CLI
+surfaces default to every namespace. The four leaks in section 6 apply
+when a caller does scope. Writes check nothing:
+<code>memos_forget</code> deletes any id, and <code>memos_store</code>
+writes into any namespace.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code> — earned.</strong>
+<code>quarantined</code> is a discrete field with a producer on every
+write, the regex screen, and an opt-in second producer, the review hold.
+Every recall leg excludes it by default. Release keeps an untrusted flag
+on MCP results. Read by id, the graph dump, <code>memos_context</code>
+and <code>summarize</code> still return it.</li>
+<li><strong><code>scope_enforced</code> — earned.</strong>
+<code>namespace</code> is stored on every row and applied in SQL on the
+FTS, structured and semantic legs and in code on the entity leg and the
+expansions. The value comes from the caller, and the semantic leg drops
+the list form.</li>
+<li><strong><code>audit_log</code> — earned.</strong>
+<code>tamper_log</code> is an append-only, hash-chained record of store,
+import, update and forget, written in its own transaction beside each
+mutation. It records a state hash and no actor or value, and four
+writers bypass it.</li>
+<li><strong><code>bitemporal</code> — earned.</strong> Validity is held
+in its own columns beside record time. The import path writes a validity
+start that differs from record time, and <code>memos_set_validity</code>
+takes both bounds from the caller. Default recall and
+<code>searchTemporal</code> read it. Supersession and decay write the
+time of the pass into <code>valid_to</code>, and the as-of graph read
+ignores <code>created_at</code>, so a node created later with an open
+window appears in a view of an earlier date
+(<code>src/storage/sqlite.ts:2998-3010</code>).</li>
+<li><strong><code>negative_eval</code> — earned.</strong> See section
+10.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> The forget entry
+is keyed on the node id and a hash of its full state, timestamps
+included, and no write path reads forget entries. Re-ingesting a file or
+re-importing an export stores the same text again as a new row.</li>
+<li><strong><code>human_review</code> — withheld.</strong> A quarantined
+row waits, and a person can release it with
+<code>memos quarantine release</code>. But
+<code>memos_quarantine_release</code> and <code>memos_review</code> with
+<code>action: "approve"</code> are registered on the same MCP surface as
+<code>memos_store</code> once <code>MEMOS_MCP_TOOLS=all</code> is set
+(<code>src/mcp.ts:961-1031</code>, <code>:1087-1110</code>), and neither
+checks who calls. The MCP Apps explorer routes its release button
+through that tool. The review queue proper has no shipped producer.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is large and mostly unit-level: 1,345 jest cases in 95
+files, against an in-memory SQLite and, in most files, a stub embedder.
+CI runs it and a retrieval eval with <code>--check</code>
+(<code>.github/workflows/ci.yml:167</code>, <code>:229</code>). None was
+run for this reading.</p>
+<p><strong>Negative cases.</strong> Three earn the mark, each with
+something present beside the absence.</p>
+<ul>
+<li><code>__tests__/scoped-spaces.test.ts:63-89</code> seeds five rows
+sharing the word budget across <code>default</code>, two projects and
+two users. A search of <code>project:alpha</code> requires
+<code>default</code> and <code>project:alpha</code> present and
+<code>project:beta</code> absent; a scope search for alice requires
+<code>u:alice</code> present and every <code>u:bob</code> row
+absent.</li>
+<li><code>__tests__/temporal-trust.test.ts:151-176</code> stores a past,
+a current and a future job, and a temporal search at the past time
+requires <em>Old job</em> present and <em>Future job</em> absent.</li>
+<li><code>__tests__/provenance-trust.test.ts:445-466</code> requires a
+quarantined injection absent from default search and present in the same
+search with <code>includeQuarantined</code>. The default result may be
+empty, and the paired call is the control.</li>
+</ul>
+<p>The scope cases cannot catch the semantic-leg leak in section 6.
+Their <code>StubEmbedder</code> returns <code>[0, 0, 0, 0]</code> for
+every text (<code>__tests__/scoped-spaces.test.ts:21-28</code>),
+<code>cosineSimilarity</code> returns 0 when a norm is zero
+(<code>src/embeddings.ts:173</code>), and the fusion floor is 0.05, so
+the semantic leg returns nothing and only the keyword leg is tested. The
+historical-exclusion case at
+<code>__tests__/temporal-trust.test.ts:113-125</code> asserts the
+superseded row absent without requiring its replacement present.</p>
+<p><strong>Benchmarks.</strong> The README's headline is LongMemEval-S
+over all 500 questions at 99.4% Hit@20, 98.3% evidence recall and 96.4%
+all-evidence recall, retrieval-only and scored on evidence ids. It
+recomputes exactly from
+<code>docs/artifacts/longmemeval-s-full-500-retrieval.json</code>: 497
+per-question rows out of 500 have a gold id in their top 20, and the
+fractional and all-evidence means come to 0.9830 and 0.964. The artifact
+records the embedder as Ollama's <code>nomic-embed-text</code> at 768
+dimensions and the tree as dirty at <code>53a681f</code>, not the
+model2vec default a user gets. <code>benchmarks/README.md</code> reports
+a separate 100-question stratified run on model2vec at 100.0% Hit@20.
+The end-to-end 78% on 50 questions is self-judged, as the README says.
+LoCoMo at 65.0% Hit@10 and ConvoMem at 91.0% Hit@10 come from
+<code>website/data/benchmarks.json</code> and the ConvoMem artifact;
+neither was recomputed here.</p>
+<p><strong>Paper.</strong> None. <code>docs/provenance-trust.md</code>
+cites external attack papers, AgentLAB (<a
+href="https://arxiv.org/abs/2602.16901">arXiv:2602.16901</a>) among
+them, as motivation for the quarantine layer; no paper describes this
+system.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Apply the withholding state on every leg, expansions
+included.</strong> The one function
+<code>pprInjectedNodePassesFilter</code> mirrors the SQL filters for
+anything graph traversal injects, and its comment names the leak it
+prevents (<code>src/memory.ts:9792-9870</code>).</li>
+<li><strong>Hash the full node state, not the content.</strong>
+<code>nodeHash</code> covers metadata, provenance, validity and TTL in
+canonical order, so a metadata-only edit fails verification
+(<code>src/tamper-log.ts:72-104</code>).</li>
+<li><strong>Stamp validity from the source on import.</strong> A ChatGPT
+or Slack export carries when each message was written;
+<code>importExternal</code> keeps it apart from when the row was created
+(<code>src/memory.ts:4118-4134</code>).</li>
+<li><strong>Record which prefix produced each vector.</strong>
+<code>embeddings.prefix</code> stops a model switch from mixing vector
+spaces silently (<code>src/storage/sqlite.ts:722-726</code>).</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Verifying through the read path's defaults.</strong> A
+verifier that reads rows through <code>queryNodes</code> inherits every
+filter recall applies. Read the table directly.</li>
+<li><strong>Writers that skip the log.</strong> Route the TTL sweep,
+eviction and every namespace move through the same logged update, or the
+log reports the system's own maintenance as tampering.</li>
+<li><strong>A scope prefix without a separator, and a list form one leg
+ignores.</strong> Match <code>u:bob</code> or <code>u:bob/%</code>, and
+put the namespace predicate in one helper every leg calls.</li>
+<li><strong>Taking the trust tier from the writer.</strong> If the top
+tier is meant for user confirmation, no tool argument should reach
+it.</li>
+<li><strong><code>shell: true</code> with user text in the
+arguments.</strong> Spawn <code>npx.cmd</code> directly on Windows
+instead.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who wants an offline memory for one or two
+coding agents and will read what the store holds. Its defences are aimed
+at poisoned content, not at other people. Walk away if two tenants or
+two projects that must not see each other share a database file: the key
+is chosen by the model and unscoped reads see everything. Walk away too
+if the tamper log is meant to be evidence for someone else, until the
+verifier stops flagging quarantine, supersession and the TTL sweep. The
+10,353-line <code>memory.ts</code> and a 40-tool surface are a large
+reading load for a store whose core is a table and two indexes.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the semantic leg's handling of <code>namespaces</code> intended
+to be covered by a post-fusion filter that was removed? Nothing in
+<code>hybridSearch</code> applies one at this commit.</li>
+<li>Does <code>memos log verify</code> in practice report quarantined
+rows, or does the CLI pass a filter that the library call does not? The
+CLI path at <code>src/cli.ts:4264</code> was not traced end to end.</li>
+<li>Should <code>summarize()</code> and <code>memos_context</code>
+honour quarantine, given that the SessionStart fallback injects the
+first?</li>
+<li>What is the haystack size per question in the LongMemEval-S
+artifact's scoring units? The per-question rows list ids at session and
+turn granularity, which decides how hard Hit@20 is.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/memory.ts</code></td>
+<td>The <code>MemOS</code> class: store, search, hybrid pipeline,
+correction, consolidation, quarantine and review</td>
+</tr>
+<tr>
+<td><code>src/storage/sqlite.ts</code></td>
+<td>Schema, migrations, queries, namespace and quarantine predicates,
+tamper log append, sweep</td>
+</tr>
+<tr>
+<td><code>src/tamper-log.ts</code></td>
+<td><code>nodeHash</code>, entry hashes, <code>appendTamperEntry</code>,
+<code>verifyTamperLog</code></td>
+</tr>
+<tr>
+<td><code>src/proof-of-forgetting.ts</code></td>
+<td>Deletion certificates from forget entries</td>
+</tr>
+<tr>
+<td><code>src/provenance.ts</code></td>
+<td>Tiers, trust multipliers, <code>resolveProvenance</code>,
+<code>quarantineVisible</code></td>
+</tr>
+<tr>
+<td><code>src/quarantine.ts</code></td>
+<td>The regex write screen</td>
+</tr>
+<tr>
+<td><code>src/semantic-screen.ts</code></td>
+<td>The embedding-based second screen</td>
+</tr>
+<tr>
+<td><code>src/scope.ts</code></td>
+<td>Scope composition and LIKE escaping</td>
+</tr>
+<tr>
+<td><code>src/mcp.ts</code></td>
+<td>MCP tools, tool profiles, Streamable HTTP transport</td>
+</tr>
+<tr>
+<td><code>src/cli.ts</code></td>
+<td>CLI, <code>connect</code>, the <code>mcp</code> entry, db path
+resolution</td>
+</tr>
+<tr>
+<td><code>src/ingest.ts</code></td>
+<td>File and folder ingestion</td>
+</tr>
+<tr>
+<td><code>src/embeddings.ts</code></td>
+<td>Embedding providers, model2vec default, cosine</td>
+</tr>
+<tr>
+<td><code>memos/server/main.py</code>,
+<code>memos/server/routes.py</code></td>
+<td>Python FastAPI server, auth, CORS, routes</td>
+</tr>
+<tr>
+<td><code>plugin/hooks/</code></td>
+<td>SessionStart, UserPromptSubmit (two) and SessionEnd hooks</td>
+</tr>
+<tr>
+<td><code>__tests__/scoped-spaces.test.ts</code></td>
+<td>Scope union and exclusion cases</td>
+</tr>
+<tr>
+<td><code>__tests__/temporal-trust.test.ts</code></td>
+<td>Validity, supersession and trust cases</td>
+</tr>
+<tr>
+<td><code>__tests__/provenance-trust.test.ts</code></td>
+<td>Tier, screen and quarantine cases</td>
+</tr>
+<tr>
+<td><code>__tests__/tamper-log.test.ts</code></td>
+<td>Chain and deep-check cases</td>
+</tr>
+<tr>
+<td><code>docs/artifacts/longmemeval-s-full-500-retrieval.json</code></td>
+<td>The per-question LongMemEval-S rows behind the headline</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>No MemTensor identifiers in the engine.</strong>
+<code>git grep -n -i -E 'MemCube|MOSCore|TextualMemoryItem|mem_scheduler|GeneralMemCube|TreeTextMemory' -- src memos</code>
+returns nothing; the same pattern over the whole tree matches the
+website blog at
+<code>website/app/blogs/ai-memory-landscape-2026/page.tsx:160-161</code>.</li>
+<li><strong><code>MEMOS_NAMESPACE</code> has one reader, the trio
+launcher.</strong>
+<code>git grep -n MEMOS_NAMESPACE -- src memos plugin</code> returns
+<code>src/cli.ts:4525</code>, <code>:4531</code> and
+<code>:4532</code>.</li>
+<li><strong><code>MEMOS_DB_PATH</code> is written and never read by the
+TypeScript side.</strong> <code>git grep -n MEMOS_DB_PATH -- src</code>
+returns <code>src/cli-help.ts:122</code>, <code>src/cli.ts:572</code>,
+<code>src/errors.ts:119</code> and <code>:253</code>;
+<code>git grep -n MEMOS_DB_PATH -- memos</code> matches
+<code>memos/server/main.py:42</code>.</li>
+<li><strong>No authentication on the MCP HTTP transport.</strong>
+<code>git grep -n -i -E 'authorization|bearer' -- src/mcp.ts</code>
+returns nothing; the same pattern over <code>src/embeddings.ts</code>
+matches <code>:431</code>.</li>
+<li><strong>The review hold has one producer branch and no shipped
+caller.</strong>
+<code>git grep -n -w review -- src memos plugin lme-v2</code> returns
+<code>src/memory.ts:1071</code>, <code>:1538</code>, <code>:1539</code>,
+<code>:1548</code>, <code>:4639</code>, <code>:4661</code>, the
+<code>memos_review</code> tool text in <code>src/mcp.ts</code>, types
+and comments; no surface passes <code>review: true</code>.</li>
+<li><strong>Nothing on a write path reads forget entries.</strong>
+<code>git grep -n 'readTamperLog(' -- src</code> returns
+<code>src/cli.ts:4264</code>, <code>src/memory.ts:6143</code>,
+<code>:6146</code>, <code>:6161</code>, <code>:6183</code>,
+<code>src/storage/sqlite.ts:1532</code> and
+<code>src/tamper-log.ts:245</code>, all reporting and verification.</li>
+<li><strong>Mutations that bypass the log.</strong>
+<code>git grep -n -E 'storage\.(updateNode|deleteNode|saveNode)\(' -- src</code>
+returns <code>src/memory.ts:1012</code>, <code>:1323</code>,
+<code>:1626</code>, <code>:2332</code>, <code>:3625</code> and
+<code>:4824</code>; of these, <code>:2332</code> and <code>:4824</code>
+are not followed by a log call.
+<code>git grep -n -E 'DELETE FROM nodes|UPDATE nodes SET' -- src</code>
+adds <code>src/storage/sqlite.ts:1370</code>, <code>:2306</code>,
+<code>:3039</code> and <code>:3142</code>.</li>
+<li><strong>No read excludes the archived namespace.</strong>
+<code>git grep -n -E "\"archived\"|'archived'" -- src</code> returns
+<code>src/memory.ts:6024</code> and <code>:6025</code>, the move
+itself.</li>
+<li><strong>The semantic leg has no branch for
+<code>namespaces</code>.</strong>
+<code>git grep -n -w namespaces -- src/storage/sqlite.ts</code> returns
+<code>:1677</code>, <code>:3248</code>, <code>:3446</code> and
+<code>:3464-3466</code>, the comment and the shared builder the semantic
+leg does not call.</li>
+<li><strong>No secure delete or vacuum.</strong>
+<code>git grep -n -i -E 'secure_delete|VACUUM' -- src</code> returns
+nothing; <code>git grep -n -i pragma -- src/storage/sqlite.ts</code>
+matches <code>:447</code>.</li>
+<li><strong>The tamper check passes no visibility flag.</strong>
+<code>git grep -n -E 'includeQuarantined|includeHistorical' -- src/tamper-log.ts</code>
+returns nothing; the same pattern over <code>src/memory.ts</code>
+matches.</li>
+<li><strong>No tamper case quarantines or supersedes.</strong>
+<code>git grep -n -E 'quarantin|supersede|setValidity|historical' -- __tests__/tamper-log.test.ts</code>
+returns nothing;
+<code>git grep -n -E 'forget' -- __tests__/tamper-log.test.ts</code>
+matches.</li>
+<li><strong>No paper of its own.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|CITATION|doi\.org' -- README.md ARCHITECTURE.md docs</code>
+returns citation-token prose and
+<code>docs/provenance-trust.md:173</code>, an external paper.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/Markgatcha/memos/commit/78a796bb951732b84be80975b5b7ae94a8627f17"><code class="commit-id" title="78a796bb951732b84be80975b5b7ae94a8627f17">78a796bb…</code></a>.
+First reading, read only, from a full clone at the head of
+<code>main</code>, the commit triage selected. Screened first: nine
+auto-run surfaces (<code>.claude-plugin/</code>,
+<code>.devcontainer/devcontainer.json</code>, <code>.githooks/</code>,
+<code>mcp.json</code>, <code>plugin/.claude-plugin/plugin.json</code>,
+<code>plugin/.mcp.json</code>, <code>plugin/hooks/</code>,
+<code>plugin/hooks/hooks.json</code>, <code>server.json</code>);
+<code>package.json</code>, <code>pnpm-lock.yaml</code> and
+<code>docs/requirements.txt</code> inside the seven-day cooldown;
+build-time execution in the <code>package.json</code> scripts;
+<code>docs/requirements.txt</code> unpinned. Hooks, skills and docs were
+read as data. Nothing was installed, built or run, and the 1,345 jest
+cases and 18 Python test functions were not run. Five marks:
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>bitemporal</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

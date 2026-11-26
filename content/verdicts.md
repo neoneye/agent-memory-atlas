@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 903 reports.**
+**This page covers all 904 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8353,3 +8353,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 13,617 lines of Python and a 21,079-line dashboard from one author between 5 October and 25 November 2026, the last 21 commits syncs from another repository; 383 test functions, the 187 integration tests skipped without a test database, and CI runs none; none run here. Documents are carefully versioned; memories are not. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you are giving a team's agents one shared knowledge base with per-agent collection limits and managers who must not exceed their own reach.
 - Do not copy when: agent-learned facts have to be correctable and attributable later, or kept apart across projects.
+
+### [`memos-markgatcha`](../systems/memos-markgatcha/)
+- Best idea: **a withholding state that every leg honours, the graph walks included.** A write the regex screen flags is stored with `quarantined = 1` and a reason, the FTS, structured and semantic SQL legs append `quarantined = 0`, and `pprInjectedNodePassesFilter` applies the same rule and the other structured filters to anything graph or PPR expansion injects, so a quarantined row does not ride in along an edge.
+- Second idea: a tamper-evident log over the whole node state. Each store, import, update and forget appends a SHA-256 of content, metadata, provenance, validity and TTL chained to the previous entry inside one `BEGIN IMMEDIATE` transaction, and `memos log verify --expect` checks the tip against a value kept outside the database. Import stamps `validFrom` from each exported message's own time.
+- Biggest risk: **the verifier reads through the recall filter.** `verifyTamperLog` lists live nodes with `queryNodes({ limit: 100_000 })`, which drops quarantined and historical rows, so every quarantined, superseded or decayed memory reports as `deleted_without_log`; the TTL sweep, eviction and the session-end archive move change rows with no entry at all, and `quarantined` and `trust_score` are outside the hash.
+- Second risk: the scope key is the model's argument and the vector leg drops one form of it. A `namespaces` search runs the semantic leg with no namespace predicate, a scope prefix matches `u:bobby` for `u:bob`, session expansion forgets both, and unscoped reads, which the hooks run, span every namespace; agent writes take the `user` tier and may claim `user-verified`, and on Windows the hooks hand the prompt to `cmd.exe` unquoted.
+- Most reusable component: the filter mirror in `src/memory.ts:9792-9870`, `nodeHash` and the chained append in `src/tamper-log.ts:72-104` and `src/storage/sqlite.ts:1482-1529`, and the import validity stamp at `src/memory.ts:4118-4134`.
+- Maturity impression: MIT; 52,306 lines of TypeScript in `src/`, 10,353 of them in one class, and 2,781 lines of Python, in 483 commits from 20 March to 24 November 2026 by one author and dependabot, with five tags; 1,345 jest cases mostly against a stub embedder, none run here; the LongMemEval-S headline recomputes exactly from its committed rows, measured with Ollama's nomic-embed-text rather than the shipped default. Five marks: `trust_state`, `scope_enforced`, `audit_log`, `bitemporal`, `negative_eval`.
+- Study when: you want one SQLite file to hold a poisoned-write quarantine, a mutation hash chain and validity windows, and need to see which retrieval legs a filter has to reach.
+- Do not copy when: projects or tenants that must not see each other share a database, or the tamper log has to stand as evidence before the verifier reads the table directly.

@@ -1227,6 +1227,23 @@ deletes events older than 90 days or beyond 100,000 per user, a
 vault-root reassignment deletes the user's events, and a user deletion
 purges them (<code>src/services/change_feed.py:482-589</code>). An event
 holds a hash, never content, and a tool's own event is best-effort.</p>
+<p><a href="../../systems/memos-markgatcha/">MemOS (Markgatcha)</a>
+hashes the whole node and then verifies it through the read path. Each
+store, import, update and forget appends the operation, node id and a
+SHA-256 over content, summary, tags, namespace, canonical metadata,
+provenance, validity and TTL, chained to the previous entry and assigned
+its seq inside one <code>BEGIN IMMEDIATE</code> transaction, and
+<code>memos log verify --expect</code> checks the tip against a value
+kept outside the database (<code>src/tamper-log.ts:72-104</code>,
+<code>src/storage/sqlite.ts:1482-1529</code>). Three limits. The deep
+check lists live nodes with <code>queryNodes({ limit: 100_000 })</code>,
+which applies recall's defaults, so every quarantined or superseded
+memory reports as <code>deleted_without_log</code>
+(<code>src/tamper-log.ts:346</code>, <code>:363-370</code>). The TTL
+sweep, eviction and the session-end archive move change rows with no
+entry. And <code>quarantined</code> and <code>trust_score</code> are
+outside the hash, so a direct release from quarantine verifies
+clean.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>
