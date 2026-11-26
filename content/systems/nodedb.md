@@ -288,4 +288,6 @@ bounds were not analysed.
 
 ## History
 
+**2026-11-26** — the appendix's Known Limitations bullet that recorded `NodeDB-Lab/nodedb` at this pin as examined with no report, written on 15 September 2026, was removed. This report, first published on 16 September 2026, superseded it, and the bullet had stayed in place beside it.
+
 **2026-09-16** — [`124cc53a6bdc7bde4cbe34a38ea670c9cf90786f`](https://github.com/NodeDB-Lab/nodedb/commit/124cc53a6bdc7bde4cbe34a38ea670c9cf90786f) — first reading, at a commit dated 13 September 2026. Screened before opening, from a shallow clone; a dependency surface had changed inside the seven-day cooldown. Nothing was installed, built or run.
