@@ -233,6 +233,8 @@ In [marm-memory](../../systems/marm-memory/) the bundled console is not the seco
 
 **[Operator Memory](../../systems/operator-memory/)** is the case where the editor and the automatic path are the same verbs. The store is Markdown in three directories, the model writes it with the harness's ordinary file tools, and a person edits the same files; there is no other write path to override an edit. What the pattern needs and this lacks is the person's edit holding against the model's next one. v2.0 guidance asks the model to mark user-authored documents and *"not change without user intent"*, nothing records who wrote a file, and the private partition sits in the global git excludes, so a person's edit the model later rewrites has no undo.
 
+**[Agent Memory Forest](../../systems/agent-memory-forest/)** makes the editing surface the store and puts a judge after it. Every fact is a line in a Markdown leaf that the keeper agent or a person edits with ordinary tools; the package writes no fact, and `forest check --sync`, a lint held against the run's own baseline and `forest levels apply` decide afterwards whether the page is in shape and where it belongs. A changed fact is meant to leave its old statement in the page's Update record, and nothing checks that an edit did. The correction also stops at the page: the search index serves the Update record and superseded leaves as ordinary sections, so the old value is found as readily as the new one.
+
 ## Tests to write first
 
 - Edit a unit, then run the automatic pass, and assert the edit survives.

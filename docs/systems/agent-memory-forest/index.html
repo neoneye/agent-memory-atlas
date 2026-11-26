@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A standard-library Python package
+and MCP server that keeps agents' memory as Markdown pages in numbered
+layers, with code deciding placement and reader scope.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Agent Memory
+Forest — Agent Memory Atlas">
+    <meta property="og:description" content="A standard-library Python
+package and MCP server that keeps agents' memory as Markdown pages in
+numbered layers, with code deciding placement and reader scope.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agent Memory
+Forest — Agent Memory Atlas">
+    <meta name="twitter:description" content="A standard-library Python
+package and MCP server that keeps agents' memory as Markdown pages in
+numbered layers, with code deciding placement and reader scope.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Agent Memory Forest — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Agent Memory Forest",
+      "description": "A standard-library Python package and MCP server that keeps agents' memory as Markdown pages in numbered layers, with code deciding placement and reader scope.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Code decides where a fact lives; the agent
+writes it</p>
+          <h1>Agent Memory Forest</h1>
+          <p class="document-deck">A standard-library Python package and
+MCP server that keeps agents' memory as Markdown pages in numbered
+layers, with code deciding placement and reader scope.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/hyungchulc/agent-memory-forest">
+              <span>Source</span>
+              <strong>hyungchulc/agent-memory-forest</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/hyungchulc/agent-memory-forest/commit/2a71d9ce0d6dd563fc344c64ec11d8d38e60607c" title="2a71d9ce0d6dd563fc344c64ec11d8d38e60607c">
+              <span>Analyzed revision</span>
+              <code>2a71d9ce…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/hyungchulc--agent-memory-forest" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>hyungchulc--agent-memory-forest</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE, pyproject.toml and CITATION.cff</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>37,830
+lines of Python in 58 files under src/, about 5,300 of them the 0.3 core
+(core, writer, retrieval, index) still installed as the memory-forest
+command; 33,902 lines of tests in 105 files; no runtime
+dependencies</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>181
+commits from 22 July to 17 November 2026 under two names of one author,
+165 of them in November; tags v0.1.0 to v1.0.0b1</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,198
+unittest functions in 88 files; ci.yml runs them on Ubuntu and macOS
+under Python 3.11 to 3.14; scripts/mutate_guards.py turns each guard of
+a named function and reruns its tests, outside make check; none run for
+this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Agent Memory Forest is a Python package and a <code>forest</code>
+command that keep what agents learn as plain Markdown pages in numbered
+folders on local disk, with an MCP server for lookup and logging. Its
+notable part is that code, not a model, decides where a fact belongs and
+when a subject grows a page, a branch or a tree: the level follows the
+number of distinct days its Timeline lines cover, and every move is
+logged. Its weak part is that the facts themselves are written by the
+owner's own agent with its own file tools, and search does not
+distinguish what is current from what was superseded.</p>
+<p>Version 1 is a judge, not an engine. The package takes turns into
+per-agent raw lanes, compiles the registry, moves pages, settles levels,
+lints and searches. The daily record, the filing run and the upkeep run
+are carried out by the keeper agent, following
+<code>forest guide routine</code>, which the package prints. No model is
+called by the package, and nothing but optional vector search needs a
+network.</p>
+<p>Reader scope is the strongest mechanism. One index holds every page,
+and each search arm drops any unit outside the reader's trees and raw
+lane, with the reader fixed by the connection. Correction is the
+weakest: a changed fact moves to the page's Update record and its
+Timeline line is marked superseded, and the index serves both as
+ordinary text.</p>
+<p>The licence is MIT, in <code>LICENSE</code>,
+<code>pyproject.toml</code> and <code>CITATION.cff</code>.</p>
+<p>Three marks: <code>scope_enforced</code> on the reader scope,
+<code>audit_log</code> on the move log, and <code>negative_eval</code>
+on a two-agent search test with a positive control. Section 9 gives the
+reason for each of the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>line on a leaf</strong>. A leaf is one Markdown
+page for one sub-topic of one registered subject: a person, a device, a
+project, an agent. It has <code>entity</code>, <code>subtopic</code>,
+<code>kind</code>, <code>about</code> and <code>updated_at</code> in its
+frontmatter, free sections holding the facts, a <code>## Timeline</code>
+of dated lines and an <code>## Update record</code>
+(<code>src/memory_forest/guide/routine.md</code>, <em>A minimal
+leaf</em>). Every subject has one registry line, under
+<code>## Subjects</code> of its home tree's index, with its aliases, its
+level and its home.</p>
+<p>A turn becomes a fact in four steps, two of them written by the
+keeper agent rather than by code.</p>
+<ul>
+<li><strong>Raw lane.</strong> <code>forest intake</code>,
+<code>forest log</code> or <code>memory_log</code> appends one JSON line
+to <code>06 istm/&lt;agent&gt;/&lt;day&gt;.jsonl</code>, masked. The two
+log doors set the role and origin themselves; intake takes them from the
+record (<code>src/memory_forest/intake.py:287-299</code>,
+<code>src/memory_forest/mcp.py:787</code>).</li>
+<li><strong>Daily record.</strong> The keeper writes
+<code>05 daily/&lt;day&gt;.md</code>, one block per agent and stretch of
+time, pointing back at the lane lines.</li>
+<li><strong>Filing.</strong> The keeper updates the subject's leaf, or
+an entry on its category's collection page when the subject is new.</li>
+<li><strong>Levels.</strong> <code>forest levels apply</code> counts the
+subject's distinct days and admits, promotes or makes a tree through the
+move tool (<code>src/memory_forest/levels.py:1-28</code>).</li>
+</ul>
+<p>The levels are settings and the counting is code. An entry is
+admitted to a leaf at two distinct days and a leaf subject gets a branch
+at five. A branch of a type in <code>tree_types</code> becomes a tree
+when three sub-topics each span five days and hold three leaves
+(<code>src/memory_forest/config.py:178-182</code>). A
+<code>standing</code> line recording the owner's words admits an entry
+at once. A superseded Timeline line, a reference line and a line about
+an agent's own work count no day
+(<code>src/memory_forest/levels.py:78-90</code>). No level goes
+down.</p>
+<p>A fact stops being current by the keeper rewriting the leaf. The old
+statement moves whole into the Update record as a dated line naming what
+it was, what it is now, why and the source, and the old Timeline line
+gets <code>[superseded &lt;date&gt;]</code> in front. A leaf that a
+newer one replaces takes <code>status: superseded</code> and
+<code>superseded_by:</code>. Nothing is deleted: a record over its
+budget is trimmed into a record-history file verbatim, keeping every
+line that quotes the owner, and archived pages are compressed copies
+with a manifest.</p>
+<p>The pages above the leaves are meant to hold only what the leaves
+establish. A board's <code>## Current state</code> line carries an
+<code>as of</code> date and a source leaf, and the lint reports it once
+that leaf's <code>updated_at</code> is later
+(<code>src/memory_forest/lint.py:361-382</code>). That a preference is
+carried up only on repeated evidence or the owner's own words is a rule
+in the contract that no code checks.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — code fixes the lane and the place; the keeper agent writes the fact; a correction leaves the old value on the page, where search finds it as readily as the new one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: code fixes the lane and the place; the keeper agent writes the fact; a correction leaves the old value on the page, where search finds it as readily as the new one
+flowchart TD
+  subgraph doors[&quot;Write doors&quot;]
+    direction TB
+    D1[&quot;forest intake: records&lt;br/&gt;an agent&#39;s exporter wrote&quot;]
+    D2[&quot;forest log, memory_log:&lt;br/&gt;role and origin by the door&quot;]
+    D1 ~~~ D2
+  end
+  doors --&gt; LANE[&quot;06 istm raw lane:&lt;br/&gt;masked, one line per turn&quot;]
+  LANE --&gt; DAILY[&quot;05 daily page,&lt;br/&gt;written by the keeper&quot;]
+  DAILY --&gt; LEAF[&quot;leaf line, written by&lt;br/&gt;the keeper&#39;s file tools&quot;]
+  LEAF --&gt; JUDGE{&quot;forest check --sync&lt;br/&gt;and lint against&lt;br/&gt;the run&#39;s baseline&quot;}
+  JUDGE --&gt;|&quot;new violation&quot;| FIX[&quot;the keeper fixes&lt;br/&gt;what it added&quot;]
+  JUDGE --&gt;|&quot;clean&quot;| LEVEL{&quot;levels apply:&lt;br/&gt;distinct days of&lt;br/&gt;Timeline lines&quot;}
+  LEVEL --&gt;|&quot;2 days&quot;| ADMIT[&quot;entry admitted&lt;br/&gt;to a leaf&quot;]
+  LEVEL --&gt;|&quot;5 days&quot;| BRANCH[&quot;leaf becomes&lt;br/&gt;a branch&quot;]
+  ADMIT --&gt; LOG[&quot;one line per path&lt;br/&gt;in .forest/moves.jsonl&quot;]
+  BRANCH --&gt; LOG
+  LEAF --&gt; CHANGE[&quot;fact changes: old text&lt;br/&gt;to Update record,&lt;br/&gt;Timeline line superseded&quot;]
+  CHANGE --&gt; INDEX[&quot;index build: every&lt;br/&gt;section indexed,&lt;br/&gt;status not stored&quot;]
+  LOG ~~~ INDEX
+  INDEX --&gt; SCOPE{&quot;reader&#39;s trees&lt;br/&gt;and lane?&quot;}
+  SCOPE --&gt;|&quot;no&quot;| DROP[&quot;dropped from every arm&quot;]
+  SCOPE --&gt;|&quot;yes&quot;| ROUTE[&quot;route returned: current&lt;br/&gt;and superseded alike&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The package is a standard-library Python 3.11+ library with two
+console scripts: <code>forest</code> (version 1) and
+<code>memory-forest</code> (the 0.3 command, kept installed beside it)
+(<code>pyproject.toml</code>). There are no runtime dependencies, no
+daemon and no worker.</p>
+<ul>
+<li><strong>The forest folder</strong> holds
+<code>01 xltm/XLTM.md</code> (the root index), <code>02 ltm/</code> (one
+page per tree), <code>03 mtm/&lt;tree&gt;/</code> (the tree's index and
+one board per branch), <code>04 stm/&lt;tree&gt;/&lt;branch&gt;/</code>
+(the leaves), <code>05 daily/</code> and
+<code>06 istm/&lt;agent&gt;/</code>, plus <code>forest.toml</code>.</li>
+<li><strong><code>.forest/</code></strong> holds the compiled registry
+JSON, <code>moves.jsonl</code>, the archive and its manifest,
+record-history files, the credential ledger, intake cursors and id
+files, locks, the commit journal while a commit runs, and the SQLite
+index.</li>
+<li><strong>The index</strong> has <code>files</code>,
+<code>units</code>, <code>times</code>, <code>vectors</code> and
+<code>cjk_grams</code> tables, an FTS5 table over headings and text with
+<code>unicode61</code>, and a trigram FTS5 table when the linked SQLite
+has the tokenizer (<code>src/memory_forest/search.py:1496-1547</code>).
+It is derived: <code>forest index reset</code> and a build make the same
+index.</li>
+<li><strong>The MCP server</strong>,
+<code>forest mcp --as &lt;agent&gt;</code>, serves stdio or a loopback
+HTTP port guarded by a token, one agent or one group per connection
+(<code>src/memory_forest/mcp.py</code>).</li>
+<li><strong>Writers are serialised</strong> by a forest writer lock on
+an exclusive <code>flock</code> that dies with its holder, and a
+separate short <code>intake</code> lock for the lanes
+(<code>src/memory_forest/locking.py:88-95</code>,
+<code>src/memory_forest/intake.py:59</code>).</li>
+</ul>
+<p>The 0.3 code (<code>core.py</code>, <code>writer.py</code>,
+<code>retrieval.py</code>, <code>index.py</code>) is reached only
+through <code>memory-forest</code>: JSON daily, promotion and sweep
+plans applied under a maintenance lock with per-transaction receipts in
+a private directory (<code>src/memory_forest/writer.py:1460-1500</code>,
+<code>:1820-1823</code>). The v1 guides never name it, and this report
+reads it only far enough to place it.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run.
+<code>pip install agent-memory-forest==1.0.0b1</code> (or from a clone)
+gives both commands, and <code>forest setup</code> creates or joins a
+forest from the owner's answers. No API key is needed to store or find
+anything. Vector search needs an embedding provider registered in the
+same Python process, and the package registers none
+(<code>src/memory_forest/embeddings.py:1-6</code>), so from the shipped
+CLI and MCP server the vector arm never runs.</p>
+<p>The store is the most repairable kind there is: every fact is a line
+in a Markdown file a person can open, and every derived file can be
+rebuilt. The other half of that is the operating cost. The package ships
+no scheduler, so the keeper agent has to run the daily, filing and
+upkeep passes on the owner's model and bill. The guide tells it to write
+its own cron line or scheduled task
+(<code>src/memory_forest/guide/routine.md</code>, <em>Make it run by
+itself</em>). Windows needs WSL2.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Lane write.</strong> <code>intake.append_owned</code>
+appends one turn under the <code>intake</code> lock, masked,
+deduplicated on the turn id, after <code>refuse_recording_off</code>
+checks the owner's setup answer
+(<code>src/memory_forest/intake.py:287</code>, <code>:412-431</code>).
+<code>forest intake --from jsonl</code> reads records an exporter
+appended; <code>memory_log</code> calls <code>record_turn</code> with
+<code>role="agent"</code> and an origin from the transport
+(<code>src/memory_forest/mcp.py:732-743</code>, <code>:787</code>).</li>
+<li><strong>Filing.</strong> No package code. The keeper edits pages,
+then runs <code>forest check --sync</code>, <code>forest lint</code>,
+<code>forest levels apply</code> and <code>forest index build</code>
+(<code>src/memory_forest/guide/routine.md</code>, section 2).</li>
+<li><strong>Structural change.</strong> Every tool that moves things
+builds a <code>Plan</code>, an in-memory overlay. <code>finish</code>
+rewrites references and appends record lines, and <code>check</code>
+proves the planned forest. <code>commit</code> writes the journal,
+stores archive copies, writes the pages, reads them back and appends the
+move log (<code>src/memory_forest/plan.py:1-23</code>,
+<code>:922</code>, <code>:998</code>, <code>:1106-1169</code>).</li>
+<li><strong>Levels.</strong> <code>levels.due</code> and
+<code>levels.apply</code> compute distinct days and carry each change
+out through the collections or move tool
+(<code>src/memory_forest/levels.py:236</code>, <code>:400</code>).</li>
+<li><strong>Search.</strong> <code>search.query</code> compiles the
+registry from the trees, builds the reader's <code>Scope</code>, indexes
+changed lanes and daily pages, then adds alias, word and vector hits and
+sorts by tier and score
+(<code>src/memory_forest/search.py:2491-2545</code>).</li>
+<li><strong>Read and navigate.</strong> <code>search.read</code> returns
+the page or an addressed section as written, after
+<code>_refuse_scope</code>; <code>navigate</code> returns one level down
+from the root index with lines naming hidden trees removed
+(<code>src/memory_forest/search.py:2549</code>, <code>:2636</code>,
+<code>:2728-2746</code>).</li>
+<li><strong>Timeline.</strong> <code>timeline.query</code> parses
+English and Korean time phrases and returns the units whose Timeline
+intervals overlap, inside the same scope
+(<code>src/memory_forest/timeline.py</code>).</li>
+<li><strong>Scope.</strong> <code>scope.for_reader</code> and
+<code>agents.readable_trees</code>
+(<code>src/memory_forest/scope.py:52-73</code>,
+<code>src/memory_forest/agents.py:382-403</code>).</li>
+<li><strong>Recovery.</strong> <code>journal.write</code> and the
+roll-back the next lock taker runs
+(<code>src/memory_forest/journal.py:1-20</code>,
+<code>:46-67</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Pages.</strong> Leaves, collection pages, boards, tree pages
+and the root index are parsed by <code>model.py</code>: frontmatter
+fields, <code>##</code> sections, Timeline lines
+(<code>- [superseded D] &lt;when&gt; — &lt;text&gt;</code>), record
+lines and registry lines
+(<code>src/memory_forest/model.py:735-760</code>). A leaf's content cap
+is 8 KB and its hard maximum 20 KB; the Update record does not count
+against the cap (<code>src/memory_forest/config.py:75-77</code>).</p>
+<p><strong>Scope.</strong> No page carries an owner or reader field. The
+tree is the folder: <code>04 stm/&lt;tree&gt;/…</code> and
+<code>03 mtm/&lt;tree&gt;/…</code> belong to <code>&lt;tree&gt;</code>,
+<code>06 istm/&lt;agent&gt;/</code> to that agent. The registry records
+each tree's kind, agent or shared. In the index, each unit stores
+<code>path</code>, <code>layer</code>, <code>tree</code> and
+<code>agent</code> beside its text, and <code>Scope.allows</code>
+decides by the role and tree of the classified path
+(<code>src/memory_forest/scope.py:41-49</code>).</p>
+<p><strong>Time.</strong> Timeline lines carry a date, an optional clock
+and a zone, and the index stores each as a UTC interval in
+<code>times</code>. A leaf has <code>updated_at</code>. A raw turn has
+<code>at</code> with its offset. A Timeline line's supersession date is
+in its text; <code>status: superseded</code> is a frontmatter field.
+None of these reaches a column the search reads: <code>units</code> has
+no status or validity field
+(<code>src/memory_forest/search.py:1511-1525</code>).</p>
+<p><strong>History.</strong> Three records, at three grains. The page's
+Update record holds the history of its facts, as the keeper writes it.
+<code>record-history/</code> holds trimmed record lines verbatim with a
+manifest row per block. <code>moves.jsonl</code> holds where pages and
+registry lines went (section 9).</p>
+<p><strong>The two value ledgers.</strong>
+<code>.forest/credentials/sign-in.jsonl</code> keeps an HMAC-SHA256
+digest, under a forest key, of each value a reader judged a sign-in
+value, and that value is masked wherever it appears again;
+<code>judged.jsonl</code> keeps the digests of values judged not to be
+one (<code>src/memory_forest/credential_ledger.py:1-18</code>).
+<code>.forest/repeats-judged.jsonl</code> keeps a digest per subject and
+fact line that a reading found rightly held by more than one leaf, so
+the repeat count leaves it out
+(<code>src/memory_forest/repeats.py:1-35</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Names first.</strong> <code>_add_alias_hits</code> normalises
+the question and finds every registry name, id and alias it contains,
+longest first; a match brings the subject's home and every leaf whose
+<code>about:</code> names it, at tier 0
+(<code>src/memory_forest/search.py:2749-2789</code>). This is the
+design's main bet: a question that says "the big kiln" lands on Kiln
+Two's page with no embedding.</p>
+<p><strong>Then words.</strong> <code>_add_word_hits</code> ORs the
+quoted tokens into the FTS5 table and adds trigram matches for tokens of
+three or more characters and CJK bigram hits. It keeps a unit only if a
+token occurs in its heading or text, at tier 1, scored by the number of
+tokens matched (<code>:2819-2863</code>). <strong>Vectors</strong> come
+third, brute-force cosine over every stored vector above a floor, and
+only with a registered provider (<code>:2881-2926</code>).</p>
+<p><strong>What comes back is a route.</strong> One result per page,
+each matching section with its address, lines, heading, text and the
+reasons it matched, ordered by tier, score and path, cut to
+<code>limit</code> (default 10). The agent is told to open the page,
+check its dates and its update record, and apply its own rules. Sign-in
+values and the account, card and phone numbers the forest recognises are
+masked at the door.</p>
+<p><strong>Superseded text is not told apart.</strong> A section is a
+unit whatever it holds. The <code>## Update record</code>, with its
+<code>was "…", now "…"</code> lines, is indexed like any other section,
+and a leaf with <code>status: superseded</code> like a current one. A
+<code>[superseded …]</code> Timeline line is indexed and placed on the
+time index. <code>search.py</code> and <code>timeline.py</code> contain
+no reference to supersession (Recorded searches). A word search for an
+old value finds it, and the route does not say it is old.</p>
+<p><strong>Cost.</strong> Every search, read, timeline and navigate
+compiles the registry from the trees, so it reads every leaf.
+<code>tests/test_v1_query_cost.py</code> pins the door calls: 46 per
+added leaf and one per branch for a search or a timeline read, and
+nothing per daily page or lane file, after a build with nothing changed.
+<code>docs/tools.md:636-642</code> states the same.</p>
+<p><strong>Freshness.</strong> A search first indexes the lane files and
+daily pages that changed since the build
+(<code>refresh_lanes_and_daily</code>,
+<code>src/memory_forest/search.py:351-410</code>), so an hour not filed
+yet is findable. A leaf the keeper edited is served from the old index
+until the next <code>forest index build</code>; <code>memory_read</code>
+reads the file and is current.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>No write blocks an agent on a model.</strong>
+<code>memory_log</code> and <code>forest log</code> append one line and
+return, and the tree and the index entries for a new agent follow or are
+reported <code>pending</code> with a reason. A logged turn is searchable
+at the next search, which indexes changed lanes first. A filed fact is
+retrievable after the keeper's next pass and the
+<code>forest index build</code> that ends it, which by the guide is once
+a night.</p>
+<p><strong>What the package checks of a turn.</strong> The door sets the
+role (<code>agent</code> for both log doors) and the origin
+(<code>interactive</code> on stdio, <code>headless</code> over HTTP),
+and refuses a call that names a reader, role or origin
+(<code>src/memory_forest/mcp.py:644-649</code>,
+<code>src/memory_forest/cli_find.py:138-146</code>). Numbers and sign-in
+values are masked before the line is written. A tool turn records that
+the tool ran, not its output, unless <code>intake.tool_output</code> is
+<code>keep</code>. A session whose prompt carries
+<code>MEMORY_FOREST_INTERNAL</code> is not taken in, so the keeper's own
+passes do not become conversation. Through
+<code>forest intake --from jsonl</code> the role is whatever the record
+says; the exporter that writes those records is written by the agent
+itself, following the setup guide, so "the owner speaking" is the
+exporter's claim.</p>
+<p><strong>What the package checks of a fact.</strong> Shape, not
+content (<code>src/memory_forest/guide/contract.md</code>, section
+8):</p>
+<ul>
+<li>violations: a leaf outside its subject's home, an unknown entity, a
+registry line out of shape, a stale reference, a current-state line
+without its date and source or with a source changed since, recorder
+dumps in a leaf, and account or sign-in values in full;</li>
+<li>upkeep: size, missing <code>kind:</code> or <code>about:</code>,
+repeated lines, stale lists.</li>
+</ul>
+<p>A run takes a baseline and must clean up only what its own pages
+added. The one check that would compare a filed day with the leaves,
+<code>daily_section_unfiled</code>, is registered and always reported as
+<em>not checked</em>
+(<code>src/memory_forest/lint.py:701-713</code>).</p>
+<p><strong>Deduplication</strong> is structural: one home per fact,
+reference lines instead of copies, and <code>forest repeats</code>
+moving lines shared by two leaves of one subject to the index leaf,
+through a checked plan.</p>
+<p><strong>Deletion does not exist.</strong> There is no delete, forget
+or erase command, and the contract's rule is that nothing is deleted.
+<code>forest credentials fix</code> replaces a sign-in value in a page
+with <code>[REDACTED]</code> after storing a whole-page copy in the
+archive (<code>src/memory_forest/credentials.py:975</code>), so the
+value stays on disk, compressed, and <code>forest archive show</code>
+masks it on print (<code>src/memory_forest/cli.py:515-522</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The package's own cost is file reads: a search reads every leaf to
+build the registry, which is fine at hundreds of leaves and linear
+beyond. The real cost is the keeper's passes, one model session per pass
+on whatever model the owner named, over the day's lanes and the leaves
+they touch; the package makes no estimate of it and calls no model
+itself. Nothing is injected into a prompt automatically: the agent
+searches when the use guide tells it to, and reads what it chooses.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model sees five tools on a one-agent connection:
+<code>memory_search</code> (<code>words</code>, <code>limit</code>,
+<code>source</code>), <code>memory_read</code> (<code>path</code>,
+<code>lines</code>, <code>source</code>), <code>memory_timeline</code>
+(<code>phrase</code> or <code>subject</code>, <code>source</code>),
+<code>memory_navigate</code> (<code>path</code>) and
+<code>memory_log</code> (<code>text</code>, <code>session</code>,
+<code>turn_id</code>). A group connection adds a required
+<code>agent</code> to each, resolved only to a member of that group, or
+admitted once to an open group
+(<code>src/memory_forest/mcp.py:223-239</code>,
+<code>src/memory_forest/groups.py:131-147</code>). There is no tool that
+writes a page. Filing is done with whatever file tools the keeper agent
+already has.</p>
+<p>The agent connects itself. <code>forest guide</code> prints the setup
+guide. <code>forest setup</code> with no answers lists the questions the
+agent must ask the owner, and with every answer writes the forest, the
+agent's tree and its record file and prints a <code>todo</code>.
+<code>forest doctor --phrase</code> prints a phrase for the agent to
+log, and a later doctor proves it arrived and was indexed and that the
+MCP server has been called (<code>src/memory_forest/doctor.py</code>).
+Setup writes nothing into the agent program's own settings; it tells the
+agent what to register.</p>
+<p>Two policies decide where a fact noted by an agent goes:
+<code>subject-first</code> files it in the subject's home tagged
+<code>noted by &lt;agent&gt;</code>, and <code>agent-first</code> files
+it in the agent's tree with <code>about:</code> pointers
+(<code>docs/multi-agent.md</code>). Both are rules the keeper
+follows.</p>
+<p>Adapting it to another agent means writing an exporter that appends
+that program's turns as records in the lane's shape, or calling
+<code>memory_log</code>. The package ships no reader of any program's
+transcripts, by design.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="correction-leaves-the-old-value-searchable">Correction leaves
+the old value searchable</h3>
+<p>The correction model is careful on the page and invisible to search.
+The keeper moves the old statement into the Update record and marks the
+Timeline line, and both stay in the index as ordinary sections; a
+superseded leaf is indexed like any other. Levels skip superseded lines
+(<code>src/memory_forest/levels.py:80</code>, <code>:93</code>), so the
+code knows the mark; the search and the time index do not read it. An
+agent that takes the first matching section as the answer can read the
+old value as current, and the route gives it nothing to tell them apart
+except the section heading.</p>
+<h3 id="the-facts-are-written-outside-the-package">The facts are written
+outside the package</h3>
+<p>Every guarantee the package gives is about structure: where a page
+lives, that a move rewrote every reference, that a commit rolled back
+whole. The content of a leaf is written by the keeper agent with its own
+file tools, and the package learns of it at the next check. Nothing
+records which agent wrote a fact unless the agent tags it, nothing
+checks that a changed fact got its Update record line, and the one
+content check, <code>daily_section_unfiled</code>, is not implemented. A
+keeper that rewrites a leaf without recording the old value loses it,
+apart from git if the owner keeps one.</p>
+<h3 id="reader-scope-is-a-convention-between-cooperating-agents">Reader
+scope is a convention between cooperating agents</h3>
+<p>On MCP the reader is the server's <code>--as</code>, set when the
+agent registered the server in its own tool during setup. On the command
+line it is the <code>--as</code> the calling shell passes, so an agent
+with a shell can search as the orchestrator, and the pages are plain
+files any process can read. The README says so: the forest is <em>"not …
+an authorization system"</em>. The boundary keeps a well-behaved agent's
+context to its own and the shared trees; it does not contain one that
+wants out.</p>
+<h3 id="privacy">Privacy</h3>
+<p>Masking happens before a turn is written and again at every answer,
+and the sign-in ledger stores only keyed digests. Against that, nothing
+can be erased: a fact the owner wants gone stays in the Update record,
+the record history, the archive and the raw lane, and a masked secret
+survives in the archive copy <code>credentials fix</code> makes
+first.</p>
+<h3 id="crash-safety">Crash safety</h3>
+<p>A structural commit writes its journal before the first page, reads
+every page back, and appends the move log last. A kill at any point
+leaves a journal that the next writer rolls back, cutting
+<code>moves.jsonl</code> and the judged ledger back to their earlier
+lengths (<code>src/memory_forest/journal.py:1-20</code>). A lane line is
+appended and synced before its cursor moves, so a crash can repeat a
+turn and cannot lose one
+(<code>src/memory_forest/intake.py:1-8</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> One index
+holds every tree and lane; each unit stores its path and tree, and every
+arm of search, read, timeline and navigate drops a unit
+<code>Scope.allows</code> refuses, with the reader taken from the
+connection. The key is the tree folder rather than a field on the page;
+the predicate is real, applied per hit in Python against a shared index,
+which is what separates it from one store per agent.</li>
+<li><strong><code>audit_log</code> — earned, for structure.</strong>
+<code>moves.jsonl</code> is appended by every structural operation,
+under the writer lock, with time, operation, paths, subject and reason,
+and cut back only for a commit that did not finish. It does not cover
+fact content, which no package code writes, and names no actor.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> The same query
+run as two agents and as the orchestrator: absent for one, present for
+the other.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>status: superseded</code> is a lifecycle field that levels honour
+and search does not, and nothing marks a fact candidate or
+verified.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> The sign-in
+ledger has the tombstone's shape, a durable record keyed on the value
+that suppresses it wherever it reappears, and it is a secrets mask, not
+a record of a rejected memory. The repeats ledger is keyed on a fact
+line and records that a duplicate is accepted.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> Timeline dates
+are when something happened; a supersession date sits in the line's
+text; no record time exists per line, and the index stores the event
+interval only.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No memory
+waits for anyone. Setup's questions go to the owner, and the credential
+judge is a reader's decision on masking, not on what the forest
+holds.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI runs <code>python -m unittest discover -s tests</code> on Ubuntu
+and macOS under Python 3.11 to 3.14, then the public-release audit, and
+on one combination builds the wheel and smoke-tests a clean install
+(<code>.github/workflows/ci.yml</code>). I ran nothing from the
+repository.</p>
+<p>What the suite covers that bears on memory:</p>
+<ul>
+<li>reader scope across trees, lanes, timeline and navigate, through the
+API, the CLI and the stdio MCP server, with a positive control
+(<code>tests/test_v1_find.py:340-367</code>,
+<code>:1132-1176</code>);</li>
+<li>levels from distinct days, including which lines count no day, and
+the promote rows they log
+(<code>tests/test_v1_levels.py:38-107</code>);</li>
+<li>the move log's append, resolve chains, folders and archived pages
+(<code>tests/test_v1_movelog.py</code>);</li>
+<li>a kill at each point of a commit, an interrupted roll-back, and a
+journal of an unknown schema stopping the next writer
+(<code>tests/test_v1_journal.py:84</code>, <code>:104</code>,
+<code>:159</code>);</li>
+<li>masking of numbers and sign-in values in the index and every
+answer;</li>
+<li>query cost pinned as door calls at three generated sizes
+(<code>tests/test_v1_query_cost.py</code>).</li>
+</ul>
+<p><code>scripts/mutate_guards.py</code> turns each guard of a named
+function (a condition, a comparison, a raise, a loop) and reruns the
+named tests, reporting the survivors; it is the in-tree answer to
+whether a guard's tests can fail. It is outside <code>make check</code>,
+and no run of it is committed.</p>
+<p>What is not covered: no test asserts that a superseded leaf, a
+superseded Timeline line or an Update record's old value is kept out of
+a search or flagged in it, and none would pass. No test exercises a
+filing run, since the package has none.</p>
+<p>No retrieval-quality evaluation and no benchmark result is committed;
+<code>docs/comparison.md:12</code> says none is published.
+<code>CITATION.cff</code> describes the software; the tree cites no
+paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Placement by a counted rule.</strong> Decide a subject's
+level from the number of distinct days its own dated lines cover, with
+the thresholds in settings and the move done by one logged tool. Exclude
+lines about the agent's own work, reference lines and superseded lines
+from the count.</li>
+<li><strong>Aliases before words.</strong> A registry of names and
+aliases, matched in the question first, finds the home page of what the
+question is about without an embedding.</li>
+<li><strong>The reader from the connection.</strong> Reject any tool
+argument that names a reader, role or origin, and refuse the widening
+flag on an agent's command line too.</li>
+<li><strong>A lint baseline.</strong> Make a run fix what its own pages
+broke and never what was there before, so a stricter rule can land
+without freezing the store.</li>
+<li><strong>A plan proved before it is written.</strong> Compute a
+structural change in memory, check every reference and kept line,
+journal the before-text, write, read back, and only then log.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>History the index cannot see.</strong> If the store keeps
+old values beside new ones, the index needs the status, or the retriever
+serves the old value as readily as the new.</li>
+<li><strong>A judge with no view of the writes.</strong> A linter that
+sees shape and a writer that edits files directly leave the one property
+that matters, that a changed fact was recorded, to the writer's
+diligence.</li>
+<li><strong>Never deleting.</strong> An append-only store with no erase
+path cannot honour a request to forget, and a masking step that archives
+the unmasked page first keeps the secret it masks.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an owner who already runs a capable agent on a schedule
+and wants its memory as readable, hand-repairable Markdown with strong
+structural discipline and a clean separation between agents, on one
+machine, at the scale of a personal life or a small business. It assumes
+the keeper agent is diligent and the agents are cooperative, and it asks
+the owner to pay for a strong model every night. Walk away if facts must
+be corrected so that retrieval no longer returns the old value, if
+something must be erasable, or if the agents sharing the forest cannot
+be trusted with a shell.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether search is meant to return Update record sections and
+superseded leaves as ordinary hits, or whether a status filter is
+planned.</li>
+<li>How often, in practice, a keeper agent following the routine records
+the old value in the Update record when it rewrites a fact.</li>
+<li>Whether the 0.3 <code>memory-forest</code> writer is meant to stay
+installed through the version 1 betas, and whether its receipts are read
+by anything.</li>
+<li>What a group connection is meant to prevent, given that each call
+names its own member.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Layout, pages and settings:
+<code>src/memory_forest/layout.py</code>,
+<code>src/memory_forest/model.py</code>,
+<code>src/memory_forest/config.py</code></li>
+<li>Lanes: <code>src/memory_forest/intake.py</code>,
+<code>src/memory_forest/adapters/</code>,
+<code>src/memory_forest/turn_keys.py</code>,
+<code>src/memory_forest/sources.py</code></li>
+<li>Structural change: <code>src/memory_forest/plan.py</code>,
+<code>src/memory_forest/move.py</code>,
+<code>src/memory_forest/collections.py</code>,
+<code>src/memory_forest/levels.py</code>,
+<code>src/memory_forest/movelog.py</code>,
+<code>src/memory_forest/journal.py</code>,
+<code>src/memory_forest/locking.py</code></li>
+<li>Records and archive: <code>src/memory_forest/record.py</code>,
+<code>src/memory_forest/archive.py</code>,
+<code>src/memory_forest/repeats.py</code></li>
+<li>Checks: <code>src/memory_forest/lint.py</code>,
+<code>src/memory_forest/checks.py</code>,
+<code>src/memory_forest/validate.py</code>,
+<code>src/memory_forest/maps.py</code></li>
+<li>Finding: <code>src/memory_forest/search.py</code>,
+<code>src/memory_forest/timeline.py</code>,
+<code>src/memory_forest/scope.py</code>,
+<code>src/memory_forest/agents.py</code>,
+<code>src/memory_forest/embeddings.py</code></li>
+<li>MCP and doors: <code>src/memory_forest/mcp.py</code>,
+<code>src/memory_forest/cli_find.py</code>,
+<code>src/memory_forest/groups.py</code>,
+<code>src/memory_forest/cli.py</code></li>
+<li>Masking: <code>src/memory_forest/credentials.py</code>,
+<code>src/memory_forest/credential_ledger.py</code>,
+<code>src/memory_forest/numbers.py</code>,
+<code>src/memory_forest/leaving.py</code></li>
+<li>Guides and contract: <code>src/memory_forest/guide/</code>,
+<code>docs/contract.md</code>, <code>docs/v1-design.md</code></li>
+<li>0.3: <code>src/memory_forest/core.py</code>,
+<code>src/memory_forest/writer.py</code>,
+<code>src/memory_forest/retrieval.py</code>,
+<code>src/memory_forest/index.py</code></li>
+<li>Tests: <code>tests/test_v1_find.py</code>,
+<code>tests/test_v1_levels.py</code>,
+<code>tests/test_v1_movelog.py</code>,
+<code>tests/test_v1_journal.py</code>,
+<code>tests/test_v1_query_cost.py</code>,
+<code>scripts/mutate_guards.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Search and the time index read no supersession.</strong>
+<code>git grep -n -i 'supersed' -- src/memory_forest/search.py src/memory_forest/timeline.py</code>
+returns nothing; the same pattern on
+<code>src/memory_forest/levels.py</code> matches <code>:9</code> and
+<code>:80</code>.</li>
+<li><strong>No delete, forget or erase command.</strong>
+<code>git grep -n -E 'def cmd_(delete|forget|erase|purge|remove)' -- src</code>
+returns nothing;
+<code>git grep -n -E 'def cmd_(archive_show|recover)' -- src</code>
+matches <code>src/memory_forest/cli.py:515</code> and
+<code>:544</code>.</li>
+<li><strong>The package registers no embedding provider.</strong>
+<code>git grep -n -E 'embeddings\.register' -- src</code> returns
+nothing; the same pattern on <code>tests</code> matches
+<code>tests/test_v1_find.py:426</code>.</li>
+<li><strong>No approval or quarantine state in the code.</strong>
+<code>git grep -n -i -E 'approv|pending_review|quarantin' -- src/memory_forest</code>
+returns nothing; on <code>.</code> the same pattern matches four lines
+under <code>docs/archive-0.3/</code>.</li>
+<li><strong>No validity columns.</strong>
+<code>git grep -n -E 'valid_(from|to|until)' -- .</code> matches only
+<code>invalid_toml</code> in a test name at
+<code>tests/test_v1_settings_recovery.py:358</code>.</li>
+<li><strong>No value-keyed rejection record.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|do_not_remember' -- .</code>
+returns nothing;
+<code>git grep -n -i -E 'tombstone|blocklist|redacted' -- src/memory_forest/credential_ledger.py</code>
+matches <code>:11</code> and <code>:46</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- .</code>
+returns nothing;
+<code>git grep -n -i -E 'arxiv|bibtex|citation' -- .</code> matches
+<code>CHANGELOG.md:478</code> and
+<code>tests/test_v1_cli.py:145-146</code>, about
+<code>CITATION.cff</code>.</li>
+<li><strong>No benchmark results committed.</strong>
+<code>git grep -n -i -E 'locomo|longmemeval|recall@' -- .</code> returns
+nothing; adding <code>benchmark</code> matches
+<code>docs/comparison.md:12</code>.</li>
+<li><strong>No committed mutation run.</strong>
+<code>git ls-files | grep -i -E 'mutant|guards\.json|results'</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/hyungchulc/agent-memory-forest/commit/2a71d9ce0d6dd563fc344c64ec11d8d38e60607c"><code class="commit-id" title="2a71d9ce0d6dd563fc344c64ec11d8d38e60607c">2a71d9ce…</code></a>.
+First reading, from a full clone at the head of <code>main</code>.
+Screened first: no auto-run surface, nothing inside the seven-day
+cooldown, one build-time execution point (<code>Makefile</code>) and one
+unpinned manifest (<code>pyproject.toml</code> with no lockfile);
+<code>AGENTS.md</code>, the guides and the contract were read as data.
+Nothing was installed, built or run, and the 1,198 test functions were
+not run. Three marks: <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). Search returns
+superseded text unflagged, the facts are written by the keeper agent's
+file tools, and nothing can be deleted.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

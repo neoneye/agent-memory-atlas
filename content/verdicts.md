@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 883 reports.**
+**This page covers all 884 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8153,3 +8153,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, with a prebuild gate that refuses any checkout that is not a direct GitHub fork; 4,211 commits from 26 April to 25 November 2026 under four author names; the memory modules are 812 lines using Node built-ins only; 82 test files, two of them touching memory, run by the prebuild that CI builds and not run here. One mark: `scope_enforced`.
 - Study when: you run Claude Code as the agent and want cross-session recall of what was said, with no model on the write path and a scope key the session cannot choose.
 - Do not copy when: memory must hold facts rather than quotes, contradictions must be resolved, or forgetting must be by subject rather than by day.
+
+### [`agent-memory-forest`](../systems/agent-memory-forest/)
+- Best idea: **placement by a counted rule.** A subject's level — an entry on a collection page, a leaf, a branch, a tree — follows the distinct local dates its own Timeline lines cover, with the thresholds in settings and lines about the agent's own work, reference lines and superseded lines counting no day. Each change is one checked plan, journaled, read back and written to `.forest/moves.jsonl` with its reason.
+- Second idea: the reader from the connection. One index holds every tree and lane, and every search arm, read, timeline and navigate drops what lies outside the reader's trees and own lane; an MCP call naming a reader, role or origin is refused, and an agent's command line refuses the widening `--named` flag. A test runs the same query as two agents and the orchestrator.
+- Biggest risk: **correction stops at the page.** The keeper moves a changed fact's old statement into the page's Update record and marks its Timeline line superseded, and the index stores both, and every superseded leaf, as ordinary sections with no status, so a word search finds the old value with nothing marking it old.
+- Second risk: the facts are written by the keeper agent's own file tools, outside the package, so nothing records who wrote a line or checks that a changed fact was recorded, and the one content check, `daily_section_unfiled`, is reported as not checked. Nothing can be erased, and `credentials fix` archives the unmasked page before masking it.
+- Most reusable component: the level rule in `src/memory_forest/levels.py` with the check, journal, write, read-back and log sequence of `Plan.commit` in `src/memory_forest/plan.py:1106-1169`; the reader scope in `src/memory_forest/scope.py` and `agents.readable_trees`.
+- Maturity impression: MIT; 37,830 lines of standard-library Python and 181 commits from 22 July to 17 November 2026, 165 of them in November, at 1.0.0b1; 1,198 unittest functions run in CI on two operating systems and four Python versions, not run here, and a guard-mutation tool with no committed run. Three marks: `scope_enforced`, `audit_log`, `negative_eval`. No retrieval evaluation or benchmark is committed.
+- Study when: you want agents' memory as hand-repairable Markdown whose structure code keeps, a promotion rule a person can recompute, or reader scope fixed by the connection rather than the call.
+- Do not copy when: a correction must stop retrieval returning the old value, stored text must be erasable, or the agents sharing the store cannot be trusted with a shell.
