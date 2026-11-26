@@ -621,6 +621,19 @@ forgetting a day relies on the same offset. That offset lives in one
 file that every ending session reads and rewrites whole with no lock
 (<code>lib/agent-kit/memory/record.cjs:73</code>,
 <code>:103-105</code>).</p>
+<p><a href="../../systems/carrymem/">CarryMem</a> keeps the model off
+the write path and puts a rule classifier in the admission seat instead.
+<code>classify_and_remember</code> redacts, types the message with
+pattern detectors and stores each match in one synchronous SQLite
+transaction; a message no rule matches is reported as
+<code>should_remember: False</code> and kept nowhere, so there is no raw
+event for a later pass to enrich
+(<code>src/carrymem/core/_memory_crud.py:223-313</code>). That trades
+the pattern's availability guarantee for a recall guarantee the
+classifier's phrasing coverage sets. Model calls arrive only as optional
+MCP sampling for consolidation and session summaries, borrowed from the
+client
+(<code>src/carrymem/integration/layer2_mcp/server.py:375-416</code>).</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>

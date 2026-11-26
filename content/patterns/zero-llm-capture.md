@@ -326,6 +326,8 @@ is the thing a deletion request has to survive.
 
 [Fractera](../../systems/web4-node-starter-kit/) copies the session log after every turn and records what it skipped by moving a cursor. A Claude Code Stop and SessionEnd hook appends the person's typed words, Telegram messages, the agent's text and its Telegram replies to a monthly JSONL diary, drops tool calls, slash commands and every line of a `claude -p` session, and calls no model (`lib/agent-kit/memory/record.cjs:39-107`). With memory switched off it still reads the log and advances the per-session byte offset, so turning memory on never copies what was said meanwhile, and forgetting a day relies on the same offset. That offset lives in one file that every ending session reads and rewrites whole with no lock (`lib/agent-kit/memory/record.cjs:73`, `:103-105`).
 
+[CarryMem](../../systems/carrymem/) keeps the model off the write path and puts a rule classifier in the admission seat instead. `classify_and_remember` redacts, types the message with pattern detectors and stores each match in one synchronous SQLite transaction; a message no rule matches is reported as `should_remember: False` and kept nowhere, so there is no raw event for a later pass to enrich (`src/carrymem/core/_memory_crud.py:223-313`). That trades the pattern's availability guarantee for a recall guarantee the classifier's phrasing coverage sets. Model calls arrive only as optional MCP sampling for consolidation and session summaries, borrowed from the client (`src/carrymem/integration/layer2_mcp/server.py:375-416`).
+
 ## Implementation checklist
 
 - Assign a stable event ID before acknowledging capture.

@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 885 of 886 screened at the report's current pin.**
+**Progress: 893 of 894 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 426 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 400 |
-| Repositories with build-time execution (`EXEC`) | 636 |
+| Repositories with an auto-run surface (`RUNS`) | 431 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 402 |
+| Repositories with build-time execution (`EXEC`) | 641 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -31,12 +31,14 @@ These execute without a command being typed. Read before opening the tree.
 | --- | --- |
 | [`a-memory`](../../content/systems/a-memory.md) | `.cursorrules`, `hooks/` |
 | [`acontext`](../../content/systems/acontext.md) | `.claude-plugin/`, `src/packages/claude-code/plugin/.claude-plugin/plugin.json`, `src/packages/claude-code/plugin/.mcp.json`, `src/packages/claude-code/plugin/hooks/`, `src/packages/claude-code/plugin/hooks/hooks.json` |
+| [`aelfrice`](../../content/systems/aelfrice.md) | `.githooks/` |
 | [`agent-context-os`](../../content/systems/agent-context-os.md) | `.claude/hooks/`, `.claude/settings.json`, `.opencode/` |
 | [`agent-framework`](../../content/systems/agent-framework.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md` |
 | [`agent-memory-doctrine`](../../content/systems/agent-memory-doctrine.md) | `.github/copilot-instructions.md` |
 | [`agent-memory-dotnet`](../../content/systems/agent-memory-dotnet.md) | `.github/copilot-instructions.md`, `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`agent-memory-guard`](../../content/systems/agent-memory-guard.md) | `.devcontainer/devcontainer.json` |
 | [`agent-memory-mcp`](../../content/systems/agent-memory-mcp.md) | `server.json` |
+| [`agent-memory-os-yamantaka`](../../content/systems/agent-memory-os-yamantaka.md) | `server.json`, `smithery.yaml` |
 | [`agent-working-memory`](../../content/systems/agent-working-memory.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`agentdatabase`](../../content/systems/agentdatabase.md) | `.githooks/` |
 | [`agentdb`](../../content/systems/agentdb.md) | `.claude-plugin/`, `.gitmodules`, `plugins/agentdb-causal/.claude-plugin/plugin.json`, `plugins/agentdb-core/.claude-plugin/plugin.json`, `plugins/agentdb-graph/.claude-plugin/plugin.json`, `plugins/agentdb-learning/.claude-plugin/plugin.json`, `plugins/agentdb-memory/.claude-plugin/plugin.json`, `plugins/agentdb-search/.claude-plugin/plugin.json` |
@@ -87,6 +89,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`browsentic`](../../content/systems/browsentic.md) | `server.json` |
 | [`buzz`](../../content/systems/buzz.md) | `.vscode/settings.json` |
 | [`byterover`](../../content/systems/byterover.md) | `.claude/settings.json`, `.github/copilot-instructions.md`, `.gitmodules` |
+| [`carrymem`](../../content/systems/carrymem.md) | `server.json`, `smithery.yaml` |
 | [`cartographer`](../../content/systems/cartographer.md) | `server.json` |
 | [`caura`](../../content/systems/caura.md) | `.claude/hooks/`, `.claude/settings.json`, `.mcp.json` |
 | [`chump`](../../content/systems/chump.md) | `.claude/settings.json`, `.cursor/rules/`, `.gitmodules` |
@@ -156,6 +159,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `claude-plugin/.claude-plugin/plugin.json`, `claude-plugin/.mcp.json`, `claude-plugin/hooks/`, `claude-plugin/hooks/hooks.json`, `hooks/` |
 | [`engram-mcp`](../../content/systems/engram-mcp.md) | `hooks/` |
 | [`engram-nickcirv`](../../content/systems/engram-nickcirv.md) | `.cursorrules`, `server.json` |
+| [`engrama-scops`](../../content/systems/engrama-scops.md) | `mcp.json`, `server.json` |
 | [`engraphis`](../../content/systems/engraphis.md) | `.claude-plugin/`, `.githooks/` |
 | [`enquire-mcp`](../../content/systems/enquire-mcp.md) | `scripts/` |
 | [`everos`](../../content/systems/everos.md) | `.claude/settings.json` |
@@ -398,6 +402,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`silica`](../../content/systems/silica.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json`, `mcp.json`, `server.json` |
 | [`sillytavern`](../../content/systems/sillytavern.md) | `.vscode/settings.json` |
 | [`silverbullet`](../../content/systems/silverbullet.md) | `.vscode/settings.json` |
+| [`skillmem`](../../content/systems/skillmem.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `hooks/`, `hooks/hooks.json`, `mcp.json`, `server.json` |
 | [`slowave`](../../content/systems/slowave.md) | `server.json` |
 | [`smythos-sre`](../../content/systems/smythos-sre.md) | `.claude/settings.local.json`, `.cursor/rules/` |
 | [`sqlite-graph-memory`](../../content/systems/sqlite-graph-memory.md) | `server.json` |

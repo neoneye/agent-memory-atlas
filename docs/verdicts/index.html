@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 893 reports.</strong></p>
+<p><strong>This page covers all 894 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36998,6 +36998,55 @@ agent can act on, and a replay you can verify.</li>
 <li>Do not copy when: memory must be forgotten on request, several
 clients write at once, or the model connected to it should not hold
 restore and validation switches.</li>
+</ul>
+<h3 id="carrymem"><a
+href="../systems/carrymem/"><code>carrymem</code></a></h3>
+<ul>
+<li>Best idea: <strong>bind the namespace to the server, not the
+tool.</strong> The stdio server reads <code>CARRYMEM_NAMESPACE</code>
+once, every recall arm and graph read opens with that namespace, and no
+tool schema carries a scope argument, so the model cannot read another
+project's memory by asking; a populated test requires one namespace's
+row present and the other's absent.</li>
+<li>Second idea: superseded memories leave recall and come back in the
+system prompt under <em>Outdated (superseded, do NOT use)</em>, so the
+model sees the change and the instruction together, and a correction
+case requires the old key absent from default recall.</li>
+<li>Biggest risk: <strong>a restated value goes back to sleep.</strong>
+Deduplication returns any row with the same content hash in the
+namespace, superseded or not, so "I prefer dark mode" said again after
+"I prefer light mode" superseded it inserts nothing, runs no supersede
+and reports success with the old key; light mode stays current. Read
+from the code, not run.</li>
+<li>Second risk: contradiction pairs such as dark and light, yes and no,
+new and old supersede a row of the same type with no shared topic. Rules
+share the file with no namespace and are injected into every namespace's
+prompt, and <code>promote_rules</code> with <code>auto_accept</code>
+creates rules marked confirmed by the user. With an encryption key the
+FTS index holds ciphertext. Expiry is stamped and not enforced on
+recall.</li>
+<li>Most reusable component: the recall WHERE clause in
+<code>src/carrymem/adapters/sqlite/recall_engine.py:227-269</code>, the
+superseded-as-outdated assembly in
+<code>src/carrymem/prompt_builder.py:89-143</code> with
+<code>src/carrymem/prompt.py:248</code>, and the fail-closed migration
+ledger in
+<code>src/carrymem/adapters/sqlite/schema.py:697-729</code>.</li>
+<li>Maturity impression: MIT; 59,084 lines of Python and 393 commits
+from 3 May to 26 November 2026 under four author names and dependabot,
+at 0.12.0a1; 5,161 test functions with lint and type gates in CI, none
+run here. The 83.0% PrefEval headline has a harness that forces the
+preference's type into a fresh database per item and no committed
+result, and the README cites it to an astrophysics paper. Three ledgers,
+including a reflection queue with approval and rollback, are reached
+only from tests. Three marks: <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Study when: you want one local memory file shared by several MCP
+clients with a deterministic, model-free write path and a scope the
+model cannot name.</li>
+<li>Do not copy when: the user's latest statement must win, several
+projects share one file with rules, or stored content is encrypted and
+must be searchable.</li>
 </ul>
         </article>
       </div>

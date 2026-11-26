@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Python MCP server and
+library that classifies messages with rules, stores preferences,
+corrections and decisions in one SQLite file, and builds prompts.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="CarryMem — Agent Memory Atlas">
+    <meta property="og:description" content="A local Python MCP server
+and library that classifies messages with rules, stores preferences,
+corrections and decisions in one SQLite file, and builds prompts.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CarryMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Python MCP server
+and library that classifies messages with rules, stores preferences,
+corrections and decisions in one SQLite file, and builds prompts.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>CarryMem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "CarryMem",
+      "description": "A local Python MCP server and library that classifies messages with rules, stores preferences, corrections and decisions in one SQLite file, and builds prompts.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Rule-classified preferences in one SQLite
+file, shared by every MCP client</p>
+          <h1>CarryMem</h1>
+          <p class="document-deck">A local Python MCP server and library
+that classifies messages with rules, stores preferences, corrections and
+decisions in one SQLite file, and builds prompts.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/lulin70/carrymem">
+              <span>Source</span>
+              <strong>lulin70/carrymem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/lulin70/carrymem/commit/efb76e61d080f1621600528cdc0ecac9b13dce70" title="efb76e61d080f1621600528cdc0ecac9b13dce70">
+              <span>Analyzed revision</span>
+              <code>efb76e61…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/lulin70--carrymem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>lulin70--carrymem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE, and in pyproject.toml, setup.py, server.json and the VS Code
+extension's package.json</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>59,084
+lines of Python in 168 files under src/, of which the SQLite adapter is
+7,114 and the rule engine 8,695; 69,289 lines of Python tests; a
+1,248-line TypeScript VS Code extension</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>393
+commits from 3 May to 26 November 2026, 383 of them under the names lin,
+CarryMem Dev, LIN and lulin70 and 10 from dependabot; 21 tags; VERSION
+reads 0.12.0a1</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>5,161
+test functions in 170 files; ci.yml runs pytest over tests/ excluding
+the slow marker, with flake8, black, isort and mypy; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>CarryMem is a local Python package and stdio MCP server that keeps
+one user's preferences, corrections and decisions in one SQLite file, so
+that Cursor, Claude Code, TRAE and other MCP clients read the same
+memory. A message is typed by a rule and pattern classifier with no
+model call, stored in a namespace, recalled through trigram FTS5 with
+expansion, and rendered into a system prompt with a token budget.
+Supersession keeps the old row and labels it outdated. What is notable
+is how much of the write path is deterministic and tested. What is weak
+is correction: a value the user restates after it was superseded is
+absorbed by deduplication, keyword-pair supersession crosses topics, and
+the rule engine beside the memory has no namespace.</p>
+<p>The memory is the row a classifier admits.
+<code>classify_and_remember</code> redacts, classifies and stores each
+match synchronously; a message the classifier does not match is reported
+as <code>should_remember: False</code> and kept nowhere
+(<code>src/carrymem/core/_memory_crud.py:223-313</code>). Before
+inserting, the adapter looks for the same content hash in the namespace
+and returns that row instead, whatever its state
+(<code>src/carrymem/adapters/sqlite/crud.py:61-66</code>,
+<code>:164-185</code>). A new preference, decision or fact then
+supersedes at most one older row of its type when a contradiction pair
+or an update marker matches
+(<code>src/carrymem/adapters/sqlite/supersede.py:56-90</code>,
+<code>:169-189</code>).</p>
+<p>Recall always opens with a namespace predicate from server
+configuration and drops superseded and paused rows; the prompt builder
+then brings up to five superseded rows back under <em>Outdated
+(superseded, do NOT use)</em>
+(<code>src/carrymem/adapters/sqlite/recall_engine.py:227-269</code>,
+<code>src/carrymem/prompt_builder.py:105-115</code>,
+<code>src/carrymem/prompt.py:248</code>). Expiry is stamped by tier and
+not read by recall.</p>
+<p>Around the store sit three ledgers that were built and not wired into
+a serving path. Observations carry <code>valid</code> and
+<code>unsupported</code> and are written on corrections, and nothing
+outside the adapter lists them. A reflection proposal queue with
+<code>proposed</code>, <code>approved</code>, <code>rejected</code>,
+<code>applied</code> and rollback is reached only from tests. Evidence
+links flag a derived memory <code>provenance_unsupported</code> when its
+last source is deleted, and no read consults the flag.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code> and in every
+manifest that names a licence. The README's citation block gives a
+<code>@software</code> entry under a different organisation URL
+(<code>github.com/carrymem/carrymem</code>) from the repository's.
+Nothing restricts use.</p>
+<p>Three marks are earned: <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code>. Section 9 gives
+the reason for each and for the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a classified sentence with a type</strong>. The
+seven user-facing types come from rule detectors
+(<code>src/carrymem/layers/memory_pattern_detectors.py</code>);
+<code>session_summary</code> is an eighth, excluded from recall unless
+asked for. The store treats an admitted row as true from the moment it
+is written. There is no candidate state for a memory.</p>
+<p>A row can stop being served in four ways, each a separate column:</p>
+<ul>
+<li><strong>Superseded.</strong> <code>superseded_at</code> and
+<code>supersedes</code> are set by auto-supersede on insert, by a
+correction naming it, or by consolidation. The row stays, leaves default
+recall, and returns in the prompt as outdated. No serving path clears
+the stamp.</li>
+<li><strong>Paused.</strong> <code>paused = 1</code>, set and cleared by
+the user or the agent through <code>pause_memory</code> and
+<code>resume_memory</code>. Recall and graph reads skip it.</li>
+<li><strong>Expired.</strong> <code>expires_at</code> is stamped from
+the tier: 24 hours, 90 days, a year, or never
+(<code>src/carrymem/utils/helpers.py:183-188</code>). Preferences and
+corrections are tier 2. Recall does not read the column; only
+<code>carrymem clean --expired</code> and <code>forget_expired</code>
+delete expired rows.</li>
+<li><strong>Forgotten.</strong> A hard delete of the row, its vector and
+its graph rows.</li>
+</ul>
+<p>Supersession is decided by keywords, not by meaning. A contradiction
+pair found across the two texts (<code>like</code>/<code>dislike</code>,
+<code>dark</code>/<code>light</code>, <code>yes</code>/<code>no</code>,
+<code>new</code>/<code>old</code>,
+<code>now</code>/<code>previously</code> among seventeen) supersedes
+with no topical overlap required; an update marker (<code>now</code>,
+<code>switched</code>, <code>instead</code>) needs a word Jaccard of 0.4
+(<code>src/carrymem/adapters/sqlite/supersede.py:15-50</code>,
+<code>:169-189</code>, <code>:246-257</code>). Corrections take a second
+path: the correction is stored, the most recent preference, decision or
+fact sharing two keywords is found by recall, and that row is superseded
+(<code>src/carrymem/core/_classification.py:637-666</code>).</p>
+<p>The restatement case is where the model fails. The content hash is
+the dedup key and is computed over content and type without the
+supersession state, so "I prefer dark mode" restated after "I prefer
+light mode" superseded it returns the superseded row, inserts nothing
+and runs no supersede. Light mode stays current; the user's latest
+statement is reported as stored and is outdated. Read from the code, not
+run.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a message is admitted by rules, deduplicated on its content hash whatever the row's state, and supersedes one older row by keyword pair; recall filters namespace, superseded and paused, the prompt re-adds superseded rows as outdated, and a verbatim restatement of a superseded value lands back on the superseded row</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a message is admitted by rules, deduplicated on its content hash whatever the row&#39;s state, and supersedes one older row by keyword pair; recall filters namespace, superseded and paused, the prompt re-adds superseded rows as outdated, and a verbatim restatement of a superseded value lands back on the superseded row
+flowchart TD
+    M[&quot;Message from an&lt;br/&gt;MCP client or the CLI&quot;] --&gt; R[&quot;Redaction&lt;br/&gt;secret regexes&quot;]
+    R --&gt;|&quot;secret found&quot;| X[&quot;Not stored&quot;]
+    R --&gt; C[&quot;Rule + pattern&lt;br/&gt;classifier, no model&quot;]
+    C --&gt;|&quot;no match&quot;| X
+    C --&gt; H{&quot;Same content hash&lt;br/&gt;in namespace?&quot;}
+    H --&gt;|&quot;yes, any state&quot;| E[&quot;Return existing row&lt;br/&gt;even if superseded&quot;]
+    H --&gt;|&quot;no&quot;| I[&quot;INSERT row&lt;br/&gt;namespace, tier TTL&quot;]
+    I --&gt; S[&quot;auto_supersede&lt;br/&gt;keyword pair or marker&lt;br/&gt;one older row&quot;]
+    I --&gt; K[&quot;correction:&lt;br/&gt;supersede named row&quot;]
+    S --&gt; Q[(&quot;memories&lt;br/&gt;superseded_at, paused,&lt;br/&gt;expires_at&quot;)]
+    K --&gt; Q
+    Q --&gt; F[&quot;recall: namespace IN,&lt;br/&gt;superseded and paused&lt;br/&gt;left out, no expiry&quot;]
+    F --&gt; P[&quot;system prompt&lt;br/&gt;+ up to 5 superseded&lt;br/&gt;as Outdated&quot;]
+    E -.-&gt; T[&quot;Restated value stays&lt;br/&gt;superseded; newer&lt;br/&gt;row stays current&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A library, <code>CarryMem</code>, composed from eight mixins over a
+<code>StorageAdapter</code> (<code>src/carrymem/core/</code>). The
+SQLite adapter (<code>src/carrymem/adapters/sqlite/</code>) is the
+default and the only one with versioning, supersession, graph and
+ledgers; a JSON-file adapter and an Obsidian vault adapter exist beside
+it. Everything runs in the caller's process.</p>
+<p>Entry points:</p>
+<ul>
+<li><code>carrymem mcp</code>, a stdio MCP server whose namespace comes
+from <code>CARRYMEM_NAMESPACE</code>
+(<code>src/carrymem/integration/layer2_mcp/server.py:62</code>), with 35
+tools in <code>src/carrymem/integration/layer2_mcp/tools.py</code>.</li>
+<li><code>carrymem serve</code>, the same handlers over HTTP and SSE on
+127.0.0.1:8765, with a bearer key if one is set; <code>/health</code>,
+<code>/healthz</code> and <code>/metrics</code> are public
+(<code>src/carrymem/integration/layer2_mcp/http_server.py:13-20</code>).</li>
+<li>A CLI the README counts at more than fifty commands, a Textual TUI,
+a VS Code extension under <code>extensions/vscode-carrymem/</code>, and
+<code>AsyncCarryMem</code>.</li>
+</ul>
+<p>Persistence is one SQLite file in WAL mode. <code>memories</code>
+holds the rows with an FTS5 index using the <code>trigram</code>
+tokenizer, kept in step by insert, delete and update triggers
+(<code>src/carrymem/adapters/sqlite/schema.py:19-54</code>,
+<code>:70-87</code>). The rule engine opens the same file for
+<code>rules</code> and <code>promotion_audit</code>
+(<code>src/carrymem/core/_lifecycle.py:293-300</code>,
+<code>src/carrymem/rules/storage.py:116-142</code>). The audit log is a
+second SQLite file, <code>&lt;db&gt;.audit.db</code>
+(<code>src/carrymem/adapters/sqlite/__init__.py:288-311</code>). Vector
+search needs <code>sqlite-vec</code> and
+<code>sentence-transformers</code> and is off unless
+<code>CARRYMEM_ENABLE_VECTOR_SEARCH=1</code>.</p>
+<p>Model calls are optional and borrowed: P2 consolidation and session
+summaries send <code>sampling/createMessage</code> to the MCP client
+(<code>src/carrymem/integration/layer2_mcp/server.py:375-416</code>).
+The write path makes none.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install carrymem</code>, <code>carrymem init</code>,
+<code>carrymem setup-mcp --all --global</code>. Nothing else has to run:
+no service, no API key, fully offline with vector search off. The store
+is a SQLite file a person can open; content is plain unless an
+encryption key is set, in which case <code>content</code>,
+<code>raw_text</code> and <code>original_message</code> are Fernet
+ciphertext. <code>carrymem pack</code> writes a <code>.carry</code> file
+with a SHA-256 checksum and optional password encryption for moving the
+store between machines. Python 3.12 or later.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> MCP <code>classify_and_remember</code> →
+<code>handle_classify_and_remember</code>
+(<code>src/carrymem/integration/layer2_mcp/handlers/write.py:18-36</code>)
+→ <code>CarryMem.classify_and_remember</code> with busy retry
+(<code>src/carrymem/core/_memory_crud.py:192-221</code>) →
+<code>_classify_and_remember_impl</code>: write permission, validation,
+<code>_validate_and_resolve</code> (coreference and redaction),
+<code>_classify_message</code>, <code>_store_entries</code>, and an
+audit event (<code>:223-313</code>). <code>declare</code> stores at
+confidence 1.0 and falls back to <code>user_preference</code> when
+nothing matches (<code>:444-518</code>).</p>
+<p><strong>Store.</strong> <code>_store_single_entry</code> finds a
+correction's target first, stores the entry, supersedes the target, and
+extracts graph entities
+(<code>src/carrymem/core/_classification.py:544-575</code>).
+<code>CRUDOperations._remember_impl</code> dedups by hash, inserts,
+embeds if enabled, audits and auto-supersedes
+(<code>src/carrymem/adapters/sqlite/crud.py:58-162</code>). Corrections
+also write an observation and a resolved conflict record
+(<code>src/carrymem/core/_classification.py:578-635</code>).</p>
+<p><strong>Recall.</strong> MCP <code>recall_memories</code> passes
+<code>query</code>, <code>filters</code> and <code>limit</code>
+(<code>src/carrymem/integration/layer2_mcp/handlers/read.py:156-166</code>)
+to <code>RecallEngine.recall</code>
+(<code>src/carrymem/adapters/sqlite/recall_engine.py:125-187</code>):
+the WHERE clause (<code>:227-269</code>), FTS with BM25
+(<code>:655-686</code>), LIKE fallback (<code>:688-717</code>), context
+rebuild and expansion (<code>:283-403</code>), optional vector and RRF
+(<code>:578-643</code>). The plan-based <code>recall_all</code> adds
+graph, time and entity modes
+(<code>src/carrymem/core/_recall.py:110-160</code>).</p>
+<p><strong>Context.</strong> <code>get_system_prompt</code> →
+<code>PromptBuilder.build_context</code> splits the budget 20/60/20
+between rules, memories and knowledge
+(<code>src/carrymem/prompt_builder.py:531-551</code>) and assembles
+base, superseded and summary rows (<code>:89-143</code>).</p>
+<p><strong>Correction and deletion.</strong> <code>update_memory</code>
+writes a <code>memory_versions</code> row and overwrites content
+(<code>src/carrymem/adapters/sqlite/crud.py:557-650</code>);
+<code>forget</code> deletes the row, vector and graph rows and flags
+derived rows and observations (<code>:312-349</code>);
+<code>forget_expired</code> (<code>:432-460</code>); pause and resume
+(<code>:463-540</code>).</p>
+<p><strong>Background.</strong> <code>consolidate</code> applies
+supersede pairs, deletes, and decays below a floor, then runs rule
+promotion and host-LLM merge
+(<code>src/carrymem/core/_maintenance.py:143-239</code>);
+<code>schedule_consolidation</code> runs it on a thread.</p>
+<p><strong>Rules.</strong> <code>RuleEngine</code>
+(<code>src/carrymem/rules/__init__.py</code>), the promotion pipeline
+(<code>src/carrymem/rules/promotion_pipeline.py:126-294</code>), the
+injector, and the MCP rule tools in
+<code>src/carrymem/integration/layer2_mcp/handlers/rule.py</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code>
+(<code>src/carrymem/adapters/sqlite/schema.py:19-45</code> plus
+migrations at <code>:89-181</code>): <code>id</code>, <code>type</code>,
+<code>content</code>, <code>raw_text</code>,
+<code>original_message</code>, <code>confidence</code>,
+<code>tier</code>, <code>source_layer</code>, <code>reasoning</code>,
+<code>metadata</code> JSON, <code>storage_key</code> (globally unique,
+carries a namespace tag), <code>namespace</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>expires_at</code>, <code>access_count</code>,
+<code>content_hash</code>, <code>importance_score</code>,
+<code>last_accessed_at</code>, <code>version</code>,
+<code>paused</code>, <code>paused_at</code>, <code>pause_reason</code>,
+<code>superseded_at</code>, <code>supersedes</code>,
+<code>memory_nature</code>, <code>version_chain_id</code>,
+<code>version_number</code>, entity columns and a summary.</p>
+<p><code>memory_versions</code> keeps prior content and confidence per
+edit (<code>:252-261</code>). <code>memory_entities</code> and
+<code>memory_relations</code> carry the graph, each with a
+namespace.</p>
+<p>The ledgers added in the 2.x migrations (<code>:266-390</code>):</p>
+<ul>
+<li><code>memory_evidence_links</code>: source, snapshot hash, target
+and relation, written for aggregated memories and memify output.</li>
+<li><code>memory_observations</code>: subject, predicate, value, source,
+confidence, <code>observed_at</code>, <code>expires_at</code>, and
+<code>status IN ('valid','unsupported')</code>.</li>
+<li><code>memory_conflicts</code>: candidates,
+<code>resolution_status IN ('unresolved', 'resolved','user_decided','expired')</code>,
+selected id, reasoning.</li>
+<li><code>memory_reflection_runs</code> and
+<code>memory_reflection_outputs</code>: proposals of eight types with
+risk level, a status machine through <code>proposed</code>,
+<code>approved</code>, <code>rejected</code>, <code>applied</code>,
+<code>rolled_back</code>, and CHECK constraints requiring a rollback
+reference to apply and an approver to reject.</li>
+</ul>
+<p>Each of these migrations is recorded in
+<code>carrymem_migrations</code> with a checksum, and a non-success
+status refuses to proceed
+(<code>src/carrymem/adapters/sqlite/schema.py:697-729</code>).</p>
+<p>Temporal fields are record times: <code>created_at</code>,
+<code>updated_at</code>, <code>superseded_at</code>, and
+<code>observed_at</code>, which its only writer sets to now. Nothing
+records when a preference held.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is tool-mediated. Every recall builds
+<code>namespace IN (...)</code> from the adapter's namespace, excludes
+<code>session_summary</code> unless a type is asked for, and excludes
+superseded and paused rows unless <code>include_superseded</code> or
+<code>include_paused</code> is in <code>filters</code>
+(<code>src/carrymem/adapters/sqlite/recall_engine.py:227-269</code>).
+The MCP handler passes the model's <code>filters</code> dict through
+unchanged, so the model can ask for either; it cannot name a
+namespace.</p>
+<p>Order of arms: FTS5 <code>MATCH</code> over a stop-word-reduced
+query, ranked by BM25 then importance and confidence; LIKE when FTS
+returns nothing; a rebuilt query when fewer than a quarter of the limit
+came back; synonym, spelling and cross-language expansion; vector search
+fused by reciprocal rank when enabled. Results update
+<code>access_count</code> and <code>last_accessed_at</code>, throttled
+per row, which feeds the importance score
+<code>confidence × type_weight × recency × access</code> with a 30-day
+half-life.</p>
+<p>Graph reads (<code>query_graph</code>, <code>shortest_path</code>,
+entity recall) filter <code>paused = 0</code> and namespace and do not
+filter <code>superseded_at</code>
+(<code>src/carrymem/layers/knowledge_graph.py:155-172</code>,
+<code>:407-428</code>), so a superseded preference is returned by entity
+traversal as current.</p>
+<p>Expiry does not reach recall: the recall engine has no
+<code>expires_at</code> predicate, so a 90-day preference is served
+until someone runs <code>clean --expired</code>.</p>
+<p>With an encryption key, <code>content</code>, <code>raw_text</code>
+and <code>original_message</code> are encrypted before the INSERT and
+the FTS triggers index what the INSERT wrote
+(<code>src/carrymem/adapters/sqlite/crud.py:92-94</code>,
+<code>src/carrymem/adapters/sqlite/schema.py:70-87</code>). The recall
+engine has no decryption branch, so a query is matched against
+ciphertext. The encryption tests recall with an empty query
+(<code>tests/e2e/test_e2e_encryption_full_chain.py:35-80</code>,
+<code>:349-370</code>). Read from the code, not run.</p>
+<p>The prompt builder takes up to <code>max_memories</code> rows, adds
+five superseded rows, summaries and extra preferences, and gives
+preferences 60 percent of the memory budget
+(<code>src/carrymem/prompt_builder.py:290-323</code>). Superseded rows
+render under a do-not-use heading rather than being dropped, which gives
+the model the history and the instruction together.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and model-free. The classifier runs rule
+detectors for the types and a noise detector, and no module on that path
+imports a model client. Redaction matches the regexes in
+<code>SENSITIVE_PATTERNS</code>
+(<code>src/carrymem/security/redaction.py:22-89</code>) and returns
+<code>type: auto_redacted</code> without storing. A message the rules do
+not match is not stored, so capture depends on phrasing.</p>
+<p>Deduplication is the content hash per namespace. The hash covers
+content and type, not state, so a superseded or paused row absorbs its
+own restatement. For corrections the code says so in a comment:
+identical corrections never insert a new row, and a repetition counter
+in metadata stands in
+(<code>src/carrymem/core/_classification.py:336-340</code>).</p>
+<p>Auto-supersede reads the 20 newest unsuperseded rows of the type and
+marks the first that matches. Contradiction pairs need no shared topic,
+so "I prefer dark mode" can supersede "I prefer light roast coffee", and
+a decision containing <code>yes</code> can retire one containing
+<code>no</code>. The test file pins the case it fixed, two flight
+preferences that share words, and the dark/light pair
+(<code>tests/e2e/test_e2e_supersede_preference.py:88-136</code>); no
+case there pairs a contradiction word across unrelated topics.</p>
+<p>Agent-generated facts are handled as user statements: the tool takes
+a message and the classifier types it. <code>_ASSISTANT_PREFIXES</code>
+keeps rows starting with <code>[assistant said]</code> out of
+supersession and nothing else
+(<code>src/carrymem/adapters/sqlite/supersede.py:51</code>,
+<code>:154-158</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The agent blocks on classification and one SQLite transaction; the
+README's measurement on 8 November 2026 is a 26.8 ms warm average, with
+vector search adding about 40 ms per write and 11 s at startup. A memory
+is retrievable on return. Nothing rewrites the store unless
+consolidation is scheduled. Every recall that updates access counts
+fires the update trigger, which deletes and re-inserts the row's FTS
+entry. Injection happens only when the client asks for a system prompt;
+its size is bounded by <code>max_tokens</code>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model holds most verbs: <code>classify_and_remember</code>,
+<code>declare_preference</code>, <code>recall_memories</code>,
+<code>recall_all</code>, <code>update_memory</code>,
+<code>forget_memory</code>, <code>pause_memory</code>,
+<code>resume_memory</code>, <code>get_system_prompt</code>,
+<code>consolidate_memories</code>, <code>schedule_consolidation</code>,
+<code>add_rule</code>, <code>update_rule</code>,
+<code>delete_rule</code>, <code>promote_rules</code>, graph queries and
+health. In a non-default namespace without a configured owner, the
+handler injects the namespace as <code>user_id</code> on every write and
+delete, so the access policy passes for the agent automatically
+(<code>src/carrymem/integration/layer2_mcp/handlers/__init__.py:216-243</code>,
+<code>:379-383</code>).</p>
+<p>Nothing is injected without a call. The Claude Code
+<code>mcp.json</code> sets <code>CARRYMEM_AUTO_INJECT=true</code>, which
+only <code>carrymem doctor</code> reads
+(<code>integrations/claude_code/mcp.json</code>,
+<code>src/carrymem/cli/_stats.py:662-671</code>); the server sends no
+instructions or resources on initialise. Adapting it to another agent is
+a stdio entry and a prompt telling the model to call
+<code>get_system_prompt</code>.</p>
+<p><code>promote_rules</code> returns <code>promoted</code> from
+<code>result.get("accepted")</code>, a key the pipeline never returns
+(<code>src/carrymem/integration/layer2_mcp/handlers/rule.py:273-277</code>,
+<code>src/carrymem/rules/promotion_pipeline.py:175-180</code>), so the
+agent is told zero rules were promoted, including after auto-accepting
+them.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="a-restated-value-goes-back-to-sleep">A restated value goes back
+to sleep</h3>
+<p>Supersession is keyed on the row and deduplication on the value, and
+the two do not consult each other. The result is a block nobody chose:
+an exact restatement of a superseded value returns the old row
+(<code>src/carrymem/adapters/sqlite/crud.py:61-66</code>,
+<code>:164-185</code>), the insert and the auto-supersede that would
+have retired the newer value never run, and <code>declare</code> and
+<code>classify_and_remember</code> report success with the old key. A
+paraphrase walks past it, so it stops nothing deliberately either.
+<code>forget</code> removes the row and with it the block.</p>
+<h3 id="rules-cross-namespaces">Rules cross namespaces</h3>
+<p><code>rules</code> has no namespace column, and the prompt builder
+injects active rules with no namespace argument
+(<code>src/carrymem/rules/storage.py:116-142</code>,
+<code>src/carrymem/prompt_builder.py:325-368</code>). A rule promoted
+from project A's preferences is injected into project B's prompt in the
+same file. A rule accepted through <code>promote_rules</code> with
+<code>auto_accept: true</code> is created with
+<code>confirmed_by_user</code> at its default, true
+(<code>src/carrymem/rules/promotion_pipeline.py:253-294</code>,
+<code>src/carrymem/rules/models.py:90</code>). A rejected candidate is
+not consulted when the next run queues candidates
+(<code>src/carrymem/rules/promotion_pipeline.py:182-221</code>), so a
+rejected rule returns as pending on the next pass.</p>
+<h3 id="deletion">Deletion</h3>
+<p><code>forget</code> deletes the row, vector, entities and relations,
+and leaves <code>memory_versions</code> rows holding every earlier
+content, the audit <code>details</code> holding the first 100 characters
+of the message, up to five backups made by <code>VACUUM INTO</code>, and
+any <code>.carry</code> pack. A derived memory whose last source is
+deleted gets <code>provenance_unsupported</code> in its metadata
+(<code>src/carrymem/adapters/sqlite/evidence.py:227-276</code>) and
+stays in recall, since no reader checks the flag.</p>
+<h3 id="ledgers-without-a-reader">Ledgers without a reader</h3>
+<p><code>memory_observations.status</code>, the reflection proposal
+queue and <code>get_unsupported_targets</code> are reached from tests
+and the adapter only. The reflection queue is the most complete:
+approval, rejection with a required approver, apply with a rollback
+reference, rollback, and auto-apply of low-risk proposals with
+<code>approved_by = "auto"</code>
+(<code>src/carrymem/adapters/sqlite/reflection.py:571-717</code>). No
+CLI command, MCP tool or core method calls it.</p>
+<h3 id="scope">Scope</h3>
+<p>The namespace is server configuration, which is the stronger form:
+the model has no argument to name another one. One file can hold several
+namespaces, each MCP server bound to one. The Python API's
+<code>namespaces=[...]</code> reads any listed set, as
+<code>recall_all</code> and <code>merge_memories</code> do on request.
+The HTTP server has no per-request identity; the bearer key admits a
+caller to the server's namespace.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> Every memory
+row stores <code>namespace</code>; every recall arm and graph read
+applies it from the adapter; MCP tools cannot set it. The rule engine
+beside it is unscoped.</li>
+<li><strong><code>audit_log</code> — earned.</strong>
+<code>audit_log</code> in <code>&lt;db&gt;.audit.db</code> is an
+AUTOINCREMENT table of mutation events with an insert writer and a
+<code>clear</code> method nothing calls. Remember, declare, update,
+forget, expiry, pause and resume write events, and remember, update and
+forget write two each because the facade and the CRUD layer both log.
+Supersession writes none, and no event names an actor.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> A
+two-namespace case requires an own row present and the other absent; a
+correction case requires the superseded key absent from a non-empty
+default recall.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> A memory has
+no status field. Superseded, paused and expired are three stamps, and
+the two that recall filters are lifecycle rather than belief.
+Observation status and the reflection queue have no serving reader; rule
+candidates live in <code>promotion_audit</code>, which recall and
+injection never read.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Forget is a hard
+delete with no record. The dedup block on superseded rows is keyed on
+exact content, is not a rejection record, and blocks the user rather
+than an extractor. Rejected rule candidates are not checked on
+requeue.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> No validity
+time; <code>observed_at</code> is stamped now.</li>
+<li><strong><code>human_review</code> — withheld.</strong>
+<code>carrymem rules review-promotions --accept</code> is a person
+surface, and <code>promote_rules</code> with <code>auto_accept</code>
+and <code>add_rule</code> put the same outcome on the agent's tool list.
+The reflection approval is unwired.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>5,161 test functions in 170 files cover the classifier, adapter,
+recall, supersession, versioning, encryption, audit persistence, MCP
+handlers, rules, CLI and the migration ledger. CI runs them excluding
+<code>slow</code>, plus a blocking run of <code>tests/migration/</code>
+and <code>tests/evidence/</code>. I ran none.</p>
+<p>The mark-bearing cases are in section 9. Two other isolation cases
+are weak: <code>tests/e2e/test_e2e_security.py:235-260</code> asserts
+only on results that carry a <code>namespace</code> key, and
+<code>tests/e2e/test_e2e_user_journey.py:102-110</code> asserts the
+result is a list. The first two supersede tests check
+<code>superseded_at</code> inside default recall and guard the check
+with <code>if len(results) &gt; 1</code>, which default recall's
+superseded filter makes false
+(<code>tests/e2e/test_e2e_supersede_preference.py:41-78</code>).</p>
+<p>The README's 83.0% PrefEval figure has a committed harness and no
+result: <code>benchmarks/*.json</code> and
+<code>benchmarks/PrefEval_official/</code> are in
+<code>.gitignore</code>. The harness's CarryMem condition stores the
+item's preference with <code>force_type="user_preference"</code>,
+bypassing the classifier, into a fresh database per item, skips the
+inter-turns, and asks <code>build_qa_prompt</code>
+(<code>benchmarks/prefeval_official_v2.py:378-427</code>); its default
+endpoint is a third-party OpenAI-compatible proxy (<code>:51-56</code>).
+It measures prompt formatting of one known preference, not capture or
+retrieval. The README links PrefEval to <a
+href="https://arxiv.org/abs/2410.01373">arXiv:2410.01373</a>, an
+astrophysics paper on CO and OH reactions on ice dust; PrefEval is <a
+href="https://arxiv.org/abs/2502.09597">arXiv:2502.09597</a> (Zhao et
+al., submitted 13 February 2025, ICLR 2025), and the README's BibTeX
+gives a different title and first author. The LaMP, LoCoMo, MSC and
+LongMemEval scripts in <code>benchmarks/</code> have no committed
+results either.</p>
+<p>Wanted before trusting it: a restatement of a superseded value; a
+contradiction pair across unrelated topics; a namespace-B prompt after a
+namespace-A rule; a query recall with encryption on; an expired row in
+recall.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Namespace from configuration, never from the tool.</strong>
+Bind each MCP server process to one namespace from its environment and
+give the tools no scope argument; one file can still hold several.</li>
+<li><strong>Superseded rows as labelled history in the prompt.</strong>
+Leave them out of recall and add a few under a do-not-use heading when
+building context, so the model sees the change and not only the
+result.</li>
+<li><strong>A migration ledger that refuses to proceed.</strong> Record
+each schema step with a checksum and stop on a non-success row.</li>
+<li><strong>Redact before the durable write</strong>, and report the
+refusal to the caller.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A dedup key that ignores state.</strong> If equality on
+content returns an existing row, check whether that row is superseded,
+paused or rejected and decide; otherwise a restatement is silently
+swallowed.</li>
+<li><strong>Keyword-pair contradiction without a topic.</strong> Require
+shared subject terms before a pair like dark/light retires a row.</li>
+<li><strong>A side table outside the scope key.</strong> Anything
+injected into a scoped prompt needs the same predicate as the
+memories.</li>
+<li><strong>A stamp nothing enforces.</strong> An expiry column recall
+ignores tells the operator something that is not happening.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For one developer who wants the same preferences in several local MCP
+clients with no services, no keys and a file they can copy, this is a
+light and well-tested choice, provided corrections are made by editing
+or forgetting rather than by restating. It is a poor fit for anything
+that must honour the user's latest word, for several projects in one
+file with rules, or for encrypted search. The ledgers point at a design
+heading toward governed reflection; at this commit that design is schema
+and tests.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does an encrypted store return anything for a non-empty query? Needs
+a run.</li>
+<li>Is the content-hash absorption of superseded rows intended? The
+comment at <code>src/carrymem/core/_classification.py:336-340</code>
+treats deduplication as deliberate for corrections and does not discuss
+supersession.</li>
+<li>Which commit produced the 83.0% PrefEval run, with which dataset
+slice and which model, and was the inter-turn noise in the message
+history?</li>
+<li>Will the reflection queue be wired to a CLI or to MCP, and with
+whose approval?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/carrymem/adapters/sqlite/schema.py</code></td>
+<td>Tables, FTS triggers, migrations and the migration ledger</td>
+</tr>
+<tr>
+<td><code>src/carrymem/adapters/sqlite/crud.py</code></td>
+<td>Insert, dedup, forget, expiry, pause, update, with audit events</td>
+</tr>
+<tr>
+<td><code>src/carrymem/adapters/sqlite/supersede.py</code></td>
+<td>Keyword-pair and marker supersession</td>
+</tr>
+<tr>
+<td><code>src/carrymem/adapters/sqlite/recall_engine.py</code></td>
+<td>WHERE clause, FTS, LIKE, expansion, vector and RRF</td>
+</tr>
+<tr>
+<td><code>src/carrymem/layers/knowledge_graph.py</code></td>
+<td>Entity and relation reads, no superseded filter</td>
+</tr>
+<tr>
+<td><code>src/carrymem/core/_memory_crud.py</code></td>
+<td>Facade write, declare, forget, update, rollback, audit</td>
+</tr>
+<tr>
+<td><code>src/carrymem/core/_classification.py</code></td>
+<td>Store, correction supersede, observations and conflicts</td>
+</tr>
+<tr>
+<td><code>src/carrymem/core/_recall.py</code></td>
+<td>Plan-based multi-mode recall and evidence expansion</td>
+</tr>
+<tr>
+<td><code>src/carrymem/prompt_builder.py</code>,
+<code>src/carrymem/prompt.py</code></td>
+<td>Context budget, superseded rows as outdated</td>
+</tr>
+<tr>
+<td><code>src/carrymem/security/audit.py</code></td>
+<td>Audit logger and its SQLite table</td>
+</tr>
+<tr>
+<td><code>src/carrymem/adapters/sqlite/reflection.py</code></td>
+<td>Reflection runs and proposals, unwired</td>
+</tr>
+<tr>
+<td><code>src/carrymem/adapters/sqlite/evidence.py</code></td>
+<td>Evidence links and the unsupported flag</td>
+</tr>
+<tr>
+<td><code>src/carrymem/rules/storage.py</code>,
+<code>src/carrymem/rules/promotion_pipeline.py</code></td>
+<td>Unscoped rules and the candidate queue</td>
+</tr>
+<tr>
+<td><code>src/carrymem/integration/layer2_mcp/</code></td>
+<td>Tool schemas, handlers, stdio and HTTP servers</td>
+</tr>
+<tr>
+<td><code>tests/test_carrymem.py</code></td>
+<td>The namespace isolation case</td>
+</tr>
+<tr>
+<td><code>tests/evolution/test_observation_conflict_phase2.py</code></td>
+<td>The correction supersede case</td>
+</tr>
+<tr>
+<td><code>tests/test_encryption_backup_audit.py</code></td>
+<td>Audit events from remember and forget</td>
+</tr>
+<tr>
+<td><code>benchmarks/prefeval_official_v2.py</code></td>
+<td>The PrefEval harness</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>No validity-time field.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_until|valid_at|event_time|occurred_at|as_of' -- src</code>
+returns nothing;
+<code>git grep -c -i expires_at -- src/carrymem/adapters/sqlite/schema.py</code>
+returns 4.</li>
+<li><strong>No tombstone vocabulary.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist' -- src</code>
+returns nothing;
+<code>git grep -c -i superseded_at -- src/carrymem/adapters/sqlite/supersede.py</code>
+returns 6.</li>
+<li><strong>The reflection queue has no caller outside the
+adapter.</strong>
+<code>git grep -n -E 'reflect_(decay|consolidation)|reflection_proposal|apply_auto_low_risk' -- src ':!src/carrymem/adapters/sqlite'</code>
+returns nothing; the same pattern over <code>tests</code> matches
+<code>tests/e2e/test_e2e_reflection_proposal.py</code>,
+<code>tests/evolution/test_reflection_proposal_phase4.py</code> and
+<code>tests/test_sqlite_adapter.py</code>.</li>
+<li><strong>Observations have no reader outside the adapter.</strong>
+<code>git grep -n list_observations -- src ':!src/carrymem/adapters'</code>
+returns nothing.</li>
+<li><strong>Recall has no expiry predicate.</strong>
+<code>git grep -n -i expires -- src/carrymem/adapters/sqlite/recall_engine.py</code>
+returns nothing;
+<code>git grep -c 'paused = 0' -- src/carrymem/adapters/sqlite/recall_engine.py</code>
+returns 3.</li>
+<li><strong>Graph reads have no superseded filter.</strong>
+<code>git grep -n superseded -- src/carrymem/layers/knowledge_graph.py</code>
+returns nothing;
+<code>git grep -n 'paused = 0' -- src/carrymem/layers/knowledge_graph.py</code>
+returns <code>:168</code>, <code>:237</code> and <code>:420</code>.</li>
+<li><strong>Rules have no namespace.</strong>
+<code>git grep -n -i namespace -- src/carrymem/rules</code> returns
+nothing;
+<code>git grep -c -i scope -- src/carrymem/rules/storage.py</code>
+returns 15.</li>
+<li><strong>Supersession writes no audit event.</strong>
+<code>git grep -n -i audit -- src/carrymem/adapters/sqlite/supersede.py</code>
+returns nothing;
+<code>git grep -c -i audit -- src/carrymem/adapters/sqlite/crud.py</code>
+returns 21.</li>
+<li><strong>Nothing clears the audit log.</strong>
+<code>git grep -n -E '[.]clear[(]older_than|_audit[.]clear' -- src</code>
+returns the docstring example at
+<code>src/carrymem/security/audit.py:106</code>.</li>
+<li><strong>Auto-inject is read by doctor only.</strong>
+<code>git grep -n CARRYMEM_AUTO_INJECT -- src</code> returns
+<code>src/carrymem/cli/_stats.py:663</code> and <code>:671</code>.</li>
+<li><strong>The unsupported flag has no reader.</strong>
+<code>git grep -n provenance_unsupported -- src ':!src/carrymem/adapters/sqlite/evidence.py' ':!src/carrymem/adapters/async_sqlite.py'</code>
+returns nothing.</li>
+<li><strong>Only supersession writers set superseded_at.</strong>
+<code>git grep -n 'SET superseded_at' -- src</code> returns
+<code>reflection.py:176</code>, <code>:189</code> and
+<code>supersede.py:127</code>, <code>:218</code>.</li>
+<li><strong>The promotion pipeline does not read rejections.</strong>
+<code>git grep -n -E 'PROMOTION_STATUS_REJECTED|rejected' -- src/carrymem/rules/promotion_pipeline.py</code>
+returns the constant, the set, the CHECK and the writer at
+<code>:311</code>.</li>
+<li><strong>The recall engine does not decrypt.</strong>
+<code>git grep -n -i -E 'encrypt|decrypt' -- src/carrymem/adapters/sqlite/recall_engine.py src/carrymem/adapters/sqlite/query_builder.py</code>
+returns nothing;
+<code>git grep -c -i decrypt -- src/carrymem/adapters/sqlite/serializer.py</code>
+returns 5.</li>
+<li><strong>No model on the classification path.</strong>
+<code>git grep -n -i -E 'llm|sampling|openai|anthropic' -- src/carrymem/coordinators/classification_pipeline.py src/carrymem/layers/memory_pattern_detectors.py</code>
+returns nothing; <code>git grep -n -i createMessage -- src</code>
+matches <code>server.py</code>.</li>
+<li><strong>No benchmark result committed.</strong>
+<code>git ls-files benchmarks | grep -i -E 'result|[.]jsonl$|[.]csv$'</code>
+returns nothing;
+<code>git grep -n PrefEval_official -- .gitignore</code> returns
+<code>:137</code> and <code>:165</code>.</li>
+<li><strong>The paper link.</strong>
+<code>git grep -c 2410.01373 -- README.md</code> returns 3 and
+<code>git grep -n 2502.09597 -- .</code> returns nothing.</li>
+<li><strong>The promote count key.</strong>
+<code>git grep -n '"accepted"' -- src/carrymem/rules/promotion_pipeline.py src/carrymem/rules/__init__.py</code>
+returns only the status constant at
+<code>promotion_pipeline.py:27</code>;
+<code>git grep -n candidates_auto_accepted -- src/carrymem/rules/promotion_pipeline.py</code>
+returns <code>:150</code> and <code>:179</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/lulin70/carrymem/commit/efb76e61d080f1621600528cdc0ecac9b13dce70"><code class="commit-id" title="efb76e61d080f1621600528cdc0ecac9b13dce70">efb76e61…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, dated
+26 November 2026 and 12 commits past <code>e667945</code>, the commit
+triage selected, dated 7 November. Screened first: two auto-run surfaces
+(<code>server.json</code> and <code>smithery.yaml</code>, MCP start
+commands), three build-time execution points (<code>setup.py</code>,
+<code>tests/conftest.py</code>, <code>tests/e2e/conftest.py</code>), two
+unpinned surfaces (the VS Code extension's <code>package.json</code>
+under a lockfile, <code>pyproject.toml</code> with none), nothing inside
+the cooldown; <code>CLAUDE.md</code> addresses agents and was read as
+data. Nothing was installed, built or run, and the 5,161 test functions
+were not run. Three marks: <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). A restated
+superseded value is absorbed by deduplication, rules cross namespaces,
+and the README's PrefEval link resolves to another paper.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

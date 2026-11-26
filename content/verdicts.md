@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 893 reports.**
+**This page covers all 894 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8253,3 +8253,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 code, with an OMG specification corpus under its own terms; 35,649 lines of Python including 12,411 of tests and 7,436 lines of SysML; 45 commits from 6 July to 16 November 2026, 36 of them from dependabot, with components/ and apps/ unchanged since the v1.0 tag on 13 July; 314 test functions run by CI, none run here. Evals are manual prompts with no committed result. One mark: `audit_log`.
 - Study when: you want an event-sourced memory whose durable form is the change log, with strict validation by default, structured errors an agent can act on, and a replay you can verify.
 - Do not copy when: memory must be forgotten on request, several clients write at once, or the model connected to it should not hold restore and validation switches.
+
+### [`carrymem`](../systems/carrymem/)
+- Best idea: **bind the namespace to the server, not the tool.** The stdio server reads `CARRYMEM_NAMESPACE` once, every recall arm and graph read opens with that namespace, and no tool schema carries a scope argument, so the model cannot read another project's memory by asking; a populated test requires one namespace's row present and the other's absent.
+- Second idea: superseded memories leave recall and come back in the system prompt under *Outdated (superseded, do NOT use)*, so the model sees the change and the instruction together, and a correction case requires the old key absent from default recall.
+- Biggest risk: **a restated value goes back to sleep.** Deduplication returns any row with the same content hash in the namespace, superseded or not, so "I prefer dark mode" said again after "I prefer light mode" superseded it inserts nothing, runs no supersede and reports success with the old key; light mode stays current. Read from the code, not run.
+- Second risk: contradiction pairs such as dark and light, yes and no, new and old supersede a row of the same type with no shared topic. Rules share the file with no namespace and are injected into every namespace's prompt, and `promote_rules` with `auto_accept` creates rules marked confirmed by the user. With an encryption key the FTS index holds ciphertext. Expiry is stamped and not enforced on recall.
+- Most reusable component: the recall WHERE clause in `src/carrymem/adapters/sqlite/recall_engine.py:227-269`, the superseded-as-outdated assembly in `src/carrymem/prompt_builder.py:89-143` with `src/carrymem/prompt.py:248`, and the fail-closed migration ledger in `src/carrymem/adapters/sqlite/schema.py:697-729`.
+- Maturity impression: MIT; 59,084 lines of Python and 393 commits from 3 May to 26 November 2026 under four author names and dependabot, at 0.12.0a1; 5,161 test functions with lint and type gates in CI, none run here. The 83.0% PrefEval headline has a harness that forces the preference's type into a fresh database per item and no committed result, and the README cites it to an astrophysics paper. Three ledgers, including a reflection queue with approval and rollback, are reached only from tests. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you want one local memory file shared by several MCP clients with a deterministic, model-free write path and a scope the model cannot name.
+- Do not copy when: the user's latest statement must win, several projects share one file with rules, or stored content is encrypted and must be searchable.
