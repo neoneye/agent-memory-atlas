@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-891, generated from each report's frontmatter —
+892, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-891, generated from each report's frontmatter —
+892, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-891, generated from each report's frontmatter —
+892, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 891, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 892, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-891, generated from each report's frontmatter —
+892, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 891 systems by the seven mechanisms
+filters all 892 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -403,6 +403,59 @@ implementation's read; session and memory cleanly separated; 80 memory
 tests, including isolation cases</td>
 <td>Deletion exists on the session service and not on the memory
 service, so the durable half of a user's data has no removal path</td>
+</tr>
+<tr>
+<td><a href="../systems/aelfrice/"><code>aelfrice</code></a></td>
+<td>A belief: one sentence from the user's prompt, a doc or docstring, a
+commit-message noun phrase, a locked statement or a wonder conjecture,
+with a type, an origin tier, a Beta(alpha, beta) confidence, a lock
+level and tier, a retention class, a federation scope and a project
+context</td>
+<td>One SQLite file per git repository under the git common dir, or
+~/.aelfrice/memory.db outside git; FTS5 over content, an entity index,
+typed edges, feedback_history, ingest_log and corroborations; a
+user-scope lock store at ~/.aelfrice/user/memory.db; turns.jsonl
+transcripts and feed.jsonl beside the store</td>
+<td>Every lock (L0, never trimmed), an entity-index lane, BM25F over
+FTS5 re-ranked log-additively by the posterior mean, and a walk of
+TEMPORAL_NEXT edges from the top five keyword hits; packed to a token
+budget and injected on each prompt, before search-tool calls and into
+dispatched workers; BFS and supersession exclusion are off by
+default</td>
+<td>Hooks log each turn; every 12 logged turn lines the Stop hook
+ingests the user's sentences through noise filters and a regex
+classifier, each as a belief with an origin; a post-commit hook stores
+triples matched in commit messages; aelf lock writes a locked belief;
+onboarding classifies docs with the host's model; no model on the
+transcript path</td>
+<td>aelf retire, review removal, wonder GC and prune-noise set valid_to
+and keep the row and its hash; aelf delete removes the row; aelf resolve
+writes SUPERSEDES and RESOLVES edges and changes neither belief; locks
+can be time-boxed and an open-time sweep unlocks expired ones</td>
+<td>Physical partition by git repository; a scope column (project,
+global, shared:name) filtered on read-only federated peer search in aelf
+search and aelf reason; a project_context column filtered on the prompt
+hook only when AELFRICE_PROJECT_CONTEXT is set; per-session substring
+scope-out</td>
+<td>Claude Code hooks (UserPromptSubmit, SessionStart, Stop, PreCompact,
+PreToolUse on search tools and Agent, PostToolUse on memory files), a
+git post-commit hook, an aelf CLI and /aelf: slash commands; Codex hooks
+with fewer surfaces; no MCP server since its removal</td>
+<td>A Stop-hook ingest every 12 turn lines; a detached claude -p run
+labels new core candidates by default; a PyPI update check; wonder GC
+and lock-expiry sweeps; no pass rewrites the store</td>
+<td>Origin tiers from user_stated down to speculative, rendered as a
+speculative attribute and used for tie-breaks and contradiction
+precedence, not as a read filter; locks framed as ground truth;
+confidence moves on explicit feedback and on detected praise</td>
+<td>A retired sentence's hash stays occupied and every capture path
+drops a restatement of it, tested with negative controls; no model or
+network on the transcript or prompt path; lock, retire, delete and scope
+changes each leave an audit row</td>
+<td>aelf resolve's SUPERSEDES edge is not read by default retrieval, so
+both sides of a resolved contradiction are served; a hard delete frees
+the hash; the revive tier is any shell that runs aelf lock; the default
+store is one per repository with no key on the prompt path</td>
 </tr>
 <tr>
 <td><a href="../systems/aeris/"><code>aeris</code></a></td>
@@ -40283,7 +40336,8 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>86 of 891:</em> <a
+<p><em>87 of 892:</em> <a
+href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -40373,7 +40427,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>227 of 891:</em> <a
+<p><em>227 of 892:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -40608,7 +40662,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>151 of 891:</em> <a
+<p><em>151 of 892:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -40769,11 +40823,12 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>389 of 891:</em> <a
+<p><em>390 of 892:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
 <a href="../systems/adk-python/"><code>adk-python</code></a>, <a
+href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
@@ -41178,8 +41233,9 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>301 of 891:</em> <a
+<p><em>302 of 892:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
+href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
@@ -41493,7 +41549,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>108 of 891:</em> <a
+<p><em>108 of 892:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -41605,11 +41661,12 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>579 of 891:</em> <a
+<p><em>580 of 892:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
 <a href="../systems/adk-python/"><code>adk-python</code></a>, <a
+href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
@@ -42223,8 +42280,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-579 repositories of
-891 assert that particular material must
+580 repositories of
+892 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -42297,7 +42354,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 891 is the real figure for the second kind, and
+of 892 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

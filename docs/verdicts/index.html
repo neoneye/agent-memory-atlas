@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 891 reports.</strong></p>
+<p><strong>This page covers all 892 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36895,6 +36895,57 @@ cannot supply by saying so.</li>
 <li>Do not copy when: several principals share the store through MCP, a
 deleted rule must stay deleted, or approval has to hold against an agent
 with a shell.</li>
+</ul>
+<h3 id="aelfrice"><a
+href="../systems/aelfrice/"><code>aelfrice</code></a></h3>
+<ul>
+<li>Best idea: <strong>the retired row owns its value.</strong>
+<code>content_hash</code> is the SHA-256 of the exact sentence and
+unique; retiring sets <code>valid_to</code> and keeps the row, and
+<code>insert_or_corroborate</code> reads retired rows and returns
+without writing for every background source, so a sentence the user
+retired is not stored again by transcript, commit, onboard, wonder or
+mirror capture. Only <code>aelf lock</code> revives it, with an audit
+row, and the tests pair each capture case with a live-content
+control.</li>
+<li>Second idea: every absence test carries a present control on the
+same token. Seven read paths, <code>retrieve</code> end to end among
+them, are tested with one live and one retired belief, and the
+federation tests with a peer's <code>global</code> row beside its
+<code>project</code> row.</li>
+<li>Biggest risk: <strong>a resolved contradiction is served
+whole.</strong> <code>aelf resolve</code> picks a winner by origin and
+writes SUPERSEDES and RESOLVES edges, and <code>retrieve</code> passes
+the supersession lane through a resolver that defaults to off, so the
+loser and the winner are injected side by side.</li>
+<li>Second risk: the tombstone has three ways round it: a reworded
+sentence is new, <code>aelf delete</code> frees the hash, and the revive
+tier is whatever runs <code>aelf lock</code>, which the agent's shell
+can. Wonder GC, prune-noise and the scheduled-prompt retire leave no
+audit row, and <code>aelf doctor --gc-orphan-feedback --apply</code>
+deletes the record of every hard delete. Praise raises the confidence of
+whatever was injected while complaints are off by default.</li>
+<li>Most reusable component: the retired branch of
+<code>insert_or_corroborate</code>,
+<code>src/aelfrice/store.py:5316-5334</code>, with
+<code>CORROBORATION_SOURCES_USER_EXPLICIT</code> in
+<code>src/aelfrice/models.py:324-327</code>, and the paired controls in
+<code>tests/test_reasserted_retired_belief_1215.py</code> and
+<code>tests/test_soft_deleted_retrieval_exclusion_980.py</code>.</li>
+<li>Maturity impression: MIT; 105,074 lines of Python in 146 source
+files and 267,778 lines of tests; 5,674 commits from 26 April to 21
+November 2026, almost all by the owner, and 44 tags; 12,060 test
+functions, none run here. Some metadata trails the code:
+<code>CITATION.cff</code> describes lock decay and demotion pressure the
+code removed, and the MCP server it names was deleted. Four marks:
+<code>tombstone</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Study when: you want a correction that survives re-capture without a
+separate tombstone table, or a prompt hook with no model or network on
+the path.</li>
+<li>Do not copy when: contradictions must stop being served once
+settled, deletion must keep a value out, or the agent must not hold the
+verbs the person uses.</li>
 </ul>
         </article>
       </div>

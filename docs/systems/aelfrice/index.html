@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local SQLite belief store for
+Claude Code and Codex whose hooks inject locked beliefs and ranked
+keyword matches before each prompt.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="aelfrice — Agent Memory Atlas">
+    <meta property="og:description" content="A local SQLite belief store
+for Claude Code and Codex whose hooks inject locked beliefs and ranked
+keyword matches before each prompt.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="aelfrice — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local SQLite belief
+store for Claude Code and Codex whose hooks inject locked beliefs and
+ranked keyword matches before each prompt.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>aelfrice — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "aelfrice",
+      "description": "A local SQLite belief store for Claude Code and Codex whose hooks inject locked beliefs and ranked keyword matches before each prompt.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A retired sentence keeps its hash, and
+background capture cannot bring it back</p>
+          <h1>aelfrice</h1>
+          <p class="document-deck">A local SQLite belief store for
+Claude Code and Codex whose hooks inject locked beliefs and ranked
+keyword matches before each prompt.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/robotrocketscience/aelfrice">
+              <span>Source</span>
+              <strong>robotrocketscience/aelfrice</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/robotrocketscience/aelfrice/commit/7ffe389520ced6431c481da7351519f10963889a" title="7ffe389520ced6431c481da7351519f10963889a">
+              <span>Analyzed revision</span>
+              <code>7ffe3895…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/robotrocketscience--aelfrice" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>robotrocketscience--aelfrice</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE, and pyproject.toml names the same file</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>105,074
+lines of Python in 146 files under src/aelfrice, the largest being
+cli.py (13,395), hook.py (9,429) and store.py (9,014); 267,778 lines in
+702 test files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>5,674
+commits from 26 April to 21 November 2026: 5,644 by the owner under two
+names, 23 from Dependabot, three from Gemini CLI and four from one
+outside contributor; 44 tags, the latest v5.4.1 on 20 November
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>12,060
+test functions in 702 files under tests/; 33 workflows under
+.github/workflows; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>aelfrice is a local memory for Claude Code, and less completely for
+Codex. Hooks store the user's own sentences as "beliefs" in one SQLite
+file per git repository, and before each prompt inject every locked
+belief plus keyword, entity and session-neighbour matches, with no model
+or network on that path. What is notable is retirement: a retired belief
+keeps its row and the hash of its exact text, and every background
+capture path lands on that hash and is dropped. What is weak is the rest
+of correction: <code>aelf resolve</code> records which side of a
+contradiction won, and the default retrieval keeps serving both.</p>
+<p>The design is deterministic by intent. Transcript sentences are
+classified by regex, confidence is a Beta posterior moved by explicit
+feedback and by detected praise, and ranking is BM25F over FTS5 with a
+log-additive posterior term. A lock is the user's ground truth and is
+injected on every prompt whether or not it matches.</p>
+<p>The repository documents itself heavily. Most modules carry
+docstrings that name the defect they fixed and the test that pins it,
+and the test code is two and a half times the size of the source. Some
+of the project's own metadata describes mechanisms the code has since
+removed: <code>CITATION.cff</code> still describes lock decay and
+demotion pressure, and <code>pyproject.toml</code> still lists
+<code>mcp</code> as a keyword after the MCP server was deleted.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code>, and
+<code>pyproject.toml</code> declares the same text through
+<code>license-files</code>. No file in the tree restricts use, and no
+component ships under other terms.</p>
+<p>Four marks are earned: <code>tombstone</code> and
+<code>audit_log</code> on the belief store, <code>scope_enforced</code>
+on the federation overlay, and <code>negative_eval</code> on the
+retired-belief and peer-scope tests. Section 9 gives the reason for each
+of the three withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A belief is <strong>one stored sentence with a lock, a provenance
+tier and a confidence</strong>. Transcript ingest splits a user turn
+into sentences and stores each one; the commit hook stores the noun
+phrases on either side of a fixed relation phrase;
+<code>aelf lock</code> stores the typed text; <code>/aelf:wonder</code>
+stores a machine conjecture. The identity that matters for correction is
+<code>content_hash</code>, the SHA-256 of the exact text
+(<code>src/aelfrice/derivation.py:315-316</code>), which the schema
+makes unique (<code>src/aelfrice/store.py:353-393</code>).</p>
+<p>A belief is served from the moment it is written. Nothing gates it.
+It then sits in one of four states:</p>
+<ul>
+<li><strong>Active and unlocked.</strong> Ranked against each prompt and
+injected if it fits the budget.</li>
+<li><strong>Locked.</strong> Injected on every prompt and at session
+start, verbatim or as a one-line manifest entry for a
+<code>reference</code> lock. A lock can carry an expiry, and a sweep at
+store open unlocks it when due.</li>
+<li><strong>Retired.</strong> <code>valid_to</code> is set, the row and
+its hash stay, and every read path excludes it.
+<code>aelf restore</code> clears it.</li>
+<li><strong>Deleted.</strong> The row and its index entries are
+gone.</li>
+</ul>
+<p>Origin is a second axis: <code>user_stated</code> for a lock,
+<code>user_transcript</code> for a typed sentence,
+<code>agent_inferred</code> for scanned docs, <code>speculative</code>
+for a conjecture. Promotion moves <code>speculative</code> or
+<code>agent_inferred</code> to <code>user_validated</code>. The origin
+decides how a belief is labelled in the injected block and which side
+wins a contradiction; it removes nothing from retrieval.</p>
+<p>Contradiction has a record and no consequence by default.
+<code>aelf resolve</code> picks a winner by origin precedence and writes
+<code>SUPERSEDES</code> and <code>RESOLVES</code> edges from winner to
+loser. The retrieval lane that would demote or exclude the loser ships
+off.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every capture path and aelf lock write through insert_or_corroborate keyed on the hash of the exact text; a retired row keeps that hash, so capture lands on it and is dropped while a lock revives it; a hard delete frees the hash, and resolve adds an edge the default retrieval does not read</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every capture path and aelf lock write through insert_or_corroborate keyed on the hash of the exact text; a retired row keeps that hash, so capture lands on it and is dropped while a lock revives it; a hard delete frees the hash, and resolve adds an edge the default retrieval does not read
+flowchart TD
+    subgraph C[&quot;Background capture&quot;]
+        direction TB
+        T[&quot;Prompt sentences,&lt;br/&gt;every 12 turn lines&quot;]
+        G[&quot;Commit-message triples,&lt;br/&gt;post-commit hook&quot;]
+        O[&quot;Onboard, wonder,&lt;br/&gt;MEMORY.md mirror&quot;]
+        T ~~~ G ~~~ O
+    end
+    P[&quot;aelf lock&lt;br/&gt;the revive tier&quot;]
+    C --&gt; I[&quot;insert_or_corroborate&lt;br/&gt;key: sha256 of the text&quot;]
+    P --&gt; I
+    I --&gt;|&quot;new hash, or a lock&lt;br/&gt;on a retired one&quot;| A[&quot;Active belief,&lt;br/&gt;served at once&quot;]
+    I --&gt;|&quot;live hash&quot;| K[&quot;Corroboration row&quot;]
+    I --&gt;|&quot;retired hash,&lt;br/&gt;capture&quot;| D[&quot;Dropped,&lt;br/&gt;nothing written&quot;]
+    A --&gt; V[&quot;Served: locks on every&lt;br/&gt;prompt; the rest by&lt;br/&gt;BM25F, entity, spine&quot;]
+    A --&gt; E
+    subgraph E[&quot;How a belief leaves&quot;]
+        direction TB
+        X[&quot;retire, review remove,&lt;br/&gt;wonder GC, prune:&lt;br/&gt;valid_to set, row and&lt;br/&gt;hash kept, hidden&quot;]
+        Z[&quot;aelf delete:&lt;br/&gt;row gone, hash free,&lt;br/&gt;next capture re-inserts&quot;]
+        S[&quot;aelf resolve:&lt;br/&gt;SUPERSEDES edge only,&lt;br/&gt;loser still served&quot;]
+        X ~~~ Z ~~~ S
+    end</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>aelfrice is a Python package installed with
+<code>uv tool install</code>, with three runtime dependencies:
+<code>numpy</code>, <code>scipy</code> and <code>snowballstemmer</code>.
+There is no server. Eleven console scripts are the <code>aelf</code> CLI
+and the hook entry points (<code>pyproject.toml</code>,
+<code>[project.scripts]</code>), and <code>aelf setup</code> writes the
+hooks into the host's settings and the repository's
+<code>post-commit</code> hook.</p>
+<p>The store is chosen per working directory: <code>AELFRICE_DB</code>,
+then the nearest <code>.aelfrice.toml</code> with a <code>[store]</code>
+table, then <code>&lt;git-common-dir&gt;/aelfrice/memory.db</code>, then
+<code>~/.aelfrice/memory.db</code>
+(<code>src/aelfrice/db_paths.py</code>). Worktrees of one repository
+share a store. User-scope locks live in a second store at
+<code>~/.aelfrice/user/memory.db</code> and join L0 for every repository
+(<code>src/aelfrice/db_paths.py:742-771</code>,
+<code>src/aelfrice/user_locks.py:171</code>).</p>
+<p>Beside the database sit <code>turns.jsonl</code>, the turn log the
+ingest reads, and <code>feed.jsonl</code>, a write log meant for
+<code>tail -f</code> that swallows its own errors
+(<code>src/aelfrice/feed_log.py:1-21</code>).</p>
+<p>Three paths leave the machine by default. <code>lifecycle.py</code>
+checks PyPI for a newer release
+(<code>src/aelfrice/lifecycle.py:35</code>). The Stop hook runs the
+host's <code>claude -p</code> in the background to label new core
+candidates (<code>src/aelfrice/core_gate_background.py:312</code>). The
+pre-issue guard runs <code>gh issue list --search</code> with words from
+an issue title (<code>src/aelfrice/pre_issue_create_hook.py:235</code>).
+Onboarding classifies with the host's model, or with the Anthropic SDK
+when the optional extra and a key are present.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Two commands install it: <code>uv tool install aelfrice</code>, then
+<code>aelf setup</code>. It runs fully offline with the outbound paths
+above switched off, needs no API key to store anything, and has no
+embedding model. The store is SQLite and can be inspected and repaired
+by hand; <code>aelf doctor</code> checks the hook wiring and exits
+non-zero on a failure.</p>
+<p>The first <code>aelf</code> command after a package upgrade merges
+newly default-on hooks from <code>data/hook_manifest.json</code> into
+<code>~/.claude/settings.json</code> under a file lock, honouring an
+opt-out file (<code>src/aelfrice/auto_install.py</code>). An operator
+therefore gains hooks on upgrade without running <code>aelf setup</code>
+again.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema.</strong> <code>src/aelfrice/store.py:353-393</code>
+(<code>beliefs</code>), <code>:395-403</code> (<code>edges</code>),
+<code>:405-407</code> (<code>beliefs_fts</code>), <code>:409-416</code>
+(<code>feedback_history</code>), <code>:474-482</code>
+(<code>belief_corroborations</code>), <code>:568-581</code>
+(<code>ingest_log</code>), <code>:690-695</code>
+(<code>onboard_rejections</code>); the dataclasses and constants in
+<code>src/aelfrice/models.py</code>.</li>
+<li><strong>Transcript capture.</strong>
+<code>src/aelfrice/transcript_logger.py</code> writes one line per turn;
+<code>DEFAULT_STOP_FLUSH_TURNS = 12</code> at <code>:138</code> sets how
+many new turn lines a Stop waits for before it spawns
+<code>aelf ingest-transcript</code>.
+<code>src/aelfrice/ingest.py:197-412</code> (<code>_ingest_turn</code>)
+splits a turn into sentences, appends one <code>ingest_log</code> row
+per sentence and calls <code>run_worker</code> once.</li>
+<li><strong>Derivation.</strong>
+<code>src/aelfrice/derivation.py:335</code> (<code>derive</code>) maps a
+log row to a belief: lock text gets <code>user_stated</code>, a triple
+phrase <code>agent_inferred</code> with a normalised hash, a user-typed
+transcript sentence <code>user_transcript</code>.
+<code>src/aelfrice/derivation_worker.py:276</code>
+(<code>run_worker</code>) calls <code>insert_or_corroborate</code> and
+stamps the log row.</li>
+<li><strong>The hash guard.</strong>
+<code>src/aelfrice/store.py:5242-5376</code>
+(<code>insert_or_corroborate</code>), the retired branch at
+<code>:5316-5334</code>; <code>src/aelfrice/models.py:324-327</code>
+(<code>CORROBORATION_SOURCES_USER_EXPLICIT</code>).</li>
+<li><strong>Retire, restore, delete.</strong>
+<code>src/aelfrice/store.py:3821-3850</code>
+(<code>soft_delete_belief</code>), <code>:3852-3889</code>
+(<code>restore_belief</code>), <code>:3753-3764</code>
+(<code>delete_belief</code>) and <code>:3766-3819</code>
+(<code>_purge_ingest_text</code>); the CLI handlers at
+<code>src/aelfrice/cli.py:4477-4551</code>, <code>:4554-4613</code> and
+<code>:4616-4651</code>.</li>
+<li><strong>Retrieval.</strong>
+<code>src/aelfrice/retrieval.py:4163</code> (<code>retrieve</code>, an
+adapter over <code>retrieve_v2</code> at <code>:4838</code>); the
+supersession resolver at <code>:1033-1058</code>; the temporal-spine
+resolver at <code>:2598</code>.</li>
+<li><strong>Prompt hook.</strong>
+<code>src/aelfrice/hook.py:3492-3505</code> retrieves, then applies the
+project-context and session scope-out filters (<code>:4780-4822</code>,
+<code>:4824</code>); the framing header at <code>:1882-1898</code>; the
+speculative marker at <code>:4950-4965</code>.</li>
+<li><strong>Contradiction.</strong>
+<code>src/aelfrice/contradiction.py:287-371</code>
+(<code>resolve_contradiction</code>).</li>
+<li><strong>Federation.</strong>
+<code>src/aelfrice/federation.py:110-126</code> (deps path),
+<code>src/aelfrice/store.py:4982-5063</code>
+(<code>search_peer_beliefs</code>),
+<code>src/aelfrice/cli.py:4114-4174</code>
+(<code>_apply_scope_change</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>beliefs</code> row holds the content, its hash,
+<code>alpha</code> and <code>beta</code>, <code>type</code>,
+<code>lock_level</code>, <code>locked_at</code>, <code>lock_tier</code>,
+<code>lock_expires_at</code>, <code>origin</code>,
+<code>retention_class</code>, <code>session_id</code>,
+<code>created_at</code> and <code>last_retrieved_at</code>, with
+<code>valid_to</code>, <code>scope</code>, <code>project_context</code>
+and <code>last_confirmed_at</code> added by migration
+(<code>src/aelfrice/store.py:353-393</code>,
+<code>src/aelfrice/models.py:455-537</code>). <code>type</code> is one
+of five: <code>factual</code>, <code>correction</code>,
+<code>preference</code>, <code>requirement</code>,
+<code>speculative</code>.</p>
+<p>Three columns are easy to misread from their names:</p>
+<ul>
+<li><strong><code>valid_to</code> is a soft-delete time, not validity
+time.</strong> It is set when a belief is retired and cleared when it is
+restored.</li>
+<li><strong><code>scope</code> is federation visibility.</strong>
+<code>project</code>, <code>global</code> or
+<code>shared:&lt;name&gt;</code>, validated by a regex on write
+(<code>src/aelfrice/models.py:436-452</code>).</li>
+<li><strong><code>project_context</code> is a within-repository
+tag.</strong> It is stamped with the repository identity on write for
+project-scope, unlocked beliefs, and read only when
+<code>AELFRICE_PROJECT_CONTEXT</code> is set.</li>
+</ul>
+<p><code>created_at</code> is the only other time. For a scanned file it
+is the file's last commit; for a transcript sentence it is the turn's
+time.</p>
+<p>Edges are typed and weighted, keyed on <code>(src, dst, type)</code>,
+with an optional anchor text. Ten types carry a valence for confidence
+propagation; a <code>POTENTIALLY_STALE</code> tag written by
+<code>aelf doctor --detect-stale</code> sits outside them
+(<code>src/aelfrice/models.py</code>).</p>
+<p>Provenance is three records. <code>ingest_log</code> holds each raw
+input with its source kind, path, session and derived ids.
+<code>belief_corroborations</code> holds one row per later re-assertion
+of the same hash, with source and speaker. <code>feedback_history</code>
+holds every confidence and lifecycle change.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>retrieve</code> builds the pack in lanes
+(<code>src/aelfrice/retrieval.py:4163-4339</code>):</p>
+<ol type="1">
+<li><strong>L0.</strong> Every active lock from the repository store and
+the user store, never trimmed.</li>
+<li><strong>L2.5.</strong> An entity index of file paths, symbols, error
+codes and similar spans extracted on write.</li>
+<li><strong>L1.</strong> BM25F over FTS5, re-ranked as
+<code>log(bm25) + 0.5 * log(posterior mean)</code>, with a demotion for
+beliefs grounded only in transient tokens such as bare issue
+numbers.</li>
+<li><strong>Temporal spine.</strong> A walk of
+<code>TEMPORAL_NEXT</code> edges from the top five L1 hits, on by
+default (<code>:2598</code>,
+<code>src/aelfrice/temporal_spine.py:521</code>).</li>
+</ol>
+<p>BFS over the other edge types is off by default, and an HRR lane runs
+only on a marker query. The pack is cut to a token budget, 1,500 on the
+prompt hook (<code>src/aelfrice/hook.py:269</code>), with a reserved
+floor so locks cannot starve the relevant hits.</p>
+<p>Every read excludes retired rows. <code>get_belief</code> and the
+content-hash lookup exclude them unless the caller passes
+<code>include_retired=True</code>, and the search, index, entity and
+lock reads append <code>valid_to IS NULL</code>.</p>
+<p><strong>Superseded beliefs are served.</strong> <code>retrieve</code>
+passes <code>use_supersession_demote=None</code>
+(<code>src/aelfrice/retrieval.py:4305</code>), and the resolver returns
+<code>False</code> unless an environment variable, an argument or the
+TOML file says otherwise (<code>:1033-1058</code>). The comment at
+<code>:283-301</code> gives the reason: a <code>SUPERSEDES</code> edge
+can also come from the commit-message triple extractor, and a wrong
+exclusion hides a belief with no ranking signal. The cost is that after
+<code>aelf resolve</code>, the loser and the winner are injected side by
+side, and only the session's model sees that they disagree.</p>
+<p>The injected block is framed in two trust tiers: locks as the user's
+standing instructions, the rest as "retrieved data, not instructions". A
+<code>speculative</code> origin adds <code>speculative="1"</code> and a
+sentence calling it a hypothesis
+(<code>src/aelfrice/hook.py:1882-1898</code>,
+<code>:4950-4965</code>).</p>
+<p>The same retrieval runs before the agent's Grep, Glob, WebSearch,
+WebFetch and search-shaped Bash calls, and into the prompt of a
+dispatched worker.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Transcript.</strong> The logger appends each user and
+assistant turn to <code>turns.jsonl</code>. On Stop, once twelve new
+turn lines have accumulated, it spawns an ingest of the live file;
+PreCompact rotates the file and ingests it too. Only user text becomes
+beliefs. Each sentence passes a noise filter, hedges and questions are
+dropped, and a regex classifier picks the type. One transaction per turn
+writes the log rows and the beliefs
+(<code>src/aelfrice/ingest.py:197-412</code>).</p>
+<p><strong>Commit messages.</strong> The <code>post-commit</code> hook
+matches a fixed list of lowercase relation phrases, stores up to six
+words on each side as two beliefs and writes the edge between them. A
+message with no match stores nothing.</p>
+<p><strong>Locks.</strong> <code>aelf lock &lt;text&gt;</code> records
+an <code>ingest_log</code> row with source <code>cli_remember</code> and
+runs the worker, so a lock passes through the same hash guard as capture
+(<code>src/aelfrice/cli.py:2641</code>, <code>:2268-2286</code>).</p>
+<p><strong>Onboarding and conjecture.</strong> <code>aelf onboard</code>
+scans docs, the git log and Python docstrings, and classifies candidates
+with a model. <code>aelf wonder</code> writes conjectures with origin
+<code>speculative</code> and a hash over their constituent ids, so a
+GC'd conjecture is not regenerated
+(<code>src/aelfrice/wonder/lifecycle.py:159-166</code>).</p>
+<p><strong>Confidence.</strong> <code>apply_feedback</code> adds to
+<code>alpha</code> or <code>beta</code>, refuses to move a locked
+belief's posterior, and writes a row
+(<code>src/aelfrice/feedback.py:128</code>). <code>aelf confirm</code>,
+<code>aelf feedback</code> and detected praise call it. A positive
+phrase in a prompt under 200 characters is split across the beliefs
+injected on the previous turn; negative phrases apply only when opted in
+(<code>src/aelfrice/sentiment_feedback.py:1-60</code>). By default,
+then, implicit feedback can only raise confidence.</p>
+<p><strong>Contradiction.</strong> The relationship detector that writes
+<code>CONTRADICTS</code> edges at ingest is off by default.
+<code>aelf resolve</code> writes <code>SUPERSEDES</code> and
+<code>RESOLVES</code> edges and an audit row in one transaction; it
+changes neither belief
+(<code>src/aelfrice/contradiction.py:287-371</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The prompt hook blocks the prompt on one SQLite open, the lanes above
+and a render. No model runs on that path. Capture is deferred: a
+sentence typed now becomes retrievable after the next Stop that finds
+twelve new turn lines, about six exchanges, or at compaction. A lock is
+retrievable at once. No pass rewrites the store; wonder GC and the
+lock-expiry sweep touch only their own rows. The background
+<code>claude -p</code> labelling runs per ingest batch and spends the
+host's model. The injected block is added to each prompt, so it sits
+after the host's cached prefix rather than inside it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model does not call memory; hooks put it in front of the model.
+On Claude Code, <code>UserPromptSubmit</code> injects the block,
+<code>SessionStart</code> injects locks once, <code>PreToolUse</code>
+hooks inject before search tools and worker dispatch, <code>Stop</code>
+logs and ingests, and a <code>PostToolUse</code> mirror copies writes to
+the host's own memory files into the store once consent is recorded.
+Codex gets the prompt and session hooks without the commit hook or a
+status line, as the README says.</p>
+<p>The person acts through <code>/aelf:</code> slash commands, each a
+thin wrapper over an <code>aelf</code> subcommand. The model holds a
+general shell, so every <code>aelf</code> verb is also within its reach:
+lock, unlock, retire, restore, delete with <code>--yes</code>, promote,
+resolve, review. No verb checks for an interactive terminal (see
+Recorded searches). The Stop hook prints suggested
+<code>aelf lock</code> commands for the person to run.</p>
+<p>There is no MCP server. <code>src/aelfrice/mcp_cleanup.py:1-10</code>
+records that it never started on its declared dependency range and was
+removed, and it finds and reports the registration a user may still
+have.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-tombstone-and-the-three-ways-round-it">The tombstone, and
+the three ways round it</h3>
+<p>Retiring sets <code>valid_to</code>, prunes the FTS row and keeps the
+belief with its hash (<code>src/aelfrice/store.py:3821-3850</code>).
+Because <code>content_hash</code> is unique, any later write of the same
+text must resolve to that row, and <code>insert_or_corroborate</code>
+decides what that means by source. Background capture (transcript,
+commit, filesystem, wonder, the MEMORY.md mirror, migration) returns the
+existing id and writes nothing, not even a corroboration row.
+<code>cli_remember</code> and <code>mcp_remember</code> restore the
+belief and write a <code>reassert:revive</code> row
+(<code>:5316-5334</code>). Onboarding's candidate filter and
+<code>wonder_ingest</code> read the retired hash too, so neither offers
+or regenerates it (<code>src/aelfrice/classification.py:212-229</code>,
+<code>src/aelfrice/wonder/lifecycle.py:159-166</code>).</p>
+<p>The docstring states the policy and its reason: an agent re-observing
+text must not undo the user's curation. The tests pin both tiers, and
+each capture case is paired with one on live content showing that the
+same call still does work
+(<code>tests/test_reasserted_retired_belief_1215.py:100-172</code>).</p>
+<p>Three ways round it:</p>
+<ul>
+<li><strong>A reworded sentence is new.</strong> The key is the exact
+text, with no case or whitespace folding outside commit triples.</li>
+<li><strong>A hard delete frees the hash.</strong>
+<code>aelf delete</code> removes the row, so the next capture of the
+same sentence inserts it as a new belief, and it also blanks the text of
+the log rows that produced it.</li>
+<li><strong>The revive tier is a source label.</strong>
+<code>cli_remember</code> is what <code>aelf lock</code> writes, and the
+agent's shell can run <code>aelf lock</code> as well as the person can.
+<code>mcp_remember</code> has no producer since the MCP server was
+removed.</li>
+</ul>
+<p>A sibling ledger, <code>onboard_rejections</code>, records text the
+onboarding classifier rejected, keyed on source and text, and only
+onboarding reads it (<code>src/aelfrice/store.py:690-695</code>,
+<code>:8387-8424</code>).</p>
+<h3 id="contradiction-is-recorded-then-ignored">Contradiction is
+recorded, then ignored</h3>
+<p><code>aelf resolve</code> is the only disposition and it writes two
+edges. The default retrieval reads neither (section 6), so a resolved
+contradiction is served exactly as before. The <code>exclude</code>
+treatment exists and refetches below the cutoff so the pack does not
+shrink (<code>src/aelfrice/retrieval.py:3724-3764</code>); it waits on a
+benchmark the comment names.</p>
+<h3 id="the-audit-records">The audit records</h3>
+<p><code>feedback_history</code> is written for each confidence move and
+for each lifecycle verb a person runs. <code>aelf delete</code> writes
+its row before deleting (<code>src/aelfrice/cli.py:4541-4547</code>),
+and the table has no foreign key, so the row survives the delete, which
+a test asserts (<code>tests/test_cli_delete_command.py:264-277</code>).
+Three gaps:</p>
+<ul>
+<li><strong>Three soft-delete paths leave no row.</strong> Wonder GC
+(<code>src/aelfrice/wonder/lifecycle.py:270</code>),
+<code>aelf doctor --prune-noise</code>
+(<code>src/aelfrice/cli.py:9661</code>) and the scheduled-prompt retire
+(<code>src/aelfrice/scheduled_prompts.py:266</code>) call
+<code>soft_delete_belief</code> and nothing else.</li>
+<li><strong>A repair command deletes the delete record.</strong>
+<code>aelf doctor --gc-orphan-feedback --apply</code> removes every row
+whose belief no longer exists
+(<code>src/aelfrice/store.py:5217-5240</code>), which after a hard
+delete is exactly its <code>user_deleted</code> row.</li>
+<li><strong>Exposure shares the table.</strong> The prompt hook writes a
+<code>source='hook'</code> row per injected belief;
+<code>EXPOSURE_ONLY_FEEDBACK_SOURCES</code> names it so readers can drop
+it (<code>src/aelfrice/models.py:304</code>).</li>
+</ul>
+<p><code>ingest_log</code> is append-only apart from that purge, which
+replaces the text with its SHA-256 and the time rather than removing the
+row (<code>src/aelfrice/store.py:3766-3819</code>).</p>
+<h3 id="scope">Scope</h3>
+<p>The boundary that holds by default is the file: one store per git
+repository. The <code>scope</code> column matters only across that
+boundary. A peer's <code>project</code> rows never reach
+<code>aelf search</code> or <code>aelf reason</code>, and its
+<code>global</code> and <code>shared:&lt;name&gt;</code> rows do when
+this store lists the peer and, for a shared group, a dep of that name
+(<code>src/aelfrice/store.py:5016-5045</code>). The prompt hook does not
+read peers. The predicate runs in the reader's SQL over a file the
+reader opens, so it decides what aelfrice shows, not what a process with
+the path can read.</p>
+<p>Within one store, <code>project_context</code> separates worktrees or
+sub-projects only when the variable is set;
+<code>active_project_context</code> returns <code>''</code> otherwise,
+and <code>''</code> means no filter
+(<code>src/aelfrice/db_paths.py:1291-1325</code>).</p>
+<h3 id="prompt-injection">Prompt injection</h3>
+<p>Text the user types is stored and assistant text is not, and the
+block tells the model that unlocked beliefs are data. A sentence pasted
+into a prompt, from a web page or a log, becomes a
+<code>user_transcript</code> belief with the full prior and is served on
+matching prompts thereafter. Locks are the stronger channel, and a lock
+is one shell command away from the agent.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code> — earned.</strong> A retired belief's
+exact-text hash stays occupied, and every capture writer reads it and
+drops the restatement. The three limits above go with it.</li>
+<li><strong><code>scope_enforced</code> — earned.</strong> A stored
+<code>scope</code> key is applied as an SQL predicate on the federated
+peer read, with a test that a peer's <code>project</code> row is absent
+beside its <code>global</code> row. The default boundary is a physical
+partition, and the prompt path carries no key unless an environment
+variable is set.</li>
+<li><strong><code>audit_log</code> — earned.</strong>
+<code>feedback_history</code> and <code>ingest_log</code> are
+append-only records of mutations in the store, with producers on every
+person-facing verb; the three silent soft-delete paths and the orphan GC
+are the gaps.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Seven
+retired-belief cases and two federation cases require particular
+material absent from a populated result.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> Origin is a
+discrete tier with a speculative value and a promotion, and the read
+path labels it rather than filtering on it. <code>valid_to</code>
+filters, and it is a soft-delete timestamp rather than an epistemic
+status. Supersession is an edge nothing reads by default.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>created_at</code> is record or file-commit time and
+<code>valid_to</code> is retirement time; the module docstring says
+event time is deferred (<code>src/aelfrice/models.py:1-5</code>).</li>
+<li><strong><code>human_review</code> — withheld.</strong> Nothing waits
+for anyone. A belief is served when written, and lock, promote and
+review are verbs on the same CLI the agent's shell reaches.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading: 12,060 test
+functions in 702 files, and 76 skip markers.</p>
+<p>The tests behind the marks carry their own negative controls and say
+why. The #1215 file explains that "background capture did not revive"
+and "background capture did nothing at all" pass the same assertions,
+and adds a live-content case for each source
+(<code>tests/test_reasserted_retired_belief_1215.py:128-172</code>). The
+#980 file pairs every absence with a present live belief on the same
+token, across six read paths and <code>retrieve</code> end to end
+(<code>tests/test_soft_deleted_retrieval_exclusion_980.py:56-150</code>).
+The federation tests seed a peer file and require the
+<code>global</code> row present and the <code>project</code> row absent
+(<code>tests/test_scope_field.py:277-304</code>).</p>
+<p>No committed case asserts that <code>aelf resolve</code> changes what
+<code>retrieve</code> returns, that a hard-deleted sentence stays out
+after the next capture, or that the agent cannot run
+<code>aelf lock</code>; on the default path none of the three holds.</p>
+<p>The academic suite under <code>benchmarks/</code> has adapters for
+MAB, LoCoMo, LongMemEval, StructMemEval and AMA-Bench, and committed
+result files under <code>benchmarks/results/</code> and
+<code>docs/bake_off_results/</code>. They were not opened or recomputed
+for this reading. The README's reproducibility badge reads "partial
+(6/11 adapters)", and <code>docs/concepts/ARCHITECTURE.md</code> says
+the 11/11 it once reached was measured at v2.1.0.</p>
+<p>There is no paper. <code>CITATION.cff</code> cites the software
+itself, and its abstract describes lock decay and demotion pressure,
+which the code no longer has: a migration drops the
+<code>demotion_pressure</code> column
+(<code>src/aelfrice/store.py:1053</code>).</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the retired row own its value.</strong> A unique
+content hash, a retired row that keeps it, and a write path that opts
+into retired rows before deciding: three lines of policy turn a soft
+delete into a tombstone, and every capture path inherits it.</li>
+<li><strong>Tier revival by who is asserting.</strong> Background
+capture cannot lift a retirement; an explicit command can, and leaves a
+row saying so.</li>
+<li><strong>Pair every absence assertion with a live control.</strong>
+The #1215 and #980 files are the templates.</li>
+<li><strong>Write the audit row before the delete, into a table with no
+foreign key.</strong> The record survives the thing it records.</li>
+<li><strong>Label conjecture in the injected text.</strong> A fixed
+attribute chosen by code, with one sentence explaining it, costs nothing
+and tells the model what it is reading.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A disposition the read path does not consult.</strong> A
+resolve verb that writes an edge retrieval ignores leaves the user
+believing a contradiction was settled.</li>
+<li><strong>A tombstone a hard delete can erase.</strong> If deletion is
+for erasure, keep a keyed digest of the deleted value, or say that
+delete re-admits it.</li>
+<li><strong>A repair command that deletes audit rows by orphan
+status.</strong> The rows a hard delete orphans are the ones that
+explain it.</li>
+<li><strong>One-sided implicit feedback.</strong> Praise raising the
+confidence of whatever was injected, with complaints off, ratchets the
+posterior upward.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer who wants a deterministic, inspectable
+memory of their own instructions for Claude Code, with no model and no
+network on the prompt path, and who will lock what matters and retire
+what is wrong. The retire path is the most dependable part, and a person
+who corrects by retiring gets a correction that holds against
+capture.</p>
+<p>It suits a team less. The store is per repository on one machine,
+federation is read-only and reaches only the CLI's search, and the agent
+holds every verb the person holds. A reader who expects contradictions
+to be settled automatically should read section 9 first: the system
+records them and serves both sides.</p>
+<p>The maintenance budget is the other cost. The project tags releases
+every few days, its hooks reconfigure themselves on upgrade, and its
+metadata trails its code in places, so an adopter should pin a version
+and read its CHANGELOG entry.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Will the supersession lane ship on, and with which treatment? The
+comment names a three-arm bench; its result is not in the tree.</li>
+<li>Should <code>aelf delete</code> leave a hash behind? The current
+behaviour blanks the log text for privacy and frees the value for
+re-capture.</li>
+<li>Is <code>cli_remember</code> meant to stand for a person? A check
+that the lock came from an interactive terminal would make the revive
+tier mean what its name says.</li>
+<li>Do the committed benchmark files recompute to the figures the docs
+quote? Not checked for this reading.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/aelfrice/models.py</code></td>
+<td>Types, origins, scopes, corroboration source tiers</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/store.py</code></td>
+<td>Schema, the hash guard, retire, restore, delete, peer search, audit
+writers</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/derivation.py</code></td>
+<td>Log row to belief: ids, content hash, origin</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/derivation_worker.py</code></td>
+<td>Runs <code>derive</code> and <code>insert_or_corroborate</code> over
+unstamped log rows</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/ingest.py</code></td>
+<td>Turn-to-sentence ingest</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/transcript_logger.py</code></td>
+<td>Turn log and the Stop ingest cadence</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/retrieval.py</code></td>
+<td>Lanes, budget, supersession and spine resolvers</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/hook.py</code></td>
+<td>Prompt, session and Stop hooks, filters, framing</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/contradiction.py</code></td>
+<td><code>aelf resolve</code></td>
+</tr>
+<tr>
+<td><code>src/aelfrice/review.py</code></td>
+<td><code>aelf review</code> checklist and apply</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/wonder/lifecycle.py</code></td>
+<td>Conjecture ingest and GC</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/feedback.py</code></td>
+<td><code>apply_feedback</code></td>
+</tr>
+<tr>
+<td><code>src/aelfrice/sentiment_feedback.py</code></td>
+<td>Praise and complaint detection</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/federation.py</code></td>
+<td>Peer deps and read-only connections</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/db_paths.py</code></td>
+<td>Store selection and project context</td>
+</tr>
+<tr>
+<td><code>src/aelfrice/cli.py</code></td>
+<td>Every <code>aelf</code> verb</td>
+</tr>
+<tr>
+<td><code>tests/test_reasserted_retired_belief_1215.py</code></td>
+<td>The tombstone policy and its controls</td>
+</tr>
+<tr>
+<td><code>tests/test_soft_deleted_retrieval_exclusion_980.py</code></td>
+<td>Retired beliefs absent from every read</td>
+</tr>
+<tr>
+<td><code>tests/test_scope_field.py</code></td>
+<td>Scope validation and peer visibility</td>
+</tr>
+<tr>
+<td><code>tests/test_cli_delete_command.py</code></td>
+<td>Delete audit row survives the delete</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_from|event_time|as_of|observed_at|occurred_at' -- src</code>
+returns only the docstring at <code>src/aelfrice/models.py:4</code>;
+<code>git grep -n 'valid_to' -- src/aelfrice/models.py</code>
+matches.</li>
+<li><strong>Supersession is off on the production path.</strong>
+<code>git grep -n 'use_supersession_demote=None' -- src/aelfrice/retrieval.py</code>
+returns <code>:4305</code>; the resolver's last line,
+<code>return False</code>, is at <code>:1058</code>.</li>
+<li><strong>Speculative origin is labelled, not filtered, on the read
+path.</strong>
+<code>git grep -n 'ORIGIN_SPECULATIVE' -- src/aelfrice/retrieval.py src/aelfrice/hook.py</code>
+returns two cost estimates at <code>retrieval.py:677</code> and
+<code>:700</code>, the marker at <code>hook.py:4961</code> and the
+header at <code>:5336</code>, besides the imports.</li>
+<li><strong>No interactive-terminal check on a CLI verb.</strong>
+<code>git grep -n -E 'isatty\(' -- src/aelfrice/cli.py</code> returns
+nothing; <code>git grep -n 'isatty(' -- src</code> matches
+<code>src/aelfrice/llm_classifier.py:628</code>.</li>
+<li><strong>No MCP server.</strong>
+<code>git grep -n -E 'FastMCP|from mcp|import mcp|@mcp\.tool' -- src</code>
+returns nothing;
+<code>git grep -n 'mcp_remember' -- src/aelfrice/models.py</code>
+matches.</li>
+<li><strong>No producer of <code>cli_remember</code> but lock.</strong>
+<code>git grep -n -E 'INGEST_SOURCE_CLI_REMEMBER|INGEST_SOURCE_MCP_REMEMBER' -- src/aelfrice/cli.py src/aelfrice/hook*.py</code>
+returns the import and three uses, at <code>cli.py:2277</code> and
+<code>:2311</code> in lock-ingest helpers and <code>:2734</code> in
+<code>_cmd_lock</code>.</li>
+<li><strong>Peer search has two callers, neither a hook.</strong>
+<code>git grep -n search_peer_beliefs -- src</code> returns
+<code>cli.py:988</code> and <code>:1108</code>, their docstrings, a
+docstring at <code>hook.py:4805</code> and the definition.</li>
+<li><strong>One caller reads the project context.</strong>
+<code>git grep -n -E 'active_project_context\(' -- src</code> returns
+<code>src/aelfrice/hook.py:4811</code> besides the definition and
+docstrings.</li>
+<li><strong>Soft-delete callers.</strong>
+<code>git grep -n -E 'soft_delete_belief\(' -- src</code> returns
+<code>cli.py:4601</code> (retire), <code>:9661</code> (prune-noise),
+<code>migrate.py:387</code>, <code>relay_rows.py:436</code>,
+<code>review.py:278</code>, <code>scheduled_prompts.py:266</code> and
+<code>wonder/lifecycle.py:270</code>;
+<code>git grep -n -E 'insert_feedback_event' -- src/aelfrice/wonder/lifecycle.py src/aelfrice/scheduled_prompts.py</code>
+returns nothing.</li>
+<li><strong>Two writers rewrite or delete
+<code>feedback_history</code>.</strong>
+<code>git grep -n -E 'DELETE FROM feedback_history|UPDATE feedback_history' -- src</code>
+returns the dedup migration's re-key at <code>store.py:2892</code>, the
+orphan GC at <code>:5228</code>, and a docstring in
+<code>clamp_ghosts.py:134</code>.</li>
+<li><strong>The onboarding rejection ledger has one reader.</strong>
+<code>git grep -n 'onboard_rejections' -- src</code> returns the table
+and the store methods at <code>store.py:8387-8424</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv\.org|bibtex|@article|@misc' -- . ':!uv.lock'</code>
+returns nothing; <code>git grep -n -i 'doi\.org' -- . ':!uv.lock'</code>
+matches two statistics references in
+<code>tests/test_implicit_feedback_age_correlation.py</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/robotrocketscience/aelfrice/commit/7ffe389520ced6431c481da7351519f10963889a"><code class="commit-id" title="7ffe389520ced6431c481da7351519f10963889a">7ffe3895…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, 95
+commits past <code>0ef9a6f652d0</code>, the commit triage selected.
+Screened first: one auto-run surface, <code>.githooks/</code>
+(<code>commit-msg</code>, <code>pre-push</code>), inert until
+<code>core.hooksPath</code> points at it; <code>pyproject.toml</code>
+and <code>uv.lock</code> inside the seven-day cooldown; three build-time
+execution points (<code>src/aelfrice/setup.py</code>,
+<code>tests/conftest.py</code>, <code>tests/e2e/conftest.py</code>);
+nothing unpinned. Docs, slash commands and the CHANGELOG were read as
+data. Nothing was installed, built or run, and the 12,060 test functions
+were not run. Four marks: <code>tombstone</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

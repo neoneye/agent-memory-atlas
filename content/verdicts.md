@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 891 reports.**
+**This page covers all 892 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8233,3 +8233,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 10,302 lines of Python and 132 commits from 30 August to 8 November 2026, three past v0.13.0; 736 test functions, 185 of them property and review-round tests, run in CI on three operating systems and three Python versions, not run here. `docs/INVARIANTS.md` states sixteen invariants with their status and known attacks. The README's LongMemEval and agent-level numbers have committed harnesses and no committed results. Four marks: `scope_enforced`, `audit_log`, `human_review`, `negative_eval`.
 - Study when: you want agent-written procedures that become rules only by a person's act on the exact text, or a reinforcement signal the agent cannot supply by saying so.
 - Do not copy when: several principals share the store through MCP, a deleted rule must stay deleted, or approval has to hold against an agent with a shell.
+
+### [`aelfrice`](../systems/aelfrice/)
+- Best idea: **the retired row owns its value.** `content_hash` is the SHA-256 of the exact sentence and unique; retiring sets `valid_to` and keeps the row, and `insert_or_corroborate` reads retired rows and returns without writing for every background source, so a sentence the user retired is not stored again by transcript, commit, onboard, wonder or mirror capture. Only `aelf lock` revives it, with an audit row, and the tests pair each capture case with a live-content control.
+- Second idea: every absence test carries a present control on the same token. Seven read paths, `retrieve` end to end among them, are tested with one live and one retired belief, and the federation tests with a peer's `global` row beside its `project` row.
+- Biggest risk: **a resolved contradiction is served whole.** `aelf resolve` picks a winner by origin and writes SUPERSEDES and RESOLVES edges, and `retrieve` passes the supersession lane through a resolver that defaults to off, so the loser and the winner are injected side by side.
+- Second risk: the tombstone has three ways round it: a reworded sentence is new, `aelf delete` frees the hash, and the revive tier is whatever runs `aelf lock`, which the agent's shell can. Wonder GC, prune-noise and the scheduled-prompt retire leave no audit row, and `aelf doctor --gc-orphan-feedback --apply` deletes the record of every hard delete. Praise raises the confidence of whatever was injected while complaints are off by default.
+- Most reusable component: the retired branch of `insert_or_corroborate`, `src/aelfrice/store.py:5316-5334`, with `CORROBORATION_SOURCES_USER_EXPLICIT` in `src/aelfrice/models.py:324-327`, and the paired controls in `tests/test_reasserted_retired_belief_1215.py` and `tests/test_soft_deleted_retrieval_exclusion_980.py`.
+- Maturity impression: MIT; 105,074 lines of Python in 146 source files and 267,778 lines of tests; 5,674 commits from 26 April to 21 November 2026, almost all by the owner, and 44 tags; 12,060 test functions, none run here. Some metadata trails the code: `CITATION.cff` describes lock decay and demotion pressure the code removed, and the MCP server it names was deleted. Four marks: `tombstone`, `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you want a correction that survives re-capture without a separate tombstone table, or a prompt hook with no model or network on the path.
+- Do not copy when: contradictions must stop being served once settled, deletion must keep a value out, or the agent must not hold the verbs the person uses.

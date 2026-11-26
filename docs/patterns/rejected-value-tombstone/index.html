@@ -126,8 +126,8 @@ belief.</p>
 <blockquote>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
-recurs across the corpus. 86 systems of
-891 carry the mark, and <a
+recurs across the corpus. 87 systems of
+892 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -291,8 +291,8 @@ near-miss, and the argument that the expensive half of the pattern is
 not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
-<p><strong>86 systems of
-891 in the atlas carry the mark.</strong> The
+<p><strong>87 systems of
+892 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -2225,6 +2225,26 @@ next extraction of the same statement, even word for word, finds nothing
 and is stored as a new active row. The record a tombstone needs is
 present; turning it into one means dropping the status filter from the
 write path's three reads, not from the read path's.</p>
+<p><strong><a href="../../systems/aelfrice/">aelfrice</a> is SGME's
+repair already made: the write path opts into retired rows, and the read
+path does not.</strong> <code>content_hash</code> is the SHA-256 of the
+exact sentence and unique, and retiring sets <code>valid_to</code> and
+keeps the row. <code>insert_or_corroborate</code> looks the hash up with
+<code>include_retired=True</code> and, for every background source —
+transcript, commit, filesystem, wonder, the MEMORY.md mirror — returns
+the retired id and writes nothing, not even a corroboration row;
+onboarding's candidate filter and <code>wonder_ingest</code> read the
+retired hash the same way (<code>src/aelfrice/store.py:5316-5334</code>,
+<code>src/aelfrice/classification.py:212-229</code>,
+<code>src/aelfrice/wonder/lifecycle.py:159-166</code>). Only
+<code>cli_remember</code>, which <code>aelf lock</code> writes, revives
+the row, with a <code>reassert:revive</code> audit row. The tests pair
+each capture case with a live-content control, because a broken
+corroboration path passes "did not revive" too
+(<code>tests/test_reasserted_retired_belief_1215.py:100-172</code>). It
+is collided rather than consulted, and three things walk past it: a
+reworded sentence, a value whose row <code>aelf delete</code> removed,
+and an agent that runs <code>aelf lock</code> from its own shell.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,
