@@ -378,6 +378,25 @@ Each change runs through the move tool as one checked plan and logs its
 reason, which a test reads back. Retrieval does not respect the tiers it
 builds: search ranks registry names, then words, across every layer the
 reader may see.</p>
+<p><strong><a href="../../systems/turbo-quant-memory/">Turbo Quant
+Memory</a> promotes by copying, and the correction stays behind in the
+tier it was made in.</strong> The move is the agent's:
+<code>promote_note</code> writes the project note into the global store
+under the same <code>note_id</code>, active, with a
+<code>promoted_from</code> record
+(<code>src/turbo_memory_mcp/store.py:519-543</code>). From then on the
+two are separate records. <code>deprecate_note</code> on the project
+note never reads <code>promoted_from</code> (<code>:545-596</code>), so
+a decision superseded in its own project goes on being served to every
+project's <code>global</code> and <code>hybrid</code> search, and the
+tests use exactly that to make global-only notes
+(<code>tests/test_recent_context.py:177-211</code>).
+<code>write_global_note</code> checks nothing before writing
+(<code>:387-420</code>), so promoting the original again rewrites a
+retired global copy as active and drops its reason and replacement
+pointer. A promotion that makes a second record needs the retirement to
+follow the link back, or a check on write that refuses to overwrite a
+retired copy.</p>
 <h3 id="separate-inputs-a-ceiling-a-recorded-decision--argued">Separate
 inputs, a ceiling, a recorded decision — argued</h3>
 <p>No system cited here has all three on a storage-tier move; each has

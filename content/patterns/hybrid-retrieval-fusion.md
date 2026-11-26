@@ -83,6 +83,15 @@ Boring FTS over a few thousand records outperforms an untuned hybrid stack.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [Gini](../../systems/gini-agent/) — a legible implementation: four channels named with their provenance in one header comment, fused by reciprocal rank, and a temporal arm that joins only when the query names a time.
+- [HippoRAG](../../systems/hipporag/) — the alternative that does not fuse: relevance read off a Personalized PageRank diffusion seeded from query-linked entities.
+- [AgentDB](../../systems/agentdb/) — a published fusion lift that recomputes from its committed result files, most of it from the lexical arm alone.
+- [LlamaIndex](../../systems/llamaindex/) — composition under one token budget instead of fusion, and where that budget goes unenforced.
+
+### Every instance
+
 [Gini](../../systems/gini-agent/) is a legible implementation, because it
 documents its channels and their provenance in a header comment: semantic cosine,
 BM25 over FTS5, graph spreading activation seeded from the top semantic hits with
@@ -262,6 +271,8 @@ between a retriever that degrades and one that degrades silently.
 **[AgentDB](../../systems/agentdb/) publishes a fusion lift that recomputes, and most of it is the lexical arm.** Episode search pools at least 50 dense candidates from an exact cosine scan, fuses them with BM25 over task, input, output and critique by weighted reciprocal rank at k = 60 and weight 1, and with `rerank` adds a cross-encoder rank at weight 8 over the top 60 of each list (`src/controllers/episode-hybrid.ts:26-29`, `:125-170`). The README's LongMemEval_M rows, recall_all@5 0.630 dense, 0.719 hybrid and 0.789 with the cross-encoder, match `benchmarks/longmemeval/results/m-ms-marco-MiniLM-L-6-v2.json`, where BM25 alone scores 0.702. The harness reuses the product's BM25 index and tokenizer and not `retrieveRelevant`. When the embedding model is missing, the dense arm falls back to a whole-string hash and the fusion degrades to BM25 with noise, which no search reply reports.
 
 **[NeuroStrata](../../systems/neurostrata/) fuses by default under a README that says it never does.** The README describes three alternative surfaces, an HNSW index, Tantivy and an in-house BM25, whose *"scores are never fused"* (`README.md:32`). The MCP tool's default `hybrid` mode runs an exact `array_distance` scan over every row of the namespace, with no vector index created anywhere in `src/`, fetches Tantivy ranks with the principal fixed to `admin`, and combines vector rank, lexical rank, symbol match, graph co-occurrence and feedback by reciprocal rank at k = 60 (`src/store/ladybug.rs:175-218`, `:365-368`, `:1404`; `src/graph_read/hybrid.rs:42`). The committed retrieval eval ran every arm in the unfused `default` mode, so the fused path the agent uses has no committed measurement.
+
+**[Turbo Quant Memory](../../systems/turbo-quant-memory/) derives its own fusion ceiling, and its default call sits under it.** BM25 runs only when the top dense hit is below 0.82, and is fused by reciprocal rank at k = 60 with weight 0.9; the constant's comment records the sweep that moved it from 0.3 (notes MRR 0.402 to 0.561 at no cost on docs), and works out that at 0.3 an FTS-only row could never outrank a vector-only one, so the lane only reordered (`src/turbo_memory_mcp/retrieval_index.py:94-136`). The same arithmetic caps an FTS-only row at rank 8, and the comment says a caller asking for fewer *"will never see an FTS-only hit"*. `semantic_search` defaults to a limit of 5 and passes it to the fused cut in project scope (`src/turbo_memory_mcp/server.py:584`, `src/turbo_memory_mcp/retrieval.py:197-199`), so in the default call BM25 adds nothing the dense lane did not already return. The cut is then rescored on a distance scale, which makes the limit at the fusion step, not the final ranking, the decision about which lane contributes.
 
 ## Tests to require
 

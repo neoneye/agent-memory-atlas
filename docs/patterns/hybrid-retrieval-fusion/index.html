@@ -254,6 +254,23 @@ not have.</p>
 search alone answers well. Boring FTS over a few thousand records
 outperforms an untuned hybrid stack.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
+<h3 id="read-these-first">Read these first</h3>
+<ul>
+<li><a href="../../systems/gini-agent/">Gini</a> — a legible
+implementation: four channels named with their provenance in one header
+comment, fused by reciprocal rank, and a temporal arm that joins only
+when the query names a time.</li>
+<li><a href="../../systems/hipporag/">HippoRAG</a> — the alternative
+that does not fuse: relevance read off a Personalized PageRank diffusion
+seeded from query-linked entities.</li>
+<li><a href="../../systems/agentdb/">AgentDB</a> — a published fusion
+lift that recomputes from its committed result files, most of it from
+the lexical arm alone.</li>
+<li><a href="../../systems/llamaindex/">LlamaIndex</a> — composition
+under one token budget instead of fusion, and where that budget goes
+unenforced.</li>
+</ul>
+<h3 id="every-instance">Every instance</h3>
 <p><a href="../../systems/gini-agent/">Gini</a> is a legible
 implementation, because it documents its channels and their provenance
 in a header comment: semantic cosine, BM25 over FTS5, graph spreading
@@ -584,6 +601,24 @@ match, graph co-occurrence and feedback by reciprocal rank at k = 60
 committed retrieval eval ran every arm in the unfused
 <code>default</code> mode, so the fused path the agent uses has no
 committed measurement.</p>
+<p><strong><a href="../../systems/turbo-quant-memory/">Turbo Quant
+Memory</a> derives its own fusion ceiling, and its default call sits
+under it.</strong> BM25 runs only when the top dense hit is below 0.82,
+and is fused by reciprocal rank at k = 60 with weight 0.9; the
+constant's comment records the sweep that moved it from 0.3 (notes MRR
+0.402 to 0.561 at no cost on docs), and works out that at 0.3 an
+FTS-only row could never outrank a vector-only one, so the lane only
+reordered (<code>src/turbo_memory_mcp/retrieval_index.py:94-136</code>).
+The same arithmetic caps an FTS-only row at rank 8, and the comment says
+a caller asking for fewer <em>"will never see an FTS-only hit"</em>.
+<code>semantic_search</code> defaults to a limit of 5 and passes it to
+the fused cut in project scope
+(<code>src/turbo_memory_mcp/server.py:584</code>,
+<code>src/turbo_memory_mcp/retrieval.py:197-199</code>), so in the
+default call BM25 adds nothing the dense lane did not already return.
+The cut is then rescored on a distance scale, which makes the limit at
+the fusion step, not the final ranking, the decision about which lane
+contributes.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exact identifiers, paraphrases, dates, negation, and typo

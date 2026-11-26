@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-896, generated from each report's frontmatter —
+897, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-896, generated from each report's frontmatter —
+897, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-896, generated from each report's frontmatter —
+897, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 896, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 897, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-896, generated from each report's frontmatter —
+897, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 896 systems by the seven mechanisms
+filters all 897 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -37656,6 +37656,67 @@ own worst category</td>
 rebuilt on every pass</td>
 </tr>
 <tr>
+<td><a
+href="../systems/turbo-quant-memory/"><code>turbo-quant-memory</code></a></td>
+<td>A typed note (decision, lesson, pattern or handoff) with title,
+content, tags, source references, a tier, a provenance of agent or
+human-explicit and a status; indexed Markdown blocks beside it; directed
+relations between note, file and issue URIs</td>
+<td>One JSON file per note under
+~/.turbo-quant-memory/projects/&lt;project_id&gt;/notes or global/notes,
+written atomically; relations in one JSON file per scope; Markdown
+blocks and manifests as JSON; a derived LanceDB table per project and
+one global with vectors and a native FTS index; a SQLite coordination
+database and file journal for the workspace feature; an AES-256-GCM
+vault per project</td>
+<td>Dense cosine over the mirror with a tier and source filter; when the
+top dense hit is below 0.82, BM25 from LanceDB FTS is fused by weighted
+reciprocal rank at k=60 and weight 0.9; then rescored with lexical,
+recency, human-flag and project bonuses; 220-character cards with key
+points and relations; hydrate by id; recent_context lists active notes
+newest first with no query</td>
+<td>remember_note through MCP, stored at once and embedded synchronously
+on the local model, then similarity hints against existing notes;
+index_paths parses Markdown under the project root; promote_note copies
+a project note to global under the same id; no model on the write
+path</td>
+<td>No edit and no delete for a note; deprecate_note sets archived or
+superseded with a reason and a replacement pointer and removes the
+mirror row; the JSON stays on disk; Markdown blocks are replaced or
+deleted as their files change; delete_secret removes a vault entry</td>
+<td>Physical partition: a directory and LanceDB table per project, the
+project resolved from the working tree's git remote or path or an
+environment override; no project predicate on any query; global is one
+store shared by every project; select_project and bind_project let the
+model switch the connection to any listed project unless
+TQMEMORY_PROJECT_ID is set</td>
+<td>Stdio MCP server of 29 tools with a primary process that owns
+storage and proxies over an authenticated Unix socket; CLI; a SKILL.md
+copied into ~/.agents/skills and other agent skill directories; an
+optional Claude Code SessionStart hook that injects recent_context after
+compaction</td>
+<td>A refresher thread that finishes budgeted index refreshes; LanceDB
+optimisation at start and every six hours by the owning process; a file
+watcher that records working-tree file versions while two or more
+sessions share a git tree; no pass over note content</td>
+<td>note_status active, archived or superseded, set by the agent and
+filtered by eviction from the mirror and by list_notes; provenance
+human-explicit or agent, set by the agent and used as a 0.06 ranking
+bonus and a tie-break; tier episodic kept out of default search</td>
+<td>A status that every serving read honours because the writer evicts
+the row and a reconcile deletes strays; a superseded note tested absent
+from an exact result list; fusion constants with their sweeps and their
+known ceiling written beside them; ingestion confined to the project
+root and away from the vault; corrupt files skipped rather than
+fatal</td>
+<td>Deprecating a project note leaves its promoted global copy active,
+and promoting again rewrites a deprecated global copy as active; the
+model can list and select any project's memory and vault; provenance
+human-explicit is the model's own claim; no note can be deleted; at the
+default limit of 5 a BM25-only hit cannot enter project search results;
+the name implies vector quantisation the code does not do</td>
+</tr>
+<tr>
 <td><a href="../systems/tycho/"><code>tycho</code></a></td>
 <td>A file in the per-game workspace, captured into a snapshot as either
 inline <code>contents</code> or a content-addressed blob descriptor with
@@ -40556,7 +40617,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>87 of 896:</em> <a
+<p><em>87 of 897:</em> <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -40647,7 +40708,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>228 of 896:</em> <a
+<p><em>229 of 897:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -40871,6 +40932,8 @@ href="../systems/tidemind/"><code>tidemind</code></a>, <a
 href="../systems/titen/"><code>titen</code></a>, <a
 href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
 href="../systems/truememory/"><code>truememory</code></a>, <a
+href="../systems/turbo-quant-memory/"><code>turbo-quant-memory</code></a>,
+<a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
 <a href="../systems/utopia/"><code>utopia</code></a>, <a
 href="../systems/velantrim-exocortex-crystal/"><code>velantrim-exocortex-crystal</code></a>,
@@ -40883,7 +40946,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>151 of 896:</em> <a
+<p><em>151 of 897:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -41044,7 +41107,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>393 of 896:</em> <a
+<p><em>393 of 897:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -41457,7 +41520,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>305 of 896:</em> <a
+<p><em>305 of 897:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
@@ -41776,7 +41839,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>109 of 896:</em> <a
+<p><em>109 of 897:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -41889,7 +41952,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>583 of 896:</em> <a
+<p><em>584 of 897:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -42447,7 +42510,8 @@ href="../systems/tracedecay/"><code>tracedecay</code></a>, <a
 href="../systems/tree-ring-memory/"><code>tree-ring-memory</code></a>,
 <a href="../systems/trueforge/"><code>trueforge</code></a>, <a
 href="../systems/truememory/"><code>truememory</code></a>, <a
-href="../systems/tycho/"><code>tycho</code></a>, <a
+href="../systems/turbo-quant-memory/"><code>turbo-quant-memory</code></a>,
+<a href="../systems/tycho/"><code>tycho</code></a>, <a
 href="../systems/typegraph/"><code>typegraph</code></a>, <a
 href="../systems/ulpia/"><code>ulpia</code></a>, <a
 href="../systems/ultracontext/"><code>ultracontext</code></a>, <a
@@ -42511,8 +42575,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-583 repositories of
-896 assert that particular material must
+584 repositories of
+897 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -42585,7 +42649,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 896 is the real figure for the second kind, and
+of 897 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

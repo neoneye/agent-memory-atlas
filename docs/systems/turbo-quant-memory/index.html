@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local MCP server for coding
+agents that keeps typed notes as JSON files and searches the active ones
+through a hybrid LanceDB mirror.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Turbo Quant
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A local MCP server for
+coding agents that keeps typed notes as JSON files and searches the
+active ones through a hybrid LanceDB mirror.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Turbo Quant
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local MCP server for
+coding agents that keeps typed notes as JSON files and searches the
+active ones through a hybrid LanceDB mirror.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Turbo Quant Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Turbo Quant Memory",
+      "description": "A local MCP server for coding agents that keeps typed notes as JSON files and searches the active ones through a hybrid LanceDB mirror.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Typed notes as JSON files, a LanceDB mirror
+that holds only the active ones, and a project switch the model
+holds</p>
+          <h1>Turbo Quant Memory</h1>
+          <p class="document-deck">A local MCP server for coding agents
+that keeps typed notes as JSON files and searches the active ones
+through a hybrid LanceDB mirror.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Lexus2016/turbo_quant_memory">
+              <span>Source</span>
+              <strong>Lexus2016/turbo_quant_memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Lexus2016/turbo_quant_memory/commit/323a1a4c95ab7078346ef462fb103583db0a689b" title="323a1a4c95ab7078346ef462fb103583db0a689b">
+              <span>Analyzed revision</span>
+              <code>323a1a4c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Lexus2016--turbo_quant_memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Lexus2016--turbo_quant_memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE and pyproject.toml; the default embedding model is downloaded
+from Hugging Face at first run under its own terms</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>17,563
+lines of Python in 42 files under src/, and 20,747 lines of
+tests</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>370
+commits from 25 March to 24 November 2026, 368 of them by one author
+under two names, one by Cursor Agent and one by another contributor; 60
+tags, version 0.36.1</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>918
+test functions in 69 files; ci.yml runs ruff, mypy and pytest on Ubuntu
+(Python 3.11 and 3.13) and Windows (3.11); none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Turbo Quant Memory is a local MCP server for coding agents: the agent
+writes typed notes (decisions, lessons, patterns, session handoffs) that
+are stored as JSON files per project, mirrored into LanceDB, and
+returned as short cards from a hybrid dense and BM25 search. What is
+notable is a lifecycle status that holds on every serving read because
+the writer deletes a retired note's index row and a reconcile before
+each read deletes any stray, and fusion constants whose sweeps and
+ceilings are written beside them. What is weak is that the project
+boundary is a directory the model can step out of with
+<code>select_project</code>, a promoted global copy outlives the
+deprecation of its original, and no note can be deleted.</p>
+<p>The name points at vector quantisation and the code does none.
+Vectors are stored as the embedder returns them, no index is built over
+them, and compression here means a 220-character card in place of a
+document (<a href="#10-tests-evals-and-benchmarks">section 10</a> has
+the paper check).</p>
+<p>A note is served from the moment <code>remember_note</code> returns.
+Writes are synchronous, embed on a local ONNX model, and call no
+language model. The response carries similarity hints that suggest
+superseding a near-duplicate, and the decision is the agent's:
+<code>deprecate_note</code> retires the old note, and the skill the
+installer copies into the agent's skill directories says to do it.</p>
+<p><strong>Licence.</strong> MIT in <code>LICENSE</code>, with
+<code>pyproject.toml</code> declaring the same and shipping the file.
+The one component under other terms is the embedding model,
+<code>sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2</code>
+by default (<code>src/turbo_memory_mcp/retrieval_index.py:28</code>),
+which <code>fastembed</code> downloads from Hugging Face at first run;
+the tree does not state its licence. Nothing in the grant restricts
+use.</p>
+<p>Two marks are earned: <code>trust_state</code> on the note status and
+<code>negative_eval</code> on the search tests. Section 9 gives the
+reasons for the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a note the agent decided to write</strong>, typed
+by <code>kind</code> and placed in a tier by it: <code>handoff</code>
+goes to <code>episodic</code>, every other kind to <code>durable</code>,
+and indexed Markdown is <code>reference</code>
+(<code>src/turbo_memory_mcp/store.py:41-45</code>, <code>:71-76</code>).
+The agent can override the tier on write. Default search reads
+<code>durable</code> and <code>reference</code>, so a handoff is
+reachable through <code>recent_context</code> or an explicit
+<code>tier_filter</code>.</p>
+<p>Belief is binary and starts at once. A note is <code>active</code>
+when written and is served by search, by <code>recent_context</code> and
+by hydration. It stops being believed in one way:
+<code>deprecate_note</code> moves it to <code>archived</code>, or to
+<code>superseded</code> when a replacement id is given, records
+<code>deprecated_at</code>, an optional reason and a pointer to the
+replacement, and rewrites the same JSON file
+(<code>store.py:545-596</code>). Nothing moves a note back, and nothing
+deletes one.</p>
+<p>Who moves it is the agent. <code>remember_note</code>,
+<code>promote_note</code> and <code>deprecate_note</code> are all MCP
+tools (<code>src/turbo_memory_mcp/server.py:511-578</code>), and the
+only judgement offered is advisory: after a write, notes above a cosine
+of 0.78 come back as <code>review_for_conflict</code>, and same-kind
+notes above 0.88 as <code>supersede_candidate</code>
+(<code>server.py:1966-1968</code>, <code>:1971-2021</code>).</p>
+<p>Two fields sound epistemic and are not. <code>provenance</code> is
+<code>human-explicit</code> or <code>agent</code>, chosen by the agent
+in the tool call, and is a 0.06 ranking bonus and a tie-break
+(<code>src/turbo_memory_mcp/retrieval.py:36</code>,
+<code>:232-239</code>, <code>:271-281</code>).
+<code>confidence_state</code> on a search result is the similarity score
+bucketed at 0.72 and 0.52.</p>
+<p>Global memory is a copy. <code>promote_note</code> writes the project
+note into <code>global/notes</code> under the same <code>note_id</code>,
+active, with a <code>promoted_from</code> record
+(<code>store.py:519-543</code>). From then on the two are separate
+records with separate statuses.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a note is active from the moment it is written and enters the mirror at once; deprecation archives or supersedes it, keeps the file and evicts the mirror row, and a reconcile before each read deletes strays; promotion makes a separate global copy that the deprecation of the original does not reach, and a second promotion rewrites a retired global copy as active</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a note is active from the moment it is written and enters the mirror at once; deprecation archives or supersedes it, keeps the file and evicts the mirror row, and a reconcile before each read deletes strays; promotion makes a separate global copy that the deprecation of the original does not reach, and a second promotion rewrites a retired global copy as active
+flowchart TD
+    W[&quot;remember_note&lt;br/&gt;agent tool, kind, tags,&lt;br/&gt;provenance, tier&quot;] --&gt; A[&quot;active note&lt;br/&gt;JSON file per note&quot;]
+    W -.-&gt; H[&quot;similarity hints&lt;br/&gt;supersede_candidate&lt;br/&gt;review_for_conflict&quot;]
+    A --&gt; L[&quot;list_notes&lt;br/&gt;active only&quot;]
+    L --&gt; M[(&quot;LanceDB mirror&lt;br/&gt;active notes only&quot;)]
+    L --&gt; C[&quot;recent_context&lt;br/&gt;newest first&quot;]
+    M --&gt; S[&quot;semantic_search&lt;br/&gt;tier filter, dense,&lt;br/&gt;BM25 when unsure&quot;]
+    R[&quot;reconcile before read&lt;br/&gt;deletes ids not active&quot;] --&gt; M
+    A --&gt; D[&quot;deprecate_note&lt;br/&gt;agent tool&quot;]
+    H -.-&gt; D
+    D --&gt; X[&quot;archived, or superseded&lt;br/&gt;with superseded_by&lt;br/&gt;file kept, no delete&quot;]
+    D --&gt; E[&quot;mirror row deleted&quot;]
+    E --&gt; M
+    X --&gt; Y[&quot;hydrate by id&lt;br/&gt;returns any status&quot;]
+    A --&gt; P[&quot;promote_note&lt;br/&gt;same note_id, active&quot;]
+    P --&gt; G[&quot;global copy&lt;br/&gt;own status&quot;]
+    D -.-&gt; Z[&quot;global copy untouched&lt;br/&gt;still served&quot;]
+    G --&gt; Z
+    P -.-&gt; Q[&quot;second promote rewrites&lt;br/&gt;a retired global copy&lt;br/&gt;as active&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Python package, <code>turbo-quant-memory</code>, with a stdio MCP
+server, a CLI and no network service.
+<code>turbo-memory-mcp serve</code> is what every client registers. The
+first process to start becomes the primary that owns the storage root;
+the next ones become proxies that forward each call over a Unix socket
+with mode <code>0600</code> and a 32-byte <code>multiprocessing</code>
+authkey kept in <code>.daemon.lock</code>
+(<code>src/turbo_memory_mcp/daemon.py:1-16</code>), and a proxy promotes
+itself when the primary dies.</p>
+<p>Persistence is files under <code>~/.turbo-quant-memory</code>
+(<code>TQMEMORY_HOME</code> overrides): per project a
+<code>manifest.json</code>, <code>notes/&lt;id&gt;.json</code>,
+<code>relations.json</code>, Markdown roots, file manifests and blocks
+as JSON, a <code>retrieval/</code> LanceDB database, and a
+<code>secrets/</code> vault with its audit file; <code>global/</code>
+holds the same for promoted notes (<code>store.py:91-165</code>). Every
+JSON write goes through a temporary file and <code>os.replace</code>
+(<code>store.py:1239-1255</code>). The LanceDB tables are derived: each
+read reconciles them against the files, and the files are
+authoritative.</p>
+<p>The project is resolved from the working tree: git remote, else path,
+else <code>TQMEMORY_PROJECT_ID</code>, and
+<code>reconcile_project_identity</code> keeps a bucket when a remote is
+added later (<code>store.py:1013-1086</code>).</p>
+<p>Background work is three threads in the primary: a refresher that
+completes index refreshes a search left over its budget
+(<code>src/turbo_memory_mcp/refresher.py:1-11</code>), LanceDB
+optimisation at start and every six hours
+(<code>src/turbo_memory_mcp/index_maintenance.py:18-19</code>), and,
+when two or more sessions share a git working tree, a watcher that
+journals text file versions to SQLite for <code>file_history</code> and
+<code>restore_file</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>uv tool install turbo-quant-memory</code> and one
+<code>mcp add</code> line per client. No API key and no external
+service; the first run downloads a 0.22 GB ONNX model, and after that
+everything runs offline. The README's grep for HTTP client imports in
+<code>src/</code> is a claim the reader can run. The notes are
+pretty-printed JSON a person can read and edit; an edited note is
+re-embedded because the reconcile compares <code>updated_at</code>
+(<code>server.py:3003-3024</code>). LanceDB keeps old table versions for
+seven days, so the derived store grows between optimisations.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Note schema and store.</strong>
+<code>src/turbo_memory_mcp/store.py</code>: kinds, statuses, tiers and
+provenances <code>:27-52</code>, <code>write_project_note</code>
+<code>:356-385</code>, <code>write_global_note</code>
+<code>:387-420</code>, <code>list_notes</code> <code>:454-467</code>,
+<code>promote_note</code> <code>:519-543</code>,
+<code>deprecate_note</code> <code>:545-596</code>,
+<code>_build_note_record</code> <code>:853-897</code>, relations
+<code>:918-1009</code>, <code>normalize_provenance</code>
+<code>:1168-1180</code>.</li>
+<li><strong>MCP tools.</strong>
+<code>src/turbo_memory_mcp/server.py</code>: <code>_memory_call</code>
+and the project selection it injects <code>:409-421</code>,
+<code>select_project</code> and <code>bind_project</code>
+<code>:467-495</code>, <code>remember_note</code> <code>:511-555</code>,
+<code>promote_note</code> and <code>deprecate_note</code>
+<code>:557-578</code>, <code>semantic_search</code>
+<code>:580-613</code>, <code>hydrate</code> <code>:615-624</code>, the
+secrets tools <code>:720-752</code>.</li>
+<li><strong>Write path.</strong> <code>remember_note_impl</code>
+<code>server.py:2024-2117</code>; similarity hints
+<code>:1966-2021</code>; <code>promote_note_impl</code>
+<code>:2120-2139</code>; <code>deprecate_note_impl</code>
+<code>:2142-2183</code>; mirror sync and eviction
+<code>:2881-2914</code>.</li>
+<li><strong>Read path.</strong> <code>semantic_search_impl</code>
+<code>server.py:2186-2225</code>;
+<code>src/turbo_memory_mcp/retrieval.py</code>
+<code>semantic_search</code> <code>:67-173</code>,
+<code>_query_scope</code> <code>:184-212</code>, scoring
+<code>:215-254</code>, decoration <code>:285-352</code>;
+<code>src/turbo_memory_mcp/retrieval_index.py</code> fusion constants
+<code>:63-136</code>, per-note sync <code>:333-361</code>,
+<code>search</code> <code>:442-505</code>, <code>_rrf_merge</code>
+<code>:1055-1113</code>, <code>mirror_note_record</code>
+<code>:1175-1201</code>; <code>recent_context_impl</code>
+<code>server.py:2252-2361</code>;
+<code>src/turbo_memory_mcp/hydration.py:21-55</code>.</li>
+<li><strong>Reconcile.</strong>
+<code>_repair_project_retrieval_if_needed</code>
+<code>server.py:2988-3050</code> and the global variant
+<code>:3053-3081</code>.</li>
+<li><strong>Ingestion.</strong>
+<code>src/turbo_memory_mcp/ingestion.py</code>, root confinement
+<code>:374-395</code>, ignore files <code>:465-518</code>.</li>
+<li><strong>Telemetry.</strong>
+<code>src/turbo_memory_mcp/telemetry.py:66-123</code>;
+<code>_sum_raw_source_bytes</code>
+<code>server.py:3098-3119</code>.</li>
+<li><strong>Vault.</strong> <code>src/turbo_memory_mcp/secrets/</code>;
+<code>get_secret_impl</code> <code>server.py:2456-2494</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A note record (<code>store.py:878-897</code>) holds
+<code>note_id</code> (16 hex characters of a UUID4), <code>scope</code>,
+<code>project_id</code>, <code>project_name</code>, <code>title</code>,
+<code>content</code>, <code>note_kind</code>, <code>tier</code>,
+<code>provenance</code>, <code>tags</code>, <code>source_refs</code>,
+<code>source_kind</code>, <code>note_status</code>,
+<code>created_at</code> and <code>updated_at</code>, plus
+<code>promoted_from</code> on a global copy and
+<code>deprecated_at</code>, <code>deprecation_reason</code> and
+<code>superseded_by</code> on a retired note. <code>updated_at</code> is
+always the time of the write; <code>created_at</code> is kept only by
+promotion. Both are record times.</p>
+<p><code>normalize_note_status</code> refuses any value outside the
+three (<code>store.py:1157-1165</code>).
+<code>normalize_provenance</code> never refuses: an unknown value
+becomes <code>agent</code> (<code>:1168-1180</code>). The
+<code>remember_note</code> docstring offers the model
+<code>external-tool</code> and <code>system</code> as provenances
+(<code>server.py:530-533</code>); both are stored as
+<code>agent</code>.</p>
+<p>Relations are <code>{source, target, type, created_at}</code> rows in
+one JSON list per scope, deduplicated on the triple and removed by
+<code>unlink_entities</code> (<code>store.py:960-994</code>).
+<code>source_refs</code> given as URIs become <code>references</code>
+relations on write (<code>server.py:2074-2100</code>). Relations carry
+no status, so a superseded note's links are still returned beside the
+notes that point at it.</p>
+<p>The mirror row copies the note's text, kind, tier, tags,
+<code>project_id</code> and <code>updated_at</code> and adds a vector
+(<code>retrieval_index.py:1175-1201</code>). Provenance and status are
+not in it: search reads the JSON file for each candidate to learn both
+(<code>retrieval.py:229-239</code>, <code>:316-336</code>).</p>
+<p>The vault is separate: AES-256-GCM per project under a key from
+<code>TQMEMORY_SECRETS_PASSPHRASE</code> or the OS keyring, never
+indexed, with an append-only <code>audit.jsonl</code> of
+<code>set</code>, <code>get</code>, <code>list</code> and
+<code>delete</code>
+(<code>src/turbo_memory_mcp/secrets/audit.py:1-56</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>semantic_search</code> reads the project mirror by default;
+<code>global</code> and <code>hybrid</code> are opt-in
+(<code>src/turbo_memory_mcp/contracts.py:19</code>). Before the query it
+refreshes stale Markdown within a budget, reconciles the mirror against
+the active notes, and heals legacy columns
+(<code>server.py:2196-2208</code>).</p>
+<p>The index search runs dense cosine with a <code>tier IN (...)</code>
+and optional <code>source_kind IN (...)</code> filter
+(<code>retrieval_index.py:473-485</code>). When the top dense hit scores
+at least 0.82, the dense list is returned and BM25 does not run.
+Otherwise LanceDB's FTS runs with the same filter and the two lists are
+fused by reciprocal rank at k = 60 with BM25 weighted 0.9, then cut to
+the limit (<code>:487-505</code>, <code>:1055-1113</code>). If both are
+empty, a lexical scan over every row fills in
+(<code>retrieval.py:387-408</code>).</p>
+<p>The cut decides which rows survive, and the weight's own comment
+works out the consequence: an FTS-only row can reach rank 8 at best, so
+<em>"a caller requesting fewer than 8 results will never see an FTS-only
+hit no matter how exact the lexical match"</em>
+(<code>retrieval_index.py:117-130</code>). <code>semantic_search</code>
+defaults to a limit of 5 and passes <code>max(limit, 5)</code> to the
+index in project scope (<code>server.py:584</code>,
+<code>retrieval.py:197-199</code>). So in the default call, with five or
+more dense candidates, BM25 reorders rows the dense lane found and adds
+none. In <code>hybrid</code> scope each lane asks for at least 10, which
+clears the ceiling.</p>
+<p>The surviving rows are then rescored on a different scale, starting
+from the similarity implied by the vector distance; an FTS-only row gets
+a synthetic distance from its BM25 rank. Added to it are a lexical bonus
+up to 0.24, a project bias of 0.15 in hybrid, 0.02 for Markdown, 0.06
+for <code>human-explicit</code> and a recency bonus that falls from 0.05
+to zero over 30 days (<code>retrieval.py:24-56</code>,
+<code>:215-254</code>). Each comment beside these constants carries a
+sweep: the recency value peaks at 0.05 with an MRR gain the comment
+calls noise, and the human bonus is called uncalibratable because seven
+of 905 notes in the largest live corpus carry it.</p>
+<p>A result is a card: a 220-character summary, up to three key points
+chosen by query overlap, relations, tier, status and provenance
+(<code>retrieval.py:285-352</code>). <code>hydrate</code> returns the
+full note or a Markdown block with one or two neighbours on each
+side.</p>
+<p><code>recent_context</code> takes no query. It reads
+<code>list_notes</code>, which returns only active notes, sorts by
+<code>updated_at</code>, and in <code>hybrid</code> fills the window
+with this project's notes before global ones, dropping a global copy
+only when its original already holds a slot
+(<code>server.py:2295-2335</code>). It includes the episodic tier by
+default; that is its purpose.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>remember_note</code> refuses <code>scope="global"</code>,
+requires a non-empty title and content and a known kind, writes the
+JSON, then upserts the mirror row for that note
+(<code>server.py:2037-2062</code>). A failure in the mirror step returns
+a warning and leaves the reconcile to repair it on the next read. There
+is no deduplication: every call writes a new id. The similarity hints
+are computed after the write against the mirror, which holds only active
+notes, so a restatement of a superseded note gets no hint.</p>
+<p><code>index_paths</code> registers Markdown roots under the project
+root only, refuses anything inside the vault, honours
+<code>.tqmemoryignore</code>, and replaces a file's blocks when its
+checksum changes (<code>ingestion.py:374-395</code>). Blocks pending
+mirroring are recorded in the file manifest in the same atomic write, so
+a run that dies resumes (<code>store.py:630-635</code>).</p>
+<p>Promotion copies; deprecation retires. Deprecating a project note
+leaves its global copy active: no line in <code>deprecate_note</code>
+reads <code>promoted_from</code>, and the tests in
+<code>tests/test_recent_context.py:177-211</code> rely on the copy
+surviving. <code>write_global_note</code> checks nothing before writing
+(<code>store.py:387-420</code>), so promoting a still-active original
+again rewrites a deprecated global copy as <code>active</code> and drops
+its <code>deprecated_at</code>, reason and pointer.</p>
+<p>No path deletes a note. A deprecated note's text stays in its JSON
+file, and its vector stays in LanceDB's older table versions until
+optimisation prunes them, seven days on
+(<code>index_maintenance.py:18</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write blocks on one local embedding and a LanceDB upsert, and the
+note is retrievable when the call returns. No language model runs
+anywhere in the package. No background pass reads note content; the
+six-hourly job compacts index files. A read costs one embedding and,
+below the gate, one FTS query, plus one JSON file read per candidate for
+provenance and status. Injection is bounded by the caller: at most 20
+cards per search, and the optional <code>SessionStart</code> hook asks
+<code>recent_context</code> for five lines after a compaction, placed by
+Claude Code as additional context.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Twenty-nine MCP tools in seven groups: write, read, projects, graph,
+hygiene, vault and workspace. The agent saves, searches, hydrates,
+links, promotes and deprecates explicitly; nothing captures from the
+conversation. <code>turbo-memory-mcp skill install</code> copies a
+<code>SKILL.md</code> into <code>~/.agents/skills</code> always, and
+into the Claude, Gemini, Kimi and Codex skill directories when they
+exist (<code>src/turbo_memory_mcp/skill_install.py:35-43</code>). It
+tells the agent to call <code>recent_context</code> first, to mark notes
+the user asked for as <code>human-explicit</code>, and to write a
+replacement and deprecate the old note rather than leave both
+active.</p>
+<p>The model holds the project boundary. <code>list_projects</code>
+lists every bucket on the machine and
+<code>select_project(project_id)</code> switches the connection to any
+of them for every later call, the vault included:
+<code>_memory_call</code> injects the selection into every tool except
+the project-management ones (<code>server.py:409-421</code>,
+<code>:919-935</code>). The one stop is an explicit
+<code>TQMEMORY_PROJECT_ID</code> in the client's configuration, which
+makes a different selection fail.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-status-holds-because-the-writer-evicts">The status holds
+because the writer evicts</h3>
+<p>The search path has no status predicate. <code>semantic_search</code>
+queries the mirror and only displays <code>note_status</code>
+(<code>retrieval.py:329</code>). What keeps a retired note out is that
+it is never in the mirror: the per-note syncs skip inactive notes
+(<code>retrieval_index.py:346</code>, <code>:358</code>), full syncs
+build from <code>list_notes</code> (<code>:661-662</code>),
+<code>deprecate_note</code> deletes the row
+(<code>server.py:2174</code>, <code>:2905-2914</code>), and the
+reconcile before each read deletes any mirrored id that is not an active
+note (<code>:3013-3041</code>). <code>include_inactive=True</code> is
+passed by no product code. A failed eviction is repaired on the next
+read rather than served, and the cost is a scan of the notes directory
+per read.</p>
+<h3 id="what-the-status-does-not-cover">What the status does not
+cover</h3>
+<ul>
+<li><strong>The global copy.</strong> A project note and its promotion
+are two records. The agent that supersedes a decision in the project
+leaves the old decision served to every project that searches
+<code>global</code> or <code>hybrid</code>, unless it also calls
+<code>deprecate_note(scope="global")</code>. No hint says so.</li>
+<li><strong>Re-promotion.</strong> Promoting the original again resets a
+retired global copy to active.</li>
+<li><strong>Hydration by id</strong> returns any status, with the status
+in the payload.</li>
+</ul>
+<h3 id="provenance-and-injected-content">Provenance and injected
+content</h3>
+<p><code>human-explicit</code> is the agent's word in a tool argument,
+and the bonus is small by design. A note can carry any text the model
+writes, including text read from a file or a web page; nothing labels or
+quarantines it. The README's <em>"Human notes outrank agent notes"</em>
+describes a 0.06 additive bonus.</p>
+<h3 id="scope">Scope</h3>
+<p>The partition is real on disk and in LanceDB: each project has its
+own directory and table, and no query mixes them except
+<code>hybrid</code>, which adds the single global store. It is not a
+boundary against the model, which can select any project and read its
+notes and, if the keyring holds that project's key, its secrets. Global
+notes from every project share one table with no project predicate,
+which is the design.</p>
+<h3 id="durability-and-concurrency">Durability and concurrency</h3>
+<p>One primary owns the storage; proxies forward and fail over. A write
+lock per project serialises tools in the primary
+(<code>server.py:1187-1211</code>); the README says independent CLI
+writers are outside it. Corrupt note and block files are skipped with a
+warning instead of failing the call (<code>store.py:442-510</code>).
+Migrations snapshot the storage root before running
+(<code>src/turbo_memory_mcp/migrations/snapshot.py</code>). Deletion is
+the gap: a user who asks to forget a note has no tool for it.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>trust_state</code> — earned.</strong>
+<code>note_status</code> is a validated three-value field, moved by
+<code>deprecate_note</code>, and both serving reads withhold
+<code>archived</code> and <code>superseded</code>: search by eviction
+and reconcile, <code>recent_context</code> through
+<code>list_notes</code>. The state is the agent's to set; there is no
+candidate state and no way back.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> A superseded
+note with the same title and tag as its replacement is required absent
+from an exact result list, an archived sibling from a one-item result,
+and a handoff from the default search beside a present lesson.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> The mirror
+row stores <code>project_id</code> and no query filters on it; isolation
+is one table per project, a physical partition, and the model chooses
+which one.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> Note mutations
+leave no event: deprecation rewrites the note in place and keeps only
+the latest state. The vault's <code>audit.jsonl</code> is append-only
+and records every set, get, list and delete of a secret, which is a
+credential store beside the memory rather than memory. The workspace
+journal records working-tree file versions.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> A retired note
+is keyed by its id. The same text written again is a new active note,
+and the similarity hints cannot see the retired one.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>created_at</code>, <code>updated_at</code> and
+<code>deprecated_at</code> are record times.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Nothing
+waits. Every write, promotion and deprecation is an agent tool, and the
+migration runner's approval step concerns schema migrations.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading. CI runs ruff,
+mypy and pytest on three configurations
+(<code>.github/workflows/ci.yml</code>). Fourteen test files patch
+<code>build_default_embedder</code>, the search tests among them, with a
+keyword embedder, so they exercise the store, mirror and ranking code
+with deterministic vectors and not the model.</p>
+<p>The negative cases are non-vacuous. In
+<code>tests/test_namespace_tools.py:193-223</code> the superseded note's
+title contains a keyword the query shares, so a mirror that kept it
+would return it, and the assertion is equality with a one-item list.
+<code>tests/test_semantic_search.py:185-212</code> and the tier cases at
+<code>tests/test_namespace_tools.py:445-509</code> each pair the absent
+item with a present one. <code>tests/test_storage.py:95-142</code>
+asserts the retired note keeps its file and fields.</p>
+<p>No test deprecates a promoted note and searches global, re-promotes
+over a retired copy, or asserts that one project cannot select another.
+No test checks that a BM25-only hit is reachable at the default
+limit.</p>
+<p><strong>Benchmarks.</strong> <code>benchmarks/latest.md</code>
+measures bytes returned by <code>semantic_search</code> against opening
+every file behind the top five hits on 18 Markdown files of this
+repository: 83.79% average saving, 74.5% with one hydration.
+<code>benchmarks/retrieval_quality_notes.md</code> runs queries built
+from each gold note's own title over copies of live stores and says that
+this inflates Hit@k; its delta isolates the recency bonus at about zero.
+The README's 2,640,000 tokens saved is one developer's
+<code>server_info</code> counter, computed as the full content of every
+returned note or block minus the card bytes, divided by four
+(<code>telemetry.py:80-91</code>, <code>server.py:3098-3119</code>), so
+it counts a hit the agent would never have opened as saved.</p>
+<p><strong>Paper check.</strong> The README and docs cite no paper;
+<code>git grep</code> for arXiv, DOI and BibTeX returns nothing.
+<code>.planning/PROJECT.md:45</code> names TurboQuant research from
+Google Research as the inspiration, with no link, and says the project
+applies the idea to external context rather than the model. The paper of
+that name, <em>TurboQuant: Online Vector Quantization with Near-optimal
+Distortion Rate</em> (<a
+href="https://arxiv.org/abs/2504.19874">arXiv:2504.19874</a>, submitted
+28 April 2025), quantises vectors by a random rotation, a scalar
+quantiser per coordinate, and a 1-bit QJL stage on the residual for
+inner products. None of that is in the tree: no quantiser, no codebook,
+and no vector index of any kind is created over the LanceDB tables.
+<code>TECHNICAL_SPEC.md:249</code> lists <em>"claiming direct token
+quantization"</em> as a non-goal, and the project's own
+<code>AUDIT_REPORT_v0.23.md:268</code> records that the name promises
+quantised embeddings the code does not have.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Evict on retire and reconcile before read.</strong> A
+derived index that holds only believed rows needs no status predicate on
+any query, and a diff of id sets before each read turns a missed
+eviction into a repair instead of a leak.</li>
+<li><strong>Write the sweep beside the constant.</strong> Each ranking
+constant here carries the values tried, the metric and the corpus, and
+the FTS weight's comment derives its own ceiling from the RRF
+arithmetic.</li>
+<li><strong>Keep the JSON authoritative and the index
+disposable.</strong> Every index failure falls back to a rebuild from
+files a person can read.</li>
+<li><strong>Record pending index work in the same atomic write as the
+new checksum</strong>, so an interrupted ingest resumes from the
+manifest.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A promotion that copies without a link back.</strong> When a
+tier move makes a second record, retiring the first has to reach the
+second, or the correction stops at the tier it was made in.</li>
+<li><strong>A write path that rewrites without checking what is
+there.</strong> An upsert on promotion silently undid a retirement.</li>
+<li><strong>A cut before a rescore on another scale.</strong> Fusion
+chose the rows by RRF and the result orders them by distance and
+bonuses, so the limit passed to the fusion decides which lane can
+contribute at all.</li>
+<li><strong>A project switch on the model's tool surface</strong> when
+the partition is meant to keep projects apart.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer on one machine who wants an agent to keep
+decisions and lessons across sessions, with files they can open, no
+service to run and no key to buy. The agent is the curator: it decides
+what to write, what to retire and what to promote, and the system's job
+is to make retirement stick on search. A reader who needs several
+people's or several clients' memory kept apart should not rely on the
+project directories, which the model can cross. A reader who needs
+forgetting, for privacy or for a user's request, should walk away or add
+a delete: here a retired note stays on disk for good.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the global copy meant to outlive its original's deprecation, or
+is that a gap? The tests rely on it as a way to make global-only
+notes.</li>
+<li>Does any client pin <code>TQMEMORY_PROJECT_ID</code> by default? The
+example client configurations would settle whether
+<code>select_project</code> is reachable in a typical install.</li>
+<li>Does LanceDB apply the tier filter before or after the vector top-k
+in the pinned version? After would let episodic rows crowd a filtered
+result list.</li>
+<li>How often does the dense gate fire on real queries? The constant's
+comment reports half of 40 targeted queries and none of 300 identifier
+queries.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/turbo_memory_mcp/store.py</code></td>
+<td>Note, block, relation and manifest storage; promotion and
+deprecation</td>
+</tr>
+<tr>
+<td><code>src/turbo_memory_mcp/server.py</code></td>
+<td>The 29 MCP tools, write and read implementations, project selection,
+mirror sync and reconcile</td>
+</tr>
+<tr>
+<td><code>src/turbo_memory_mcp/retrieval.py</code></td>
+<td>Search orchestration, rescoring bonuses, cards</td>
+</tr>
+<tr>
+<td><code>src/turbo_memory_mcp/retrieval_index.py</code></td>
+<td>LanceDB mirror, embedder, dense gate, FTS lane, RRF</td>
+</tr>
+<tr>
+<td><code>src/turbo_memory_mcp/hydration.py</code></td>
+<td>Full note or block with neighbours</td>
+</tr>
+<tr>
+<td><code>src/turbo_memory_mcp/ingestion.py</code></td>
+<td>Markdown roots, confinement, ignore files</td>
+</tr>
+<tr>
+<td><code>src/turbo_memory_mcp/telemetry.py</code></td>
+<td>The token-savings counter</td>
+</tr>
+<tr>
+<td><code>src/turbo_memory_mcp/daemon.py</code></td>
+<td>Primary and proxy processes over an authenticated socket</td>
+</tr>
+<tr>
+<td><code>src/turbo_memory_mcp/index_maintenance.py</code></td>
+<td>Six-hourly LanceDB optimisation</td>
+</tr>
+<tr>
+<td><code>src/turbo_memory_mcp/secrets/audit.py</code></td>
+<td>The vault's append-only audit file</td>
+</tr>
+<tr>
+<td><code>src/turbo_memory_mcp/skill_install.py</code></td>
+<td>Where the skill is copied</td>
+</tr>
+<tr>
+<td><code>src/turbo_memory_mcp/skills/turbo-quant-memory/SKILL.md</code></td>
+<td>The operating manual given to the agent</td>
+</tr>
+<tr>
+<td><code>tests/test_namespace_tools.py</code></td>
+<td>Supersession and tier cases through the tool implementations and
+dispatcher</td>
+</tr>
+<tr>
+<td><code>tests/test_semantic_search.py</code></td>
+<td>Archived note left out of search</td>
+</tr>
+<tr>
+<td><code>tests/test_storage.py</code></td>
+<td>Deprecation keeps the record</td>
+</tr>
+<tr>
+<td><code>tests/test_recent_context.py</code></td>
+<td>Hybrid window and promoted copies</td>
+</tr>
+<tr>
+<td><code>benchmarks/latest.md</code>,
+<code>benchmarks/retrieval_quality_notes.md</code></td>
+<td>Committed byte-savings and notes-retrieval results</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No product path reads inactive notes.</strong>
+<code>git grep -n 'include_inactive=True' -- src</code> returns nothing;
+<code>git grep -n 'include_inactive' -- src</code> matches
+<code>store.py:454</code> and <code>:465</code>.</li>
+<li><strong>No note delete.</strong>
+<code>git grep -n -E 'def (delete|forget|remove|purge)_note' -- src</code>
+returns nothing; <code>git grep -n -c 'def deprecate_note' -- src</code>
+counts two in <code>server.py</code> and one in
+<code>store.py</code>.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -E 'valid_from|valid_until|valid_to|event_at|occurred_at' -- src</code>
+returns nothing;
+<code>git grep -c created_at -- src/turbo_memory_mcp/store.py</code>
+counts ten.</li>
+<li><strong>No value-keyed block.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist' -- src</code>
+returns nothing;
+<code>git grep -c superseded -- src/turbo_memory_mcp/store.py</code>
+counts three.</li>
+<li><strong>Deprecation does not read the promotion record.</strong>
+<code>git grep -n 'promoted_from' -- src/turbo_memory_mcp/store.py</code>
+returns the two write signatures, <code>promote_note</code> at
+<code>:523</code> and <code>:540</code>, and
+<code>_build_note_record</code> at <code>:866</code> and
+<code>:895-896</code>, none inside <code>deprecate_note</code> at
+<code>:545-596</code>.</li>
+<li><strong>No review queue.</strong>
+<code>git grep -n -i -E 'approve|pending_review|needs_review' -- src</code>
+returns one docstring line about schema migrations in
+<code>migrations/runner.py:5</code>;
+<code>git grep -c -i 'review_for_conflict' -- src/turbo_memory_mcp/server.py</code>
+counts one.</li>
+<li><strong>The only audit writer is the vault's.</strong>
+<code>git grep -n -E 'AuditLog\(' -- src</code> returns the secrets set,
+get, list and delete paths in <code>server.py</code> and
+<code>cli.py</code> and the vault's constructor.</li>
+<li><strong>No project predicate on a mirror query.</strong>
+<code>git grep -n -E 'where\(|where_conditions\.append' -- src/turbo_memory_mcp/retrieval_index.py</code>
+returns the tier and source-kind conditions at <code>:476</code> and
+<code>:479</code>, a source-kind sample at <code>:578</code>, and the
+two lanes applying them at <code>:956</code> and <code>:980</code>.</li>
+<li><strong>No vector quantisation or vector index.</strong>
+<code>git grep -n -i -E 'create_index|IVF|_PQ|num_sub_vectors|int8|float16' -- src</code>
+returns nothing; <code>git grep -n -c 'create_fts_index' -- src</code>
+matches <code>retrieval_index.py</code> and
+<code>index_maintenance.py</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|doi\.org' -- .</code> returns
+nothing; <code>git grep -n -i 'turboquant' -- .planning</code> matches
+<code>PROJECT.md:5</code> and <code>:45</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/Lexus2016/turbo_quant_memory/commit/323a1a4c95ab7078346ef462fb103583db0a689b"><code class="commit-id" title="323a1a4c95ab7078346ef462fb103583db0a689b">323a1a4c…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, two
+commits past <code>d983ff7</code>, the commit triage selected. Screened
+first: one auto-run surface, <code>server.json</code>, an MCP manifest
+whose start command fetches the package with <code>uvx</code>, not run;
+nothing inside the seven-day cooldown; no build-time execution; nothing
+unpinned, <code>uv.lock</code> present. <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> are addressed to agents and were read as data.
+Nothing was installed, built or run, and the 918 test functions were not
+run. Two marks: <code>trust_state</code> and <code>negative_eval</code>
+(<a href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

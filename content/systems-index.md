@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **896 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **897 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -949,6 +949,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/trilium/"><span class="az-id">Trilium Notes</span><span class="az-what">One tool registry for the chat and the MCP</span><code class="az-repo">TriliumNext/Trilium</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/trueforge/"><span class="az-id">TrueForge</span><span class="az-what">Compaction that rewrites pointers, never bodies</span><code class="az-repo">truefoundry/trueforge</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/truememory/"><span class="az-id">TrueMemory</span><span class="az-what">A leaderboard that puts someone else first</span><code class="az-repo">buildingjoshbetter/TrueMemory</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/turbo-quant-memory/"><span class="az-id">Turbo Quant Memory</span><span class="az-what">Typed notes as JSON files, a LanceDB mirror that holds only the active ones, and a project switch the model holds</span><code class="az-repo">Lexus2016/turbo_quant_memory</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/tycho/"><span class="az-id">Tycho</span><span class="az-what">Snapshots that know what the harness wrote</span><code class="az-repo">NIMI-research/Tycho</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/typegraph/"><span class="az-id">TypeGraph</span><span class="az-what">Truth maintenance on a SQL graph</span><code class="az-repo">nicia-ai/typegraph</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>

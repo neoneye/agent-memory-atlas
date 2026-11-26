@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 896 reports.**
+**This page covers all 897 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8283,3 +8283,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 12,296 lines of Rust, 4,134 of them inline tests; 33 commits from 5 June to 2 November 2026 under five author names; 100 test functions with CI on build, test, fmt and clippy, none run here; no benchmark result committed, and no in-tree entry point exercises the V2 ranker, the learned weights or the reranker. Two marks: `scope_enforced`, `negative_eval`. Withheld: `trust_state`, `tombstone`, `bitemporal`, `audit_log`, `human_review`.
 - Study when: you want a small, readable composite ranker over embedded exchanges and a pattern for keeping scope out of the model's hands.
 - Do not copy when: users must be able to make the system forget, or what the user said must stay distinguishable from what the model said back.
+
+### [`turbo-quant-memory`](../systems/turbo-quant-memory/)
+- Best idea: **retire by eviction, and reconcile before every read.** `deprecate_note` deletes a retired note's LanceDB row, the per-note and full syncs build only from active notes, and the reconcile that runs before each search deletes any mirrored id that is not an active note, so no query needs a status predicate and a missed eviction is repaired rather than served; a populated test requires a superseded note with the same title and tag absent from an exact result list.
+- Second idea: every ranking constant carries its sweep. The BM25 weight's comment gives the values tried, Hit@k and MRR on two fixtures, why 0.3 silenced the lane, and the RRF arithmetic that caps an FTS-only hit at rank 8; the recency and human-flag bonuses say in their comments that their gains are noise and that the flag's population is seven notes.
+- Biggest risk: **a correction stops at the tier it was made in.** `promote_note` writes a separate global record under the same id, `deprecate_note` on the project note does not read `promoted_from`, so the superseded decision keeps being served to every project's `global` and `hybrid` search; promoting the original again rewrites a retired global copy as active and drops its reason and pointer. Read from the code, not run.
+- Second risk: the project boundary is on the model's tool surface. `list_projects` lists every bucket on the machine and `select_project` points every later call, `get_secret` included, at any of them unless the client pins `TQMEMORY_PROJECT_ID`. `provenance="human-explicit"` is the model's own claim. No note can be deleted, and at the default search limit of 5 a BM25-only hit cannot enter project results, as the constant's own comment says.
+- Most reusable component: the id-set reconcile in `src/turbo_memory_mcp/server.py:2988-3050` with the active-only syncs at `src/turbo_memory_mcp/retrieval_index.py:333-361`, and the commented fusion constants at `src/turbo_memory_mcp/retrieval_index.py:63-136`.
+- Maturity impression: MIT; 17,563 lines of Python under `src/` and 370 commits from 25 March to 24 November 2026, nearly all by one author under two names, at version 0.36.1 with 60 tags; 918 test functions with ruff, mypy and pytest on Ubuntu and Windows in CI, none run here. Committed benchmarks measure bytes saved against opening whole files and a title-derived notes retrieval set that says it is inflated; the README's 2.64 million tokens saved is one developer's counter. The name points at TurboQuant vector quantisation, which the code does not implement and the project's own audit says so. Two marks: `trust_state`, `negative_eval`.
+- Study when: you want one developer's coding-agent memory as readable JSON files with a disposable vector index, and a retirement that every search honours without a filter on each query.
+- Do not copy when: projects or clients must be kept apart from the model, a user must be able to delete what was stored, or a correction has to reach every copy of a promoted fact.

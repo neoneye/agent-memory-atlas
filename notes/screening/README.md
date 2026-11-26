@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 895 of 896 screened at the report's current pin.**
+**Progress: 896 of 897 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 432 |
+| Repositories with an auto-run surface (`RUNS`) | 433 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 403 |
 | Repositories with build-time execution (`EXEC`) | 643 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
@@ -429,6 +429,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`tree-ring-memory`](../../content/systems/tree-ring-memory.md) | `.claude-plugin/`, `plugins/tree-ring-memory/.claude-plugin/plugin.json`, `plugins/tree-ring-memory/hooks/`, `plugins/tree-ring-memory/hooks/claude-hooks.json` |
 | [`trilium`](../../content/systems/trilium.md) | `.envrc`, `.mcp.json`, `.vscode/settings.json` |
 | [`trueforge`](../../content/systems/trueforge.md) | `.cursor/rules/` |
+| [`turbo-quant-memory`](../../content/systems/turbo-quant-memory.md) | `server.json` |
 | [`ulpia`](../../content/systems/ulpia.md) | `.claude/hooks/`, `.claude/settings.json`, `.githooks/`, `.mcp.json` |
 | [`understand-anything`](../../content/systems/understand-anything.md) | `.claude-plugin/`, `understand-anything-plugin/.claude-plugin/plugin.json`, `understand-anything-plugin/hooks/`, `understand-anything-plugin/hooks/hooks.json` |
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.claude-plugin/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
