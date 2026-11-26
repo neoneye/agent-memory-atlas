@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 890 reports.**
+**This page covers all 891 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8223,3 +8223,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 22,846 lines of Python, 231 commits by one main author from 11 April to 7 November 2026 with nine tagged releases; 929 test functions, CI running SQLite, a Neo4j service and the scope guard, none run here. Several isolation tests search as an empty tenant and every populated negative case runs without an embedder. No benchmark result is committed. Three marks: `tombstone`, `scope_enforced`, `negative_eval`.
 - Study when: you are putting an authenticating gateway in front of an MCP memory server and want the read layer to fail closed, or you want a pattern-proposal pass whose rejections stick.
 - Do not copy when: memory has to be forgotten or corrected and stay that way across every retrieval arm, or the store must hold more than what the model chooses to write.
+
+### [`skillmem`](../systems/skillmem/)
+- Best idea: **approval bound to the bytes the owner read.** MCP, HTTP and pack writes are surfaces that never count as the owner, so every agent write lands unapproved; `skillmem trust` and `review` refuse without a TTY and pass the content hash they displayed to `set_trust`, which compares it under the write lock, and the Stop hook prints a new rule from the database so a one-word reply approves exactly that text. An approved row is sealed: agents cannot edit, archive, unpin or decay it.
+- Second idea: strength that self-report cannot raise. `self_report` moves recency only, and `test_passed` over MCP counts only if a PostToolUse hook saw a lone test runner exit cleanly in the last ten minutes; the README says which signals are still the agent's word.
+- Biggest risk: **visibility is an HTTP feature.** Every row stores public, shared or private with its author and topics, and only the FastAPI server filters on them; the stdio MCP server and the hooks, which are the default install, read every row of the one database Claude Code, Codex and the other agents share.
+- Second risk: the approve-in-chat hook takes the owner's word from its stdin and skips the TTY check, so an agent with Bash can run `skillmem hook pending-rules` and `skillmem hook auto-recall` itself; only a deny rule stops it, and the plugin install ships none. Granting or withdrawing approval writes no history row, and a deleted rule's text passes the duplicate check under a new slug.
+- Most reusable component: the `SURFACES` table, `_owner` and `set_trust` in `skillmem/storage.py:1307-1396`; `frame_for_model` in `skillmem/hooks.py:245-275`; `test_witness` with `_TEST_RUNNER` in `skillmem/hooks.py:892-936`; `scripts/gate_new_tests.py`, which requires each new regression test to fail on its fix's parent.
+- Maturity impression: Apache-2.0; 10,302 lines of Python and 132 commits from 30 August to 8 November 2026, three past v0.13.0; 736 test functions, 185 of them property and review-round tests, run in CI on three operating systems and three Python versions, not run here. `docs/INVARIANTS.md` states sixteen invariants with their status and known attacks. The README's LongMemEval and agent-level numbers have committed harnesses and no committed results. Four marks: `scope_enforced`, `audit_log`, `human_review`, `negative_eval`.
+- Study when: you want agent-written procedures that become rules only by a person's act on the exact text, or a reinforcement signal the agent cannot supply by saying so.
+- Do not copy when: several principals share the store through MCP, a deleted rule must stay deleted, or approval has to hold against an agent with a shell.

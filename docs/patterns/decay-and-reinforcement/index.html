@@ -895,6 +895,26 @@ uses a critique that cannot produce a rule
 (<code>tests/test_agent_api.py:130-135</code>). <strong>Decay that
 deletes needs the deleted value kept where the writer checks, or the
 next write undoes it.</strong></p>
+<p><strong><a href="../../systems/skillmem/">skillmem</a> lets nothing
+the agent says raise a skill's strength, and lets it claim two signals
+that do.</strong> Strength moves only through <code>reinforce</code>,
+whose table gives <code>self_report</code> zero,
+<code>test_passed</code>, <code>diff_accepted</code> and
+<code>user_confirmed</code> +0.15 up to 2.0, and <code>failure</code> a
+multiplier of 0.7 down to 0.05
+(<code>skillmem/storage.py:2501-2593</code>). Over MCP,
+<code>test_passed</code> counts only if a PostToolUse hook touched a
+witness file after a lone test runner exited cleanly in the last ten
+minutes, and is recorded as <code>self_report</code> otherwise
+(<code>skillmem/hooks.py:892-936</code>,
+<code>skillmem/mcp_server.py:294-318</code>); the other two are the
+agent's claim, unchecked. Decay multiplies by 0.85 per fourteen idle
+days, and a skill idle for ninety days at the floor is archived, out of
+every ranked read; pinned skills and anything the owner approved sit out
+both (<code>skillmem/storage.py:2644-2747</code>). Recall itself
+refreshes recency only. <strong>A witness the harness writes is the
+cheapest outside signal, and one witness file for every skill means any
+passing test backs any claim.</strong></p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

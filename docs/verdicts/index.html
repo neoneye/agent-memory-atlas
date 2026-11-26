@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 890 reports.</strong></p>
+<p><strong>This page covers all 891 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36842,6 +36842,59 @@ pattern-proposal pass whose rejections stick.</li>
 <li>Do not copy when: memory has to be forgotten or corrected and stay
 that way across every retrieval arm, or the store must hold more than
 what the model chooses to write.</li>
+</ul>
+<h3 id="skillmem"><a
+href="../systems/skillmem/"><code>skillmem</code></a></h3>
+<ul>
+<li>Best idea: <strong>approval bound to the bytes the owner
+read.</strong> MCP, HTTP and pack writes are surfaces that never count
+as the owner, so every agent write lands unapproved;
+<code>skillmem trust</code> and <code>review</code> refuse without a TTY
+and pass the content hash they displayed to <code>set_trust</code>,
+which compares it under the write lock, and the Stop hook prints a new
+rule from the database so a one-word reply approves exactly that text.
+An approved row is sealed: agents cannot edit, archive, unpin or decay
+it.</li>
+<li>Second idea: strength that self-report cannot raise.
+<code>self_report</code> moves recency only, and
+<code>test_passed</code> over MCP counts only if a PostToolUse hook saw
+a lone test runner exit cleanly in the last ten minutes; the README says
+which signals are still the agent's word.</li>
+<li>Biggest risk: <strong>visibility is an HTTP feature.</strong> Every
+row stores public, shared or private with its author and topics, and
+only the FastAPI server filters on them; the stdio MCP server and the
+hooks, which are the default install, read every row of the one database
+Claude Code, Codex and the other agents share.</li>
+<li>Second risk: the approve-in-chat hook takes the owner's word from
+its stdin and skips the TTY check, so an agent with Bash can run
+<code>skillmem hook pending-rules</code> and
+<code>skillmem hook auto-recall</code> itself; only a deny rule stops
+it, and the plugin install ships none. Granting or withdrawing approval
+writes no history row, and a deleted rule's text passes the duplicate
+check under a new slug.</li>
+<li>Most reusable component: the <code>SURFACES</code> table,
+<code>_owner</code> and <code>set_trust</code> in
+<code>skillmem/storage.py:1307-1396</code>; <code>frame_for_model</code>
+in <code>skillmem/hooks.py:245-275</code>; <code>test_witness</code>
+with <code>_TEST_RUNNER</code> in
+<code>skillmem/hooks.py:892-936</code>;
+<code>scripts/gate_new_tests.py</code>, which requires each new
+regression test to fail on its fix's parent.</li>
+<li>Maturity impression: Apache-2.0; 10,302 lines of Python and 132
+commits from 30 August to 8 November 2026, three past v0.13.0; 736 test
+functions, 185 of them property and review-round tests, run in CI on
+three operating systems and three Python versions, not run here.
+<code>docs/INVARIANTS.md</code> states sixteen invariants with their
+status and known attacks. The README's LongMemEval and agent-level
+numbers have committed harnesses and no committed results. Four marks:
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>human_review</code>, <code>negative_eval</code>.</li>
+<li>Study when: you want agent-written procedures that become rules only
+by a person's act on the exact text, or a reinforcement signal the agent
+cannot supply by saying so.</li>
+<li>Do not copy when: several principals share the store through MCP, a
+deleted rule must stay deleted, or approval has to hold against an agent
+with a shell.</li>
 </ul>
         </article>
       </div>
