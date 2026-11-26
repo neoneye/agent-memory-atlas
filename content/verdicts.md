@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 888 reports.**
+**This page covers all 889 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8203,3 +8203,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 295,996 lines of Rust and 1,129 commits from 12 April to 26 November 2026, at 1.19.1; 3,322 Rust test functions and 281 plugin test cases run in CI on Ubuntu as the gate, not run here, with Lean proofs and a Kani mutation check on the task kernels. The README's retrieval description (HNSW, never fused) does not match the default search (exact scan, reciprocal-rank fusion), and a committed synthetic retrieval eval records its own gate as FAIL. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you want one local binary that keeps project rules beside the code graph and makes agents file what they learn, or a retirement filter applied uniformly across every read surface.
 - Do not copy when: agents on one machine must be kept apart, a retracted fact must stay retracted, or the memory layer has to be small enough to audit in a day.
+
+### [`agent-memory-os-yamantaka`](../systems/agent-memory-os-yamantaka/)
+- Best idea: **one ACL predicate for every track.** `_append_acl_filter` builds owner OR `global` OR `agent:<id>` OR a grant per registered team and project, every SQL retrieval appends it, and ids from link traversal and vector providers are re-read through it before their content is used, so an invisible row can neither be returned nor bridge two visible ones. A set-equality matrix pins five agents' views across two teams and three projects.
+- Second idea: a separate clock for grants. Share and revoke bump `acl_updated_at`, which sync merges apart from content, so a revocation reaches replicas that already hold the row; an untrusted peer may only shrink a grant list, and a future-dated ACL clock is refused, both with tests.
+- Biggest risk: **a missing requester opens the store.** The helper returns before adding a clause when no requester is passed, so the MCP server with `AGENT_MEMORY_AGENT_ID` unset, which both registry manifests mark optional, and every HTTP read without a requester parameter see every row. The same default let `resonance_search` return private rows to SDK callers until 17 September 2026.
+- Second risk: the sync token writes past the gate. A pushed bundle is merged untrusted and still inserts global rows flagged as always-on constants, rewrites a known row's owner and content with no future-clock bound, and applies tombstones to any id, while the docstring and threat model say otherwise; read from the code, not run. Retention archives without a tombstone, so peers re-insert archived rows.
+- Most reusable component: `_append_acl_filter` and `_visible_rows_for_ids` in `src/agent_memory_os/db.py:3142-3289`, with `tests/test_team_project_isolation.py` as the test to copy.
+- Maturity impression: Apache-2.0; 19,129 lines of Python and 197 commits from 5 June to 2 October 2026, 42 tags to v1.10.1; 572 test functions on a three-OS CI matrix, not run here; a committed validation report whose recall probe searches unique planted tokens. Two marks: `scope_enforced`, `negative_eval`.
+- Study when: several agents share one store and team and project boundaries must hold on every read path, or grants arrive from replicas you trust only to narrow them.
+- Do not copy when: a replica is not yours, a read without an identity must fail closed, recall must match paraphrases from an MCP client, or a deleted fact must stay gone when an agent restates it.

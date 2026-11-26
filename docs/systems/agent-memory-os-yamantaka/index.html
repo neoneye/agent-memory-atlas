@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first Python memory store
+for agent fleets: one SQLite file with a visibility ACL on every read,
+associative links and federated peer sync.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Agent Memory OS
+(yamantaka520) — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first Python memory
+store for agent fleets: one SQLite file with a visibility ACL on every
+read, associative links and federated peer sync.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agent Memory OS
+(yamantaka520) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first Python
+memory store for agent fleets: one SQLite file with a visibility ACL on
+every read, associative links and federated peer sync.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Agent Memory OS (yamantaka520) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Agent Memory OS (yamantaka520)",
+      "description": "A local-first Python memory store for agent fleets: one SQLite file with a visibility ACL on every read, associative links and federated peer sync.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One ACL predicate on every read, and a sync
+door that does not ask it</p>
+          <h1>Agent Memory OS (yamantaka520)</h1>
+          <p class="document-deck">A local-first Python memory store for
+agent fleets: one SQLite file with a visibility ACL on every read,
+associative links and federated peer sync.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/yamantaka520/Agent-Memory-OS">
+              <span>Source</span>
+              <strong>yamantaka520/Agent-Memory-OS</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/yamantaka520/Agent-Memory-OS/commit/2932382b430a14a59019f907a873094f741f215b" title="2932382b430a14a59019f907a873094f741f215b">
+              <span>Analyzed revision</span>
+              <code>2932382b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yamantaka520--Agent-Memory-OS" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>yamantaka520--Agent-Memory-OS</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE, NOTICE and pyproject.toml; CONTRIBUTING asks for a DCO
+sign-off</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>19,129
+lines of Python in 66 files under src/, 3,685 of them in db.py and 1,157
+in a timestamp-conversion module unrelated to memory; 11,844 lines of
+tests in 65 files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>197
+commits from 5 June to 2 October 2026: 146 by LittleNEO, 24 by Manfred
+Hsu (21 of them merges), 19 by warrentc3 and 8 under two Bastet Agent
+Team names; 42 tags from v0.1.0-stable to v1.10.1</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>572
+pytest functions in 65 files and one Node script driven by a pytest
+case; ci.yml runs pytest on Ubuntu, macOS and Windows under Python 3.11
+to 3.13 with the api and mcp extras; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Agent Memory OS is a local-first memory store for a fleet of agents
+sharing one SQLite file: a zero-dependency Python library with an MCP
+server, a Hermes memory-provider plugin, a FastAPI console and peer sync
+between nodes. Its notable part is the read gate. Every row stores an
+owner and a list of grants, and one SQL predicate over the requester's
+id and registered memberships runs on every retrieval track before
+ranking. Its weak part is what bypasses that gate: a read with no
+requester sees every row, and a bundle pushed with the federation-only
+token can plant, rewrite and delete memories.</p>
+<p>The design has no model in it. A memory is a sentence an agent chose
+to store, written at once and searchable at once. Recall is BM25 over
+FTS5, a track of always-on constants, one hop along association edges,
+and a fallback that returns pinned and important rows when nothing
+matches. A vector sidecar over a hashing embedder is written and tested,
+and the MCP server, the Hermes plugin, the console and the CLI all
+construct the client without it.</p>
+<p>Correction is thin. An owner edits a row in place, and a
+<code>supersedes</code> edge multiplies the older row's score by 0.4. A
+delete removes the row and leaves a tombstone keyed on its random id, so
+a peer's older copy does not come back. Nothing records a rejected
+statement, and retention archives rows without a tombstone, so a peer's
+copy of an archived row is re-inserted on the next sync.</p>
+<p>The licence is Apache-2.0, in <code>LICENSE</code>,
+<code>NOTICE</code> and <code>pyproject.toml</code>.</p>
+<p>Two marks are earned on the memory store: <code>scope_enforced</code>
+on the owner and grant predicate, and <code>negative_eval</code> on an
+isolation matrix that requires each of five agents to see an exact set.
+Section 9 gives the reason for each of the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>one self-contained statement an agent decided to
+keep</strong>, with an owner, a type and a grant list. The MCP tool's
+description asks for a sentence that makes sense on its own in a later
+session (<code>src/agent_memory_os/mcp_server.py:103-156</code>).
+Nothing extracts, summarises or infers at write time; the store keeps
+what it is given.</p>
+<p>Five routes create one:</p>
+<ul>
+<li><strong>An agent's tool call.</strong> <code>memory_add</code> over
+MCP, or <code>amos_add</code> in the Hermes plugin, with the owner taken
+from the server's configured identity and the grant list resolved from a
+<code>share</code> word
+(<code>src/agent_memory_os/mcp_server.py:21-51</code>,
+<code>src/agent_memory_os/hermes_plugin.py:349-369</code>).</li>
+<li><strong>A Hermes mirror.</strong> Each <code>add</code> or
+<code>replace</code> the host makes to its own <code>MEMORY.md</code> or
+<code>USER.md</code> becomes a private row whose id hashes the target
+and the text; a <code>remove</code> is not mirrored
+(<code>src/agent_memory_os/hermes_plugin.py:392-428</code>).</li>
+<li><strong>A delegation.</strong> The plugin stores each subagent's
+task and result as a private note at importance 0.3
+(<code>src/agent_memory_os/hermes_plugin.py:430-453</code>).</li>
+<li><strong>The operator.</strong> The SDK,
+<code>POST /api/memories</code>, the CLI and the importers take every
+field, including the free <code>source</code> JSON that the ranking
+reads.</li>
+<li><strong>A peer.</strong> A sync bundle inserts rows the local node
+has never seen and overwrites rows it has (section 9).</li>
+</ul>
+<p>The store treats a memory as <strong>true until edited, demoted or
+removed</strong>. It has no status, and nothing a read checks can say
+"on record, not believed". Confidence starts at 0.8 and falls by 0.05
+each time an agent reports a recall unhelpful
+(<code>src/agent_memory_os/db.py:1865-1870</code>,
+<code>src/agent_memory_os/constants.py:13</code>); it weights the score.
+A <code>supersedes</code> edge between two rows that both survive the
+gate multiplies the older one's score by 0.4
+(<code>src/agent_memory_os/db.py:2816-2841</code>). The context pack
+marks a line <code>[CONFLICT]</code> when two results share a
+<code>source.claim_key</code> with different <code>source.claim</code>
+values (<code>src/agent_memory_os/context_pack.py:213-220</code>), and
+no writer in the package sets either field.</p>
+<p>A memory stops counting four ways. An owner rewrites it in place,
+keeping the id (<code>src/agent_memory_os/db.py:238-299</code>). An
+expiry passes, and every read drops it at once and retention later moves
+it to the archive. Retention also archives a row idle for four
+half-lives, unless it is pinned or flagged permanent
+(<code>src/agent_memory_os/db.py:2129-2164</code>). A delete removes the
+row and its edges and writes the id into <code>tombstones</code>
+(<code>src/agent_memory_os/db.py:316-334</code>). Consolidation deletes
+exact duplicates within one owner, scope and grant list, and adds a
+concept row summarising a cluster recalled together at least three times
+(<code>src/agent_memory_os/db.py:2682-2814</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every write lands at once as a row with an owner and a grant list; a read either carries a requester and passes one ACL predicate on each track, or carries none and sees every row; a pushed sync bundle writes rows and deletions without meeting that predicate</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every write lands at once as a row with an owner and a grant list; a read either carries a requester and passes one ACL predicate on each track, or carries none and sees every row; a pushed sync bundle writes rows and deletions without meeting that predicate
+flowchart TD
+  subgraph writers[&quot;Writers on this node&quot;]
+    direction TB
+    W1[&quot;MCP memory_add:&lt;br/&gt;owner from env,&lt;br/&gt;share word to grants&quot;]
+    W2[&quot;Hermes tools, mirror&lt;br/&gt;and delegation hooks:&lt;br/&gt;owner from profile&quot;]
+    W3[&quot;SDK, CLI, HTTP:&lt;br/&gt;any owner, any source&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  writers --&gt; ROW[&quot;memories row: owner,&lt;br/&gt;visibility list, source;&lt;br/&gt;FTS5 trigger, live now&quot;]
+  SYNC[&quot;bundle pushed with&lt;br/&gt;the sync token,&lt;br/&gt;merged untrusted&quot;] --&gt; KNOWN{&quot;row id already&lt;br/&gt;here?&quot;}
+  KNOWN --&gt;|&quot;no&quot;| ROW
+  KNOWN --&gt;|&quot;yes&quot;| LWW[&quot;newer updated_at wins:&lt;br/&gt;content and owner;&lt;br/&gt;grants may only shrink&quot;]
+  LWW --&gt; ROW
+  SYNC --&gt; TOMB[&quot;tombstone for any id:&lt;br/&gt;row deleted, no trust&lt;br/&gt;or clock check&quot;]
+  ROW --&gt; REQ{&quot;requester given?&quot;}
+  REQ --&gt;|&quot;no&quot;| ALL[&quot;every row: MCP with&lt;br/&gt;no identity, HTTP&lt;br/&gt;by default&quot;]
+  REQ --&gt;|&quot;yes&quot;| ACL[&quot;owner = me OR global&lt;br/&gt;OR agent:me OR my&lt;br/&gt;team or project grant&quot;]
+  ACL --&gt; TRACKS[&quot;FTS5, constants, link&lt;br/&gt;hop, fallback; every id&lt;br/&gt;rejoined through ACL&quot;]
+  ALL --&gt; TRACKS
+  TRACKS --&gt; RANK[&quot;importance, confidence,&lt;br/&gt;freshness, use count;&lt;br/&gt;superseded x 0.4&quot;]
+  RANK --&gt; PACK[&quot;token-budgeted pack,&lt;br/&gt;duplicates folded&quot;]
+  ROW ~~~ ARCH[&quot;retention archive:&lt;br/&gt;no tombstone, so a&lt;br/&gt;peer&#39;s copy returns&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The core is a library. <code>MemoryClient</code> opens
+<code>&lt;home&gt;/memories.db</code> through <code>MemoryStore</code>,
+which sets WAL, a busy timeout and foreign keys, creates the base schema
+and runs twenty forward-only migrations recorded in
+<code>schema_migrations</code>
+(<code>src/agent_memory_os/db.py:83-151</code>,
+<code>src/agent_memory_os/migrations/__init__.py:29-50</code>). Several
+processes share the file: the MCP server, the Hermes plugin and the
+console each hold one connection, and each client clears its caches when
+<code>PRAGMA data_version</code> changes
+(<code>src/agent_memory_os/client.py:65-76</code>).</p>
+<ul>
+<li><strong><code>db.py</code></strong> holds the schema access, every
+retrieval track, the ACL predicate, teams, projects, peers, retention,
+archive, purge and consolidation.</li>
+<li><strong><code>client.py</code></strong> wraps the store with an LRU
+cache, profile resolution, context packs, snapshots and the optional
+semantic index.</li>
+<li><strong><code>context_pack.py</code></strong> and
+<strong><code>orchestrator.py</code></strong> turn results into prompt
+text under a token budget.</li>
+<li><strong><code>sync.py</code></strong> and
+<strong><code>sync_bundles/</code></strong> export and merge JSONL
+bundles and speak to peers over HTTP.</li>
+<li><strong><code>mcp_server.py</code></strong>,
+<strong><code>hermes_plugin.py</code></strong>,
+<strong><code>web_app.py</code></strong> and
+<strong><code>cli.py</code></strong> are the four surfaces.</li>
+</ul>
+<p>Retrieval needs nothing beyond SQLite with FTS5. The semantic arm is
+an <code>AutoSemanticIndex</code> over <code>turbovec</code> and a
+feature-hashing embedder, added only when a caller constructs
+<code>MemoryClient(semantic="auto")</code>
+(<code>src/agent_memory_os/client.py:36-48</code>). The four shipped
+surfaces construct the client without that argument
+(<code>src/agent_memory_os/mcp_server.py:77</code>,
+<code>src/agent_memory_os/hermes_plugin.py:149</code>,
+<code>src/agent_memory_os/web_app.py:268</code>,
+<code>src/agent_memory_os/cli.py:1233</code>), so installing the
+<code>[full]</code> extra puts <code>turbovec</code> on disk and no
+agent-facing read uses it.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install agent-memory-os</code> stores and recalls with no
+other process, no key and no model. The <code>mcp</code>,
+<code>api</code>, <code>semantic</code> and <code>secure-sync</code>
+extras add the MCP SDK, FastAPI, turbovec and Fernet encryption of
+bundles. A Docker image and a compose file for a two-node mesh are in
+the tree. The store is one SQLite file that <code>sqlite3</code> opens
+directly, and <code>agent-memory check</code> compares the FTS row count
+with the table and counts orphan edges
+(<code>src/agent_memory_os/db.py:157-182</code>).</p>
+<p>Identity is configuration. Each MCP server reads
+<code>AGENT_MEMORY_AGENT_ID</code> at start; <code>server.json</code>
+and <code>smithery.yaml</code> both list it as optional, and the
+Smithery command runs <code>uv run --with agent-memory-os[mcp]</code>,
+fetching the package from PyPI at each launch. The console accepts three
+bearer tokens: full, read-only, and a sync token limited to the node,
+export and import routes
+(<code>src/agent_memory_os/web_app.py:301-325</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>MemoryClient.add</code> builds a
+<code>MemoryRecord</code>, which validates scope, type, grants and
+ranges, and <code>MemoryStore.add</code> inserts it and commits
+(<code>src/agent_memory_os/client.py:78-84</code>,
+<code>src/agent_memory_os/schema.py:127-172</code>,
+<code>src/agent_memory_os/db.py:184-204</code>). The FTS5 triggers index
+it in the same statement
+(<code>src/agent_memory_os/database_schema.py:33-44</code>).
+<code>auto_link=True</code>, which the Hermes <code>amos_add</code>
+passes, links the new row to similar ones.</li>
+<li><strong>Retrieval.</strong> <code>MemoryStore.search</code> runs
+<code>_fts_rows</code>, <code>_authority_rows</code>,
+<code>_semantic_candidate_rows</code> and
+<code>_resonance_results</code>, keeps the best score per id, applies
+<code>_apply_supersedes_demotion</code>, falls back to
+<code>_fallback_candidates</code> when nothing matched and re-weights by
+profile (<code>src/agent_memory_os/db.py:2527-2669</code>).</li>
+<li><strong>The gate.</strong> <code>_append_acl_filter</code> is called
+from the FTS, authority, list, type, timeline, recall-feedback and
+fallback queries, and <code>_visible_rows_for_ids</code> applies it to
+ids from link expansion and semantic providers
+(<code>src/agent_memory_os/db.py:3142-3193</code>,
+<code>:3250-3289</code>).</li>
+<li><strong>Context assembly.</strong>
+<code>build_context_pack_report</code> sorts by score plus confidence,
+importance and authority bonuses, folds duplicates by claim key or
+normalised text, reserves budget for flagged constants and records a
+reason for every include and exclude
+(<code>src/agent_memory_os/context_pack.py:51-152</code>).
+<code>orchestrate_context</code> splits the budget into session,
+constants, warnings, procedures and task buckets and logs what a session
+has already received
+(<code>src/agent_memory_os/orchestrator.py:97-252</code>).</li>
+<li><strong>Update and delete.</strong> <code>update_memory</code>
+refuses a requester who is not the owner and bumps
+<code>acl_updated_at</code> when the grants change
+(<code>src/agent_memory_os/db.py:238-299</code>); <code>delete</code>
+removes edges and row and records the tombstone (<code>:316-334</code>);
+<code>share_memory</code> and <code>revoke_share</code> are owner-only
+and write <code>memory_audit</code> (<code>:2017-2127</code>).</li>
+<li><strong>Lifecycle.</strong> <code>run_retention</code> tunes
+half-lives from feedback, archives expired rows, rotates snapshots and
+archives decayed rows
+(<code>src/agent_memory_os/db.py:2129-2203</code>);
+<code>consolidate</code> merges duplicates and synthesises concept rows
+(<code>:2671-2814</code>).</li>
+<li><strong>Sync.</strong> <code>import_bundle</code> merges memories,
+links, profiles, tombstones and org records in one transaction
+(<code>src/agent_memory_os/sync.py:281-344</code>);
+<code>_merge_memory</code> and <code>_apply_tombstone</code> carry the
+trust decisions (<code>:347-486</code>).</li>
+<li><strong>Surfaces.</strong> The MCP server registers thirteen tools
+and serialises them on one lock
+(<code>src/agent_memory_os/mcp_server.py:73-490</code>); the Hermes
+provider injects a pack in <code>prefetch</code>
+(<code>src/agent_memory_os/hermes_plugin.py:182-206</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The base <code>memories</code> table has nineteen columns; migrations
+add <code>helpful_count</code>, <code>unhelpful_count</code>,
+<code>acl_updated_at</code> and <code>decay_base_half_life_days</code>
+(<code>src/agent_memory_os/database_schema.py:1-22</code>,
+<code>src/agent_memory_os/db.py:186-201</code>). Two fields carry the
+access model and one does not:</p>
+<ul>
+<li><strong><code>owner</code></strong>, a free string, always sees its
+own rows.</li>
+<li><strong><code>visibility</code></strong>, a JSON list of grants:
+<code>global</code>, <code>agent:&lt;id&gt;</code>,
+<code>team:&lt;id&gt;</code>, <code>project:&lt;id&gt;</code>, and a
+legacy bare <code>team</code> read together with
+<code>source.team_id</code>. An empty list is private.</li>
+<li><strong><code>scope</code></strong>, one of user, agent, project,
+team, global or profile, is a label. The MCP tool says it <em>"Does NOT
+set access control"</em>
+(<code>src/agent_memory_os/mcp_server.py:112-118</code>), and a read
+filters on it only when the caller passes it.</li>
+</ul>
+<p>Teams and projects are first-class tables with membership rows; a
+project's members must belong to its team, and leaving a team removes
+the agent from its projects
+(<code>tests/test_team_project_isolation.py:86-111</code>). Memberships
+are read through a 30-second cache that local membership writes and
+another process's commits both clear
+(<code>src/agent_memory_os/db.py:3418-3442</code>,
+<code>src/agent_memory_os/client.py:68-76</code>).</p>
+<p>Time is record time. <code>created_at</code>, <code>updated_at</code>
+and <code>last_accessed_at</code> are written by the store,
+<code>expires_at</code> by the caller, and <code>acl_updated_at</code>
+is a second clock for grant changes so that a revoke propagates without
+touching freshness (<code>src/agent_memory_os/db.py:2100-2113</code>).
+The time window added on 17 September 2026 accepts only those three
+store clocks (<code>src/agent_memory_os/db.py:3375</code>). Provenance
+is the free <code>source</code> JSON: the Hermes plugin writes its
+system name and session, the importer writes the file path and section
+hash, and a sync import adds <code>synced_from</code>.</p>
+<p>Edges in <code>memory_links</code> carry a relation from five
+(<code>related_to</code>, <code>supersedes</code>,
+<code>caused_by</code>, <code>derived_from</code>,
+<code>co_recalled</code>), a weight, an activation count and timestamps,
+and cascade with their rows
+(<code>src/agent_memory_os/schema.py:219-259</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is lexical with an associative hop. The FTS arm maps BM25 into
+a 0.5 to 1.0 text score. Every arm's text score is then multiplied by
+<code>0.45 + 0.35·importance + 0.20·confidence</code>, by an exponential
+or linear freshness on <code>updated_at</code>, and by a reinforcement
+factor capped at 1.25 (<code>src/agent_memory_os/db.py:2566-2574</code>,
+<code>src/agent_memory_os/scoring.py:38-48</code>).</p>
+<p>Three other tracks add rows the query did not match:</p>
+<ul>
+<li><strong>Constants.</strong> Rows whose <code>source</code> has
+<code>permanence</code> 1 and <code>weight</code> at least 10 join every
+search, capped at a quarter of the limit, and fill the 20% bedrock
+bucket of every orchestrated context
+(<code>src/agent_memory_os/db.py:3012-3061</code>,
+<code>:2576-2606</code>, <code>:521-537</code>). The Hermes
+<code>MEMORY.md</code> importer sets both flags on every section it
+imports
+(<code>src/agent_memory_os/hermes_importer.py:124-133</code>).</li>
+<li><strong>Resonance.</strong> Each hit spreads activation along its
+strongest edges, decayed by 0.6 per hop and by a 90-day edge half-life;
+the store runs one hop by default, and the neighbours are re-read
+through the gate before they can enter the frontier
+(<code>src/agent_memory_os/db.py:2843-2956</code>).</li>
+<li><strong>Fallback.</strong> When no track returns anything, the store
+returns pinned, important, confident and recent visible rows
+(<code>src/agent_memory_os/db.py:3470-3536</code>). An agent asking
+about something the store does not hold gets its most important
+memories, where the MCP tool's description promises an empty list.</li>
+</ul>
+<p>Supersession is a demotion. When both ends of a
+<code>supersedes</code> edge are in one result set, the older row's
+score is multiplied by 0.4; when only the old row matches, it is
+returned at full score
+(<code>src/agent_memory_os/db.py:2816-2841</code>).</p>
+<p>The pack is bounded by the caller's <code>max_tokens</code>, counted
+with a dependency-free estimate that counts CJK characters at one token
+each (<code>src/agent_memory_os/context_pack.py:26-44</code>). Flagged
+constants may exceed the budget while less than the larger of 300 tokens
+or a quarter of the budget has been used. The Hermes plugin injects up
+to 900 tokens before each turn; MCP clients call the pack tools
+themselves.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous. <code>add</code> commits one row
+and returns, the triggers index it, and the next search in any process
+finds it. No path calls a model; <code>extractors.py</code> wraps a
+caller-supplied completion function for
+<code>consolidate(link_extractor=...)</code> and the package never
+constructs one
+(<code>src/agent_memory_os/extractors.py:1-15</code>).</p>
+<p>There is no deduplication on write. The MCP description of
+<code>memory_add</code> says <em>"Content is de-duplicated softly"</em>;
+<code>MemoryClient.add</code> and <code>MemoryStore.add</code> insert
+unconditionally (<code>src/agent_memory_os/client.py:78-84</code>,
+<code>src/agent_memory_os/db.py:184-204</code>). Duplicates are folded
+when a pack is built and merged when <code>consolidate</code> runs,
+which an agent or operator must call.</p>
+<p>Updates replace fields in place. Over MCP, <code>memory_update</code>
+changes content, importance, confidence or the pin of a row the
+configured identity owns
+(<code>src/agent_memory_os/mcp_server.py:303-333</code>). The Hermes
+mirror never edits. A <code>replace</code> in <code>MEMORY.md</code>
+adds a second row under a new hash and leaves the old one. A
+<code>remove</code> is ignored, so a fact the host deleted from its own
+memory file stays in the store and keeps being recalled
+(<code>src/agent_memory_os/hermes_plugin.py:392-428</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write path blocks for one SQLite insert and its FTS trigger.
+Nothing runs in the background. Consolidation loads every row under its
+owner filter and groups them in Python, and retention scans with SQL,
+each when called. The read path injects a bounded pack; the Hermes
+plugin returns it from <code>prefetch</code>, and its system-prompt
+block is a fixed paragraph.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server exposes thirteen tools: add, search, timeline, context
+pack, orchestrated context, link, recall feedback, update, share,
+consolidate, and offload, reload and diff of context snapshots. None
+deletes a memory. Every tool runs as the identity in
+<code>AGENT_MEMORY_AGENT_ID</code>, and the legacy <code>owner</code>
+argument must match it when it is set
+(<code>src/agent_memory_os/mcp_server.py:87-99</code>,
+<code>:146-148</code>). Mutations check ownership: a second identity's
+<code>memory_update</code>, <code>memory_link</code>, snapshot reload
+and consolidation all return errors in a stdio test
+(<code>tests/test_mcp_sharing.py:105-234</code>).</p>
+<p>The Hermes plugin is a native memory provider. It derives its
+identity from config or as <code>hermes-&lt;profile&gt;</code>, injects
+a pack each turn, offers <code>amos_search</code>, <code>amos_add</code>
+and <code>amos_share</code>, mirrors the host's built-in memory writes,
+and refuses writes from cron and subagent contexts
+(<code>src/agent_memory_os/hermes_plugin.py:127-206</code>,
+<code>:301-388</code>).</p>
+<p>Adapting it to another agent means running the MCP server with a
+distinct identity per agent against one home, which is what the Claude
+Code guide configures (<code>docs/integrations/claude-code.md:20</code>,
+<code>:34</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="scope">Scope</h3>
+<p>The predicate is the system's strongest part. One function builds the
+clause: the requester's own rows, <code>global</code>,
+<code>agent:&lt;me&gt;</code>, each team the registry lists for the
+requester and each project it lists
+(<code>src/agent_memory_os/db.py:3250-3289</code>). It is applied in SQL
+on every track, and candidate ids from link traversal and semantic
+providers pass through it again before their content is read, so an
+invisible row can neither be returned nor bridge two visible ones
+(<code>src/agent_memory_os/db.py:3155-3160</code>). Project grants
+resolve only from the membership table.</p>
+<p>The predicate is skipped when no requester is passed:
+<code>if not requester_agent_id: return</code>
+(<code>src/agent_memory_os/db.py:3259-3260</code>). The project names
+this the owner or admin view. It is what the MCP server does when
+<code>AGENT_MEMORY_AGENT_ID</code> is unset, as both registry manifests
+allow, and what every HTTP read does without a
+<code>requester_agent_id</code> parameter
+(<code>src/agent_memory_os/mcp_server.py:8-13</code>,
+<code>src/agent_memory_os/web_app.py:1-7</code>). The default has
+already cost the project once: until 17 September 2026
+<code>resonance_search</code> accepted no requester and returned other
+owners' private memories to any SDK caller
+(<code>CHANGELOG.md:49-57</code>).</p>
+<p><code>requester_team_id</code> is a caller-supplied team added to the
+clause without a membership check. The SDK and every HTTP read route
+accept it, and a test records the intent that it may widen team
+visibility and never reach projects
+(<code>tests/test_team_project_isolation.py:114-124</code>). The MCP
+server and the Hermes plugin never pass it.</p>
+<h3 id="what-a-pushed-bundle-can-do">What a pushed bundle can do</h3>
+<p><code>POST /api/sync/import</code> merges a pushed bundle with
+<code>trusted=False</code> and no org mutations, and the sync token
+reaches it (<code>src/agent_memory_os/web_app.py:1202-1246</code>). The
+comment beside the token tiers says a peer holding it <em>"cannot
+read/write memory via the API"</em>
+(<code>src/agent_memory_os/web_app.py:307-309</code>). The import route
+writes memory, and four things in the merge are not gated by trust:</p>
+<ul>
+<li><strong>New rows keep the peer's grants and flags.</strong> For an
+unknown id, the only untrusted check refuses an owner that is a
+registered local agent; the row is inserted with its visibility and
+<code>source</code>, and <code>synced_from</code> is added
+(<code>src/agent_memory_os/sync.py:378-401</code>). A row with
+<code>["global"]</code>, <code>permanence</code> 1 and
+<code>weight</code> 10 joins the constants track of every agent's
+search. The module docstring says an untrusted peer may not inject
+globally visible memories
+(<code>src/agent_memory_os/sync.py:17-19</code>, <code>:291-292</code>).
+<code>test_semi_trusted_import_records_provenance</code> imports a
+global row untrusted and asserts it is present
+(<code>tests/test_federation_trust.py:109-126</code>).</li>
+<li><strong>Known rows take the peer's owner and content.</strong> A
+newer <code>updated_at</code> overwrites every column except
+<code>id</code> and the two grant fields, <code>owner</code> included
+(<code>src/agent_memory_os/sync.py:404-416</code>). The shrink-only rule
+guards visibility (<code>:445-455</code>); setting the owner to another
+agent grants that agent the row through the owner clause.</li>
+<li><strong>The content clock has no future bound.</strong>
+<code>_ts_too_future</code> guards the ACL clock and the three org
+record kinds and is not called on <code>updated_at</code>
+(<code>src/agent_memory_os/sync.py:86-96</code>, <code>:434</code>,
+<code>:523</code>, <code>:578</code>, <code>:627</code>), so a
+far-future edit outranks every later local edit.
+<code>docs/THREAT_MODEL.md:35-36</code> says future-dated timestamps are
+rejected.</li>
+<li><strong>Tombstones apply to any id.</strong>
+<code>_apply_tombstone</code> takes no trust argument, deletes the row
+when <code>deleted_at</code> is not older than its
+<code>updated_at</code>, and keeps the tombstone so the row cannot
+return (<code>src/agent_memory_os/sync.py:470-486</code>).</li>
+</ul>
+<p><code>GET /api/sync/export</code> serves every non-private row to the
+same token, so the ids those bullets need come from the node itself. The
+tests cover the grant clock and org tombstones under untrusted import,
+with future clocks (<code>tests/test_review_fixes_v0_14.py:68-93</code>,
+<code>:234-257</code>); none sends an untrusted memory tombstone, a new
+global row or an owner change. This section is read from the code and
+was not run.</p>
+<h3 id="correction-and-deletion">Correction and deletion</h3>
+<p>A delete is a hard delete with an id tombstone that blocks a peer's
+older copy, with a test
+(<code>tests/test_federation_trust.py:66-80</code>). Ids are random
+UUIDs, so the same statement stored again is a new row the tombstone
+does not know. Retention archives without a tombstone, and
+<code>sync.py</code> never reads the archive, so a row archived on one
+node is re-inserted when a peer that still holds it syncs.
+<code>purge_owner</code> reaches the live table, the archive, the
+delivery log and the share audit, and tombstones every id
+(<code>src/agent_memory_os/db.py:2284-2346</code>).</p>
+<h3 id="marks">Marks</h3>
+<p>Two are earned, both on the memory store's read path.</p>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> Each row
+stores <code>owner</code> and a grant list, and the same predicate is
+appended in SQL to every retrieval query, with candidate ids rejoined
+through it. On MCP and in Hermes the requester comes from configuration,
+not from a tool argument. An unset identity removes the predicate, and a
+pushed bundle can change a row's owner.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> One case
+requires a private row absent and a global row present for another agent
+on one query; the isolation module requires five agents' search and list
+results to equal exact sets across two teams and three projects.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>memory_audit</code> has writers only in <code>share_memory</code>
+and <code>revoke_share</code>
+(<code>src/agent_memory_os/db.py:2060-2088</code>). Add, update, delete,
+consolidation and sync write nothing to it, the MCP and Hermes share
+tools change grants through <code>update</code> and skip it, the HTTP
+share route records a caller-supplied <code>actor</code>, and
+<code>purge_owner</code> deletes its rows. <code>org_audit</code>
+records team and membership changes, which are not memory.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No status
+column exists. Confidence is a float used in scoring, and supersession
+is a 0.4 multiplier.</li>
+<li><strong><code>tombstone</code> — withheld.</strong>
+<code>tombstones</code> is keyed on the row id for sync. Nothing records
+a rejected value.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> Every stored
+time is a store clock or a caller expiry; no column says when a fact
+held.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No memory
+waits for anyone. The console edits, deletes and shares after the
+write.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite has 572 pytest functions in 65 files. CI runs it on three
+operating systems and three Python versions, beside an MCP v1
+compatibility job and an upgrade job that migrates a database written by
+the last published release (<code>.github/workflows/ci.yml</code>). The
+isolation tests are the strongest part: the matrix in
+<code>tests/test_team_project_isolation.py</code> checks equality of
+sets, so it fails if a row leaks in or a permitted row drops out. The
+MCP tests start the real server over stdio as two identities.</p>
+<p>Two committed artifacts measure the system. A validation report at
+v0.14.0, dated 11 July 2026, records twelve ACL checks and ten
+functional checks over 5,055 generated memories, with the raw JSON
+beside it
+(<code>docs/reports/20260711-v0.14.0-validation-report.md</code>). Its
+recall probe searches for unique tokens such as <code>zxq001</code>
+planted in one memory each
+(<code>scripts/validation_run.py:105-110</code>, <code>:182-186</code>),
+which measures FTS5 on an exact token rather than recall of a
+paraphrase. The README's latency figures come from
+<code>docs/reviews/20260712-v1.0.0-perf-security.md</code>, which names
+<code>scripts/perf_bench.py 10000</code> to reproduce them; no raw
+output of that run is committed.</p>
+<p><code>golden_recall.py</code> runs caller-written query cases with
+<code>forbidden</code> terms and counts forbidden hits; its tests use
+inline cases, and no case file is committed. No paper is cited.</p>
+<p>Missing before trusting it across machines: untrusted-import cases
+for memory tombstones, new global rows, owner changes and future content
+clocks; a sync case for an archived row; and the isolation matrix run
+through the MCP server with and without
+<code>AGENT_MEMORY_AGENT_ID</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One predicate function, called by every track.</strong>
+Build the access clause once and append it to every query, including the
+rejoin of ids from link traversal and vector sidecars. A new arm then
+inherits the gate instead of re-implementing it.</li>
+<li><strong>Identity from the process, not the call.</strong> Reading
+the requester from the server's environment removes the argument a model
+could forge.</li>
+<li><strong>An isolation matrix that checks equality.</strong> Seed one
+row per boundary, list what each agent is entitled to, and assert the
+set; it fails on a leak and on an over-tight filter.</li>
+<li><strong>A separate clock for grants.</strong> Propagating
+revocations on their own timestamp, and accepting only a shrink from a
+peer you do not fully trust, lets a revoke travel without letting a
+replica widen access.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A gate that opens when the caller says nothing.</strong> A
+missing requester should be an error or an empty result. A default of
+"see everything" turns each new entry point into a possible leak, as one
+already did here.</li>
+<li><strong>Trust checks on one field of a merge.</strong> Guarding
+visibility while the same merge rewrites the owner, honours any
+timestamp and applies deletions unconditionally guards the wrong door.
+Apply the peer's trust level to every column and every record kind.</li>
+<li><strong>Retiring a row without telling the mesh.</strong> Any
+removal that is not a tombstone is undone by the next replica that still
+has the row.</li>
+<li><strong>Tool descriptions that promise what the handler does not
+do.</strong> An agent told its writes are de-duplicated stops
+checking.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a small team that owns every machine in the mesh and wants
+several agents on one workstation to share team and project memory
+without a model, a server or a key. The ACL work is careful and well
+tested, and the rest is plain: memory is what agents chose to write,
+ranked by keywords and links. Walk away if any peer is not yours,
+because the sync token can plant and remove memory. Walk away too if
+recall has to match a paraphrase from an MCP client, or if a deleted
+fact must stay gone when an agent restates it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the untrusted import was meant to refuse new global rows, as
+its docstring says, or to accept them, as its test asserts.</li>
+<li>Whether <code>owner</code> was meant to be part of the content merge
+from untrusted peers.</li>
+<li>Whether the semantic sidecar is meant to be on for MCP and Hermes,
+given the README's "semantic recall works out of the box".</li>
+<li>Whether retention is meant to tombstone, or the archive meant to be
+checked on import.</li>
+<li>What is meant to write <code>source.claim_key</code> and
+<code>source.claim</code> for the conflict tag.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and migrations:
+<code>src/agent_memory_os/database_schema.py</code>,
+<code>src/agent_memory_os/schema.py</code>,
+<code>src/agent_memory_os/migrations/</code></li>
+<li>Store, gate, retrieval, lifecycle:
+<code>src/agent_memory_os/db.py</code>,
+<code>src/agent_memory_os/scoring.py</code>,
+<code>src/agent_memory_os/constants.py</code></li>
+<li>Client, packs, orchestration:
+<code>src/agent_memory_os/client.py</code>,
+<code>src/agent_memory_os/context_pack.py</code>,
+<code>src/agent_memory_os/orchestrator.py</code></li>
+<li>Semantic sidecar: <code>src/agent_memory_os/embedding.py</code>,
+<code>src/agent_memory_os/providers/turbovec.py</code>,
+<code>src/agent_memory_os/candidates.py</code></li>
+<li>Sync: <code>src/agent_memory_os/sync.py</code>,
+<code>src/agent_memory_os/sync_bundles/</code>,
+<code>src/agent_memory_os/crypto.py</code></li>
+<li>Surfaces: <code>src/agent_memory_os/mcp_server.py</code>,
+<code>src/agent_memory_os/hermes_plugin.py</code>,
+<code>src/agent_memory_os/web_app.py</code>,
+<code>src/agent_memory_os/cli.py</code>, <code>server.json</code>,
+<code>smithery.yaml</code></li>
+<li>Tests: <code>tests/test_team_project_isolation.py</code>,
+<code>tests/test_acl_visibility.py</code>,
+<code>tests/test_mcp_sharing.py</code>,
+<code>tests/test_federation_trust.py</code>,
+<code>tests/test_review_fixes_v0_14.py</code>,
+<code>.github/workflows/ci.yml</code></li>
+<li>Evaluation: <code>scripts/validation_run.py</code>,
+<code>scripts/perf_bench.py</code>, <code>docs/reports/</code>,
+<code>docs/reviews/</code>, <code>docs/THREAT_MODEL.md</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>No validity-time column.</strong>
+<code>git grep -n -i -E 'valid_from|valid_to|valid_at|invalid_at|event_time|occurred_at|valid_until'</code>
+returns nothing; <code>git grep -n -c -i -E 'expires_at' -- src</code>
+matches <code>db.py</code> 19 times.</li>
+<li><strong>No status column on memory.</strong>
+<code>git grep -n -E 'status TEXT|"status"' -- src/agent_memory_os/db.py src/agent_memory_os/database_schema.py src/agent_memory_os/migrations</code>
+returns nothing;
+<code>git grep -n -E 'status' -- src/agent_memory_os/discovery.py</code>
+matches a node-probe field.</li>
+<li><strong>No pending or approval state.</strong>
+<code>git grep -n -i -E 'pending|approv|quarantin|needs_review|awaiting' -- src</code>
+returns two comments, <code>cli.py:539</code> and
+<code>schema.py:85</code>.</li>
+<li><strong>No value-keyed refusal.</strong>
+<code>git grep -n -i -E 'reject(ed)?_(value|content|fact|claim)|blocklist|denylist|suppress' -- src</code>
+returns <code>context_pack.py:79</code>, the duplicate fold.</li>
+<li><strong>The share audit has two writers.</strong>
+<code>git grep -n -E '_audit\(|_org_audit\(|audit_fleet_op\(' -- src/agent_memory_os</code>
+returns <code>db.py:2060</code>, <code>:2061</code>, <code>:2067</code>
+and <code>:2088</code> for <code>memory_audit</code>, the rest being org
+and fleet audit calls.</li>
+<li><strong>No MCP tool deletes.</strong>
+<code>git grep -n -E 'def memory_' -- src/agent_memory_os/mcp_server.py</code>
+returns thirteen tools, none a delete.</li>
+<li><strong>No shipped surface enables the semantic arm.</strong>
+<code>git grep -n -E 'semantic ==|semantic=' -- src tests scripts</code>
+returns <code>client.py:36</code>, one test and
+<code>scripts/validation_run.py:304</code> with <code>None</code>;
+<code>git grep -n -E 'MemoryClient\(' -- src</code> returns four
+constructors, none passing it.</li>
+<li><strong>The content clock is not bounded.</strong>
+<code>git grep -n -E '_ts_too_future|SYNC_MAX_FUTURE_SKEW' -- src</code>
+returns the definition and <code>sync.py:434</code>, <code>:523</code>,
+<code>:578</code>, <code>:627</code>.</li>
+<li><strong>Sync never reads the archive.</strong>
+<code>git grep -n -E 'memories_archive|archive' -- src/agent_memory_os/sync.py</code>
+returns nothing; <code>git grep -n -E 'memories_archive' -- src</code>
+returns lines in <code>db.py</code>.</li>
+<li><strong>No writer of the conflict fields.</strong>
+<code>git grep -n -E 'claim_key|"claim"'</code> returns
+<code>SPEC.md</code>, two docs, one downgrade-check script and
+<code>context_pack.py</code>.</li>
+<li><strong>No untrusted memory-tombstone test.</strong>
+<code>git grep -n -E '"kind": "tombstone"|kind.*tombstone' -- tests</code>
+returns a fixture, contract lines and org-tombstone cases.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation|doi\.org'</code>
+returns nothing, and there is no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/yamantaka520/Agent-Memory-OS/commit/2932382b430a14a59019f907a873094f741f215b"><code class="commit-id" title="2932382b430a14a59019f907a873094f741f215b">2932382b…</code></a>.
+First reading, read only, from a full clone at the head of
+<code>main</code>. Screened first: two auto-run surfaces, the MCP start
+commands in <code>server.json</code> and <code>smithery.yaml</code>;
+nothing inside the seven-day cooldown; no build-time execution; one
+unpinned surface, <code>pyproject.toml</code> with no lockfile. Docs
+were read as data. Nothing was installed, built or run, and the 572 test
+functions were not run. Two marks: <code>scope_enforced</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). A read without a
+requester sees every row, and a pushed sync bundle can plant global
+constants, rewrite owners and delete any known id.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

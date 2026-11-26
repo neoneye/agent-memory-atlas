@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 888 reports.</strong></p>
+<p><strong>This page covers all 889 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36744,6 +36744,52 @@ retirement filter applied uniformly across every read surface.</li>
 <li>Do not copy when: agents on one machine must be kept apart, a
 retracted fact must stay retracted, or the memory layer has to be small
 enough to audit in a day.</li>
+</ul>
+<h3 id="agent-memory-os-yamantaka"><a
+href="../systems/agent-memory-os-yamantaka/"><code>agent-memory-os-yamantaka</code></a></h3>
+<ul>
+<li>Best idea: <strong>one ACL predicate for every track.</strong>
+<code>_append_acl_filter</code> builds owner OR <code>global</code> OR
+<code>agent:&lt;id&gt;</code> OR a grant per registered team and
+project, every SQL retrieval appends it, and ids from link traversal and
+vector providers are re-read through it before their content is used, so
+an invisible row can neither be returned nor bridge two visible ones. A
+set-equality matrix pins five agents' views across two teams and three
+projects.</li>
+<li>Second idea: a separate clock for grants. Share and revoke bump
+<code>acl_updated_at</code>, which sync merges apart from content, so a
+revocation reaches replicas that already hold the row; an untrusted peer
+may only shrink a grant list, and a future-dated ACL clock is refused,
+both with tests.</li>
+<li>Biggest risk: <strong>a missing requester opens the store.</strong>
+The helper returns before adding a clause when no requester is passed,
+so the MCP server with <code>AGENT_MEMORY_AGENT_ID</code> unset, which
+both registry manifests mark optional, and every HTTP read without a
+requester parameter see every row. The same default let
+<code>resonance_search</code> return private rows to SDK callers until
+17 September 2026.</li>
+<li>Second risk: the sync token writes past the gate. A pushed bundle is
+merged untrusted and still inserts global rows flagged as always-on
+constants, rewrites a known row's owner and content with no future-clock
+bound, and applies tombstones to any id, while the docstring and threat
+model say otherwise; read from the code, not run. Retention archives
+without a tombstone, so peers re-insert archived rows.</li>
+<li>Most reusable component: <code>_append_acl_filter</code> and
+<code>_visible_rows_for_ids</code> in
+<code>src/agent_memory_os/db.py:3142-3289</code>, with
+<code>tests/test_team_project_isolation.py</code> as the test to
+copy.</li>
+<li>Maturity impression: Apache-2.0; 19,129 lines of Python and 197
+commits from 5 June to 2 October 2026, 42 tags to v1.10.1; 572 test
+functions on a three-OS CI matrix, not run here; a committed validation
+report whose recall probe searches unique planted tokens. Two marks:
+<code>scope_enforced</code>, <code>negative_eval</code>.</li>
+<li>Study when: several agents share one store and team and project
+boundaries must hold on every read path, or grants arrive from replicas
+you trust only to narrow them.</li>
+<li>Do not copy when: a replica is not yours, a read without an identity
+must fail closed, recall must match paraphrases from an MCP client, or a
+deleted fact must stay gone when an agent restates it.</li>
 </ul>
         </article>
       </div>
