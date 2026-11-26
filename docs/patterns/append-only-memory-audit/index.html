@@ -865,6 +865,21 @@ next rebuild. The one store write outside it is an
 on the other side of the retention question. An owner's forget is itself
 a journal line, so the forgotten text is retained, signed and replicated
 to every device for good.</p>
+<p><strong><a href="../../systems/vellis/">Vellis</a> keeps only the log
+on disk and rebuilds the graph from it at every start.</strong> Each
+mutating controller call inserts a request row holding the resolved
+batch before validation, then an error or response row under the same
+transaction id, and startup replays the requests that have a success
+response into an empty in-memory graph
+(<code>components/rtg/controller/implementation.py:277-344</code>,
+<code>:914-1053</code>). Coverage therefore holds for every call that
+records. Two do not, and both are reachable from the agent's tool
+surface: a restore with <code>ledger_mode: "skip"</code> writes no row
+(<code>:806-856</code>), and a write whose three insert attempts fail is
+applied anyway and queued to a JSON file until
+<code>rtg_flush_ledger_failures</code> runs (<code>:2094-2133</code>).
+As in HiveMind, the log keeps what it was given: a deleted fact stays in
+its request row, and no tool compacts the table.</p>
 <p><strong><a
 href="../../systems/hyperconsciousness/">Hyperconsciousness</a> makes
 the log the store and signs every record of it.</strong> Each record

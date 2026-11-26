@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 892 reports.**
+**This page covers all 893 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8243,3 +8243,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 105,074 lines of Python in 146 source files and 267,778 lines of tests; 5,674 commits from 26 April to 21 November 2026, almost all by the owner, and 44 tags; 12,060 test functions, none run here. Some metadata trails the code: `CITATION.cff` describes lock decay and demotion pressure the code removed, and the MCP server it names was deleted. Four marks: `tombstone`, `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you want a correction that survives re-capture without a separate tombstone table, or a prompt hook with no model or network on the path.
 - Do not copy when: contradictions must stop being served once settled, deletion must keep a value out, or the agent must not hold the verbs the person uses.
+
+### [`vellis`](../systems/vellis/)
+- Best idea: **the ledger is the store.** The graph, schema and migration state live only in process memory, and `prepare_controller` rebuilds them at every start by replaying each request row whose transaction has a success response, then refuses to start if `validate_graph` reports findings (`apps/rtg_knowledge_graph/starter_schema.py:74-93`, `components/rtg/controller/implementation.py:914-1053`). A mutation that is not in the ledger does not survive a restart, so coverage needs no separate discipline.
+- Second idea: replay verification by digest. `rtg_verify_replay_from_ledger` replays into scratch state and compares a SHA-256 of the canonical domain state with the live one, separately from counts and the ledger cursor, and a test changes one fact value under equal counts and requires the mismatch (`components/rtg/controller/implementation.py:1055-1146`, `components/rtg/controller/tests/test_rtg_controller_contract.py:1746-1788`).
+- Biggest risk: **the agent holds both skip switches.** `rtg_apply_live_graph_changes` and three other write tools pass `validation_mode: "skip"` through, and the next start replays the unchecked batch and fails closed if the graph no longer validates; `rtg_restore_from_snapshot` accepts `ledger_mode: "skip"`, which the model's own contract reserves for internal recovery, and replaces the state with no row, so the next start rebuilds without it.
+- Second risk: forgetting and concurrency. A deleted value stays in its request row for as long as the SQLite file exists, and no tool compacts the ledger. Nothing keeps two stdio processes off one storage root; each holds its own graph and appends to the same table. A query that passes options without naming `live_filter` returns staged candidates.
+- Most reusable component: `_apply_normalized_change_batch` with `_record_ledger` and `replay_ledger` in `components/rtg/controller/implementation.py:277-344`, `:2094-2133`, `:914-1053`, and `_domain_state_digest` at `:2574-2602`.
+- Maturity impression: Apache-2.0 code, with an OMG specification corpus under its own terms; 35,649 lines of Python including 12,411 of tests and 7,436 lines of SysML; 45 commits from 6 July to 16 November 2026, 36 of them from dependabot, with components/ and apps/ unchanged since the v1.0 tag on 13 July; 314 test functions run by CI, none run here. Evals are manual prompts with no committed result. One mark: `audit_log`.
+- Study when: you want an event-sourced memory whose durable form is the change log, with strict validation by default, structured errors an agent can act on, and a replay you can verify.
+- Do not copy when: memory must be forgotten on request, several clients write at once, or the model connected to it should not hold restore and validation switches.

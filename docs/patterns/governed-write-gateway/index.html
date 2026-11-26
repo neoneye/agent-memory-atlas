@@ -443,6 +443,22 @@ types either passes every rule (<code>:2295</code>,
 boundaries, so a deleted owner fact or a deleted memory file goes
 through (<code>:3867-3872</code>, <code>:3921-3926</code>), and
 <code>--no-verify</code> reaches history around it.</p>
+<p><a href="../../systems/vellis/">Vellis</a> has the single gateway and
+a parameter that lowers it. Every graph mutation goes through
+<code>_apply_normalized_change_batch</code>, which resolves references,
+writes a ledger row, validates the batch against the live schema and
+constraints and restores a preimage if applying it fails
+(<code>components/rtg/controller/implementation.py:277-344</code>). The
+method takes <code>validation_mode</code>, and four MCP write tools pass
+the agent's value through, so <code>"skip"</code> applies a batch
+unchecked; the next start replays it and refuses to open if the graph no
+longer validates
+(<code>apps/rtg_knowledge_graph/starter_schema.py:81-92</code>). The
+live lane also flips a staged candidate live without the cutover that
+would have validated it, since it refuses only <code>live: false</code>
+(<code>implementation.py:2015-2029</code>). Where <a
+href="../../systems/cartographer/">Cartographer</a> has no setting that
+lowers its gate, this one is an argument.</p>
 <h3 id="gates-on-something-other-than-a-write">Gates on something other
 than a write</h3>
 <p>These are analogies rather than instances. Each puts one gate, or one

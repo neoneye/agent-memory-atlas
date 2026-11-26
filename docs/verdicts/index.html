@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 892 reports.</strong></p>
+<p><strong>This page covers all 893 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36946,6 +36946,58 @@ the path.</li>
 <li>Do not copy when: contradictions must stop being served once
 settled, deletion must keep a value out, or the agent must not hold the
 verbs the person uses.</li>
+</ul>
+<h3 id="vellis"><a
+href="../systems/vellis/"><code>vellis</code></a></h3>
+<ul>
+<li>Best idea: <strong>the ledger is the store.</strong> The graph,
+schema and migration state live only in process memory, and
+<code>prepare_controller</code> rebuilds them at every start by
+replaying each request row whose transaction has a success response,
+then refuses to start if <code>validate_graph</code> reports findings
+(<code>apps/rtg_knowledge_graph/starter_schema.py:74-93</code>,
+<code>components/rtg/controller/implementation.py:914-1053</code>). A
+mutation that is not in the ledger does not survive a restart, so
+coverage needs no separate discipline.</li>
+<li>Second idea: replay verification by digest.
+<code>rtg_verify_replay_from_ledger</code> replays into scratch state
+and compares a SHA-256 of the canonical domain state with the live one,
+separately from counts and the ledger cursor, and a test changes one
+fact value under equal counts and requires the mismatch
+(<code>components/rtg/controller/implementation.py:1055-1146</code>,
+<code>components/rtg/controller/tests/test_rtg_controller_contract.py:1746-1788</code>).</li>
+<li>Biggest risk: <strong>the agent holds both skip switches.</strong>
+<code>rtg_apply_live_graph_changes</code> and three other write tools
+pass <code>validation_mode: "skip"</code> through, and the next start
+replays the unchecked batch and fails closed if the graph no longer
+validates; <code>rtg_restore_from_snapshot</code> accepts
+<code>ledger_mode: "skip"</code>, which the model's own contract
+reserves for internal recovery, and replaces the state with no row, so
+the next start rebuilds without it.</li>
+<li>Second risk: forgetting and concurrency. A deleted value stays in
+its request row for as long as the SQLite file exists, and no tool
+compacts the ledger. Nothing keeps two stdio processes off one storage
+root; each holds its own graph and appends to the same table. A query
+that passes options without naming <code>live_filter</code> returns
+staged candidates.</li>
+<li>Most reusable component: <code>_apply_normalized_change_batch</code>
+with <code>_record_ledger</code> and <code>replay_ledger</code> in
+<code>components/rtg/controller/implementation.py:277-344</code>,
+<code>:2094-2133</code>, <code>:914-1053</code>, and
+<code>_domain_state_digest</code> at <code>:2574-2602</code>.</li>
+<li>Maturity impression: Apache-2.0 code, with an OMG specification
+corpus under its own terms; 35,649 lines of Python including 12,411 of
+tests and 7,436 lines of SysML; 45 commits from 6 July to 16 November
+2026, 36 of them from dependabot, with components/ and apps/ unchanged
+since the v1.0 tag on 13 July; 314 test functions run by CI, none run
+here. Evals are manual prompts with no committed result. One mark:
+<code>audit_log</code>.</li>
+<li>Study when: you want an event-sourced memory whose durable form is
+the change log, with strict validation by default, structured errors an
+agent can act on, and a replay you can verify.</li>
+<li>Do not copy when: memory must be forgotten on request, several
+clients write at once, or the model connected to it should not hold
+restore and validation switches.</li>
 </ul>
         </article>
       </div>
