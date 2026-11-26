@@ -15204,6 +15204,23 @@ prompt or agent code is committed and its private state goes to
 code file calls a model client or a vector or SQL store
 (<code>git grep -n -i -E 'sqlite|chromadb|faiss|qdrant|pgvector|lancedb|embedding|cosine' -- '*.py' '*.mjs' '*.js' '*.ts' '*.astro'</code>
 returns nothing).</li>
+<li><strong><code>atomicstrata/atomicmemory-python</code> was examined
+and has no report: it is an HTTP client SDK, and the engine it calls is
+another repository.</strong> Apache-2.0, at <a
+href="https://github.com/atomicstrata/atomicmemory-python/commit/c6f380458c77df81f41f7d4d704de649a8946896"><code class="commit-id" title="c6f380458c77df81f41f7d4d704de649a8946896">c6f38045…</code></a>.
+Its three registered memory providers, for AtomicMemory, Mem0 and
+Hindsight, each open an <code>httpx</code> client against a server, and
+<code>MemoryService</code> builds only from them; the lifecycle, audit,
+lessons and agents/trust handles wrap the engine's routes, which live in
+<code>atomicstrata/atomicmemory</code>. The README's local search and
+SQLite store are two utilities no memory path calls:
+<code>kv_cache/sqlite_storage.py</code> is a key/value table with an
+expiry time that no module outside <code>kv_cache/</code> imports, and
+<code>search/semantic_search.py</code> is a cosine scan over a list the
+caller passes on each call, called only by
+<code>examples/local_search.py</code>. <code>tools.py</code> binds the
+model-facing ingest and search tools to a user scope the application
+sets, which the model cannot change.</li>
 <li><strong><code>WujiangXu/A-mem</code> was examined and has no report
 because the atlas already reviews the same system.</strong> It is the
 A-MEM paper's (<a
