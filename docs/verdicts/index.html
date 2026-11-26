@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 898 reports.</strong></p>
+<p><strong>This page covers all 899 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37254,6 +37254,57 @@ version store with a caller-set valid interval.</li>
 <li>Do not copy when: you wanted a memory system rather than a store to
 build one on, or your memory must be erasable — a bitemporal document's
 body outlives its deletion in two places.</li>
+</ul>
+<h3 id="katra"><a href="../systems/katra/"><code>katra</code></a></h3>
+<ul>
+<li>Best idea: <strong>overwrite the argument with the caller.</strong>
+The MCP dispatcher replaces <code>user_id</code> in every tool call with
+<code>resolveUserId</code>, which keeps a client key to its own
+identity, so each handler, including ones added later, starts from a
+pinned id; a source-text guard requires every scoped handler to call
+it.</li>
+<li>Second idea: nest the scope under <code>$and</code>. A hybrid scope
+is an <code>$or</code>, and the text and regex passes put the content
+<code>$or</code> beside it inside an <code>$and</code> instead of
+overwriting it, with exported builders a test pins; the in-process
+vector index's hits are re-read through the same filter, so a stale
+index cannot widen scope or revive a retracted fact.</li>
+<li>Biggest risk: <strong>an exempt read route returns everyone's
+memory.</strong> <code>GET /api/v1/admin/memory-search</code> is on both
+exemption lists, applies no filter without a <code>user_id</code> and
+none ever to knowledge nodes and reflective journals, and runs on a port
+published on all interfaces with CORS open to any origin, so a page in
+any browser on the network can read every identity's facts, events and
+private journals.</li>
+<li>Second risk: correction and scope configuration are open verbs.
+<code>set_memory_scope</code> checks only that an admin key exists, so a
+client-key agent can list every identity as visible to itself;
+<code>retract_memory</code> matches by id with no scope; a retracted
+fact is left out of two tools and read by sleep consolidation, the REST
+recall routes and the dashboard search, and its episodic source stays
+searchable. The anomaly quarantine the tools describe is computed and
+never written.</li>
+<li>Most reusable component: <code>resolveCallerIdentity</code> and
+<code>resolveUserId</code>,
+<code>server/src/utils/api-key-manager.ts:586-620</code> and
+<code>server/src/mcp-server.ts:97-105</code>, the write-scope policy in
+<code>server/src/services/memory/write-scope-policy.ts:58-84</code>, the
+scoped query builders at
+<code>server/src/mcp-server.ts:1774-1801</code>, and the
+negation-preserving proposition key in
+<code>server/src/services/memory/proposition-key.ts</code>.</li>
+<li>Maturity impression: Business Source License 1.1, MIT in the
+manifests; 49,003 lines of TypeScript in the server and 461 commits from
+18 June to 29 October 2026, many under agent identities; 780 vitest
+cases, 226 of them testing copies of the code defined in the test file,
+none run in CI and none here. One mark:
+<code>scope_enforced</code>.</li>
+<li>Study when: you are adding identity separation to an MCP memory
+server that several agents share, and want the caller pinned in one
+place rather than in each tool.</li>
+<li>Do not copy when: the store will hold anything a network neighbour
+should not read, or a correction has to hold across every read path,
+consolidation included.</li>
 </ul>
         </article>
       </div>

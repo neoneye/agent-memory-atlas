@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted MongoDB, Redis and
+MinIO memory appliance served over MCP and REST, with episodic,
+semantic, graph and reflective layers and caller-keyed scope.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Katra — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted MongoDB,
+Redis and MinIO memory appliance served over MCP and REST, with
+episodic, semantic, graph and reflective layers and caller-keyed
+scope.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Katra — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted MongoDB,
+Redis and MinIO memory appliance served over MCP and REST, with
+episodic, semantic, graph and reflective layers and caller-keyed
+scope.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Katra — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Katra",
+      "description": "A self-hosted MongoDB, Redis and MinIO memory appliance served over MCP and REST, with episodic, semantic, graph and reflective layers and caller-keyed scope.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Every MCP read is scoped to the caller's
+key, and an unauthenticated admin search reads every identity's
+memory</p>
+          <h1>Katra</h1>
+          <p class="document-deck">A self-hosted MongoDB, Redis and
+MinIO memory appliance served over MCP and REST, with episodic,
+semantic, graph and reflective layers and caller-keyed scope.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/kolegadev/Katra-Agentic-Memory">
+              <span>Source</span>
+              <strong>kolegadev/Katra-Agentic-Memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/kolegadev/Katra-Agentic-Memory/commit/62cba09a81e4e083b38e68eaca572f2d8acee940" title="62cba09a81e4e083b38e68eaca572f2d8acee940">
+              <span>Analyzed revision</span>
+              <code>62cba09a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kolegadev--Katra-Agentic-Memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>kolegadev--Katra-Agentic-Memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Business
+Source License 1.1 in LICENSE, barring hosted or embedded paid offerings
+that compete with the licensor's paid versions; converts to
+AGPL-3.0-or-later on 2030-08-11; source-available, not open source;
+server/package.json and both SDK manifests say MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>49,003
+lines of TypeScript in 104 files under server/src, 6,865 of them the
+secret vault and the code graph, and mcp-server.ts alone 4,248; 15,699
+lines of TypeScript tests; 16,143 lines of Python in 78 files (watchers,
+the Kolega Code bridge, a network-recovery agent, scripts and
+SDKs)</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>461
+commits from 18 June to 29 October 2026 under fourteen name and address
+pairs, 217 under John Pellew's three addresses and 135 under Kolega
+Code; no tags</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>780
+vitest cases in 59 files, 343 of them vault and code graph; 226 cases in
+11 unit and security files test copies of the functions defined inside
+the test file; ci.yml runs typecheck and build and no tests; 82 Python
+test functions, none on memory; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Katra is a self-hosted memory appliance for long-running agents: a
+Node server in a Docker stack with MongoDB, Redis and MinIO, reached
+over MCP and REST, holding episodic events, semantic facts, a knowledge
+graph, working memory and LLM-written reflections. Its notable part is
+identity. Every MCP call resolves its caller from the presented key and
+pins <code>user_id</code> to it, and the scope filter rides into both
+the text and the vector pass. Its weak part is everything beside that
+path. A dashboard search route needs no key and returns every identity's
+memories, any authenticated caller can rewrite the scope configuration,
+and a retraction is honoured by two tools only.</p>
+<p>The design is brain-modelled. Messages land as episodic events, a
+background pass distils them into facts and graph edges through an LLM,
+and a nightly sleep consolidation writes a journal, emotional reflection
+nodes and philosophical insights. The README calls the result a
+cognitive layer, and much of the code under
+<code>services/processing/</code> computes drives, salience and a
+self-model around the store.</p>
+<p>Correction is one verb. <code>retract_memory</code> sets
+<code>status: 'retracted'</code> on a semantic fact by id, and
+<code>search_memories</code> and <code>vector_search</code> leave it out
+by default. For an extracted fact the source event stays searchable,
+sleep consolidation reads the retracted fact, and an exact restatement
+merges into the retracted row and stays hidden without saying so.</p>
+<p>The suite has 780 vitest cases, and CI runs none of them. 226 of
+them, in 11 files, test functions defined inside the test file rather
+than the server's own.</p>
+<p><strong>Licence.</strong> The Additional Use Grant bars offering
+Katra <em>"on a hosted or embedded basis in order to compete with
+kolegadev's paid version(s)"</em>, and measures competition by overlap
+<em>"with the capabilities of kolegadev's paid version(s)"</em>, paid
+support included. The tree does not define that product: its only
+description is a hosted tier at <code>api.katra.ai</code>, "Availability
+TBA" (<code>docs/ARCHITECTURE.md:357-374</code>), and every mechanism
+that tier lists, per-tenant databases and free, pro and enterprise plans
+included, is already here
+(<code>server/src/services/integration/tenant-service.ts:20</code>,
+<code>:91</code>). What is barred therefore moves with what the licensor
+later sells. The manifests disagree with the file:
+<code>server/package.json:50</code> and both SDK manifests say MIT, and
+both SDK READMEs call it MIT while linking the root BSL
+<code>LICENSE</code>.</p>
+<p>One mark is earned, <code>scope_enforced</code>, on the MCP read
+tools. Section 9 gives the reason for each of the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one of several kinds of record, each in its own
+collection.</p>
+<ul>
+<li><strong>An episodic event</strong> is one message or one stored
+event, with a session, a user and a content hash. Events of distilled
+types (goal, plan, decision) merge by proposition key, so a repeat
+increments <code>occurrences</code> and keeps up to five variants
+(<code>server/src/services/memory/proposition-merge.ts:45-119</code>).</li>
+<li><strong>A semantic fact</strong> is a sentence with a category, a
+confidence the writer supplies, tags, and <code>user_id</code> and
+<code>shared_id</code> (<code>server/src/types/memory.ts:70-89</code>).
+It is the unit the correction verb acts on.</li>
+<li><strong>Graph nodes and edges</strong> come out of extraction and
+the code-graph scanner.</li>
+<li><strong>Reflections</strong> are LLM output: a journal per period,
+entity nodes with an emotional signature, typed emotional edges such as
+<code>feels_frustrated_by</code>, and philosophical insights whose
+status climbs from <code>emerging</code> to <code>stable</code> as
+observations accumulate
+(<code>server/src/types/memory.ts:133-224</code>,
+<code>server/src/services/infrastructure/reflection-store.ts:236-237</code>).</li>
+</ul>
+<p>A statement becomes a fact two ways. An agent calls
+<code>store_memory</code>, which upserts on a hash of user and trimmed
+content
+(<code>server/src/services/infrastructure/content-hash-utils.ts:41-44</code>).
+Or a watcher or the bridge writes an event, and the background pass asks
+an LLM to extract facts from it, which <code>add_semantic_fact</code>
+merges into any fact with the same proposition key in the same user and
+shared scope
+(<code>server/src/services/memory/memory-manager.ts:357-462</code>).
+Everything is treated as true on arrival. Confidence is a number the
+writer chooses and retrieval prints.</p>
+<p>A fact stops counting in one way: <code>retract_memory</code> writes
+<code>status</code>, <code>retracted_at</code>,
+<code>retracted_reason</code> and an optional <code>superseded_by</code>
+(<code>server/src/mcp-server.ts:1743-1754</code>). Two reads honour it.
+Nothing deletes or edits a fact through a tool.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a statement becomes a semantic fact keyed on user and content; the caller's scope and the retracted status filter the two MCP search tools, while consolidation and an unauthenticated admin search read past both, and an exact restatement of a retracted fact merges into the hidden row</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a statement becomes a semantic fact keyed on user and content; the caller&#39;s scope and the retracted status filter the two MCP search tools, while consolidation and an unauthenticated admin search read past both, and an exact restatement of a retracted fact merges into the hidden row
+flowchart TD
+  subgraph writers[&quot;Writers&quot;]
+    direction TB
+    W1[&quot;store_memory tool:&lt;br/&gt;fact, preference, insight&quot;]
+    W2[&quot;events from watchers,&lt;br/&gt;the bridge, store_memory&quot;]
+    W1 ~~~ W2
+  end
+  writers --&gt; EX[&quot;background pass, 30 s:&lt;br/&gt;LLM extracts facts&quot;]
+  EX --&gt; ROW[&quot;semantic_facts row:&lt;br/&gt;user_id, shared_id,&lt;br/&gt;content_hash, proposition&quot;]
+  ROW --&gt; RET{&quot;retract_memory:&lt;br/&gt;by id, any caller&quot;}
+  RET --&gt;|&quot;status retracted&quot;| HID[&quot;left out of&lt;br/&gt;search_memories and&lt;br/&gt;vector_search&quot;]
+  HID --&gt; RE[&quot;same words again:&lt;br/&gt;upsert merges into&lt;br/&gt;the hidden row&quot;]
+  ROW --&gt; readers
+  subgraph readers[&quot;Reads of the same row&quot;]
+    direction TB
+    R1[&quot;MCP search: caller scope;&lt;br/&gt;episodic source of a&lt;br/&gt;retracted fact still served&quot;]
+    R2[&quot;sleep consolidation:&lt;br/&gt;user filter, no status&quot;]
+    R3[&quot;GET admin/memory-search:&lt;br/&gt;no key, no scope,&lt;br/&gt;no status&quot;]
+    R1 ~~~ R2 ~~~ R3
+  end
+  RE ~~~ QA[&quot;anomaly z-score:&lt;br/&gt;quarantine computed,&lt;br/&gt;never written&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One container runs both servers. <code>node build/index.js</code>
+starts the REST API on port 9002 and the MCP server on 3100, then the
+background processor, the sleep-consolidation scheduler and the
+autonomous executive (<code>Dockerfile:58</code>,
+<code>server/src/index.ts:120-142</code>, <code>:212</code>). The
+compose file publishes them as 3112 and 9012 on every host interface;
+Redis alone is bound to <code>127.0.0.1</code>
+(<code>docker-compose.yml:53</code>, <code>:89-90</code>).</p>
+<ul>
+<li><strong><code>mcp-server.ts</code></strong> registers 81 tools and
+implements most of their handlers in one 4,248-line file. The README and
+<code>docs/MCP-TOOLS.md</code> say 66.</li>
+<li><strong><code>routes/</code></strong> holds the REST API: memory,
+recall, ingestion, reflection, graph, assets, tenants, vault and an
+admin router the dashboard uses.</li>
+<li><strong><code>services/memory/</code></strong> holds the stores, the
+scope service and the write-scope policy.</li>
+<li><strong><code>services/processing/</code></strong> holds extraction,
+dispatch, sleep consolidation, decay, anomaly detection, salience,
+motivation and the executive.</li>
+<li><strong><code>services/vault/</code></strong> is an encrypted secret
+store with approvals and its own audit collection.</li>
+<li><strong><code>services/code-graph/</code></strong> scans
+repositories with tree-sitter into the knowledge graph.</li>
+</ul>
+<p>Embeddings come from <code>Xenova/all-MiniLM-L6-v2</code>, 384
+dimensions, run in process
+(<code>server/src/services/infrastructure/embedding-service.ts:27</code>).
+Extraction, journalling and summaries call an LLM, DeepSeek by default,
+with a provider list and a fallback to Ollama
+(<code>server/src/services/infrastructure/llm-service.ts:176-221</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>install.sh</code> clones the source, generates credentials and
+runs <code>docker compose up --build</code>. Storage needs no API key;
+extraction of longer messages and consolidation need an LLM provider,
+local through Ollama or hosted. Without one, the extractor catches the
+failure and falls back to pattern matching
+(<code>server/src/services/processing/extraction-service.ts:178-181</code>,
+<code>:600-612</code>).</p>
+<p>The store is MongoDB, readable with <code>mongosh</code> and
+repairable by hand. The first boot prints an admin key; per-agent client
+keys exist only when <code>KATRA_EXTRA_IDENTITIES</code> names them
+(<code>server/src/utils/api-key-manager.ts:472-570</code>). A one-agent
+install therefore hands that agent the admin key, which resolves as a
+trusted caller.</p>
+<p>Multi-tenant mode puts each tenant in its own MongoDB database and
+resolves the tenant from its key
+(<code>server/src/middleware/caller-auth.ts:91-115</code>). That
+boundary is a physical partition, separate from the <code>user_id</code>
+scope inside a database.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Caller resolution.</strong>
+<code>resolveCallerIdentity</code> returns a trusted local identity for
+a loopback socket or the admin key in a header, an untrusted identity
+for a key in <code>client_keys</code>, and null otherwise
+(<code>server/src/utils/api-key-manager.ts:586-620</code>). The MCP
+dispatcher runs each call inside that identity and overwrites
+<code>user_id</code> with <code>resolveUserId</code> before any handler
+sees it (<code>server/src/mcp-server.ts:3668-3683</code>,
+<code>:97-105</code>).</li>
+<li><strong>Store.</strong> <code>handleStoreMemory</code> resolves
+<code>{user_id, shared_id}</code> through
+<code>resolveWriteScope</code>, routes <code>category: 'event'</code> to
+<code>createEvent</code> with an embedding and an anomaly score, and
+upserts everything else into <code>semantic_facts</code> on
+<code>content_hash</code>, then embeds it
+(<code>server/src/mcp-server.ts:1567-1724</code>).</li>
+<li><strong>Extraction.</strong>
+<code>BackgroundProcessor.processUnprocessedEvents</code> takes
+unprocessed events every 30 seconds, triages system and derived types,
+and calls <code>extraction_service.extractStructuredData</code> and
+<code>dispatch_service.dispatchToMemory</code>, which writes facts
+through <code>add_semantic_fact</code>
+(<code>server/src/services/processing/background-processor.ts:77-114</code>,
+<code>:413</code>, <code>:492</code>;
+<code>server/src/services/processing/dispatch-service.ts:237</code>,
+<code>:563</code>, <code>:857</code>).</li>
+<li><strong>Search.</strong> <code>handleSearchMemories</code> builds
+the scope filter, runs a vector pass over semantic facts through
+<code>gatherVectorCandidates</code>, then a <code>$text</code> or regex
+pass over eleven collections, and touches <code>last_accessed</code>
+(<code>server/src/mcp-server.ts:1803-2050</code>).</li>
+<li><strong>Vector search.</strong> <code>handleVectorSearch</code> uses
+the same candidate gatherer, scores by best window cosine blended with
+recency, and collapses near duplicates
+(<code>server/src/mcp-server.ts:2093-2171</code>).</li>
+<li><strong>Retract.</strong> <code>handleRetractMemory</code> updates
+one <code>semantic_facts</code> row by <code>_id</code>
+(<code>server/src/mcp-server.ts:1726-1767</code>).</li>
+<li><strong>Consolidation.</strong>
+<code>SleepConsolidationService.schedule</code> fires daily at 02:00,
+weekly and monthly, and <code>runConsolidation</code> gathers the
+period's events and facts for <code>DEFAULT_USER_ID</code> and writes a
+journal, nodes, edges and insights
+(<code>server/src/index.ts:133-138</code>,
+<code>server/src/services/processing/sleep-consolidation-service.ts:253-269</code>,
+<code>:409-447</code>).</li>
+<li><strong>Bridge.</strong> The Kolega Code hook calls
+<code>vector_search</code>, <code>get_temporal_context</code>,
+<code>temporal_recall</code>, working memory and the daily reflection,
+and injects the formatted result
+(<code>integrations/kolega-code/kolega_katra_bridge/config.py:20-23</code>,
+<code>integrations/kolega-code/kolega_katra_bridge/katra_client.py:164-294</code>).</li>
+<li><strong>Dashboard search.</strong>
+<code>GET /api/v1/admin/memory-search</code> searches four collections
+by regex and by embedding
+(<code>server/src/routes/admin-routes.ts:369-429</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Facts.</strong> A <code>semantic_facts</code> document
+carries <code>user_id</code>, <code>content</code>,
+<code>content_hash</code>, <code>category</code>,
+<code>confidence</code>, <code>source</code>, <code>timestamp</code>,
+<code>tags</code>, <code>shared_id</code>,
+<code>metadata.extraction_context</code>, the embedding fields, and from
+extraction <code>proposition_key</code>, <code>proposition_norm</code>,
+<code>variants</code>, <code>extraction_count</code> and
+<code>source_event_timestamp</code>
+(<code>server/src/mcp-server.ts:1662-1679</code>,
+<code>server/src/services/memory/memory-manager.ts:404-416</code>). A
+retraction adds <code>status</code>, <code>retracted_at</code>,
+<code>retracted_reason</code> and <code>superseded_by</code>.</p>
+<p><strong>Two hashes for one fact.</strong> <code>store_memory</code>
+upserts on <code>content_hash</code> alone, while extraction upserts on
+<code>content_hash</code> and <code>shared_id</code> together and first
+looks for the proposition key within the same user and shared scope
+(<code>server/src/mcp-server.ts:1681-1689</code>,
+<code>server/src/services/memory/memory-manager.ts:390-398</code>,
+<code>:420-428</code>,
+<code>server/src/services/memory/proposition-merge.ts:131-144</code>).
+The two writers can therefore land one statement on one row or on
+two.</p>
+<p><strong>Scope.</strong> <code>user_id</code> is the writer.
+<code>shared_id</code> is <code>my-team</code> for every write that is
+not private and not a personal kind (<code>journal</code>,
+<code>reflection</code>, <code>emotional</code>, <code>insight</code>),
+which never carry one
+(<code>server/src/services/memory/write-scope-policy.ts:21-29</code>,
+<code>:58-84</code>). The reflection store strips <code>shared_id</code>
+from journals, insights, nodes and edges, and a test pins each.</p>
+<p><strong>Time.</strong> <code>timestamp</code>,
+<code>created_at</code>, <code>updated_at</code> and
+<code>last_accessed</code> are record times.
+<code>source_event_timestamp</code> is the time of the message a fact
+was extracted from
+(<code>server/src/services/processing/background-processor.ts:486</code>).
+No field says when a fact held.</p>
+<p><strong>Decay.</strong> Events and facts carry
+<code>retrieval_strength</code>, <code>decay_exponent</code> and
+<code>access_count</code>, boosted on recall
+(<code>server/src/services/memory/memory-manager.ts:464-503</code>).
+Ranking uses cosine and age through <code>blendedScore</code> and does
+not read them
+(<code>server/src/services/memory/vector-ranking.ts:47-53</code>).</p>
+<p><strong>Anomaly.</strong> <code>classifyAtIngestion</code> keeps a
+running centroid per user and memory type, returns a z-score and
+<code>shouldQuarantine</code> at z ≥ 3, and <code>store_memory</code>
+writes the score and class onto the event
+(<code>server/src/services/processing/anomaly-detection-service.ts:83-105</code>,
+<code>server/src/mcp-server.ts:1617-1641</code>). The
+<code>quarantined_memories</code> and <code>anomaly_records</code>
+collections have readers and no writer.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The vector pass gathers before it scores.</strong>
+<code>selectVectorCandidates</code> takes the newest facts in scope
+(1,500 by default, 400 from <code>search_memories</code>) and a
+keyword-matched set (500, or 200), and
+<code>vectorIndexService.search</code> adds up to 200 from an int8 index
+built per scope filter and rebuilt every ten minutes
+(<code>server/src/services/memory/vector-candidate-selector.ts:37-67</code>,
+<code>server/src/services/memory/vector-index-service.ts:48</code>,
+<code>:106-139</code>). The extra ids are re-read through the same
+filter, so the index cannot widen the scope or revive a retracted fact
+(<code>server/src/mcp-server.ts:2082-2085</code>).</p>
+<p><strong>Scoring.</strong> The best cosine over the pooled vector and
+any window vectors is multiplied by a recency factor floored at 0.6
+(<code>server/src/services/memory/vector-ranking.ts:27-53</code>).
+<code>search_memories</code> drops hits below cosine 0.3;
+<code>vector_search</code> applies no floor and collapses
+near-duplicates by an 80-character prefix
+(<code>server/src/mcp-server.ts:1902</code>, <code>:2137</code>,
+<code>server/src/services/memory/result-dedupe.ts:29-50</code>).</p>
+<p><strong>The text pass spans the store.</strong>
+<code>search_memories</code> queries episodic events, facts, both
+journals, knowledge nodes and relationships, memory nodes and edges,
+missions, assets and working-memory sessions, each with the scope filter
+nested under <code>$and</code> so a hybrid <code>$or</code> survives
+(<code>server/src/mcp-server.ts:1836-1848</code>,
+<code>:1792-1801</code>). Results are grouped by source and deduplicated
+by an 80-character prefix; text hits get a fixed score of 0.5.</p>
+<p><strong>Context injection</strong> is the bridge's job, not the
+server's. The Kolega Code hook defaults to a 5,000-token budget over
+five sources, weighted by a personality profile the dashboard can set
+(<code>integrations/kolega-code/kolega_katra_bridge/config.py:20-29</code>).</p>
+<p><strong>Failure modes.</strong> Retracted facts reach the model
+through every read other than the two MCP search tools. The episodic
+event a retracted fact came from is returned by the text pass of
+<code>search_memories</code>. A newly stored fact enters the semantic
+tier only at the next index rebuild, though the recency tier finds it at
+once.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong><code>store_memory</code> blocks on the embedding, not on a
+model.</strong> The handler awaits the upsert and the local MiniLM
+encode before it replies
+(<code>server/src/mcp-server.ts:1681-1717</code>). The fact is
+retrievable by text immediately and by vector once the call returns.</p>
+<p><strong>Extraction is deferred.</strong> Events wait for the next
+30-second cycle. A message under 50 characters goes through regex
+patterns for URLs, paths and commands or is skipped; a longer one always
+goes to the LLM
+(<code>server/src/services/processing/extraction-service.ts:103-136</code>).
+A fact from a conversation appears within a minute or so when the
+provider answers. Fan-out per event is capped
+(<code>server/src/services/processing/background-processor.ts:434</code>,
+<code>server/src/services/processing/extraction-fanout.ts:28</code>). No
+pass rewrites the whole store; consolidation reads at most 100 events
+and 100 facts of one period for one user
+(<code>server/src/services/processing/sleep-consolidation-service.ts:409-447</code>).</p>
+<p><strong>Deduplication by proposition.</strong>
+<code>propositionKeyOf</code> lowercases, strips punctuation and a short
+stopword list and keeps negations and numerals, so "did not fail" and
+"did fail" stay apart
+(<code>server/src/services/memory/proposition-key.ts:1-60</code>). A
+repeat raises <code>extraction_count</code>, keeps the higher confidence
+and adds the wording to <code>variants</code>
+(<code>server/src/services/memory/proposition-merge.ts:147-173</code>).
+Contradictions are not detected: a statement and its negation are two
+live facts.</p>
+<p><strong>The upsert keeps a retraction.</strong> Neither upsert names
+<code>status</code>, so a fact restated with the same content hash, or
+the same proposition key in the same scope, merges into the retracted
+row and stays hidden, while <code>store_memory</code> replies
+<em>"Memory stored"</em>. This holds by omission, not by a check, and no
+test covers it. Writers that use <code>insertOne</code> or
+<code>insertMany</code> (time-block summaries, reflection-store facts,
+learning feedback) bypass it
+(<code>server/src/services/processing/time-block-summarizer.ts:379</code>,
+<code>server/src/services/infrastructure/reflection-store.ts:395</code>,
+<code>server/src/services/processing/learning-feedback-service.ts:742</code>).</p>
+<p><strong>Agent-generated content is stored as given.</strong> No quote
+check, no provenance requirement and no injection filter sits on
+<code>store_memory</code>. The anomaly score is written onto events and
+read by nothing.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Each event of 50 characters or more costs one LLM call. Each
+<code>vector_search</code> loads up to about 2,200 candidate documents
+with embeddings from MongoDB and scores them in Node. The bridge injects
+up to 5,000 tokens per prompt behind a 30-second cache
+(<code>integrations/kolega-code/kolega_katra_bridge/config.py:20-21</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model holds all 81 tools. Writing (<code>store_memory</code>,
+<code>store_journal</code>, missions, working memory), retracting, scope
+configuration (<code>set_memory_scope</code>), LLM configuration
+(<code>configure_llm</code>), reflection triggers and the vault verbs
+are all on one surface. <code>set_memory_scope</code> and
+<code>configure_llm</code> check only that an admin key exists, not that
+the caller presented it
+(<code>server/src/mcp-server.ts:3009-3013</code>,
+<code>:3090-3094</code>); four vault and auth handlers do check
+<code>caller.trusted</code> (<code>:3438</code>, <code>:3519</code>,
+<code>:3535</code>, <code>:3604</code>).</p>
+<p>Inter-agent messaging is memory. An agent stores a fact beginning
+<code>Attention:</code> with <code>shared_id: my-team</code>, and other
+agents find it through <code>search_memories</code>. In the seeded
+<code>personal</code> mode reads ignore <code>shared_id</code>, so the
+bus works only after someone switches to <code>hybrid</code> or
+<code>shared</code>
+(<code>server/src/database/migrations.ts:28-40</code>). The README
+describes hybrid as the default.</p>
+<p>The bridge for Kolega Code injects context on session start, on every
+user prompt and after a session clear, and writes back through
+<code>store_memory</code> with <code>private: true</code> for
+session-derived content, a rule its docstring dates to a leak of whole
+session histories across agents
+(<code>integrations/kolega-code/kolega_katra_bridge/katra_client.py:440-470</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-dashboard-search-reads-every-identity">The dashboard search
+reads every identity</h3>
+<p><code>GET /api/v1/admin/memory-search</code> is exempt from the REST
+key check and from the admin router's own gate
+(<code>server/src/middleware/caller-auth.ts:31-41</code>,
+<code>:86-89</code>,
+<code>server/src/routes/admin-routes.ts:98-110</code>). With no
+<code>user_id</code> it applies no filter to episodic events and
+semantic facts, and for knowledge nodes and reflective journals it never
+applies one (<code>server/src/routes/admin-routes.ts:50-63</code>,
+<code>:381</code>). It returns up to 100 items per collection, 300
+characters each, including the personal journals the write policy keeps
+private and retracted facts. Port 9012 is published on all interfaces
+and CORS allows any origin (<code>docker-compose.yml:90</code>,
+<code>server/src/index.ts:154-155</code>), so a page open in any browser
+on the network can read it. A committed test asserts the unscoped
+behaviour as the contract
+(<code>server/tests/unit/admin-memory-search.test.ts:137-143</code>).</p>
+<h3 id="scope-is-server-wide-and-any-caller-may-rewrite-it">Scope is
+server-wide and any caller may rewrite it</h3>
+<p><code>set_memory_scope</code> writes <code>mode</code>,
+<code>shared_id</code> and <code>hybrid_visible_user_ids</code> into
+<code>system_settings</code> for every caller once an admin key is
+configured (<code>server/src/mcp-server.ts:3009-3047</code>). An agent
+on a client key can set hybrid mode with every other identity listed and
+then read their private facts through its own scoped search. The
+boot-time reset of the visible list runs only at start
+(<code>server/src/services/memory/write-scope-policy.ts:104-115</code>).</p>
+<h3 id="retraction-is-partial-and-unguarded">Retraction is partial and
+unguarded</h3>
+<p><code>retract_memory</code> matches <code>{ _id }</code> with no
+scope, so any authenticated caller can hide another identity's fact by
+id (<code>server/src/mcp-server.ts:1743-1754</code>). The reason is a
+field on the row, overwritten by a second retraction. Sleep
+consolidation reads facts by user and time with no status filter, so a
+retracted fact still shapes the night's journal and insights
+(<code>server/src/services/processing/sleep-consolidation-service.ts:441-447</code>).
+The REST recall routes search as <code>DEFAULT_USER_ID</code> whatever
+the caller, with no status filter
+(<code>server/src/routes/recall-routes.ts:392</code>,
+<code>server/src/services/memory/memory-manager.ts:464-473</code>).</p>
+<h3 id="declared-and-unwired-quarantine">Declared and unwired:
+quarantine</h3>
+<p>The tool description of <code>get_quarantined_memories</code> says
+anomalous memories are <em>"excluded from retrieval and reflection until
+corroborated"</em> (<code>server/src/mcp-server.ts:795-797</code>).
+<code>classifyAtIngestion</code> computes <code>shouldQuarantine</code>,
+and its one caller writes the class onto the event and drops the flag
+(<code>server/src/mcp-server.ts:1620-1639</code>). No code inserts into
+<code>quarantined_memories</code> or <code>anomaly_records</code>, and
+<code>rehabilitateMemory</code>, <code>recordCorroboration</code> and
+<code>shouldAutoRehabilitate</code> have no caller. No read filters on
+<code>anomaly_classification</code>.</p>
+<h3 id="marks">Marks</h3>
+<p>One is earned.</p>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> Facts,
+events, journals and missions store <code>user_id</code> and
+<code>shared_id</code>. <code>buildScopeFilter</code> applies the stored
+mode on <code>search_memories</code>, <code>vector_search</code>, the
+temporal tools and conversation history, and the value comes from the
+caller's key: a client key is pinned to its own id. The admin key and
+loopback may name any user, the scope mode is writable by every caller,
+and the dashboard search bypasses it; the scoping matrix row says
+so.</li>
+<li><strong><code>trust_state</code> — withheld.</strong>
+<code>retracted</code> is a second value beside none, set by the
+writer's own tool on any row, honoured by two reads and by no
+consolidation; it has no candidate state. Quarantine has no writer.
+Insight status is derived from observation counts, and
+<code>getIdentityKernel</code> filters on it
+(<code>server/src/services/processing/self-model-service.ts:74-77</code>),
+which makes it a threshold rather than a status anyone sets. Skill
+status filters only when the caller passes one.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> The retracted
+row does refuse an exact restatement on the two upsert writers, but
+nothing reads the status on write; the effect follows from
+<code>$set</code> not naming it. A restatement in another
+<code>shared_id</code> inserts a live row on the extraction path, the
+insert-only writers bypass it, the episodic source stays searchable, and
+no test pins it.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> No collection
+records memory mutations. <code>vault_audit</code> records secret
+operations, and secrets are not memory;
+<code>agent_transaction_log</code> records the executive's actions;
+<code>processing_log</code> is updated in place and purged
+(<code>server/src/services/processing/background-processor.ts:1027</code>).</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> Only record
+times and the source message time.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No memory
+waits for a person. The dashboard approves or rejects pending autonomous
+tasks, not memory content, and the background processor auto-triages
+that queue (<code>server/src/routes/admin-routes.ts:714-723</code>,
+<code>server/src/services/processing/background-processor.ts:628-640</code>).
+Vault approvals gate secret use.</li>
+<li><strong><code>negative_eval</code> — withheld.</strong> No committed
+case seeds two identities' memories and requires one absent from a read.
+The scope tests pin filter shapes, source text or copies of the function
+(section 10). The admin search test's scope case cannot fail on scope,
+because the only fixture matching <code>hello</code> belongs to the user
+it filters for
+(<code>server/tests/unit/admin-memory-search.test.ts:18-21</code>,
+<code>:159-164</code>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI installs, typechecks and builds, and has no test step
+(<code>.github/workflows/ci.yml:33-39</code>); the pull-request template
+asks for <code>npm test</code> by hand. I ran nothing from the
+repository.</p>
+<p><strong>Tests of copies.</strong> Eleven unit and security files, 226
+cases, import nothing from <code>server/src</code> and define the
+function under test in the test file: <code>memory-scope.test.ts</code>
+re-implements <code>buildScopeFilter</code>
+(<code>server/tests/unit/memory-scope.test.ts:10-43</code>),
+<code>user-id-scoping.test.ts</code> builds each filter it checks
+(<code>server/tests/security/user-id-scoping.test.ts:9-22</code>), and
+<code>anomaly-detection-service.test.ts</code> defines its own
+<code>cosineDistance</code> and <code>classifyZScore</code>
+(<code>server/tests/unit/anomaly-detection-service.test.ts:8-36</code>).
+The same holds for decay, salience, motivation, self-model,
+decision-action, working memory, the episodic manager and the API key
+manager. These cannot fail when the server's code changes.</p>
+<p><strong>A comment in place of the assertion.</strong>
+<em>"set_memory_scope rejects with MCP key only"</em> checks that
+<code>/api/v1/health</code> returns 200
+(<code>server/tests/integration/pipeline-auth.test.ts:70-77</code>).</p>
+<p><strong>What does exercise server code:</strong></p>
+<ul>
+<li><code>resolveUserId</code> keeping an untrusted caller to its own id
+(<code>server/tests/unit/resolve-user-id.test.ts:35-43</code>);</li>
+<li>the exported vector and text filter builders keeping scope and the
+retraction predicate
+(<code>server/tests/unit/semantic-vector-filter.test.ts:12-59</code>);</li>
+<li>a source-text guard that every scoped handler calls
+<code>resolveUserId</code>
+(<code>server/tests/unit/read-tools-caller-pinning.test.ts:48-82</code>);</li>
+<li>forced-private writes in the reflection store
+(<code>server/tests/unit/journal-forced-private.test.ts:41-120</code>);</li>
+<li>proposition keys, merges, the candidate selector, the vector index
+and ranking;</li>
+<li>the vault, in 343 cases with the code graph, including a containment
+run against real MongoDB that skips without one
+(<code>server/tests/security/vault-denylist.test.ts:398</code>).</li>
+</ul>
+<p><strong>Missing.</strong> No case stores facts for two identities and
+reads as one. None retracts a fact and checks consolidation, the
+episodic source or a restatement. None calls <code>retract_memory</code>
+or <code>set_memory_scope</code> as an untrusted caller.</p>
+<p>No benchmark, retrieval evaluation or paper is committed. The
+<code>research/</code> directory holds literature surveys that cite
+arXiv papers; none describes this code. The README's account of emergent
+inter-agent behaviour is an observation with no artifact.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Resolve the caller from the key and overwrite the
+argument.</strong> Replacing <code>user_id</code> in the dispatcher,
+before any handler runs, closes every tool at once, including ones added
+later.</li>
+<li><strong>Nest the scope under <code>$and</code>.</strong> A hybrid
+scope is an <code>$or</code>, and a content <code>$or</code> set beside
+it overwrites it; nesting both under <code>$and</code> is a one-line
+rule with a test.</li>
+<li><strong>Re-read index hits through the filter.</strong> An
+in-process index keyed by filter can go stale; fetching its ids back
+through the same query keeps a retracted or foreign row out.</li>
+<li><strong>A proposition key that keeps negations.</strong> Normalising
+wording while keeping <code>not</code> and numerals merges paraphrases
+without merging opposites.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A read-only exemption on a route that reads memory.</strong>
+"Read-only" is not "harmless" when the route returns private content; an
+exempt path list belongs to health checks.</li>
+<li><strong>Scope configuration on the agent's tool surface.</strong> If
+one tool can widen who sees what, the per-call pinning beside it
+protects nothing.</li>
+<li><strong>A status two readers honour.</strong> Put the predicate in
+one function every read path calls, consolidation included.</li>
+<li><strong>Tests that re-implement the code.</strong> A copy of
+<code>buildScopeFilter</code> in a test file passes after the real one
+is deleted.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is for an operator who wants a brain-shaped memory around one or
+a few cooperating agents on a home server, accepts an LLM bill per
+event, and will read the code before exposing a port. The identity
+separation, whose code comments date its cutover to 21 August 2026, is
+careful on the MCP path, and the rest of the server has not caught up:
+anyone needing identities that cannot read each other should treat the
+REST port as open and the scope setting as shared. The licence rules out
+building a paid hosted service on it until 2030. Walk away if
+corrections must hold across every read, or if the store will hold
+anything a LAN neighbour should not see.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>/api/v1/admin/memory-search</code> is meant to be
+public on a published port, or assumes the dashboard is only reachable
+locally.</li>
+<li>Whether <code>set_memory_scope</code> is meant to be restricted to
+trusted callers, as the vault approval handlers are.</li>
+<li>What the "paid version(s)" in the licence contain beyond this
+tree.</li>
+<li>Whether the upsert keeping a retraction is intended.</li>
+<li>Whether quarantine is meant to be written by
+<code>store_memory</code> or by extraction.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>server/src/types/memory.ts</code>,
+<code>server/src/database/migrations.ts</code>,
+<code>server/src/database/index-management.ts</code>,
+<code>server/src/database/tenant-context.ts</code></li>
+<li>Write path: <code>server/src/mcp-server.ts</code>
+(<code>handleStoreMemory</code>),
+<code>server/src/services/memory/memory-manager.ts</code>,
+<code>server/src/services/memory/episodic-event-manager.ts</code>,
+<code>server/src/services/memory/proposition-key.ts</code>,
+<code>server/src/services/memory/proposition-merge.ts</code>,
+<code>server/src/services/infrastructure/content-hash-utils.ts</code></li>
+<li>Extraction:
+<code>server/src/services/processing/background-processor.ts</code>,
+<code>server/src/services/processing/extraction-service.ts</code>,
+<code>server/src/services/processing/dispatch-service.ts</code></li>
+<li>Retrieval: <code>server/src/mcp-server.ts</code>
+(<code>handleSearchMemories</code>, <code>handleVectorSearch</code>),
+<code>server/src/services/memory/vector-candidate-selector.ts</code>,
+<code>server/src/services/memory/vector-index-service.ts</code>,
+<code>server/src/services/memory/vector-ranking.ts</code>,
+<code>server/src/services/memory/result-dedupe.ts</code></li>
+<li>Scope and identity:
+<code>server/src/services/memory/memory-scope-service.ts</code>,
+<code>server/src/services/memory/write-scope-policy.ts</code>,
+<code>server/src/utils/caller-identity.ts</code>,
+<code>server/src/utils/api-key-manager.ts</code>,
+<code>server/src/middleware/caller-auth.ts</code></li>
+<li>Correction: <code>server/src/mcp-server.ts</code>
+(<code>handleRetractMemory</code>)</li>
+<li>Background:
+<code>server/src/services/processing/sleep-consolidation-service.ts</code>,
+<code>server/src/services/infrastructure/reflection-store.ts</code>,
+<code>server/src/services/processing/anomaly-detection-service.ts</code>,
+<code>server/src/services/processing/memory-decay-service.ts</code></li>
+<li>REST and dashboard: <code>server/src/routes/admin-routes.ts</code>,
+<code>server/src/routes/recall-routes.ts</code>,
+<code>server/src/index.ts</code>, <code>dashboard/index.html</code></li>
+<li>Integration:
+<code>integrations/kolega-code/kolega_katra_bridge/</code>,
+<code>watcher/</code>, <code>sdks/</code></li>
+<li>Deployment: <code>Dockerfile</code>,
+<code>docker-compose.yml</code>, <code>install.sh</code>,
+<code>helm/katra/</code>, <code>terraform/aws/</code></li>
+<li>Tests: <code>server/tests/unit/</code>,
+<code>server/tests/security/</code>,
+<code>server/tests/integration/</code>,
+<code>.github/workflows/ci.yml</code></li>
+<li>Licence: <code>LICENSE</code>, <code>docs/ARCHITECTURE.md</code>,
+<code>server/src/services/integration/tenant-service.ts</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/local/bin/git grep</code>.</p>
+<ul>
+<li><strong>Nothing writes the quarantine collections.</strong>
+<code>git grep -n -E "collection\('(quarantined_memories|anomaly_records)'\)\.(insertOne|insertMany|bulkWrite|replaceOne)" -- .</code>
+returns nothing, and
+<code>git grep -n upsert -- server/src/services/processing/anomaly-detection-service.ts</code>
+returns nothing; the control
+<code>git grep -n -E "collection\('anomaly_stats'\)\.(insertOne)" -- server/src</code>
+matches <code>anomaly-detection-service.ts:117</code>.</li>
+<li><strong>The rehabilitation methods have no caller.</strong>
+<code>git grep -n -E "recordCorroboration|rehabilitateMemory|shouldAutoRehabilitate|classifyAtIngestion" -- server/src scripts watcher integrations</code>
+returns the three definitions and one call of
+<code>classifyAtIngestion</code> at
+<code>server/src/mcp-server.ts:1620</code>.</li>
+<li><strong>No read of the anomaly class.</strong>
+<code>git grep -n -w anomaly_classification -- server/src</code> returns
+the two type fields and the write at
+<code>server/src/mcp-server.ts:1638</code>.</li>
+<li><strong>The retracted status is read in one file.</strong>
+<code>git grep -n "'retracted'" -- server/src</code> returns
+<code>server/src/mcp-server.ts:1747</code>, <code>:1779</code> and
+<code>:1930</code>.</li>
+<li><strong>No validity-time field.</strong>
+<code>git grep -n -i -E "valid_from|valid_to|valid_until|invalid_at|t_valid" -- server/src</code>
+returns one false match, <code>ingest_validate</code> at
+<code>server/src/routes/ingestion-routes.ts:332</code>; the control
+<code>git grep -c source_event_timestamp -- server/src</code> counts
+matches in four files.</li>
+<li><strong>No memory review state.</strong>
+<code>git grep -n -E "pending_review|needs_review" -- server/src</code>
+returns nothing;
+<code>git grep -n -c pending_approval -- server/src/routes/admin-routes.ts</code>
+counts four, all on autonomous tasks.</li>
+<li><strong>No memory mutation log.</strong>
+<code>git grep -n -i -E "memory_(history|audit|log)|fact_history|mutation_log|change_log" -- server/src</code>
+returns nothing.</li>
+<li><strong>No retraction outside the MCP tool.</strong>
+<code>git grep -n -i retract -- server/src/routes dashboard</code>
+returns nothing.</li>
+<li><strong>The admin-only tools check no caller.</strong>
+<code>git grep -n "caller.trusted" -- server/src/mcp-server.ts</code>
+returns <code>:103</code> and four vault and auth handlers at
+<code>:3438</code>, <code>:3519</code>, <code>:3535</code>,
+<code>:3604</code>, none in <code>handleSetMemoryScope</code> or
+<code>handleConfigureLLM</code>.</li>
+<li><strong>CI runs no tests.</strong>
+<code>git grep -n -E "npm test|vitest|npm run test" -- .github/workflows</code>
+returns nothing; the control
+<code>git grep -n "npm test" -- .github</code> matches
+<code>.github/PULL_REQUEST_TEMPLATE.md:21</code>.</li>
+<li><strong>No paper or benchmark.</strong>
+<code>git grep -n -i -E "arxiv|bibtex|@article|doi\.org" -- . ':!research' ':!*package-lock.json'</code>
+returns nothing, while <code>git grep -c -i arxiv -- research</code>
+counts seven in
+<code>research/brain-gap-analysis/memory-poisoning-defense.md</code>;
+<code>git grep -n -i -E "locomo|longmemeval|recall@" -- .</code> returns
+nothing.</li>
+<li><strong>No import of code absent from the tree.</strong> Every
+relative import in <code>server/src</code> resolves to a tracked file
+except <code>./memory_synthesis_service.js</code> in a commented-out
+line at
+<code>server/src/services/processing/learning-feedback-service.ts:12</code>.</li>
+<li><strong>Test files that import no server code.</strong> A loop over
+<code>git ls-files 'server/tests/*.test.ts' ':!server/tests/fixtures'</code>
+printing files with no import from <code>src/</code> and no
+<code>readFileSync</code> lists eleven unit and security files (226
+cases) and three integration files that call a running server over
+HTTP.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/kolegadev/Katra-Agentic-Memory/commit/62cba09a81e4e083b38e68eaca572f2d8acee940"><code class="commit-id" title="62cba09a81e4e083b38e68eaca572f2d8acee940">62cba09a…</code></a>.
+First reading, read only, from a full clone at the head of
+<code>main</code>, the commit triage selected. Screened first: no
+auto-run surface, nothing inside the cooldown, one build-time execution
+point (the <code>prepublishOnly</code> script in
+<code>sdks/typescript/package.json</code>), four unpinned surfaces
+(<code>server/package.json</code> and
+<code>sdks/typescript/package.json</code> with lockfiles beside them,
+<code>sdks/python/pyproject.toml</code> and
+<code>integrations/kolega-code/pyproject.toml</code> without).
+<code>AGENTS.md</code> and the skill files were read as data. Nothing
+was installed, built or run, and no test count comes from a run. One
+mark, <code>scope_enforced</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>); the dashboard
+search reads every identity without a key.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

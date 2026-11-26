@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 898 reports.**
+**This page covers all 899 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8303,3 +8303,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, v0.1.0 beta; 153,280 lines of Rust in three crates over 254 commits between 11 April and 16 October 2026, almost all by one author; 1,824 test functions, none run here, of which the sync interop and SQL parity suites return early without an Origin build. The engines are `nodedb-*` crates outside the tree, resolved on caret versions with no lockfile, and CI builds them from NodeDB's `main`. No memory model of its own. Two marks: `bitemporal`, `negative_eval`.
 - Study when: you need agent memory that runs on a device or in a browser and syncs to a server, or you want a small, readable bitemporal version store with a caller-set valid interval.
 - Do not copy when: you wanted a memory system rather than a store to build one on, or your memory must be erasable — a bitemporal document's body outlives its deletion in two places.
+
+### [`katra`](../systems/katra/)
+- Best idea: **overwrite the argument with the caller.** The MCP dispatcher replaces `user_id` in every tool call with `resolveUserId`, which keeps a client key to its own identity, so each handler, including ones added later, starts from a pinned id; a source-text guard requires every scoped handler to call it.
+- Second idea: nest the scope under `$and`. A hybrid scope is an `$or`, and the text and regex passes put the content `$or` beside it inside an `$and` instead of overwriting it, with exported builders a test pins; the in-process vector index's hits are re-read through the same filter, so a stale index cannot widen scope or revive a retracted fact.
+- Biggest risk: **an exempt read route returns everyone's memory.** `GET /api/v1/admin/memory-search` is on both exemption lists, applies no filter without a `user_id` and none ever to knowledge nodes and reflective journals, and runs on a port published on all interfaces with CORS open to any origin, so a page in any browser on the network can read every identity's facts, events and private journals.
+- Second risk: correction and scope configuration are open verbs. `set_memory_scope` checks only that an admin key exists, so a client-key agent can list every identity as visible to itself; `retract_memory` matches by id with no scope; a retracted fact is left out of two tools and read by sleep consolidation, the REST recall routes and the dashboard search, and its episodic source stays searchable. The anomaly quarantine the tools describe is computed and never written.
+- Most reusable component: `resolveCallerIdentity` and `resolveUserId`, `server/src/utils/api-key-manager.ts:586-620` and `server/src/mcp-server.ts:97-105`, the write-scope policy in `server/src/services/memory/write-scope-policy.ts:58-84`, the scoped query builders at `server/src/mcp-server.ts:1774-1801`, and the negation-preserving proposition key in `server/src/services/memory/proposition-key.ts`.
+- Maturity impression: Business Source License 1.1, MIT in the manifests; 49,003 lines of TypeScript in the server and 461 commits from 18 June to 29 October 2026, many under agent identities; 780 vitest cases, 226 of them testing copies of the code defined in the test file, none run in CI and none here. One mark: `scope_enforced`.
+- Study when: you are adding identity separation to an MCP memory server that several agents share, and want the caller pinned in one place rather than in each tool.
+- Do not copy when: the store will hold anything a network neighbour should not read, or a correction has to hold across every read path, consolidation included.

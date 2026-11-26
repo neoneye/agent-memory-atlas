@@ -2074,6 +2074,24 @@ two tenants on one vector and require exact sets
 <code>tests/test_tenant_fail_closed.py:136-146</code>). The operator
 inspector takes the tenant as a query parameter, and any admin key reads
 every tenant.</p>
+<p><a href="../../systems/katra/">Katra</a> pins the key in the
+dispatcher and lets every caller rewrite the rule it feeds. The MCP call
+handler replaces <code>user_id</code> in every tool's arguments with
+<code>resolveUserId</code>, which keeps a client key to its own
+identity, and <code>buildScopeFilter</code> turns the stored mode into a
+<code>user_id</code>, <code>shared_id</code> or <code>$or</code>
+predicate that search, vector search, the temporal tools and history
+spread into each query (<code>server/src/mcp-server.ts:97-105</code>,
+<code>:3683</code>,
+<code>server/src/services/memory/memory-scope-service.ts:78-108</code>).
+The mode and its <code>hybrid_visible_user_ids</code> live in one
+settings document that <code>set_memory_scope</code> rewrites for any
+authenticated caller once an admin key exists
+(<code>server/src/mcp-server.ts:3009-3047</code>), and the dashboard's
+<code>GET /api/v1/admin/memory-search</code> needs no key and applies no
+predicate at all
+(<code>server/src/middleware/caller-auth.ts:31-41</code>,
+<code>server/src/routes/admin-routes.ts:381</code>).</p>
 <p><a href="../../systems/ditto-harness/">Ditto Harness</a> closes its
 tools over the host's keys and shows what happens to a third key the
 model can see. The five memory tools take <code>user_id</code> and
