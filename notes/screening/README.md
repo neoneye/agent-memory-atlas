@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 883 of 884 screened at the report's current pin.**
+**Progress: 884 of 885 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 424 |
+| Repositories with an auto-run surface (`RUNS`) | 425 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 400 |
-| Repositories with build-time execution (`EXEC`) | 634 |
+| Repositories with build-time execution (`EXEC`) | 635 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -39,6 +39,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`agent-memory-mcp`](../../content/systems/agent-memory-mcp.md) | `server.json` |
 | [`agent-working-memory`](../../content/systems/agent-working-memory.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |
 | [`agentdatabase`](../../content/systems/agentdatabase.md) | `.githooks/` |
+| [`agentdb`](../../content/systems/agentdb.md) | `.claude-plugin/`, `.gitmodules`, `plugins/agentdb-causal/.claude-plugin/plugin.json`, `plugins/agentdb-core/.claude-plugin/plugin.json`, `plugins/agentdb-graph/.claude-plugin/plugin.json`, `plugins/agentdb-learning/.claude-plugin/plugin.json`, `plugins/agentdb-memory/.claude-plugin/plugin.json`, `plugins/agentdb-search/.claude-plugin/plugin.json` |
 | [`agentic-context-engine`](../../content/systems/agentic-context-engine.md) | `.claude/settings.json`, `.gitmodules` |
 | [`agentictrading`](../../content/systems/agentictrading.md) | `.vscode/settings.json` |
 | [`agentmemory`](../../content/systems/agentmemory.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json` |

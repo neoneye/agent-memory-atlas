@@ -1973,6 +1973,18 @@ only boundary (<code>lib/agent-kit/memory/recall.cjs:24-27</code>,
 <code>:320-334</code>). The main agent reads every element's rows except
 those of apps with their own owner. The one committed test checks the
 predicate on an array, not a read.</p>
+<p><a href="../../systems/agentdb/">AgentDB</a> advertises a scope
+filter in the tool schema and drops it in the handler.
+<code>agentdb_search</code> declares <code>filters.session_id</code> and
+<code>filters.tags</code>; the handler copies <code>min_reward</code>
+and leaves the comment <em>"Session ID filter would require custom
+query"</em>, and <code>ReflexionQuery</code> has no session field, so no
+episode retrieval can apply one
+(<code>src/mcp/agentdb-mcp-server.ts:462-468</code>,
+<code>:1511-1516</code>). <code>agentdb_list</code> and the consolidator
+do filter on <code>session_id</code>, so the key exists and only the
+read path that reaches a prompt ignores it. Isolation is one SQLite file
+per server process.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

@@ -554,6 +554,21 @@ description promises "vector RAG (text+visual)" while the vector arm
 queries the text collection only (<code>:62-71</code>,
 <code>:120-121</code>). <strong>A router decides which arm a query never
 reaches; test the arm it skips, not only the one it picks.</strong></p>
+<p><strong><a href="../../systems/agentdb/">AgentDB</a> publishes a
+fusion lift that recomputes, and most of it is the lexical arm.</strong>
+Episode search pools at least 50 dense candidates from an exact cosine
+scan, fuses them with BM25 over task, input, output and critique by
+weighted reciprocal rank at k = 60 and weight 1, and with
+<code>rerank</code> adds a cross-encoder rank at weight 8 over the top
+60 of each list (<code>src/controllers/episode-hybrid.ts:26-29</code>,
+<code>:125-170</code>). The README's LongMemEval_M rows, recall_all@5
+0.630 dense, 0.719 hybrid and 0.789 with the cross-encoder, match
+<code>benchmarks/longmemeval/results/m-ms-marco-MiniLM-L-6-v2.json</code>,
+where BM25 alone scores 0.702. The harness reuses the product's BM25
+index and tokenizer and not <code>retrieveRelevant</code>. When the
+embedding model is missing, the dense arm falls back to a whole-string
+hash and the fusion degrades to BM25 with noise, which no search reply
+reports.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exact identifiers, paraphrases, dates, negation, and typo

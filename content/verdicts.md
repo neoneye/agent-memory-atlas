@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 884 reports.**
+**This page covers all 885 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8163,3 +8163,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 37,830 lines of standard-library Python and 181 commits from 22 July to 17 November 2026, 165 of them in November, at 1.0.0b1; 1,198 unittest functions run in CI on two operating systems and four Python versions, not run here, and a guard-mutation tool with no committed run. Three marks: `scope_enforced`, `audit_log`, `negative_eval`. No retrieval evaluation or benchmark is committed.
 - Study when: you want agents' memory as hand-repairable Markdown whose structure code keeps, a promotion rule a person can recompute, or reader scope fixed by the connection rather than the call.
 - Do not copy when: a correction must stop retrieval returning the old value, stored text must be erasable, or the agents sharing the store cannot be trusted with a shell.
+
+### [`agentdb`](../systems/agentdb/)
+- Best idea: **re-embed in the writer's transaction and refuse a concurrent edit.** `updateEpisode` embeds the changed text outside the transaction, re-reads the row inside it and aborts if the text moved, so a vector is never stored against text it was not computed from; patterns and skills repeat the check, and deletes clean embeddings by hand because foreign-key cascades are off.
+- Second idea: a default MCP profile without deletes. `learning` exposes every write and update and none of the delete, reset or cache-clear tools, and the end-to-end script asserts that the profile neither lists nor runs them.
+- Biggest risk: **the search drops the scope it advertises.** `agentdb_search` declares `filters.session_id` and `filters.tags`, the handler copies only `min_reward` beside the comment *"Session ID filter would require custom query"*, and `ReflexionQuery` has no session field, so every caller of a server reads the whole file.
+- Second risk: when the optional transformers package is missing or the model cannot load, embeddings fall back to a whole-string hash stored under the MiniLM label, so the dense arm becomes noise without any reply saying so. The README's +36% self-learning lift is `overallSuccessRate += 0.04` over nine sessions in a benchmark script, and its audit-trail, witness-chain and SOC2 claims rest on unwired middleware, a solver training call and a retrieval log.
+- Most reusable component: `updateEpisode` and `deleteEpisode` in `src/controllers/ReflexionMemory.ts:1124-1246` and `:1605-1690`, the weighted RRF and cross-encoder fusion in `src/controllers/episode-hybrid.ts:125-170`, and the profile allowlist in `src/security/mcp-policy.ts`.
+- Maturity impression: MIT; 79,939 lines of TypeScript under src, 95 commits from 6 May to 11 November 2026 under three names of one author, eight library tags in ten days of November; 2,668 test cases, 30 targets of them run in CI on pull requests, none run here; the LongMemEval table recomputes from committed JSON and the speed table has harnesses and no outputs. No marks.
+- Study when: you want hybrid episode recall over one SQLite file with a measured, checkable fusion, or a CRUD layer that keeps text, vectors and the keyword index in step.
+- Do not copy when: two agents, users or projects share a store, a correction must be recorded rather than overwritten, or the learning and audit claims are why you are looking.

@@ -1018,6 +1018,8 @@ that matches only through `LIKE`'s `_` wildcard.
 
 [Fractera](../../systems/web4-node-starter-kit/) keys every diary row on the agent whose session wrote it and takes that key from outside the session. The bridge writes the element id into each hook's command line, and on a walled server the core's relay takes it from the caller's key and refuses a transcript outside the caller's own project folder, a hole a red-team run found on 20 November 2026 (`lib/agent-kit/modes.cjs:393-404`, `lib/agent-kit/hook-relay-run.cjs:27-29`, `:46-82`). The word path filters rows with `inScope`, and the meaning path keeps a vector hit only if its id is one of the scoped rows, so the per-agent collection is not the only boundary (`lib/agent-kit/memory/recall.cjs:24-27`, `:320-334`). The main agent reads every element's rows except those of apps with their own owner. The one committed test checks the predicate on an array, not a read.
 
+[AgentDB](../../systems/agentdb/) advertises a scope filter in the tool schema and drops it in the handler. `agentdb_search` declares `filters.session_id` and `filters.tags`; the handler copies `min_reward` and leaves the comment *"Session ID filter would require custom query"*, and `ReflexionQuery` has no session field, so no episode retrieval can apply one (`src/mcp/agentdb-mcp-server.ts:462-468`, `:1511-1516`). `agentdb_list` and the consolidator do filter on `session_id`, so the key exists and only the read path that reaches a prompt ignores it. Isolation is one SQLite file per server process.
+
 ## Tests to require
 
 The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A TypeScript agent memory library,
+CLI and MCP server keeping Reflexion-style episodes, reasoning patterns,
+skills and causal edges in one SQLite file.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AgentDB — Agent Memory Atlas">
+    <meta property="og:description" content="A TypeScript agent memory
+library, CLI and MCP server keeping Reflexion-style episodes, reasoning
+patterns, skills and causal edges in one SQLite file.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AgentDB — Agent Memory Atlas">
+    <meta name="twitter:description" content="A TypeScript agent memory
+library, CLI and MCP server keeping Reflexion-style episodes, reasoning
+patterns, skills and causal edges in one SQLite file.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AgentDB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AgentDB",
+      "description": "A TypeScript agent memory library, CLI and MCP server keeping Reflexion-style episodes, reasoning patterns, skills and causal edges in one SQLite file.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Hybrid recall over one SQLite file, and a
+headline learning lift that is a loop counter</p>
+          <h1>AgentDB</h1>
+          <p class="document-deck">A TypeScript agent memory library,
+CLI and MCP server keeping Reflexion-style episodes, reasoning patterns,
+skills and causal edges in one SQLite file.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ruvnet/agentdb">
+              <span>Source</span>
+              <strong>ruvnet/agentdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ruvnet/agentdb/commit/84081e21afa383f7f0849fed96c90b177ce27c8b" title="84081e21afa383f7f0849fed96c90b177ce27c8b">
+              <span>Analyzed revision</span>
+              <code>84081e21…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ruvnet--agentdb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ruvnet--agentdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE and package.json; the README and six plugin manifests say MIT
+OR Apache-2.0, and no Apache-2.0 text is in the tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>79,939
+lines of TypeScript in 189 files under src outside tests; the episode,
+pattern, skill, causal and learner controllers with both SQL schemas
+hold 6,655, the MCP server 3,022 and the CLI 3,520; a 25,878-line
+marketing site under ui/ is not counted</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>95
+commits from 6 May to 11 November 2026 under three names of one author
+(ruv, rUv, ruvnet), 75 of them from 31 October; library tags v3.3.0 to
+v3.10.0; the package history before 6 May 2026 is not in this
+repository</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,668
+vitest and node:test cases in 144 files outside benchmarks/ and
+simulation/; library.yml runs 30 selected test targets and five MCP
+end-to-end scripts on pull requests; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AgentDB is an MIT TypeScript package, used as a library, an
+<code>agentdb</code> CLI and a stdio MCP server, that keeps an agent's
+Reflexion-style episodes, reasoning patterns, skills and causal edges in
+one SQLite file and recalls episodes by cosine fused with BM25. Its
+notable part is the episode CRUD path: ids are parsed strictly, a text
+change is re-embedded inside a transaction that refuses a concurrent
+edit, and the default MCP profile can write and update but not delete.
+Its weak part is that the memory has no scope, no status and no record
+of change. The MCP search advertises session and tag filters and drops
+both, and the README's headline <em>"36% from feedback alone"</em> is a
+variable the benchmark script raises by 0.04 per session.</p>
+<p>Much of what the README and schema describe is declared and not
+wired. Seven schema tables, including <code>facts</code> with an
+<code>expires_at</code> TTL, have no writer in <code>src/</code>. The
+JWT and audit-logger middleware has no importer and no HTTP server
+exists to mount it. The RVF "mutation witness" is a solver training run
+seeded by a 32-bit hash of the string <code>insert:&lt;id&gt;</code>.
+The recall-certificate verifier has no caller.</p>
+<p>The agent surface is the MCP server, which builds every controller
+without a vector index: its own capability report says <em>"every search
+here is an exact cosine scan over the SQL embedding tables"</em>
+(<code>src/mcp/agentdb-mcp-server.ts:333-336</code>). The HNSW, RuVector
+and RVF backends behind the README's speed figures are reached only
+through the library API.</p>
+<p>The plugin marketplace has a second gap. Six of its seven plugins
+carry skills and agents that call
+<code>agentdb_hierarchical_store</code>,
+<code>agentdb_causal_edge</code>, <code>agentdb_attestation_log</code>
+and other names the server does not register. The one plugin that starts
+a server pins <code>agentdb@3.6.0</code>, 33 commits before the pin.</p>
+<p><strong>Licence.</strong> The README badge, its <em>License</em>
+section and six of the seven <code>plugin.json</code> files say <em>"MIT
+OR Apache-2.0"</em>, and the tree holds one licence text, MIT, which the
+root <code>package.json</code> and the <code>agentdb</code> plugin also
+name. The MIT grant in <code>LICENSE</code> is complete on its own, so
+the dual offer adds nothing a reader can rely on until an Apache-2.0
+text is committed.</p>
+<p>No marks. Section 9 gives the reason for each of the seven. <a
+href="../ruflo/">Ruflo</a>, from the same author, embeds this package as
+its vector backend, and <a href="../ruvector/">RuVector</a> supplies the
+engine packages; the <code>packages/ruvector-upstream</code> submodule
+is not checked out and was not read.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>episode</strong>: one attempt at a task, with
+input, output, a critique, a reward and a success flag
+(<code>src/schemas/schema.sql:21-36</code>). It becomes a belief the
+moment a caller stores it. No model call extracts or checks it, and the
+reward and success flag are whatever the caller wrote;
+<code>agentdb_insert</code> stores every row with reward 1.0 and success
+true (<code>src/mcp/agentdb-mcp-server.ts:1419-1436</code>).</p>
+<p>Three other kinds sit beside it.</p>
+<ul>
+<li>A <strong>reasoning pattern</strong> is a task type and an approach
+with a success rate the caller states at store time
+(<code>required: ['taskType', 'approach', 'successRate']</code>,
+<code>src/mcp/agentdb-mcp-server.ts:946-957</code>). Feedback averages
+into it, so the first feedback replaces the stated rate entirely
+(<code>src/controllers/ReasoningBank.ts:650-668</code>).</li>
+<li>A <strong>skill</strong> is a named description and code template
+with usage statistics.</li>
+<li>A <strong>causal edge</strong> links two memory ids, or two bare
+strings: the MCP <code>causal_add_edge</code> writes
+<code>fromMemoryId: 0</code> and puts the cause and effect text in the
+type columns
+(<code>src/mcp/agentdb-mcp-server.ts:1712-1730</code>).</li>
+</ul>
+<p>A memory stops counting in three ways, none of them a judgement about
+whether it is true. An admin deletes it by id, by session or before a
+timestamp, and the row and its embedding are removed
+(<code>src/controllers/ReflexionMemory.ts:1605-1690</code>).
+<code>agentdb_update</code> rewrites it in place.
+<code>pruneEpisodes</code> deletes low-reward episodes older than 30
+days beyond five per task
+(<code>src/controllers/ReflexionMemory.ts:1253-1290</code>), and
+<code>consolidate_now</code> deletes every causal edge below confidence
+0.6 or older than 90 days, including edges the agent added by hand
+(<code>src/controllers/NightlyLearner.ts:571-583</code>).</p>
+<p>No state between stored and deleted exists. Reward and success rate
+rank and can filter by a caller-chosen minimum, but nothing withholds a
+stored episode from recall.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an episode is believed when stored, with the reward the caller wrote; recall reads the whole file whatever session the caller names; nothing between stored and deleted exists</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an episode is believed when stored, with the reward the caller wrote; recall reads the whole file whatever session the caller names; nothing between stored and deleted exists
+flowchart TD
+  subgraph writers[&quot;Writers on the MCP surface&quot;]
+    direction TB
+    W1[&quot;agentdb_insert:&lt;br/&gt;reward 1.0, success true&quot;]
+    W2[&quot;reflexion_store:&lt;br/&gt;caller&#39;s reward, critique&quot;]
+    W3[&quot;agentdb_pattern_store:&lt;br/&gt;caller&#39;s success rate&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  writers --&gt; G{&quot;injection guard on?&lt;br/&gt;(default off)&quot;}
+  G --&gt;|&quot;block, flagged&quot;| R[&quot;write refused&quot;]
+  G --&gt;|&quot;off, warn, clean&quot;| E{&quot;transformers&lt;br/&gt;package loaded?&quot;}
+  E --&gt;|&quot;yes&quot;| V1[&quot;MiniLM vector&quot;]
+  E --&gt;|&quot;no&quot;| V2[&quot;whole-string hash,&lt;br/&gt;stored under the&lt;br/&gt;MiniLM label&quot;]
+  V1 --&gt; ROW[(&quot;episode row and&lt;br/&gt;embedding in one&lt;br/&gt;SQLite file&quot;)]
+  V2 --&gt; ROW
+  ROW --&gt; S[&quot;agentdb_search:&lt;br/&gt;session and tag&lt;br/&gt;filters dropped&quot;]
+  S --&gt; RANK[&quot;exact cosine, every row;&lt;br/&gt;BM25 fused by RRF;&lt;br/&gt;top k&quot;]
+  ROW --&gt; U[&quot;agentdb_update:&lt;br/&gt;rewrite and re-embed&lt;br/&gt;in one transaction&quot;]
+  U --&gt; ROW
+  ROW --&gt; DEL[&quot;admin only:&lt;br/&gt;hard delete,&lt;br/&gt;no record kept&quot;]
+  DEL ~~~ CN[&quot;consolidate_now:&lt;br/&gt;edges from session pairs,&lt;br/&gt;then weak, old edges cut&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs in one Node.js process over one SQLite file. The MCP
+server opens <code>AGENTDB_PATH</code>, default
+<code>./agentdb.db</code> in the directory the client starts it from,
+through <code>createDatabase</code>, which loads better-sqlite3 when the
+optional native module resolves and sql.js otherwise
+(<code>src/mcp/agentdb-mcp-server.ts:271-277</code>,
+<code>src/db-fallback.ts</code>). On sql.js the database lives in memory
+and is written back every five minutes and on SIGINT or SIGTERM, so a
+crash can lose up to five minutes of writes
+(<code>src/mcp/agentdb-mcp-server.ts:2948-2990</code>).</p>
+<ul>
+<li><strong>Controllers.</strong> <code>ReflexionMemory</code>
+(episodes), <code>ReasoningBank</code> (patterns),
+<code>SkillLibrary</code>, <code>CausalMemoryGraph</code>,
+<code>CausalRecall</code>, <code>NightlyLearner</code>,
+<code>LearningSystem</code> (nine RL algorithms over
+<code>learning_experiences</code>), and three model stores added in 3.8
+to 3.10: <code>FannModels</code>, <code>WeightPrograms</code> and
+<code>NeuralReranker</code>.</li>
+<li><strong>Schemas.</strong> <code>src/schemas/schema.sql</code> and
+<code>frontier-schema.sql</code>, inlined at build time into
+<code>src/schemas/inline.ts</code>. <code>ReasoningBank</code> creates
+its own two tables
+(<code>src/controllers/ReasoningBank.ts:215-261</code>).</li>
+<li><strong>Embeddings.</strong> <code>EmbeddingService</code> with
+<code>Xenova/all-MiniLM-L6-v2</code> through
+<code>@huggingface/transformers</code>, an optional dependency, 384
+dimensions (<code>src/mcp/agentdb-mcp-server.ts:300-305</code>).</li>
+<li><strong>Vector backends.</strong> <code>RuVectorBackend</code>,
+<code>HNSWLibBackend</code>, <code>RvfBackend</code> and
+<code>SelfLearningRvfBackend</code> under <code>src/backends/</code>,
+thin wrappers over the <code>@ruvector/*</code> and
+<code>hnswlib-node</code> npm packages. The library's
+<code>AgentDB</code> class passes one to its controllers
+(<code>src/core/AgentDB.ts:73-88</code>); the MCP server and the CLI
+pass none.</li>
+<li><strong>Policy.</strong> <code>src/security/mcp-policy.ts</code>
+maps <code>AGENTDB_MCP_PROFILE</code> to a tool allowlist.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>claude mcp add agentdb -- npx agentdb mcp start</code> is the
+documented install, and <code>npx</code> fetches the package at run
+time. Nothing else has to run and no API key is needed: MiniLM downloads
+about 90 MB on first use, or comes from a bundled <code>.rvf</code>
+model when present. Offline without the model, the service logs
+<em>"Falling back to mock embeddings for testing"</em> and keeps going
+(<code>src/controllers/EmbeddingService.ts:156-166</code>), which
+section 6 prices.</p>
+<p>The store is an ordinary SQLite file, readable and repairable with
+any SQLite tool. The library's <code>.rvf</code> and
+<code>.ruvector</code> sidecars are opaque formats owned by the
+<code>@ruvector</code> packages.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>agentdb_insert</code>,
+<code>agentdb_insert_batch</code>, <code>reflexion_store</code>,
+<code>reflexion_store_batch</code> call
+<code>ReflexionMemory.storeEpisode</code>, which screens the text,
+inserts the row, embeds <code>task</code>, <code>critique</code> and
+<code>output</code>, and writes the embedding
+(<code>src/controllers/ReflexionMemory.ts:190-335</code>).
+<code>agentdb_pattern_store</code> calls
+<code>ReasoningBank.storePattern</code>
+(<code>src/controllers/ReasoningBank.ts:264-313</code>);
+<code>skill_create</code> calls
+<code>SkillLibrary.createSkill</code>.</li>
+<li><strong>Retrieval.</strong> <code>agentdb_search</code> and
+<code>reflexion_retrieve</code> call <code>retrieveRelevant</code>
+(<code>src/controllers/ReflexionMemory.ts:341-399</code>), which pools
+<code>max(4k, 50)</code> dense candidates from
+<code>retrieveFromSQLFallback</code> (<code>:633-662</code>) and fuses
+them with <code>EpisodeLexicalIndex</code> hits in
+<code>hybridRank</code> (<code>:434-481</code>), using
+<code>fuseEpisodeScores</code> and <code>applyCrossEncoder</code>
+(<code>src/controllers/episode-hybrid.ts:125-170</code>).</li>
+<li><strong>Pattern retrieval.</strong>
+<code>agentdb_pattern_search</code> embeds the query and calls
+<code>searchPatternsLegacy</code>, which scans
+<code>pattern_embeddings</code> with optional <code>task_type</code>,
+<code>success_rate</code> and tag predicates and ranks by
+<code>rerankScore</code>
+(<code>src/controllers/ReasoningBank.ts:432-512</code>,
+<code>:104-113</code>).</li>
+<li><strong>Causal recall.</strong> <code>recall_with_certificate</code>
+runs <code>CausalRecall.recall</code>, which reranks by similarity,
+uplift and latency and writes a <code>recall_certificates</code> row
+with a Merkle root over the returned sources
+(<code>src/controllers/ExplainableRecall.ts:130-216</code>).</li>
+<li><strong>Update and delete.</strong> <code>handleCrudTool</code>
+dispatches the ADR-017 tools
+(<code>src/mcp/agentdb-mcp-server.ts:1233-1354</code>);
+<code>updateEpisode</code>
+(<code>src/controllers/ReflexionMemory.ts:1124-1246</code>),
+<code>deleteEpisode</code> (<code>:1605-1690</code>), and the bulk
+<code>deleteEpisodesWhere</code>
+(<code>src/mcp/agentdb-mcp-server.ts:1206-1216</code>).</li>
+<li><strong>Consolidation.</strong> <code>consolidate_now</code> calls
+<code>NightlyLearner.run</code> or, with a session id,
+<code>consolidateEpisodes</code>
+(<code>src/mcp/agentdb-mcp-server.ts:2890-2905</code>,
+<code>src/controllers/NightlyLearner.ts:101-158</code>).</li>
+<li><strong>Policy.</strong> <code>buildMcpToolPolicy</code> and
+<code>isMcpToolAllowed</code>, checked at the top of the call handler
+(<code>src/mcp/agentdb-mcp-server.ts:1363-1368</code>).</li>
+<li><strong>CLI.</strong>
+<code>agentdb reflexion store|retrieve|prune</code>, <code>skill</code>,
+<code>causal</code>, <code>learner</code>, <code>recall</code> and
+<code>mcp start</code> in
+<code>src/cli/agentdb-cli.ts:1727-1982</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Episodes.</strong> <code>episodes</code> holds an integer id,
+<code>ts</code>, <code>session_id</code>, <code>task</code>,
+<code>input</code>, <code>output</code>, <code>critique</code>,
+<code>reward</code>, <code>success</code>, latency, tokens, JSON
+<code>tags</code> and <code>metadata</code>, and
+<code>created_at</code>. <code>episode_embeddings</code> holds one blob
+per episode and an <code>embedding_model</code> column that defaults to
+<code>'all-MiniLM-L6-v2'</code>
+(<code>src/schemas/schema.sql:21-50</code>). <code>storeEmbedding</code>
+never writes that column, so a hash-fallback vector is labelled as
+MiniLM (<code>src/controllers/ReflexionMemory.ts:1302-1310</code>).</p>
+<p><strong>Patterns and skills.</strong> <code>reasoning_patterns</code>
+carries <code>task_type</code>, <code>approach</code>,
+<code>success_rate</code>, <code>uses</code>, <code>avg_reward</code>,
+tags and metadata; <code>skills</code> adds a name, a signature, code,
+<code>avg_latency_ms</code> and links to other skills.</p>
+<p><strong>Causal graph.</strong> <code>causal_edges</code> holds from
+and to ids and types, similarity, uplift, confidence, sample size,
+evidence ids and a free-text <code>mechanism</code>. Its comment says
+the foreign keys were removed so ids can be 0 for <em>"abstract causal
+relationships"</em>
+(<code>src/schemas/frontier-schema.sql:14-44</code>). The consolidator
+writes the two episodes' task text into <code>mechanism</code>
+(<code>src/controllers/NightlyLearner.ts:402</code>), and deleting an
+episode does not touch its edges.</p>
+<p><strong>Scope.</strong> The only key is <code>session_id</code>.
+<code>listEpisodes</code>, <code>getRecentEpisodes</code> and the
+consolidator filter on it; <code>ReflexionQuery</code> has no session
+field, so retrieval cannot
+(<code>src/controllers/ReflexionMemory.ts:129-151</code>). The library's
+<code>AgentDBConfig.namespace</code> is declared and never read
+(<code>src/core/AgentDB.ts:24</code>).</p>
+<p><strong>Time.</strong> <code>ts</code> and <code>created_at</code>
+are record times. The only validity column,
+<code>facts.expires_at</code>, belongs to a table nothing writes.</p>
+<p><strong>Declared and unwritten.</strong> <code>facts</code>,
+<code>notes</code>, <code>consolidated_memories</code>,
+<code>exp_nodes</code>, <code>memory_scores</code>,
+<code>memory_access_log</code> and <code>consolidation_runs</code> have
+no <code>INSERT</code> in <code>src/</code> outside the schema;
+<code>events</code> is written only by <code>agentdb migrate</code>.
+<code>ExplainableRecall</code> reads <code>notes</code> and
+<code>facts</code> when hashing a source of that type, so those reads
+find nothing.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Recall is tool-mediated.</strong> Nothing injects memory into
+a prompt; the agent calls <code>agentdb_search</code>,
+<code>reflexion_retrieve</code>, <code>agentdb_pattern_search</code>,
+<code>skill_search</code> or <code>recall_with_certificate</code> and
+reads a formatted text reply; the two search tools print the first five
+hits.</p>
+<p><strong>The dense arm is a full scan.</strong>
+<code>retrieveFromSQLFallback</code> selects every episode joined to its
+embedding, ordered by reward, and keeps the top k by cosine in a bounded
+heap (<code>src/controllers/ReflexionMemory.ts:633-662</code>). Cost
+grows with the file, and the MCP server never uses the HNSW index the
+README measures.</p>
+<p><strong>Fusion.</strong> With <code>hybrid</code> on by default, BM25
+over task, input, output and critique joins the dense pool by weighted
+reciprocal rank, k = 60, lexical weight 1; keyword-only hits are loaded,
+filtered and given their true cosine
+(<code>src/controllers/episode-hybrid.ts:26-29</code>,
+<code>:125-135</code>). <code>rerank: true</code> adds a cross-encoder
+rank at weight 8 over the top 60 of each list (<code>:151-155</code>).
+The fusion is the strongest piece of the read path, and section 10 shows
+it measured.</p>
+<p><strong>The filters the schema promises.</strong>
+<code>agentdb_search</code> declares <code>filters.session_id</code> and
+<code>filters.tags</code>
+(<code>src/mcp/agentdb-mcp-server.ts:462-468</code>). The handler copies
+<code>min_reward</code> and leaves the comment <em>"Session ID filter
+would require custom query"</em> (<code>:1511-1516</code>), so a model
+that asks for one session's episodes gets the whole file ranked.</p>
+<p><strong>The embedder can stop being one.</strong> When
+<code>@huggingface/transformers</code> is not installed or the model
+cannot load, <code>mockEmbedding</code> hashes the whole string to one
+32-bit integer and fills the vector with <code>sin</code> and
+<code>cos</code> of it
+(<code>src/controllers/EmbeddingService.ts:309-343</code>). Two texts
+that differ by one character get unrelated vectors, so the dense arm
+becomes noise and the lexical arm carries recall.
+<code>agentdb_capabilities</code> reports
+<code>embedding.active: 'mock'</code>; the search reply does not.</p>
+<p><strong>Pattern ranking.</strong>
+<code>0.7 × similarity + 0.2 × success rate + 0.1 × average reward</code>,
+clamped (<code>src/controllers/ReasoningBank.ts:77-81</code>,
+<code>:104-113</code>). A new pattern ranks on the success rate its
+author claimed until the first feedback arrives.</p>
+<p><strong>Neural reranking.</strong> An opt-in
+<code>neuralRerank</code> scores up to 64 candidates with a
+caller-trained ruv-FANN model, in shadow mode by default, which
+annotates scores and keeps the baseline order
+(<code>src/controllers/ReflexionMemory.ts:401-432</code>). Promotion of
+a reranker is admin-only; promotion of a weight-space program is in the
+default learning profile
+(<code>src/security/mcp-policy.ts:43</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and model-free. The tool call embeds the text,
+inserts the row and returns, and the episode is retrievable in the next
+call; the lexical index rebuilds lazily when it sees a new count or
+maximum id. No background pass reads or rewrites the store unless the
+agent calls <code>consolidate_now</code>.</p>
+<p><strong>What the caller decides.</strong> Reward, success, critique
+and, for patterns, the success rate are arguments. The tool descriptions
+do not ask the model to justify them, and nothing in the server checks
+them against an outcome.</p>
+<p><strong>Screening.</strong> <code>screenStoredText</code> runs before
+every episode, pattern and skill write and update
+(<code>src/controllers/ReflexionMemory.ts:191</code>,
+<code>:1145</code>, <code>src/controllers/ReasoningBank.ts:265</code>,
+<code>src/controllers/SkillLibrary.ts:102</code>). It is off unless
+<code>AGENTDB_INJECTION_GUARD</code> is <code>warn</code> or
+<code>block</code>, and <code>block</code> refuses the write when the
+optional <code>aidefence</code> package is missing
+(<code>src/security/injection-guard.ts:88-112</code>). The plugin's mod
+adds a secret check at the tool-call boundary
+(<code>plugins/agentdb/hooks/register.ts:28-52</code>).</p>
+<p><strong>Update.</strong> <code>updateEpisode</code> patches named
+fields, re-embeds only when the embedded text changed, embeds outside
+the transaction, and inside it re-reads the row and refuses the write if
+the text moved meanwhile
+(<code>src/controllers/ReflexionMemory.ts:1206-1222</code>). Patterns
+and skills repeat the check
+(<code>src/controllers/ReasoningBank.ts:839</code>,
+<code>src/controllers/SkillLibrary.ts:1046</code>). The old text is
+overwritten and kept nowhere.</p>
+<p><strong>Delete.</strong> By id through the controller, which removes
+graph, vector-index and SQL copies and invalidates the lexical index; by
+session or before a timestamp through <code>deleteEpisodesWhere</code>,
+which deletes embeddings first because foreign-key cascades are off by
+default (<code>src/mcp/agentdb-mcp-server.ts:1205-1216</code>). Under
+the default learning profile the agent has no delete tool at all, so an
+agent cannot forget anything it stored
+(<code>tests/mcp-crud-e2e.mjs:144-149</code>).</p>
+<p><strong>Consolidation.</strong> <code>discoverCausalEdges</code>
+pairs episodes in the same session within an hour, computes a
+doubly-robust estimate with the treatment indicator fixed at 1 and
+similarity fixed at 0.8, and adds an edge when the estimate and a
+sample-size confidence clear their thresholds
+(<code>src/controllers/NightlyLearner.ts:340-417</code>).
+<code>learner_discover</code> runs it and returns an empty array
+whatever it wrote, with the comment <em>"In a real implementation, we'd
+track and return the actual edges created"</em> (<code>:191</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Every recall embeds the query and scans every embedding row; a
+cross-encoder rerank adds about 200 ms on CPU by the tool's own
+description. Writes cost one embedding. Nothing is injected per turn, so
+nothing touches a provider's prompt cache. <code>consolidate_now</code>
+without a session reads up to 1,000 same-session episode pairs and runs
+several aggregate queries over <code>episodes</code> for each.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The server registers 72 tools: 50 in its own array and 22 from the
+rerank, weight-program and neural-model modules
+(<code>src/mcp/agentdb-mcp-server.ts:393-1196</code>). The README says
+41. Four profiles filter them: <code>readonly</code> and
+<code>retrieval</code> are the same list, <code>learning</code> is the
+default and adds every write and update, and <code>admin</code> adds
+deletes, reset and reranker promotion
+(<code>src/security/mcp-policy.ts:3-90</code>).</p>
+<p>The marketplace lists seven plugins. Only
+<code>plugins/agentdb</code> has an <code>.mcp.json</code>, and it runs
+<code>npx -y agentdb@3.6.0 mcp start</code>, the release of commit
+<code>27678c3</code> on 6 November 2026, so a plugin install runs
+neither this commit nor the reranker and model tools the README
+documents (<code>plugins/agentdb/.mcp.json:4-5</code>). Its mod refuses
+memory writes that look like secrets and refuses destructive tools
+unless <code>allow_destructive</code> is set.</p>
+<p>The other six carry skills, commands and agents that tell the model
+to call <code>agentdb_hierarchical_store</code>,
+<code>agentdb_hierarchical_recall</code>,
+<code>agentdb_causal_edge</code>,
+<code>agentdb_causal_node_delete</code>,
+<code>agentdb_attestation_log</code> and others. None of those names is
+registered in <code>src/</code>. <a href="../ruflo/">Ruflo</a> records
+that AgentDB removed <code>HierarchicalMemory</code> at 3.0.0-alpha.17
+and routes hierarchical memory to its own store, which is consistent
+with these names being a different server's.</p>
+<p>Integration with another agent is easy where it works: the tools take
+plain text, and the policy layer is a reusable allowlist. Memory has no
+session-lifecycle or compaction hook; the mod's
+<code>session.start</code> handler only registers a slash command.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="claims-the-code-does-not-carry">Claims the code does not
+carry</h3>
+<ul>
+<li><em>"Cryptographic audit trail"</em> and <em>"SOC2 / GDPR audit
+trails"</em> (README lines 23 and 131). <code>AuditLogger</code> is
+imported only by <code>auth.middleware.ts</code> and
+<code>rate-limit.middleware.ts</code>, nothing imports either, and
+<code>src/</code> has no HTTP server. It logs authentication events, not
+memory changes.</li>
+<li>The RVF <em>"mutation witness"</em>.
+<code>recordMutationWitness</code> calls
+<code>solver.train({ count: 1, ... seed })</code> with a 32-bit hash of
+<code>insert:&lt;id&gt;</code> or <code>remove:&lt;id&gt;</code>
+(<code>src/backends/rvf/SelfLearningRvfBackend.ts:126-133</code>). What
+the solver's chain records is in <code>@ruvector/rvf-solver</code>, not
+read; the call passes no content, no before or after value and no actor,
+and nothing maps a witness entry back to an id.</li>
+<li>Recall certificates. <code>recall_certificates</code> records which
+sources a recall returned, with a Merkle root over their content hashes.
+It is a retrieval log, and <code>verifyCertificate</code> has no caller
+outside its own file.</li>
+</ul>
+<h3 id="silent-degradation">Silent degradation</h3>
+<p>The hash fallback in section 6 is logged once at start to stderr and
+stored under the MiniLM label. A store written partly offline holds two
+embedding spaces with no way to tell rows apart, the failure <a
+href="../ruvector/">RuVector</a>'s hook store refuses with a provenance
+stamp. <code>EmbeddingSpaceIdentity</code> and
+<code>assertEmbeddingSpaceCompatible</code> exist here and are used only
+by <code>MemoryController</code>, an in-process map that nothing outside
+tests constructs.</p>
+<h3 id="injection-and-authority">Injection and authority</h3>
+<p>Every stored memory is the agent's own claim about its own success,
+and every MCP client of one server shares one file. Screening is opt-in.
+The default profile cannot delete, which also means a poisoned episode
+stays until an operator runs an admin server.</p>
+<h3 id="deletion">Deletion</h3>
+<p>Deletes are hard and leave no residue in the episode tables. The task
+text of a deleted episode survives in any
+<code>causal_edges.mechanism</code> the consolidator wrote and in SQLite
+free pages until a <code>VACUUM</code>.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — withheld.</strong>
+<code>session_id</code> is the only key, retrieval cannot filter on it,
+and the search drops the filter its schema declares. Isolation is one
+database file per server process, a physical partition.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No status
+column exists on any memory. Reward, success and success rate rank and
+back optional caller-chosen minimums; the reranker's shadow and active
+modes describe a ranking model, not a memory.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> No append-only
+record of memory mutations exists; the three candidates above are an
+unwired auth log, a solver training call and a retrieval log.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Writes take
+effect at once. Admin-only promotion and rollback apply to reranker
+models, which are not memory, and weight-program promotion is open to
+the default profile.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> A deleted
+episode leaves nothing that a later write consults.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> Record time
+only; <code>facts.expires_at</code> has no writer.</li>
+<li><strong><code>negative_eval</code> — withheld.</strong> The one
+memory-level case cannot fail on what it names, and the cases that can
+fail sit on the vector-index layer the MCP server does not use (section
+10).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran nothing from the repository. <code>library.yml</code> runs on
+pull requests: 30 named vitest targets, the MCP stdio-purity, CRUD,
+FANN, weight-program and rerank end-to-end scripts, and the
+neural-rerank evaluation
+(<code>.github/workflows/library.yml:40-52</code>). The rest of the
+2,668 cases run only by hand.</p>
+<p>What the memory tests cover:</p>
+<ul>
+<li>episode, pattern and skill get, list, update and delete,
+re-embedding, concurrency refusal and orphan-free deletes with foreign
+keys off (<code>tests/unit/controllers/crud-adr017.test.ts</code>);</li>
+<li>the same verbs over the real MCP transport, including that the
+learning profile neither lists nor runs the three delete tools and that
+the injection guard reports a planted instruction
+(<code>tests/mcp-crud-e2e.mjs:60-175</code>);</li>
+<li>hybrid fusion and cross-encoder ordering
+(<code>tests/unit/controllers/ReflexionMemory-hybrid.test.ts</code>,
+<code>tests/unit/controllers/episode-rerank.test.ts</code>).</li>
+</ul>
+<p><strong>The negative case that cannot fail.</strong> <em>"re-embeds
+on a text change and the keyword index serves the new text, not the
+old"</em> stores 31 episodes, renames one from <em>zorblax</em> to
+<em>quuxifier</em>, and asserts that a search for <em>zorblax</em>
+returns no episode whose task contains it
+(<code>tests/unit/controllers/crud-adr017.test.ts:126-143</code>). Both
+arms load each hit's row from the table after the update, so
+<code>task</code> holds the new text whether or not the keyword index
+was refreshed. The assertion can pass with a stale index, which is the
+defect its name says it excludes.</p>
+<p><strong>The negative cases that can fail are below the
+memory.</strong> <code>rvf-049-upsert-lock.test.ts:218-226</code> and
+<code>ruvector-backend-async.test.ts:60-78</code> remove a vector from a
+populated index and require it absent from the next search. They test
+the <code>RvfBackend</code> and <code>RuVectorBackend</code> wrappers,
+which the MCP server and CLI never construct.</p>
+<p><strong>The +36% has no measurement behind it.</strong> The README
+cites <code>benchmarks/ruvector-performance.test.ts</code> for a
+<em>"Self-learning quality lift"</em> of +36%
+(<code>README.md:183</code>). That file times inserts, searches and
+graph queries and measures no quality. The number comes from
+<code>benchmarks/advanced-self-learning-benchmark.js</code>, which
+raises a variable <code>overallSuccessRate</code> by 0.04 at the start
+of each of ten sessions, generates episodes that succeed with that
+probability, records the variable as the session's success rate, and
+reports the difference between the last and the first: 0.90 − 0.54
+(<code>:122-161</code>). Retrieval does not feed it.</p>
+<p><strong>LongMemEval recomputes.</strong> The README's three rows
+(recall_all@5 0.630, 0.719, 0.789) match <code>dense only</code>,
+<code>hybrid rrf 1:1 max</code> and <code>hybrid 1:1 + CE x8</code> in
+<code>benchmarks/longmemeval/results/m-ms-marco-MiniLM-L-6-v2.json</code>.
+The harness imports the product's <code>Bm25Index</code> and tokenizer
+and its own RRF with the same k and weight, over turn chunks with
+max-per-session aggregation; it does not call
+<code>retrieveRelevant</code>. BM25 alone scores 0.702 in the same file,
+so most of the hybrid's lift over dense comes from the lexical arm.</p>
+<p><strong>The speed table has harnesses and no outputs.</strong>
+<code>benchmarks/hnsw/</code>, <code>vector-search/</code>,
+<code>database/</code> and <code>quantization/</code> each hold one
+script; the only committed result files are the LongMemEval set and two
+CRUD latency runs under <code>benchmarks/results/</code>.
+<code>npm run bench</code>, which the README offers, is not a script in
+<code>package.json</code>.</p>
+<p>No paper describes AgentDB. The ADRs cite related work, and the
+episode store credits Reflexion (Shinn et al., 2023) in prose without an
+identifier.</p>
+<p>What I would want before trusting it: a search for one session's
+episodes that must omit another session's; a store written with the hash
+fallback and read with MiniLM; and a delete followed by a populated
+search through the MCP tool.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Re-embed inside the writer's transaction and refuse a
+concurrent edit.</strong> Embed outside, re-read inside, and abort if
+the text moved; a stale vector can never be stored against new
+text.</li>
+<li><strong>A default tool profile without deletes.</strong> Shipping
+writes and updates to the model and keeping destructive verbs behind an
+operator setting is a cheap, real boundary.</li>
+<li><strong>Commit the result files beside the headline table.</strong>
+The LongMemEval rows are checkable because the JSON is in the tree, per
+question type.</li>
+<li><strong>Report the embedder that is actually running.</strong>
+<code>getRuntimeInfo</code> and <code>agentdb_capabilities</code> say
+<code>mock</code> when the model did not load; put that in every search
+reply too.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A filter in the tool schema that the handler drops.</strong>
+The model reads the schema as a promise; refuse the argument or apply
+it.</li>
+<li><strong>A hash embedder as a silent fallback under the real model's
+label.</strong> Stamp each vector with what produced it and refuse to
+mix.</li>
+<li><strong>Self-reported reward as a ranking input.</strong> A model
+that writes its own success rate ranks its own claims; take outcomes
+from something the model does not author.</li>
+<li><strong>A benchmark whose improvement is a loop variable.</strong>
+If the number would be the same with retrieval removed, it measures the
+script.</li>
+<li><strong>Plugin skills written against another server's tool
+names.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single developer who wants a local episode log with good
+hybrid recall and is content to treat every entry as the agent's own
+account. It needs nothing to run and the file is inspectable. Walk away
+if two agents, users or projects share a server and must not see each
+other's episodes, if a correction has to be recorded rather than
+overwritten, or if the README's learning and audit claims are the reason
+for choosing it: the code that would carry them is unwired or measures
+nothing. The release cadence, eight library tags between 1 and 10
+November 2026, means the surface will move.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the MCP server is meant to use a vector backend; its
+capability report says it does not, and the README's performance table
+assumes one.</li>
+<li>What <code>@ruvector/rvf-solver</code>'s witness chain actually
+records for a <code>train</code> call; the package is not in this
+tree.</li>
+<li>What the published <code>agentdb@3.6.0</code> contains; the plugin
+runs it, and the repository has no tag for it.</li>
+<li>Which server the six sibling plugins' tool names were written
+for.</li>
+<li>Whether the sql.js path is common in practice, since it sets the
+five-minute loss window.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>src/schemas/schema.sql</code>,
+<code>src/schemas/frontier-schema.sql</code>,
+<code>src/schemas/inline.ts</code></li>
+<li>Episodes: <code>src/controllers/ReflexionMemory.ts</code>,
+<code>src/controllers/episode-hybrid.ts</code>,
+<code>src/search/conversation-retrieval.ts</code>,
+<code>src/controllers/crud-helpers.ts</code></li>
+<li>Patterns and skills: <code>src/controllers/ReasoningBank.ts</code>,
+<code>src/controllers/SkillLibrary.ts</code></li>
+<li>Causal graph and consolidation:
+<code>src/controllers/CausalMemoryGraph.ts</code>,
+<code>src/controllers/CausalRecall.ts</code>,
+<code>src/controllers/ExplainableRecall.ts</code>,
+<code>src/controllers/NightlyLearner.ts</code></li>
+<li>Embeddings: <code>src/controllers/EmbeddingService.ts</code>,
+<code>src/embedding/EmbeddingSpaceIdentity.ts</code></li>
+<li>Storage: <code>src/db-fallback.ts</code>,
+<code>src/core/AgentDB.ts</code>, <code>src/backends/</code></li>
+<li>MCP: <code>src/mcp/agentdb-mcp-server.ts</code>,
+<code>src/mcp/rerank-tools.ts</code>, <code>src/mcp/wsp-tools.ts</code>,
+<code>src/mcp/fann-tools.ts</code>,
+<code>src/security/mcp-policy.ts</code>,
+<code>src/security/injection-guard.ts</code></li>
+<li>CLI: <code>src/cli/agentdb-cli.ts</code>,
+<code>src/cli/commands/migrate.ts</code></li>
+<li>Unwired: <code>src/services/audit-logger.service.ts</code>,
+<code>src/middleware/</code>,
+<code>src/controllers/MemoryController.ts</code></li>
+<li>Plugins: <code>.claude-plugin/marketplace.json</code>,
+<code>plugins/agentdb/</code>, <code>plugins/agentdb-*/</code></li>
+<li>Tests and benchmarks:
+<code>tests/unit/controllers/crud-adr017.test.ts</code>,
+<code>tests/mcp-crud-e2e.mjs</code>, <code>tests/backends/</code>,
+<code>benchmarks/longmemeval/</code>,
+<code>benchmarks/advanced-self-learning-benchmark.js</code>,
+<code>.github/workflows/library.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No supersession, validity or tombstone vocabulary in the
+source.</strong>
+<code>git grep -n -i -E 'tombstone|supersed|valid_from|validfrom|valid_until|validuntil' -- src</code>
+returns nothing; <code>git grep -n -i -E 'expires_at' -- src</code>
+matches <code>src/controllers/WeightPrograms.ts:50</code>.</li>
+<li><strong>Seven tables have no writer.</strong>
+<code>git grep -n -i -E 'INTO (facts|notes|consolidated_memories|memory_access_log|consolidation_runs|memory_scores|exp_nodes)([^_a-z]|$)' -- src ':!*.sql' ':!src/schemas/inline.ts'</code>
+returns nothing; the same form with <code>reasoning_patterns</code>
+matches <code>src/controllers/ReasoningBank.ts:273</code>, and with
+<code>events</code> matches only
+<code>src/cli/commands/migrate.ts:586</code>.</li>
+<li><strong>The auth and audit middleware has no importer.</strong>
+<code>git grep -n -E 'middleware/(auth|rate-limit)' -- src tests</code>
+returns nothing; <code>git grep -n 'auth.middleware' -- src</code>
+matches the relative import at
+<code>src/middleware/rate-limit.middleware.ts:22</code>.</li>
+<li><strong>No HTTP listener.</strong>
+<code>git grep -n -E '\.listen\(|express\(\)|fastify\(' -- src</code>
+and
+<code>git grep -n -E "createServer|from 'http'|from 'node:http'|from 'https'" -- src</code>
+return nothing; <code>git grep -n 'auth.middleware' -- src</code> shows
+the search form matches imports.</li>
+<li><strong>Retrieval takes no session.</strong>
+<code>git grep -n -E 'session_id|sessionId' -- src/controllers/ReflexionMemory.ts</code>
+matches the insert, conversions, <code>getRecentEpisodes</code> and
+<code>listEpisodes</code>, and nothing in <code>retrieveRelevant</code>,
+<code>buildSQLFilters</code> or <code>ReflexionQuery</code>.</li>
+<li><strong>The plugins' extra tool names are not registered.</strong>
+<code>git grep -n -E "'agentdb_(hierarchical|causal_edge|attestation_log|reflexion_store|skill_compose|bandit_pick)" -- src</code>
+returns nothing;
+<code>git grep -n -E "'agentdb_pattern_store'" -- src</code> matches
+<code>src/mcp/agentdb-mcp-server.ts:946</code> and
+<code>:1933</code>.</li>
+<li><strong>The certificate verifier has no caller.</strong>
+<code>git grep -n 'verifyCertificate(' -- src ':!src/controllers/ExplainableRecall.ts'</code>
+returns nothing; the same for <code>createCertificate(</code> matches
+<code>src/controllers/CausalRecall.ts:330</code>.</li>
+<li><strong><code>MemoryController</code> has no product
+constructor.</strong>
+<code>git grep -n 'new MemoryController(' -- src</code> returns
+nothing.</li>
+<li><strong>The episode store never writes
+<code>embedding_model</code>.</strong>
+<code>git grep -n 'embedding_model' -- src ':!*.sql' ':!src/schemas/inline.ts'</code>
+matches <code>src/cli/commands/init.ts:128</code> and
+<code>src/cli/commands/migrate.ts:677</code> only;
+<code>src/schemas/schema.sql:48</code> declares the default.</li>
+<li><strong>The attention tools are not in the server.</strong>
+<code>git grep -n 'attention-mcp-integration' -- src</code> matches only
+comments inside <code>src/mcp/attention-mcp-integration.ts</code>.</li>
+<li><strong><code>namespace</code> is not read by
+<code>AgentDB</code>.</strong>
+<code>git grep -n -E 'namespace' -- src/core/AgentDB.ts</code> matches
+only the declaration at line 24.</li>
+<li><strong>No <code>bench</code> script.</strong>
+<code>grep -n '"bench"' package.json</code> returns nothing;
+<code>grep -n '"benchmark"' package.json</code> matches.</li>
+<li><strong>No paper about AgentDB.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- . ':!package-lock.json' ':!ui'</code>
+returns references in <code>docs/ADR-002-*</code> and
+<code>docs/adrs/</code> to prior work only.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/ruvnet/agentdb/commit/84081e21afa383f7f0849fed96c90b177ce27c8b"><code class="commit-id" title="84081e21afa383f7f0849fed96c90b177ce27c8b">84081e21…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, read
+only. Screened first: twelve auto-run surfaces (the marketplace
+manifest, <code>.gitmodules</code>, seven plugin manifests, the
+<code>agentdb</code> plugin's <code>.mcp.json</code>, its hooks
+directory and <code>hooks.json</code>), one build-time execution point
+(<code>postinstall</code> in <code>package.json</code>), three manifests
+with floating ranges, nothing inside the seven-day cooldown; none
+executed, and the <code>packages/ruvector-upstream</code> submodule was
+not fetched. Docs, skills and plugin prompts were read as data. Nothing
+was installed, built or run, and the 2,668 test cases were not run. No
+marks (<a href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
