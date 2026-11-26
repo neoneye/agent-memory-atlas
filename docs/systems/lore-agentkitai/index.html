@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted cross-agent memory
+server over SQLite or Postgres, with MCP tools, prompt hooks, per-user
+visibility, write-time reconciliation and a supersession log.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Lore
+(AgentKit) — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted cross-agent
+memory server over SQLite or Postgres, with MCP tools, prompt hooks,
+per-user visibility, write-time reconciliation and a supersession log.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Lore
+(AgentKit) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted cross-agent
+memory server over SQLite or Postgres, with MCP tools, prompt hooks,
+per-user visibility, write-time reconciliation and a supersession log.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Lore (AgentKit) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Lore (AgentKit)",
+      "description": "A self-hosted cross-agent memory server over SQLite or Postgres, with MCP tools, prompt hooks, per-user visibility, write-time reconciliation and a supersession log.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Org, project and owner predicates on every
+read, and an MCP remember path that stamps no owner</p>
+          <h1>Lore (AgentKit)</h1>
+          <p class="document-deck">A self-hosted cross-agent memory
+server over SQLite or Postgres, with MCP tools, prompt hooks, per-user
+visibility, write-time reconciliation and a supersession log.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/agentkitai/lore">
+              <span>Source</span>
+              <strong>agentkitai/lore</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/agentkitai/lore/commit/f2fd553a6163fb408c7c842d7445d3b1f5d3da09" title="f2fd553a6163fb408c7c842d7445d3b1f5d3da09">
+              <span>Analyzed revision</span>
+              <code>f2fd553a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/agentkitai--lore" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>agentkitai--lore</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE, pyproject.toml and ts/package.json</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>54,607
+lines of Python in 220 files under src/, of which the two Store
+implementations are 6,428 (SQLite) and 4,530 (Postgres); 56,919 lines of
+Python tests; 2,987 lines of TypeScript in a separate client package; 26
+migrations per backend</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>305
+commits from 12 February to 2 August 2026: 282 under two names of Amit
+Paz and 23 from dependabot; 29 tags, the latest v1.4.2 on 27 June
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>3,416
+Python test functions in 210 files and 154 TypeScript cases; 621 Python
+functions take a store fixture that skips on both backends without a
+reachable Postgres, and the CI job that collects them starts none; none
+run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Lore is a self-hosted memory server for coding agents and other MCP
+clients: a FastAPI service over SQLite or PostgreSQL, an MCP server that
+starts that service in-process by default, prompt hooks that inject
+recalled memories into Claude Code and other agents, and capture and
+dream subagents that write and consolidate memories in the background.
+Its notable part is the read boundary: every recall branch applies the
+org from the credential, a project-or-global scope and a per-user
+private-or-shared visibility in SQL. Its weak part is the distance
+between the write paths and that boundary: the MCP <code>remember</code>
+tool reaches a legacy route that stores no owner, the shipped prompt
+hook sends no project and so retrieves only global rows, and the
+write-time reconciliation step calls <code>are_superseded</code> with
+one argument where both stores require two.</p>
+<p>The README describes bi-temporal facts, an approval queue for graph
+edges with rejected patterns remembered, a full audit log of every
+action and workspace isolation. The code holds a supersession log with
+as-of reads, a relationship validity window stamped from the write
+clock, a review route over a status nothing sets to pending, a
+<code>rejected_patterns</code> table nothing reads, an
+<code>audit_log</code> table nothing writes, and a
+<code>workspace_id</code> column no query uses.</p>
+<p>The licence is MIT, in <code>LICENSE</code>,
+<code>pyproject.toml</code> and the TypeScript manifest.</p>
+<p>Two marks: <code>scope_enforced</code> on the server store's org,
+scope and owner predicates, and <code>negative_eval</code> on a
+project-scope case that runs without Postgres. Section 9 gives the
+reason for each of the five withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is one <strong>row of text with a type, an owner and a
+reach</strong>. The type (<code>note</code>, <code>lesson</code>,
+<code>fact</code>, <code>preference</code>, <code>pattern</code>,
+<code>convention</code>, <code>observation</code> and others, kept in
+<code>meta</code>) decides the default scope: the four universal types
+become <code>global</code>, everything else <code>project</code>
+(<code>src/lore/services/memories.py:36-41</code>). The owner is the
+principal that wrote it, and visibility starts <code>private</code>
+(<code>migrations/026_visibility.sql</code>).</p>
+<p>A row enters by one of four doors, and they do not do the same
+things.</p>
+<ul>
+<li><strong>The MCP <code>remember</code> tool</strong> builds a
+<code>Memory</code> in the sync SDK, redacts and embeds it client-side
+and posts it to <code>POST /v1/lessons</code>, which inserts it with no
+owner and no reconciliation
+(<code>src/lore/store/http.py:233-237</code>,
+<code>src/lore/server/routes/lessons.py:83-111</code>,
+<code>src/lore/services/lessons.py:62-119</code>).</li>
+<li><strong><code>POST /v1/memories</code></strong>, which the
+TypeScript client, <code>AsyncLore</code> and the consolidate route use,
+stamps the owner, reconciles against near-duplicates, and then spawns
+entity extraction and a contradiction check
+(<code>src/lore/server/routes/memories.py:94-163</code>).</li>
+<li><strong>The capture subagent</strong>, a <code>claude -p</code>
+process the Stop and SessionEnd hooks spawn, reads the session buffer
+and calls <code>remember_observation</code>, which posts to
+<code>/v1/observations</code> with the project resolved from the git
+remote (<code>src/lore/cli/commands/capture.py:773</code>).</li>
+<li><strong>The dream subagent</strong>, spawned by a Stop hook once 24
+hours and five sessions have passed, consolidates, supersedes and
+forgets through the MCP tools
+(<code>src/lore/cli/commands/dream.py:355-388</code>).</li>
+</ul>
+<p>A memory stops counting in three ways. A
+<strong>supersession</strong> appends a row to
+<code>memory_supersessions</code>, and the latest row per memory decides
+the state: a non-null <code>superseded_by</code> means superseded, a
+null one means explicitly restored
+(<code>migrations/023_memory_supersessions.sql</code>). Reconciliation,
+the contradiction detector, the <code>supersede</code> and
+<code>consolidate_memories</code> tools and the dream subagent all write
+it. A <strong>delete</strong> removes the row, its vector, its mentions
+and its supersession history. An <strong>expiry</strong> from the
+<code>working</code> (one hour) or <code>short</code> (seven days) tier
+hides the row, and a retention pass deletes it.</p>
+<p>Nothing in the model distinguishes a believed memory from a doubted
+one. A superseded row stays retrievable at a tenth of its hybrid score,
+and the <code>contradiction</code> label the detector adds is a tag.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three write doors into one row shape; only the memories route stamps an owner and reconciles, and its reconcile step raises on a near-duplicate; supersession is read by the hybrid retrieve and not by the MCP recall path, and deleting a replacement rewrites the log that marks its predecessor</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three write doors into one row shape; only the memories route stamps an owner and reconciles, and its reconcile step raises on a near-duplicate; supersession is read by the hybrid retrieve and not by the MCP recall path, and deleting a replacement rewrites the log that marks its predecessor
+flowchart TD
+  A[&quot;MCP remember →&lt;br/&gt;POST /v1/lessons:&lt;br/&gt;no owner, no reconcile&quot;]
+  B[&quot;POST /v1/memories,&lt;br/&gt;TS client, consolidate:&lt;br/&gt;owner set&quot;]
+  C[&quot;capture subagent →&lt;br/&gt;/v1/observations: owner,&lt;br/&gt;project from git remote&quot;]
+  B --&gt; REC{&quot;near-duplicate&lt;br/&gt;≥ 0.90 visible&lt;br/&gt;to the writer?&quot;}
+  REC --&gt;|&quot;yes&quot;| ERR[&quot;are_superseded called&lt;br/&gt;without org_id:&lt;br/&gt;TypeError, write fails&quot;]
+  REC --&gt;|&quot;no&quot;| ROW
+  A --&gt; ROW[&quot;memories row: org_id,&lt;br/&gt;project, scope,&lt;br/&gt;visibility, user_id&quot;]
+  C --&gt; ROW
+  ROW --&gt; SUPW[&quot;contradiction LLM,&lt;br/&gt;supersede tool,&lt;br/&gt;dream subagent&quot;]
+  SUPW --&gt; SUP[&quot;memory_supersessions:&lt;br/&gt;latest row decides&quot;]
+  SUP --&gt; HY[&quot;/v1/retrieve hybrid:&lt;br/&gt;superseded score × 0.1&quot;]
+  SUP -.-&gt;|&quot;not consulted&quot;| LS[&quot;MCP recall →&lt;br/&gt;/v1/lessons/search:&lt;br/&gt;superseded ranks normally&quot;]
+  HY --&gt; HOOK[&quot;prompt hook sends&lt;br/&gt;no project:&lt;br/&gt;global rows only&quot;]
+  DEL[&quot;delete the&lt;br/&gt;replacement memory&quot;] --&gt; NUL[&quot;FK nulls superseded_by:&lt;br/&gt;the log now reads&lt;br/&gt;as un-supersede&quot;]
+  NUL --&gt; SUP</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The server is one FastAPI process, <code>lore.server.app</code>, with
+30 routers over a <code>Store</code> protocol that two classes
+implement: <code>SqliteStore</code> on aiosqlite with sqlite-vec and
+FTS5, and <code>PostgresStore</code> on asyncpg with pgvector
+(<code>src/lore/persistence/factory.py:11-36</code>).
+<code>scripts/check_routes_no_sql.py</code> and
+<code>scripts/check_migrations_parity.py</code>, both run in CI, keep
+SQL out of the routes and the two migration directories in step.</p>
+<ul>
+<li><strong><code>services/</code></strong> holds the logic the routes
+call: memories, lessons, retrieve, temporal, reconciliation,
+contradiction, graph extraction and review, forget, workspaces and the
+rest.</li>
+<li><strong><code>persistence/</code></strong> holds the protocol, the
+typed rows and both stores.</li>
+<li><strong><code>mcp/server.py</code></strong> defines 46 FastMCP tools
+over the sync <code>Lore</code> SDK.</li>
+<li><strong><code>lore.py</code>, <code>store/</code>,
+<code>graph/</code></strong> are the older sync SDK, whose only stores
+are <code>HttpStore</code> and an in-process <code>MemoryStore</code>
+(<code>src/lore/lore.py:214-221</code>).</li>
+<li><strong><code>async_lore.py</code></strong> is an async SDK that
+opens a <code>SqliteStore</code> and calls the same services the routes
+do.</li>
+<li><strong><code>setup.py</code></strong> writes the hook scripts for
+Claude Code, Cursor, Codex and OpenClaw.</li>
+</ul>
+<p><strong>Two stacks share one name.</strong> In local mode the MCP
+server starts the HTTP server on a loopback port in a daemon thread,
+reads the solo API key that bootstrap wrote to
+<code>~/.lore/key.txt</code>, and builds
+<code>Lore(store="remote")</code> over <code>HttpStore</code>
+(<code>src/lore/mcp/server.py:179-260</code>, <code>:279-301</code>).
+The graph, fact, conflict and review tools then call the SDK's
+<code>Store</code> base class, whose methods return nothing:
+<code>get_relationship</code> returns <code>None</code>,
+<code>list_pending_relationships</code> returns <code>[]</code> and
+<code>save_fact</code> is <code>pass</code>
+(<code>src/lore/store/base.py:90-92</code>, <code>:155-156</code>,
+<code>:261-263</code>). The server's own graph, filled by
+<code>graph_extraction</code>, is reachable over <code>/v1/graph</code>,
+the review routes and the web UI, and not through those MCP tools.</p>
+<p>Background work is in-process: <code>asyncio.create_task</code> for
+enrichment, graph extraction and contradiction detection on each create,
+and, on Postgres only, a retention scheduler and an SLO checker started
+in the lifespan (<code>src/lore/server/app.py:165-203</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>uvx --from lore-sdk[mcp] lore-memory</code> is the documented
+zero-config install: the first run downloads a MiniLM ONNX model from
+Hugging Face and creates <code>~/.lore/lore.db</code>. No API key is
+needed to store. The OpenAI-key-gated enrichment and contradiction
+detector switch on when <code>OPENAI_API_KEY</code> is set, and LLM
+relationship extraction needs <code>LORE_GRAPH_LLM=true</code> and the
+<code>claude</code> CLI on <code>PATH</code>. The capture and dream
+subagents run <code>claude -p</code> with
+<code>--permission-mode bypassPermissions</code> and only
+<code>mcp__lore__*</code> tools
+(<code>src/lore/cli/commands/capture.py:614</code>,
+<code>src/lore/cli/commands/dream.py:436</code>).
+<code>docker compose up</code> gives Postgres 16 with pgvector;
+<code>fly.toml</code> and an AWS CDK app under <code>infra/</code> are
+deployment recipes. The SQLite file is readable with
+<code>sqlite3</code>, and <code>lore export</code> writes JSON or
+Obsidian-style Markdown.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Remember over MCP.</strong> <code>remember</code> calls
+<code>Lore.remember</code>, which checks the tier, redacts, embeds, sets
+<code>expires_at</code> from <code>TIER_DEFAULT_TTL</code>, saves
+through <code>HttpStore.save</code> and then runs fact extraction into
+the base class's no-op (<code>src/lore/mcp/server.py:350-379</code>,
+<code>src/lore/lore.py:375-500</code>).</li>
+<li><strong>Create over REST.</strong> <code>create_memory</code> in the
+route embeds, calls <code>services.memories.create_memory</code> with
+<code>user_id=auth.principal_id</code>, then spawns enrichment,
+<code>graph_extraction.extract_and_persist</code> and
+<code>contradiction.detect_and_flag</code>
+(<code>src/lore/server/routes/memories.py:94-163</code>). The service
+redacts, derives the scope, calls <code>reconcile_for_write</code>,
+inserts, and records a supersession on a <code>delete</code> decision
+(<code>src/lore/services/memories.py:44-185</code>).</li>
+<li><strong>Reconcile.</strong> <code>reconcile_for_write</code> recalls
+up to <code>max_candidates</code> rows at similarity 0.90 or more in the
+writer's scope and visibility, then calls
+<code>store.are_superseded({c.id for c in candidates})</code>
+(<code>src/lore/services/reconciliation.py:97-174</code>,
+<code>:143</code>). Both stores declare
+<code>are_superseded(self, memory_ids, org_id, *, at=None)</code>
+(<code>src/lore/persistence/sqlite.py:5925-5930</code>,
+<code>src/lore/persistence/postgres.py:4123-4129</code>).</li>
+<li><strong>Retrieve for the hooks.</strong>
+<code>GET /v1/retrieve</code> embeds the query, resolves the project
+from the key or the query string, runs <code>_hybrid_recall</code> and
+appends up to three recent session snapshots
+(<code>src/lore/server/routes/retrieve.py:150-320</code>).</li>
+<li><strong>Hybrid recall.</strong> <code>_hybrid_recall</code> gathers
+the vector, FTS and graph branches, fuses them with
+<code>_rrf_fuse</code>, asks <code>are_superseded</code> with the org,
+and multiplies by recency, supersession and an optional anonymous-owner
+weight (<code>src/lore/services/retrieve.py:319-366</code>,
+<code>:460-612</code>).</li>
+<li><strong>Recall over MCP.</strong> <code>recall</code> calls
+<code>Lore.recall</code>, which calls <code>HttpStore.search</code>,
+which posts to <code>/v1/lessons/search</code>; the lessons service
+calls <code>recall_by_embedding</code> and re-scores by a type-specific
+decay (<code>src/lore/store/http.py:355-395</code>,
+<code>src/lore/server/routes/lessons.py:117-138</code>,
+<code>src/lore/services/lessons.py:122-200</code>).</li>
+<li><strong>Supersede.</strong>
+<code>POST /v1/memories/{id}/supersede</code> requires the target in the
+org and owned by the caller or unowned, and appends a row with
+<code>agent="api"</code>; <code>/consolidate</code> creates the merged
+memory and supersedes each source
+(<code>src/lore/server/routes/temporal.py:45-53</code>,
+<code>:120-151</code>, <code>:269-336</code>).</li>
+<li><strong>Contradiction.</strong> <code>detect_and_flag</code> recalls
+five neighbours at 0.75 or more across projects within the writer's
+visibility, asks a model through litellm (<code>gpt-4o-mini</code> by
+default) whether each contradicts, tags the new memory and supersedes
+neighbours the writer owns above 0.75 confidence
+(<code>src/lore/services/contradiction.py:123-226</code>).</li>
+<li><strong>Graph.</strong> <code>extract_and_persist</code> runs spaCy
+NER, or with <code>LORE_GRAPH_LLM</code> a <code>claude -p</code>
+extraction, and replaces the memory's mentions and edges, each edge with
+<code>valid_from=now</code>
+(<code>src/lore/services/graph_extraction.py:419-528</code>,
+<code>:535-655</code>).</li>
+<li><strong>Review.</strong> <code>POST /v1/review/{id}</code> sets a
+relationship to <code>approved</code> or <code>rejected</code> and on
+rejection upserts <code>(source_name, target_name, rel_type)</code> into
+<code>rejected_patterns</code>
+(<code>src/lore/services/graph/review.py:162-196</code>).</li>
+<li><strong>Delete.</strong> <code>delete_memory</code> resolves the
+rowid under the org and owner-only predicate and deletes the vector and
+the row in one transaction
+(<code>src/lore/persistence/sqlite.py:1249-1286</code>).</li>
+<li><strong>Forget with proof.</strong> <code>forget_with_proof</code>
+deletes a subject's rows and returns an HMAC-signed certificate; its one
+caller is <code>AsyncLore</code>
+(<code>src/lore/services/forget.py:105-140</code>,
+<code>src/lore/async_lore.py:475-490</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The row.</strong> <code>memories</code> carries
+<code>id</code>, <code>org_id</code>, <code>content</code>,
+<code>context</code>, <code>tags</code>, <code>source</code>,
+<code>project</code>, <code>embedding</code>, <code>created_at</code>,
+<code>updated_at</code>, <code>expires_at</code>, <code>upvotes</code>,
+<code>downvotes</code>, <code>meta</code>, <code>access_count</code>,
+<code>last_accessed_at</code>, <code>scope</code>,
+<code>visibility</code>, <code>user_id</code>, <code>promoted_by</code>
+and <code>promoted_at</code>, plus <code>workspace_id</code>,
+<code>tenant_id</code>, <code>reputation_score</code> and
+<code>quality_signals</code> left by earlier migrations. The SQLite
+insert writes eleven columns, and <code>workspace_id</code> and
+<code>tenant_id</code> are not among them
+(<code>src/lore/persistence/sqlite.py:1125-1130</code>). Migration 025
+dropped <code>importance_score</code> and <code>confidence</code>
+because no caller set them.</p>
+<p><strong>Scope keys.</strong> <code>org_id</code> is a foreign key to
+<code>orgs</code>. <code>scope</code> is
+<code>CHECK (scope IN ('project', 'global'))</code>, backfilled from the
+type (<code>migrations/024_scope_and_kind.sql</code>).
+<code>visibility</code> is
+<code>CHECK (visibility IN ('private', 'shared'))</code>; every row that
+existed when migration 026 ran was set to <code>shared</code>.</p>
+<p><strong>Supersession.</strong>
+<code>memory_supersessions(id, memory_id, superseded_by, reason, ts, agent)</code>
+with <code>memory_id … ON DELETE CASCADE</code> and
+<code>superseded_by … ON DELETE SET NULL</code>
+(<code>migrations/023_memory_supersessions.sql:16-17</code>). The
+<code>agent</code> column records which door wrote the row:
+<code>api</code>, <code>reconcile</code>, <code>contradiction</code> or
+<code>auto</code>.</p>
+<p><strong>The graph.</strong> <code>entities</code>,
+<code>entity_mentions</code> and <code>relationships</code> carry
+<code>org_id NOT NULL</code> since migration 028. A relationship has
+<code>rel_type</code>, <code>weight</code>,
+<code>source_memory_id</code>, <code>valid_from</code>,
+<code>valid_until</code>, <code>superseded_by</code> and a
+<code>status</code> that defaults to <code>approved</code>
+(<code>migrations/011_approval_ux.sql</code>).
+<code>relationship_supersessions</code> mirrors the memory log with the
+same foreign-key actions. <code>rejected_patterns</code> is keyed
+uniquely on <code>(source_name, target_name, rel_type)</code> and
+carries no <code>org_id</code>.</p>
+<p><strong>Time.</strong> <code>created_at</code> and
+<code>updated_at</code> are record times.
+<code>list_memories_at_time</code> reads
+<code>created_at &lt;= at</code> and the supersession rows with
+<code>ts &lt;= at</code>
+(<code>src/lore/persistence/sqlite.py:6029-6085</code>). A
+relationship's <code>valid_from</code> is the extraction clock and its
+<code>valid_until</code> is the clock at expiry or supersession.</p>
+<p><strong>Around the memories.</strong> <code>api_keys</code> with an
+optional bound project and a role; <code>users</code> for OIDC;
+<code>workspaces</code> and <code>workspace_members</code>;
+<code>audit_log</code>; <code>sharing_audit</code>;
+<code>retrieval_events</code>; <code>conversation_jobs</code>;
+<code>dream_runs</code>; profiles, policies, SLO and recommendation
+tables.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Three recall branches, fused.</strong> The vector branch
+scores
+<code>(1 − cosine distance) × 0.5^(min(age, time since access) / half-life)</code>
+over sqlite-vec or pgvector; the FTS branch ranks by BM25 or
+<code>ts_rank</code>; the graph branch finds entity names in the query
+and returns memories that mention them or their neighbours.
+<code>_rrf_fuse</code> adds <code>weight / (60 + rank + 1)</code> per
+branch and divides by the weight total over 61, so a row ranked first
+everywhere scores 1.0
+(<code>src/lore/services/retrieve.py:319-366</code>). Profiles set the
+branch weights, the recency bias and <code>min_score</code>.</p>
+<p><strong>Supersession is a score, on one path.</strong> The hybrid
+path multiplies a superseded row by 0.1 and recency by up to 1.5, so a
+superseded row tops out at 0.15, under the shell hooks'
+<code>min_score</code> of 0.3 and the Python hook's default of 0.5
+(<code>src/lore/services/retrieve.py:556-607</code>,
+<code>src/lore/setup.py:315</code>). The <code>search</code> tool's own
+fallback advice is <code>min_score=0.1</code>, and a profile can lower
+the threshold. The MCP <code>recall</code> tool goes to
+<code>/v1/lessons/search</code>, whose <code>recall_by_embedding</code>
+and re-scoring never read <code>memory_supersessions</code>, so a
+superseded memory ranks as if current there.</p>
+<p><strong>The predicates.</strong> Every branch begins with
+<code>org_id = ?</code>. With a project known it adds
+<code>(scope = 'global' OR (scope = 'project' AND project = ?))</code>;
+with none it adds <code>scope = 'global'</code>;
+<code>scope='all'</code> drops the scope clause and keeps a named
+project. <code>_append_visibility</code> adds the owner clause when a
+principal is known, which on the server is always
+(<code>src/lore/persistence/sqlite.py:374-399</code>,
+<code>:1678-1693</code>).</p>
+<p><strong>The hook sees only global rows.</strong> The Claude Code
+<code>UserPromptSubmit</code> hook builds a query from the last four
+user turns and calls <code>/v1/retrieve</code> with <code>query</code>,
+<code>format</code>, <code>limit</code> and <code>min_score</code> and
+no project (<code>src/lore/setup.py:194-203</code>,
+<code>:315-333</code>). The solo key is created with
+<code>project=None</code>
+(<code>src/lore/persistence/bootstrap.py:161-170</code>), so the route's
+project is <code>None</code> and only <code>scope = 'global'</code> rows
+return. Lessons, preferences, patterns and conventions are injected;
+notes, facts and the observations the capture subagent files under the
+git-remote project are not.</p>
+<p><strong>Starvation on SQLite.</strong> The vec0 query fetches
+<code>k = 4 × limit</code> neighbours and applies the org, scope,
+visibility and expiry predicates after the KNN
+(<code>src/lore/persistence/sqlite.py:1669</code>,
+<code>:1702-1730</code>). In a shared SQLite store, other orgs' rows or
+other users' private rows near the query fill <code>k</code> and the
+visible result comes back short. Postgres puts the predicates in the
+same <code>WHERE</code> as the cosine.</p>
+<p><strong>Formatting.</strong> XML, Markdown or raw text; the hook
+prints a Markdown block with scores. Each retrieval writes a
+<code>retrieval_events</code> row and bumps <code>access_count</code>,
+and a recalled row's <code>last_accessed_at</code> resets its decay.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The REST create returns after the insert; enrichment, extraction and
+contradiction run as unawaited tasks, so a memory is retrievable at once
+and its tags and supersessions land a model call later. The capture path
+is the slow one: the Stop hook spawns a detached <code>claude -p</code>
+that writes when it finishes. No pass rewrites the whole store; the
+dream subagent reads stats, recent transcripts and candidate memories
+once a day at most.</p>
+<p><strong>Reconciliation raises on its own success condition.</strong>
+With <code>LORE_RECONCILIATION_ENABLED</code> on by default, a write
+through <code>services.memories.create_memory</code> whose recall finds
+any row at 0.90 or more calls <code>store.are_superseded</code> with no
+<code>org_id</code>. Commit cebdadb on 26 June 2026 added
+<code>org_id</code> to both stores' <code>are_superseded</code> and
+updated the hybrid recall call; <code>reconciliation.py</code> has not
+changed since its own commit on 23 June
+(<code>src/lore/services/reconciliation.py:143</code>). Nothing catches
+the <code>TypeError</code> in the service or the route, so
+<code>POST /v1/memories</code>, the consolidate route and
+<code>AsyncLore.remember</code> fail for any non-observation write with
+a near-duplicate the writer can see. Consolidation, whose merged text is
+close to its sources by construction, is the case it hits most. I did
+not run this; it is read from the two signatures and the call.</p>
+<p><strong>The legacy route skips all of it.</strong>
+<code>lessons_service.create</code> builds a <code>NewMemory</code> with
+no <code>user_id</code>, no reconciliation, no contradiction and no
+graph extraction (<code>src/lore/services/lessons.py:106-118</code>).
+The MCP <code>remember</code> tool is therefore the one door where
+duplicates accumulate and the one door whose rows nobody owns.</p>
+<p><strong>Contradiction is an LLM judgement acted on.</strong> Above
+0.6 confidence the new memory is tagged <code>contradiction</code> with
+the conflicting ids in <code>meta</code>; above 0.75 each conflicting
+row the writer owns, or that has no owner, is superseded with
+<code>agent="contradiction"</code>. Another principal's row is only
+flagged (<code>src/lore/services/contradiction.py:170-216</code>). Rows
+from the MCP <code>remember</code> door have no owner, so any
+principal's contradicting write can supersede them.</p>
+<p><strong>Redaction.</strong> The sync SDK blocks secrets by default
+before the network; the server pass masks secrets, PII and a
+configurable denylist and tags <code>meta.redacted</code>
+(<code>src/lore/redact/write.py</code>). The capture hook strips
+<code>&lt;private&gt;…&lt;/private&gt;</code> blocks before
+buffering.</p>
+<p><strong>Deletion.</strong> Delete is hard. The dream prompt tells its
+subagent to forget observations older than 30 days with importance under
+0.3 and no access, and to promote observations with importance over 0.7;
+<code>importance</code> was dropped in migration 025, and the prompt
+names an <code>update_memory</code> tool the MCP server does not
+register (<code>src/lore/cli/commands/dream.py:375-388</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A REST create costs one local embedding, one reconciliation KNN, and
+with an OpenAI key up to five contradiction calls in the background. A
+hook retrieval is one embedding and three recall queries, bounded by
+<code>limit</code> (default five) and added to the user prompt by the
+hook. Each capture batch and each dream is a <code>claude -p</code>
+session; the dream subagent is pinned to Sonnet unless overridden.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server's instructions tell the model to call
+<code>recent_activity</code> at the start of every session and to
+<code>remember</code> what is worth keeping
+(<code>src/lore/mcp/server.py:316-326</code>). The 46 tools include
+writes (<code>remember</code>, <code>remember_observation</code>,
+<code>forget</code>, <code>supersede</code>,
+<code>consolidate_memories</code>, <code>supersede_fact</code>,
+<code>promote_memory</code>, <code>demote_memory</code>,
+<code>upvote_memory</code>, <code>downvote_memory</code>,
+<code>review_connection</code>) and reads (<code>recall</code>,
+<code>search</code>, <code>get_memories</code>, <code>timeline</code>,
+<code>list_at_time</code>, <code>provenance</code>, graph and topic
+tools). The model has full write agency: it can delete, supersede and
+approve or reject graph edges with no prompt.</p>
+<p><code>lore setup claude-code</code> installs
+<code>UserPromptSubmit</code>, <code>PostToolUse</code>,
+<code>Stop</code> and <code>SessionEnd</code> hooks and a dream trigger.
+Auto-retrieval therefore needs no model cooperation. Auto-capture runs a
+second agent, with bypassed permissions, whose tool surface is the same
+46 tools, including <code>forget</code>.</p>
+<p>The TypeScript client posts to <code>/v1/memories</code>, so it gets
+owners and reconciliation where the Python MCP path does not.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="two-predicates-the-writers-do-not-feed">Two predicates the
+writers do not feed</h3>
+<p>The read predicates are sound. The writers fill them unevenly.</p>
+<ul>
+<li><strong>Owner.</strong> The MCP <code>remember</code> door stores
+<code>user_id</code> as null. The visibility clause admits
+<code>user_id IS NULL</code> for every principal, and the owner-only
+write clause admits it too, so in a team deployment with per-user keys
+every memory written through MCP <code>remember</code> is readable,
+editable, deletable and supersedable by every key in the org.
+<code>LORE_RECALL_QUARANTINE_ANON</code> would drop exactly these rows
+from hybrid recall (<code>src/lore/services/retrieve.py:296-317</code>,
+<code>:578</code>).</li>
+<li><strong>Project.</strong> The capture subagent resolves the project
+from the git remote; the prompt hook resolves none;
+<code>LORE_PROJECT</code> is the MCP server's own setting.
+<code>resolve_project</code> has one caller, the capture command. A
+project-scoped memory reaches a prompt only through an MCP
+<code>recall</code> whose project string matches the remote-derived one,
+or through <code>scope='all'</code>.</li>
+</ul>
+<h3 id="the-supersession-log-is-rewritten-by-its-own-schema">The
+supersession log is rewritten by its own schema</h3>
+<p><code>memory_supersessions</code> is inserted by four producers and
+no statement updates or deletes it. Its foreign keys do. Deleting a
+memory cascades away its whole history. Deleting the
+<strong>replacement</strong> sets <code>superseded_by</code> to null on
+every row that pointed at it, including the latest row of the memory it
+replaced, which <code>is_superseded</code> and
+<code>are_superseded</code> then read as an explicit un-supersession.
+Forgetting a newer memory revives the one it corrected, and the log
+afterwards records a restoration that never happened. No test covers
+it.</p>
+<h3 id="declared-and-unwired">Declared and unwired</h3>
+<ul>
+<li><strong><code>audit_log</code>.</strong>
+<code>write_audit_log</code> and <code>fire_audit_log</code> exist and
+nothing calls them; <code>lore audit</code> and
+<code>GET /v1/audit</code> read an empty table
+(<code>src/lore/server/audit.py:12-50</code>).
+<code>write_audit_log</code> is also asyncpg-only.</li>
+<li><strong>The review queue.</strong> Relationships default to
+<code>approved</code>, and no code sets <code>pending</code>. The
+listing filters <code>status = 'pending'</code> and is empty; no read
+outside it consults <code>status</code>, so rejecting an edge leaves it
+in graph traversal and recall
+(<code>src/lore/persistence/sqlite.py:5136</code>,
+<code>:5218-5280</code>).</li>
+<li><strong><code>rejected_patterns</code>.</strong> Written on every
+rejection and read by nothing on the server;
+<code>is_rejected_pattern</code> is defined in the SDK's base and
+in-memory stores and has no caller.</li>
+<li><strong>Workspaces.</strong> Creation, members, roles and switching
+exist; no memory query or insert references <code>workspace_id</code>,
+and <code>AuthContext</code> has no workspace.</li>
+<li><strong>Facts and conflicts over MCP.</strong>
+<code>extract_facts</code> needs an SDK LLM provider,
+<code>list_facts</code> and <code>conflicts</code> read the base class's
+empty lists, and <code>graph_query</code> and <code>entity_map</code>
+read an SDK graph that <code>HttpStore</code> never fills.</li>
+</ul>
+<h3 id="authentication-and-authorisation">Authentication and
+authorisation</h3>
+<p>The org comes from the credential: an API key's row, an OIDC token's
+org claim, or an HS256 AgentGate token's <code>tid</code> claim,
+defaulting to <code>default</code>
+(<code>src/lore/server/auth.py:197-235</code>). Key roles are
+<code>reader</code>, <code>writer</code> and <code>admin</code>; the
+memory write routes require <code>writer</code>. The review routes and
+the supersession reads take any authenticated caller, so a
+<code>reader</code> key can approve or reject edges. The supersede route
+checks the org and the owner and not the key's bound project.</p>
+<h3 id="deletion-and-privacy">Deletion and privacy</h3>
+<p>Delete removes the row, its vector, its mentions and its supersession
+history. <code>forget.py</code> states what it does not reach:
+relationships, recommendation feedback and the memory-id lists in
+<code>retrieval_events</code> and <code>conversation_jobs</code>.
+Exports and snapshots keep whatever they captured.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> The org is
+server-resolved and the first predicate of every read; the scope and
+owner clauses sit in the SQL of the vector, FTS and graph branches, of
+get, list, export, session snapshots and as-of reads. The limits are the
+ownerless door and the client-supplied project above.</li>
+<li><strong><code>negative_eval</code> — earned.</strong>
+<code>test_recall_with_no_current_project_returns_only_global</code>
+stores two rows on one embedding, requires the global one and excludes
+the project-scoped one, against a SqliteStore the test opens
+itself.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> The one
+producing log is the supersession table: it records supersede and
+un-supersede and nothing else, its rows are deleted with the memory, and
+its pointer is nulled when the replacement is deleted, which changes
+what the remaining row means. The general <code>audit_log</code> has no
+writer.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> Supersession
+is a pointer read as a score multiplier; relationship
+<code>status</code> is read only by a listing nothing fills; the
+<code>contradiction</code> tag filters nothing.</li>
+<li><strong><code>tombstone</code> — withheld.</strong>
+<code>rejected_patterns</code> is keyed on the value, and no extraction
+path consults it.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> Edge validity
+is the extraction and expiry clock; memories have no valid time.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Nothing
+enters <code>pending</code>, and the approve verb is also an MCP tool
+the agent holds.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI runs <code>pytest --ignore=tests/server/</code> on Python 3.10,
+3.11 and 3.12 with no database service, and
+<code>pytest tests/server/ -v</code> in a second job with pgvector
+(<code>.github/workflows/ci.yml:36</code>, <code>:70</code>). I ran
+nothing.</p>
+<p><strong>The contract suite skips itself in CI.</strong> The
+parametrized <code>store</code> fixture takes <code>_pg_pool</code> as
+an argument, and <code>_pg_pool</code> calls <code>pytest.skip</code>
+when Postgres is unreachable, so the <code>postgres</code> and the
+<code>sqlite</code> parameter both skip
+(<code>tests/persistence/conftest.py:57-71</code>, <code>:78</code>).
+The first CI job has no Postgres; the second runs only
+<code>tests/server/</code>. The 621 functions that take the fixture, in
+tests/persistence, tests/services and one integration file, never
+execute in CI. <code>tests/services/test_phase6g_scope.py</code> and
+<code>tests/integration/test_phase6g_e2e.py</code> both say so in their
+docstrings. That is how the reconciliation defect shipped:
+<code>tests/services/test_memories_reconciliation.py</code> drives the
+near-duplicate path through <code>create_memory</code>, and at :87 it
+calls <code>store.is_superseded(old.id)</code> without the
+<code>org_id</code> both stores have required since 26 June.</p>
+<p>What the suites that do run cover:</p>
+<ul>
+<li>the project and global scope clause on a SqliteStore, including the
+populated negative case
+(<code>tests/services/test_phase6g_scope.py:290-328</code>);</li>
+<li>RRF normalisation, recency, the supersession multiplier and the
+anonymous-owner quarantine on fakes
+(<code>tests/test_hybrid_retrieval.py</code>,
+<code>tests/services/test_temporal_supersession.py:345-390</code>);</li>
+<li>the <code>AsyncLore</code> SDK over a temporary SqliteStore
+(<code>tests/embedded/test_async_lore.py</code>);</li>
+<li>the MCP tool wrappers against mocked HTTP
+(<code>tests/test_mcp_provenance_and_recall.py</code>);</li>
+<li>the sync SDK, graph, facts, conflicts and review against
+<code>MemoryStore</code>.</li>
+</ul>
+<p>What is written and does not run in CI: owner isolation on every read
+and write (<code>tests/persistence/test_visibility.py</code>, 19 cases,
+populated), graph org isolation, supersession and as-of reads,
+contradiction, reconciliation and forget-with-proof.</p>
+<p>Not covered anywhere: a supersession surviving the deletion of its
+replacement; a <code>remember</code> through MCP being hidden from a
+second principal; the hook retrieving a project-scoped memory.</p>
+<p><code>benchmarks/run_benchmarks.py</code> measures SDK latency over
+<code>MemoryStore</code>. No retrieval-quality evaluation is committed,
+and the tree cites no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One predicate helper, appended on every branch.</strong>
+<code>_append_visibility</code> takes the WHERE list and the bind list
+and appends both in step, with an owner-only variant for writes, so
+vector, FTS, graph, list and export cannot drift apart.</li>
+<li><strong>Scope derived from the kind of memory.</strong> Universal
+types default to global and everything else to the project, and the read
+clause collapses to global-only when no project is known rather than to
+everything.</li>
+<li><strong>A supersession log with explicit restoration.</strong>
+Latest row wins, and a null pointer is a recorded un-supersede, so as-of
+reads replay the log.</li>
+<li><strong>Supersede only what the writer owns.</strong> The
+contradiction detector flags another principal's row and leaves it
+current.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A legacy write route beside the governed one.</strong> Every
+guarantee the new route adds (owner, reconciliation, contradiction) is
+absent from the path the MCP tool uses. Retire the old route or send it
+through the new service.</li>
+<li><strong>Foreign-key actions on an audit table.</strong>
+<code>ON DELETE SET NULL</code> on the replacement pointer turns a
+deletion into a fabricated restoration. Keep ids in an audit as plain
+text.</li>
+<li><strong>A test fixture that couples two backends.</strong> One
+unreachable database skipped the other backend's whole suite and hid a
+signature change for months.</li>
+<li><strong>Writer and reader resolving the project separately.</strong>
+Derive it once and hand it to both, or the hook never sees what capture
+filed.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that wants one memory server for several coding
+agents, will run Postgres, issue a key per person, and call
+<code>/v1/memories</code> from its own clients. It does not yet suit the
+zero-config MCP install its README leads with: that path writes through
+the legacy route, injects only global memories, and runs two subagents
+with bypassed permissions over a store whose reconciliation raises on
+near-duplicates. Walk away if a correction must hold after the corrected
+memory is deleted, or if the review queue and audit log in the README
+are requirements.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the <code>/v1/lessons</code> routes are meant to stay as the
+MCP write path or to be retired in favour of
+<code>/v1/memories</code>.</li>
+<li>Whether the hook is meant to send a project, and which resolver it
+should use.</li>
+<li>What is meant to set a relationship to <code>pending</code>.</li>
+<li>Whether <code>ON DELETE SET NULL</code> on
+<code>superseded_by</code> is intended.</li>
+<li>Whether the persistence suite is run against Postgres anywhere
+outside CI.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>migrations/</code> and <code>migrations_sqlite/</code>
+(023, 024, 026, 027, 028 carry the memory semantics),
+<code>src/lore/persistence/types.py</code>,
+<code>src/lore/persistence/protocol.py</code></li>
+<li>Stores: <code>src/lore/persistence/sqlite.py</code>,
+<code>src/lore/persistence/postgres.py</code>,
+<code>src/lore/persistence/factory.py</code>,
+<code>src/lore/persistence/bootstrap.py</code></li>
+<li>Write path: <code>src/lore/server/routes/memories.py</code>,
+<code>src/lore/server/routes/lessons.py</code>,
+<code>src/lore/server/routes/observations.py</code>,
+<code>src/lore/services/memories.py</code>,
+<code>src/lore/services/lessons.py</code>,
+<code>src/lore/services/reconciliation.py</code>,
+<code>src/lore/services/contradiction.py</code>,
+<code>src/lore/services/graph_extraction.py</code>,
+<code>src/lore/redact/write.py</code></li>
+<li>Retrieval: <code>src/lore/server/routes/retrieve.py</code>,
+<code>src/lore/services/retrieve.py</code>,
+<code>src/lore/services/lessons.py</code></li>
+<li>Supersession and time:
+<code>src/lore/server/routes/temporal.py</code>,
+<code>src/lore/services/temporal.py</code>,
+<code>src/lore/server/routes/facts.py</code></li>
+<li>Review and audit: <code>src/lore/services/graph/review.py</code>,
+<code>src/lore/server/routes/review.py</code>,
+<code>src/lore/server/audit.py</code>,
+<code>src/lore/server/routes/audit.py</code></li>
+<li>Auth: <code>src/lore/server/auth.py</code></li>
+<li>MCP and SDKs: <code>src/lore/mcp/server.py</code>,
+<code>src/lore/lore.py</code>, <code>src/lore/store/http.py</code>,
+<code>src/lore/store/base.py</code>,
+<code>src/lore/async_lore.py</code>,
+<code>ts/src/store/remote.ts</code></li>
+<li>Hooks and subagents: <code>src/lore/setup.py</code>,
+<code>hooks/</code>, <code>src/lore/cli/commands/capture.py</code>,
+<code>src/lore/cli/commands/_project.py</code>,
+<code>src/lore/cli/commands/dream.py</code></li>
+<li>Forget: <code>src/lore/services/forget.py</code></li>
+<li>Tests: <code>tests/persistence/conftest.py</code>,
+<code>tests/services/test_phase6g_scope.py</code>,
+<code>tests/persistence/test_visibility.py</code>,
+<code>tests/services/test_memories_reconciliation.py</code>,
+<code>tests/services/test_temporal_supersession.py</code>,
+<code>.github/workflows/ci.yml</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Nothing calls the audit writer.</strong>
+<code>git grep -n -E 'fire_audit_log|write_audit_log' -- src</code>
+returns only the three lines of <code>src/lore/server/audit.py</code>
+that define and schedule them.</li>
+<li><strong>Nothing reads rejected patterns on the server.</strong>
+<code>git grep -n -E 'is_rejected_pattern|FROM rejected_patterns' -- src</code>
+returns the two definitions in <code>src/lore/store/base.py:276</code>
+and <code>src/lore/store/memory.py:426</code>.</li>
+<li><strong>Nothing sets a relationship to pending.</strong>
+<code>git grep -n -E "'pending'|\"pending\"" -- src/lore/persistence src/lore/services src/lore/server</code>
+returns the two listing predicates (<code>postgres.py:1788</code>,
+<code>sqlite.py:5136</code>) and a docstring in
+<code>protocol.py:506</code>.</li>
+<li><strong>No read filters on an approved or rejected status.</strong>
+<code>git grep -n -E "status = 'approved'|status != 'rejected'|status &lt;&gt; 'rejected'|status IN" -- src/lore/persistence</code>
+returns nothing;
+<code>git grep -n -E "status = 'pending'" -- src/lore/persistence</code>
+matches the two listing predicates.</li>
+<li><strong>No statement updates or deletes a supersession row.</strong>
+<code>git grep -n -E 'UPDATE memory_supersessions|DELETE FROM memory_supersessions|UPDATE relationship_supersessions|DELETE FROM relationship_supersessions' -- .</code>
+returns nothing;
+<code>git grep -n -c 'INSERT INTO memory_supersessions' -- src</code>
+counts one in each store.</li>
+<li><strong>One relationship constructor, on the write clock.</strong>
+<code>git grep -n 'NewRelationship(' -- src</code> returns
+<code>src/lore/services/graph_extraction.py:643</code>, whose
+<code>valid_from</code> is <code>now</code>.</li>
+<li><strong>The lessons service sets no owner.</strong>
+<code>git grep -n -w 'user_id' -- src/lore/services/lessons.py</code>
+returns nothing; the same file passes <code>requesting_user_id</code> on
+its reads.</li>
+<li><strong>No workspace in authentication or memory writes.</strong>
+<code>git grep -n -w -i 'workspace' -- src/lore/server/auth.py</code>
+returns nothing;
+<code>git grep -n -w 'workspace_id' -- src/lore/server/routes/memories.py src/lore/server/routes/lessons.py src/lore/services/memories.py src/lore/services/lessons.py</code>
+returns nothing.</li>
+<li><strong>The hook scripts name no project.</strong>
+<code>git grep -n -i 'project' -- src/lore/setup.py</code> returns one
+docstring at :1191 about Cursor's project-level hooks directory.</li>
+<li><strong>The project resolver has one caller.</strong>
+<code>git grep -n 'resolve_project' -- src</code> outside
+<code>_project.py</code> returns
+<code>src/lore/cli/commands/capture.py:80</code> and <code>:773</code>,
+and a comment in <code>src/lore/cli/__init__.py:688</code>.</li>
+<li><strong>The MCP server registers no update tool.</strong>
+<code>git grep -n -E 'def update_memory' -- src/lore/mcp</code> returns
+nothing; the same pattern without the path matches the service and the
+stores.</li>
+<li><strong>The reconcile call is the only one without an org.</strong>
+<code>git grep -n -E 'are_superseded\(' -- src</code> returns the three
+definitions, <code>src/lore/services/retrieve.py:560</code> with
+<code>params.org_id</code>, and
+<code>src/lore/services/reconciliation.py:143</code> without it.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- . ':!*package-lock.json'</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/agentkitai/lore/commit/f2fd553a6163fb408c7c842d7445d3b1f5d3da09"><code class="commit-id" title="f2fd553a6163fb408c7c842d7445d3b1f5d3da09">f2fd553a…</code></a>.
+First reading, from a full clone at the head of <code>main</code>.
+Screened first: three auto-run surfaces (<code>.cursorrules</code>,
+<code>hooks/</code>, and <code>server.json</code>, which launches the
+package through <code>uvx</code>), seven build-time execution points
+(<code>src/lore/setup.py</code>, five <code>conftest.py</code> files,
+the TypeScript <code>prepublishOnly</code>), four unpinned manifests,
+nothing inside the seven-day cooldown. <code>.cursorrules</code> and
+<code>CLAUDE.md</code> are addressed to agents and were read as data.
+Nothing was installed, built or run, and the test functions were not
+run. Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). The MCP write
+path stores no owner, the hook retrieves only global rows,
+reconciliation calls <code>are_superseded</code> without its org, and
+the contract suite skips in CI.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

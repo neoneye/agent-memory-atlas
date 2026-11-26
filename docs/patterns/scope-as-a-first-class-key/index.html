@@ -1958,6 +1958,23 @@ entity graph returns another user's memory naming the same entity; the
 project's own eval asserts that cross-user edge exists
 (<code>tests/evals/test_trust_model.py:840</code>). Every scope test
 runs with the graph overlays off.</p>
+<p><a href="../../systems/lore-agentkitai/">Lore (AgentKit)</a> puts
+three keys in every read and lets two of its writers leave them empty.
+Each recall branch, get, list, export and as-of read starts with the
+credential's <code>org_id</code>, adds
+<code>(scope = 'global' OR (scope = 'project' AND project = ?))</code>,
+or <code>scope = 'global'</code> alone when no project is known, and
+appends
+<code>visibility = 'shared' OR user_id = ? OR user_id IS NULL</code>
+through one helper that binds the value in the same call. The MCP
+<code>remember</code> tool posts to a legacy route that stores no owner,
+so its rows match the <code>user_id IS NULL</code> disjunct for every
+principal in the org. The prompt hook sends no project and retrieves
+global rows only, while the capture subagent files observations under a
+project resolved from the git remote, a resolver with that one caller.
+<strong>A predicate that admits the unowned row is only as strict as the
+least careful writer, and a project key is only as useful as the
+reader's copy of it.</strong></p>
 <p><a href="../../systems/web4-node-starter-kit/">Fractera</a> keys
 every diary row on the agent whose session wrote it and takes that key
 from outside the session. The bridge writes the element id into each

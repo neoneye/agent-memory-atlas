@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 884 of 885 screened at the report's current pin.**
+**Progress: 885 of 886 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 425 |
+| Repositories with an auto-run surface (`RUNS`) | 426 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 400 |
-| Repositories with build-time execution (`EXEC`) | 635 |
+| Repositories with build-time execution (`EXEC`) | 636 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -228,6 +228,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`local-memory-mcp`](../../content/systems/local-memory-mcp.md) | `server.json` |
 | [`lokalbot`](../../content/systems/lokalbot.md) | `.claude-plugin/`, `Distribution/claude-plugin/.claude-plugin/plugin.json` |
 | [`longterm-memory-mcp`](../../content/systems/longterm-memory-mcp.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `.mcp.json`, `.vscode/mcp.json`, `server.json` |
+| [`lore-agentkitai`](../../content/systems/lore-agentkitai.md) | `.cursorrules`, `hooks/`, `server.json` |
 | [`lorekit`](../../content/systems/lorekit.md) | `.claude-plugin/`, `plugins/lorekit-claude/.claude-plugin/plugin.json`, `plugins/lorekit-claude/hooks/`, `plugins/lorekit-claude/hooks/hooks.json` |
 | [`loreweave`](../../content/systems/loreweave.md) | `server.json` |
 | [`lossless-context-mcp`](../../content/systems/lossless-context-mcp.md) | `hooks/`, `server.json` |

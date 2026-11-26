@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 885 reports.**
+**This page covers all 886 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8173,3 +8173,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 79,939 lines of TypeScript under src, 95 commits from 6 May to 11 November 2026 under three names of one author, eight library tags in ten days of November; 2,668 test cases, 30 targets of them run in CI on pull requests, none run here; the LongMemEval table recomputes from committed JSON and the speed table has harnesses and no outputs. No marks.
 - Study when: you want hybrid episode recall over one SQLite file with a measured, checkable fusion, or a CRUD layer that keeps text, vectors and the keyword index in step.
 - Do not copy when: two agents, users or projects share a store, a correction must be recorded rather than overwritten, or the learning and audit claims are why you are looking.
+
+### [`lore-agentkitai`](../systems/lore-agentkitai/)
+- Best idea: **one helper appends the owner clause and its bind value together on every read.** `_append_visibility` adds `visibility = 'shared' OR user_id = ? OR user_id IS NULL` to the vector, full-text and graph branches and to get, list, export, session snapshots and as-of reads, with an owner-only variant for update and delete, after an `org_id` taken from the credential.
+- Second idea: derive the scope from the kind of memory. Lessons, preferences, patterns and conventions default to global and everything else to the project, and a read with no project sees only global rows rather than everything; a populated SQLite test pins it.
+- Biggest risk: **the writers do not feed the read predicates.** The MCP `remember` tool posts to `/v1/lessons`, which stores no owner, so every key in the org can read, edit, delete and supersede those rows; the prompt hook sends no project and injects only global rows, while the capture subagent files observations under a project taken from the git remote.
+- Second risk: write-time reconciliation, on by default, calls `are_superseded` without the `org_id` both stores have required since 26 June 2026, so a `/v1/memories` or consolidate write with a near-duplicate raises. `ON DELETE SET NULL` on the supersession pointer turns deleting a replacement into a restoration of the memory it corrected. The tests that would catch both take a fixture that skips without Postgres, and CI gives that job none. The audit log, review queue and rejected-pattern table in the README have no writer, no producer and no reader respectively.
+- Most reusable component: `_append_visibility` and the scope clause of `recall_by_embedding`, `src/lore/persistence/sqlite.py:374-399` and `:1678-1693`; `default_scope_for_type`, `src/lore/services/memories.py:36-41`; `_rrf_fuse`, `src/lore/services/retrieve.py:319-366`.
+- Maturity impression: MIT; 54,607 lines of Python under `src/` and 56,919 of tests, 305 commits from 12 February to 2 August 2026, 282 of them by one author, 29 tags to v1.4.2; 3,416 Python test functions, 621 of them behind a fixture that skips in CI, none run here. Two marks: `scope_enforced`, `negative_eval`.
+- Study when: you are building one memory server for several principals and want the org, scope and owner predicates in one place on every read branch.
+- Do not copy when: you will rely on the zero-config MCP install, a correction must survive deleting the memory that made it, or the review queue and audit log the README describes are requirements.

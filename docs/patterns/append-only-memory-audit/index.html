@@ -728,6 +728,23 @@ deletes events by age, and <code>ON DELETE CASCADE</code> removes a
 memory's events with it — so the log explains edits to memories that
 still exist and nothing else, and the report withholds
 <code>audit_log</code> on that ground.</p>
+<p><strong><a href="../../systems/lore-agentkitai/">Lore (AgentKit)</a>
+has an insert-only log that its own foreign keys rewrite.</strong>
+<code>memory_supersessions</code> takes a row per supersede and
+un-supersede from four producers, the REST route, write-time
+reconciliation, the contradiction detector and the dream subagent, and
+no statement updates or deletes it; the latest row per memory decides
+the state, and a null <code>superseded_by</code> is read as an explicit
+restoration. The schema declares
+<code>memory_id … ON DELETE CASCADE</code> and
+<code>superseded_by … ON DELETE SET NULL</code>, so deleting a memory
+removes its history, and deleting its replacement turns the row that
+recorded the correction into a restoration that never happened, which
+<code>are_superseded</code> then serves to recall. The general
+<code>audit_log</code> table has no writer. <strong>An audit row that
+names another memory needs the id as plain text, not as a foreign key
+with an action.</strong> The report withholds
+<code>audit_log</code>.</p>
 <p><strong><a href="../../systems/mnemosyne-nabzx/">Mnemosyne
 (Nabzx)</a> removes the transactional-coupling problem by making the log
 the state.</strong> Each write is a <code>Commit</code> object and a new
