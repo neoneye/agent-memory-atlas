@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 899 reports.</strong></p>
+<p><strong>This page covers all 900 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37305,6 +37305,53 @@ place rather than in each tool.</li>
 <li>Do not copy when: the store will hold anything a network neighbour
 should not read, or a correction has to hold across every read path,
 consolidation included.</li>
+</ul>
+<h3 id="artel"><a href="../systems/artel/"><code>artel</code></a></h3>
+<ul>
+<li>Best idea: <strong>inject one line, and choose the cut on what it
+says when it should say nothing.</strong> The prompt hook searches with
+<code>max_distance=1.0</code> and injects at most one note and one skill
+in 480 characters; the committed labels include 11 prompts with no right
+answer, on which the chosen policy fires 3 times where the looser ones
+fire 7 and 11.</li>
+<li>Second idea: a capture hook that is an append and a fork. The Stop
+and PreCompact hooks write the payload to a spool and start a detached
+drainer under <code>flock</code>, which ships each session's new
+transcript slice by byte cursor and advances it only on a successful
+post. Decay is set by a PI loop on regret events, reads of
+already-decayed notes deduplicated per reader.</li>
+<li>Biggest risk: <strong>the scope key holds on search and nowhere
+around it.</strong> <code>GET /graph/{id}</code> returns any memory row,
+private and deleted ones included, to any registered agent, and
+<code>GET /events</code> lists every memory id. The archivist reads
+every project and writes a merge of two projects' notes with
+<code>project</code> NULL, which every agent reads, and a test requires
+the NULL.</li>
+<li>Second risk: retrieval votes for itself. Every search hit raises
+confidence and counts a distinct reader, including the up to five notes
+per prompt the hook fetched and did not inject, and two readers promote
+a note to a doc that never decays. Captured and RSS-derived facts enter
+at 1.0, any agent may join any project or write a global directive into
+every synthesis pass, and with <code>UI_PASSWORD</code> unset an
+<code>X-UI-Session</code> header is the owner.</li>
+<li>Most reusable component: the capture spool and drainer in
+<code>scripts/artel-capture.sh</code> and
+<code>scripts/_artel_hooks.py:575-682</code>, the injection policy at
+<code>scripts/_artel_hooks.py:304-364</code>, the regret sensor at
+<code>artel/server/routes/memory.py:139-164</code> and the controller in
+<code>artel/archivist/control.py</code>.</li>
+<li>Maturity impression: MIT; 24,487 lines of Python, 17,161 in the
+package, in 857 commits from 1 May to 9 November 2026 by one author and
+a release bot, with 96 tags; 1,246 test functions against an in-process
+server with embeddings stubbed, none run here; the README's quick-start
+archivist has no shared database. Two marks:
+<code>scope_enforced</code>, <code>negative_eval</code>.</li>
+<li>Study when: you are deciding how much a per-prompt memory hook
+should say, how to capture sessions without touching the agent's
+latency, or how to set a decay rate from evidence.</li>
+<li>Do not copy when: two clients, teams or untrusted agents share an
+instance, or a note must stay inside the project that wrote it through
+every background pass.</li>
 </ul>
         </article>
       </div>

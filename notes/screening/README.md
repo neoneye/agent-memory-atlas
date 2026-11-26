@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 898 of 899 screened at the report's current pin.**
+**Progress: 899 of 900 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 433 |
+| Repositories with an auto-run surface (`RUNS`) | 434 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 403 |
-| Repositories with build-time execution (`EXEC`) | 645 |
+| Repositories with build-time execution (`EXEC`) | 646 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -67,6 +67,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`archeus`](../../content/systems/archeus.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json` |
 | [`areev`](../../content/systems/areev.md) | `.githooks/` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
+| [`artel`](../../content/systems/artel.md) | `.claude-plugin/`, `.claude-plugin/plugin.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`athena`](../../content/systems/athena.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
 | [`atmem`](../../content/systems/atmem.md) | `.vscode/settings.json` |
 | [`attested-memory`](../../content/systems/attested-memory.md) | `server.json` |

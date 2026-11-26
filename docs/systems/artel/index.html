@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted SQLite memory server
+for agent fleets: Claude Code hooks inject one note per prompt, and an
+LLM archivist merges and decays notes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Artel — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted SQLite memory
+server for agent fleets: Claude Code hooks inject one note per prompt,
+and an LLM archivist merges and decays notes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Artel — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted SQLite
+memory server for agent fleets: Claude Code hooks inject one note per
+prompt, and an LLM archivist merges and decays notes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Artel — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Artel",
+      "description": "A self-hosted SQLite memory server for agent fleets: Claude Code hooks inject one note per prompt, and an LLM archivist merges and decays notes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Search and list honour project and private
+scope; the graph route, the event log and the archivist's merges do
+not</p>
+          <h1>Artel</h1>
+          <p class="document-deck">A self-hosted SQLite memory server
+for agent fleets: Claude Code hooks inject one note per prompt, and an
+LLM archivist merges and decays notes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/NicolasPrimeau/artel">
+              <span>Source</span>
+              <strong>NicolasPrimeau/artel</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/NicolasPrimeau/artel/commit/65437abc9b2aafda2d59a007a80cd23e59fa64b1" title="65437abc9b2aafda2d59a007a80cd23e59fa64b1">
+              <span>Analyzed revision</span>
+              <code>65437abc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/NicolasPrimeau--artel" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>NicolasPrimeau--artel</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE.md, matching pyproject.toml and both Claude Code plugin
+manifests</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>24,487
+lines of Python outside tests/, 17,161 of them in the artel package's 79
+files; 22,945 lines of tests; a 2,473-line dashboard page</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>857
+commits from 1 May to 9 November 2026, 588 by Nicolas Primeau and 269 by
+github-actions[bot] regenerating openapi.json and bumping manifest
+versions; 96 tags, the latest v0.51.0 on 9 November 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,246
+test functions in 79 files, 205 of them in
+tests/scenarios/test_coordination.py, all against an in-process ASGI
+server with embeddings stubbed; ci.yml runs the suite on Python 3.11,
+3.12 and 3.13; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Artel is a self-hosted shared notepad for a fleet of coding agents.
+One FastAPI server over one SQLite file serves REST and MCP. Claude Code
+hooks inject a single relevant note per prompt and per file edit, and an
+archivist process merges, decays, promotes and links notes hourly,
+calling a model for the merges and the extraction. What is notable is
+the restraint of the injection path and the care in its bookkeeping: one
+line, a measured distance cut, a capture hook that only appends and
+forks. What is weak is the scope boundary. Search and list apply it; the
+graph route returns any row's content to any reader, and the archivist
+publishes a merge of two projects' notes as global.</p>
+<p>A note is the row. It is believed from the moment it is written: no
+status withholds it, and its confidence is a float that ranks. Every
+search hit raises the confidence of what it returned, whether or not the
+agent saw it, and two distinct readers are enough for the archivist to
+promote a note to a <code>doc</code>, which never decays again.</p>
+<p>Captured sessions take a longer route. The Stop and PreCompact hooks
+spool the transcript, and a detached drainer posts a compressed slice to
+<code>/captures</code>. The archivist extracts facts and decisions from
+it with a model, writing each fact at confidence 1.0 into the project
+the hook named.</p>
+<p>The scope key is real where it is applied. Each row stores
+<code>scope</code> (<code>agent</code> or <code>project</code>) and
+<code>project</code>, the caller is resolved from its key, and the
+ranked arms carry both predicates. Membership is self-service: any agent
+may join any project. A second set of routes applies neither predicate,
+and the archivist, which reads every project, writes any merge across
+two projects with no project at all.</p>
+<p><strong>Licence.</strong> MIT in <code>LICENSE.md</code>, and
+<code>pyproject.toml</code>, <code>.claude-plugin/plugin.json</code> and
+<code>.claude-plugin/marketplace.json</code> say the same. It restricts
+nothing. The committed recall labels describe 48 prompts from the
+author's own sessions with private names paraphrased, and the database
+they were scored against is not in the tree.</p>
+<p>Two marks are earned, <code>scope_enforced</code> and
+<code>negative_eval</code>, on the read predicates and the populated
+isolation tests. Section 9 gives the reason for each mark withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A note becomes a belief by being written. <code>POST /memory</code>
+stores it with the caller's confidence, embeds it and indexes it in one
+transaction, and it is searchable on return
+(<code>artel/server/routes/memory.py:257-322</code>). There is no
+candidate state. Five types set its lifespan:</p>
+<ul>
+<li><strong><code>memory</code></strong> decays when unread and can be
+merged, pruned, split or promoted by the archivist.</li>
+<li><strong><code>doc</code></strong> is settled. Decay, synthesis and
+capture refinement skip it
+(<code>artel/archivist/synthesis.py:860</code>, <code>:1463</code>). The
+weekly deep pass and the event-driven merge still reach it.</li>
+<li><strong><code>directive</code></strong> has confidence forced to
+1.0, never decays, and is placed in the archivist's system prompt as a
+standing instruction.</li>
+<li><strong><code>skill</code></strong> is skipped by the hourly decay
+and lowered by the weekly utilization prune when unread for 30 days; it
+is never merged or promoted.</li>
+<li><strong><code>compiled</code></strong> is a description derived from
+a source symbol, pinned to its SHA, and flagged <code>stale</code> when
+an anchor it grounds on changes.</li>
+</ul>
+<p>Confidence moves five ways. A search hit by any agent but the
+archivist raises it by <code>0.2 * (1 - c)</code>
+(<code>artel/server/routes/memory.py:457-463</code>). Hourly decay
+multiplies it by a rate a PI controller sets, for <code>memory</code>
+entries not updated for seven days whose read heat, the read count
+discounted by 0.9 per week since the last read, is under 1
+(<code>artel/archivist/synthesis.py:1452-1509</code>). The weekly
+utilization prune multiplies a never-read note over 30 days old by 0.7
+(<code>:1384-1428</code>). The archivist's prune op drops it to the 0.05
+floor and tags it <code>archivist-flagged</code>, and deletes it if it
+was already there (<code>:478-495</code>). An
+<code>adjust_confidence</code> op sets it to whatever the model says
+(<code>:509-518</code>).</p>
+<p>A note stops being served in one way: <code>deleted_at</code> is set.
+That happens on an owner's delete, on a project clear, when the
+archivist merges, splits, prunes at the floor or discards it, and when a
+peer's replicated delete dominates. The row stays.
+<code>expires_at</code> is accepted on write and returned, and no read
+compares it with the clock. The hooks add a softer exit: they search
+with <code>confidence_min=0.1</code>, so a note pruned to the 0.05 floor
+is still found by search and list and is never injected.</p>
+<p>Promotion is the one-way door. <code>run_promotion</code> turns a
+<code>memory</code> into a <code>doc</code> when it has three versions
+and seven quiet days, or when two distinct agents have read it, provided
+its confidence is at least 0.6 and it carries no workflow tag
+(<code>artel/archivist/synthesis.py:1667-1711</code>). A search hit
+counts as a read, including hits the recall hook fetched and did not
+inject, so two agents' prompt hooks matching the same captured fact can
+make it permanent.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — four writers land rows in one SQLite table; search, list, get, delta and the session handoff apply private scope and project membership while the graph, related, central and events routes apply neither; every search hit raises confidence and counts a reader, and two readers promote a note to a doc that decay never touches; the archivist's merge of two projects' notes is written with no project, so every agent reads it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: four writers land rows in one SQLite table; search, list, get, delta and the session handoff apply private scope and project membership while the graph, related, central and events routes apply neither; every search hit raises confidence and counts a reader, and two readers promote a note to a doc that decay never touches; the archivist&#39;s merge of two projects&#39; notes is written with no project, so every agent reads it
+flowchart TD
+    subgraph W[&quot;Writers&quot;]
+        direction TB
+        A[&quot;memory_write, POST /memory&lt;br/&gt;confidence from caller&quot;]
+        H[&quot;Stop, PreCompact hooks&lt;br/&gt;slice to POST /captures&quot;]
+        F[&quot;RSS item at 0.5,&lt;br/&gt;mesh peer by vclock&quot;]
+        A ~~~ H ~~~ F
+    end
+    H --&gt; Q[(&quot;captures queue&lt;br/&gt;redacted, TTL&quot;)]
+    Q --&gt; X[&quot;archivist compaction&lt;br/&gt;model facts at 1.0&quot;]
+    W --&gt; M[(&quot;memory row&lt;br/&gt;scope, project,&lt;br/&gt;confidence, deleted_at&quot;)]
+    X --&gt; M
+    M --&gt; S[&quot;search, list, get,&lt;br/&gt;delta, handoff&lt;br/&gt;scope + membership&quot;]
+    M --&gt; U[&quot;GET graph/{id}, related,&lt;br/&gt;central, events&lt;br/&gt;no predicate&quot;]
+    M --&gt; AR[&quot;archivist, hourly&lt;br/&gt;reads every project&quot;]
+    S --&gt; R[&quot;each hit: conf +0.2(1-c),&lt;br/&gt;distinct reader +1&quot;]
+    R --&gt; P[&quot;2 readers, conf 0.6+&lt;br/&gt;promoted to doc&quot;]
+    P --&gt; N[&quot;doc: never decays&quot;]
+    AR --&gt; G[&quot;merge across projects&lt;br/&gt;written with project NULL&quot;]
+    AR --&gt; D[&quot;unread 7 days:&lt;br/&gt;conf x PI-set rate&quot;]
+    G --&gt; GL[&quot;global note:&lt;br/&gt;every agent reads it&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Python package with five entry points: the server, the archivist,
+a stdio MCP adapter, an mDNS announcer and a file watcher
+(<code>pyproject.toml</code>). The server is FastAPI on
+<code>0.0.0.0:8000</code> by default
+(<code>artel/server/config.py:9-10</code>). It mounts the MCP server at
+<code>/mcp</code>, where each tool calls the REST API over loopback with
+the caller's credentials (<code>artel/server/app.py:149-209</code>,
+<code>artel/mcp/server.py:32-37</code>).</p>
+<p>Everything lives in one SQLite file in WAL mode with
+<code>busy_timeout=5000</code>. The schema is
+<code>artel/store/schema.py</code>, with in-place migrations in
+<code>artel/store/db.py:94-357</code>. The keyword index is an FTS5
+table and the vector index a <code>vec0</code> table of 384 floats, both
+created on first open (<code>artel/store/db.py:30-48</code>,
+<code>:458-466</code>). Embeddings come from fastembed's
+<code>sentence-transformers/all-MiniLM-L6-v2</code>, loaded in process
+and retried on a five-minute cooldown if the load fails, in which case
+search runs keyword only
+(<code>artel/store/embeddings.py:10-34</code>).</p>
+<p>The archivist is a separate process that talks to the server over
+HTTP as the <code>archivist</code> agent and also opens the SQLite file
+directly for its cursors, its controller state, read counts and graph
+edges. It holds a 120-second curator lease renewed every 40, so two
+copies do not both curate
+(<code>artel/archivist/agent.py:88-108</code>). Its model is Anthropic,
+OpenRouter, an OpenAI-compatible endpoint or the Claude Agent SDK.
+Without one it runs passively: decay, promotion and utilization prune
+still happen; compaction, merges, synthesis and feed extraction do
+not.</p>
+<p>Mesh replication pulls peers' JSON feeds on a poller, compares vector
+clocks per row, keeps a deterministic winner and stores the loser as a
+<code>sync-conflict</code> sibling joined by a <code>contradicts</code>
+edge (<code>artel/server/feed_poller.py:140-172</code>,
+<code>:175-330</code>). Peers are linked by the owner only
+(<code>artel/server/routes/mesh.py:114-115</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The quick start downloads <code>docker-compose.yml</code> and
+<code>.env.example</code> and runs <code>docker compose up</code>: the
+server, the archivist, a read-only cost ledger, an mDNS sidecar on host
+networking, and Watchtower polling the <code>:edge</code> image every
+300 seconds with the Docker socket mounted. The four Artel services pull
+<code>ghcr.io/nicolasprimeau/artel:edge</code>, a tag CI moves on each
+push to <code>master</code>, so a running install tracks the branch
+head.</p>
+<p>The archivist service in that file has no volume and no
+<code>DB_PATH</code>. Its direct reads then open a fresh
+<code>artel.db</code> in the container, not the server's. The committed
+<code>docker-compose.override.yml</code> mounts the volume for it, and
+the README's two <code>curl</code> lines do not fetch it. Inferred from
+the files, not run: on the quick-start path the decay heat check sees
+every note as unread, and utilization prune sees zero reads.
+<code>link</code> edges and the synthesis cursor land in the throwaway
+file, and <code>instance_id()</code> differs from the server's.</p>
+<p>Fully local operation needs no API key to store or search; the
+archivist needs one for everything but decay, promotion and the disuse
+prune. The store is one SQLite file a person can open, and nothing in
+the package removes a memory row, so it only grows.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Direct write.</strong> <code>write_memory</code> refuses a
+<code>directive</code> from a <code>viewer</code>, takes
+<code>project</code> from the body or the caller's most recent
+membership, checks membership and forces a directive's confidence to
+1.0. It embeds, then in one transaction inserts the row, the vector, the
+FTS row and a <code>memory.written</code> event, and broadcasts the
+event on the SSE stream
+(<code>artel/server/routes/memory.py:257-322</code>). The MCP
+<code>memory_write</code> tool fills <code>project</code> from the
+<code>x-mcp-project</code> header when the model omits it
+(<code>artel/mcp/server.py:508-565</code>).</p>
+<p><strong>Capture.</strong> <code>scripts/artel-capture.sh</code>
+appends the hook payload to <code>~/.artel/spool/incoming.jsonl</code>
+and forks <code>artel-drain.sh</code> under <code>setsid</code>. The
+drainer takes an <code>flock</code> and reads each session's transcript
+from a byte cursor. It keeps user and assistant text and tool names,
+drops tool results, caps the slice at 8,000 characters, and waits for
+400 characters unless the event was PreCompact
+(<code>scripts/_artel_hooks.py:436-466</code>, <code>:575-607</code>).
+It posts token rollups to <code>/usage</code> and the slice to
+<code>/captures</code>, and advances the cursor only on success. The
+server redacts known key formats and <code>API_KEY=</code>,
+<code>SECRET=</code>, <code>TOKEN=</code> and
+<code>PASSWORD=</code>-style assignments, and stores the slice with a
+TTL of one hour to 30 days
+(<code>artel/server/routes/captures.py:19-46</code>,
+<code>artel/store/redact.py:1-41</code>).</p>
+<p><strong>Compaction.</strong> Each hourly cycle the archivist lists 20
+pending captures, searches existing memory for the first 400 characters
+of each, and asks the model for durable facts, updates to the related
+notes, and decisions
+(<code>artel/archivist/compaction.py:141-200</code>). Facts are written
+tagged <code>capture-extracted</code>, <code>archivist-extracted</code>
+and <code>session:&lt;id&gt;</code> into the capture's project; updates
+apply only to ids the search returned; decisions go to the append-only
+<code>decisions</code> table (<code>:94-138</code>). The search is the
+archivist's, which spans every project, so an update can rewrite another
+project's note with content from this capture.</p>
+<p><strong>Refinement.</strong> A later pass takes up to 15
+<code>capture-extracted</code> notes from the last six hours and lets
+the model consolidate, promote (drop the tag) or discard them,
+restricted to that set
+(<code>artel/archivist/compaction.py:259-325</code>).</p>
+<p><strong>Event-driven merge.</strong> For each
+<code>memory.written</code> from anyone but the archivist,
+<code>check_and_merge</code> searches for neighbours within vector
+distance 0.08 (<code>1 - conflict_threshold</code>). It merges the entry
+with the nearest through the model, writes the result with both as
+parents, soft-deletes both, and messages both authors
+(<code>artel/archivist/conflict.py:15-74</code>). Line 44 sets the
+merged project to <code>None</code> when the two differ.</p>
+<p><strong>Synthesis.</strong> <code>run_synthesis</code> takes the
+delta since its cursor and drops directives, docs, skills, compiled
+notes and peers' rows. It runs a cleanup pass (merge, prune, split,
+extract) and an insight pass (promote, tag, adjust confidence, create or
+close a task, link) through the model, with the directives in play
+prepended (<code>artel/archivist/synthesis.py:835-1017</code>). The
+merge op again writes <code>project=None</code> when its sources span
+projects (<code>:434-446</code>), and a test requires it
+(<code>tests/test_archivist.py:511-522</code>).</p>
+<p><strong>Retrieval.</strong> <code>search_memory</code> runs the
+vector arm and the FTS arm, each already filtered on
+<code>deleted_at</code> and private scope, then fuses and scores them.
+It applies the project and filter predicates, optionally diversifies by
+MMR, flags a project note that shadows a near-identical global one, and
+records the reads
+(<code>artel/server/routes/memory.py:325-511</code>).</p>
+<p><strong>Injection.</strong> The UserPromptSubmit hook ignores prompts
+under 12 characters and a list of acknowledgements. It searches the
+first 300 characters with <code>confidence_min=0.1</code>,
+<code>max_distance=1.0</code>, <code>diversify=true</code> and
+<code>context=recall</code>. At most one note and one skill are
+injected, each cut to 120 characters, in 480 characters with any
+procedure step (<code>scripts/_artel_hooks.py:304-330</code>). The
+PreToolUse hook on Edit, Write, MultiEdit and NotebookEdit searches the
+file name and injects the first hit whose content or
+<code>source_path</code> names that file (<code>:333-364</code>). The
+SessionStart hook injects the last handoff if it is under 14 days old,
+in 600 characters (<code>:367-390</code>). Each id is injected once per
+session, tracked in temp files.</p>
+<p><strong>Decay control.</strong> Search and get log a
+<code>decay_regret_events</code> row when a reader hits a note below
+0.85 confidence, deduplicated per reader per ten minutes
+(<code>artel/server/routes/memory.py:139-164</code>). The archivist
+feeds the per-cycle count into a PI controller with a deadband and a
+leak that sets the decay rate between 0.6 and 0.99
+(<code>artel/archivist/control.py:26-60</code>,
+<code>artel/archivist/synthesis.py:233-295</code>).</p>
+<p><strong>Compile mode.</strong> A pre-commit payload, inert until
+linked into <code>.git/hooks</code>, parses staged sources into symbol
+units with descriptions and posts them to <code>/compile</code>. The
+route upserts code anchors by project, path and symbol, creates or
+rewrites the grounded <code>compiled</code> note, links
+<code>relies_on</code> edges, and marks dependents <code>stale</code>
+when an anchor's SHA moves
+(<code>artel/server/routes/compile.py:67-192</code>,
+<code>artel/store/graph.py:136-159</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memory</code> table carries <code>id</code>,
+<code>type</code>, <code>agent_id</code>, <code>project</code>,
+<code>scope</code>, <code>content</code>, <code>confidence</code>,
+<code>parents</code>, <code>tags</code>, <code>created_at</code>,
+<code>updated_at</code>, <code>version</code>, <code>deleted_at</code>,
+<code>expires_at</code>, <code>origin</code>, read counters, source
+fields for compiled notes, <code>stale</code>, a model-written
+<code>headline</code>, <code>vclock</code>, <code>trail</code>,
+<code>author_updated_at</code> and <code>content_at</code>
+(<code>artel/store/schema.py:14-45</code>). Ids are UUID4
+(<code>artel/server/models.py:9-10</code>).</p>
+<p>Scope has two keys. <code>scope</code> is <code>agent</code> (the
+author alone) or <code>project</code>; <code>project</code> is a
+lower-cased name or <code>NULL</code>, and a <code>NULL</code> project
+is visible to every agent. Memberships live in
+<code>project_members</code> with an <code>owner</code> or
+<code>member</code> role; a static key in <code>AGENT_KEYS</code> may
+carry a project list, and a static key with none is unscoped
+(<code>artel/server/auth.py:163-179</code>). The <code>archivist</code>
+and <code>viewer</code> roles see every project.</p>
+<p>Provenance is thin. <code>agent_id</code> is the writer, which for
+every merge, split, compaction fact and feed fact is the archivist.
+<code>parents</code> lists the sources of a merge or split. A capture's
+session id survives only as a <code>session:&lt;id&gt;</code> tag.
+<code>origin</code> is the instance id of the peer a row came from.</p>
+<p>Time is record time only. <code>content_at</code> is when the content
+last changed, <code>author_updated_at</code> when the original author
+last edited, and every read returns the second as
+<code>days_since_author_update</code>
+(<code>artel/server/routes/memory.py:224-254</code>,
+<code>:958-964</code>).</p>
+<p>Beside the notes sit a typed edge table (<code>grounds</code>,
+<code>relies_on</code>, <code>applies_to</code>,
+<code>contradicts</code>, <code>corroborates</code>) and a Hebbian table
+of co-retrieval weights with a 14-day half-life. Code anchors,
+decisions, session handoffs, the captures queue, an <code>events</code>
+table and <code>archivist_logs</code>, capped at 10,000 rows, complete
+it (<code>artel/store/schema.py:47-54</code>, <code>:192-202</code>,
+<code>:214-231</code>, <code>:244-253</code>, <code>:363-371</code>,
+<code>:405-432</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Search is hybrid and automatic. The vector arm takes
+<code>k = limit * 5</code> when the caller names a project or has a
+membership list, and <code>limit * 2</code> otherwise. The FTS arm ORs
+up to twelve quoted word tokens under BM25, and RRF adds
+<code>1 / (60 + rank)</code> from each
+(<code>artel/server/routes/memory.py:346-396</code>). The fused score is
+then multiplied by <code>0.4 + 0.6 * confidence</code>,
+<code>1 + 0.2 * ln(1 + trail)</code> with a seven-day trail half-life,
+and <code>0.3 + 0.7 * recency</code> with a 90-day half-life on
+<code>content_at</code> (<code>:409-416</code>).</p>
+<p>The project, distance, confidence, tag, type and author filters run
+after scoring, in <code>_passes</code> (<code>:418-442</code>). A caller
+in one project of many can get fewer than <code>limit</code> results
+when the over-fetch is spent on other projects' rows; the arms'
+<code>k</code> is the only margin.</p>
+<p>Ranking feeds back into itself. Every hit returned to a non-archivist
+caller gets a read, a confidence raise, a trail deposit, a
+distinct-reader count, and Hebbian reinforcement among the top five
+(<code>artel/server/routes/memory.py:451-483</code>). The recall hook
+asks for six and injects one or two, so up to five notes per prompt are
+reinforced unseen. <code>test_search_hits_count_as_reads</code> requires
+the read (<code>tests/test_memory_hybrid.py:436</code>).</p>
+<p>A learned ranker is wired to observe and not to rank. With
+<code>recall_bandit_enabled</code>, off by default, the search logs
+features per hit and the archivist resolves a reward from whether the
+note was read again; <code>recall_bandit.predict</code> has no caller
+(<code>artel/store/recall_bandit.py:49-50</code>,
+<code>artel/server/routes/memory.py:484-501</code>).
+<code>docs/adaptive-control.md:116</code> says so.</p>
+<p>The graph read paths are separate routes.
+<code>/memory/{id}/related</code> spreads activation three hops from one
+note over typed edges, with <code>contradicts</code> inhibiting, plus
+Hebbian edges at half conductance
+(<code>artel/store/graph.py:223-273</code>).
+<code>/memory/central</code> runs PageRank over the support edges
+(<code>:281-336</code>). The dashboard calls <code>/related</code>; no
+hook or MCP tool does.</p>
+<p>Context per turn is bounded by the hook, not the server. A prompt
+gets at most 480 characters and a file edit one 120-character line. The
+MCP <code>session_context</code> tool returns far more: the project
+brief, ten tasks, a knowledge map over up to 500 notes, the last handoff
+and the first 20 entries of the delta
+(<code>artel/mcp/server.py:380-466</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Four writers produce notes: agents through REST or MCP, the archivist
+from captures, feeds and its own passes, the RSS poller, and mesh
+replication. Agent writes are synchronous: the request embeds the
+content before it returns. Capture writes never block the agent, and the
+lag before a captured fact is searchable is the drainer's 400-character
+floor plus up to one archivist cycle of 3,600 seconds, longer when 20
+captures are ahead of it.</p>
+<p>Deduplication is a model call. The event-driven merge fires on every
+agent write whose nearest neighbour is within vector distance 0.08 and
+replaces both with a model-written merge. The synthesis cleanup pass
+merges what the model judges redundant in the day's delta. No exact-text
+check exists on the direct write path, so the same sentence written
+twice is two rows until one of those passes runs.</p>
+<p>Captured and feed facts are written at the client's default
+confidence of 1.0 (<code>artel/archivist/client.py:77-97</code>). A fact
+the model drew from an RSS summary therefore enters at the same
+confidence as an agent's own statement, while the raw feed item sits at
+0.5 (<code>artel/server/feed_poller.py:46-87</code>,
+<code>artel/archivist/synthesis.py:1882-1916</code>). Nothing marks an
+extracted fact as unconfirmed in a way a read respects.</p>
+<p>Directives steer the curator. Any agent may write one, and one with
+no project applies to every synthesis pass, because
+<code>_directives_in_play</code> admits a global or agent-scoped
+directive into every batch
+(<code>artel/archivist/synthesis.py:105-117</code>). The pass's
+instructions then say <em>"Directives are in the system prompt. Follow
+them above all else."</em></p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The hot path is the recall hook: one HTTP search per prompt and per
+file edit, each a vector query, an FTS query and a write transaction for
+the reinforcement. The capture hook is an append and a fork. The
+archivist runs its pass list every hour; synthesis sends the delta since
+its last run to the model twice, compaction one call per capture, and
+the event-driven merge one call per near-duplicate write. Nothing
+rewrites the whole store. The weekly deep synthesis reads the 200 most
+recently updated notes, and the weekly utilization prune the 500 most
+recently updated, newest first, so in a larger store neither reaches the
+oldest rows.</p>
+<p>Injected text is under 500 characters per prompt, sent as
+<code>additionalContext</code> after the user's message, so it does not
+sit in a cached prefix.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The Claude Code plugin registers the HTTP MCP server and five hooks
+(<code>.claude-plugin/plugin.json</code>,
+<code>hooks/hooks.json</code>). Read as data, the hooks would do this
+once installed and configured with <code>ARTEL_URL</code>,
+<code>ARTEL_AGENT_ID</code> and <code>ARTEL_API_KEY</code>:</p>
+<ul>
+<li><strong>SessionStart</strong> fetches <code>/sessions/handoff</code>
+and injects the last handoff.</li>
+<li><strong>UserPromptSubmit</strong> searches the prompt and injects
+one note, one skill and the next procedure step.</li>
+<li><strong>PreToolUse</strong> on edits searches the file name and
+injects one note about that file.</li>
+<li><strong>PreCompact and Stop</strong> spool the payload and fork the
+drainer, which posts the session slice and token counts.</li>
+</ul>
+<p>The read hooks exit 0 and print nothing when the server is down or
+the credentials are missing. The capture hook spools the payload either
+way, and an unconfigured drainer exits without reading the spool, so
+<code>incoming.jsonl</code> grows by one small record per Stop.
+<code>server.json</code> is a registry entry for a remote endpoint with
+no start command. <code>scripts/hooks/pre-commit</code> runs the compile
+payload once someone links it.</p>
+<p>The drainer takes identity and project from the repository the
+session ran in. For each spooled event it reads <code>.mcp.json</code>
+and <code>.claude/settings*.json</code> under that event's
+<code>cwd</code> and, when they name them, uses that agent id, API key
+and project (<code>scripts/_artel_hooks.py:109-140</code>,
+<code>:649-660</code>). The URL stays the user's. A cloned repository
+whose <code>.mcp.json</code> names a project therefore decides which
+project the user's transcripts are filed under.</p>
+<p>The onboarding script at <code>/onboard</code> registers an agent and
+writes the key to <code>~/.config/artel/env.sh</code> and the
+<code>env</code> block of <code>~/.claude/settings.json</code>. It
+appends a <code>source</code> line to <code>.bashrc</code>,
+<code>.zshrc</code> and <code>.profile</code>, and installs the plugin
+from the GitHub marketplace, which is the repository head rather than
+the server's version
+(<code>artel/server/routes/onboard.py:286-341</code>).</p>
+<p>The model has wide agency. The 47 tools write, update and delete
+notes, write directives, add graph edges, join and leave projects,
+rename the agent, subscribe the server to feeds, emit arbitrary events,
+and run procedures. Agents are told to call <code>session_context</code>
+first and <code>session_handoff</code> last; the hooks make both
+optional.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="where-scope-holds">Where scope holds</h3>
+<p>Search, list, delta, get, the Atom and JSON feeds, the Merkle sync
+summary and the session handoff each apply private scope, as
+<code>scope != 'agent' OR agent_id = ?</code> or its equivalent, and the
+membership predicate. The caller is the key's owner: headers, a JWT, or
+the UI session (<code>artel/server/auth.py:49-82</code>). The tests
+write to one project and read from another with populated results
+(<code>tests/scenarios/test_coordination.py:1089-1161</code>).</p>
+<p>The boundary between projects is a convenience, not a wall, because
+<code>POST /projects/{id}/join</code> admits any agent to any project
+and replaces its current one
+(<code>artel/server/routes/projects.py:54-68</code>). The scenario test
+that proves isolation does it by joining both projects in turn. Private
+scope is the stronger boundary: only the author's key passes it.</p>
+<h3 id="where-it-does-not">Where it does not</h3>
+<p><code>GET /graph/{node_id}</code> loads
+<code>SELECT * FROM memory WHERE id=?</code> and returns the row as
+<code>node</code>, with no scope, membership or <code>deleted_at</code>
+check, to any caller with the <code>viewer</code> role
+(<code>artel/server/routes/compile.py:248-265</code>). The id is a full
+UUID, and <code>GET /events</code> lists every
+<code>memory.written</code> event's <code>memory_id</code> since any
+timestamp with no filter
+(<code>artel/server/routes/events.py:41-58</code>). Together they hand
+any registered agent the content of every private, project and deleted
+note. Not run.</p>
+<p><code>/memory/{id}/related</code> filters its result on
+<code>deleted_at</code> alone, and Hebbian edges join notes that were
+returned together to one reader, including that reader's private notes.
+Inferred, not run: another agent asking for a global note's neighbours
+can be handed them (<code>artel/server/routes/memory.py:514-543</code>,
+<code>artel/store/hebbian.py:16-34</code>). <code>/memory/central</code>
+and <code>/compile/stale</code> take any project name with no membership
+check (<code>artel/server/routes/memory.py:546-568</code>,
+<code>artel/server/routes/compile.py:214-225</code>).</p>
+<p>The archivist reads across every project by role and writes merges
+without a project when its inputs span two. Line 44 of
+<code>artel/archivist/conflict.py</code> does it on every near-duplicate
+write, and the synthesis merge op does it at
+<code>artel/archivist/synthesis.py:435</code>. The merged note has
+<code>project NULL</code>, which every agent's
+<code>project IS NULL OR</code> clause admits. Two near-identical notes
+in two private client projects become one note every agent on the server
+reads. The test at <code>tests/test_archivist.py:511-522</code> requires
+the <code>None</code>.</p>
+<p>Captures are filed under the project the request names, with no
+membership check (<code>artel/server/routes/captures.py:25-46</code>).
+The archivist then writes the extracted facts into that project, so any
+agent can add notes to a project it does not belong to by way of the
+queue.</p>
+<h3 id="who-the-server-thinks-is-calling">Who the server thinks is
+calling</h3>
+<p>With <code>UI_PASSWORD</code> unset, its default,
+<code>verify_ui_session</code> returns true for any token, so any
+request carrying an <code>X-UI-Session</code> header authenticates as
+<code>artel-ui</code>, which the lifespan makes <code>owner</code>
+(<code>artel/server/auth.py:19-21</code>, <code>:55-60</code>,
+<code>artel/server/app.py:101-115</code>).
+<code>docs/auth.md:75-77</code> states it: <em>"open instance = open
+owner UI"</em>. The same unauthenticated <code>/ui</code> page then
+embeds the registration key (<code>artel/server/app.py:381-399</code>).
+The example <code>.env</code> sets a password of
+<code>changeme</code>.</p>
+<p>A request to <code>/mcp</code> with no credentials is run as the
+configured <code>mcp</code> agent with its key from
+<code>AGENT_KEYS</code> (<code>artel/server/app.py:195-202</code>). The
+example <code>.env</code> lists <code>mcp:changeme</code> with no
+project suffix, which <code>_memberships</code> treats as unscoped.
+Inferred from the code, not run: on the documented compose an anonymous
+MCP client reads and writes every project.</p>
+<h3 id="trust-in-content">Trust in content</h3>
+<p>Nothing holds a note back. A model-extracted fact is served at 1.0
+the moment it is written; an RSS-derived fact likewise. A
+<code>sync-conflict</code> sibling, the losing side of a concurrent
+edit, is a searchable note until the archivist resolves it. A compiled
+note whose source moved is <code>stale</code>, and search returns it
+with <code>stale: true</code> and the same rank. The prompt hook prints
+only the content, so the agent never sees the flag.</p>
+<p>Directives are the lever an injected instruction would want. A web
+page that persuades an agent to write a directive with no project has
+reached the system prompt of every subsequent synthesis pass over every
+project.</p>
+<h3 id="deletion-and-privacy">Deletion and privacy</h3>
+<p>Delete is <code>deleted_at</code>. No statement in
+<code>artel/</code> or <code>scripts/</code> removes a memory row, so a
+deleted note's content stays in the file, in the FTS and vector tables,
+and in <code>/memory/feed.json?include_deleted=true</code> for readers
+in its scope (<code>artel/server/routes/memory.py:743-805</code>).
+Redaction applies to captures only; a secret typed into
+<code>memory_write</code> is stored as written. API keys are stored in
+clear in <code>agents.api_key</code>.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> The stored
+<code>scope</code> and <code>project</code> keys are applied on the
+ranked search arms and on list, delta, get, feeds and the handoff, with
+the caller resolved server-side. The graph, related, central,
+compile-stale and events routes bypass them, and the archivist's
+cross-project merges remove the key.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Two scenario
+tests require another project's note absent from a result that holds the
+caller's own. The private-scope cases assert over results that can be
+empty, and <code>test_agent_scoped_memory_not_in_search</code> is an
+<code>all(...)</code> that passes on none.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No discrete
+status excludes a row from a read. <code>stale</code>, the
+<code>capture-extracted</code> and <code>archivist-flagged</code> tags
+and <code>sync-conflict</code> siblings are all returned by search;
+confidence is a float, used as a floor of 0.1 by the hook.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Deletion is a
+flag on the row. A capture that restates a deleted fact is extracted
+again. The nearest thing is <code>conflict_sibling_id</code>, a UUID5
+over the memory id and the losing content's hash. Its soft-deleted row
+keeps the same loser from being re-inserted as a sibling
+(<code>artel/server/feed_poller.py:122-172</code>), which guards one
+replication conflict, not a value.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>created_at</code>, <code>updated_at</code>,
+<code>content_at</code> and <code>author_updated_at</code> are all
+record times.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>events</code> takes <code>memory.written</code> on a create, a
+feed item and a replicated write, <code>memory.deleted</code> on a
+replicated delete, and nothing on a REST patch or delete. Any agent can
+insert any event type through <code>POST /events</code>, and an agent
+rename rewrites <code>events.agent_id</code>
+(<code>artel/server/routes/events.py:26-38</code>,
+<code>artel/server/routes/agents.py:42-52</code>).
+<code>archivist_logs</code> holds pass counts, is capped at 10,000 rows,
+and any agent can write to it.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Nothing
+waits. The archivist messages authors after a merge that they <em>"may
+want to review it"</em>, and the owner can edit or delete from the
+dashboard after the fact.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading. CI runs
+<code>pytest tests/</code> on three Python versions after
+<code>ruff</code> (<code>.github/workflows/ci.yml</code>). Every test
+runs against an in-process ASGI app with a temporary database, and the
+root <code>conftest.py</code> stubs <code>embed</code> to a zero vector,
+so vector ranking is exercised only where a test installs its own
+embedding table.</p>
+<p>Memory behaviour is well covered at the route level: hybrid fusion
+and keyword fallback during an embedding outage, private scope on both
+arms, project isolation, read counting, shadowing, diversification,
+stigmergy trails, Hebbian edges, spreading activation and PageRank. The
+archivist tests drive <code>_execute_operations</code> and the passes
+against mocked clients, so they check which calls are made, not what the
+model would choose. <code>scripts/sabotage.py</code> reintroduces past
+silent failures and checks that the suite goes red; I did not run
+it.</p>
+<p>Missing tests follow the gaps in section 9. No test reads
+<code>/graph/{id}</code>, <code>/related</code> or <code>/events</code>
+as an agent outside the note's scope. No test runs the archivist's merge
+with private-scoped or project-scoped inputs and then searches as an
+outsider; the one cross-project merge test asserts the global result.
+The one <code>expires_at</code> test requires the value to be stored and
+returned (<code>tests/scenarios/test_directives.py:103-113</code>); none
+requires an expired note to be hidden, and none would pass.</p>
+<p>Two benchmark harnesses are committed. <code>bench/run.py</code> runs
+SWE-bench Verified with and without the plugin as a non-inferiority
+test; <code>runs/</code> is gitignored and no result is committed.
+<code>bench/recall/run.py</code> replays 48 labelled prompts, 37 with at
+least one relevant note and 11 with none, through the hook's search. The
+README's table of four distance policies, with the third at precision
+0.65 and 3 of 11 false injections, was measured against a private
+backup. The labels are in the tree and the database is not, so the table
+does not recompute.</p>
+<p>There is no paper reference in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the capture hook an append and a fork.</strong> A spool
+file as the write-ahead log, a detached drainer under
+<code>flock</code>, a byte cursor per session advanced only on a
+successful post. The agent pays for nothing.</li>
+<li><strong>Inject one line, and measure silence.</strong> A labelled
+set with no-answer prompts in it scores the injection policy on what it
+says when it should say nothing, and the distance cut was chosen on that
+column.</li>
+<li><strong>Control decay on an event, not a population.</strong> Count
+reads of already-decayed notes per cycle, deduplicate per reader, and
+let a PI loop with a deadband set the rate.</li>
+<li><strong>Mark narrower-scope overrides.</strong> When a project note
+outranks a near-identical global one, return the global id beside
+it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Derived writes that drop the scope key.</strong> A merge,
+summary or promotion of inputs from two scopes needs the intersection or
+a refusal. <code>NULL</code> meaning "everyone" turns every such
+fallback into publication.</li>
+<li><strong>A debugging route that returns rows by id.</strong> Any read
+that loads by primary key needs the same predicate as search, and an
+event stream that names ids is a directory for it.</li>
+<li><strong>Counting retrieval as use.</strong> Reinforcing and
+promoting on every hit the agent never saw makes the injection hook vote
+for its own choices.</li>
+<li><strong>A one-way promotion on a cheap signal.</strong> Two readers
+and confidence 0.6 moving a note permanently out of decay is a ratchet
+driven by retrieval.</li>
+<li><strong>Auth that fails open when unset.</strong> An unset password
+or an absent header should refuse, not default to the most privileged
+identity.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one operator running a handful of their own agents on one
+private network, who wants notes to surface without being asked for and
+accepts that every agent on the server can, with a little effort, read
+everything. For that reader the injection path, the capture spool and
+the decay controller are a small, careful design that costs almost
+nothing per turn.</p>
+<p>It does not suit anyone who puts two clients, two teams or a
+stranger's agent on one instance. The project boundary is self-service,
+the graph route ignores it, and the curator merges across it by design.
+It also does not suit a reader who needs to know why a note says what it
+says: the archivist rewrites content, the provenance is a parents list
+and a session tag, and the change itself leaves no record.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>project=None</code> on a cross-project merge meant to
+publish, or meant to keep the merge out of both projects? The test pins
+the value and not the reason.</li>
+<li>Is <code>GET /graph/{node_id}</code> meant to return the full row?
+The MCP tool that calls it prints only edges and viability.</li>
+<li>Does the quick-start archivist, with no volume, curate against the
+server's data at all, or does the author always run the override?</li>
+<li>Should <code>expires_at</code> be enforced? It was added by
+migration and is accepted and returned on every write.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>artel/store/schema.py</code></td>
+<td>Every table, including memory, edges, captures, decisions,
+events</td>
+</tr>
+<tr>
+<td><code>artel/store/db.py</code></td>
+<td>Connection, migrations, FTS5 and sqlite-vec tables, prefix id
+resolution</td>
+</tr>
+<tr>
+<td><code>artel/server/auth.py</code></td>
+<td>Credentials, roles, memberships, the project predicate, the UI
+session</td>
+</tr>
+<tr>
+<td><code>artel/server/routes/memory.py</code></td>
+<td>Write, hybrid search, reinforcement, list, delta, get, patch,
+delete, feeds, related, central</td>
+</tr>
+<tr>
+<td><code>artel/server/routes/projects.py</code></td>
+<td>Create, join, leave, clear</td>
+</tr>
+<tr>
+<td><code>artel/server/routes/captures.py</code></td>
+<td>The capture queue</td>
+</tr>
+<tr>
+<td><code>artel/server/routes/compile.py</code></td>
+<td>Compile mode, the graph node and edge routes</td>
+</tr>
+<tr>
+<td><code>artel/server/routes/events.py</code></td>
+<td>Event emit, poll and SSE</td>
+</tr>
+<tr>
+<td><code>artel/server/routes/sessions.py</code></td>
+<td>Handoff write and the scoped delta</td>
+</tr>
+<tr>
+<td><code>artel/server/feed_poller.py</code></td>
+<td>RSS ingest and mesh replication with conflict siblings</td>
+</tr>
+<tr>
+<td><code>artel/server/app.py</code></td>
+<td>Lifespan roles, the MCP auth middleware and fallback identity, the
+UI</td>
+</tr>
+<tr>
+<td><code>artel/store/graph.py</code>,
+<code>artel/store/hebbian.py</code></td>
+<td>Typed edges, invalidation, viability, spreading activation,
+PageRank, co-retrieval edges</td>
+</tr>
+<tr>
+<td><code>artel/store/recall_bandit.py</code>,
+<code>artel/archivist/control.py</code></td>
+<td>The observe-only bandit and the PI decay controller</td>
+</tr>
+<tr>
+<td><code>artel/archivist/agent.py</code></td>
+<td>Lease, event dispatch, the hourly pass list</td>
+</tr>
+<tr>
+<td><code>artel/archivist/conflict.py</code></td>
+<td>The event-driven merge</td>
+</tr>
+<tr>
+<td><code>artel/archivist/compaction.py</code></td>
+<td>Capture compaction and refinement</td>
+</tr>
+<tr>
+<td><code>artel/archivist/synthesis.py</code></td>
+<td>Synthesis ops, directives, decay, promotion, prune, feed triage</td>
+</tr>
+<tr>
+<td><code>artel/mcp/server.py</code></td>
+<td>The 47 MCP tools</td>
+</tr>
+<tr>
+<td><code>scripts/_artel_hooks.py</code>,
+<code>hooks/hooks.json</code></td>
+<td>The plugin hooks and the capture drainer</td>
+</tr>
+<tr>
+<td><code>artel/server/routes/onboard.py</code></td>
+<td>The onboarding and plugin installer scripts</td>
+</tr>
+<tr>
+<td><code>tests/scenarios/test_coordination.py</code></td>
+<td>Project isolation and visibility scenarios</td>
+</tr>
+<tr>
+<td><code>tests/scenarios/test_hybrid_retrieval.py</code>,
+<code>tests/test_memory_hybrid.py</code></td>
+<td>Hybrid search, private scope on both arms, read counting</td>
+</tr>
+<tr>
+<td><code>tests/test_archivist.py</code></td>
+<td>Archivist ops, including the cross-project merge</td>
+</tr>
+<tr>
+<td><code>bench/recall/</code></td>
+<td>Recall labels and the replay harness</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Nothing in the package removes a memory row.</strong>
+<code>git grep -n -E 'DELETE FROM memory([^_]|$)' -- artel scripts</code>
+returns nothing;
+<code>git grep -n -c 'DELETE FROM memory_vec' -- artel</code> matches
+three files.</li>
+<li><strong><code>expires_at</code> on a memory is written and returned,
+and read by nothing.</strong>
+<code>git grep -n 'expires_at' -- artel/server/routes/memory.py artel/store/schema.py artel/archivist artel/server/routes/sessions.py</code>
+returns the column, the captures and OAuth columns, and three lines of
+<code>memory.py</code> that map, insert and bind it.</li>
+<li><strong>A REST patch or delete emits no event.</strong>
+<code>git grep -n -E 'memory\.(deleted|updated|patched)' -- artel</code>
+returns one line, the replication delete at
+<code>artel/server/feed_poller.py:290</code>.</li>
+<li><strong>Search does not filter <code>stale</code>.</strong>
+<code>git grep -n 'stale' -- artel/server/routes/memory.py</code>
+returns the response mapping at <code>:251</code> and a comment at
+<code>:959</code>.</li>
+<li><strong>The provisional tag is read only by refinement.</strong>
+<code>git grep -n -E 'capture-extracted|_PROVISIONAL_TAG' -- artel</code>
+returns six lines, all in
+<code>artel/archivist/compaction.py</code>.</li>
+<li><strong>The bandit's prediction has no caller.</strong>
+<code>git grep -n 'predict(' -- artel</code> returns the two definitions
+and the call inside <code>bandit.update</code>.</li>
+<li><strong>The graph routes carry no scope predicate.</strong>
+<code>git grep -n -E "scope != 'agent'|deleted_at IS NULL" -- artel/server/routes/compile.py</code>
+returns the anchor lookup at <code>:106</code> and the stale list at
+<code>:221</code>;
+<code>git grep -n -c "scope != 'agent'" -- artel/server/routes/memory.py</code>
+returns 5.</li>
+<li><strong>The events routes carry no scope predicate.</strong>
+<code>git grep -n -E 'project_filter|_memberships|scope' -- artel/server/routes/events.py</code>
+returns nothing.</li>
+<li><strong>Captures check no membership.</strong>
+<code>git grep -n -E '_memberships|project_filter' -- artel/server/routes/captures.py</code>
+returns nothing;
+<code>git grep -n -c '_memberships' -- artel/server/routes/feeds.py</code>
+returns 3.</li>
+<li><strong>Join has no invitation or approval.</strong>
+<code>git grep -n -i -E 'invite|approv|owner' -- artel/server/routes/projects.py</code>
+returns the import, the role assignment and the clear route's owner
+check.</li>
+<li><strong>No review or approval state.</strong>
+<code>git grep -n -i -E 'pending_review|approved|needs_review|awaiting' -- artel</code>
+and <code>git grep -n -i approve -- artel</code> return nothing.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -w -i -E 'valid_from|valid_to|valid_until|event_time|occurred_at' -- artel</code>
+returns nothing;
+<code>git grep -n -w -c content_at -- artel/server/routes/memory.py</code>
+matches.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|doi\.org|CITATION' -- . ':!uv.lock' ':!scripts/sandbox_seed.json'</code>
+returns nothing;
+<code>git grep -n -c -i 'swe-bench' -- bench/README.md</code> returns
+4.</li>
+<li><strong>The only <code>expires_at</code> test checks
+storage.</strong> <code>git grep -n 'expires_at' -- tests</code>
+filtered of capture, OAuth, lease and notification lines returns
+<code>tests/scenarios/test_directives.py:103</code>, <code>:109</code>
+and <code>:113</code>.</li>
+<li><strong>No test reads the unscoped routes across scope.</strong>
+<code>git grep -n -E "scope.*agent" -- tests/test_compile.py tests/test_spreading_activation.py tests/test_hebbian.py tests/test_pagerank.py tests/test_events.py</code>
+returns nothing.</li>
+<li><strong>No submodules.</strong> The tree has no
+<code>.gitmodules</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/NicolasPrimeau/artel/commit/65437abc9b2aafda2d59a007a80cd23e59fa64b1"><code class="commit-id" title="65437abc9b2aafda2d59a007a80cd23e59fa64b1">65437abc…</code></a>.
+First reading at <code>65437ab</code>, read only, from a full clone at
+the head of <code>master</code>. Screened first: five auto-run surfaces
+(<code>server.json</code>, <code>hooks/</code>,
+<code>hooks/hooks.json</code>, <code>.claude-plugin/</code>,
+<code>.claude-plugin/plugin.json</code>), two build-time execution
+points (<code>tests/conftest.py</code>,
+<code>tests/scenarios/conftest.py</code>), an inert git hook payload in
+<code>scripts/hooks/pre-commit</code>, nothing inside the cooldown,
+nothing unpinned (<code>uv.lock</code>). <code>CLAUDE.md</code>, the
+hooks and docs were read as data. Nothing was installed, built or run,
+and the 1,246 test functions were not run. Two marks:
+<code>scope_enforced</code> and <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

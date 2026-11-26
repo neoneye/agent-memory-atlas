@@ -2074,6 +2074,25 @@ two tenants on one vector and require exact sets
 <code>tests/test_tenant_fail_closed.py:136-146</code>). The operator
 inspector takes the tenant as a query parameter, and any admin key reads
 every tenant.</p>
+<p><a href="../../systems/artel/">Artel</a> applies both keys on every
+ranked arm and leaves them off the routes beside it. The vector and FTS
+arms add <code>scope != 'agent' OR agent_id = ?</code>, the membership
+predicate runs on search, list, delta, get, the feeds and the session
+handoff, and the caller comes from its key, with populated tests across
+two projects (<code>artel/server/routes/memory.py:353-383</code>,
+<code>:418-428</code>, <code>artel/server/auth.py:163-198</code>,
+<code>tests/scenarios/test_coordination.py:1089-1161</code>).
+<code>GET /graph/{id}</code> returns the full row of any id with no
+predicate and <code>GET /events</code> lists every memory id, so any
+registered agent can read private and deleted notes
+(<code>artel/server/routes/compile.py:248-265</code>,
+<code>artel/server/routes/events.py:41-58</code>). Membership is
+self-service through <code>POST /projects/{id}/join</code>, and the
+archivist, which reads every project, writes a merge of two projects'
+notes with <code>project</code> NULL, visible to all, under a test that
+requires it (<code>artel/archivist/conflict.py:44</code>,
+<code>artel/archivist/synthesis.py:435</code>,
+<code>tests/test_archivist.py:511-522</code>).</p>
 <p><a href="../../systems/katra/">Katra</a> pins the key in the
 dispatcher and lets every caller rewrite the rule it feeds. The MCP call
 handler replaces <code>user_id</code> in every tool's arguments with

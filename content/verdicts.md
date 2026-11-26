@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 899 reports.**
+**This page covers all 900 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8313,3 +8313,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Business Source License 1.1, MIT in the manifests; 49,003 lines of TypeScript in the server and 461 commits from 18 June to 29 October 2026, many under agent identities; 780 vitest cases, 226 of them testing copies of the code defined in the test file, none run in CI and none here. One mark: `scope_enforced`.
 - Study when: you are adding identity separation to an MCP memory server that several agents share, and want the caller pinned in one place rather than in each tool.
 - Do not copy when: the store will hold anything a network neighbour should not read, or a correction has to hold across every read path, consolidation included.
+
+### [`artel`](../systems/artel/)
+- Best idea: **inject one line, and choose the cut on what it says when it should say nothing.** The prompt hook searches with `max_distance=1.0` and injects at most one note and one skill in 480 characters; the committed labels include 11 prompts with no right answer, on which the chosen policy fires 3 times where the looser ones fire 7 and 11.
+- Second idea: a capture hook that is an append and a fork. The Stop and PreCompact hooks write the payload to a spool and start a detached drainer under `flock`, which ships each session's new transcript slice by byte cursor and advances it only on a successful post. Decay is set by a PI loop on regret events, reads of already-decayed notes deduplicated per reader.
+- Biggest risk: **the scope key holds on search and nowhere around it.** `GET /graph/{id}` returns any memory row, private and deleted ones included, to any registered agent, and `GET /events` lists every memory id. The archivist reads every project and writes a merge of two projects' notes with `project` NULL, which every agent reads, and a test requires the NULL.
+- Second risk: retrieval votes for itself. Every search hit raises confidence and counts a distinct reader, including the up to five notes per prompt the hook fetched and did not inject, and two readers promote a note to a doc that never decays. Captured and RSS-derived facts enter at 1.0, any agent may join any project or write a global directive into every synthesis pass, and with `UI_PASSWORD` unset an `X-UI-Session` header is the owner.
+- Most reusable component: the capture spool and drainer in `scripts/artel-capture.sh` and `scripts/_artel_hooks.py:575-682`, the injection policy at `scripts/_artel_hooks.py:304-364`, the regret sensor at `artel/server/routes/memory.py:139-164` and the controller in `artel/archivist/control.py`.
+- Maturity impression: MIT; 24,487 lines of Python, 17,161 in the package, in 857 commits from 1 May to 9 November 2026 by one author and a release bot, with 96 tags; 1,246 test functions against an in-process server with embeddings stubbed, none run here; the README's quick-start archivist has no shared database. Two marks: `scope_enforced`, `negative_eval`.
+- Study when: you are deciding how much a per-prompt memory hook should say, how to capture sessions without touching the agent's latency, or how to set a decay rate from evidence.
+- Do not copy when: two clients, teams or untrusted agents share an instance, or a note must stay inside the project that wrote it through every background pass.
