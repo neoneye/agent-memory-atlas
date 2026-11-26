@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 887 reports.</strong></p>
+<p><strong>This page covers all 888 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36693,6 +36693,57 @@ against a real Qdrant, none run here. Three marks:
 want the boundary to survive a new arm or a new ranking stage.</li>
 <li>Do not copy when: an agent must be able to retract a fact and have
 it stay retracted, or facts live in the graph.</li>
+</ul>
+<h3 id="neurostrata"><a
+href="../systems/neurostrata/"><code>neurostrata</code></a></h3>
+<ul>
+<li>Best idea: <strong>one retirement predicate on every
+reader.</strong> Retired (<code>valid_to</code> passed), archived and
+mesh-conflicted rows are dropped on the vector arm, the exact-name pass,
+the Tantivy hydration, the in-house BM25, the session snapshot, conflict
+detection, GraphQL and SPARQL, and the Tantivy path re-reads the stored
+row so a stale index entry cannot surface an archived one, with a test
+that strips the flag to prove it.</li>
+<li>Second idea: correction as a new row plus a reason on the old one.
+<code>neurostrata_supersede_memory</code> keeps the retired wording with
+<code>superseded_by</code> and <code>superseded_reason</code>, re-embeds
+the replacement, re-reads the old row before retiring it, and refuses
+the machine-wide <code>global</code> namespace without
+<code>allow_global</code>.</li>
+<li>Biggest risk: <strong>the namespace is whatever the model
+types.</strong> Every read applies <code>m.namespace</code>, but the
+value is the tool argument, matched case-insensitively to existing
+names, <code>list_namespaces</code> returns them all,
+<code>related</code> widens on <code>cross_namespace: true</code>, and
+the ACL principal defaults to <code>admin</code>; one machine's projects
+share one database.</li>
+<li>Second risk: a correction does not stay made. The exact-duplicate
+check skips retired and archived rows, so an agent re-extracting the
+corrected claim stores it again as active; delete leaves no record, and
+the only mutation log is the kinetic-action receipts, which the ordinary
+memory tools never write.</li>
+<li>Most reusable component: the row-class predicates and their
+placement in <code>search_inner</code>
+(<code>src/store/ladybug.rs:48-410</code>) with
+<code>par02_tantivy_hydration_respects_archive_escape_hatch</code>; the
+supersede handler at <code>src/server.rs:10628</code>; the action
+receipt with before and after images in
+<code>src/rdf/action.rs</code>.</li>
+<li>Maturity impression: MIT; 295,996 lines of Rust and 1,129 commits
+from 12 April to 26 November 2026, at 1.19.1; 3,322 Rust test functions
+and 281 plugin test cases run in CI on Ubuntu as the gate, not run here,
+with Lean proofs and a Kani mutation check on the task kernels. The
+README's retrieval description (HNSW, never fused) does not match the
+default search (exact scan, reciprocal-rank fusion), and a committed
+synthetic retrieval eval records its own gate as FAIL. Three marks:
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</li>
+<li>Study when: you want one local binary that keeps project rules
+beside the code graph and makes agents file what they learn, or a
+retirement filter applied uniformly across every read surface.</li>
+<li>Do not copy when: agents on one machine must be kept apart, a
+retracted fact must stay retracted, or the memory layer has to be small
+enough to audit in a day.</li>
 </ul>
         </article>
       </div>

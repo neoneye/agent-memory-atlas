@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-887, generated from each report's frontmatter —
+888, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-887, generated from each report's frontmatter —
+888, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-887, generated from each report's frontmatter —
+888, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 887, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 888, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-887, generated from each report's frontmatter —
+888, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 887 systems by the seven mechanisms
+filters all 888 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -25579,6 +25579,65 @@ insert and reports rather than refuses; and workspace is an optional
 argument with no default, so an omitted one reads every workspace</td>
 </tr>
 <tr>
+<td><a href="../systems/neurostrata/"><code>neurostrata</code></a></td>
+<td>A Memory node: id, namespace, content, user_id, memory_type (rule,
+fact, procedure, task, guard_rule, code_ast and others), agent_name,
+location, location_lines, a JSON metadata object and a fixed-width
+embedding; typed edges GOVERNS, RELATES_TO, CONTAINS, DEPENDS_ON and
+EXTRACTED_FROM carry source, valid_from, valid_to, generation, extractor
+and confidence</td>
+<td>One embedded LadybugDB database per machine under
+~/.config/NeuroStrata/data/db holding every namespace, with a Tantivy
+index directory beside it and an in-memory BM25 index loaded per
+namespace; session logs, intake ledgers and receipts as JSON under each
+project's .NeuroStrata; an optional SynapticMesh git checkout under
+~/.NeuroStrata</td>
+<td>Default MCP search runs an exact-name pre-pass, an exact cosine scan
+of the namespace (array_distance, no vector index) and Tantivy BM25,
+fuses the two ranks by reciprocal rank at k 60 with symbol, decision and
+feedback terms, then expands one or two graph hops; vector, Tantivy-only
+and in-house BM25 modes exist; five results by default; archived,
+retired and mesh-conflicted rows are dropped on every arm</td>
+<td>add_memory embeds locally and stores at once after a secret scan and
+an exact-duplicate check in the namespace; task_complete refuses to
+close a task without a lesson; task_candidates auto-commits a fact or
+decision when the caller sets auto_commit with confidence at least 0.85;
+mesh pull imports teammates' rules and facts</td>
+<td>supersede writes a new row and sets valid_to, superseded_by and
+superseded_reason on the old one; archive sets archived; both are hidden
+from reads and from the duplicate check; hard delete by id over the CLI
+or HTTP /delete with an operator token; no MCP delete tool</td>
+<td>namespace column applied in every Cypher read, supplied by the model
+as a tool argument and resolved case-insensitively against existing
+names; a global namespace whose rules join every project's task context;
+a visible_to ACL keyed on a principal argument that defaults to
+admin</td>
+<td>MCP over HTTP at 127.0.0.1:34343 with a bearer token, about seventy
+tools; embedded plugins for OpenCode, Claude Code, Hermes, Codex CLI,
+Copilot CLI and OpenClaw that prefetch governing memories on file touch
+and inject active task, golden rules and subagent context; git
+pre-commit and pre-push hooks; a Tauri graph viewer that edits and
+deletes</td>
+<td>A 60-second checkpoint loop and storage hygiene in the daemon; a
+file watcher that re-ingests the code graph by generation; Leiden
+communities and KGE training on request; the SynapticMesh worker
+draining an outbox JSONL into a git checkout</td>
+<td>No status field on a memory; archived, valid_to and mesh.conflict
+each withhold a row from every read; a per-snapshot disputed badge
+computed and not stored; intake candidates carry review_state on a
+separate table the agent resolves itself</td>
+<td>One retirement predicate applied on every read arm, the snapshot and
+the duplicate check, with populated tests and a stale-index case;
+supersession that keeps the old text and the reason; a secret scan at
+every write entry; a committed retrieval eval whose own gate records
+FAIL; destructive HTTP routes behind a second token</td>
+<td>The namespace is a model-supplied argument and list_namespaces names
+them all; the README describes an HNSW index and unfused surfaces the
+default search does not run; a superseded or archived value re-added is
+stored as new; the action receipts are the only mutation log and cover
+one tool; the committed Laya model is a stub by its own manifest</td>
+</tr>
+<tr>
 <td><a href="../systems/nexusmem/"><code>nexusmem</code></a></td>
 <td>A <code>node</code> — kind, project, event timestamp, source, title,
 body, a <code>signal</code> float and a JSON <code>meta</code> blob —
@@ -40051,7 +40110,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>85 of 887:</em> <a
+<p><em>85 of 888:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -40140,7 +40199,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>227 of 887:</em> <a
+<p><em>227 of 888:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -40375,7 +40434,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>151 of 887:</em> <a
+<p><em>151 of 888:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -40536,7 +40595,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>385 of 887:</em> <a
+<p><em>386 of 888:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -40800,6 +40859,7 @@ href="../systems/neo-agent-brain/"><code>neo-agent-brain</code></a>, <a
 href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <a href="../systems/neurakeep/"><code>neurakeep</code></a>, <a
 href="../systems/neuron/"><code>neuron</code></a>, <a
+href="../systems/neurostrata/"><code>neurostrata</code></a>, <a
 href="../systems/nexusmem/"><code>nexusmem</code></a>, <a
 href="../systems/no-human/"><code>no-human</code></a>, <a
 href="../systems/nocturne-memory/"><code>nocturne-memory</code></a>, <a
@@ -40940,7 +41000,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>299 of 887:</em> <a
+<p><em>300 of 888:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -41145,6 +41205,7 @@ href="../systems/mushroomdb/"><code>mushroomdb</code></a>, <a
 href="../systems/neko/"><code>neko</code></a>, <a
 href="../systems/neurakeep/"><code>neurakeep</code></a>, <a
 href="../systems/neuralmind/"><code>neuralmind</code></a>, <a
+href="../systems/neurostrata/"><code>neurostrata</code></a>, <a
 href="../systems/nexusmem/"><code>nexusmem</code></a>, <a
 href="../systems/no-human/"><code>no-human</code></a>, <a
 href="../systems/noosphere/"><code>noosphere</code></a>, <a
@@ -41253,7 +41314,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>107 of 887:</em> <a
+<p><em>107 of 888:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -41364,7 +41425,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>575 of 887:</em> <a
+<p><em>576 of 888:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -41750,6 +41811,7 @@ href="../systems/neurakeep/"><code>neurakeep</code></a>, <a
 href="../systems/neuralmind/"><code>neuralmind</code></a>, <a
 href="../systems/neuron/"><code>neuron</code></a>, <a
 href="../systems/neurostack/"><code>neurostack</code></a>, <a
+href="../systems/neurostrata/"><code>neurostrata</code></a>, <a
 href="../systems/nexusmem/"><code>nexusmem</code></a>, <a
 href="../systems/no-human/"><code>no-human</code></a>, <a
 href="../systems/nodedb/"><code>nodedb</code></a>, <a
@@ -41977,8 +42039,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-575 repositories of
-887 assert that particular material must
+576 repositories of
+888 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -42051,7 +42113,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 887 is the real figure for the second kind, and
+of 888 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

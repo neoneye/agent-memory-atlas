@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 887 reports.**
+**This page covers all 888 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8193,3 +8193,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, with MIT declared for the OpenClaw plugin and no MIT text; 40,263 lines of Python in 476 commits from 17 April to 25 November 2026, at version 3.4.0; 2,746 test functions, most against an in-memory Qdrant, run in CI on five Python versions and against a real Qdrant, none run here. Three marks: `bitemporal`, `scope_enforced`, `negative_eval`.
 - Study when: you serve one retrieval backend to several tenants and want the boundary to survive a new arm or a new ranking stage.
 - Do not copy when: an agent must be able to retract a fact and have it stay retracted, or facts live in the graph.
+
+### [`neurostrata`](../systems/neurostrata/)
+- Best idea: **one retirement predicate on every reader.** Retired (`valid_to` passed), archived and mesh-conflicted rows are dropped on the vector arm, the exact-name pass, the Tantivy hydration, the in-house BM25, the session snapshot, conflict detection, GraphQL and SPARQL, and the Tantivy path re-reads the stored row so a stale index entry cannot surface an archived one, with a test that strips the flag to prove it.
+- Second idea: correction as a new row plus a reason on the old one. `neurostrata_supersede_memory` keeps the retired wording with `superseded_by` and `superseded_reason`, re-embeds the replacement, re-reads the old row before retiring it, and refuses the machine-wide `global` namespace without `allow_global`.
+- Biggest risk: **the namespace is whatever the model types.** Every read applies `m.namespace`, but the value is the tool argument, matched case-insensitively to existing names, `list_namespaces` returns them all, `related` widens on `cross_namespace: true`, and the ACL principal defaults to `admin`; one machine's projects share one database.
+- Second risk: a correction does not stay made. The exact-duplicate check skips retired and archived rows, so an agent re-extracting the corrected claim stores it again as active; delete leaves no record, and the only mutation log is the kinetic-action receipts, which the ordinary memory tools never write.
+- Most reusable component: the row-class predicates and their placement in `search_inner` (`src/store/ladybug.rs:48-410`) with `par02_tantivy_hydration_respects_archive_escape_hatch`; the supersede handler at `src/server.rs:10628`; the action receipt with before and after images in `src/rdf/action.rs`.
+- Maturity impression: MIT; 295,996 lines of Rust and 1,129 commits from 12 April to 26 November 2026, at 1.19.1; 3,322 Rust test functions and 281 plugin test cases run in CI on Ubuntu as the gate, not run here, with Lean proofs and a Kani mutation check on the task kernels. The README's retrieval description (HNSW, never fused) does not match the default search (exact scan, reciprocal-rank fusion), and a committed synthetic retrieval eval records its own gate as FAIL. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you want one local binary that keeps project rules beside the code graph and makes agents file what they learn, or a retirement filter applied uniformly across every read surface.
+- Do not copy when: agents on one machine must be kept apart, a retracted fact must stay retracted, or the memory layer has to be small enough to audit in a day.

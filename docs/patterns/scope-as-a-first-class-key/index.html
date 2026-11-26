@@ -2002,6 +2002,23 @@ episode retrieval can apply one
 do filter on <code>session_id</code>, so the key exists and only the
 read path that reaches a prompt ignores it. Isolation is one SQLite file
 per server process.</p>
+<p><a href="../../systems/neurostrata/">NeuroStrata</a> applies its key
+everywhere and takes it from the model. Every Cypher read the agent
+reaches, the vector scan, the exact-name pass, the lexical load, the
+duplicate check and get by id, opens with
+<code>WHERE m.namespace = '&lt;ns&gt;'</code>
+(<code>src/store/ladybug.rs:365-368</code>, <code>:11753-11756</code>,
+<code>:12853-12860</code>). The value is the <code>namespace</code>
+argument of the MCP call, matched case-insensitively against names that
+exist by <code>resolve_namespace</code>
+(<code>src/server.rs:12334-12378</code>), and
+<code>neurostrata_list_namespaces</code> returns every name on the
+machine. The harness plugins resolve the namespace from the project's
+root marker on the calls they make; the model's own calls name what it
+chooses, <code>neurostrata_related</code> leaves the namespace on
+<code>cross_namespace: true</code>, and the <code>visible_to</code>
+principal defaults to <code>admin</code>. <strong>A key applied on every
+read is still a filing key when the reader supplies it.</strong></p>
 <p><a href="../../systems/mnemostack/">mnemostack</a> applies the key
 three times and refuses to start without one. Under <code>--auth</code>
 the HTTP and MCP servers take the tenant from the presented key in one

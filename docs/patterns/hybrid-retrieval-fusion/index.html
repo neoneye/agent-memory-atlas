@@ -569,6 +569,21 @@ index and tokenizer and not <code>retrieveRelevant</code>. When the
 embedding model is missing, the dense arm falls back to a whole-string
 hash and the fusion degrades to BM25 with noise, which no search reply
 reports.</p>
+<p><strong><a href="../../systems/neurostrata/">NeuroStrata</a> fuses by
+default under a README that says it never does.</strong> The README
+describes three alternative surfaces, an HNSW index, Tantivy and an
+in-house BM25, whose <em>"scores are never fused"</em>
+(<code>README.md:32</code>). The MCP tool's default <code>hybrid</code>
+mode runs an exact <code>array_distance</code> scan over every row of
+the namespace, with no vector index created anywhere in
+<code>src/</code>, fetches Tantivy ranks with the principal fixed to
+<code>admin</code>, and combines vector rank, lexical rank, symbol
+match, graph co-occurrence and feedback by reciprocal rank at k = 60
+(<code>src/store/ladybug.rs:175-218</code>, <code>:365-368</code>,
+<code>:1404</code>; <code>src/graph_read/hybrid.rs:42</code>). The
+committed retrieval eval ran every arm in the unfused
+<code>default</code> mode, so the fused path the agent uses has no
+committed measurement.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exact identifiers, paraphrases, dates, negation, and typo
