@@ -1696,6 +1696,15 @@ papers cited by arXiv id — is read from the sources linked inline.
   because *"installing a local one would create a second database and write
   memories where nobody is looking"*. Renamed from MemoCat MCP, with a compat
   shim under the old package name; neither name is reported here.
+  That client is `MontyGovernance/montycat_python` (MIT), examined at
+  [`cc09fcd9f1e28915032bddff02cea35f235171d3`](https://github.com/MontyGovernance/montycat_python/commit/cc09fcd9f1e28915032bddff02cea35f235171d3)
+  and not reported either: every keyspace verb, semantic, BM25 and hybrid
+  search included, is an orjson payload that `send_data` writes to the
+  server over TCP (`montycat/core/utils.py:47`), and the only data the
+  client computes on is an xxh32 digest of custom keys. Its README calls
+  Montycat open-source; on 26 November 2026 the organisation's public
+  repositories were four language clients, a serialization derive crate
+  and montycat-mcp, with no engine among them.
 - **A repository was examined and carries no memory implementation to report
   on.** `Dakera-AI/dakera-deploy` is MIT-licensed deployment infrastructure for
   the Dakera memory platform — Compose files, Kubernetes manifests, a Caddy
