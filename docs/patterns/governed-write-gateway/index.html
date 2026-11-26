@@ -476,6 +476,22 @@ would have validated it, since it refuses only <code>live: false</code>
 (<code>implementation.py:2015-2029</code>). Where <a
 href="../../systems/cartographer/">Cartographer</a> has no setting that
 lowers its gate, this one is an argument.</p>
+<p><a href="../../systems/nodedb-lite/">NodeDB Lite</a> has two doors
+into one document store and only one keeps its invariants. The
+<code>NodeDb</code> trait's <code>document_put</code> and
+<code>document_delete</code> append a version to a bitemporal
+collection's history and ask the host's <code>SyncGate</code> whether
+the document may leave the device
+(<code>nodedb-lite/src/nodedb/trait_impl/document.rs:64-190</code>). The
+SQL path's insert and delete branch only on whether the collection is
+strict and write the CRDT row
+(<code>nodedb-lite/src/query/document_ops/writes/insert.rs:156-176</code>,
+<code>nodedb-lite/src/query/document_ops/writes/delete.rs:46-58</code>),
+while the SQL scan of a bitemporal collection reads the history
+(<code>nodedb-lite/src/query/engine_read.rs:28-56</code>). The gate is
+also skipped by <code>document_put_with_valid_time</code>, the batch
+path and <code>vector_insert</code>, so which writer was called decides
+both what a later read returns and what reaches the server.</p>
 <h3 id="gates-on-something-other-than-a-write">Gates on something other
 than a write</h3>
 <p>These are analogies rather than instances. Each puts one gate, or one

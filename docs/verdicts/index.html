@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 897 reports.</strong></p>
+<p><strong>This page covers all 898 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37198,6 +37198,62 @@ search honours without a filter on each query.</li>
 <li>Do not copy when: projects or clients must be kept apart from the
 model, a user must be able to delete what was stored, or a correction
 has to reach every copy of a promoted fact.</li>
+</ul>
+<h3 id="nodedb-lite"><a
+href="../systems/nodedb-lite/"><code>nodedb-lite</code></a></h3>
+<ul>
+<li>Best idea: <strong>valid time rides in the version, not in the
+key.</strong> A bitemporal document's history row is keyed on a strictly
+monotonic system time, so two writes in one millisecond keep two rows,
+and carries <code>valid_from</code> and <code>valid_until</code> that
+<code>document_put_with_valid_time</code> takes from the caller;
+<code>document_get_as_of</code> takes the last version at or before the
+system time and returns it only if it is live and covers the valid time,
+half-open. A test requires presence at 400 and absence at 200 and at the
+exclusive bound 500.</li>
+<li>Second idea: refuse the policy you cannot enforce. Lite consumes
+physical plans built for Origin, and every dispatch arm that can carry a
+row-level-security program or write check passes it to
+<code>deny_policy</code>, which errors on the statement; its match over
+<code>RlsWriteCheck</code> is exhaustive so a new variant breaks the
+build, and <code>PendingInjection</code> refuses because "a missed
+injection fails loudly instead of admitting the write".</li>
+<li>Biggest risk: <strong>two write paths into one store, and only one
+maintains the history.</strong> SQL <code>INSERT</code>,
+<code>UPDATE</code>, <code>DELETE</code> and <code>TRUNCATE</code> on a
+bitemporal schemaless collection write the CRDT row and no history
+version, while SQL <code>SELECT</code> and <code>document_get</code>
+read the history, so by reading the code a SQL insert is not selectable
+and a SQL delete is not deleted. The regression test for SQL over a
+bitemporal collection writes its rows through
+<code>document_put</code>.</li>
+<li>Second risk: deletion does not reach every copy.
+<code>document_delete</code> leaves an attached vector in the HNSW
+index, and hydration returns a hit whose row is gone; on a bitemporal
+collection the CRDT copy is kept for sync, so the hit carries the
+deleted document's fields. No code deletes a document history row, the
+<code>GdprErased</code> tag has no writer, and no
+<code>TemporalPurge</code> targets document history. Columnar
+<code>AS OF SYSTEM TIME</code> is bound to <code>_system_as_of_ms</code>
+and ignored beside a comment saying it is applied.</li>
+<li>Most reusable component:
+<code>nodedb-lite/src/engine/document/history/</code> — key layout,
+<code>versioned_put</code>, <code>versioned_get_as_of</code> — and
+<code>nodedb-lite/src/query/physical_visitor/adapter/policy.rs</code>.</li>
+<li>Maturity impression: Apache-2.0, v0.1.0 beta; 153,280 lines of Rust
+in three crates over 254 commits between 11 April and 16 October 2026,
+almost all by one author; 1,824 test functions, none run here, of which
+the sync interop and SQL parity suites return early without an Origin
+build. The engines are <code>nodedb-*</code> crates outside the tree,
+resolved on caret versions with no lockfile, and CI builds them from
+NodeDB's <code>main</code>. No memory model of its own. Two marks:
+<code>bitemporal</code>, <code>negative_eval</code>.</li>
+<li>Study when: you need agent memory that runs on a device or in a
+browser and syncs to a server, or you want a small, readable bitemporal
+version store with a caller-set valid interval.</li>
+<li>Do not copy when: you wanted a memory system rather than a store to
+build one on, or your memory must be erasable — a bitemporal document's
+body outlives its deletion in two places.</li>
 </ul>
         </article>
       </div>

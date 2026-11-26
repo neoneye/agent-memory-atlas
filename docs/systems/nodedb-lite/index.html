@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The embedded, Apache-2.0 edition
+of NodeDB: an in-process multi-model database for agents and local-first
+apps, with bitemporal documents and CRDT sync to Origin.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="NodeDB
+Lite — Agent Memory Atlas">
+    <meta property="og:description" content="The embedded, Apache-2.0
+edition of NodeDB: an in-process multi-model database for agents and
+local-first apps, with bitemporal documents and CRDT sync to Origin.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NodeDB
+Lite — Agent Memory Atlas">
+    <meta name="twitter:description" content="The embedded, Apache-2.0
+edition of NodeDB: an in-process multi-model database for agents and
+local-first apps, with bitemporal documents and CRDT sync to Origin.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>NodeDB Lite — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "NodeDB Lite",
+      "description": "The embedded, Apache-2.0 edition of NodeDB: an in-process multi-model database for agents and local-first apps, with bitemporal documents and CRDT sync to Origin.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Valid time on documents, and a refusal to
+run the policies it cannot enforce</p>
+          <h1>NodeDB Lite</h1>
+          <p class="document-deck">The embedded, Apache-2.0 edition of
+NodeDB: an in-process multi-model database for agents and local-first
+apps, with bitemporal documents and CRDT sync to Origin.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/NodeDB-Lab/nodedb-lite">
+              <span>Source</span>
+              <strong>NodeDB-Lab/nodedb-lite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/NodeDB-Lab/nodedb-lite/commit/4ce3f39d2971aa100c99c9c84053ac8a3a2e717d" title="4ce3f39d2971aa100c99c9c84053ac8a3a2e717d">
+              <span>Analyzed revision</span>
+              <code>4ce3f39d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/NodeDB-Lab--nodedb-lite" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>NodeDB-Lab--nodedb-lite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE and the workspace manifest; the nodedb-* engine crates and
+pagedb it builds on are crates.io dependencies outside this tree, with
+no lockfile committed</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>153,280
+lines of Rust in three crates, 117,103 of them in nodedb-lite/src and
+28,636 in nodedb-lite/tests; the HNSW, CSR, BM25 and CRDT engines, the
+SQL planner and the NodeDb trait come from nodedb-* 0.6 crates not in
+the clone</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>254
+commits from 11 April to 16 October 2026, 239 by Farhan Syah under two
+addresses and 15 by three other names; tag v0.1.0 on 16 October 2026,
+three CI commits before the pin</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>1,824
+test functions: 1,813 #[test] and #[tokio::test] cases and 11
+wasm_bindgen tests; the sync interop and SQL parity suites need an
+Origin build and return early without one; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>NodeDB Lite is the embedded edition of <a
+href="../nodedb/">NodeDB</a>: one Rust library running document,
+key-value, vector, graph, full-text, spatial, columnar, timeseries and
+array engines in-process over a paged file, offline by default, with
+CRDT sync to a NodeDB Origin server. Its notable parts are a bitemporal
+document collection whose valid time a caller sets apart from the
+system-time key, and a plan adapter that refuses an access policy it
+cannot enforce rather than dropping it. Its weak part is that it is a
+database and not a memory system, and that the bitemporal history is
+complete only for writes through the Rust trait.</p>
+<p>The README calls it "[t]he embedded memory engine for AI agents" and
+names ma8e, "an in-development memory-and-knowledge layer for coding
+agents", as its consumer (<code>README.md:50</code>). Nothing of ma8e is
+in this tree. What the tree offers an agent is <code>NodeDbLite</code>,
+an implementation of the <code>NodeDb</code> trait from the
+<code>nodedb-client</code> crate, with <code>document_put</code>,
+<code>vector_search</code>, <code>graph_traverse</code>,
+<code>text_search</code>, <code>hybrid_search</code> and
+<code>graph_rag_search</code>. There is no memory unit, extraction,
+consolidation, importance or provenance of its own, so the memory model
+is the caller's to build. One piece is shaped by that consumer: a
+<code>SyncGate</code> that keeps confidential documents off the wire
+"for hosts (e.g. ma8e)"
+(<code>nodedb-lite/src/nodedb/core/types.rs:149-154</code>).</p>
+<p>This repository is separate from the server and shares no code with
+it in the tree. The engines it calls — HNSW, CSR adjacency, BM25, the
+Loro wrappers, the SQL parser and physical plan types, the
+<code>NodeDb</code> trait itself — are crates.io dependencies on
+<code>nodedb-*</code> 0.6 (<code>Cargo.toml:15-31</code>), with
+<code>Cargo.lock</code> listed in <code>.gitignore</code>. CI builds
+them from a checkout of <code>NodeDB-Lab/nodedb</code> at
+<code>main</code>
+(<code>.github/actions/setup-workspace/action.yml:1-21</code>). What is
+in the tree is the integration: storage, per-engine adapters, the
+bitemporal history, the physical-plan visitor and the sync client.</p>
+<p><strong>Licence.</strong> The Apache-2.0 grant covers the integration
+layer, and the code that does most of the work is not in the tree to
+read: every engine is a <code>nodedb-*</code> crate resolved from
+crates.io on a caret requirement with no lockfile, so what a build links
+is whatever 0.6.x the registry serves that day. The README's assurance
+of "no BSL anywhere in its dependency tree" cannot be checked from this
+repository. <code>deny.toml</code> enforces it on the graph cargo-deny
+sees, since its allow list holds no BUSL entry (its <code>BSL-1.0</code>
+is the Boost licence). The sync interop suite builds the BUSL-1.1 Origin
+server from a sibling checkout
+(<code>scripts/ensure-origin.sh:1-25</code>), which the README's
+statement does not mention.</p>
+<p>Two marks, on code in this tree: <code>bitemporal</code> on the
+document history and <code>negative_eval</code> on populated vector and
+graph exclusion tests. The server's <code>scope_enforced</code> rests on
+its row-level-security walker (<a href="../nodedb/">NodeDB</a>); Lite
+has no counterpart, since it runs one tenant and refuses the walker's
+output. Section 9 gives each withheld mark.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A "memory" here is whatever row the caller writes. Most rows have one
+state, present, and leave by deletion. A row in a collection created
+<code>WITH (bitemporal=true)</code> has a history instead, and that
+history is the only place in the tree where a stored thing can be true
+for a period and then stop being true without being destroyed.</p>
+<p>A bitemporal document's versions live in
+<code>Namespace::DocumentHistory</code> under
+<code>{collection}:{doc_id}\x00{system_from_ms:020}</code>, each value a
+tag (<code>LIVE</code>, <code>TOMBSTONE</code> or
+<code>GdprErased</code>), <code>valid_from_ms</code>,
+<code>valid_until_ms</code> and the body
+(<code>nodedb-lite/src/engine/document/history/mod.rs:3-19</code>). A
+<code>LatestVersion</code> pointer names the newest key, updated in the
+same batch.</p>
+<ul>
+<li><strong>A version is born</strong> from <code>document_put</code>,
+with <code>valid_from</code> set to the wall-clock now and
+<code>valid_until</code> open, or from
+<code>document_put_with_valid_time</code>, with both bounds the
+caller's. The system-time key comes from a strictly monotonic clock so
+two writes in one millisecond keep two rows
+(<code>nodedb-lite/src/nodedb/trait_impl/document.rs:109-127</code>,
+<code>:270-286</code>).</li>
+<li><strong>It stops being current</strong> when a later version or a
+<code>TOMBSTONE</code> is appended. <code>document_delete</code> on a
+bitemporal collection writes the tombstone, removes the pointer and
+leaves the CRDT copy for sync
+(<code>nodedb-lite/src/nodedb/trait_impl/document.rs:153-177</code>).</li>
+<li><strong>It is read</strong> current through the pointer, or as of a
+system time <code>t</code> by scanning the document's versions newest
+first, taking the first with <code>system_from &lt;= t</code>, and
+returning it only when it is <code>LIVE</code> and covers the requested
+valid time
+(<code>nodedb-lite/src/engine/document/history/ops/read.rs:80-122</code>).</li>
+<li><strong>It never dies.</strong> No code deletes a
+<code>DocumentHistory</code> row, and the <code>GdprErased</code> tag is
+decoded but written by nothing in the document engine.</li>
+</ul>
+<p>Valid time is one interval per system-time version. A document
+written as valid over 2024 and then rewritten with a 2025 interval holds
+the 2025 interval at the current system time and the 2024 interval only
+as of the earlier system time, so a query for a 2024 valid time at the
+current system time returns nothing.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a bitemporal document gets one history row per version with a caller-set valid interval, and the as-of read filters on both clocks; SQL writes reach only the CRDT row, which is also what search hits hydrate from, so the history and the searchable copy can disagree</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a bitemporal document gets one history row per version with a caller-set valid interval, and the as-of read filters on both clocks; SQL writes reach only the CRDT row, which is also what search hits hydrate from, so the history and the searchable copy can disagree
+flowchart TD
+  subgraph writers[&quot;Trait writers&quot;]
+    direction TB
+    W1[&quot;document_put:&lt;br/&gt;valid from now, open&quot;]
+    W2[&quot;document_put_with_&lt;br/&gt;valid_time: caller bounds&quot;]
+    W3[&quot;document_delete:&lt;br/&gt;TOMBSTONE version&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  writers --&gt; H[&quot;DocumentHistory row&lt;br/&gt;key: id + monotonic&lt;br/&gt;system_from&lt;br/&gt;value: tag, valid_from,&lt;br/&gt;valid_until, body&quot;]
+  writers --&gt; C[&quot;CRDT row in Loro&lt;br/&gt;kept after a delete&lt;br/&gt;so sync still works&quot;]
+  SQL[&quot;SQL INSERT, UPDATE,&lt;br/&gt;DELETE, TRUNCATE&quot;] --&gt; C
+  H --&gt; ASOF{&quot;document_get_as_of:&lt;br/&gt;last version with&lt;br/&gt;system_from at or&lt;br/&gt;before t&quot;}
+  ASOF --&gt; VT{&quot;LIVE and&lt;br/&gt;valid_from &lt;= v&lt;br/&gt;and v &lt; valid_until?&quot;}
+  VT --&gt;|&quot;yes&quot;| HIT[&quot;document returned&quot;]
+  VT --&gt;|&quot;no&quot;| NONE[&quot;None&quot;]
+  H --&gt; CUR[&quot;document_get and SELECT&lt;br/&gt;read the current version&lt;br/&gt;from history&quot;]
+  C --&gt; HYD[&quot;vector and graph-RAG&lt;br/&gt;hits hydrate metadata&lt;br/&gt;from the CRDT row&quot;]
+  HYD ~~~ GAP[&quot;no code deletes a&lt;br/&gt;history row; a deleted&lt;br/&gt;document still hydrates&lt;br/&gt;a search hit&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs in the host process. <code>NodeDbLite::open</code>
+takes a storage backend and returns an <code>Arc</code>; nothing else
+has to be running, no API key is needed to store anything, and the
+network is touched only by <code>start_sync</code>, behind the default
+<code>sync</code> cargo feature
+(<code>nodedb-lite/Cargo.toml:12-19</code>).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nodedb-lite/src/storage/</code></td>
+<td><code>StorageEngine</code> trait over pagedb (file, memory, OPFS),
+namespaces, checksums, an encrypted wrapper</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/engine/</code></td>
+<td>Per-engine state: CRDT documents, strict rows, columnar and
+timeseries, vector, sparse vector, graph CSR, FTS, spatial, array</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/engine/document/history/</code></td>
+<td>The bitemporal document history</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/nodedb/trait_impl/</code></td>
+<td><code>NodeDb</code> trait methods: document, vector, graph, batch,
+SQL lifecycle</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/nodedb/graph_rag/</code></td>
+<td>Hybrid and graph-RAG retrieval with RRF</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/query/</code></td>
+<td>SQL through <code>nodedb-sql</code>, a physical-plan visitor and
+per-engine ops</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/sync/</code></td>
+<td>WebSocket client, outbound queues, shapes, vector clock,
+compensation</td>
+</tr>
+<tr>
+<td><code>nodedb-lite-ffi/</code>, <code>nodedb-lite-wasm/</code></td>
+<td>C ABI with Kotlin and JNI, and the npm package</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Adoption is <code>cargo add nodedb-lite</code> or
+<code>npm install @nodedb-lab/nodedb-lite</code>. The store is a pagedb
+file, not readable by hand; at rest it is plaintext only if the caller
+chooses <code>Encryption::Plaintext</code>, since the enum has no
+default and a passphrase derives the key through Argon2id with a
+<code>&lt;db_path&gt;.salt</code> sidecar
+(<code>nodedb-lite/src/storage/encryption.rs:14-40</code>).</p>
+<p>Building from a clone is harder than the README's three commands
+suggest. The CI action's own header says <code>nodedb-* = "0.5"</code>
+once did not resolve because "0.5.0 exists only in the Origin working
+tree", and that a caret requirement "never matches a prerelease" of
+pagedb; it checks out <code>NodeDB-Lab/nodedb</code> and
+<code>NodeDB-Lab/pagedb</code> at <code>main</code> and writes a
+<code>[patch.crates-io]</code> table over them
+(<code>.github/actions/setup-workspace/action.yml:1-21</code>,
+<code>:27-38</code>). A test run on CI therefore exercises this pin
+against whatever the Origin workspace holds that day; only the release
+path, with <code>sources: registry</code>, builds against published
+crates.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Bitemporal document write and read.</strong>
+<code>document_put_impl</code> upserts the CRDT row, drops its pending
+delta if the sync gate rejects it, and appends a <code>LIVE</code>
+version for a bitemporal collection
+(<code>nodedb-lite/src/nodedb/trait_impl/document.rs:64-136</code>).
+<code>versioned_put</code> writes the history row and the pointer in one
+<code>batch_write</code>
+(<code>nodedb-lite/src/engine/document/history/ops/write.rs:21-52</code>).
+<code>document_get_as_of_impl</code> refuses a non-bitemporal collection
+and calls <code>versioned_get_as_of</code>
+(<code>nodedb-lite/src/nodedb/trait_impl/document.rs:200-226</code>).</p>
+<p><strong>SQL writes.</strong> <code>point_insert_admitted</code> and
+<code>point_delete_admitted</code> branch only on whether the collection
+is strict; a schemaless collection's row goes to
+<code>crdt.upsert</code> or <code>crdt.delete</code>
+(<code>nodedb-lite/src/query/document_ops/writes/insert.rs:156-176</code>,
+<code>nodedb-lite/src/query/document_ops/writes/delete.rs:46-58</code>).
+The SQL scan of a bitemporal collection reads
+<code>scan_live_documents</code> from history instead
+(<code>nodedb-lite/src/query/engine_read.rs:28-56</code>).</p>
+<p><strong>Vector search.</strong> <code>vector_search_internal</code>
+builds a prefilter bitmap from the caller's allowed ids,
+<code>run_vector_search</code> searches HNSW, drops nodes the index
+marks deleted and reranks, and <code>Hydration::result</code> reads the
+row's fields from the CRDT store, returning the hit with empty metadata
+when the row is absent
+(<code>nodedb-lite/src/nodedb/trait_impl/vector.rs:56-95</code>,
+<code>nodedb-lite/src/engine/vector/search/run.rs:215-222</code>,
+<code>nodedb-lite/src/engine/vector/search/hydrate.rs:36-67</code>).</p>
+<p><strong>Graph-RAG.</strong> <code>graph_rag_search</code> seeds from
+vector hits and caller seeds, expands outgoing edges breadth-first to
+<code>graph_depth</code> under a visited cap, fuses the two rankings
+with weighted RRF, and reads graph-only hits' metadata from the CRDT row
+(<code>nodedb-lite/src/nodedb/graph_rag/graph.rs:25-124</code>).</p>
+<p><strong>Policy slots.</strong> Every physical-visitor arm that can
+carry an Origin policy calls <code>deny_policy</code>, which returns
+<code>LiteError::Unsupported</code> for a non-empty read program or a
+write check of <code>Predicate</code> or <code>PendingInjection</code>
+(<code>nodedb-lite/src/query/physical_visitor/adapter/policy.rs:19-59</code>).</p>
+<p><strong>Sync gate.</strong> <code>should_sync_doc</code> asks the
+installed gate and returns <code>true</code> when none is installed or
+its lock is poisoned
+(<code>nodedb-lite/src/nodedb/core/ops/crdt.rs:27-39</code>).
+<code>document_put_impl</code> and <code>document_put_with_vector</code>
+consult it
+(<code>nodedb-lite/src/nodedb/trait_impl/document.rs:103-106</code>,
+<code>nodedb-lite/src/nodedb/trait_impl/document_vector.rs:61</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no memory schema. A collection belongs to one engine and a
+record is that engine's row; the collection name is the leading
+component of every storage key, and a vector is "an attachment to the
+row with the same collection and id", merged into the CRDT row's fields
+(<code>nodedb-lite/src/nodedb/trait_impl/vector.rs:97-150</code>).</p>
+<p>Temporal fields come in three strengths. Schemaless documents carry
+both clocks as described in section 2. Graph edges in a bitemporal
+collection carry <code>system_from</code> in the key and
+<code>system_to</code> in a trailer, system time only
+(<code>nodedb-lite/src/engine/graph/history.rs:1-19</code>); strict rows
+keep superseded versions in <code>Namespace::StrictHistory</code> "for
+audit until an explicit <code>TemporalPurge</code>"
+(<code>nodedb-lite/src/engine/strict/crud.rs:245-249</code>). Columnar
+collections stamp a segment with a flush time, and the columnar scan
+applies a valid-time filter only to columns the caller named
+<code>_ts_valid_from</code> and <code>_ts_valid_until</code>
+(<code>nodedb-lite/src/query/columnar_ops/reads.rs:90-126</code>).</p>
+<p>Scope fields do not exist on a record. Lite "runs one database and
+one tenant, so every scope it builds uses
+[<code>DatabaseId::DEFAULT</code>] and tenant zero"
+(<code>nodedb-lite/src/nodedb/core/ops/memory_engines.rs:17-26</code>).
+KV values carry an 8-byte deadline and expire lazily on read
+(<code>nodedb-lite/src/nodedb/collection/kv.rs:70-97</code>,
+<code>:208-243</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is application-driven; nothing injects context. The arms
+are a BM25 text search over the persistent FTS index, HNSW vector search
+with optional quantized rerank, graph traversal, R-tree predicates and a
+SQL subset whose <code>SqlPlan</code> variants are listed in
+<code>docs/lite-support-matrix.md</code> — <code>JOIN</code>,
+aggregates, CTEs and the vector and text search plans return
+<code>LiteError::Unsupported</code>.</p>
+<p><code>hybrid_search</code> runs a vector search and a text search and
+fuses them by reciprocal rank, mapping the fused score to
+<code>1.0 / (1.0 + rrf_score)</code> as the returned distance
+(<code>nodedb-lite/src/nodedb/graph_rag/hybrid.rs:18-88</code>).
+<code>graph_rag_search</code> fuses vector hits with a breadth-first
+expansion that ranks nodes by depth
+(<code>nodedb-lite/src/nodedb/graph_rag/graph.rs:77-96</code>). Both
+pass the caller's <code>allowed_ids</code> to every arm and to every
+neighbour, which is the only per-query restriction the library
+offers.</p>
+<p>Two failure modes follow from the hydration rule. A vector whose row
+was deleted is still returned by id with empty metadata, because
+<code>document_delete_impl</code> calls no vector delete and hydration
+does not drop a missing row. On a bitemporal collection the CRDT row
+survives the delete, so the hit, and a graph-RAG hit on the same id,
+carries the deleted document's fields. Both are readings of the code; no
+committed test deletes a document and then searches its vector.</p>
+<p>A third is a parameter nothing reads. The columnar scan destructures
+<code>system_as_of_ms</code> into <code>_system_as_of_ms</code> and
+never uses it, while the comment above <code>list_rows</code> says the
+cutoff is "applied post-hoc on the segment system_time_from_ms
+metadata"; <code>list_rows_with_temporal</code>, which the comment
+names, does not exist
+(<code>nodedb-lite/src/query/columnar_ops/reads.rs:43-52</code>,
+<code>:77-88</code>). A columnar <code>AS OF SYSTEM TIME</code> returns
+current rows.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous library calls and no model is involved. A
+document, CRDT or unindexed KV write updates in-memory state and is
+readable at once; it reaches storage at the next flush, which a task
+schedules every <code>auto_flush_ms</code>, one second by default, with
+no wall-clock guarantee (<code>nodedb-lite/src/lib.rs:23-38</code>).
+Strict rows, indexed KV puts and bitemporal history versions commit
+before the call returns. Nothing rewrites the store in the background
+beyond compaction and checkpointing.</p>
+<p>Every write emits a Loro delta into a pending queue that the sync
+client pushes to Origin. When Origin rejects one,
+<code>handle_reject_with_policy_impl</code> consults the collection's
+conflict policy, which may overwrite, rename a unique field with a
+<code>_1</code> suffix, defer for retry or escalate; escalation is a
+<code>tracing::warn!</code> line, and an <code>IntegrityViolation</code>
+deletes the local row
+(<code>nodedb-lite/src/nodedb/sync_delegate/reject.rs:20-80</code>,
+<code>nodedb-lite/src/engine/crdt/policy.rs:101-200</code>).</p>
+<p>The bitemporal history is written only by the trait's document
+methods. SQL <code>INSERT</code> into a bitemporal schemaless collection
+writes the CRDT row and no history version, so by reading the code the
+next <code>SELECT</code>, which scans history, does not return it. SQL
+<code>DELETE</code> removes the CRDT row and leaves the last
+<code>LIVE</code> version, which <code>document_get</code> keeps
+returning. The committed regression for SQL over a bitemporal collection
+writes its rows through <code>document_put</code>
+(<code>nodedb-lite/tests/document_bitemporal_api.rs:300-350</code>).</p>
+<p>The <code>SyncGate</code> is consulted on two of the write paths.
+<code>document_put_with_valid_time</code> upserts the CRDT row without
+asking it, <code>document_put_with_vector_batch</code> upserts its
+documents and enqueues its vectors without asking it,
+<code>vector_insert</code> enqueues without asking it, and SQL writes do
+not ask it
+(<code>nodedb-lite/src/nodedb/trait_impl/document.rs:258-268</code>,
+<code>nodedb-lite/src/nodedb/trait_impl/document_batch.rs:243-244</code>,
+<code>nodedb-lite/src/nodedb/trait_impl/vector.rs:158-167</code>). Its
+doc comment says a rejected document is "excluded from every outbound
+sync channel"
+(<code>nodedb-lite/src/nodedb/core/types.rs:165-174</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no agent surface: no MCP server, CLI, hook or tool schema.
+An agent reaches Lite through a host program that links the crate, the C
+ABI or the npm package. The memory model, the choice of what to store,
+and how retrieved rows reach a prompt are the host's.</p>
+<p>The <code>NodeDb</code> trait is the point of the design. The same
+trait is implemented by a remote client for Origin, so "[m]oving from
+embedded to server is a connection string change, not a rewrite"
+(<code>README.md</code>, <em>Same API, Any Runtime</em>). The trait's
+definition lives in <code>nodedb-client</code>, outside this tree, and
+the bitemporal methods are on it; the C ABI exports
+<code>nodedb_document_put</code>, <code>nodedb_document_get</code> and
+<code>nodedb_document_delete</code> with no time argument
+(<code>nodedb-lite-ffi/abi/surface.txt:21-23</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Policy slots fail closed.</strong> The module header states
+the rule: "Executing the write while dropping the slot would apply an
+unpoliced write, so every dispatch arm that can carry one rejects it
+here instead"
+(<code>nodedb-lite/src/query/physical_visitor/adapter/policy.rs:1-7</code>).
+<code>write_gate_applies</code> is exhaustive over
+<code>RlsWriteCheck</code>, "[a] new variant must break this build and
+force a decision", and <code>PendingInjection</code> refuses because "a
+missed injection fails loudly instead of admitting the write"
+(<code>:41-59</code>). This is the server's
+<code>PendingInjection</code> contract applied by a consumer that cannot
+evaluate the predicate, and four unit tests cover predicate, pending,
+unpoliced and read-filter cases (<code>:65-121</code>).</p>
+<p><strong><code>scope_enforced</code> — withheld.</strong> Nothing on a
+record names a principal. The instance runs tenant zero, the collection
+is a key prefix, and the walker that enforces the server's policies is
+not in this tree: no <code>inject_rls</code>, <code>RlsStore</code> or
+<code>AuthContext</code> appears, and plans carrying its output are
+refused. An <code>allowed_ids</code> set is a filter the caller supplies
+per query. Shape subscriptions such as <code>WHERE user_id = $me</code>
+are evaluated by Origin; Lite keeps the shape ids and LSN watermarks
+(<code>nodedb-lite/src/sync/shapes.rs:10-30</code>). One Lite database
+per device or per agent is a physical partition.</p>
+<p><strong><code>audit_log</code> — withheld.</strong> The document
+history appends a row for each trait write in the same batch as the
+pointer, and a strict collection keeps superseded rows. Neither is an
+event record: the history is the bitemporal store that current reads
+come from, it names no actor or reason, it is opt-in per collection, and
+SQL writes bypass it. Loro's op log is sync state that
+<code>TemporalPurgeCrdt</code> compacts
+(<code>nodedb-lite/src/query/meta_ops/temporal.rs:92-115</code>).</p>
+<p><strong><code>tombstone</code> — withheld.</strong> The
+<code>TOMBSTONE</code> tag is keyed on a document id and marks its
+deletion in system time; a rejected value has no record, and nothing
+consults one before a write.</p>
+<p><strong><code>trust_state</code>, <code>human_review</code> —
+withheld.</strong> No field carries an epistemic status and nothing
+waits for a person. Conflict policies decide between two writers' rows
+and the escalation path is a log line.</p>
+<p><strong>Deletion.</strong> On a plain collection a delete removes the
+CRDT row and its text and sparse entries, and by reading the code leaves
+an attached vector searchable. On a bitemporal collection a deleted
+document's body stays in <code>DocumentHistory</code>, where no code
+deletes a row, and in the CRDT store; no <code>TemporalPurge</code>
+variant targets document history.</p>
+<p><strong>Sync gate.</strong> The gate fails open: a poisoned lock
+syncs the document
+(<code>nodedb-lite/src/nodedb/core/ops/crdt.rs:32-38</code>), and the
+paths in section 7 that skip it send the document or its vector to
+Origin regardless of the host's policy. The C ABI and WASM bindings do
+not expose <code>set_sync_gate</code>.</p>
+<p><strong>Dependency drift.</strong> With no lockfile and CI patched to
+Origin's <code>main</code>, a test pass at this pin says the integration
+compiled against an unpinned engine on one day.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is integration-heavy: 129 files under
+<code>nodedb-lite/tests/</code>, engine gates per model, crash recovery,
+encryption round trips, corruption handling and a large sync interop
+set. The interop and <code>sql_parity</code> cases spawn an Origin
+binary located through <code>NODEDB_BIN</code> and return early without
+one (<code>nodedb-lite/tests/common/origin.rs:7-12</code>,
+<code>:96</code>), and <code>scripts/ensure-origin.sh</code> builds it
+only when the <code>nodedb-types</code> crate resolves to a local Origin
+checkout. A Lite-only <code>cargo nextest run</code> is green with those
+suites unexercised.</p>
+<p>The negative cases that hold are the ones with a positive control in
+the same result. <code>vector_search_allowed_ids_filters_to_set</code>
+requires the allowed row present and its twin absent
+(<code>nodedb-lite/tests/vector_engine_gate.rs:103-133</code>).
+<code>filtered_search_excludes_prefix_colliding_collection</code>
+requires exactly <code>["a"]</code> from a search of <code>chat</code>
+beside a row in <code>chat2</code> that matches the filter
+(<code>:350-377</code>), which targets a real class of key-prefix bug.
+The graph case requires three incoming edges and excludes a fourth from
+another collection
+(<code>nodedb-lite/tests/graph_direction_and_filters.rs:46-90</code>).
+The bitemporal valid-time case requires presence at 400 and absence at
+200 and at the exclusive bound 500
+(<code>nodedb-lite/tests/document_bitemporal_api.rs:178-228</code>).</p>
+<p>The deletion cases do not.
+<code>vector_delete_removes_from_search</code> seeds ten neighbours and
+checks the target before the delete, then asserts
+<code>!after.iter().any(...)</code> with nothing requiring
+<code>after</code> to hold a row
+(<code>nodedb-lite/tests/vector_engine_gate.rs:58-99</code>); the other
+deletion cases use <code>all(|h| h.id != ...)</code> the same way.
+<code>fts_returns_only_live_versions_after_reopen</code> puts its
+control in a second query
+(<code>nodedb-lite/tests/fts_persistence_bitemporal.rs:66-138</code>).
+<code>gate_withholds_non_public_from_pending_deltas</code> has a control
+in the same list, and asserts about the outbound delta queue rather than
+a read (<code>nodedb-lite/tests/sync_gate.rs:27-60</code>).</p>
+<p>Missing: a SQL write to a bitemporal collection read back through
+<code>SELECT</code> and <code>document_get</code>; a document deleted
+and its vector searched; a two-interval valid-time history; the sync
+gate on <code>document_put_with_valid_time</code> and
+<code>vector_insert</code>; a columnar <code>AS OF SYSTEM TIME</code>.
+The README's performance table is a list of targets, and no result is
+committed. No paper is cited.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p>Store valid time in the version, not in the key. A monotonic
+system-time key keeps every write distinct, and the valid interval rides
+in the value where a caller can set it; the same-millisecond regression
+is the test to copy
+(<code>nodedb-lite/tests/document_bitemporal_api.rs:356-402</code>).</p>
+<p>When you consume a plan from a richer planner, refuse every slot you
+cannot honour, exhaustively. <code>deny_policy</code> turns "Lite cannot
+enforce this" into an error on the statement, and its match over the
+write-check enum makes a new variant a compile error.</p>
+<p>Test a filter against a neighbour whose key extends the target's. A
+row in <code>chat2</code> is the cheapest fixture that catches a prefix
+scan reading past its collection.</p>
+<h3 id="avoid">Avoid</h3>
+<p>Two write paths into one store, one of which maintains the history.
+When the read path is switched to the history for a flag, every writer
+has to switch with it, or the store answers differently by
+interface.</p>
+<p>Hydrating a search hit from a row the delete did not reach. A vector
+index, a graph and a CRDT row are three copies; a delete that touches
+one leaves the other two serving the content.</p>
+<p>A comment that describes a filter the code does not apply.
+<code>_system_as_of_ms</code> next to a paragraph saying the cutoff is
+applied is the shape that passes review.</p>
+<h3 id="fit">Fit</h3>
+<p>Choose Lite as substrate if you are building agent memory that must
+run on a phone, in a browser or offline, and sync to a server you also
+run; the bitemporal document API and the shared trait are reasons to. It
+is a beta database with an unpinned engine underneath, so the memory
+model, the deletion guarantees and the tests that matter to memory are
+yours to write, and the first thing to do is pin the
+<code>nodedb-*</code> versions. A reader who wanted a memory system
+rather than a store to build one on should walk away; a reader who needs
+erasure on a bitemporal collection should wait for a writer of
+<code>GdprErased</code>.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the <code>nodedb-sql</code> planner sends SQL DML on a
+bitemporal schemaless collection somewhere other than the
+<code>DocumentOp</code> arms read here. The planner is outside the tree;
+at this pin the visitor's insert and delete arms do not branch on the
+flag.</li>
+<li>What ma8e does with the <code>SyncGate</code> and the bitemporal
+API, and whether its capture writes through SQL. It is not public in
+this tree.</li>
+<li>Which licence each <code>nodedb-*</code> 0.6 crate on crates.io
+declares. The server workspace read at <a href="../nodedb/">its own
+pin</a> was BUSL-1.1 with some crates Apache-2.0; this tree cannot say
+which ones Lite links.</li>
+<li>Whether Origin's sync endpoint rejects a delta for a document Lite
+holds as a bitemporal tombstone, since the CRDT copy is never
+deleted.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nodedb-lite/src/engine/document/history/</code></td>
+<td>Key and value layout, <code>versioned_put</code>,
+<code>versioned_get_as_of</code>, <code>scan_live_documents</code></td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/nodedb/trait_impl/document.rs</code></td>
+<td>Bitemporal put, delete, as-of read and valid-time put</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/query/document_ops/writes/</code></td>
+<td>SQL document writes, which do not touch history</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/query/engine_read.rs</code></td>
+<td>SQL scan reading history for a bitemporal collection</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/query/physical_visitor/adapter/policy.rs</code></td>
+<td>Refusing Origin policy slots</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/engine/vector/search/</code></td>
+<td>HNSW search, rerank and hydration from the CRDT row</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/nodedb/graph_rag/</code></td>
+<td>Hybrid and graph-RAG fusion</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/nodedb/core/ops/crdt.rs</code>,
+<code>nodedb-lite/src/nodedb/core/types.rs</code></td>
+<td><code>SyncGate</code></td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/query/columnar_ops/reads.rs</code></td>
+<td>The unread <code>system_as_of_ms</code></td>
+</tr>
+<tr>
+<td><code>nodedb-lite/src/storage/encryption.rs</code></td>
+<td>Encryption at rest</td>
+</tr>
+<tr>
+<td><code>.github/actions/setup-workspace/action.yml</code>,
+<code>scripts/ensure-origin.sh</code></td>
+<td>How the engine crates and the Origin binary are resolved</td>
+</tr>
+<tr>
+<td><code>nodedb-lite/tests/document_bitemporal_api.rs</code>,
+<code>nodedb-lite/tests/vector_engine_gate.rs</code>,
+<code>nodedb-lite/tests/graph_direction_and_filters.rs</code>,
+<code>nodedb-lite/tests/sync_gate.rs</code></td>
+<td>The cases cited in section 10</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>The server's RLS walker is not in this tree.</strong>
+<code>git grep -n -E 'inject_rls|rls_store|RlsStore|AuthContext'</code>
+returns nothing;
+<code>git grep -n -i -E 'rls|row.level' -- nodedb-lite/src</code>
+matches the <code>rls_filters</code> and <code>rls_write_check</code>
+slots in <code>query/physical_visitor/</code>.</li>
+<li><strong>Nothing deletes a document history row.</strong>
+<code>git grep -n -B1 -E 'ns: Namespace::DocumentHistory' -- nodedb-lite/src</code>
+returns six lines, each under a <code>WriteOp::Put</code>, in
+<code>history/ops/backfill.rs</code>, <code>history/ops/read.rs</code>
+(a test) and <code>history/ops/write.rs</code>.</li>
+<li><strong><code>GdprErased</code> has no writer in the document
+engine.</strong> <code>git grep -n -E 'GdprErased' -- nodedb-lite</code>
+returns <code>engine/array/memtable.rs:84</code>, a comment in
+<code>history/ops/read.rs:66</code> and the decode in
+<code>history/value.rs:25</code>, <code>:36</code>.</li>
+<li><strong>SQL document writes do not consult the bitemporal
+flag.</strong>
+<code>git grep -n -i -E 'bitemporal|history::' -- nodedb-lite/src/query/physical_visitor nodedb-lite/src/query/document_ops</code>
+returns only <code>query/document_ops/index_reads.rs:14</code>,
+<code>:111</code>, <code>:120</code>, a read path.</li>
+<li><strong><code>document_delete</code> reaches no vector
+index.</strong>
+<code>git grep -n -i -E 'vector' -- nodedb-lite/src/nodedb/trait_impl/document.rs</code>
+returns nothing.</li>
+<li><strong>No test deletes a document and searches its vector.</strong>
+<code>git grep -n -l 'document_delete' -- nodedb-lite/tests | xargs git grep -n -l 'vector_search' --</code>
+returns <code>nodedb-lite/tests/integration/api.rs</code>, which deletes
+from collection <code>d</code> and searches collection
+<code>coll</code>.</li>
+<li><strong>The columnar <code>system_as_of_ms</code> is not
+read.</strong>
+<code>git grep -n -E 'system_as_of' -- nodedb-lite/src/query/columnar_ops/reads.rs</code>
+returns the field, the <code>_system_as_of_ms</code> binding at
+<code>:49</code>, three comment lines and a second unused parameter at
+<code>:229</code>;
+<code>git grep -n list_rows_with_temporal -- nodedb-lite</code> returns
+the comment at <code>:80</code>.</li>
+<li><strong>The bindings expose no document time argument.</strong>
+<code>git grep -n -E 'document_get_as_of|document_put_with_valid_time|get_as_of|valid_time' -- nodedb-lite-ffi nodedb-lite-wasm</code>
+returns nothing; the same pattern over <code>nodedb-lite/src</code>
+returns eight lines.</li>
+<li><strong>The sync gate's consumers.</strong>
+<code>git grep -n -E 'should_sync|sync_gate|drop_pending' -- nodedb-lite/src</code>
+returns <code>core/ops/crdt.rs</code>,
+<code>core/ops/text_index.rs:30</code>, <code>core/types.rs</code>,
+<code>trait_impl/document.rs:104-105</code>,
+<code>trait_impl/document_vector.rs:61</code>, <code>:91</code> and
+<code>engine/crdt/engine/pending.rs:93</code>; nothing in
+<code>trait_impl/document_batch.rs</code>,
+<code>trait_impl/vector.rs</code> or <code>query/</code>.</li>
+<li><strong>No durable dead-letter queue.</strong>
+<code>git grep -n -i -E 'dead.letter|dlq' -- nodedb-lite/src</code>
+returns comments in <code>engine/crdt/policy.rs</code>, the
+<code>DlqFull</code> mapping in <code>error/from_crdt.rs</code>, a doc
+line in <code>nodedb/collection/transaction.rs:167</code> and the log
+line in <code>nodedb/sync_delegate/reject.rs:73</code>.</li>
+<li><strong>No lockfile.</strong>
+<code>git ls-files | grep -i lock</code> returns four source files and
+no <code>Cargo.lock</code>, which <code>.gitignore</code> lists.</li>
+<li><strong>Agent framing in the code.</strong>
+<code>git grep -n -i 'ma8e'</code> returns <code>README.md:50</code> and
+<code>nodedb-lite/src/nodedb/core/types.rs:152</code>;
+<code>git grep -c -i -w 'agents' -- '*.rs'</code> returns one file,
+<code>engine/timeseries/query_routing.rs</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation|doi\.org'</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/NodeDB-Lab/nodedb-lite/commit/4ce3f39d2971aa100c99c9c84053ac8a3a2e717d"><code class="commit-id" title="4ce3f39d2971aa100c99c9c84053ac8a3a2e717d">4ce3f39d…</code></a>.
+First reading at 4ce3f39, read only, from a full clone at the head of
+<code>main</code>. Screened first: no auto-run surface, nothing inside
+the seven-day cooldown, two build-time execution points
+(<code>nodedb-lite-ffi/build.rs</code>,
+<code>nodedb-lite/src/engine/fts/rebuild/build.rs</code>) and no
+unpinned surface among six scanned files. Nothing was installed, built
+or run, and the 1,824 test functions were not run. Two marks:
+<code>bitemporal</code> and <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). SQL writes bypass
+the bitemporal history, a deleted document's vector stays searchable,
+and no lockfile pins the engine crates.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

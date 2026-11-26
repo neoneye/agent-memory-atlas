@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-897, generated from each report's frontmatter —
+898, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-897, generated from each report's frontmatter —
+898, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-897, generated from each report's frontmatter —
+898, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 897, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 898, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-897, generated from each report's frontmatter —
+898, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 897 systems by the seven mechanisms
+filters all 898 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -26172,6 +26172,63 @@ views</td>
 superseded</td>
 </tr>
 <tr>
+<td><a href="../systems/nodedb-lite/"><code>nodedb-lite</code></a></td>
+<td>A row in a named collection of one engine: a Loro CRDT document, a
+strict binary-tuple row, a key-value pair with an optional TTL, a vector
+attached to the row of the same id, a graph edge, a columnar or
+timeseries row, an R-tree entry or an array tile; a bitemporal document
+collection adds a version history with valid-time bounds</td>
+<td>pagedb, an embedded paged store: one file natively with optional
+AES-256-GCM pages under an Argon2id or raw key, in memory, or OPFS in
+the browser; HNSW, CSR, FTS and R-tree indexes are held in memory and
+checkpointed to it</td>
+<td>Point get, collection scan, BM25 text search, HNSW vector search
+with an allowed-id set and metadata filter, graph traversal and shortest
+path, hybrid vector plus text fused by RRF, graph-RAG expansion from
+vector seeds, and a documented SQL subset; document_get_as_of reads a
+bitemporal document at a system time and valid time</td>
+<td>Synchronous library calls through the NodeDb trait or execute_sql;
+document, CRDT and unindexed KV writes buffer until an auto-flush every
+second, strict rows and indexed KV commit on return; every write
+produces a Loro delta queued for Origin unless a host SyncGate rejects
+the document</td>
+<td>Plain collections hard-delete the CRDT row and its text and sparse
+entries; a bitemporal document collection appends a TOMBSTONE version
+and keeps the CRDT copy for sync; KV keys expire lazily on read;
+TemporalPurge meta-ops trim graph, strict, columnar, CRDT and array
+history, and nothing deletes a document history row</td>
+<td>None on a record: one database and tenant zero per instance, a
+collection name as the key prefix, an allowed-id set and metadata filter
+the caller passes per search, and plans carrying an Origin
+row-level-security slot refused rather than run; shape subscriptions
+that decide which rows a device receives are evaluated by Origin</td>
+<td>A Rust crate implementing the same NodeDb trait as the Origin
+client, a C ABI with Kotlin and JNI bindings for Android, and a
+wasm-bindgen package published to npm; WebSocket sync to Origin behind a
+default cargo feature; no MCP server, CLI or agent hook in the tree</td>
+<td>An auto-flush task on a one-second interval, auto-compaction, the
+sync loop with AIMD flow control and replay dedup, and index rebuilds at
+open from history or CRDT state</td>
+<td>None on content; conflict policies for rejected deltas (last writer
+wins, rename suffix, cascade defer, escalate) whose escalation is a log
+line; a per-document SyncGate that keeps rejected documents off every
+outbound channel it is wired to; encryption at rest</td>
+<td>Valid time on a document is a caller-set interval stored apart from
+a monotonic system-time key, with a public as-of read; an Origin policy
+slot that Lite cannot evaluate makes the statement fail rather than run
+unpoliced, through an exhaustive match that treats an injection that
+never ran as a refusal; the filtered vector search is tested against a
+collection whose name extends the searched one</td>
+<td>SQL writes to a bitemporal document collection reach the CRDT row
+and not the history that SQL SELECT and document_get read; a
+document_delete leaves its vector in the index, and on a bitemporal
+collection its CRDT copy, so vector and graph-RAG hits still hydrate the
+deleted content; no code removes a document history row and the
+GDPR-erased tag has no writer; columnar AS OF SYSTEM TIME is accepted
+and ignored; the engine crates float on caret versions with no lockfile
+and CI builds against NodeDB main</td>
+</tr>
+<tr>
 <td><a href="../systems/nodedb/"><code>nodedb</code></a></td>
 <td>A row in a collection, in whichever engine the collection uses —
 key-value, document, columnar, graph, vector, text, array, spatial or
@@ -40617,7 +40674,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>87 of 897:</em> <a
+<p><em>87 of 898:</em> <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -40708,7 +40765,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>229 of 897:</em> <a
+<p><em>229 of 898:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -40946,7 +41003,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>151 of 897:</em> <a
+<p><em>152 of 898:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -41052,6 +41109,7 @@ href="../systems/neo4j-agent-memory/"><code>neo4j-agent-memory</code></a>,
 <a href="../systems/neurakeep/"><code>neurakeep</code></a>, <a
 href="../systems/nexusmem/"><code>nexusmem</code></a>, <a
 href="../systems/nodedb/"><code>nodedb</code></a>, <a
+href="../systems/nodedb-lite/"><code>nodedb-lite</code></a>, <a
 href="../systems/noosphere-lite-mcp/"><code>noosphere-lite-mcp</code></a>,
 <a href="../systems/nornicdb/"><code>nornicdb</code></a>, <a
 href="../systems/nougenshards/"><code>nougenshards</code></a>, <a
@@ -41107,7 +41165,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>393 of 897:</em> <a
+<p><em>393 of 898:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -41520,7 +41578,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>305 of 897:</em> <a
+<p><em>305 of 898:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
@@ -41839,7 +41897,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>109 of 897:</em> <a
+<p><em>109 of 898:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -41952,7 +42010,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>584 of 897:</em> <a
+<p><em>585 of 898:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -42349,6 +42407,7 @@ href="../systems/neurostrata/"><code>neurostrata</code></a>, <a
 href="../systems/nexusmem/"><code>nexusmem</code></a>, <a
 href="../systems/no-human/"><code>no-human</code></a>, <a
 href="../systems/nodedb/"><code>nodedb</code></a>, <a
+href="../systems/nodedb-lite/"><code>nodedb-lite</code></a>, <a
 href="../systems/nooa-memory/"><code>nooa-memory</code></a>, <a
 href="../systems/noosphere-lite-mcp/"><code>noosphere-lite-mcp</code></a>,
 <a href="../systems/nougenshards/"><code>nougenshards</code></a>, <a
@@ -42575,8 +42634,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-584 repositories of
-897 assert that particular material must
+585 repositories of
+898 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -42649,7 +42708,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 897 is the real figure for the second kind, and
+of 898 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

@@ -756,6 +756,24 @@ store no longer knows the memory was withdrawn, and the MCP
 (<code>src/mnemostack/ingest.py:1331-1397</code>). Graph triples carry
 the world-time pair alone. A system-time stamp that a request can set
 and a repeat write can delete records no more than the last request.</p>
+<p><a href="../../systems/nodedb-lite/">NodeDB Lite</a> keys each
+version of a bitemporal document on a strictly monotonic system time and
+carries the valid interval in the value, so two writes in one
+millisecond keep two rows and the caller sets <code>valid_from</code>
+and <code>valid_until</code> through
+<code>document_put_with_valid_time</code>
+(<code>nodedb-lite/src/engine/document/history/ops/write.rs:21-52</code>,
+<code>nodedb-lite/src/nodedb/trait_impl/document.rs:232-295</code>).
+<code>document_get_as_of</code> takes the last version at or before the
+system time and returns it only when it is live and
+<code>valid_from &lt;= v &lt; valid_until</code>
+(<code>nodedb-lite/src/engine/document/history/ops/read.rs:80-122</code>).
+The interval is one per version, so a rewrite with a new interval hides
+the old one at the current system time. The history is complete only for
+the trait's writers: SQL <code>INSERT</code> and <code>DELETE</code>
+reach the CRDT row and not the history that <code>SELECT</code> reads,
+and no code deletes a history row, so a deleted document's body is never
+erased.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision
