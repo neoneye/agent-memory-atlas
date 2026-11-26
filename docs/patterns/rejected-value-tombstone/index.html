@@ -127,7 +127,7 @@ belief.</p>
 <p><strong>Reported:</strong> a durable record keyed on the rejected
 <em>value</em> rather than on the row, and consulted on the write path,
 recurs across the corpus. 87 systems of
-900 carry the mark, and <a
+901 carry the mark, and <a
 href="#sorted-by-what-actually-stops-the-value">the table below</a>
 sorts the holders this page discusses by what actually stops the value.
 The idea's history runs from invention to independent arrival: Verel
@@ -292,7 +292,7 @@ not the hard half.</li>
 </ul>
 <h3 id="every-instance">Every instance</h3>
 <p><strong>87 systems of
-900 in the atlas carry the mark.</strong> The
+901 in the atlas carry the mark.</strong> The
 entries below are the ones whose mechanism this page discusses.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
 as a correctness mechanism and protects rejected states from ordinary
@@ -980,6 +980,21 @@ the next batch
 mark is withheld: a block keyed on exact text that nobody wrote as a
 rejection is the failure the pattern's decision rule exists to make
 deliberate.</p>
+<p><strong><a href="../../systems/romem/">RoMem</a> ships the tombstone
+its paper argues against, and nothing constructs it.</strong>
+<code>MemoryOpsManager</code> asks the model to choose ADD, UPDATE,
+FORGET, MERGE or KEEP_BOTH for each new triple against facts sharing an
+entity; FORGET of the new fact writes <code>inactive</code> under the
+triple's own hash, and every decision is appended to a JSONL registry
+(<code>romem/ingestion/ops.py:160-196</code>, <code>:443-466</code>,
+<code>:74-83</code>). The read half is a method,
+<code>filter_inactive_timed_triples</code>, that would drop a later
+extraction of that triple, and nothing calls it, not even the resolver,
+which puts a re-extracted triple to the model again and on ADD rewrites
+it <code>active</code> (<code>:141-158</code>, <code>:429-441</code>).
+The class is exported and instantiated nowhere. The shipped design keeps
+every contradiction and lets a time-rotated embedding rank them, so a
+rejected value has no way to stay rejected.</p>
 <h3 id="sorted-by-what-actually-stops-the-value">Sorted by what actually
 stops the value</h3>
 <p>The mark covers four different mechanisms. The table sorts the

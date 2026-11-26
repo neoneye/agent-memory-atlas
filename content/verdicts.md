@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 900 reports.**
+**This page covers all 901 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8323,3 +8323,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 24,487 lines of Python, 17,161 in the package, in 857 commits from 1 May to 9 November 2026 by one author and a release bot, with 96 tags; 1,246 test functions against an in-process server with embeddings stubbed, none run here; the README's quick-start archivist has no shared database. Two marks: `scope_enforced`, `negative_eval`.
 - Study when: you are deciding how much a per-prompt memory hook should say, how to capture sessions without touching the agent's latency, or how to set a decay rate from evidence.
 - Do not copy when: two clients, teams or untrusted agents share an instance, or a note must stay inside the project that wrote it through every background pass.
+
+### [`romem`](../systems/romem/)
+- Best idea: **a per-relation time speed learned from the relation's text.** `speed_mlp` maps a relation embedding to α in (0, 1) and scales the rotation angle by it, so *born in* barely rotates and *president of* rotates fast, and an unseen relation gets a speed without a rule (`romem/kge/model/romem_chronor.py:76-101`).
+- Second idea: multiplicative temporal fusion. The dense fact score is multiplied by `1 + 0.3 · α_r · S_kge`, so a fact at the right time but on the wrong topic cannot be lifted (`romem/RoMem.py:1187-1192`).
+- Biggest risk: **the release does not run.** `romem/__init__.py` imports both wrappers, both import `.checkpoints`, and that module was never committed, so every import of the package fails; `scripts/`, `dataset/` and the gate checkpoints the README auto-loads are also absent.
+- Second risk: `ready_to_retrieve` is reset only by `delete`, so a fact added after the first query in a process is never retrieved until restart; and the KGE keeps one time per distinct triple, so a repeated event trains on its first date only.
+- Most reusable component: `RoMemReranker`'s fit, score and rerank over `(h, r, t, date)` tuples (`romem/romem_reranker.py:139-250`) with the rotation model in `romem/kge/model/romem_chronor.py`, once the gate checkpoint is supplied.
+- Maturity impression: no licence; 13,886 lines of Python under `romem/`, a HippoRAG fork with a 3,893-line temporal KGE, and 17,814 under `benchmarks/`; four commits by one author between 25 May and 27 September 2026, all the code in the first; no tests; 57 committed result files from which the paper's tables recompute, one cell excepted. No marks.
+- Study when: you are deciding whether to rank temporal contradictions instead of resolving them, or want a relation-aware time decay for a reranker over dated facts.
+- Do not copy when: memory must accept writes between queries, retract a mistaken fact, keep repeated events apart, or ship under a licence.

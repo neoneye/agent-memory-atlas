@@ -774,6 +774,21 @@ the trait's writers: SQL <code>INSERT</code> and <code>DELETE</code>
 reach the CRDT row and not the history that <code>SELECT</code> reads,
 and no code deletes a history row, so a deleted document's body is never
 erased.</p>
+<p><a href="../../systems/romem/">RoMem</a> stores no validity interval
+and learns one into an embedding instead. Each fact carries a
+<code>happen_time</code>, a point read from the text, and an
+<code>observed_time</code> that is the caller's timestamp whenever one
+is given, so the ingestion clock is then kept nowhere
+(<code>romem/RoMem.py:381-384</code>, <code>:447-459</code>). A temporal
+knowledge-graph embedding rotates each triple by an angle proportional
+to the query time and a learned per-relation speed, and the older of two
+contradicting facts is meant to fall out of phase and rank lower
+(<code>romem/kge/model/romem_chronor.py:91-135</code>). Nothing filters
+on either clock: the observed-time bounds in <code>rerank_facts</code>
+have no caller (<code>romem/RoMem.py:2469-2539</code>). The cost is that
+"what was true then" becomes a ranking, and a repeated event keeps only
+its first date, because the embedding's graph holds one time per
+distinct triple (<code>romem/kge/knowledge_graph.py:90-94</code>).</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

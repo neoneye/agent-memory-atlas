@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 900 reports.</strong></p>
+<p><strong>This page covers all 901 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37352,6 +37352,46 @@ latency, or how to set a decay rate from evidence.</li>
 <li>Do not copy when: two clients, teams or untrusted agents share an
 instance, or a note must stay inside the project that wrote it through
 every background pass.</li>
+</ul>
+<h3 id="romem"><a href="../systems/romem/"><code>romem</code></a></h3>
+<ul>
+<li>Best idea: <strong>a per-relation time speed learned from the
+relation's text.</strong> <code>speed_mlp</code> maps a relation
+embedding to α in (0, 1) and scales the rotation angle by it, so
+<em>born in</em> barely rotates and <em>president of</em> rotates fast,
+and an unseen relation gets a speed without a rule
+(<code>romem/kge/model/romem_chronor.py:76-101</code>).</li>
+<li>Second idea: multiplicative temporal fusion. The dense fact score is
+multiplied by <code>1 + 0.3 · α_r · S_kge</code>, so a fact at the right
+time but on the wrong topic cannot be lifted
+(<code>romem/RoMem.py:1187-1192</code>).</li>
+<li>Biggest risk: <strong>the release does not run.</strong>
+<code>romem/__init__.py</code> imports both wrappers, both import
+<code>.checkpoints</code>, and that module was never committed, so every
+import of the package fails; <code>scripts/</code>,
+<code>dataset/</code> and the gate checkpoints the README auto-loads are
+also absent.</li>
+<li>Second risk: <code>ready_to_retrieve</code> is reset only by
+<code>delete</code>, so a fact added after the first query in a process
+is never retrieved until restart; and the KGE keeps one time per
+distinct triple, so a repeated event trains on its first date only.</li>
+<li>Most reusable component: <code>RoMemReranker</code>'s fit, score and
+rerank over <code>(h, r, t, date)</code> tuples
+(<code>romem/romem_reranker.py:139-250</code>) with the rotation model
+in <code>romem/kge/model/romem_chronor.py</code>, once the gate
+checkpoint is supplied.</li>
+<li>Maturity impression: no licence; 13,886 lines of Python under
+<code>romem/</code>, a HippoRAG fork with a 3,893-line temporal KGE, and
+17,814 under <code>benchmarks/</code>; four commits by one author
+between 25 May and 27 September 2026, all the code in the first; no
+tests; 57 committed result files from which the paper's tables
+recompute, one cell excepted. No marks.</li>
+<li>Study when: you are deciding whether to rank temporal contradictions
+instead of resolving them, or want a relation-aware time decay for a
+reranker over dated facts.</li>
+<li>Do not copy when: memory must accept writes between queries, retract
+a mistaken fact, keep repeated events apart, or ship under a
+licence.</li>
 </ul>
         </article>
       </div>

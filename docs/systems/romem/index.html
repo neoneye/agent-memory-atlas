@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A HippoRAG-derived temporal memory
+library that reranks extracted facts with a time-rotating graph
+embedding, so superseded facts fall out of phase instead of being
+deleted.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="RoMem — Agent Memory Atlas">
+    <meta property="og:description" content="A HippoRAG-derived temporal
+memory library that reranks extracted facts with a time-rotating graph
+embedding, so superseded facts fall out of phase instead of being
+deleted.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RoMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A HippoRAG-derived
+temporal memory library that reranks extracted facts with a
+time-rotating graph embedding, so superseded facts fall out of phase
+instead of being deleted.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>RoMem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "RoMem",
+      "description": "A HippoRAG-derived temporal memory library that reranks extracted facts with a time-rotating graph embedding, so superseded facts fall out of phase instead of being deleted.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Time as a rotation angle, not a label</p>
+          <h1>RoMem</h1>
+          <p class="document-deck">A HippoRAG-derived temporal memory
+library that reranks extracted facts with a time-rotating graph
+embedding, so superseded facts fall out of phase instead of being
+deleted.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Tencent/RoMem">
+              <span>Source</span>
+              <strong>Tencent/RoMem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Tencent/RoMem/commit/7f3a96a816f14a38d1c3512b926e88f5ab9ae40c" title="7f3a96a816f14a38d1c3512b926e88f5ab9ae40c">
+              <span>Analyzed revision</span>
+              <code>7f3a96a8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Tencent--RoMem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Tencent--RoMem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>None:
+no LICENSE file, and neither the README nor any manifest names one, so
+all rights are reserved by default; the vendored baselines carry
+Apache-2.0 (ChronoR), MIT (RotatE) and CC BY-NC-SA 4.0
+(DE-SimplE)</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>13,886
+lines of Python in 74 files under romem/, 3,893 of them the temporal KGE
+in romem/kge; 17,814 in 98 files under benchmarks/; 1,017 in five eval/
+entry points; 2,741 in 21 files of vendored TKGE baselines; 57 committed
+result files; 134 committed .pyc files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>4
+commits by one author from 25 May to 27 September 2026, the first
+holding all of the code and the later three the project page, a README
+line and a .DS_Store removal; no tag, one branch</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>No
+test file and no test function in RoMem's own code; the one workflow
+deploys the project page; nothing run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>RoMem is the code for <em>Time is Not a Label</em>, an EMNLP 2026
+paper from Tencent: a temporal memory library built on a fork of <a
+href="../hipporag/">HippoRAG</a> that adds a temporal knowledge-graph
+embedding to fact ranking. What it does differently is refuse to resolve
+contradictions. Both "Obama was president" and "Biden became president"
+stay stored, and at query time each triple is rotated by an angle
+proportional to the query's timestamp and to a learned per-relation
+speed, so the one whose phase matches the asked time outranks the other.
+The weak part is the release: the package does not import at the pinned
+commit because the module holding the bundled gate checkpoints was never
+committed, and the library wrapper never refreshes its retrieval index
+after the first query.</p>
+<p>The mechanism the paper names <em>geometric shadowing</em> is in the
+tree and matches the paper. <code>RoMemChronoRModel</code> computes θ =
+τ·s·ω, multiplies it by α_r = σ(MLP(φ(r))) from the relation's text
+embedding, and rotates head and tail by it before a ChronoR-style
+product (<code>romem/kge/model/romem_chronor.py:76-135</code>). The
+fusion in retrieval is multiplicative,
+<code>base * (1 + beta * boost)</code> with
+<code>boost = S_kge * α_r</code>, so a fact that is semantically
+off-topic cannot be lifted by being at the right time
+(<code>romem/RoMem.py:1156-1192</code>). That is the idea worth taking:
+an evolving relation and a static one get different time behaviour from
+one learned function of the relation's text, with no per-relation
+rule.</p>
+<p>What surrounds it is research code. Every <code>add</code> retrains
+the embedding over the whole graph. Retrieval makes up to three LLM
+calls per query. The repeat-event case the README demonstrates
+collapses, since the knowledge graph keeps one timestamp per distinct
+triple and drops later ones. The most informative file is one nothing
+calls: <code>romem/ingestion/ops.py</code> holds a Mem0-style ADD,
+UPDATE, FORGET resolver with an <code>inactive</code> status, an
+uncalled value-keyed filter for re-extraction and an append-only JSONL
+registry. That is the destructive resolution the paper argues against,
+written in full and never constructed.</p>
+<p><strong>Licence.</strong> The repository grants nothing: there is no
+<code>LICENSE</code> file, the README names no licence, and no manifest
+declares one, so the code is all rights reserved and reading it is not
+permission to run, modify or redistribute it. The tree is
+HippoRAG-derived by its own docstrings (<code>romem/RoMem.py:362</code>,
+<code>:709</code>), and HippoRAG's MIT notice, which that licence asks
+to be kept, appears nowhere in it. The vendored DE-SimplE baseline, with
+19 trained checkpoints, is under
+<em>Attribution-NonCommercial-ShareAlike 4.0</em>
+(<code>baselines/tkge/de-simple-master/LICENSE:1</code>), a
+non-commercial term the README does not mention.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a triple with a time it was said to
+happen</strong>. The triple extractor asks the model for
+<code>head</code>, <code>relation</code>, <code>tail</code>,
+<code>text_time</code> and <code>observed_time</code> per fact, with
+<code>text_time</code> normalised to <code>YYYY-MM-DD</code> or empty
+(<code>romem/prompts/templates/triple_extraction.py:4-21</code>). The
+code stores it as a <code>TimedTriple</code> whose
+<code>happen_time</code> is the text time and whose
+<code>system_time</code> is the observation time
+(<code>romem/utils/misc_utils.py:35-38</code>,
+<code>romem/ingestion/openie_openai.py:145-165</code>).</p>
+<p>A triple becomes a belief by being extracted, and it never stops
+being one. There is no status, no supersession and no validity end. The
+design's claim is that none is needed: a later contradicting triple is
+added beside the earlier one, and the temporal embedding decides at each
+query which of them is in phase with the asked time. The paper says this
+in as many words — memory is append-only and contradictions
+co-exist.</p>
+<p>Three things can change what a stored triple means later:</p>
+<ul>
+<li><strong>Its embedding moves.</strong> Each <code>add</code> retrains
+the KGE over every triple it holds
+(<code>romem/kge/encoder.py:945-960</code>, <code>:1008-1016</code>), so
+a fact's score at a given time depends on everything added since.</li>
+<li><strong>The query time.</strong> It comes from the caller's
+<code>time=</code> argument, or from an LLM call that returns a date, an
+earliest or latest ordering and whether the question asks for a time
+(<code>romem/RoMem.py:778-796</code>, <code>:917-1016</code>). With no
+time in the query the facts are scored at the wall clock.</li>
+<li><strong>Deletion of its document.</strong> <code>RoMem.delete</code>
+removes the chunk, then every triple and entity no remaining chunk
+supports (<code>romem/RoMem.py:613-699</code>).</li>
+</ul>
+<p>The weak point of the state machine is identity. The fact store keys
+a row on the triple's text and skips a row it already holds, so a triple
+re-observed at a new date keeps the first <code>happen_time</code>
+(<code>romem/ingestion/embedding_store.py:67-97</code>,
+<code>romem/RoMem.py:435-441</code>). The KGE graph does the same:
+<code>add_timed_triples</code> skips any <code>(h, r, t)</code> already
+in <code>_fact_set</code>
+(<code>romem/kge/knowledge_graph.py:90-94</code>). "Obama consulted Xi
+Jinping" in 2013, 2014 and 2015, the README's own reranker example,
+trains as one quadruple dated 2013-06-08.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — text becomes LLM-extracted timed triples stored once per triple; at query time a rotation score at the query's time multiplies the semantic score, both rivals stay stored, and the resolver that could retire one is never constructed</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: text becomes LLM-extracted timed triples stored once per triple; at query time a rotation score at the query&#39;s time multiplies the semantic score, both rivals stay stored, and the resolver that could retire one is never constructed
+flowchart TD
+    T[&quot;add(text, timestamp)&quot;] --&gt; X[&quot;OpenIE: LLM calls&lt;br/&gt;per chunk, triples&lt;br/&gt;with text_time&quot;]
+    X --&gt; FS[(&quot;Fact store: one row&lt;br/&gt;per triple, first&lt;br/&gt;happen_time kept&quot;)]
+    X --&gt; KG[(&quot;KGE graph: one time&lt;br/&gt;per triple, repeats&lt;br/&gt;dropped&quot;)]
+    KG --&gt; TR[&quot;Full retrain over&lt;br/&gt;every triple, each add&quot;]
+    TR ~~~ Q[&quot;ask(question)&quot;]
+    Q --&gt; QT[&quot;LLM: query time,&lt;br/&gt;ordering, time_request&quot;]
+    QT --&gt; SEM[&quot;Dense fact scores&quot;]
+    FS -.-&gt; SEM
+    SEM --&gt; ROT[&quot;Facts of linked entities&lt;br/&gt;scored at query time,&lt;br/&gt;angle τ·s·ω·α_r&quot;]
+    TR -.-&gt; ROT
+    ROT --&gt; FU[&quot;S_sem × (1 + 0.3·α_r·S_kge)&quot;]
+    FU --&gt; F[&quot;LLM fact filter,&lt;br/&gt;then PPR to passages&quot;]
+    F --&gt; P[&quot;Older rival still stored,&lt;br/&gt;ranked lower or not&quot;]
+    OPS[&quot;ops.py resolver:&lt;br/&gt;FORGET, UPDATE, inactive,&lt;br/&gt;JSONL registry —&lt;br/&gt;never constructed&quot;] -.- X</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Python library with no service. <code>romem/__init__.py</code>
+exports <code>RoMem</code>, the pipeline class; <code>RoMemLLM</code>, a
+three-method wrapper; <code>RoMemReranker</code>, the KGE alone; and
+<code>pretrain_gate</code> (<code>romem/__init__.py:1-6</code>).
+Retrieval structure is HippoRAG 2's: an OpenIE knowledge graph of entity
+and passage nodes, fact, passage and synonymy edges in igraph, dense
+fact retrieval, an LLM recognition filter and Personalized PageRank
+(<code>romem/RoMem.py:1528-1682</code>, <code>:2603-2646</code>).
+RoMem's additions are the <code>romem/kge</code> package, the time-aware
+extraction prompt, the query-time extraction and the tunnel that fuses
+the two scores.</p>
+<p>Persistence is a directory. <code>RoMem.__init__</code> makes
+<code>&lt;save_dir&gt;/&lt;llm&gt;_&lt;embedding&gt;/</code> and opens
+three <code>EmbeddingStore</code>s, each one parquet file, an igraph
+pickle and an OpenIE results JSON (<code>romem/RoMem.py:112-170</code>,
+<code>romem/ingestion/builder.py:23-59</code>,
+<code>romem/ingestion/embedding_store.py:40-42</code>). Every LLM
+response is cached in SQLite under <code>save_dir/llm_cache</code>
+(<code>romem/llm/openai_gpt.py:145-162</code>). The KGE is not part of
+what <code>RoMemLLM</code> saves. On the first retrieve after a restart,
+<code>prepare_retrieval_objects</code> feeds every stored fact back into
+it and retrains (<code>romem/RoMem.py:2066-2093</code>). Only the
+MultiTQ runner saves and reloads a KGE checkpoint
+(<code>benchmarks/runners/multitq/romem_backend.py:156-173</code>).</p>
+<p>The speed gate is pretrained on ICEWS05-15 transitions
+(<code>romem/pretraining/build_gate_pretrain_data.py</code>,
+<code>romem/pretraining/pretrain_alpha_r.py:120</code>) and loaded once
+into the KGE before its first training run
+(<code>romem/kge/encoder.py:1088-1114</code>). <code>RoMemLLM</code> and
+<code>RoMemReranker</code> find a bundled checkpoint through
+<code>get_gate_path</code>, imported from <code>.checkpoints</code>
+(<code>romem/romem_llm.py:23</code>,
+<code>romem/romem_reranker.py:37</code>). That module is not in the tree
+and never was. <code>git log --all -- romem/checkpoints</code> returns
+nothing, <code>.gitignore</code> excludes only <code>.DS_Store</code>
+and <code>*.pyc</code>, and <code>romem/__init__.py</code> imports both
+wrappers. By Python's import rules every import of the package or a
+submodule therefore stops with <code>ModuleNotFoundError</code>, the
+benchmark backends' <code>from romem import RoMem</code> included
+(<code>benchmarks/runners/locomo/romem_backend.py:91</code>). That is
+inferred from the source; nothing was run.</p>
+<p>The README's layout names four more things the tree lacks:
+<code>scripts/</code>, which every reproduction command calls;
+<code>dataset/</code>; <code>romem/pretrain_gate.py</code>; and
+<code>baselines/HippoRAG</code>, <code>mem0</code> and
+<code>graphiti</code>. The baselines exist only as benchmark adapters
+under <code>benchmarks/runners/</code>, with three TKGE baselines
+vendored under <code>baselines/tkge/</code>. Committed <code>.pyc</code>
+files reference sources that are absent, among them
+<code>tempusmem_backend</code>, <code>temporal_rot_distmult</code> and
+the <code>icews</code>, <code>findkg</code> and
+<code>temporalwiki</code> loaders.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install -r requirements-romem.txt</code>, an OpenAI key or
+a vLLM endpoint for extraction, query-time extraction and the LLM
+filter, and an embedding model. A GPU is used for KGE training when
+present (<code>romem/kge/encoder.py:1017</code>). Nothing can be stored
+without the LLM, since extraction is the write. The store is parquet, a
+pickle and JSON, inspectable with pandas, but <code>graph.pickle</code>
+and the KGE checkpoints are loaded with
+<code>igraph.Graph.Read_Pickle</code> and <code>torch.load</code>
+without <code>weights_only</code>
+(<code>romem/ingestion/graph_manager.py:17</code>,
+<code>romem/kge/encoder.py:286</code>, <code>:337</code>). A
+<code>save_dir</code> from someone else is code.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>RoMemLLM.add</code>
+(<code>romem/romem_llm.py:150-171</code>) → <code>RoMem.index</code>
+(<code>romem/RoMem.py:360</code>). Chunk records get
+<code>observed_time</code>, the caller's timestamp or now
+(<code>:381-384</code>). <code>OpenIE.batch_openie</code> runs NER and
+triple extraction per new chunk (<code>:390-392</code>); the triples go
+to <code>tkge_retriever.update</code> (<code>:400-415</code>), then
+entities and facts are embedded with <code>happen_time</code>,
+<code>observed_time</code> and <code>chunk_ids</code> in the row
+metadata (<code>:429-460</code>). Fact edges, passage edges and synonymy
+edges are added and the graph is pickled (<code>:462-474</code>).
+<code>metadata</code> on <code>add</code> is accepted and dropped.
+<code>index_triples</code> is the structured path, used by the MultiTQ
+runner, that skips OpenIE (<code>romem/RoMem.py:476-599</code>).</p>
+<p><strong>KGE update.</strong> <code>TKGERetriever.update</code> →
+<code>TKGEEncoder.update_facts</code>
+(<code>romem/kge/retriever.py:38-49</code>,
+<code>romem/kge/encoder.py:945-960</code>) →
+<code>KnowledgeGraph.add_timed_triples</code>, which keeps a triple's
+first time (<code>romem/kge/knowledge_graph.py:79-104</code>) →
+<code>_train</code> over all triples
+(<code>romem/kge/encoder.py:1008</code>) for
+<code>tkge_steps_per_update</code> epochs, 200 by default
+(<code>romem/utils/config_utils.py:206-209</code>).</p>
+<p><strong>Retrieve.</strong> <code>RoMemLLM.retrieve</code> →
+<code>RoMem.retrieve</code> (<code>romem/RoMem.py:701</code>). It builds
+the in-memory arrays once (<code>:743-744</code>), takes the query time
+from the override or the LLM (<code>:778-796</code>), scores facts
+densely (<code>get_fact_scores</code>, <code>:2178</code>), runs the
+tunnel (<code>:813-820</code>), then <code>rerank_facts</code>
+(<code>:828-836</code>, <code>:2427-2601</code>), then PPR over the
+graph or dense passage retrieval when no fact survives
+(<code>:881-895</code>). <code>RoMemLLM</code> returns the passages
+under the key <code>"fact"</code>
+(<code>romem/romem_llm.py:198-205</code>).</p>
+<p><strong>Tunnel.</strong> <code>_apply_tkge_tunnel</code>
+(<code>romem/RoMem.py:1018-1391</code>): link the query to five entities
+by embedding (<code>:1044-1050</code>), collect their facts and cap them
+at 200 (<code>:1051-1058</code>), score at the query time or, for a
+when-question with an ordering or with competing dates, at each fact's
+own <code>happen_time</code> (<code>:1060-1132</code>), min-max
+normalise, weight by α_r and fuse (<code>:1151-1192</code>).</p>
+<p><strong>Delete.</strong> <code>RoMem.delete</code>
+(<code>romem/RoMem.py:613-699</code>). Not exposed on
+<code>RoMemLLM</code> or <code>RoMemReranker</code>, and no benchmark
+runner calls it.</p>
+<p><strong>Unwired.</strong> <code>MemoryOpsManager</code>
+(<code>romem/ingestion/ops.py:33-497</code>) and
+<code>Neo4jWriter</code> (<code>romem/ingestion/neo4j_writer.py</code>)
+are exported from <code>romem/ingestion/__init__.py:9-26</code> and
+constructed nowhere. <code>GraphBuilder.delete_facts</code>, the one
+path that would remove a triple from the KGE, has no caller
+(<code>romem/ingestion/builder.py:103-108</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Three parquet tables share one shape: <code>hash_id</code>,
+<code>content</code>, <code>embedding</code>, <code>embed_text</code>
+and a JSON <code>meta</code>
+(<code>romem/ingestion/embedding_store.py:107-133</code>). The id is an
+MD5 of the content with a <code>chunk-</code>, <code>entity-</code> or
+<code>fact-</code> prefix. A fact's <code>content</code> is the Python
+repr of a list of three strings, and every reader turns it back into a
+tuple with <code>eval</code> (<code>romem/RoMem.py:2044</code>,
+<code>:2075</code>, <code>:2544</code>).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Content</th>
+<th>Metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>chunk</td>
+<td>passage text</td>
+<td><code>observed_time</code></td>
+</tr>
+<tr>
+<td>entity</td>
+<td>normalised phrase</td>
+<td><code>last_seen_time</code>, set once</td>
+</tr>
+<tr>
+<td>fact</td>
+<td><code>str([h, r, t])</code></td>
+<td><code>happen_time</code>, <code>observed_time</code>,
+<code>chunk_ids</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Two time fields sit on each fact, and they are not two clocks in the
+<a href="../../patterns/bi-temporal-fact-validity/">bi-temporal</a>
+sense. <code>happen_time</code> is a point, the date the text mentions,
+with no end. <code>observed_time</code> is the caller's timestamp when
+one is passed, so in the README's own example it holds the date of the
+event, and the ingestion wall clock is then kept nowhere.
+<code>RoMemLLM.add</code> documents its <code>timestamp</code> as
+<em>"for when this information was valid or observed"</em>
+(<code>romem/romem_llm.py:163-164</code>).</p>
+<p>The KGE's own model is <code>KnowledgeGraph</code>: entity and
+relation id maps, <code>facts</code>, <code>fact_times</code> and
+<code>fact_has_happen</code>, one entry per distinct triple
+(<code>romem/kge/knowledge_graph.py:40-47</code>). It has no scope, no
+actor and no provenance beyond the fact's chunk ids. There is no scoping
+field anywhere in <code>romem/</code>; isolation is a separate
+<code>save_dir</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is HippoRAG 2 with a temporal multiplier in front of the
+recognition step. The dense fact score is min-max normalised and
+multiplied by <code>1 + tkge_weight * α_r * S_kge</code>, where
+<code>tkge_weight</code> is 0.3 (<code>romem/RoMem.py:1187-1192</code>,
+<code>romem/utils/config_utils.py:182-185</code>). Only facts attached
+to the five linked entities get a KGE score; every other fact keeps its
+semantic score unchanged. A fact with no <code>happen_time</code> still
+gets a KGE score, because the KGE was trained on it at time zero
+(<code>romem/kge/time_utils.py:406-408</code>).</p>
+<p>Which time a candidate is scored at depends on the question
+(<code>romem/RoMem.py:1060-1132</code>). An explicit or extracted date
+scores all candidates at that date. A <em>when</em> question with no
+date scores each fact at its own <code>happen_time</code> if the
+question asks for the earliest or latest, or if one
+<code>(head, relation)</code> pair has two distinct dates among the
+candidates. Otherwise the wall clock is used. For ordering questions
+<code>rerank_facts</code> then sorts the filtered facts by
+<code>happen_time</code> (<code>:2563-2589</code>).</p>
+<p>The candidate cap takes the first 200 indices of a Python
+<code>set</code> of fact indices, not the 200 best
+(<code>romem/RoMem.py:1057</code>). The α_r weighting is in a
+<code>try</code> whose <code>except</code> falls back to uniform weights
+without a log line (<code>:1158-1172</code>). <code>rerank_facts</code>
+catches every exception and returns no facts, which sends the query to
+dense passage retrieval (<code>:2599-2601</code>,
+<code>:881-883</code>). Each of these degrades the temporal signal
+silently rather than failing.</p>
+<p>A query costs up to three LLM calls: the time extraction in
+<code>retrieve</code>, a second one in <code>rerank_facts</code> when
+the first found no date and the question does not ask for a time
+(<code>romem/RoMem.py:2457-2458</code>), and the DSPy recognition filter
+(<code>romem/rerank.py:111-121</code>). Responses are cached on the
+exact messages, and the time-extraction prompt carries today's date, so
+the cache holds for a day. For temporal queries the passage-node weight
+in PPR drops from 0.05 to 0.0 (<code>romem/RoMem.py:885-887</code>,
+<code>romem/utils/config_utils.py:79-86</code>).</p>
+<p><code>rerank_facts</code> also accepts
+<code>observed_time_cutoffs</code> and <code>observed_time_bounds</code>
+and drops facts observed outside them
+(<code>romem/RoMem.py:2469-2539</code>). No caller in the tree passes
+either.</p>
+<p><strong>Stale index.</strong> <code>prepare_retrieval_objects</code>
+sets <code>ready_to_retrieve = True</code>
+(<code>romem/RoMem.py:2142</code>), and only <code>delete</code> sets it
+back (<code>:699</code>); <code>index</code> and
+<code>index_triples</code> never do. The fact keys, fact embeddings,
+passage keys and fact tuples are the arrays built on the first retrieve.
+A fact added after that is in the parquet store and the KGE, and is
+absent from every later retrieval in the same process. The README's
+add-add-ask example works; add-ask-add-ask returns stale results until
+restart.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and expensive. An <code>add</code> blocks on
+NER and triple extraction for each new chunk, three embedding batches,
+synonymy-edge KNN over all entities, and a KGE retrain over every triple
+for 200 epochs (<code>romem/RoMem.py:390-474</code>,
+<code>romem/kge/encoder.py:959-960</code>). A retrievable fact costs a
+retrain of the whole embedding. No background pass exists: nothing
+consolidates, decays or summarises.</p>
+<p>Deduplication is by exact text at three levels: the chunk store, the
+fact store and the KGE graph, each skipping a key it holds. Extraction
+drops a triple whose head or tail is the time expression and runs a
+triple validity filter
+(<code>romem/ingestion/openie_openai.py:159-161</code>,
+<code>:178-184</code>, <code>romem/utils/llm_utils.py:203</code>).
+Nothing else filters input. If the model's reply fails
+<code>json.loads</code>, the triple parser falls back to a regex match
+passed to <code>eval</code>
+(<code>romem/ingestion/openie_openai.py:107-116</code>). The pattern
+admits a <code>triples</code> list with no <code>]</code> inside it, so
+a passage that can steer the extractor's output to a Python call reaches
+<code>eval</code> on that fallback.</p>
+<p>Correction is deletion of the source document.
+<code>RoMem.delete</code> removes the chunk, rewrites the OpenIE JSON
+without it, deletes the facts and entities no other chunk supports and
+removes their graph vertices (<code>romem/RoMem.py:636-697</code>). It
+does not touch the KGE. The deleted triple stays in
+<code>KnowledgeGraph.facts</code> and keeps shaping every later training
+run; it cannot be returned, because candidates come from the fact store.
+The remover that would reach it,
+<code>KnowledgeGraph.remove_triples</code>, would empty the graph if
+anything called it: it adds every remaining key to
+<code>_fact_set</code> and then re-adds them through
+<code>add_timed_triples</code>, which skips keys already in
+<code>_fact_set</code>
+(<code>romem/kge/knowledge_graph.py:111-127</code>).</p>
+<p><strong>The resolver that is not there.</strong>
+<code>MemoryOpsManager.resolve_new_facts</code> asks the model to choose
+ADD, UPDATE, FORGET, MERGE or KEEP_BOTH for a new triple against up to
+twelve facts sharing an entity, with the instruction that observed time
+<em>"must not be used to judge factual validity"</em>
+(<code>romem/ingestion/ops.py:160-196</code>, <code>:238-288</code>).
+UPDATE marks the targets <code>inactive</code>. FORGET of the new fact
+marks the triple's own hash id <code>inactive</code>
+(<code>:443-466</code>, <code>:468-497</code>). A method,
+<code>filter_inactive_timed_triples</code>, would drop any later
+extraction of a triple so marked (<code>:141-158</code>). Nothing calls
+it, not even <code>resolve_new_facts</code>, which puts a re-extracted
+triple to the model again and on ADD rewrites its status to
+<code>active</code> (<code>:429-441</code>). Every change is appended to
+<code>memory_registry.jsonl</code> (<code>:74-83</code>). The class is
+exported and instantiated nowhere.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>None beyond a Python call. There is no MCP server, HTTP route, CLI or
+tool schema in RoMem's own code. <code>RoMemLLM.ask</code> retrieves
+five passages, writes them into a fixed prompt and calls the answer
+model through the OpenAI client, returning an error string rather than
+raising on failure (<code>romem/romem_llm.py:207-250</code>).
+<code>RoMemReranker</code> is the more portable surface: fit a KGE on
+<code>(h, r, t, date)</code> tuples, <code>score</code> candidates at a
+time, <code>rerank</code> by the same multiplicative fusion,
+<code>get_alpha</code> for a relation
+(<code>romem/romem_reranker.py:139-250</code>). It needs the same
+missing checkpoint module to import.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="what-the-shadowing-buys-and-what-it-costs">What the shadowing
+buys and what it costs</h3>
+<p>The design keeps the history a destructive resolver throws away, and
+it never asks a model to decide which of two facts is true. A question
+about 2019 and a question about now read the same store. The cost is
+that correctness is a ranking property. Nothing can say "this is false".
+An extraction error stays retrievable for as long as its document
+exists, and whether an old fact is shadowed depends on a KGE retrained
+on everything at every write. A relation the gate scores near zero,
+<em>born in</em> in the paper's framing, does not rotate, so two
+contradicting static facts are separated by semantics alone.</p>
+<h3 id="silent-degradation">Silent degradation</h3>
+<p>Three fallbacks remove the temporal signal without saying so: the α_r
+<code>except</code>, the <code>rerank_facts</code> catch-all and the
+candidate cap taken from set order (section 6). A query-time extraction
+failure returns no time and scores at the wall clock
+(<code>romem/RoMem.py:1015-1016</code>). None of these is logged at
+warning level except the rerank error.</p>
+<h3 id="stored-code">Stored code</h3>
+<p><code>eval</code> on stored fact content at three read sites,
+<code>eval</code> on a regex match of model output at two extraction
+sites (<code>romem/ingestion/openie_openai.py:39</code>,
+<code>:114</code>), and pickle loads of the graph and KGE checkpoints.
+The fact content is written as a list repr by the code itself, so the
+store sites need a tampered file; the extraction sites need only a
+steered model reply.</p>
+<h3 id="marks">Marks</h3>
+<p>No mark is awarded. The near-misses are the content of this
+section.</p>
+<ul>
+<li><strong><code>tombstone</code>: declared and unwired,
+twice.</strong> FORGET of a new fact writes <code>inactive</code> under
+the triple's hash, and <code>filter_inactive_timed_triples</code> would
+refuse that triple on later extraction
+(<code>romem/ingestion/ops.py:141-158</code>, <code>:443-466</code>).
+That is the shape of a value-keyed rejection. The filter has no caller,
+and <code>MemoryOpsManager</code> has no constructor call anywhere in
+the tree, so no path a user or agent reaches produces or reads the
+state.</li>
+<li><strong><code>trust_state</code>: declared and unwired.</strong> The
+registry's <code>active</code> and <code>inactive</code> status is read
+by <code>active_fact_ids</code> and the same filter, neither called; the
+resolver reads it only to print it into its prompt (<code>:205</code>,
+<code>:248</code>).</li>
+<li><strong><code>audit_log</code>: declared and unwired.</strong>
+<code>memory_registry.jsonl</code> is append-only and records each
+decision with its action, rationale and time, from the same class.</li>
+<li><strong><code>bitemporal</code>: withheld.</strong> Two times per
+fact, but <code>happen_time</code> is a point read only for ranking,
+<code>observed_time</code> is the caller's value whenever one is given,
+so record time is not kept apart, and the one filter on either axis, the
+observed-time bounds in <code>rerank_facts</code>, has no caller. The
+validity the design relies on is learned into the embedding, not
+stored.</li>
+<li><strong><code>scope_enforced</code>: no.</strong> No scope key on
+any record; one <code>save_dir</code> per instance is a physical
+partition.</li>
+<li><strong><code>human_review</code>, <code>negative_eval</code>:
+no.</strong> Nothing waits for a person, and the tree has no tests.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>There is no test suite. A search for test files and
+<code>def test_</code> outside the vendored baselines finds nothing, and
+the only workflow deploys <code>docs/</code> to GitHub Pages
+(<code>.github/workflows/pages.yml</code>).</p>
+<p>The evaluation is committed as output, not as a runnable harness. 57
+<code>results.jsonl</code> files, 56 with a <code>details.jsonl</code>
+beside them, under <code>benchmarks/reports/</code> hold per-question
+rows and summary rows for MultiTQ, LoCoMo, DMR-MSC, FinTMMBench and
+LongMemEval, for RoMem and six adapters. The runners and evaluators that
+wrote them are committed. The <code>scripts/*.sh</code> the README runs
+them through, the datasets and the gate checkpoints are not, so no
+result can be reproduced from the tree.</p>
+<p>The paper is <a
+href="https://arxiv.org/abs/2604.11544">arXiv:2604.11544</a>, submitted
+13 April 2026 and revised 25 August 2026. Its arXiv title, <em>Time is
+Not a Label: Continuous Phase Rotation for Temporal Knowledge Graphs and
+Agentic Memory</em>, differs in the subtitle from the README's, and
+arXiv lists five authors where the README's commented-out BibTeX lists
+two. The equation for the angle and the gate in the code match the
+paper's.</p>
+<p>I recomputed every summary row from its per-question rows with a
+script reading the JSONL as data, and each matched. Against the paper's
+v2 tables:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table cell</th>
+<th>Paper</th>
+<th>Committed run</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MultiTQ, RoMem, GPT-5-mini: MRR, Acc@10</td>
+<td>0.337, 0.392</td>
+<td><code>multitq_romem/20260303161815</code>: 0.3371, 0.392</td>
+</tr>
+<tr>
+<td>MultiTQ, RoMem, LLaMA-3.1-70B: MRR</td>
+<td>0.316</td>
+<td><code>multitq_romem_server/20260309091913</code>: 0.3164 (the
+earlier run: 0.3042)</td>
+</tr>
+<tr>
+<td>MultiTQ, "Zep", GPT-5-mini: MRR</td>
+<td>0.192</td>
+<td><code>multitq_graphiti/20260305142510</code>: 0.1922</td>
+</tr>
+<tr>
+<td>DMR-MSC, "Zep", GPT-5-mini: MRR</td>
+<td>0.170</td>
+<td><code>dmr_msc_graphiti</code>: 0.1699 (<code>dmr_msc_zep</code>:
+0.2603)</td>
+</tr>
+<tr>
+<td>LoCoMo, RoMem, GPT-5-mini: four-category recall</td>
+<td>0.857</td>
+<td><code>locomo_romem</code>: 0.8571</td>
+</tr>
+<tr>
+<td>LoCoMo, RoMem, LLaMA-3.1-70B: temporal recall</td>
+<td>0.759</td>
+<td><code>locomo_romem_server</code>: 0.7674</td>
+</tr>
+<tr>
+<td>FinTMMBench, RoMem, GPT-5-mini: MRR</td>
+<td>0.728</td>
+<td>the later of two runs: 0.7278 (the earlier: 0.6987)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Three findings follow. The tables recompute from the committed files,
+with one cell off: the LLaMA LoCoMo temporal recall is 0.7674 in the
+file and 0.759 in the paper. Where a system has several runs, the paper
+reports the latest. For RoMem that is also the best, in all three cases.
+And the column the paper calls Zep is the Graphiti adapter throughout.
+In DMR-MSC, where a Zep Cloud run is also committed, it scored higher
+than the reported column. Graphiti is <a href="../zep/">Zep</a>'s open
+engine, so the label is defensible and the table does not say it. The
+Graphiti adapters' per-question LoCoMo recall is identical under the two
+model configurations, which is why the paper's two Zep rows are
+identical.</p>
+<p>The paper's MultiTQ "2-3x" holds for answer accuracy, 0.392 against
+0.102 to 0.128, and for MRR only against LiCoMem, 0.337 against 0.149;
+against <a href="../hipporag/">HippoRAG</a> it is 0.337 against 0.203.
+The ablation that carries the argument — 0.1044 MRR without the semantic
+gate, 0.0452 with discrete time — has no committed run, and the
+ICEWS05-15 72.6 MRR has no committed result file;
+<code>benchmarks/runners/tkge/romem_tkg_benchmark.py</code> is the
+harness. The README's gate values for <em>Consult</em>, <em>Make a
+visit</em> and <em>Make statement</em> depend on the missing
+checkpoint.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A per-relation time speed from the relation's text.</strong>
+<code>speed_mlp</code> maps a relation embedding to α in (0, 1) and
+scales the rotation angle by it
+(<code>romem/kge/model/romem_chronor.py:76-101</code>). Unseen relations
+get a speed without a rule table, and the same α weights the boost at
+retrieval.</li>
+<li><strong>Multiplicative temporal fusion.</strong>
+<code>base * (1 + β·α·S_kge)</code> cannot lift an off-topic fact by its
+date (<code>romem/RoMem.py:1187-1192</code>). An additive fusion
+can.</li>
+<li><strong>Choose the scoring time from the question shape.</strong> An
+asked date, a when question with an ordering, a when question with
+competing dates, or now (<code>romem/RoMem.py:1060-1132</code>). The
+case split is the reusable part even without a KGE.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A retrieval cache that the write path does not
+invalidate</strong> (<code>romem/RoMem.py:2142</code>,
+<code>:699</code>).</li>
+<li><strong>One timestamp per distinct triple</strong> in a store meant
+for recurring events
+(<code>romem/kge/knowledge_graph.py:90-94</code>).</li>
+<li><strong>A full retrain on every write.</strong> It makes write
+latency grow with the store.</li>
+<li><strong><code>eval</code> on model output and on stored
+content</strong>, and pickle for a store a user might share.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Study this to decide whether temporal ranking can replace temporal
+resolution in your store. Do not deploy it: the release does not import,
+has no licence and no tests, and every write costs a training run. The
+design suits a corpus of dated events queried with explicit times, which
+is MultiTQ's shape. It suits agent memory less, because the facts an
+agent most needs to retire — a preference changed, a mistaken extraction
+— have no time in the text and no way to be marked wrong. A team that
+wants the idea should take <code>RoMemReranker</code>'s fusion into a
+store that also keeps a status, and keep the shadowing for the cases the
+status cannot decide.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether <code>romem/checkpoints</code> and <code>scripts/</code>
+exist in an unpublished tree, and whether the committed results came
+from code identical to the pin.</li>
+<li>What a <code>tempusmem</code> result directory and the orphaned
+<code>.pyc</code> files record: <code>locomo_tempusmem</code> is dated 6
+February 2026, before every RoMem run.</li>
+<li>Why the Graphiti adapter returns identical LoCoMo recall per
+question under GPT-5-mini with OpenAI embeddings and LLaMA-3.1-70B with
+BGE-M3.</li>
+<li>Whether <code>MemoryOpsManager</code> was an ablation arm, an
+earlier design or a planned mode; the paper's text that was read does
+not mention it.</li>
+<li>How the shadowing behaves for static relations the gate scores near
+zero when two contradicting values are both stored.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>romem/RoMem.py</code></td>
+<td>The pipeline: <code>index</code>, <code>index_triples</code>,
+<code>delete</code>, <code>retrieve</code>,
+<code>_apply_tkge_tunnel</code>, <code>rerank_facts</code>,
+<code>prepare_retrieval_objects</code></td>
+</tr>
+<tr>
+<td><code>romem/romem_llm.py</code></td>
+<td><code>RoMemLLM</code> add, retrieve, ask; imports the missing
+<code>.checkpoints</code></td>
+</tr>
+<tr>
+<td><code>romem/romem_reranker.py</code></td>
+<td><code>RoMemReranker</code> fit, score, rerank, get_alpha</td>
+</tr>
+<tr>
+<td><code>romem/kge/model/romem_chronor.py</code></td>
+<td>Rotation angle, speed gate, ChronoR scoring</td>
+</tr>
+<tr>
+<td><code>romem/kge/model/romem_distmult.py</code></td>
+<td>DistMult backbone and <code>_rotate</code></td>
+</tr>
+<tr>
+<td><code>romem/kge/encoder.py</code></td>
+<td>KGE training, gate checkpoint loading, staged gate schedule</td>
+</tr>
+<tr>
+<td><code>romem/kge/knowledge_graph.py</code></td>
+<td>One time per triple; <code>remove_triples</code></td>
+</tr>
+<tr>
+<td><code>romem/kge/retriever.py</code></td>
+<td><code>TKGERetriever.update</code> and <code>score</code></td>
+</tr>
+<tr>
+<td><code>romem/ingestion/openie_openai.py</code></td>
+<td>NER and timed triple extraction, <code>eval</code> fallback</td>
+</tr>
+<tr>
+<td><code>romem/ingestion/embedding_store.py</code></td>
+<td>Parquet stores keyed on content hash</td>
+</tr>
+<tr>
+<td><code>romem/ingestion/ops.py</code></td>
+<td>Unwired ADD, UPDATE, FORGET resolver and registry</td>
+</tr>
+<tr>
+<td><code>romem/prompts/templates/triple_extraction.py</code></td>
+<td>Extraction prompt with <code>text_time</code></td>
+</tr>
+<tr>
+<td><code>romem/pretraining/</code></td>
+<td>Gate pretraining data mining and training</td>
+</tr>
+<tr>
+<td><code>romem/utils/config_utils.py</code></td>
+<td><code>BaseConfig</code> defaults</td>
+</tr>
+<tr>
+<td><code>benchmarks/runners/*/romem_backend.py</code></td>
+<td>Benchmark adapters for RoMem</td>
+</tr>
+<tr>
+<td><code>benchmarks/reports/</code></td>
+<td>Committed per-question and summary results</td>
+</tr>
+<tr>
+<td><code>baselines/tkge/</code></td>
+<td>ChronoR, RotatE and DE-SimplE, each with its own licence</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Every absence claim above rests on one of these, run at the tree root
+with <code>git -C &lt;clone&gt;</code>; a positive control is listed
+first where the pattern could fail silently.</p>
+<pre class="sh"><code>git log --all --oneline -- romem/checkpoints scripts dataset        # empty
+git ls-files | grep -i -E &#39;checkpoints?/|get_gate_path&#39;               # empty
+git grep -n -E &#39;get_gate_path|checkpoints&#39; -- &#39;*.py&#39;                  # only the two imports and docstrings
+git ls-files | grep -i -E &#39;(^|/)(licen[sc]e|copying|notice|third.party)&#39;   # three files, all under baselines/tkge/
+git grep -n -i -E &#39;licen[sc]e|copyright&#39; -- README.md docs/index.html &#39;romem/*.py&#39; &#39;benchmarks/*.py&#39; &#39;eval/*.py&#39;   # empty
+git grep -n -i -c -E &#39;happen_time&#39; -- romem                           # control: 43 in RoMem.py
+git grep -n -i -E &#39;supersed|invalidat|contradict|tombstone|retract|status&#39; -- romem   # only ops.py and unrelated status strings
+git grep -n -E &#39;MemoryOpsManager|active_fact_ids|filter_inactive_timed_triples|resolve_new_facts|memory_registry&#39;   # ops.py and the __init__ export only
+git grep -n -E &#39;Neo4jWriter|neo4j_writer&#39;                             # __init__ export only
+git grep -n -E &#39;delete_facts|delete_chunks_by_texts|use_tkge_facts|fact_encoder=&#39;   # builder.py only
+git grep -n -E &#39;remove_facts|remove_triples&#39; -- &#39;*.py&#39;                # builder.py, encoder.py, knowledge_graph.py
+git grep -n -E &#39;\.delete\(&#39; -- &#39;*.py&#39;                                 # RoMem.py stores, builder.py, the Zep adapter
+git grep -n &#39;ready_to_retrieve&#39; -- romem                              # set True at 2142, False at 238 and 699
+git grep -n -E &#39;observed_time_bounds|observed_time_cutoffs&#39;           # RoMem.py only, no caller
+git grep -n -E &#39;load_tkge_checkpoint|save_tkge_checkpoint|load_full_checkpoint|save_full_checkpoint&#39; -- &#39;*.py&#39;   # MultiTQ runner and the reranker only
+git grep -n -i -E &#39;user_id|tenant|namespace|agent_id|session_id&#39; -- romem   # only the EmbeddingStore namespace prefix
+git grep -n -i -E &#39;audit|event_log|append_only&#39; -- romem              # empty
+git ls-files | grep -i -E &#39;(^|/)(tests?|test_[^/]*\.py|[^/]*_test\.py|conftest\.py)&#39;   # data files under baselines/ only
+git grep -n -l -E &#39;import pytest|import unittest|def test_&#39; -- &#39;*.py&#39; # one vendored baseline file
+git grep -n -E &#39;(^|[^a-z_.])eval\(&#39; -- romem                          # six sites
+git grep -n -E &#39;torch\.load|pickle\.load|Read_Pickle&#39; -- romem        # three sites
+git grep -n -i -E &#39;discrete|force_time_gate_one&#39; -- romem benchmarks eval   # no discrete-time variant</code></pre>
+<p>The result recomputation read each
+<code>benchmarks/reports/*/*/*/results.jsonl</code> as JSON with
+<code>python3 -I</code> from a script outside the clone, averaged the
+per-question metrics and compared them with the summary rows.</p>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/Tencent/RoMem/commit/7f3a96a816f14a38d1c3512b926e88f5ab9ae40c"><code class="commit-id" title="7f3a96a816f14a38d1c3512b926e88f5ab9ae40c">7f3a96a8…</code></a>.
+First reading, read only, from a full clone at the head of
+<code>main</code>, the commit triage selected. Screened first: no
+auto-run surface, nothing inside the seven-day cooldown, no build-time
+execution, four unpinned requirements files, two of them under the
+vendored <code>baselines/tkge/</code>. No licence in the tree; the three
+vendored baselines carry their own. Nothing was installed, built or run,
+and there are no tests to count. The paper's arXiv id was checked
+against its title and its v2 tables were compared with the committed
+result files, which were recomputed from their per-question rows. No
+marks; three are declared and unwired in
+<code>romem/ingestion/ops.py</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
