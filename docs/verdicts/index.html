@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 886 reports.</strong></p>
+<p><strong>This page covers all 887 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36641,6 +36641,58 @@ every read branch.</li>
 <li>Do not copy when: you will rely on the zero-config MCP install, a
 correction must survive deleting the memory that made it, or the review
 queue and audit log the README describes are requirements.</li>
+</ul>
+<h3 id="mnemostack"><a
+href="../systems/mnemostack/"><code>mnemostack</code></a></h3>
+<ul>
+<li>Best idea: <strong>take the tenant from the key and filter on it
+three times.</strong> The HTTP and MCP servers resolve the tenant from
+the presented key, <code>_stamp_tenant</code> overwrites any caller
+<code>tenant_id</code> on write, every dense, sparse and native BM25
+query carries a <code>tenant_id</code> must condition, arms that cannot
+take a tenant are skipped, and <code>filter_by_tenant</code> runs after
+fusion and again after the ranking pipeline, whose graph stage injects
+records no scoped arm returned; populated tests put two tenants on one
+vector and require exact sets.</li>
+<li>Second idea: refuse rather than serve everyone. With auth off and no
+tenant configured, the server probes the collection and graph for two
+distinct tenants and will not start; lifecycle calls skip foreign ids
+with the same count as missing ones, so delete and invalidate cannot
+enumerate another tenant's ids.</li>
+<li>Biggest risk: <strong>the same words undo a retraction.</strong>
+Storing the same tenant, source, offset and text again deletes
+<code>invalidated_at</code> and keeps <code>valid_until</code>, by
+design and pinned by a test, and the MCP <code>remember</code> tool is
+one of the callers, so an agent restating a fact an operator retracted
+makes it current and the store forgets it was ever withdrawn.
+<code>invalidated_at</code> is also a request field, so the record clock
+is whatever the caller sends.</li>
+<li>Second risk: graph facts written through <code>POST /triples</code>
+and the MCP tool have no retraction or delete on HTTP or MCP; a
+file-backed BM25 arm ignores invalidation; the audit file covers keys,
+quotas and tenant lifecycle and no memory write; the committed ranking
+comparison has recall-only order at MRR 0.5575 against 0.3535 for the
+serving composition on its own synthetic corpus, and the README's LoCoMo
+figures have no committed result file.</li>
+<li>Most reusable component: <code>_stamp_tenant</code> and
+<code>_assemble_filter</code> in
+<code>src/mnemostack/vector/qdrant.py:71-86</code>,
+<code>:1464-1475</code>, <code>filter_by_tenant</code> in
+<code>src/mnemostack/recall/validity.py:386-400</code>, the arm
+admission in <code>src/mnemostack/recall/recaller.py:1549-1560</code>,
+and the startup gate in
+<code>src/mnemostack/server.py:1410-1438</code>.</li>
+<li>Maturity impression: Apache-2.0, with MIT declared for the OpenClaw
+plugin and no MIT text; 40,263 lines of Python in 476 commits from 17
+April to 25 November 2026, at version 3.4.0; 2,746 test functions, most
+against an in-memory Qdrant, run in CI on five Python versions and
+against a real Qdrant, none run here. Three marks:
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>negative_eval</code>.</li>
+<li>Study when: you serve one retrieval backend to several tenants and
+want the boundary to survive a new arm or a new ranking stage.</li>
+<li>Do not copy when: an agent must be able to retract a fact and have
+it stay retracted, or facts live in the graph.</li>
 </ul>
         </article>
       </div>

@@ -740,6 +740,22 @@ caller outside tests
 filter <code>invalid_at IS NULL</code>, which every row passes, and
 correction goes through <code>superseded_by</code>, a pointer with no
 time on it.</p>
+<p><a href="../../systems/mnemostack/">mnemostack</a> keeps a retraction
+stamp beside the window and lets the next write delete it. A point's
+<code>valid_from</code> and <code>valid_until</code> come from the
+writer's metadata or the invalidate call, <code>invalidated_at</code>
+from the clock unless the caller sends one, and <code>as_of</code> on
+HTTP and MCP keeps points inside the window while ignoring the stamp
+(<code>src/mnemostack/recall/validity.py:1-14</code>,
+<code>:318-330</code>,
+<code>src/mnemostack/vector/qdrant.py:1356-1421</code>). Storing the
+same tenant, source, offset and text again deletes
+<code>invalidated_at</code> and keeps <code>valid_until</code>, so the
+store no longer knows the memory was withdrawn, and the MCP
+<code>remember</code> tool is one of the callers
+(<code>src/mnemostack/ingest.py:1331-1397</code>). Graph triples carry
+the world-time pair alone. A system-time stamp that a request can set
+and a repeat write can delete records no more than the last request.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

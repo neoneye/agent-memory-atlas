@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 886 reports.**
+**This page covers all 887 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8183,3 +8183,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 54,607 lines of Python under `src/` and 56,919 of tests, 305 commits from 12 February to 2 August 2026, 282 of them by one author, 29 tags to v1.4.2; 3,416 Python test functions, 621 of them behind a fixture that skips in CI, none run here. Two marks: `scope_enforced`, `negative_eval`.
 - Study when: you are building one memory server for several principals and want the org, scope and owner predicates in one place on every read branch.
 - Do not copy when: you will rely on the zero-config MCP install, a correction must survive deleting the memory that made it, or the review queue and audit log the README describes are requirements.
+
+### [`mnemostack`](../systems/mnemostack/)
+- Best idea: **take the tenant from the key and filter on it three times.** The HTTP and MCP servers resolve the tenant from the presented key, `_stamp_tenant` overwrites any caller `tenant_id` on write, every dense, sparse and native BM25 query carries a `tenant_id` must condition, arms that cannot take a tenant are skipped, and `filter_by_tenant` runs after fusion and again after the ranking pipeline, whose graph stage injects records no scoped arm returned; populated tests put two tenants on one vector and require exact sets.
+- Second idea: refuse rather than serve everyone. With auth off and no tenant configured, the server probes the collection and graph for two distinct tenants and will not start; lifecycle calls skip foreign ids with the same count as missing ones, so delete and invalidate cannot enumerate another tenant's ids.
+- Biggest risk: **the same words undo a retraction.** Storing the same tenant, source, offset and text again deletes `invalidated_at` and keeps `valid_until`, by design and pinned by a test, and the MCP `remember` tool is one of the callers, so an agent restating a fact an operator retracted makes it current and the store forgets it was ever withdrawn. `invalidated_at` is also a request field, so the record clock is whatever the caller sends.
+- Second risk: graph facts written through `POST /triples` and the MCP tool have no retraction or delete on HTTP or MCP; a file-backed BM25 arm ignores invalidation; the audit file covers keys, quotas and tenant lifecycle and no memory write; the committed ranking comparison has recall-only order at MRR 0.5575 against 0.3535 for the serving composition on its own synthetic corpus, and the README's LoCoMo figures have no committed result file.
+- Most reusable component: `_stamp_tenant` and `_assemble_filter` in `src/mnemostack/vector/qdrant.py:71-86`, `:1464-1475`, `filter_by_tenant` in `src/mnemostack/recall/validity.py:386-400`, the arm admission in `src/mnemostack/recall/recaller.py:1549-1560`, and the startup gate in `src/mnemostack/server.py:1410-1438`.
+- Maturity impression: Apache-2.0, with MIT declared for the OpenClaw plugin and no MIT text; 40,263 lines of Python in 476 commits from 17 April to 25 November 2026, at version 3.4.0; 2,746 test functions, most against an in-memory Qdrant, run in CI on five Python versions and against a real Qdrant, none run here. Three marks: `bitemporal`, `scope_enforced`, `negative_eval`.
+- Study when: you serve one retrieval backend to several tenants and want the boundary to survive a new arm or a new ranking stage.
+- Do not copy when: an agent must be able to retract a fact and have it stay retracted, or facts live in the graph.

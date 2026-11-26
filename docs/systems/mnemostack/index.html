@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Python memory and
+retrieval service over Qdrant and optional Memgraph, with service-key
+tenants, invalidation with validity windows, and fused hybrid recall.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="mnemostack — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Python memory
+and retrieval service over Qdrant and optional Memgraph, with
+service-key tenants, invalidation with validity windows, and fused
+hybrid recall.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="mnemostack — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Python
+memory and retrieval service over Qdrant and optional Memgraph, with
+service-key tenants, invalidation with validity windows, and fused
+hybrid recall.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>mnemostack — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "mnemostack",
+      "description": "A self-hosted Python memory and retrieval service over Qdrant and optional Memgraph, with service-key tenants, invalidation with validity windows, and fused hybrid recall.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A tenant key from the service key on every
+arm, and a retraction that the same words undo</p>
+          <h1>mnemostack</h1>
+          <p class="document-deck">A self-hosted Python memory and
+retrieval service over Qdrant and optional Memgraph, with service-key
+tenants, invalidation with validity windows, and fused hybrid
+recall.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/udjin-labs/mnemostack">
+              <span>Source</span>
+              <strong>udjin-labs/mnemostack</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/udjin-labs/mnemostack/commit/5fd7c7aad5e659b06377cc400b0c32f02658b614" title="5fd7c7aad5e659b06377cc400b0c32f02658b614">
+              <span>Analyzed revision</span>
+              <code>5fd7c7aa…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/udjin-labs--mnemostack" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>udjin-labs--mnemostack</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE and pyproject.toml; the OpenClaw companion's package.json
+declares MIT and the tree carries no MIT text</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>40,263
+lines of Python in 97 files under src/, 52,121 lines of tests, and 2,401
+lines in the openclaw-plugin directory</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>476
+commits under seven author names from 17 April to 25 November 2026;
+package version 3.4.0; first published under the name
+memvault</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,746
+Python test functions in 142 files, most against an in-memory Qdrant
+client, and 34 JavaScript cases in three plugin test files; CI runs
+pytest on Python 3.10 to 3.14, a minimum-dependency job and a
+real-Qdrant smoke job; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>mnemostack is a self-hosted memory and retrieval layer in Python:
+Qdrant holds chunked text and vectors, an optional Memgraph holds dated
+triples, and the same recall chain is served through an SDK, a CLI, a
+FastAPI server, an MCP server and an OpenClaw plugin. What is notable is
+the tenant boundary. The tenant comes from the service key, every arm's
+query carries it, arms that cannot carry it are dropped, and two
+backstops filter the fused and the re-ranked results; an unauthenticated
+server refuses to start over a collection holding two tenants. What is
+weak is correction. Invalidation hides a point and records when, and
+storing the same content again deletes that record, so nothing keeps a
+retracted value from coming back. Graph facts an agent writes have no
+retraction path on the surfaces it uses.</p>
+<p>The package calls itself a backend and leaves capture policy to
+integrations. Nothing extracts, summarises or consolidates memory on a
+serving path: what is stored is what a caller sent, chunked and embedded
+synchronously. Correction is explicit, by id or by source, and comes in
+two strengths: a non-destructive invalidation that keeps the point
+reachable through <code>as_of</code> and
+<code>include_invalidated</code>, and a hard delete.</p>
+<p>Retrieval is the larger half of the code. Up to four arms are fused
+by weighted reciprocal rank fusion and passed through a ranking pipeline
+of up to eleven stages, three of them stateful and learning from
+explicit feedback, then an optional LLM reranker. The project's own
+committed comparison, on a synthetic corpus built to be adversarial, has
+recall-only order ahead of every pipeline configuration on overall
+MRR.</p>
+<p><strong>Licence.</strong> Apache-2.0 is in <code>LICENSE</code> and
+<code>pyproject.toml</code>, and nothing in it restricts use. The
+OpenClaw companion's <code>openclaw-plugin/package.json</code> declares
+<code>"license": "MIT"</code> while the only licence text in the tree is
+the Apache one, so the JavaScript plugin names a grant the repository
+does not contain.</p>
+<p>Three marks are earned: <code>scope_enforced</code> and
+<code>negative_eval</code> on the tenant boundary, and
+<code>bitemporal</code> on the validity window kept beside the
+retraction stamp. Section 9 gives the reasons for the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a chunk of text a caller chose to store</strong>,
+with its source and offset, and it is believed, in the sense of being
+served, from the moment the upsert returns. There is no candidate state
+and no judgement on the way in. The id is a UUID derived from SHA-256
+over tenant, source, offset and text
+(<code>src/mnemostack/ingest.py:111-129</code>), so the same words from
+the same place are the same memory.</p>
+<p>A memory stops being served in one of three ways:</p>
+<ul>
+<li><strong>Invalidated.</strong> <code>invalidated_at</code> is set on
+the payload, by default to the clock, optionally with a world-time
+<code>valid_until</code>
+(<code>src/mnemostack/vector/qdrant.py:1356-1421</code>). Default recall
+hides it. <code>include_invalidated</code> shows it again, and
+<code>as_of</code> ignores the stamp and asks whether the instant falls
+inside <code>valid_from</code>/<code>valid_until</code>
+(<code>src/mnemostack/recall/validity.py:1-14</code>,
+<code>:318-330</code>).</li>
+<li><strong>Deleted.</strong> <code>DELETE /memories</code> removes the
+point outright, by id or by source
+(<code>src/mnemostack/server.py:2536</code>). Triples in the graph are
+separate records and stay.</li>
+<li><strong>Pruned.</strong> Re-indexing a file removes the chunks that
+no longer appear in it, guarded by <code>index_root</code> so one
+indexing root cannot prune another's.</li>
+</ul>
+<p>And one way back: storing the same content again. The remote ingest
+path finds the existing id carrying <code>invalidated_at</code> and
+patches the key away, keeping <code>valid_until</code>, at zero
+embedding cost (<code>src/mnemostack/ingest.py:1331-1397</code>). A test
+pins it as intended behaviour
+(<code>tests/test_remote_ingest.py:1184-1204</code>). The retraction is
+not recorded anywhere else, so after reactivation the store cannot say
+the memory was ever withdrawn.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every writer derives the point id from tenant, source, offset and text and stores at once; invalidation sets a stamp that default recall hides and that a repeat write of the same content deletes; every arm queries under the key's tenant, arms that cannot are skipped, and the tenant filter runs again after fusion and after the ranking pipeline</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every writer derives the point id from tenant, source, offset and text and stores at once; invalidation sets a stamp that default recall hides and that a repeat write of the same content deletes; every arm queries under the key&#39;s tenant, arms that cannot are skipped, and the tenant filter runs again after fusion and after the ranking pipeline
+flowchart TD
+    subgraph W[&quot;Writers&quot;]
+        direction TB
+        H[&quot;HTTP POST /memories&lt;br/&gt;tenant from service key&quot;]
+        M[&quot;MCP mnemostack_remember&lt;br/&gt;tenant from process key&quot;]
+        C[&quot;CLI index and watch&lt;br/&gt;files and markdown&quot;]
+        H ~~~ M ~~~ C
+    end
+    W --&gt; ID[&quot;stable_chunk_id&lt;br/&gt;sha256 of tenant,&lt;br/&gt;source, offset, text&quot;]
+    ID --&gt; P[(&quot;Qdrant point&lt;br/&gt;tenant_id, valid_from,&lt;br/&gt;valid_until, indexed_at&quot;)]
+    ID -.-&gt;|&quot;id exists, stamped&quot;| RE[&quot;Reactivate:&lt;br/&gt;delete invalidated_at,&lt;br/&gt;keep valid_until&quot;]
+    RE --&gt; P
+    INV[&quot;POST /invalidate and&lt;br/&gt;mnemostack_invalidate&lt;br/&gt;set invalidated_at&quot;] --&gt; P
+    DEL[&quot;DELETE /memories&lt;br/&gt;by id or source&quot;] --&gt; GONE[&quot;Point removed;&lt;br/&gt;graph facts stay&quot;]
+    P --&gt; Q[&quot;Each arm queries with&lt;br/&gt;tenant_id must and&lt;br/&gt;hide-invalidated or as_of&quot;]
+    Q --&gt; F[&quot;RRF fusion;&lt;br/&gt;arms without&lt;br/&gt;accepts_tenant skipped&quot;]
+    F --&gt; B1[&quot;filter_by_validity&lt;br/&gt;then filter_by_tenant&quot;]
+    B1 --&gt; PL[&quot;Ranking pipeline,&lt;br/&gt;graph resurrection&quot;]
+    PL --&gt; B2[&quot;filter_by_tenant&lt;br/&gt;again&quot;]
+    B2 --&gt; OUT[&quot;Results, or an&lt;br/&gt;LLM answer over them&quot;]</code></pre></details></figure>
+<p>The model never decides what is true. An agent can store, retract by
+id and give usefulness feedback; the feedback moves ranking state, not
+belief. <code>synthesize</code> builds an entity profile on request and
+stores nothing, and a citation's verdict against its current source file
+is computed on request and never written back
+(<code>src/mnemostack/provenance.py:1-30</code>).</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Python package, <code>src/mnemostack/</code>, with optional
+extras for the server (<code>fastapi</code>, <code>uvicorn</code>), MCP
+(<code>fastmcp</code>), HuggingFace embeddings and a file watcher
+(<code>pyproject.toml</code>). The runtime dependencies are
+<code>qdrant-client</code> 1.20 or later and the Neo4j driver; Qdrant
+1.20 is required since 3.0.0.</p>
+<ul>
+<li><strong>Storage.</strong> Qdrant collections hold dense vectors and
+payloads, optionally a named sparse vector and a BM25-scored full-text
+index (<code>src/mnemostack/vector/qdrant.py</code>). Memgraph or Neo4j
+holds triples (<code>src/mnemostack/graph/store.py</code>). The learning
+state of the stateful ranking stages lives in a <code>StateStore</code>,
+by default a JSON file under <code>flock</code>
+(<code>src/mnemostack/recall/pipeline/state.py:140</code>). Service
+keys, quotas and the opt-in audit trail are local files, with an
+optional OpenBao key store.</li>
+<li><strong>Serving.</strong> <code>mnemostack serve</code> (FastAPI)
+and <code>mnemostack mcp-serve</code> (FastMCP, stdio or HTTP) share
+<code>recall_flow()</code> (<code>src/mnemostack/recall/flow.py</code>),
+and both default to binding 127.0.0.1
+(<code>src/mnemostack/cli.py:4839</code>, <code>:4962</code>).
+<code>mnemostack inspect</code> is a separate operator console.</li>
+<li><strong>Providers.</strong> Embeddings from Gemini, Ollama or
+HuggingFace, each with a declared embedding profile; LLMs from Gemini,
+Ollama or an OpenAI-compatible endpoint for answers, query expansion,
+HyDE and the LLM reranker.</li>
+<li><strong>Background.</strong> None over the store. The markdown
+watcher re-indexes changed files; nothing schedules consolidation, decay
+or summarisation.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Something must run Qdrant. The quickstart uses Docker for Qdrant and
+Ollama for embeddings, so a fully local and offline setup works with no
+API key. Memgraph is optional and only the graph arm, the triple routes
+and graph resurrection need it. Install is
+<code>pip install mnemostack</code> plus extras. The store is not
+readable by hand, but the inspector browses records, invalidated facts
+and tenants, and <code>tenant-export</code> writes a tenant's points and
+payloads to a file. A multi-host deployment has to replace the file
+state store, which <code>docs/memory-model.md</code> says in as many
+words.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>POST /memories</code> validates each
+item and its metadata, checks the tenant's storage quota and calls
+<code>ingest_remote_items</code> inside a per-tenant in-process lock
+(<code>src/mnemostack/server.py:2097-2245</code>,
+<code>src/mnemostack/ingest.py:1036</code>, <code>:1210</code>).
+<code>mnemostack_remember</code> calls the same function
+(<code>src/mnemostack/mcp/server.py:1043</code>). The CLI's
+<code>index</code>, <code>index-markdown</code> and <code>watch</code>
+chunk files through <code>src/mnemostack/chunking/</code> and the
+markdown indexer, and the SDK <code>Ingestor</code> batches and flushes,
+stamping <code>indexed_at</code>
+(<code>src/mnemostack/ingest.py:2178</code>).</p>
+<p><strong>Extraction.</strong> None on a serving path.
+<code>TripleExtractor</code> asks an LLM for subject, predicate, object
+and <code>valid_from</code>
+(<code>src/mnemostack/graph/extractor.py:25-28</code>) and is exported
+with no caller outside its module. Triples enter the graph through
+<code>POST /triples</code> and <code>mnemostack_graph_add_triple</code>
+(<code>src/mnemostack/server.py:2247</code>,
+<code>src/mnemostack/mcp/server.py:1374</code>).</p>
+<p><strong>Retrieval.</strong> <code>Recaller.recall</code> runs the
+configured arms, applies the tenant and validity conditions inside each,
+fuses, then runs <code>filter_by_validity</code> and
+<code>filter_by_tenant</code>
+(<code>src/mnemostack/recall/recaller.py:916</code>,
+<code>:1017-1022</code>). <code>recall_flow</code> resolves the default
+tenant before calling it, applies the pipeline, then the caller's
+filters and the tenant backstop again, then the reranker
+(<code>src/mnemostack/recall/flow.py:62-150</code>).</p>
+<p><strong>Context assembly.</strong> HTTP and MCP return ranked results
+with an optional trace; <code>/answer</code> and
+<code>mnemostack_answer</code> synthesise an answer over them
+(<code>src/mnemostack/recall/answer.py</code>). The OpenClaw plugin
+calls <code>/answer</code> from a <code>before_prompt_build</code> hook
+and prepends the answer, its confidence and up to eight sources inside
+an <code>&lt;active_memory&gt;</code> tag capped at 2,000 characters
+(<code>openclaw-plugin/src/plugin.js:190</code>,
+<code>openclaw-plugin/src/injection.js:37-46</code>,
+<code>openclaw-plugin/src/config.js:24</code>).</p>
+<p><strong>Update and delete.</strong> <code>POST /invalidate</code>,
+<code>mnemostack_invalidate</code> and the CLI call
+<code>VectorStore.invalidate</code>
+(<code>src/mnemostack/server.py:2427-2534</code>,
+<code>src/mnemostack/mcp/server.py:936</code>,
+<code>src/mnemostack/cli.py:2353</code>). <code>DELETE /memories</code>
+calls <code>delete_points</code>
+(<code>src/mnemostack/server.py:2536</code>,
+<code>src/mnemostack/vector/qdrant.py:1303</code>).
+<code>tenant-rm</code> revokes the tenant's keys first, then deletes its
+points and graph nodes
+(<code>src/mnemostack/vector/qdrant.py:1331</code>,
+<code>src/mnemostack/graph/store.py:593</code>).
+<code>GraphStore.invalidate</code> closes an edge by setting
+<code>valid_until</code>
+(<code>src/mnemostack/graph/store.py:396-431</code>); outside its
+definition it appears only in a docstring.</p>
+<p><strong>Tests.</strong> Section 10.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A point's payload carries the text under the configured
+<code>text_key</code>, <code>source</code>, <code>offset</code>,
+<code>timestamp</code>, <code>tags</code>, <code>indexed_at</code>,
+caller metadata, <code>tenant_id</code>, <code>index_root</code>, the
+snapshot hash of its source document, and the
+<code>_embedding_space</code> fingerprint. Caller metadata cannot set
+<code>tenant_id</code>, underscore keys, <code>tags</code>,
+<code>timestamp</code> or <code>invalidated_at</code>, and may set
+<code>valid_from</code> and <code>valid_until</code> if they parse as
+ISO-8601 and are ordered (<code>src/mnemostack/ingest.py:475-491</code>,
+<code>:595-610</code>).</p>
+<p>Scope is one key, <code>tenant_id</code>, indexed as a keyword
+payload field (<code>src/mnemostack/vector/qdrant.py:382-385</code>).
+<code>index_root</code> is an ownership guard for lifecycle calls, not a
+read filter. The ranking state is namespaced per tenant by
+<code>tenant_state_key</code>
+(<code>src/mnemostack/recall/pipeline/state.py:16-24</code>).</p>
+<p>Time has four fields. <code>timestamp</code> is the content's own
+time and feeds freshness and the temporal arm. <code>indexed_at</code>
+is when it was stored. <code>valid_from</code> and
+<code>valid_until</code> are the world-time window a writer states.
+<code>invalidated_at</code> is the system-time retraction. A graph
+triple has only the world-time pair, with <code>"current"</code> as the
+open end (<code>src/mnemostack/graph/store.py:20-35</code>), and a
+tenant property folded into its node and edge MERGE keys
+(<code>:116-195</code>).</p>
+<p>There is no type distinction between episodic, semantic or profile
+memory. The unit is a chunk, and a deployment that wants classes sets
+them as metadata and filters on them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The arms are a dense <code>VectorRetriever</code>, a lexical arm
+chosen by <code>recall.text_search</code> (Qdrant-native BM25, a sparse
+tf-idf vector, or an in-process BM25 over files), a
+<code>TemporalRetriever</code> that parses dates out of the query into a
+timestamp range, and an optional <code>MemgraphRetriever</code>
+(<code>src/mnemostack/recall/retrievers.py:253</code>,
+<code>:567</code>, <code>:632</code>, <code>:764</code>,
+<code>:1308</code>, <code>:2351</code>,
+<code>src/mnemostack/cli.py:2735-2800</code>). Fusion is weighted RRF
+with k 60, on rank only
+(<code>src/mnemostack/recall/fusion.py:15-40</code>).</p>
+<p><code>build_full_pipeline</code> then applies up to eleven stages
+(<code>src/mnemostack/recall/pipeline/presets.py:30-138</code>): query
+classification, relevance calibration, exact-token rescue for
+identifiers, hub dampening (SDK only), a Q-learning reranker over source
+and query type, a curiosity boost, a freshness blend with a bounded
+access bonus, gravity dampening of hits missing query terms, inhibition
+of return, exact-token protection, and graph resurrection, which injects
+graph records. An LLM reranker can follow, and <code>token_budget</code>
+cuts the returned text.</p>
+<p>The project's own measurement of this pipeline is committed in
+<code>benchmarks/pr232/evidence/</code>. On 3,000 synthetic memories and
+240 queries with <code>bge-m3</code>, recall-only order scores MRR
+0.5575 and recall@25 1.000. The serving composition,
+<code>recall_flow</code>, scores 0.3168 at the base commit and 0.3535
+after the stage reorder, with recall@25 0.8042 in both
+(<code>benchmarks/pr232/evidence/base-metrics.md</code>). The MRR
+columns recompute from <code>per_query.csv</code>. The README beside
+them says the corpus is adversarial by design and that only the
+difference between the two trees is the result; the absolute numbers
+still say that on this corpus the pipeline moves gold down.</p>
+<p>The code documents two failure modes of its own. An in-process BM25
+corpus built from files carries no validity keys and so returns
+invalidated content, and one built from Qdrant reflects an invalidation
+only when rebuilt
+(<code>src/mnemostack/vector/qdrant.py:1376-1384</code>). Under a
+tenant, an unstamped file corpus is skipped with a warning rather than
+searched (<code>src/mnemostack/recall/recaller.py:1549-1560</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous: chunk if asked, embed
+server-side, upsert. A duplicate id costs no embedding call. The secret
+policy, off by default, can refuse recognisable key and token shapes
+before any side effect. There is no LLM in the write path and no
+deduplication beyond the id, so two phrasings of one fact are two
+memories, and <code>docs/memory-model.md</code> makes reconciling them
+the application's job.</p>
+<p>Conflict handling is the caller's. Storing "the service moved to team
+B" does not touch "the service belongs to team A"; the caller
+invalidates the old point and may state a <code>valid_until</code>.
+Source-scoped invalidation is first-retraction-wins, so a later call
+does not restamp an earlier retraction
+(<code>src/mnemostack/server.py:2427-2460</code>).
+<code>GET /memories?source=</code> lists ids and content hashes per
+source without text, so a client can reconcile its own copy against the
+service.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The agent blocks on one embedding call per new chunk, and a memory is
+retrievable by the dense and native-BM25 arms as soon as the upsert
+returns. No background pass reads or rewrites the store. On the read
+path the cost is the arms, the pipeline and, when configured, an LLM
+reranker and an LLM answer. The OpenClaw companion pays one
+<code>/answer</code> call per prompt and prepends at most 2,000
+characters at the front of the prompt, where the block changes on every
+turn.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers nine tools: <code>mnemostack_health</code>,
+<code>_search</code>, <code>_answer</code>, <code>_resolve</code>,
+<code>_invalidate</code>, <code>_remember</code>,
+<code>_feedback</code>, and, when a graph is configured,
+<code>_graph_query</code> and <code>_graph_add_triple</code>
+(<code>src/mnemostack/mcp/server.py:613-1374</code>). Source-scoped
+retraction and hard delete are HTTP-only, by a stated choice that an
+agent tool able to retract a whole document has too large a blast radius
+(<code>src/mnemostack/server.py:2431-2437</code>).</p>
+<p>Under <code>--auth</code> the MCP server verifies the stdio process's
+key, or the HTTP caller's bearer token, on every call and takes the
+tenant from it; with auth off, every tool runs under the configured
+default tenant (<code>src/mnemostack/mcp/server.py:309-333</code>). No
+tool takes a tenant argument.</p>
+<p><code>integrations/</code> holds skills for Claude Code, Cursor and
+OpenClaw that tell an agent when to call the tools; the OpenClaw plugin
+is the one automatic injection. Nothing captures a conversation by
+itself, as the README states.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-tenant-boundary">The tenant boundary</h3>
+<p>The key decides the tenant, in one function per server
+(<code>src/mnemostack/server.py:1673-1680</code>,
+<code>src/mnemostack/mcp/server.py:328-333</code>). On write,
+<code>_stamp_tenant</code> sets <code>tenant_id</code> from that value,
+and strips a caller-supplied one when there is no tenant, so markdown
+frontmatter cannot plant a point in a tenant's scope
+(<code>src/mnemostack/vector/qdrant.py:71-86</code>). An upsert onto an
+id another tenant owns raises <code>TenantConflictError</code>
+(<code>:224</code>). On read, <code>_assemble_filter</code> appends the
+tenant condition to the dense, sparse and native BM25 queries
+(<code>:1464-1475</code>). The recaller admits only arms that declare
+<code>accepts_tenant</code>. <code>filter_by_tenant</code> drops any
+result whose payload names another tenant or none, once after fusion and
+once after the pipeline, because graph resurrection injects records that
+never passed a tenant-scoped arm
+(<code>src/mnemostack/recall/recaller.py:1017-1022</code>,
+<code>src/mnemostack/recall/flow.py:140-150</code>). Graph reads confine
+both endpoints and the edge
+(<code>src/mnemostack/graph/store.py:464-470</code>).</p>
+<p>The startup gate covers the case where none of that applies. With
+auth off, no default tenant and no <code>--allow-cross-tenant</code>,
+<code>build_app</code> probes the collection and the graph for two
+distinct tenants and refuses to start
+(<code>src/mnemostack/server.py:1410-1438</code>). Lifecycle calls apply
+the same tenant: invalidating or deleting a foreign id is skipped and
+counted the same as a missing one, so the count is not an existence
+oracle (<code>src/mnemostack/vector/qdrant.py:1411-1412</code>).</p>
+<p>The edge of the boundary is the operator console. Without
+<code>--auth</code>, <code>mnemostack inspect</code> serves
+<code>/api/records</code> with the tenant as a query parameter, and an
+empty one browses every point
+(<code>src/mnemostack/inspector.py:726-736</code>). With
+<code>--auth</code>, any admin key reads every tenant, which
+<code>docs/deployment.md</code> states and answers with "do not issue
+<code>admin</code> keys to tenants". The console binds 127.0.0.1 by
+default.</p>
+<h3 id="correction-does-not-hold">Correction does not hold</h3>
+<p>Invalidation is careful about its own semantics and loses them on the
+next write of the same content. <code>ingest_remote_items</code> deletes
+<code>invalidated_at</code> from an existing point when the same tenant,
+source, offset and text arrive again
+(<code>src/mnemostack/ingest.py:1331-1397</code>).
+<code>mnemostack_remember</code> is one of its callers, so an agent
+restating a fact an operator retracted makes it current. Restated from
+another source or offset, it is a new point that never carried the
+stamp. Either way no record of the rejected value survives, and the
+store cannot answer when the memory was withdrawn.</p>
+<p><code>invalidated_at</code> is also a request field on
+<code>POST /invalidate</code> and <code>mnemostack_invalidate</code>, so
+the system-time stamp is whatever the caller sends. And
+<code>as_of</code> ignores it, so the store can answer what was true at
+an instant but not what it held as current then.</p>
+<p>Graph facts are the other gap. <code>POST /triples</code> and
+<code>mnemostack_graph_add_triple</code> write them, and nothing on HTTP
+or MCP closes or deletes one. <code>GraphStore.invalidate</code> exists
+in the SDK, <code>DELETE /memories</code> leaves the graph alone by
+design, and only <code>tenant-rm</code> removes a tenant's graph
+wholesale.</p>
+<h3 id="the-audit-trail-is-control-plane-only">The audit trail is
+control plane only</h3>
+<p><code>MNEMOSTACK_AUDIT_FILE</code> turns on an append-only JSONL file
+with careful handling: an exclusive lock, a symlink-refusing path walk,
+permission checks and redaction of key-shaped strings
+(<code>src/mnemostack/audit.py:1-40</code>). Its vocabulary is key issue
+and revoke, quota set and remove, tenant export, migrate and removal,
+admin-console denials and three collection index commands, written from
+the CLI and the inspector (<code>src/mnemostack/cli.py:1422-1434</code>,
+<code>src/mnemostack/inspector.py:500-520</code>). The module's own
+contract puts the data plane out of scope. No ingest, invalidation,
+reactivation or delete of a memory is recorded.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong>
+<code>tenant_id</code> is stamped from the key and applied as a Qdrant
+<code>must</code> condition on every arm that queries the collection,
+with arm admission and two result backstops, and graph reads are
+confined the same way.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Store-level,
+recaller-level and arm-level tests require foreign-tenant points and
+invalidated points to be absent from results that hold other material,
+with exact-set assertions or a non-empty check first.</li>
+<li><strong><code>bitemporal</code> — earned.</strong> The world-time
+window is caller-stated and separate from <code>indexed_at</code> and
+<code>invalidated_at</code>, and <code>as_of</code> reads it on HTTP and
+MCP. The record clock is caller-settable and erasable, and the graph
+keeps only the world-time pair.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Invalidation is
+keyed on the point, and storing the same text clears it. No list of
+rejected values exists.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> The only state
+that withholds a memory is the presence of <code>invalidated_at</code>,
+which is the system-time half of the validity model, binary, cleared by
+a repeat write and ignored by <code>as_of</code>. There is no candidate
+or verified state. Citation verdicts are computed on request and not
+stored.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> The audit file
+records keys, quotas and tenant lifecycle, not memory mutations, and is
+off by default.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Nothing waits
+for anyone. The inspector browses; the admin console manages keys and
+quotas.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is large and mostly runs without services: 2,746 test
+functions in 142 files, most against
+<code>QdrantClient(":memory:")</code>. CI runs them on five Python
+versions, again with the minimum declared <code>qdrant-client</code>,
+and runs a smoke file against a real Qdrant 1.20 container
+(<code>.github/workflows/ci.yml</code>). The dev extra installs
+<code>fastapi</code> and <code>fastmcp</code>, so the server and MCP
+tests that <code>importorskip</code> them run in CI.</p>
+<p>The tenant tests are the strongest part.
+<code>test_read_is_isolated_by_tenant</code> puts three points from two
+tenants on one vector so only the filter can separate them and asserts
+exact sets (<code>tests/test_multi_tenant.py:46-55</code>).
+<code>test_write_to_a_recall_as_b_is_empty_across_arms</code> gives the
+recaller an arm that ignores its tenant and requires the output to be
+exactly the one own hit
+(<code>tests/test_tenant_fail_closed.py:136-146</code>). The HTTP-level
+test of recall asserts the tenant the fake recaller received, not an
+exclusion (<code>tests/test_server.py:840-845</code>), and the HTTP
+write test asserts per-tenant counts
+(<code>tests/test_remote_ingest.py:383-394</code>).</p>
+<p>Validity tests cover the default hide,
+<code>include_invalidated</code>, <code>as_of</code> ignoring the stamp,
+over-fetch past a stale top window and the vector floor not re-injecting
+stale points (<code>tests/test_validity.py:60-80</code>,
+<code>:198-216</code>, <code>:273-318</code>). Reactivation is pinned as
+intended (<code>tests/test_remote_ingest.py:1184-1204</code>,
+<code>:1249-1268</code>); no test asserts that a retracted value stays
+retracted.</p>
+<p>The README reports LoCoMo strict accuracy of 82.9% on 1,986 questions
+with a <code>gemini-3-flash-preview</code> judge, and reports beside it
+the score without the auto-passed empty-answer category. The harness is
+committed (<code>benchmarks/run_locomo.sh</code>,
+<code>benchmarks/locomo_single.py</code>); no result file is, and
+<code>benchmarks/.gitignore</code> excludes <code>results/</code>. The
+real-corpus needle numbers come from a private corpus. The one committed
+result set is <code>benchmarks/pr232/evidence/</code>, discussed in
+section 6. No paper is cited.</p>
+<p>Missing before trusting correction: a test that an invalidated value
+restated by the agent does not return to default recall, which would
+fail by design at this commit, and a test that an invalidated point is
+absent from a file-backed BM25 arm.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Take the scope from the credential and apply it three
+times.</strong> In the store query, at arm admission, and on the final
+result list after anything that can inject records. The last filter
+makes a forgotten predicate in a new arm a non-event.</li>
+<li><strong>Refuse to start rather than serve everyone.</strong> A probe
+for two distinct tenants at startup turns a misconfiguration into an
+error message.</li>
+<li><strong>Make lifecycle counts uninformative.</strong> Skipping
+foreign ids with the same count as missing ones keeps delete and
+invalidate from enumerating another tenant's ids.</li>
+<li><strong>Separate retraction from erasure, and say what each
+covers.</strong> The invalidate and delete handlers state which arms and
+stores they reach.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Letting an idempotent write clear a retraction.</strong> If
+identical content re-asserts a withdrawn memory, the retraction has to
+live somewhere the write path consults, keyed on the content.</li>
+<li><strong>A record clock the caller can set.</strong> A system-time
+field taken from the request can be backdated and cannot support "what
+did we hold then".</li>
+<li><strong>Two stores with one lifecycle API.</strong> Facts in a
+second store need their own retract and delete on the surfaces that
+write them.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>mnemostack suits a team that wants a retrieval service for several
+consumers on one Qdrant, decides capture and reconciliation in its own
+application, and values a tested tenant boundary over memory that
+manages itself. It is a poor fit for an agent expected to maintain
+beliefs on its own: nothing extracts, merges or judges, and the one
+correction primitive an agent holds is undone when it repeats itself.
+The ranking stack is large and its own evidence does not yet show it
+helping, so start with recall-only order and add stages against a corpus
+of your own.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether any deployment pairs a file-backed BM25 corpus with
+invalidation in practice, and so serves retracted text through the
+lexical arm.</li>
+<li>What the LoCoMo result files contained; they are regenerated locally
+and not committed.</li>
+<li>Whether the full pipeline helps on the private production corpus the
+README describes, where the committed synthetic corpus shows it
+hurting.</li>
+<li>Whether graph retraction over HTTP and MCP is planned; the
+deployment guide refers to "the graph invalidation API", which is an SDK
+method.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/mnemostack/vector/qdrant.py</code></td>
+<td>Store, tenant stamp and condition, invalidate, delete, search
+filters</td>
+</tr>
+<tr>
+<td><code>src/mnemostack/ingest.py</code></td>
+<td>Deterministic ids, remote ingest, metadata validation,
+reactivation</td>
+</tr>
+<tr>
+<td><code>src/mnemostack/recall/recaller.py</code></td>
+<td>Arms, fusion, tenant arm admission, validity and tenant
+backstop</td>
+</tr>
+<tr>
+<td><code>src/mnemostack/recall/flow.py</code></td>
+<td>The serving chain and the post-pipeline tenant backstop</td>
+</tr>
+<tr>
+<td><code>src/mnemostack/recall/validity.py</code></td>
+<td><code>valid_at</code>, <code>filter_by_validity</code>,
+<code>filter_by_tenant</code></td>
+</tr>
+<tr>
+<td><code>src/mnemostack/recall/retrievers.py</code></td>
+<td>Dense, sparse, native BM25, file BM25, HyDE, Memgraph and temporal
+arms</td>
+</tr>
+<tr>
+<td><code>src/mnemostack/recall/pipeline/</code></td>
+<td>Ranking stages, presets, learning-state stores</td>
+</tr>
+<tr>
+<td><code>src/mnemostack/server.py</code></td>
+<td>HTTP routes, auth, tenant resolution, startup gate</td>
+</tr>
+<tr>
+<td><code>src/mnemostack/mcp/server.py</code></td>
+<td>MCP tools, per-call key check</td>
+</tr>
+<tr>
+<td><code>src/mnemostack/graph/store.py</code></td>
+<td>Triples, tenant MERGE keys, graph <code>as_of</code>, tenant
+delete</td>
+</tr>
+<tr>
+<td><code>src/mnemostack/audit.py</code></td>
+<td>Control-plane audit file</td>
+</tr>
+<tr>
+<td><code>src/mnemostack/inspector.py</code></td>
+<td>Read-only browser and admin console</td>
+</tr>
+<tr>
+<td><code>src/mnemostack/provenance.py</code></td>
+<td>Citation resolution against current sources</td>
+</tr>
+<tr>
+<td><code>openclaw-plugin/src/</code></td>
+<td><code>before_prompt_build</code> hook and injection</td>
+</tr>
+<tr>
+<td><code>tests/test_multi_tenant.py</code>,
+<code>tests/test_tenant_fail_closed.py</code></td>
+<td>Tenant isolation</td>
+</tr>
+<tr>
+<td><code>tests/test_validity.py</code>,
+<code>tests/test_remote_ingest.py</code></td>
+<td>Validity, invalidation, reactivation</td>
+</tr>
+<tr>
+<td><code>benchmarks/pr232/</code></td>
+<td>Committed ranking comparison and ablation</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>git grep</code>.</p>
+<ul>
+<li><strong>No memory mutation reaches the audit vocabulary.</strong>
+<code>git grep -n -E '"(memory|memories|point|points|invalidate|ingest|prune|delete)\.[a-z_]+"' -- src/mnemostack/cli.py src/mnemostack/inspector.py src/mnemostack/server.py src/mnemostack/mcp/server.py</code>
+returns nothing. The control
+<code>git grep -c -E '"(tenant|keys|quota)\.[a-z_]+"' -- src/mnemostack/cli.py src/mnemostack/inspector.py</code>
+returns 24 and 11.</li>
+<li><strong>Only the CLI and the inspector write the audit
+file.</strong> <code>git grep -n -E 'audit_log_from_env' -- src</code>
+returns the definition at <code>audit.py:415</code>,
+<code>cli.py:1432</code> and <code>:1434</code>, and
+<code>inspector.py:501</code>, <code>:512</code>, <code>:1022</code> and
+<code>:1024</code>.</li>
+<li><strong>No serving path invalidates or deletes a graph
+fact.</strong> <code>git grep -n -E '\.invalidate\(' -- src</code>
+returns <code>cli.py:2353</code>, <code>mcp/server.py:1021</code> and
+<code>server.py:2486</code>, all on the vector store, and the docstring
+at <code>graph/__init__.py:11</code>.
+<code>git grep -n -E 'delete_triple|DETACH DELETE|DELETE r' -- src</code>
+returns the markdown link sync at <code>graph/store.py:299</code> and
+the tenant delete at <code>:598</code>, <code>:624</code> and
+<code>:627</code>.</li>
+<li><strong>The triple extractor has no caller.</strong>
+<code>git grep -n 'TripleExtractor' -- src</code> returns its
+definition, the package export and a comment at
+<code>recall/validity.py:221</code>.</li>
+<li><strong>The consolidation runtime has no caller outside its
+package.</strong>
+<code>git grep -n -E 'consolidation' -- src ':!src/mnemostack/consolidation'</code>
+returns nothing;
+<code>git grep -c consolidation -- src/mnemostack/consolidation</code>
+matches inside the package.</li>
+<li><strong>No value-keyed rejection.</strong>
+<code>git grep -n -i -E 'tombstone|rejected_|blocklist|denylist' -- src</code>
+returns one comment at <code>markdown/parse.py:83</code> about wikilink
+parsing.</li>
+<li><strong>No discrete trust status.</strong>
+<code>git grep -n -E '"(verified|candidate|pending|approved|rejected|disputed|quarantined|current)"' -- src</code>
+returns only the <code>"current"</code> validity marker in
+<code>graph/store.py</code>.</li>
+<li><strong>No review queue.</strong>
+<code>git grep -n -i -E 'approve|pending_review|needs_review' -- src</code>
+returns three comments about approved corpus roots in
+<code>provenance.py</code> and a guard comment at
+<code>cli.py:3223</code>.</li>
+<li><strong>No LoCoMo result is committed.</strong>
+<code>git ls-files benchmarks | grep -i -E 'result|\.json'</code>
+returns nothing, and <code>benchmarks/.gitignore</code> lists
+<code>results/</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/udjin-labs/mnemostack/commit/5fd7c7aad5e659b06377cc400b0c32f02658b614"><code class="commit-id" title="5fd7c7aad5e659b06377cc400b0c32f02658b614">5fd7c7aa…</code></a>.
+First reading at <code>5fd7c7a</code>, read only from a full clone at
+the head of <code>main</code>, dated 25 November 2026 and one
+documentation commit past <code>f808edb</code>, the commit the triage
+selected, with no change under <code>src/</code>. Screened first: no
+auto-run surface, nothing inside the seven-day cooldown, no build-time
+execution, one unpinned surface (<code>pyproject.toml</code> with no
+lockfile). Docs were read as data. Nothing was installed, built or run,
+and the 2,746 Python test functions and 34 JavaScript cases were not
+run. The MRR columns in <code>benchmarks/pr232/evidence/</code> were
+recomputed from <code>per_query.csv</code>. Three marks:
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>negative_eval</code> (<a href="#marks">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

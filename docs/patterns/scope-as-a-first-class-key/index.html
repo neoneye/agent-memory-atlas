@@ -2002,6 +2002,29 @@ episode retrieval can apply one
 do filter on <code>session_id</code>, so the key exists and only the
 read path that reaches a prompt ignores it. Isolation is one SQLite file
 per server process.</p>
+<p><a href="../../systems/mnemostack/">mnemostack</a> applies the key
+three times and refuses to start without one. Under <code>--auth</code>
+the HTTP and MCP servers take the tenant from the presented key in one
+function each, and <code>_stamp_tenant</code> overwrites a caller's
+<code>tenant_id</code> on write
+(<code>src/mnemostack/vector/qdrant.py:71-86</code>,
+<code>src/mnemostack/server.py:1673-1680</code>). Every dense, sparse
+and native BM25 query appends a <code>tenant_id</code> must condition,
+the recaller skips any arm that does not declare it can take a tenant,
+and <code>filter_by_tenant</code> runs after fusion and again after the
+ranking pipeline, whose graph-resurrection stage injects records no
+scoped arm returned
+(<code>src/mnemostack/recall/recaller.py:1017-1022</code>,
+<code>:1549-1560</code>,
+<code>src/mnemostack/recall/flow.py:140-150</code>). With auth off and
+no tenant configured, the server probes the collection and the graph for
+two tenants and will not start
+(<code>src/mnemostack/server.py:1410-1438</code>). Populated tests put
+two tenants on one vector and require exact sets
+(<code>tests/test_multi_tenant.py:46-55</code>,
+<code>tests/test_tenant_fail_closed.py:136-146</code>). The operator
+inspector takes the tenant as a query parameter, and any admin key reads
+every tenant.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a
