@@ -172,13 +172,13 @@ Where the atlas has an exact count — the seven mechanisms on
 <!-- BEGIN GENERATED SPREAD -->
 | Mechanism | Systems carrying it |
 | --- | --- |
-| Negative retrieval assertion | 577 of 889 |
-| Scope enforced in retrieval | 387 of 889 |
-| Append-only mutation audit | 300 of 889 |
-| Explicit trust state | 227 of 889 |
-| Bi-temporal validity | 151 of 889 |
-| Human review surface | 107 of 889 |
-| Rejected-value tombstone | 85 of 889 |
+| Negative retrieval assertion | 578 of 890 |
+| Scope enforced in retrieval | 388 of 890 |
+| Append-only mutation audit | 300 of 890 |
+| Explicit trust state | 227 of 890 |
+| Bi-temporal validity | 151 of 890 |
+| Human review surface | 107 of 890 |
+| Rejected-value tombstone | 86 of 890 |
 <!-- END GENERATED SPREAD -->
 
 Read the bottom two rows as what they are: PLACEHOLDER_PATTERN_HUMAN_REVIEW_COUNT

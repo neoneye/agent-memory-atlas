@@ -2002,6 +2002,21 @@ episode retrieval can apply one
 do filter on <code>session_id</code>, so the key exists and only the
 read path that reaches a prompt ignores it. Isolation is one SQLite file
 per server process.</p>
+<p><a href="../../systems/engrama-scops/">Engrama (scops)</a> makes the
+missing key a match-nothing clause and puts the rule in CI.
+<code>scope_filter_sql</code> and <code>scope_filter_cypher</code>
+return <code>org_id = ? AND user_id IN (?, '__entity__')</code>, and
+<code>(1 = 0)</code> or <code>(false)</code> when either half is absent,
+so a bug that drops the scope returns nothing instead of everything
+(<code>engrama/core/scope.py:159-233</code>). The MCP server takes the
+pair from two request headers or a per-install UUID and never from a
+tool argument, and refuses exactly one header
+(<code>engrama/adapters/mcp/server.py:261-287</code>).
+<code>scripts/check_scoped_queries.py</code> fails the build on a
+backend query literal whose function neither calls a helper nor carries
+a <code>scope-exempt</code> comment. The exempt functions include a TTL
+archive that crosses identities, and the HTTP transport authenticates no
+header.</p>
 <p><a href="../../systems/agent-memory-os-yamantaka/">Agent Memory OS
 (yamantaka520)</a> builds the predicate in one function and leaves two
 doors beside it. <code>_append_acl_filter</code> adds the requester's

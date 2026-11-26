@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python graph memory for agents
+on SQLite or Neo4j, served over MCP, with fail-closed per-identity
+scoping and a reflect pass that proposes reviewable Insights.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Engrama
+(scops) — Agent Memory Atlas">
+    <meta property="og:description" content="A Python graph memory for
+agents on SQLite or Neo4j, served over MCP, with fail-closed
+per-identity scoping and a reflect pass that proposes reviewable
+Insights.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Engrama
+(scops) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python graph memory for
+agents on SQLite or Neo4j, served over MCP, with fail-closed
+per-identity scoping and a reflect pass that proposes reviewable
+Insights.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Engrama (scops) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Engrama (scops)",
+      "description": "A Python graph memory for agents on SQLite or Neo4j, served over MCP, with fail-closed per-identity scoping and a reflect pass that proposes reviewable Insights.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Every read fails closed on its owner, and a
+dismissed Insight's title keeps reflect from proposing it again</p>
+          <h1>Engrama (scops)</h1>
+          <p class="document-deck">A Python graph memory for agents on
+SQLite or Neo4j, served over MCP, with fail-closed per-identity scoping
+and a reflect pass that proposes reviewable Insights.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/scops/engrama">
+              <span>Source</span>
+              <strong>scops/engrama</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/scops/engrama/commit/dcf3557d9f36765c2494d85151f2fd2de67624f1" title="dcf3557d9f36765c2494d85151f2fd2de67624f1">
+              <span>Analyzed revision</span>
+              <code>dcf3557d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/scops--engrama" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>scops--engrama</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in LICENSE, pyproject.toml, mcp.json and server.json; copyright Sinensia
+IT Solutions</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>22,846
+lines of Python in 65 files under engrama/, the MCP server alone 3,634
+and the SQLite store 2,212; 19,202 lines of tests in 78 files;
+documentation in English and Spanish, with eight design decision
+records</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>231
+commits from 11 April to 7 November 2026: 204 by Carlos Arranz, 3 under
+SINENSIA and 24 by dependabot; nine tags from v0.11.0 to v0.18.1, the
+last release on 29 September 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>929
+test functions in 78 files; ci.yml runs everything without the neo4j
+marker on SQLite, the marked tests against a Neo4j 5.26.4 service, and a
+scope guard over backend query literals; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Engrama is a Python memory framework whose unit is a node in a typed
+knowledge graph: entities, the observations written onto them as
+properties, and typed relations between them, held in one SQLite file or
+in Neo4j and served to an agent through a 14-tool MCP server, a Python
+SDK and a CLI. What is notable is the tenancy: every node and edge is
+owned by an <code>(org_id, user_id)</code> pair the server resolves from
+transport headers, every tenant-facing read applies a predicate that
+matches nothing when either half is missing, and CI fails on a backend
+query that does not route through it. What is weak is what the default
+backend can find: SQLite indexes no <code>details</code> field for
+search and embeds neither <code>summary</code> nor <code>details</code>,
+the two fields the remember tool's own description asks an agent to
+fill.</p>
+<p>The second mechanism is reflect. Nine deterministic detectors look
+for patterns across the caller's graph (a decision in one project that
+fits an open problem in another, a technology shared by several
+entities, stale knowledge linked to an active project) and write each as
+an <code>Insight</code> node with status <code>pending</code>. Titles
+are built from the entities and carry no counts, so a title the user
+dismissed is skipped by every later reflect. That is a value-keyed
+refusal, and it earns the <code>tombstone</code> mark for Insights.</p>
+<p>The rest of the lifecycle is thinner. No model runs in the server:
+the agent extracts, decides and writes through
+<code>engrama_remember</code>, and nothing gates a write. The agent
+cannot forget one node over MCP; the SDK's <code>forget</code> archives
+it, which removes it from fulltext search and leaves it on the vector
+arm and in <code>engrama_context</code>. The only MCP deletion is
+<code>engrama_gdpr_forget</code>, which erases the caller's whole
+identity. Approving or dismissing an Insight is a tool on the agent's
+own surface, and a dismissed Insight stays an ordinary search hit.</p>
+<p><strong>Licence.</strong> Apache-2.0, stated the same way in
+<code>LICENSE</code>, <code>pyproject.toml</code>, <code>mcp.json</code>
+and <code>server.json</code>, with no rider and no component under other
+terms. The README advertises an invitation-only hosted deployment and
+says it runs the same code; this report reads only the tree.</p>
+<p>Three marks are earned: <code>scope_enforced</code> and
+<code>negative_eval</code> on the graph store, and
+<code>tombstone</code> on reflect Insights. Section 9 gives the reason
+for each of the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a node the agent decided to write</strong>. Its
+identity is <code>(label, name or title, org_id, user_id)</code>; its
+content is a free property bag in which the remember tool asks for
+<code>summary</code>, <code>details</code>, <code>tags</code>,
+<code>source</code> and <code>status</code>
+(<code>engrama/adapters/mcp/server.py:586-598</code>). There is no
+candidate stage. A node is served from the moment
+<code>engrama_remember</code> returns, ranked partly by a
+<code>trust_level</code> the server derives from the write's source,
+never from the caller (<code>engrama/core/security.py:35-58</code>).</p>
+<p>Three things can stop a node being served, and none of them is a
+judgement about whether it is true:</p>
+<ul>
+<li><strong>Archived.</strong> The SDK's <code>forget</code> sets
+<code>status: archived</code>. Fulltext search drops it
+(<code>engrama/backends/sqlite/store.py:959</code>); the vector arm and
+the neighbourhood read do not.</li>
+<li><strong>Erased.</strong> <code>engrama_gdpr_forget</code> with
+<code>mode: apply</code> deletes every row the identity owns.</li>
+<li><strong>Expired.</strong> A <code>valid_to</code> property exists,
+nothing reachable writes it except the agent passing it as an ordinary
+property, and nothing reachable reads it (section 5).</li>
+</ul>
+<p><code>status</code> is otherwise free text. <code>stub</code> marks a
+relation target created because it did not exist yet, and an enriching
+write promotes it to <code>active</code>
+(<code>store.py:333-334</code>). <code>superseded</code> is a value the
+tool description suggests and only the reflect detectors honour
+(<code>store.py:1518-1529</code>).</p>
+<p>The one state machine with a judgement in it belongs to Insights, the
+nodes reflect writes:</p>
+<ul>
+<li><code>pending</code> on creation, served by
+<code>engrama_surface_insights</code> and hinted after a related
+search;</li>
+<li><code>approved</code> or <code>dismissed</code> when
+<code>engrama_approve_insight</code> (or the SDK) is called; an approved
+Insight may be appended to a vault note, a pending or dismissed one may
+not (<code>server.py:3219</code>);</li>
+<li>a dismissed or approved title is skipped by every later reflect in
+the same scope (<code>server.py:2853-2895</code>).</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the agent writes nodes with no gate; reflect proposes Insights whose titles are checked against the judged set before writing; a dismissal is a refusal keyed on the title; every read is scoped to the caller's identity, and an archived node leaves only the fulltext arm</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the agent writes nodes with no gate; reflect proposes Insights whose titles are checked against the judged set before writing; a dismissal is a refusal keyed on the title; every read is scoped to the caller&#39;s identity, and an archived node leaves only the fulltext arm
+flowchart TD
+    subgraph W[&quot;Writers&quot;]
+        direction TB
+        R[&quot;engrama_remember&lt;br/&gt;agent-supplied props&quot;]
+        S[&quot;SDK remember,&lt;br/&gt;vault sync&quot;]
+        R ~~~ S
+    end
+    W --&gt; N[(&quot;node: label, key,&lt;br/&gt;org_id, user_id&lt;br/&gt;status active or stub&quot;)]
+    N --&gt; F[&quot;reflect detectors&lt;br/&gt;live nodes in scope&quot;]
+    F --&gt; J{&quot;title already&lt;br/&gt;judged?&quot;}
+    J --&gt;|&quot;no&quot;| I[(&quot;Insight&lt;br/&gt;status pending&quot;)]
+    J --&gt;|&quot;yes&quot;| X[&quot;skipped,&lt;br/&gt;nothing written&quot;]
+    I --&gt; A[&quot;engrama_approve_insight&lt;br/&gt;on the agent&#39;s surface&quot;]
+    A --&gt; AP[&quot;approved:&lt;br/&gt;vault export allowed&quot;]
+    A --&gt; D[&quot;dismissed:&lt;br/&gt;title kept as refusal&quot;]
+    D -.-&gt; J
+    N --&gt; K[&quot;SDK forget&lt;br/&gt;status archived&quot;]
+    subgraph RD[&quot;Reads, scoped to&lt;br/&gt;org_id + user_id&quot;]
+        direction TB
+        FT[&quot;FTS5: drops archived&quot;]
+        VE[&quot;vector KNN:&lt;br/&gt;keeps archived&quot;]
+        CX[&quot;engrama_context:&lt;br/&gt;keeps archived&quot;]
+        FT ~~~ VE ~~~ CX
+    end
+    K --&gt; RD
+    I --&gt; RD
+    G[&quot;engrama_gdpr_forget&lt;br/&gt;erases the identity&quot;] --&gt; N</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A library with three front ends. <code>engrama/core</code> holds the
+engine, the scope model, the sanitiser, hybrid search, reflect and
+temporal helpers. Two backends implement one protocol:
+<code>engrama/backends/sqlite</code> (graph, FTS5 and sqlite-vec in one
+file) and <code>engrama/backends/neo4j</code> (Cypher, a fulltext index
+named <code>memory_search</code> and a vector index).
+<code>engrama/adapters</code> holds the MCP server, the SDK and the
+Obsidian sync. The MCP server talks to the async store directly rather
+than through the engine, and applies the same sanitiser and scope at its
+own boundary (<code>server.py:165-169</code>).</p>
+<p>The schema is profile-driven.
+<code>engrama init --profile developer</code> reads
+<code>profiles/*.yaml</code> and their modules for the node labels and
+relation types the sanitiser will accept; a label outside the set is
+refused on write.</p>
+<p>The MCP server runs over stdio by default and over Streamable HTTP
+with <code>ENGRAMA_TRANSPORT=http</code>, bound to
+<code>127.0.0.1</code> unless <code>ENGRAMA_HTTP_HOST</code> says
+otherwise (<code>engrama/adapters/mcp/__init__.py:89-100</code>). The
+HTTP transport validates <code>Origin</code> and <code>Host</code>
+against a loopback allow-list and has no authentication;
+<code>/.well-known/oauth-protected-resource</code> is a stub
+(<code>engrama/adapters/mcp/http.py:1-18</code>).
+<code>server.json</code> also lists a remote endpoint for the hosted
+beta, which was not contacted.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The default needs nothing running: <code>pip install engrama</code>,
+<code>engrama init</code>, and the store is
+<code>~/.engrama/engrama.db</code> in WAL mode. No API key is needed to
+store or search anything, because the default embedding provider is
+<code>none</code> (<code>engrama/embeddings/__init__.py:40</code>), and
+with it search is FTS5 only. An Ollama or OpenAI-compatible endpoint
+turns on the vector arm. Neo4j needs the <code>neo4j</code> extra and
+the bundled <code>docker-compose.yml</code>, and the README positions it
+for multi-process writers.</p>
+<p>The store is readable with any SQLite client: one row per node with
+its properties as JSON. With <code>VAULT_PATH</code> set,
+<code>engrama_remember</code> also writes a Markdown note with YAML
+frontmatter, and <code>engrama_sync_vault</code> reads a vault back into
+the graph, so a person can edit memory in Obsidian. A multi-tenant
+deployment puts a gateway in front that authenticates the caller and
+injects the identity headers; <code>ENGRAMA_REQUIRE_IDENTITY=1</code>
+makes a header-less request fail instead of falling back to the local
+identity (<code>server.py:202-214</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Identity.</strong> <code>resolve_scope</code> in
+<code>engrama/adapters/mcp/server.py:261-287</code> reads both headers;
+neither gives the standalone identity from
+<code>resolve_local_sub</code>
+(<code>engrama/core/identity.py:39-64</code>), exactly one raises
+<code>ScopeUnresolved</code>. <code>_with_mcp_provenance</code>
+sanitises the caller's properties and stamps provenance and scope over
+them (<code>server.py:290-301</code>).
+<code>EngramaEngine.merge_node</code> raises
+<code>ScopeIncomplete</code> for an SDK write without both keys
+(<code>engrama/core/engine.py:150-160</code>).</li>
+<li><strong>Scope predicates.</strong> <code>scope_filter_sql</code>,
+<code>scope_filter_cypher</code>, <code>owner_filter_sql</code> and
+<code>node_visible</code> in
+<code>engrama/core/scope.py:159-317</code>.</li>
+<li><strong>Write.</strong> <code>engrama_remember</code> at
+<code>server.py:1389</code>: label check, merge key canonicalised,
+tag-anchor and duplicate checks (<code>:1491-1531</code>), optional
+vault note (<code>:1544-1604</code>), <code>store.merge_node</code>
+(<code>:1612</code>), embedding through <code>_reembed_node</code>
+(<code>:395-427</code>) and the sweep (<code>:429-455</code>), then
+inline relations with stub creation (<code>:1705-1880</code>). SQLite
+<code>merge_node</code> at
+<code>engrama/backends/sqlite/store.py:260-360</code>.</li>
+<li><strong>Search.</strong> <code>engrama_search</code> at
+<code>server.py:1234</code>, through
+<code>HybridSearchEngine.asearch</code>
+(<code>engrama/core/search.py:480-533</code>) with a fallback to
+<code>fulltext_search</code>; SQLite fulltext at
+<code>store.py:913-997</code>, vector at
+<code>engrama/backends/sqlite/vector.py:210-289</code>; Neo4j at
+<code>engrama/backends/neo4j/async_store.py:604-660</code> and
+<code>:1275-1300</code>.</li>
+<li><strong>Context.</strong> <code>engrama_context</code> at
+<code>server.py:2211</code> calls <code>get_node_with_neighbours</code>;
+SQLite's recursive walk is <code>store.py:700-870</code>.</li>
+<li><strong>Reflect.</strong> <code>engrama_reflect</code> at
+<code>server.py:2810-2942</code>; detectors, title builders and
+<code>select</code> in <code>engrama/core/reflection.py</code>; the
+SQLite detector queries from <code>store.py:1531</code>, each with
+<code>_live_and</code> (<code>:1518-1529</code>); the SDK entry in
+<code>engrama/skills/reflect.py:53-77</code>.</li>
+<li><strong>Insight review.</strong>
+<code>engrama_surface_insights</code>,
+<code>engrama_approve_insight</code> (<code>server.py:3064</code>) and
+<code>engrama_write_insight_to_vault</code> (<code>:3159</code>);
+<code>update_insight_status</code>,
+<code>get_dismissed_insight_titles</code> and
+<code>get_approved_insight_titles</code> at
+<code>store.py:1347-1450</code>.</li>
+<li><strong>Forget.</strong> <code>ForgetSkill</code> in
+<code>engrama/skills/forget.py</code> (SDK only) over
+<code>archive_node_by_name</code> and
+<code>archive_nodes_older_than</code> (<code>store.py:429-475</code>,
+<code>:1187-1236</code>); <code>engrama_gdpr_forget</code> at
+<code>server.py:3554</code> over <code>gdpr_forget</code> in
+<code>engrama/migrate.py:688-827</code>.</li>
+<li><strong>Schema.</strong>
+<code>engrama/backends/sqlite/schema.sql</code>;
+<code>engrama/backends/neo4j/schema.cypher</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The SQLite <code>nodes</code> table has <code>label</code>,
+<code>key_field</code>, <code>key_value</code>, a <code>props</code>
+JSON blob and the two timestamps (<code>schema.sql:11-19</code>). The
+owner lives inside <code>props</code>, and a unique expression index
+over label, key and the two <code>json_extract</code> owner values makes
+the owner part of identity (<code>schema.sql:26-31</code>). Two tenants
+writing <code>roadmap</code> get two rows. A pre-v3 database with the
+older <code>UNIQUE(label, key_value)</code> is rebuilt on connect
+(<code>store.py:182-237</code>). <code>edges</code> carry their own
+<code>org_id</code> and <code>user_id</code> columns and a unique
+<code>(from_id, rel_type, to_id)</code> (<code>schema.sql:41-50</code>).
+<code>nodes_fts</code> indexes ten text fields
+(<code>store.py:43-54</code>), and a vec0 table holds one vector per
+node id.</p>
+<p>Every node gets an <code>engrama_id</code> UUID that a later write
+cannot change, plus <code>valid_from</code> and <code>confidence</code>
+on create (<code>store.py:304-311</code>, <code>:337-340</code>).
+Provenance is four flat properties: <code>source</code>,
+<code>source_agent</code>, <code>source_session</code> and
+<code>trust_level</code>. Scope adds <code>org_id</code>,
+<code>user_id</code> and, when set, <code>agent_id</code> and
+<code>session_id</code>. All eight are reserved: the sanitiser drops
+them from a caller's bag (<code>security.py:46-58</code>), so an agent
+cannot raise its own trust or move a write into another identity.
+<code>status</code>, <code>confidence</code>, <code>valid_from</code>
+and <code>valid_to</code> are not reserved.</p>
+<p>Temporal fields are declared and mostly inert.
+<code>valid_from</code> defaults to the write time and is passed
+explicitly only by the benchmark runner
+(<code>engrama/bench/runner.py:293-304</code>). <code>valid_to</code> is
+set by <code>expire_node</code>, which has no caller, and cleared by any
+re-merge that does not name it (<code>store.py:329-331</code>,
+<code>:1014-1042</code>). The one read of both,
+<code>query_at_date</code>, has no caller either
+(<code>store.py:1149-1185</code>). Ranking measures recency from
+<code>last_activity_at</code>, which a write or a new edge refreshes
+(<code>engrama/core/temporal.py:99-130</code>).</p>
+<p>Separation between kinds of memory is by label: <code>Decision</code>
+and <code>Problem</code> are title-keyed, <code>Insight</code> is the
+derived kind, <code>Domain</code> and <code>Concept</code> seed the
+taxonomy. There is no separate episodic store and no raw conversation
+log.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>engrama_search</code> runs two channels when an embedder is
+configured. Fulltext takes the top 20 from FTS5 or the Neo4j index; the
+vector arm takes the top 20 by cosine (<code>search.py:190-191</code>).
+Results are merged by name, ranked by reciprocal rank fusion at k 60,
+and adjusted as <code>rrf + 0.1 × temporal + 0.1 × trust</code> plus
+<code>0.15 ×</code> a graph-distance score
+(<code>search.py:177-198</code>, <code>:854</code>,
+<code>:659-662</code>).</p>
+<p>The graph term rewards candidates that are neighbours of other
+candidates and of an anchor node the query names, fetched one hop at a
+time through the scoped neighbour read (<code>search.py:535-662</code>).
+Temporal is stored confidence times a recency decay with a 180-day
+half-life, 30 days for reflect Insights, stretched for well-connected
+nodes and waived for project, client, course and domain anchors
+(<code>temporal.py:99-130</code>). Trust is the source's
+<code>trust_level</code>, so a CLI or sync write outranks an agent's MCP
+write by 0.05 at equal relevance. <code>confidence</code> is not
+reserved, so the agent can set its own, and it multiplies the temporal
+term (<code>search.py:816-831</code>).</p>
+<p>What the channels can see differs by backend, and the default is the
+narrow one:</p>
+<ul>
+<li><strong>SQLite fulltext</strong> indexes <code>name</code>,
+<code>title</code>, <code>description</code>, <code>notes</code>,
+<code>rationale</code>, <code>solution</code>, <code>context</code>,
+<code>body</code>, <code>summary</code> and <code>tags</code>
+(<code>store.py:43-54</code>). The Neo4j index covers those,
+<code>details</code> and 41 more profile fields
+(<code>schema.cypher:110-112</code>).</li>
+<li><strong>Embedding text</strong> is the label, the name or title, and
+<code>description</code>, <code>notes</code>, <code>rationale</code>,
+<code>solution</code>, <code>context</code> and <code>body</code>
+(<code>engrama/embeddings/text.py:15-22</code>, <code>:45-57</code>).
+Neither <code>summary</code> nor <code>details</code> is embedded.</li>
+</ul>
+<p>The remember tool's example of a good node carries
+<code>summary</code>, <code>details</code> and <code>tags</code> and no
+<code>description</code> (<code>server.py:586-598</code>). On SQLite its
+<code>details</code> is reachable by no search arm, and with an embedder
+its vector is built from the label and the name alone.</p>
+<p>Every channel is scoped (section 9). Not every channel drops what was
+archived: the fulltext SQL excludes <code>status = 'archived'</code> on
+both backends (<code>store.py:959</code>,
+<code>async_store.py:631</code>), and the SQLite and Neo4j vector
+queries and the SQLite neighbour walk filter on scope only
+(<code>vector.py:226-253</code>, <code>async_store.py:1291-1300</code>,
+<code>store.py:700-870</code>). The merge is keyed on name alone
+(<code>search.py:696-783</code>), so two nodes of different labels
+sharing a name collapse into one result. The vector query asks vec0 for
+<code>k</code> neighbours and applies the scope predicate to the joined
+rows, so in a shared database a tenant can receive fewer than
+<code>k</code> vector hits; read from the query, not run.</p>
+<p>Search responses carry name, label, scores, <code>summary</code> and
+<code>tags</code>, never <code>details</code> and never
+<code>status</code>. A dismissed Insight comes back the same way a fact
+does. <code>engrama_context</code> returns the root node with all its
+properties except the vector, and neighbours up to three hops without
+<code>details</code> (<code>store.py:855-868</code>).</p>
+<p>When the vector channel ran, the search response also lists pending
+Insights whose stored vector is close to the query, with a hint to
+surface them (<code>server.py:1344-1375</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>The agent writes.</strong> <code>engrama_remember</code>
+takes a label and a property bag and merges it under the caller's
+identity. A merge overwrites every property the caller names and keeps
+the rest. Two refusals are opt-in: with
+<code>ENGRAMA_REQUIRE_RELATIONS</code> set it refuses a node that would
+have no relation unless an anchor tag can link it automatically, and
+with <code>ENGRAMA_REMEMBER_DEDUPE=block</code> it refuses a name that
+resembles an existing one unless <code>force_new</code> is set. By
+default it only reports possible duplicates
+(<code>server.py:1488-1531</code>,
+<code>engrama/core/resolve.py:66-69</code>).</p>
+<p><strong>Relations in the same call.</strong> An inline
+<code>relations</code> map names targets by name. A target the resolver
+cannot connect becomes a <code>stub</code> node whose label is inferred
+from the relation type unless the caller pins it, and the response says
+which relations landed on a new stub (<code>server.py:1705-1880</code>,
+<code>:1990-1996</code>).</p>
+<p><strong>Extraction is the client's.</strong>
+<code>engrama_ingest</code> reads a vault note or takes raw text and
+returns it with an extraction prompt; the model then calls
+<code>engrama_remember</code> per entity. No LLM is called anywhere in
+the package; the only outbound calls are to embedding endpoints.</p>
+<p><strong>Vault sync</strong> reads Obsidian notes into nodes with
+source <code>sync</code> and trust 1.0, injecting an
+<code>engrama_id</code> into each note's frontmatter unless run as a dry
+run. The pass that archived nodes whose notes had disappeared,
+<code>archive_missing</code>, has no caller; the roadmap records it as
+superseded by <code>ForgetSkill</code>
+(<code>engrama/adapters/obsidian/sync.py:130-145</code>,
+<code>docs/roadmap.md:53</code>).</p>
+<p><strong>Reflect</strong> writes Insights only within the caller's
+scope, at most 25 per detector, and links each to the entities it is
+about with <code>ABOUT</code> edges (<code>reflection.py:82-93</code>,
+<code>server.py:2895-2917</code>). The remember tool suggests a reflect
+after every ten writes, counted in a module-level dictionary that all
+callers of one process share (<code>server.py:462-466</code>,
+<code>:2002-2010</code>).</p>
+<p><strong>Correction and deletion.</strong> A correction is a re-merge
+with the new value; the old one is overwritten with no record.
+<code>ForgetSkill.forget_by_name</code> archives or purges the caller's
+own node, and <code>forget_by_ttl</code> archives or purges every node
+of a label older than a threshold across all identities, the store
+method carrying a <code>scope-exempt</code> comment for an admin sweep
+(<code>store.py:1197-1200</code>). Neither is reachable from MCP or the
+CLI. <code>engrama_gdpr_forget</code> deletes embeddings, FTS rows,
+edges and nodes of the exact <code>(org_id, user_id)</code> and the
+identity's vault notes, defaulting to a dry run
+(<code>migrate.py:773-827</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write blocks on one SQLite or Neo4j merge, one embedding call when
+an embedder is configured, up to three more embedding calls for nodes
+left without a vector, and one merge per inline relation. A node is
+retrievable when the call returns. No background pass reads or rewrites
+the store: <code>engrama decay</code> prints a deprecation notice and
+changes nothing (<code>engrama/cli.py:432-449</code>). A search makes
+one embedding call and one neighbour read per fused candidate for the
+graph term, bounded at 64 neighbours each. The injection is whatever the
+client puts in its prompt; the server returns up to 50 results with
+summaries and no <code>details</code>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP surface is 14 tools: status, search, remember, relate,
+context, sync note, sync vault, ingest, reflect, surface insights,
+approve insight, write insight to vault, reindex and GDPR forget. The
+model holds every verb on its own surface, including approval and
+whole-identity erasure. <code>engrama_status</code> and
+<code>engrama_reindex</code> are listed in the status payload as tools a
+gateway should consider restricting, because status counts are
+deployment-wide and a bulk re-embed is costly
+(<code>server.py:185-196</code>).</p>
+<p>The tool descriptions tell the model to search at the start of every
+session, to call <code>engrama_relate</code> right after
+<code>engrama_remember</code>, and to present each Insight and never act
+on one without the user's approval. The last is prose to the model: the
+approve tool takes a title and an action and checks only that the
+Insight belongs to the caller's scope
+(<code>server.py:3064-3130</code>).</p>
+<p>The SDK exposes <code>remember</code>, <code>recall</code>,
+<code>search</code>, <code>hybrid_search</code>, <code>associate</code>,
+<code>forget</code>, <code>forget_by_ttl</code>, <code>reflect</code>,
+<code>approve_insight</code> and <code>dismiss_insight</code> under an
+identity given to the constructor, from environment variables, or the
+standalone identity
+(<code>engrama/adapters/sdk/__init__.py:180-500</code>). There is no
+session-start injection and no hook: retrieval happens when the model
+calls a tool. <code>examples/claude_desktop/system-prompt.md</code> is a
+prompt that asks for it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="scope">Scope</h3>
+<p>Every node and edge stores its owner, and every read that reaches a
+caller applies it. <code>scope_filter_sql</code> returns
+<code>org_id = :org AND user_id IN (:user, '__entity__')</code> over the
+JSON properties, and <code>(1 = 0)</code> when the scope is
+<code>None</code> or either half is empty
+(<code>scope.py:186-205</code>); the Cypher twin returns
+<code>(false)</code> (<code>:208-233</code>). The fulltext, vector and
+neighbour reads append it in SQL; the context root is checked with the
+same rule; the Insight queue, the dismissed and approved title reads,
+every reflect detector and the reindex scan take it too. The
+<code>__entity__</code> user is the only sharing: a node written under
+it is visible to everyone in the org, and a node with an org and no user
+is visible to no one.</p>
+<p>The pair comes from outside the tool call. <code>resolve_scope</code>
+reads two request headers and never a tool argument, a partial identity
+is refused, and under stdio there are no headers, so every call runs as
+the install's own UUID (<code>server.py:261-287</code>). The read path
+returns zero results for an unresolved scope rather than an error, and
+write and reflect paths refuse.</p>
+<p><code>scripts/check_scoped_queries.py</code> walks the backend
+modules' syntax trees for query literals (<code>MATCH (</code>,
+<code>FROM nodes</code>, <code>FROM edges</code>) and fails when the
+enclosing function neither calls a scope helper nor carries a
+<code># scope-exempt:</code> comment; <code>ci.yml</code> runs it as a
+blocking job. The exempt functions are the admin and maintenance paths.
+<code>archive_nodes_older_than</code>, behind the SDK's
+<code>forget_by_ttl</code>, archives across identities.
+<code>delete_node</code>, <code>expire_node</code> and
+<code>archive_node_for_missing_note</code> match by label and key
+without the owner, and none of the three has a caller. The embedding
+sweep after a write lists unembedded nodes of every identity and embeds
+them under their own owners (<code>server.py:439</code>), so one
+tenant's write sends other tenants' text to the embedder.</p>
+<p>The boundary is only as good as what sets the headers. The OSS HTTP
+transport authenticates nothing; whoever can reach the port can name any
+identity, which the README states and answers with a gateway or the
+hosted service. <code>ENGRAMA_REQUIRE_IDENTITY</code> stops a
+header-less request from falling into the standalone identity, not a
+forged one.</p>
+<h3 id="what-leaves-the-read-path-and-what-does-not">What leaves the
+read path, and what does not</h3>
+<p>An archived node is excluded by one arm of three. With an embedder
+configured, a node the user asked the SDK to forget still comes back
+from <code>engrama_search</code> through its vector, and from
+<code>engrama_context</code> as a root or a neighbour.
+<code>tests/backends/test_sqlite.py:383-389</code> covers the fulltext
+arm only.</p>
+<p>A dismissed Insight is not excluded by any read. Its
+<code>body</code> is indexed by FTS5, the search response does not carry
+its status, and the agent reading it cannot tell it from an approved one
+without a second call.</p>
+<h3 id="insights-and-review">Insights and review</h3>
+<p>Reflect is deterministic: SQL or Cypher over live nodes in the
+caller's scope, with <code>archived</code>, <code>superseded</code> and
+reflect-generated Insights excluded from the evidence
+(<code>store.py:1518-1529</code>). An Insight is a claim that could be
+wrong (a decision that may transfer, knowledge that may be stale), and
+its review state is real: pending in the queue, approved before it can
+be written to a vault note, dismissed so reflect does not propose it
+again. Who resolves it is the producer's side: the same model that
+called reflect calls <code>engrama_approve_insight</code>, and the
+status is also writable through <code>engrama_remember</code> with label
+<code>Insight</code>, because <code>status</code> is not reserved.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> A stored
+<code>(org_id, user_id)</code> on every node and edge, applied as a
+predicate on every tenant-facing read, from an identity the transport
+supplies. The predicate is the same function on both backends and a CI
+job refuses a backend query that bypasses it.</li>
+<li><strong><code>negative_eval</code> — earned.</strong>
+<code>test_alice_sees_only_her_own</code> requires a populated fulltext
+result to equal one node of four that match
+(<code>tests/test_scope_reads.py:161-169</code>); the SDK cases in
+<code>tests/test_scope_e2e.py:156-195</code> require a tenant's own node
+present and another's, an org-only and an unscoped node absent in the
+same search; <code>test_same_name_gives_each_owner_its_own_node</code>
+requires one row without the other owner's details
+(<code>tests/test_tenancy_same_name.py:56-74</code>). All run with no
+embedder.</li>
+<li><strong><code>tombstone</code> — earned, for Insights.</strong> A
+dismissed Insight's title is a function of the pattern's entities,
+<code>select</code> drops any draft whose title is dismissed or approved
+before the merge, and both reflect entry points apply it; the MCP test
+seeds a dismissed under-connected Insight under a legacy title and
+requires reflect to produce other Insights and not that one
+(<code>tests/test_reflect_detectors.py:238-268</code>). The refusal is
+the dismissed row itself, so it shares the row's fate, and it covers
+nothing the agent writes through remember. Ordinary facts have none: a
+fact re-asserted after <code>forget</code> is a new merge.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> Insight status
+is a pending, approved and dismissed triple whose reads gate the review
+queue, the vault export and re-proposal, while search and context return
+a dismissed Insight as an ordinary hit. <code>status: superseded</code>
+is honoured by the reflect detectors and read by no search, the same
+shape the <a href="../agent-memory-forest/">Agent Memory Forest</a>
+report withholds on. <code>trust_level</code> is a number spent in the
+score.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>valid_from</code> defaults to the write time, the only caller
+passing one is the benchmark runner, and the only read of
+<code>valid_from</code> and <code>valid_to</code> has no caller.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> The schema has
+nodes, edges, the FTS table and the vector table; a merge overwrites
+properties in place, and GDPR erasure returns a report and writes no
+record of it.</li>
+<li><strong><code>human_review</code> — withheld.</strong>
+<code>engrama_approve_insight</code> is on the agent's tool surface, and
+a node written by <code>engrama_remember</code> waits for nothing.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading: 929 test
+functions in 78 files. <code>ci.yml</code> runs ruff, the scope guard,
+an import smoke test of the base install on Python 3.11 to 3.13, every
+test without the <code>neo4j</code> marker on SQLite, and the marked
+tests against a Neo4j 5.26.4 service container.</p>
+<p>Tenancy is the best-covered behaviour: 14 files on scope resolution,
+the fail-closed helpers, the context root, same-name identity, write
+identity, migration and GDPR erasure. The erasure tests count rows,
+vectors, FTS rows and vault notes for the target and a bystander
+identity (<code>tests/test_tenancy_gdpr_forget.py:121-267</code>). Not
+every isolation test can fail:
+<code>test_search_does_not_leak_across_tenants</code> and
+<code>test_same_user_string_isolated_by_org</code> search as a tenant
+that stored nothing, and
+<code>test_context_traversal_does_not_cross_tenants</code> walks from a
+node whose only edge is the cross-tenant one, so each passes on an empty
+result (<code>tests/test_tenancy_isolation.py:31-47</code>,
+<code>:76-95</code>).
+<code>test_mcp_remember_same_name_does_not_cross_tenants</code> asserts
+a string is absent from Bob's context response with no check of what the
+response holds
+(<code>tests/test_tenancy_same_name.py:222-256</code>).</p>
+<p>Reflect has pure tests of activation, <code>select</code> and stable
+titles, store tests of each detector on SQLite and Neo4j, and two
+entry-point tests: an approval survives a second SDK reflect, and a
+dismissed under-connected Insight suppresses that detector through MCP
+(<code>tests/test_reflect_detectors.py:27-268</code>). No test dismisses
+an ordinary title and runs reflect again.</p>
+<p>No test asserts that an archived node is absent from vector search or
+from context, and no test runs a negative scope case with an embedder
+configured. No test covers the fields each arm can search.</p>
+<p><code>engrama/bench</code> loads LoCoMo and LongMemEval, replays each
+conversation into a fresh SQLite file, and scores recall@k of evidence
+ids against fulltext search only; an LLM judge is stubbed
+(<code>engrama/bench/scoring.py:1-11</code>,
+<code>engrama/bench/runner.py:1-24</code>). Only two mini fixtures are
+committed under <code>tests/data</code>, and no result file is.
+<code>docs/ddr-003.md:600-630</code> states target ranges, not results.
+There is no paper; the design records cite Zep's temporal paper as
+background.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the scope helper fail closed and refuse the build
+around it.</strong> One function returns a match-nothing clause for a
+missing or partial identity, every backend query calls it or says in a
+comment why not, and an AST check in CI holds that rule over every query
+literal.</li>
+<li><strong>Take identity from the transport, not the tool
+call.</strong> The model never sees an argument it could set to someone
+else's id; a gateway sets two headers, and a single-user install gets a
+stable local UUID.</li>
+<li><strong>Put the owner in the identity.</strong> A unique index over
+label, key and owner means two tenants' <code>roadmap</code> are two
+rows, and every key-addressed write targets the caller's own.</li>
+<li><strong>Make derived titles stable and check them before
+writing.</strong> A proposal whose title is a function of its evidence,
+with no counts in it, lets one dismissal hold for every later run, and a
+test pins the stability.</li>
+<li><strong>Reserve provenance keys in the sanitiser.</strong> Source,
+trust and identity are stamped after the caller's bag is cleaned, so
+none can be forged.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Exclusion on one retrieval arm.</strong> A status filter
+written into the fulltext SQL and not the vector query or the graph walk
+is a forget that holds until an embedder is configured.</li>
+<li><strong>Asking the writer for fields no arm indexes.</strong> A tool
+description that steers the model's richest text into a field the
+default index and the embedding both skip makes the best-written
+memories the hardest to find.</li>
+<li><strong>A review verb beside the producing verb.</strong> An approve
+tool on the same surface as reflect makes the human step a convention in
+the prompt.</li>
+<li><strong>Isolation tests that search as an empty tenant.</strong> A
+negative assertion needs the searcher's own row present in the same
+result.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Engrama suits a single developer or a small team that wants an agent
+to build and walk a typed graph of projects, decisions and technologies,
+keep it in one local file, and see it in Obsidian. The schema profiles,
+deterministic reflect and the English and Spanish docs make it
+reasonable to adopt as written for that use. It also suits a builder
+putting a tenancy gateway in front of an MCP memory server: the scope
+layer is the most complete part of the code and is designed for exactly
+that front door.</p>
+<p>It does not suit a reader who needs memory to be corrected and to
+stay corrected. A forgotten fact can still be retrieved, a correction
+leaves no trace, a contradiction is resolved by whichever write came
+last, and the only refusal of a value covers reflect's own proposals.
+Nor does it suit a reader who wants extraction done for them: here the
+model does all of it through tool calls, and the server stores what it
+is told.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the hosted beta run this tree unmodified, as the README says,
+and does its gateway restrict <code>engrama_gdpr_forget</code> and
+<code>engrama_approve_insight</code>?</li>
+<li>Is the SQLite FTS field list meant to omit <code>details</code>,
+given the Neo4j index includes it and the README calls the data model
+identical?</li>
+<li>Will forget reach the MCP surface, and will archived nodes be
+excluded from the vector and context reads when it does?</li>
+<li>What recall@k does <code>engrama bench run</code> report on full
+LoCoMo and LongMemEval? Nothing is committed.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>engrama/core/scope.py</code></td>
+<td><code>MemoryScope</code>, the fail-closed read predicates, owner
+predicates, <code>node_visible</code></td>
+</tr>
+<tr>
+<td><code>engrama/core/identity.py</code></td>
+<td>The per-install standalone identity</td>
+</tr>
+<tr>
+<td><code>engrama/core/security.py</code></td>
+<td>Provenance, default trust by source, reserved keys, the
+sanitiser</td>
+</tr>
+<tr>
+<td><code>engrama/core/engine.py</code></td>
+<td>The sync engine: sanitise, provenance, scope guard, embed on
+write</td>
+</tr>
+<tr>
+<td><code>engrama/core/search.py</code></td>
+<td>Hybrid search: RRF, graph distance, temporal and trust terms</td>
+</tr>
+<tr>
+<td><code>engrama/core/temporal.py</code></td>
+<td>Read-time recency</td>
+</tr>
+<tr>
+<td><code>engrama/core/reflection.py</code></td>
+<td>Detectors, stable Insight titles, <code>select</code></td>
+</tr>
+<tr>
+<td><code>engrama/backends/sqlite/schema.sql</code></td>
+<td>Nodes, edges, owner identity index, FTS5</td>
+</tr>
+<tr>
+<td><code>engrama/backends/sqlite/store.py</code></td>
+<td>SQLite graph store: merge, fulltext, neighbours, archive, Insights,
+detectors</td>
+</tr>
+<tr>
+<td><code>engrama/backends/sqlite/vector.py</code></td>
+<td>sqlite-vec KNN with the scope predicate</td>
+</tr>
+<tr>
+<td><code>engrama/backends/neo4j/async_store.py</code></td>
+<td>Neo4j async store, fulltext and vector reads</td>
+</tr>
+<tr>
+<td><code>engrama/backends/neo4j/schema.cypher</code></td>
+<td>Neo4j constraints and the <code>memory_search</code> index</td>
+</tr>
+<tr>
+<td><code>engrama/embeddings/text.py</code></td>
+<td>The text embedded per node</td>
+</tr>
+<tr>
+<td><code>engrama/adapters/mcp/server.py</code></td>
+<td>The 14 MCP tools, identity resolution, reflect and review</td>
+</tr>
+<tr>
+<td><code>engrama/adapters/mcp/http.py</code></td>
+<td>Streamable HTTP origin and host checks</td>
+</tr>
+<tr>
+<td><code>engrama/adapters/sdk/__init__.py</code></td>
+<td>The <code>Engrama</code> SDK</td>
+</tr>
+<tr>
+<td><code>engrama/adapters/obsidian/sync.py</code></td>
+<td>Vault sync and note erasure</td>
+</tr>
+<tr>
+<td><code>engrama/skills/forget.py</code>,
+<code>engrama/skills/reflect.py</code></td>
+<td>SDK forget and reflect</td>
+</tr>
+<tr>
+<td><code>engrama/migrate.py</code></td>
+<td>Export, import, tenancy migration, GDPR erasure</td>
+</tr>
+<tr>
+<td><code>engrama/bench/</code></td>
+<td>LoCoMo and LongMemEval loaders, runner, recall@k scorer</td>
+</tr>
+<tr>
+<td><code>scripts/check_scoped_queries.py</code></td>
+<td>The CI scope guard</td>
+</tr>
+<tr>
+<td><code>tests/test_scope_reads.py</code>,
+<code>tests/test_scope_e2e.py</code>,
+<code>tests/test_tenancy_*.py</code></td>
+<td>Tenancy tests</td>
+</tr>
+<tr>
+<td><code>tests/test_reflect_detectors.py</code></td>
+<td>Reflect detectors and judged-title tests</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No vector query mentions archived.</strong>
+<code>git grep -n archived -- engrama/backends/sqlite/vector.py engrama/backends/neo4j/vector.py</code>
+returns nothing;
+<code>git grep -n archived -- engrama/backends/sqlite/store.py</code>
+matches the fulltext predicate at <code>:959</code>, the archive
+writers, the decay and TTL sweeps and <code>_live_and</code> at
+<code>:1519-1524</code>, and nothing between <code>:700</code> and
+<code>:870</code>, the neighbour walk.</li>
+<li><strong>No MCP tool forgets one node.</strong>
+<code>git grep -n -E 'name="engrama_' -- engrama/adapters/mcp/server.py</code>
+returns 14 tool names, of which <code>engrama_gdpr_forget</code> is the
+only deletion.</li>
+<li><strong>Forget and archive helpers are reached only from the
+SDK.</strong>
+<code>git grep -n -E 'delete_embedding|delete_vectors|archive_node_by_name|delete_node\(|expire_node\(' -- engrama</code>
+returns definitions, the GDPR delete at
+<code>engrama/migrate.py:813</code>, and <code>ForgetSkill</code> at
+<code>engrama/skills/forget.py:51</code>.</li>
+<li><strong>The temporal reads and the missing-note archive have no
+caller.</strong>
+<code>git grep -n -E 'query_at_date|expire_node|archive_missing\(' -- engrama</code>
+returns definitions, the async wrapper at
+<code>engrama/backends/sqlite/async_store.py:600</code>, comments and
+docstrings.</li>
+<li><strong>No audit table.</strong>
+<code>git grep -n -i -E 'CREATE (VIRTUAL )?TABLE' -- engrama</code>
+returns <code>nodes</code>, <code>edges</code>, <code>nodes_fts</code>,
+the migration's <code>nodes_v3</code> and the vec0 table;
+<code>git grep -n -i -E 'audit|event' -- engrama/backends/neo4j/schema.cypher engrama/backends/sqlite/schema.sql</code>
+returns nothing.</li>
+<li><strong>No LLM call in the package.</strong>
+<code>git grep -n -i -E 'chat/completions|chat\.completions|/api/generate|/api/chat|messages\.create' -- engrama</code>
+returns nothing; <code>git grep -n '/api/embed' -- engrama</code>
+matches the Ollama embedder.</li>
+<li><strong>Ranking reads no status and no validity time.</strong>
+<code>git grep -n -E 'status' -- engrama/core/search.py engrama/core/rerank.py</code>
+returns nothing;
+<code>git grep -n valid_from -- engrama/core/search.py engrama/core/rerank.py engrama/core/temporal.py</code>
+returns nothing, and
+<code>git grep -n last_activity_at -- engrama/core/temporal.py</code>
+matches the recency read at <code>:109</code> and
+<code>:119</code>.</li>
+<li><strong><code>details</code> is in the Neo4j index and not the
+SQLite FTS or the embedding.</strong>
+<code>git grep -n -E 'details' -- engrama/backends/neo4j/schema.cypher engrama/backends/sqlite/schema.sql engrama/backends/sqlite/store.py engrama/embeddings/text.py</code>
+returns the Neo4j index at <code>schema.cypher:112</code> and the
+neighbour property filter at <code>store.py:863</code>.</li>
+<li><strong>Status is not reserved.</strong>
+<code>git grep -n -E 'RESERVED_PROVENANCE_KEYS: |RESERVED_SCOPE_KEYS: ' -- engrama/core/security.py</code>
+returns <code>:46</code> and <code>:54</code>, whose sets name
+<code>source</code>, <code>source_agent</code>,
+<code>source_session</code>, <code>trust_level</code>,
+<code>org_id</code>, <code>user_id</code>, <code>agent_id</code> and
+<code>session_id</code>.</li>
+<li><strong>No benchmark result committed.</strong>
+<code>git ls-files | grep -i -E 'result|\.jsonl$|leaderboard'</code>
+returns nothing; <code>git ls-files | grep -i bench</code> matches
+<code>engrama/bench/</code> and <code>tests/test_bench.py</code>.</li>
+<li><strong>No paper.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|citation|doi\.org' -- .</code>
+returns the Zep reference in <code>docs/ddr-003.md:834</code> and its
+Spanish copy, a profile field named <code>citation</code>, and two
+matches inside the word "elicitation" in the HTTP docs.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/scops/engrama/commit/dcf3557d9f36765c2494d85151f2fd2de67624f1"><code class="commit-id" title="dcf3557d9f36765c2494d85151f2fd2de67624f1">dcf3557d…</code></a>.
+First reading, from a full clone at the head of <code>main</code>, the
+commit triage selected. Screened first: two auto-run surfaces
+(<code>mcp.json</code>, and <code>server.json</code> launching through
+<code>uvx</code>), one build-time execution point
+(<code>tests/conftest.py</code>), <code>uv.lock</code> present, nothing
+inside the seven-day cooldown, no unpinned surfaces. Docs, prompts and
+the onboarding skill were read as data. Nothing was installed, built or
+run, and the 929 test functions were not run. Three marks:
+<code>tombstone</code>, <code>scope_enforced</code> and
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>). The default
+backend searches no <code>details</code> and embeds no
+<code>summary</code>, and an archived node leaves only the fulltext
+arm.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

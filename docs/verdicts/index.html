@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 889 reports.</strong></p>
+<p><strong>This page covers all 890 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36790,6 +36790,58 @@ you trust only to narrow them.</li>
 <li>Do not copy when: a replica is not yours, a read without an identity
 must fail closed, recall must match paraphrases from an MCP client, or a
 deleted fact must stay gone when an agent restates it.</li>
+</ul>
+<h3 id="engrama-scops"><a
+href="../systems/engrama-scops/"><code>engrama-scops</code></a></h3>
+<ul>
+<li>Best idea: <strong>a scope helper that fails closed and a CI job
+that refuses any query around it.</strong> <code>scope_filter_sql</code>
+and <code>scope_filter_cypher</code> return
+<code>org_id = ? AND user_id IN (?, '__entity__')</code>, and a
+match-nothing clause for a missing or partial identity;
+<code>scripts/check_scoped_queries.py</code> walks the backends' syntax
+trees and fails the build on a query literal whose function neither
+calls a helper nor carries a <code>scope-exempt</code> comment. The
+identity comes from two request headers or a per-install UUID, never
+from a tool argument.</li>
+<li>Second idea: stable derived titles as the refusal key. Each reflect
+detector builds an Insight title from the entities of its pattern with
+no counts in it, a test pins that, and both reflect entry points drop a
+draft whose title the caller already dismissed or approved, so one
+dismissal holds for every later run.</li>
+<li>Biggest risk: <strong>the default backend cannot find what the write
+tool asks for.</strong> <code>engrama_remember</code> tells the model to
+put its richest text in <code>summary</code> and <code>details</code>;
+SQLite's FTS5 indexes no <code>details</code>, and the embedding text
+includes neither field, so the tool's own good-node example embeds as
+its label and name. The Neo4j index includes <code>details</code>, and
+the README calls the two data models identical.</li>
+<li>Second risk: forget holds on one arm of three. The SDK's archive is
+excluded by the fulltext SQL on both backends and by neither vector
+query nor the SQLite neighbour walk, and no MCP tool forgets one node;
+the only MCP deletion erases the caller's whole identity. A dismissed
+Insight stays an ordinary search hit, and the approve verb sits on the
+agent's own tool surface.</li>
+<li>Most reusable component: <code>engrama/core/scope.py:159-317</code>
+with <code>scripts/check_scoped_queries.py</code>,
+<code>resolve_scope</code> in
+<code>engrama/adapters/mcp/server.py:261-287</code>, the owner identity
+index in <code>engrama/backends/sqlite/schema.sql:26-31</code>, and
+<code>select</code> with the title builders in
+<code>engrama/core/reflection.py</code>.</li>
+<li>Maturity impression: Apache-2.0; 22,846 lines of Python, 231 commits
+by one main author from 11 April to 7 November 2026 with nine tagged
+releases; 929 test functions, CI running SQLite, a Neo4j service and the
+scope guard, none run here. Several isolation tests search as an empty
+tenant and every populated negative case runs without an embedder. No
+benchmark result is committed. Three marks: <code>tombstone</code>,
+<code>scope_enforced</code>, <code>negative_eval</code>.</li>
+<li>Study when: you are putting an authenticating gateway in front of an
+MCP memory server and want the read layer to fail closed, or you want a
+pattern-proposal pass whose rejections stick.</li>
+<li>Do not copy when: memory has to be forgotten or corrected and stay
+that way across every retrieval arm, or the store must hold more than
+what the model chooses to write.</li>
 </ul>
         </article>
       </div>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-889, generated from each report's frontmatter —
+890, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-889, generated from each report's frontmatter —
+890, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-889, generated from each report's frontmatter —
+890, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 889, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 890, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-889, generated from each report's frontmatter —
+890, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 889 systems by the seven mechanisms
+filters all 890 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -11157,6 +11157,68 @@ in CI on three operating systems</td>
 person-facing verb exists; a <code>supersedes</code> verdict hides
 nothing; the local HTTP API is open unless a token is set; a hard delete
 does not reach payloads held in the cloud journal</td>
+</tr>
+<tr>
+<td><a
+href="../systems/engrama-scops/"><code>engrama-scops</code></a></td>
+<td>A typed graph node from the active profile's label set, keyed on
+label, name or title, and owner, with free properties such as summary,
+details, tags, status and confidence; typed relations between nodes;
+reflect-generated Insight nodes with a pending, approved or dismissed
+status</td>
+<td>SQLite by default: a nodes table with properties as JSON, an edges
+table with owner columns, an FTS5 table and a sqlite-vec vec0 table in
+one WAL file at ~/.engrama/engrama.db; Neo4j 5.26 with fulltext and
+vector indexes as the alternative; an optional Obsidian vault of
+Markdown notes that remember writes and sync reads</td>
+<td>FTS5 or Neo4j fulltext and, when an embedder is configured, a vector
+KNN, fused by reciprocal rank at k 60 and adjusted by 0.15 times a
+graph-distance score over the candidates' neighbours, 0.1 times
+confidence by recency, and 0.1 times source trust; engrama_context
+returns a node and up to three hops of neighbours; the default
+configuration has no embedder, so search is fulltext only</td>
+<td>The agent calls engrama_remember with a label and properties and
+waits on it: a merge by label, key and owner, an embedding if one is
+configured, a duplicate warning or block, inline relations whose missing
+targets become stubs, and a Markdown note when a vault is set;
+engrama_ingest returns text and an extraction prompt for the client
+model; no model runs inside the server</td>
+<td>A re-merge overwrites properties in place and clears valid_to; the
+SDK's forget sets status archived or hard-deletes one node, which leaves
+the fulltext arm and stays on the vector arm and in context;
+engrama_gdpr_forget hard-deletes every node, edge, FTS row, embedding
+and vault note of the caller's identity; no MCP tool forgets one
+node</td>
+<td>org_id and user_id on every node and edge, from request headers or a
+per-install UUID; reads match the pair or the org-shared
+<strong>entity</strong> user, and nothing for a missing or partial
+scope; agent_id and session_id are stored and never filtered; the HTTP
+transport has no authentication</td>
+<td>A FastMCP server with 14 tools over stdio or Streamable HTTP, a
+Python SDK, a CLI for init, search, reflect, reindex, export, import,
+migrate and bench, Obsidian vault sync, and example Claude Desktop and
+LangChain setups</td>
+<td>None scheduled: reflect runs when the agent or the SDK calls it,
+each remember whose embedding succeeded re-embeds up to three nodes left
+without a vector, and confidence decay is deprecated and changes
+nothing</td>
+<td>trust_level by source (sync and cli 1.0, sdk 0.8, mcp 0.5) set by
+the server and never by the caller, worth 0.1 in the score; a free
+status property (active, resolved, superseded, stub, archived) of which
+only archived leaves fulltext search and superseded is skipped by
+reflect; Insight status gates the review queue, the vault export and
+re-proposal, and not search</td>
+<td>A scope predicate that fails closed on a missing identity, applied
+in every tenant-facing read and held by a CI guard over query literals;
+identity from transport headers and never from a tool argument;
+owner-scoped node identity so two tenants can hold one name; stable
+Insight titles that let one dismissal stop every later reflect</td>
+<td>The default SQLite backend searches no details field and embeds
+neither summary nor details, the two fields the remember tool asks for;
+archived nodes leave fulltext and stay on the vector arm and in context;
+dismissed Insights remain ordinary search hits; the approve verb is the
+agent's own tool; the HTTP transport trusts identity headers from anyone
+who reaches it</td>
 </tr>
 <tr>
 <td><a href="../systems/engraphis/"><code>engraphis</code></a></td>
@@ -40165,7 +40227,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>85 of 889:</em> <a
+<p><em>86 of 890:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -40179,6 +40241,7 @@ href="../systems/clickhouse-loom/"><code>clickhouse-loom</code></a>, <a
 href="../systems/contextcore/"><code>contextcore</code></a>, <a
 href="../systems/daimon/"><code>daimon</code></a>, <a
 href="../systems/dense-mem/"><code>dense-mem</code></a>, <a
+href="../systems/engrama-scops/"><code>engrama-scops</code></a>, <a
 href="../systems/fernme/"><code>fernme</code></a>, <a
 href="../systems/fireweed-mcp/"><code>fireweed-mcp</code></a>, <a
 href="../systems/friday/"><code>friday</code></a>, <a
@@ -40254,7 +40317,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>227 of 889:</em> <a
+<p><em>227 of 890:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -40489,7 +40552,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>151 of 889:</em> <a
+<p><em>151 of 890:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -40650,7 +40713,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>387 of 889:</em> <a
+<p><em>388 of 890:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -40767,7 +40830,8 @@ href="../systems/empryo/"><code>empryo</code></a>, <a
 href="../systems/engram/"><code>engram</code></a>, <a
 href="../systems/engram-cognitive/"><code>engram-cognitive</code></a>,
 <a href="../systems/engram-provable/"><code>engram-provable</code></a>,
-<a href="../systems/engraphis/"><code>engraphis</code></a>, <a
+<a href="../systems/engrama-scops/"><code>engrama-scops</code></a>, <a
+href="../systems/engraphis/"><code>engraphis</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/evox-genesis/"><code>evox-genesis</code></a>, <a
 href="../systems/exomem/"><code>exomem</code></a>, <a
@@ -41057,7 +41121,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>300 of 889:</em> <a
+<p><em>300 of 890:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -41371,7 +41435,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>107 of 889:</em> <a
+<p><em>107 of 890:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -41482,7 +41546,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>577 of 889:</em> <a
+<p><em>578 of 890:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -41645,6 +41709,7 @@ href="../systems/engram-alpha/"><code>engram-alpha</code></a>, <a
 href="../systems/engram-cognitive/"><code>engram-cognitive</code></a>,
 <a href="../systems/engram-mcp/"><code>engram-mcp</code></a>, <a
 href="../systems/engram-nickcirv/"><code>engram-nickcirv</code></a>, <a
+href="../systems/engrama-scops/"><code>engrama-scops</code></a>, <a
 href="../systems/engraphis/"><code>engraphis</code></a>, <a
 href="../systems/enquire-mcp/"><code>enquire-mcp</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
@@ -42098,8 +42163,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-577 repositories of
-889 assert that particular material must
+578 repositories of
+890 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -42172,7 +42237,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 889 is the real figure for the second kind, and
+of 890 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not
