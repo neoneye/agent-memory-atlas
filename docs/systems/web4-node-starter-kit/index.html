@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Claude Code
+workspace whose core copies every conversation into a JSONL diary and
+injects per-element recalls before each message.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Fractera — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Claude Code
+workspace whose core copies every conversation into a JSONL diary and
+injects per-element recalls before each message.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Fractera — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Claude Code
+workspace whose core copies every conversation into a JSONL diary and
+injects per-element recalls before each message.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Fractera — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Fractera",
+      "description": "A self-hosted Claude Code workspace whose core copies every conversation into a JSONL diary and injects per-element recalls before each message.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A diary copied from session logs, recalled
+per element</p>
+          <h1>Fractera</h1>
+          <p class="document-deck">A self-hosted Claude Code workspace
+whose core copies every conversation into a JSONL diary and injects
+per-element recalls before each message.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Fractera/web4-node-starter-kit">
+              <span>Source</span>
+              <strong>Fractera/web4-node-starter-kit</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Fractera/web4-node-starter-kit/commit/e7395d7eb42a441f4c17d824b74a3717de9ac35d" title="e7395d7eb42a441f4c17d824b74a3717de9ac35d">
+              <span>Analyzed revision</span>
+              <code>e7395d7e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-26</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Fractera--web4-node-starter-kit" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Fractera--web4-node-starter-kit</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE (Fractera, Inc.); package.json names no licence; vendored
+skills under .claude/skills/ and lib/agent-kit/skills/base/ carry their
+own MIT and Apache-2.0 LICENSE files; the prebuild refuses any checkout
+that is not a direct GitHub fork of the original</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>3,501
+tracked files: about 148,500 lines of .ts and .tsx and 117,000 of .mjs
+and .cjs; the memory path is lib/agent-kit/memory, 812 lines in four
+modules, plus scripts/memory.mjs at 209; the 13 element repositories
+cloned at first run, the deep memory and the vector store among them,
+are not in this tree</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>4,211
+commits from 26 April to 25 November 2026 under four author names, which
+the README attributes to one developer working with Claude Code; the
+memory modules last changed on 19 November 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>82
+test files, 80 under scripts/; 474 cases matched as t(, test( or it(
+calls in 43 of them; the prebuild runs own-app.test.mjs and
+redteam-holes.test.mjs, and CI runs npm run build on every push; no test
+calls the diary writer, findings, recallBest or forget; none run for
+this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Fractera is a self-hosted workspace around Claude Code: a Next.js
+core that runs a main agent and one agent per "element", each a separate
+Next.js service, driven from a terminal or Telegram. Its own memory,
+which it calls the base memory, is a diary. A hook copies every word the
+person and the agents say from Claude Code's session logs into monthly
+JSONL files, with no model, and recalls up to three related lines before
+each message, scoped to the agent asking. The weak part is the write
+path's bookkeeping. The cursor that stops a session being copied twice,
+and that keeps a forgotten day from coming back, is rewritten whole by
+every session that ends a turn, with no lock, and nothing tests it.</p>
+<p>The diary serves two hooks. At session start an agent gets its last
+exchange with the person and, for the main agent, its last note of where
+it stopped. Before each of the person's messages it gets up to three
+findings, first by cosine similarity through the node's vector element
+and otherwise by a hand-written stemmer and BM25. The texts are quoted
+and headed <em>"true then — check it if it matters"</em>.</p>
+<p>The scope key is the agent id on every row. An element reads its own
+rows. The main agent reads every element's rows except those of apps
+with an owner of their own. On a walled server the id comes from the
+caller's key, not from anything the session sends.</p>
+<p>Two other stores sit beside the diary. One is Claude Code's own
+memory folder, which the bridge relocates into the node. The other is a
+"deep memory" that the README describes at length, with facts, photos,
+PDFs and reminders. It lives in a separate repository the installer
+clones; this tree holds only its client, so how it stores, corrects and
+forgets is not inspectable here.</p>
+<p><strong>Licence.</strong> The MIT grant permits anyone to <em>"copy,
+modify, merge, publish, distribute"</em>, and the first gate of the
+prebuild, <code>scripts/check-origin.mjs</code>, refuses to build any
+checkout whose <code>origin</code> is not a direct GitHub fork of the
+original. Its header gives the owner's reason as making it impossible
+for anyone to sell updates built on the starter, plans to obfuscate the
+file, and notes that until then the check can be removed by editing it
+(<code>scripts/check-origin.mjs:1-14</code>). A copy redistributed under
+the licence does not install unmodified. The data layer, vectors,
+embeddings and deep memory the README calls the node's memory are among
+13 other repositories, so this <code>LICENSE</code> covers none of the
+code that stores a vector.</p>
+<p>One mark is earned: <code>scope_enforced</code>, on the agent key.
+Section 9 gives the reason for each of the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>something said</strong>: one row of the diary per
+utterance of the person, an agent or the node, copied from the session
+log as it was said. The owner's rule for it is quoted in the writer's
+header: if the architect asked for a record, the agent must not think
+about what it refers to, and nothing is filtered by meaning
+(<code>lib/agent-kit/memory/record.cjs:1-4</code>). There is no
+extraction, no fact and no belief. A row is evidence that something was
+said on a date.</p>
+<p>A row has three states, none stored as a field.</p>
+<ul>
+<li><strong>Written.</strong> After each turn the Stop hook appends the
+new words of the session to the month's file and sends person and agent
+rows to the vector element
+(<code>lib/agent-kit/memory/record.cjs:66-107</code>,
+<code>:124</code>).</li>
+<li><strong>Recalled.</strong> A row of the asking agent's scope, from
+another session, that matches the person's message by meaning or by
+words, is shown before the message with its date and speaker
+(<code>lib/agent-kit/memory/recall.cjs:316-350</code>). Rows older than
+the last twelve monthly files are not read.</li>
+<li><strong>Forgotten.</strong> <code>forget --day</code> or
+<code>forget --all</code> removes the rows and their vectors. The person
+asks the main agent in words, and the <code>know-the-architect</code>
+skill maps the request to the command
+(<code>scripts/memory.mjs:144-169</code>,
+<code>.claude/skills/know-the-architect/SKILL.md:60-76</code>).</li>
+</ul>
+<p>A second rule governs absence. When the person turns memory off, the
+writer still reads the session and moves its cursor, and writes nothing,
+so turning memory on again never copies what was said meanwhile
+(<code>lib/agent-kit/memory/record.cjs:68-70</code>, <code>:94</code>,
+<code>:103-105</code>). Forgetting leans on the same cursor: the month
+files are rewritten and the cursor stays, so the next hook on that
+session starts after the forgotten words.</p>
+<p>The "picture of the person" is different in kind. It is Claude Code's
+own memory folder, written by the model with its file tools; the bridge
+points every session's <code>autoMemoryDirectory</code> at
+<code>data/services/&lt;id&gt;/memory</code>, and the brief reads the
+index lines of records typed <code>user</code> or <code>feedback</code>
+(<code>lib/agent-kit/modes.cjs:374-378</code>,
+<code>lib/agent-kit/memory/brief.cjs:71-102</code>). The core keeps no
+state about those records.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — session-end hooks copy the person's and agents' words into monthly diary files with the asking agent's id; before each message, recall filters rows by that id, searches by meaning and falls back to words, and returns at most three quoted findings; forget rewrites the files and keeps the per-session read cursor</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: session-end hooks copy the person&#39;s and agents&#39; words into monthly diary files with the asking agent&#39;s id; before each message, recall filters rows by that id, searches by meaning and falls back to words, and returns at most three quoted findings; forget rewrites the files and keeps the per-session read cursor
+flowchart TD
+  L[&quot;Claude Code session log&quot;] --&gt;|&quot;Stop, SessionEnd&quot;| R[&quot;record.cjs&lt;br/&gt;element id from&lt;br/&gt;the bridge or relay&quot;]
+  R --&gt; K[&quot;cursor .read.json&lt;br/&gt;byte offset per session&lt;br/&gt;rewritten whole, no lock&quot;]
+  R --&gt;|&quot;memory on&quot;| D[&quot;diary YYYY-MM.jsonl&lt;br/&gt;t, agent, session,&lt;br/&gt;who, via, text&quot;]
+  R --&gt;|&quot;person, agent rows&quot;| V[&quot;vector element&lt;br/&gt;collection memory-id&lt;br/&gt;another repository&quot;]
+  Q[&quot;person&#39;s message&lt;br/&gt;UserPromptSubmit&quot;] --&gt; P{&quot;agent key predicate&lt;br/&gt;element: own rows&lt;br/&gt;main: all but own apps&quot;}
+  D --&gt; P
+  P --&gt; M[&quot;meaning: cosine 0.4+&lt;br/&gt;hits kept only if&lt;br/&gt;in scoped rows&quot;]
+  V --&gt; M
+  M --&gt;|&quot;no vectors or error&quot;| W[&quot;words: stems, BM25&lt;br/&gt;last 12 month files&quot;]
+  M --&gt; C[&quot;3 findings max&lt;br/&gt;1,500 chars, quoted&lt;br/&gt;true then, check it&quot;]
+  W --&gt; C
+  F[&quot;forget --day or --all&quot;] --&gt;|&quot;rewrite files&quot;| D
+  F --&gt;|&quot;delete by row id&quot;| V
+  F -.-&gt;|&quot;cursor kept&quot;| K</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The core is a Next.js 16 application with a custom server, a control
+panel and a bridge that starts Claude Code sessions in pseudo-terminals,
+one per element and one for the main agent
+(<code>app/[lang]/(architectLayer)/architect/build/_agent-kit/server/bridge.cjs</code>;
+the same file is copied byte for byte under every other element's
+directory). The bridge writes each session's <code>--settings</code>
+with the memory folder and the memory hooks
+(<code>bridge.cjs:290-292</code>, <code>:310</code>).</p>
+<p>The base memory needs only the file system. Its vector arm needs two
+other elements running: <code>data</code>, the one door to the vector
+element, and <code>embeddings</code>, a local MiniLM model the vector
+element calls (<code>lib/agent-kit/memory/embed.cjs:1-8</code>,
+<code>:30-35</code>). The core finds the data element's port in
+<code>WEB4-ITEMS-REGISTRY/web4-items.json</code> and authenticates with
+<code>DATA_SECRET</code> from <code>.env.local</code>. Without either,
+recall uses words.</p>
+<p><code>.gitmodules</code> does not exist. The 13 element repositories
+are cloned by <code>serve:start</code> on first run and named in the
+registry; <code>fractera-memory-starter</code> is one
+(<code>WEB4-ITEMS-REGISTRY/web4-items.json:153</code>,
+<code>README.md:373</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The README's install path is a fork, a terminal running
+<code>claude</code>, and one command. On a home computer every element's
+agent runs as the person's OS user, and the README says so: the stores
+keep the doors apart, not the disk (<code>README.md:177</code>). On a
+dedicated server a custom element's agent runs as its own Linux user,
+reads nothing of the core, and gets its hooks through a relay
+(<code>lib/agent-kit/hook-relay.cjs:1-11</code>). The diary needs no
+configuration and no service; it starts with the first session the
+bridge launches.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Hook installation.</strong>
+<code>memoryHooks(element, mode)</code> returns Stop and SessionEnd for
+the writer and SessionStart and UserPromptSubmit for the readers, with
+the element id as the last argument, and returns nothing for a
+working-process session, whose prompts are other agents' orders
+(<code>lib/agent-kit/modes.cjs:393-404</code>).</li>
+<li><strong>Write.</strong> <code>recordSession</code> reads the log
+from the session's cursor, keeps typed user text and assistant text,
+keeps Telegram replies sent through the reply tool, labels the first
+typed message and the node's own texts as <code>node</code>, skips a
+whole <code>claude -p</code> session, appends rows, and rewrites the
+cursor file (<code>lib/agent-kit/memory/record.cjs:39-107</code>).</li>
+<li><strong>Vectors.</strong> <code>save</code> posts each person and
+agent row as text to <code>/vectors</code> with an id hashed from its
+own fields, and <code>kind</code> re-reads the vector element's model on
+every call and empties the ledger when it changed
+(<code>lib/agent-kit/memory/embed.cjs:38</code>,
+<code>:59-86</code>).</li>
+<li><strong>Recall.</strong> <code>recallBest</code> scopes the diary,
+searches the collections of the agents in scope, keeps hits above 0.4
+whose id is a scoped row, one per exchange, and falls back to
+<code>findings</code> on any error
+(<code>lib/agent-kit/memory/recall.cjs:316-350</code>).</li>
+<li><strong>Brief.</strong> <code>brief</code> composes the last
+exchange, the last note and, for an element, the main agent's picture of
+the person (<code>lib/agent-kit/memory/brief.cjs:112-147</code>).</li>
+<li><strong>Control.</strong> <code>scripts/memory.mjs</code> implements
+<code>show</code>, <code>forget</code>, <code>off</code>,
+<code>on</code>, <code>vectors</code>, <code>adopt</code> and
+<code>backfill</code>.</li>
+<li><strong>Walled relay.</strong> <code>/api/node/hook-relay</code>
+resolves the caller from <code>x-element-key</code> and runs
+<code>record</code>, <code>brief</code> or <code>recall</code> with that
+id (<code>app/api/node/hook-relay/route.ts:23-34</code>,
+<code>lib/agent-kit/hook-relay-run.cjs:27-29</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A diary row is
+<code>{ t, agent, session, who, via, user?, text }</code>, with
+<code>text</code> cut to 8,000 characters
+(<code>lib/agent-kit/memory/record.cjs:17</code>, <code>:97</code>).
+<code>who</code> is <code>person</code>, <code>agent</code> or
+<code>node</code>; <code>via</code> is <code>terminal</code>,
+<code>telegram</code> or <code>core</code>; <code>user</code> is the
+Telegram user name when the message came through the channel. Rows go to
+<code>data/node/memory/episodes/&lt;YYYY-MM&gt;.jsonl</code> by the
+month of their timestamp.</p>
+<p>Beside it:</p>
+<ul>
+<li><code>.read.json</code>, one object keyed by session id holding a
+byte offset, whether the first typed message was seen, and a skip flag
+(<code>lib/agent-kit/memory/record.cjs:73-75</code>);</li>
+<li><code>notes.jsonl</code>, rows of <code>{ t, agent, note }</code>
+cut to 300 characters
+(<code>lib/agent-kit/memory/brief.cjs:150-157</code>);</li>
+<li><code>settings.json</code>, present only when memory is off;</li>
+<li><code>vectors.json</code>, the vector model, its dimensions and a
+map from row id to agent, written through a temporary file and a rename
+(<code>lib/agent-kit/memory/embed.cjs:40-45</code>).</li>
+</ul>
+<p>A row's id is the SHA-1 of agent, session, time, speaker, channel and
+text, so the same row always maps to the same vector and forgetting can
+find it (<code>lib/agent-kit/memory/embed.cjs:37-38</code>). Nothing on
+a row says whether it is true, current or superseded.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall runs as a UserPromptSubmit hook and only on the person's
+words. A prompt the diary's own classifier labels as the node's text, a
+slash command or a system insertion gets nothing
+(<code>lib/agent-kit/memory/recall.cjs:270-273</code>). Rows of the
+current session are skipped, because they are already in context.</p>
+<p><strong>By meaning.</strong> The question goes as text to
+<code>/vectors/search</code> for each agent in scope that has a stored
+vector, ten hits each. A hit counts when its cosine is at least 0.4 and
+its id is one of the scoped rows, and the first per exchange is kept, up
+to three (<code>lib/agent-kit/memory/recall.cjs:316-346</code>). The
+comment at <code>:306-308</code> says 0.4 was chosen in the middle of
+the gap between expected rows (0.451 to 0.692) and unrelated questions'
+best rows (0.162 to 0.348) on the step's check sets, whose file is not
+in this tree.</p>
+<p><strong>By words.</strong> When the vector path fails for any reason,
+<code>findings</code> stems the message with a Snowball Russian stemmer
+written in the file and a light English one, drops stop words including
+the words people use to point at the past, and ranks rows by BM25 (k1
+1.2, b 0.75). It weights the person's words at 1.3, the agent's at 1.0
+and the node's at 0.6, doubles names, numbers and ids, and multiplies by
+a recency factor that falls from 1.0 toward 0.75 with a 30-day scale. A
+row must cover 35% of the message's information and match two of its
+words, a strong word, or its only word
+(<code>lib/agent-kit/memory/recall.cjs:28-36</code>,
+<code>:201-267</code>).</p>
+<p><strong>What the agent receives.</strong> At most three findings, at
+most 1,500 characters, each with UTC time, speaker and channel, inside
+guillemets with any closing guillemet doubled, under a header naming the
+path that found them and saying the text was true then
+(<code>lib/agent-kit/memory/recall.cjs:275-297</code>). The hook returns
+it as the UserPromptSubmit hook's <code>additionalContext</code>, which
+Claude Code adds beside that message (<code>:367</code>).</p>
+<p><strong>At session start.</strong> On <code>startup</code>, not after
+<code>/clear</code> or a resume, the brief gives the agent's last person
+message and its answer (300 and 400 characters), the main agent's last
+note if it is newer than that exchange, and for an element the main
+agent's picture of the person up to 1,500 characters
+(<code>lib/agent-kit/memory/brief.cjs:24</code>, <code>:112-130</code>).
+With no picture, the main agent is told to run its first-meeting
+questions.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes happen in the Stop hook after every answer and in the
+SessionEnd hook, which the bridge gives a 10-second timeout because its
+sessions end by killing the pseudo-terminal
+(<code>lib/agent-kit/modes.cjs:380-392</code>, <code>:400</code>). The
+writer copies, never interprets.</p>
+<ul>
+<li><strong>What is kept.</strong> The person's typed text, Telegram
+messages unwrapped from their channel envelope, a Telegram message that
+arrived while the agent was off, the agent's text blocks and its
+Telegram replies
+(<code>lib/agent-kit/memory/record.cjs:39-63</code>).</li>
+<li><strong>What is not.</strong> Tool calls and results, files, slash
+commands and their output, meta insertions, and every line of a
+<code>claude -p</code> session (<code>:86-87</code>).</li>
+<li><strong>The node's texts.</strong> The first typed message of a
+session is the bridge's launch prompt and is labelled <code>node</code>,
+as are texts the core types into a live session (<code>:35-50</code>).
+The rule depends on Claude Code's log shape.</li>
+<li><strong>Agent-generated content.</strong> The agent's answers are
+stored and recalled beside the person's words, at weight 1.0 against
+1.3. An agent's wrong statement in one session is offered as memory in
+the next, under the same "true then" header.</li>
+<li><strong>No dedupe and no conflict handling.</strong> Two sessions
+that say contradictory things both stay; recall returns whichever
+matches.</li>
+</ul>
+<p><strong>Forgetting</strong> is by day on the computer's clock, or
+everything (<code>scripts/memory.mjs:144-169</code>). It rewrites each
+affected month file through a temporary file and a rename, removes that
+day's notes, deletes the vectors of the removed rows that the ledger
+knows, and says how many vectors it could not delete. The output reminds
+the person that Claude Code keeps its own session logs until it deletes
+them. There is no forget by phrase, row or person.</p>
+<p><strong>The cursor.</strong> <code>recordSession</code> reads the
+whole <code>.read.json</code>, changes one session's entry and writes
+the whole object back, with no lock and no rename
+(<code>lib/agent-kit/memory/record.cjs:73</code>,
+<code>:103-105</code>). The main agent and the elements end turns
+independently, so two hooks can interleave. An inference from the code,
+not tested: when they do, the later write drops the earlier session's
+new offset, and that session's next hook copies the same bytes again. If
+the person forgot that day in between, the forgotten words return, as
+long as Claude Code still holds the log.</p>
+<p>The <strong>deep memory</strong> is written by
+<code>npm run remember</code>, which posts to the memory element's
+<code>/v1/remember</code> with optional files and a reminder
+(<code>scripts/node-commands.mjs:179-214</code>). Its behaviour is
+outside this tree.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>Does the write block the agent?</strong> The Stop hook runs
+synchronously after each answer: a file append, then one HTTP call per
+row to the vector element with an 8-second timeout. No model is
+called.</li>
+<li><strong>Lag.</strong> A row is in the diary when the turn's Stop
+hook ends and in the vector collection when <code>save</code> returns.
+Recall skips the current session anyway, so a row matters from the next
+session on.</li>
+<li><strong>Background passes.</strong> None.
+<code>npm run memory -- vectors</code> re-embeds rows without a vector
+when someone runs it, and after a model change it re-embeds
+everything.</li>
+<li><strong>Read cost.</strong> The word path reads the last twelve
+month files on every message; a measured 0.12 to 0.19 seconds is quoted
+in a comment (<code>lib/agent-kit/modes.cjs:387</code>). The injection
+is at most 1,500 characters per message and 1,500 plus about 1,000 at
+session start, attached to the message rather than the system
+prompt.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model does not call the base memory; hooks do. The only
+agent-driven operations are the main agent's note
+(<code>npm run done -- --note</code>,
+<code>scripts/main-agent-cli.mjs:482-488</code>) and the person's
+controls, which the main agent runs on the person's words through the
+<code>know-the-architect</code> skill.
+<code>lib/agent-kit/memory/memory.md</code> is the text that tells
+agents what their memory is and to say no more than that.</p>
+<p>An element's agent that is asked to remember something passes the
+request to the main agent, which runs <code>npm run remember</code> or
+<code>npm run remind</code>. <code>remind</code> answers from the deep
+memory and from the diary, the latter with <code>recallBest</code> as
+the main agent (<code>scripts/node-commands.mjs:216-242</code>).</p>
+<p><code>.claude/hooks/brain-ingest.py</code> posts edited project
+documents to <code>localhost:3002/api/rag/ingest</code>.
+<code>.claude/settings.json</code> does not register it and no route of
+that name is in the tree, so it does nothing.</p>
+<p>The integration is specific to Claude Code: it reads Claude Code's
+session-log format, its hook events and its
+<code>autoMemoryDirectory</code> setting. The diary writer, the recall
+module and the brief are each a few hundred lines with Node built-ins
+only, and could be lifted into another Claude Code setup.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-scope-key-and-who-sets-it">The scope key and who sets
+it</h3>
+<p>The agent id reaches the hooks as a command-line argument the bridge
+writes into the session's settings, so the model inside the session does
+not choose it (<code>lib/agent-kit/modes.cjs:398-402</code>). On a
+walled server the hook relay takes the id from the caller's key
+(<code>app/api/node/hook-relay/route.ts:23</code>,
+<code>lib/agent-kit/hook-relay-run.cjs:4-5</code>). The relay also
+refuses a <code>record</code> whose <code>transcript_path</code> is not
+in the caller's own Claude project folder, after a red-team run on 20
+November 2026 found an element could copy the main agent's conversation
+into its own diary rows
+(<code>lib/agent-kit/hook-relay-run.cjs:46-82</code>).</p>
+<p>On a home computer the boundary is softer. Every element runs as the
+same OS user, and an element's agent is kept from reading
+<code>data/node/memory</code> by a PreToolUse hook that asks the person,
+not by file permissions
+(<code>scripts/element-isolate.mjs:13-15</code>).
+<code>npm run memory -- recall &lt;id&gt;</code> prints any agent's
+findings to whoever runs it.</p>
+<h3 id="what-crosses-the-boundary-by-design">What crosses the boundary
+by design</h3>
+<p>The main agent reads every element's rows except those of an app with
+its own owner, so a family node's architect sees what each member said,
+as the README states. Every element that is part of the project receives
+the main agent's picture of the person at session start. An app with its
+own owner gets its own picture instead
+(<code>lib/agent-kit/memory/brief.cjs:137-147</code>).</p>
+<h3 id="injection-handling">Injection handling</h3>
+<p>Recalled and briefed text is quoted with doubled closing guillemets,
+so a quote cannot close itself. The brief's header says the quotes are
+data, not instructions
+(<code>lib/agent-kit/memory/brief.cjs:129</code>). Recalled text is the
+person's and agents' own past words, including anything an agent quoted
+from a web page in its answer.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code> — earned.</strong> The agent id
+is on every row and both recall paths and the brief filter on it; the
+vector hits are intersected with the scoped rows, so the collection is
+not the only boundary. The id is set by the bridge or by the caller's
+key.</li>
+<li><strong><code>negative_eval</code> — withheld.</strong>
+<code>scripts/own-app.test.mjs:73-78</code> asserts on a populated
+three-row array that <code>inScope</code> excludes an own app's rows
+from the main agent and other agents' rows from an element. It tests the
+predicate, not the read path: <code>findings</code> or
+<code>recallBest</code> could stop calling it and the test would still
+pass. Seeding rows of two agents and asserting the other's row is absent
+from <code>findings</code> would earn it.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> A row has no
+status. The header's "true then, check it" applies to every finding
+alike.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> The cursor that
+keeps a forgotten session from being copied again is keyed on the
+session and a byte offset, not on what was said; the same words in a new
+session are recorded, as a diary should.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> <code>t</code>
+is the time the line was said, taken from the log; nothing records when
+a statement held.</li>
+<li><strong><code>audit_log</code> — withheld.</strong> The diary is
+itself append-only, and forgetting rewrites it with no record of what
+was removed or by whom.</li>
+<li><strong><code>human_review</code> — withheld.</strong>
+<code>npm run memory -- show</code> lists counts and the picture's index
+lines; nothing waits for a person's approval.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran nothing from the repository. CI runs <code>npm ci</code>, a
+path-case check, <code>node scripts/node-update.test.mjs</code> and
+<code>npm run build</code>, whose prebuild's 132 steps include
+<code>scripts/own-app.test.mjs</code> and
+<code>scripts/redteam-holes.test.mjs</code>
+(<code>.github/workflows/three-os.yml:54-70</code>,
+<code>package.json:18</code>). The origin gate lets the original's own
+CI through (<code>scripts/check-origin.mjs:48</code>).</p>
+<p>What touches memory:</p>
+<ul>
+<li><code>scripts/own-app.test.mjs:56-78</code>: an own app's brief
+carries its own picture and never the architect's, a project element's
+brief carries the architect's, and the <code>inScope</code> predicate on
+a three-row array. The brief cases call <code>compose</code> with the
+picture already chosen, so they test the wording, not which picture
+<code>brief</code> reads.</li>
+<li><code>scripts/redteam-holes.test.mjs:33-65</code>: the relay's
+transcript check refuses the main agent's log, a neighbour whose folder
+name is longer, a symlink planted in the element's own folder and a
+non-transcript, and the relay refuses before any script runs.</li>
+<li><code>scripts/element-wall.test.mjs:418-438</code>: the relay
+rewrites the memory hooks of a walled session into relay calls with no
+id argument.</li>
+</ul>
+<p>What is not covered:</p>
+<ul>
+<li>No test calls <code>recordSession</code>, so the log parser, the off
+switch and the cursor are untested.</li>
+<li>No test calls <code>findings</code> or <code>recallBest</code>; the
+stemmer, the BM25 weights and the 0.4 floor have no committed case.</li>
+<li>No test runs <code>forget</code> or checks that a forgotten day
+stays out.</li>
+</ul>
+<p>Comments cite check sets and measurements in step files such as
+<code>completed-steps/595-8b.md</code>, which are not in this tree. No
+paper is cited.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Copy, do not extract.</strong> A diary that copies words
+from the session log with no model is cheap, cannot invent, and leaves
+interpretation to the reader. The rule that a <code>claude -p</code>
+session is never a conversation keeps automation out.</li>
+<li><strong>An off switch that moves the cursor.</strong> Reading past
+what is said while memory is off, rather than not reading, is what makes
+"on" not resurrect it.</li>
+<li><strong>The scope id from the caller's credential.</strong> The
+relay ignores any id in the request and checks that the transcript
+belongs to the caller.</li>
+<li><strong>Intersect vector hits with the scoped rows.</strong> A
+per-agent collection plus an id check against the agent's own rows keeps
+one boundary from being the only one.</li>
+<li><strong>Tell the model how old and how sure.</strong> Date, speaker
+and "true then" on every finding, quoted so it cannot break out.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A shared cursor file rewritten whole.</strong> Keep one
+cursor file per session, or take a lock, or write through a rename after
+re-reading.</li>
+<li><strong>Recalling the agent's own answers as memory.</strong>
+Weighting them below the person's words still puts an earlier session's
+mistake in front of a new message.</li>
+<li><strong>Hand-written stemmers with no committed case.</strong> The
+comments describe failures found by hand (<code>«Токио»</code> and
+<code>«токены»</code> sharing a stem,
+<code>lib/agent-kit/memory/recall.cjs:228-229</code>); those belong in a
+test.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits someone who already runs Claude Code as the agent and
+wants a session to know what was said in earlier sessions, in any
+language, with no model bill for memory. The base memory is a small,
+readable part of a large and fast-moving product that installs only from
+a GitHub fork and pulls 13 other repositories; borrowing the four
+modules is easier than adopting the node. Walk away if memory must hold
+facts rather than quotes, if two statements must be reconciled, or if
+forgetting must be by subject rather than by day.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether concurrent Stop hooks are serialised anywhere outside these
+modules, which would rule out the cursor race.</li>
+<li>Whether an element's Telegram bot can admit more than one person;
+the diary stores the Telegram user but recall does not filter on
+it.</li>
+<li>What the vector element does with a row's text on
+<code>DELETE /vectors/&lt;id&gt;</code>; the comment at
+<code>lib/agent-kit/memory/embed.cjs:101-103</code> says it keeps the
+text beside the vector.</li>
+<li>How the deep memory stores, corrects and forgets, which needs a
+reading of <code>Fractera/fractera-memory-starter</code>.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Write path: <code>lib/agent-kit/memory/record.cjs</code>,
+<code>lib/agent-kit/memory/embed.cjs</code></li>
+<li>Retrieval and context assembly:
+<code>lib/agent-kit/memory/recall.cjs</code>,
+<code>lib/agent-kit/memory/brief.cjs</code></li>
+<li>Hook wiring: <code>lib/agent-kit/modes.cjs</code>
+(<code>memoryDir</code>, <code>memoryHooks</code>),
+<code>app/[lang]/(architectLayer)/architect/build/_agent-kit/server/bridge.cjs</code></li>
+<li>Walled relay: <code>lib/agent-kit/hook-relay.cjs</code>,
+<code>lib/agent-kit/hook-relay-run.cjs</code>,
+<code>app/api/node/hook-relay/route.ts</code></li>
+<li>Control: <code>scripts/memory.mjs</code>,
+<code>scripts/main-agent-cli.mjs</code>,
+<code>.claude/skills/know-the-architect/SKILL.md</code>,
+<code>lib/agent-kit/memory/memory.md</code></li>
+<li>Deep memory client: <code>scripts/node-commands.mjs</code></li>
+<li>Isolation: <code>scripts/element-isolate.mjs</code>,
+<code>scripts/element-boundary-hook.mjs</code></li>
+<li>Unwired: <code>.claude/hooks/brain-ingest.py</code></li>
+<li>Tests: <code>scripts/own-app.test.mjs</code>,
+<code>scripts/redteam-holes.test.mjs</code>,
+<code>scripts/element-wall.test.mjs</code>,
+<code>.github/workflows/three-os.yml</code></li>
+<li>Licence gate: <code>scripts/check-origin.mjs</code>,
+<code>LICENSE</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No status field in the memory modules.</strong>
+<code>git grep -n -E 'status|verified|candidate|confidence' -- lib/agent-kit/memory scripts/memory.mjs</code>
+returns <code>lib/agent-kit/memory/embed.cjs:50</code> and
+<code>:61</code>, an HTTP status and the vector element's
+<code>/vectors/status</code> route.</li>
+<li><strong>No value-keyed refusal.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|suppress|rejected' -- lib/agent-kit/memory scripts/memory.mjs</code>
+returns nothing; the same pattern over <code>lib/agent-kit</code>
+matches <code>lib/agent-kit/resume.cjs:10</code>.</li>
+<li><strong>No validity time.</strong>
+<code>git grep -n -i -E 'valid_?(from|to|until)|validFrom|validUntil' -- . ':!package-lock.json'</code>
+returns nothing.</li>
+<li><strong>The only appends are the diary and the notes.</strong>
+<code>git grep -n -E 'appendFileSync' -- lib/agent-kit/memory scripts/memory.mjs</code>
+returns <code>lib/agent-kit/memory/record.cjs:98</code> and
+<code>lib/agent-kit/memory/brief.cjs:155</code>.</li>
+<li><strong>No lock in the memory modules.</strong>
+<code>git grep -n -i -E 'lock|flock|O_EXCL' -- lib/agent-kit/memory</code>
+returns nothing; the same pattern over <code>lib/agent-kit</code>
+matches <code>lib/agent-kit/guard-search.cjs:15</code>.</li>
+<li><strong>No approval step.</strong>
+<code>git grep -n -i -E 'approv|pending|review' -- lib/agent-kit/memory scripts/memory.mjs</code>
+returns nothing; over <code>lib/agent-kit</code> it matches
+<code>lib/agent-kit/commands.cjs:68</code>.</li>
+<li><strong>The RAG ingest hook has no registration and no
+route.</strong>
+<code>git grep -n -E 'brain-ingest|api/rag' -- . ':!package-lock.json'</code>
+returns only <code>.claude/hooks/brain-ingest.py:45</code>.</li>
+<li><strong>No test exercises the diary's read or write
+functions.</strong>
+<code>git grep -n -E 'findings|recordSession|recallBest|stemRu|lastExchange|memory -- forget|forget\(' -- '*.test.mjs' '*.test.cjs' '*.test.ts'</code>
+returns <code>scripts/element-delete-agents.test.mjs:41-42</code>, which
+call an unrelated <code>supervision.forget</code>;
+<code>git grep -n -c -E 'inScope' -- '*.test.mjs'</code> returns
+<code>scripts/own-app.test.mjs:4</code>.</li>
+<li><strong>The memory element's code is not in the tree.</strong>
+<code>git ls-files | grep -c -i 'memory-starter'</code> returns 0, and
+<code>.gitmodules</code> does not exist.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- . ':!package-lock.json' ':!lib/agent-kit/skills/catalog'</code>
+returns nothing; over <code>lib/agent-kit/skills/catalog</code> it
+matches third-party skill cards.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-26</strong> — <a
+href="https://github.com/Fractera/web4-node-starter-kit/commit/e7395d7eb42a441f4c17d824b74a3717de9ac35d"><code class="commit-id" title="e7395d7eb42a441f4c17d824b74a3717de9ac35d">e7395d7e…</code></a>.
+First reading, read only, from a full clone at the head of
+<code>main</code>, 13 commits past <code>ad23116a069f</code>, the commit
+triage selected; none of the 13 touches the memory modules, the hook
+wiring or their tests. Screened first: four auto-run surfaces
+(<code>.claude/hooks/</code>, <code>.claude/settings.json</code>,
+<code>.githooks/</code>, <code>.mcp.json</code>),
+<code>package.json</code> inside the seven-day cooldown with
+<code>preinstall</code> and <code>postinstall</code> scripts and
+floating ranges under a lockfile. <code>CLAUDE.md</code>, skills and
+prompts were read as data. Nothing was installed, built or run, and the
+test files were not run. One mark, <code>scope_enforced</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -608,6 +608,19 @@ overwrites that memory's content in place instead of adding a row
 is cheap and deterministic; what survives it depends on a cosine
 threshold no test exercises. The hook also stores its stdin unparsed,
 and Claude Code delivers that as a JSON object.</p>
+<p><a href="../../systems/web4-node-starter-kit/">Fractera</a> copies
+the session log after every turn and records what it skipped by moving a
+cursor. A Claude Code Stop and SessionEnd hook appends the person's
+typed words, Telegram messages, the agent's text and its Telegram
+replies to a monthly JSONL diary, drops tool calls, slash commands and
+every line of a <code>claude -p</code> session, and calls no model
+(<code>lib/agent-kit/memory/record.cjs:39-107</code>). With memory
+switched off it still reads the log and advances the per-session byte
+offset, so turning memory on never copies what was said meanwhile, and
+forgetting a day relies on the same offset. That offset lives in one
+file that every ending session reads and rewrites whole with no lock
+(<code>lib/agent-kit/memory/record.cjs:73</code>,
+<code>:103-105</code>).</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 882 reports.**
+**This page covers all 883 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8143,3 +8143,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 6 commits from 29 October to 25 November 2026 by one author under two names, the implementation in the first; 1,720 lines of Python and an 864-line React inspector; 60 pytest functions with no CI, none run here. No marks.
 - Study when: you want a small, readable loop that adjusts a persona's prompt from self-graded outcomes on a local model, with a paper section behind each parameter.
 - Do not copy when: memory must recall facts by query, serve more than one user, or keep a rejected rule out.
+
+### [`web4-node-starter-kit`](../systems/web4-node-starter-kit/)
+- Best idea: **capture that cannot invent.** The Stop and SessionEnd hooks copy the person's and the agents' words from Claude Code's session log with no model and no filtering by meaning, skipping tool output, slash commands and `claude -p` sessions, and the off switch still moves the read cursor, so words said while memory was off never arrive later.
+- Second idea: the scope id comes from outside the session. The bridge writes the element id into each hook's command line, the walled relay takes it from the caller's key and refuses a transcript outside the caller's own project folder, and a vector hit is kept only if it is a row of the asking agent's scope.
+- Biggest risk: **the cursor is a shared file rewritten whole.** Every session that ends a turn reads `.read.json`, changes its own entry and writes the whole object back with no lock, so concurrent turns can roll another session's offset back; that session's next hook copies the same bytes again, and words forgotten in between return while Claude Code still holds the log. This is read from the code and not tested.
+- Second risk: no test calls the diary writer, `findings`, `recallBest` or `forget`, and the one scope test checks the `inScope` predicate on an array, which still passes if a read path stops calling it. The agent's own past answers are recalled beside the person's words, and forgetting is by day only.
+- Most reusable component: the session-log reader and its cursor in `lib/agent-kit/memory/record.cjs:39-107`, and the scoped meaning-then-words recall in `lib/agent-kit/memory/recall.cjs:316-350`.
+- Maturity impression: MIT, with a prebuild gate that refuses any checkout that is not a direct GitHub fork; 4,211 commits from 26 April to 25 November 2026 under four author names; the memory modules are 812 lines using Node built-ins only; 82 test files, two of them touching memory, run by the prebuild that CI builds and not run here. One mark: `scope_enforced`.
+- Study when: you run Claude Code as the agent and want cross-session recall of what was said, with no model on the write path and a scope key the session cannot choose.
+- Do not copy when: memory must hold facts rather than quotes, contradictions must be resolved, or forgetting must be by subject rather than by day.

@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **882 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **883 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -304,6 +304,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/flowly/"><span class="az-id">Flowly</span><span class="az-what">A governed lifecycle layer inside a personal agent</span><code class="az-repo">Nocetic/flowly</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/fluctlightdb/"><span class="az-id">FluctlightDB</span><span class="az-what">Embedded engine with provenance-weighted cue recall</span><code class="az-repo">voxmastery/FluctlightDB</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/forgetful/"><span class="az-id">Forgetful</span><span class="az-what">Three tools over a knowledge graph</span><code class="az-repo">scottrbk/forgetful</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/web4-node-starter-kit/"><span class="az-id">Fractera</span><span class="az-what">A diary copied from session logs, recalled per element</span><code class="az-repo">Fractera/web4-node-starter-kit</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/friday/"><span class="az-id">Friday</span><span class="az-what">Two gateways that disagree about what a revocation means</span><code class="az-repo">friday-memory/friday</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/funes/"><span class="az-id">funes</span><span class="az-what">A problem it chooses not to have</span><code class="az-repo">huggingface/funes</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/fx/"><span class="az-id">fx</span><span class="az-what">A memory tool it removed</span><code class="az-repo">vercel-labs/fx</code><span class="az-caps"></span></a></li>

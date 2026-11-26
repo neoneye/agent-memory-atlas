@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 882 reports.</strong></p>
+<p><strong>This page covers all 883 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -36453,6 +36453,49 @@ prompt from self-graded outcomes on a local model, with a paper section
 behind each parameter.</li>
 <li>Do not copy when: memory must recall facts by query, serve more than
 one user, or keep a rejected rule out.</li>
+</ul>
+<h3 id="web4-node-starter-kit"><a
+href="../systems/web4-node-starter-kit/"><code>web4-node-starter-kit</code></a></h3>
+<ul>
+<li>Best idea: <strong>capture that cannot invent.</strong> The Stop and
+SessionEnd hooks copy the person's and the agents' words from Claude
+Code's session log with no model and no filtering by meaning, skipping
+tool output, slash commands and <code>claude -p</code> sessions, and the
+off switch still moves the read cursor, so words said while memory was
+off never arrive later.</li>
+<li>Second idea: the scope id comes from outside the session. The bridge
+writes the element id into each hook's command line, the walled relay
+takes it from the caller's key and refuses a transcript outside the
+caller's own project folder, and a vector hit is kept only if it is a
+row of the asking agent's scope.</li>
+<li>Biggest risk: <strong>the cursor is a shared file rewritten
+whole.</strong> Every session that ends a turn reads
+<code>.read.json</code>, changes its own entry and writes the whole
+object back with no lock, so concurrent turns can roll another session's
+offset back; that session's next hook copies the same bytes again, and
+words forgotten in between return while Claude Code still holds the log.
+This is read from the code and not tested.</li>
+<li>Second risk: no test calls the diary writer, <code>findings</code>,
+<code>recallBest</code> or <code>forget</code>, and the one scope test
+checks the <code>inScope</code> predicate on an array, which still
+passes if a read path stops calling it. The agent's own past answers are
+recalled beside the person's words, and forgetting is by day only.</li>
+<li>Most reusable component: the session-log reader and its cursor in
+<code>lib/agent-kit/memory/record.cjs:39-107</code>, and the scoped
+meaning-then-words recall in
+<code>lib/agent-kit/memory/recall.cjs:316-350</code>.</li>
+<li>Maturity impression: MIT, with a prebuild gate that refuses any
+checkout that is not a direct GitHub fork; 4,211 commits from 26 April
+to 25 November 2026 under four author names; the memory modules are 812
+lines using Node built-ins only; 82 test files, two of them touching
+memory, run by the prebuild that CI builds and not run here. One mark:
+<code>scope_enforced</code>.</li>
+<li>Study when: you run Claude Code as the agent and want cross-session
+recall of what was said, with no model on the write path and a scope key
+the session cannot choose.</li>
+<li>Do not copy when: memory must hold facts rather than quotes,
+contradictions must be resolved, or forgetting must be by subject rather
+than by day.</li>
 </ul>
         </article>
       </div>
