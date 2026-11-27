@@ -235,6 +235,8 @@ In [marm-memory](../../systems/marm-memory/) the bundled console is not the seco
 
 **[Agent Memory Forest](../../systems/agent-memory-forest/)** makes the editing surface the store and puts a judge after it. Every fact is a line in a Markdown leaf that the keeper agent or a person edits with ordinary tools; the package writes no fact, and `forest check --sync`, a lint held against the run's own baseline and `forest levels apply` decide afterwards whether the page is in shape and where it belongs. A changed fact is meant to leave its old statement in the page's Update record, and nothing checks that an edit did. The correction also stops at the page: the search index serves the Update record and superseded leaves as ordinary sections, so the old value is found as readily as the new one.
 
+**[remindb](../../systems/remindb/) has two editing surfaces, and the one the agent holds loses at every session start.** Notes are files a person edits, compiled into nodes whose id is file, parent and sibling index, and the agent holds `MemoryWrite`, `MemorySummarize` and `MemoryForget` on the same rows. The rescan's first scan after each `serve` start compiles every file, so an edit or summary on a file-derived node goes back to the file's text and a forgotten one comes back (`pkg/mcp/rescan/rescan.go:136`, `:273-277`, `pkg/diff/engine.go:14-64`); only nodes under the pseudo-file `mcp:write` keep the agent's change. The `memorize` skill warns about the write and not about the summary or the forget, which the server's cold-node notice asks for. **When a compiled view is authoritative, an editor on the view has to write back to the source or be refused.**
+
 ## Tests to write first
 
 - Edit a unit, then run the automatic pass, and assert the edit survives.

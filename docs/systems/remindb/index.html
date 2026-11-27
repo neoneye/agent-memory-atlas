@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go MCP server that compiles
+notes in five formats into a versioned SQLite node tree, searched by
+FTS5 and ranked by temperature.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="remindb — Agent Memory Atlas">
+    <meta property="og:description" content="A Go MCP server that
+compiles notes in five formats into a versioned SQLite node tree,
+searched by FTS5 and ranked by temperature.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="remindb — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go MCP server that
+compiles notes in five formats into a versioned SQLite node tree,
+searched by FTS5 and ranked by temperature.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>remindb — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "remindb",
+      "description": "A Go MCP server that compiles notes in five formats into a versioned SQLite node tree, searched by FTS5 and ranked by temperature.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Notes compiled into a versioned node tree
+in one SQLite file, searched by FTS5 and ranked by temperature</p>
+          <h1>remindb</h1>
+          <p class="document-deck">A Go MCP server that compiles notes
+in five formats into a versioned SQLite node tree, searched by FTS5 and
+ranked by temperature.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/radimsem/remindb">
+              <span>Source</span>
+              <strong>radimsem/remindb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/radimsem/remindb/commit/af0e0a84e58a5830f892727176ace73fa9516928" title="af0e0a84e58a5830f892727176ace73fa9516928">
+              <span>Analyzed revision</span>
+              <code>af0e0a84…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-27</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/radimsem--remindb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>radimsem--remindb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE and in the five plugin manifests that carry a licence
+field</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>16,391
+lines of Go in 125 non-test files and 24,407 lines of Go tests in 92
+files; a 325-line Python memory provider for Hermes Agent and two
+TypeScript plugin shims under 12 lines each</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>306
+commits from 15 April to 26 November 2026: 297 by the author under two
+names, seven by dependabot and one each from two other contributors; 24
+tags, the latest v0.3.12</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>759
+Go test functions, 13 fuzz targets and 28 benchmarks in 92 files; ci.yml
+runs go test -race ./...; a Hermes smoke script that needs hermes on
+PATH; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>remindb is a single Go binary that compiles a directory of notes
+(Markdown, HTML, JSON, YAML, TOON) into a tree of typed nodes in one
+SQLite file and serves it to coding agents over MCP with FTS5 search,
+budgeted fetch and a wiki-link graph. What is notable is the snapshot
+log: every compile, write, summary, forget and rollback is one snapshot
+whose diffs keep the old and new content and the old metadata, so an
+agent resyncs with a delta and any snapshot restores exactly. What is
+weak is that the notes on disk are the truth and the agent's edits are
+not. Each <code>serve</code> start recompiles every file, so a summary,
+a write or a forget on a file-derived node is undone at the next
+session, and that recompile runs without the secret scrubber the
+documentation says it uses.</p>
+<p>Memory has two planes. The <strong>compile plane</strong> is the
+source directory: the parser turns each file into nodes whose id is a
+hash of file, parent and sibling position, and the compiler diffs the
+parse against the stored nodes of that file. The <strong>flat
+plane</strong> is the agent's tools: <code>MemoryWrite</code> stores one
+unparsed text node, <code>MemorySummarize</code> replaces one node's
+content, <code>MemoryForget</code> deletes by id. Both planes go through
+one emitter.</p>
+<p>The bundled <code>memorize</code> skill tells the agent to write
+structured memory as a file under the source root, and warns that a
+<code>MemoryWrite</code> on a file-sourced node is overwritten by the
+next compile
+(<code>skills/memorize/references/write-paths.md:57</code>). It gives no
+such warning for summarize or forget. The server's cold-node notice asks
+for summaries of whatever has cooled, and most of that is
+file-derived.</p>
+<p>Ranking multiplies the FTS5 score by a temperature weight and a
+recency factor. Temperature is a score with no epistemic meaning: it
+rises on read, decays on a five-minute tick, and drives the cold-node
+notice.</p>
+<p>One mark is earned: <code>negative_eval</code>, for three populated
+cases on the node store. Section 9 gives the reason for each of the six
+withheld, of which <code>audit_log</code> is the nearest miss.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a node of a compiled note, or a flat text node
+the agent wrote</strong>. Nothing distinguishes a belief from a
+candidate. A node is served from the moment its snapshot commits and
+stops being served only when it is deleted.</p>
+<p>How a node comes to exist and how it ends:</p>
+<ul>
+<li><strong>Compiled.</strong> A file under the source root is parsed
+and transformed. Its nodes get ids from
+<code>IdentifyNode(source, parent, siblingIndex)</code>
+(<code>internal/contentid/contentid.go:28</code>), so editing a
+paragraph keeps its id and inserting one above it shifts the ids after
+it. <code>DiffFlat</code> compares each parsed node with the stored node
+of the same id by content hash and emits <code>add</code>,
+<code>mod</code> or <code>rem</code>
+(<code>pkg/diff/engine.go:14-64</code>).</li>
+<li><strong>Written.</strong> <code>MemoryWrite</code> without an anchor
+creates a root <code>text</code> node in the pseudo-file
+<code>mcp:write</code> whose id is a hash of the payload, so the same
+text written twice is one node. With an anchor it replaces that node's
+content (<code>pkg/mcp/tools/write.go:33-75</code>).</li>
+<li><strong>Summarized.</strong> <code>MemorySummarize</code> replaces a
+node's content and label and sets its temperature to 0.5
+(<code>pkg/mcp/tools/summarize.go:42-63</code>).</li>
+<li><strong>Forgotten.</strong> <code>MemoryForget</code> deletes a
+node, refusing one with children unless the mode is <code>cascade</code>
+or <code>reparent</code>
+(<code>pkg/mcp/tools/forget.go:76-121</code>).</li>
+<li><strong>Rolled back.</strong> <code>MemoryRollback</code>
+reverse-applies diffs from HEAD to a target snapshot and writes the
+result as one new snapshot
+(<code>pkg/mcp/tools/rollback.go:38-116</code>).</li>
+</ul>
+<p>For a file-derived node the compile plane has the last word. The next
+compile of its file finds the stored content differs from the parse and
+emits a <code>mod</code> back to the file's text, or finds the id
+missing and emits an <code>add</code>. The rescan loop compiles every
+file on its first scan after each <code>serve</code> start, because its
+table of modification times starts empty
+(<code>pkg/mcp/rescan/rescan.go:136</code>, <code>:146-151</code>,
+<code>:273-277</code>).
+<code>TestRescanLoop_RunCatchesStaleEditsAtStartup</code> asserts that
+startup reconcile (<code>pkg/mcp/rescan/rescan_test.go:612-649</code>).
+So the agent's verbs are durable for <code>mcp:write</code> nodes and
+last until the next session for the rest.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the source plane and the agent plane write the same node rows through one emitter that records a snapshot and per-node diffs; serve start recompiles every file without the redactor, so an agent's write, summary or forget on a file-derived node is reverted or re-added; search ranks FTS5 hits by temperature and recency; rollback with drop_after deletes the history the diffs keep</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the source plane and the agent plane write the same node rows through one emitter that records a snapshot and per-node diffs; serve start recompiles every file without the redactor, so an agent&#39;s write, summary or forget on a file-derived node is reverted or re-added; search ranks FTS5 hits by temperature and recency; rollback with drop_after deletes the history the diffs keep
+flowchart TD
+    subgraph SRC[&quot;Source plane&quot;]
+        direction TB
+        F[&quot;Notes on disk&lt;br/&gt;md, html, json, yaml, toon&quot;]
+        C1[&quot;remindb compile,&lt;br/&gt;MemoryCompile&lt;br/&gt;redactor on&quot;]
+        C2[&quot;serve start: every file&lt;br/&gt;rescan: changed files&lt;br/&gt;no redactor&quot;]
+        F ~~~ C1 ~~~ C2
+    end
+    subgraph AG[&quot;Agent plane&quot;]
+        direction TB
+        W[&quot;MemoryWrite,&lt;br/&gt;MemorySummarize&lt;br/&gt;redactor on&quot;]
+        X[&quot;MemoryForget&lt;br/&gt;strict, cascade,&lt;br/&gt;reparent&quot;]
+        R[&quot;MemoryRollback&lt;br/&gt;drop_after flag&quot;]
+        W ~~~ X ~~~ R
+    end
+    SRC --&gt; D[&quot;DiffFlat by node id&lt;br/&gt;id = file + parent&lt;br/&gt;+ sibling index&quot;]
+    D --&gt; E[&quot;Emit in one tx:&lt;br/&gt;upsert or delete nodes,&lt;br/&gt;snapshot + diffs&quot;]
+    AG --&gt; E
+    E --&gt; N[(&quot;nodes + nodes_fts&lt;br/&gt;temperature, pinned&quot;)]
+    E --&gt; H[(&quot;snapshots + diffs&lt;br/&gt;old and new content&quot;)]
+    C2 -.-&gt; Z[&quot;Edited node differs&lt;br/&gt;from file: mod back;&lt;br/&gt;forgotten id: add back&quot;]
+    Z -.-&gt; N
+    R -.-&gt;|&quot;drop_after=true&quot;| P[&quot;DELETE diffs and&lt;br/&gt;snapshots after target&quot;]
+    P -.-&gt; H
+    H --&gt; HI[&quot;History, Delta, Diff:&lt;br/&gt;forgotten text&lt;br/&gt;stays readable&quot;]
+    N --&gt; S[&quot;MemorySearch&lt;br/&gt;FTS5 top 50 by BM25&lt;br/&gt;x temperature x recency&quot;]
+    S --&gt; B[&quot;+0.15 temperature&lt;br/&gt;on every listed node&quot;]
+    T[&quot;Tick every 5 min&lt;br/&gt;x exp(-0.05 per hour)&lt;br/&gt;unpinned only&quot;] --&gt; N</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One process, <code>remindb serve</code>, over one SQLite file opened
+through the pure-Go <code>modernc.org/sqlite</code> driver in WAL mode
+with a five-second busy timeout and a single connection
+(<code>pkg/store/db.go:37-51</code>). Writers inside the process are
+serialised by <code>Store.OpMu</code>, a Go mutex
+(<code>pkg/store/db.go:22</code>). Nothing coordinates two processes
+beyond SQLite's own locking.</p>
+<p><code>serve</code> speaks MCP over stdio by default, one process per
+client, or streamable HTTP on <code>127.0.0.1:7474</code>. A
+non-loopback bind is refused unless <code>REMINDB_AUTH_TOKEN</code> is
+set or <code>--insecure-public</code> is passed, and the token is
+compared in constant time (<code>pkg/mcp/http.go:38-53</code>,
+<code>:95-129</code>). With a source root, <code>serve</code> also runs
+the initial compile of an empty store, the rescan loop, the temperature
+tracker and a session ledger in one errgroup
+(<code>cmd/remindb/serve.go:158-205</code>).</p>
+<p>There is no model call anywhere in the binary. Summaries are written
+by the agent, token counts are <code>len/4</code>
+(<code>internal/tokens/tokens.go</code>), and there are no
+embeddings.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Install is a release binary (<code>install.sh</code>,
+<code>install.ps1</code>) or <code>go build</code>. Nothing else has to
+run, no API key is needed, and it works offline. The plugin manifests
+for Claude Code, Codex and Gemini CLI start <code>remindb serve</code>
+with <code>REMINDB_DB</code> and <code>REMINDB_SOURCE</code> from the
+environment (<code>plugins/claude-code/.mcp.json</code>). The store is
+readable with <code>sqlite3</code> and <code>remindb inspect</code>, and
+<code>remindb doctor --fix</code> takes a timestamped backup before it
+repairs FTS drift, orphans, dangling diffs and the HEAD cursor
+(<code>cmd/remindb/doctor.go:32</code>, <code>:67-82</code>). Because
+the notes on disk are the source, the cheapest repair is to delete the
+database and recompile, at the cost of the agent's flat-plane nodes and
+the history.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema.</strong> <code>migrations/0001_init.sql</code>
+(nodes, snapshots, diffs, cursors, <code>nodes_fts</code> and its three
+triggers), <code>0003_relations.sql</code> (relations, pending
+relations, the trigger that demotes incoming edges of a deleted node),
+<code>0004_node_pin.sql</code>,
+<code>0005_diff_metadata.sql</code>.</li>
+<li><strong>Compile.</strong> <code>pkg/compiler/compiler.go</code>:
+<code>Compile</code> <code>:150-288</code>, the transform
+<code>:236</code>, previous state <code>:621-641</code>, diff
+<code>:254</code>, the emit and relations transaction
+<code>:259-282</code>, <code>CompileDir</code> <code>:304-417</code>;
+<code>pkg/transformer/transformer.go:14-49</code> (whitespace, scrub,
+hash, label, tokens, ids); <code>pkg/diff/engine.go:14-64</code>.</li>
+<li><strong>Emit.</strong> <code>pkg/emitter/emitter.go</code>:
+<code>Emit</code> and <code>EmitTx</code>, each returning early on no
+deltas <code>:45-65</code>, node upserts and deletes
+<code>:93-100</code>, snapshot <code>:104-111</code>, diffs with old
+metadata <code>:113-131</code>, cursor <code>:133</code>; the node
+upsert in <code>pkg/store/queries.go:95-110</code>.</li>
+<li><strong>Agent writes.</strong>
+<code>pkg/mcp/tools/write.go:22-83</code>,
+<code>summarize.go:21-71</code>, <code>forget.go:23-121</code>,
+<code>rollback.go:22-126</code>, the shared single-node emit in
+<code>deps.go:112-132</code>.</li>
+<li><strong>Rescan.</strong> <code>pkg/mcp/rescan/rescan.go</code>:
+<code>Run</code> <code>:146-171</code>, <code>scan</code>
+<code>:215-351</code>, the compile options <code>:324-331</code>,
+deleted-file purge <code>:353-409</code>; the initial compile in
+<code>pkg/mcp/initial.go:15-41</code>.</li>
+<li><strong>Search and fetch.</strong>
+<code>pkg/store/search.go:24-113</code>;
+<code>pkg/query/engine.go</code>: <code>Fetch</code>
+<code>:40-73</code>, <code>Search</code> <code>:118-136</code>;
+<code>pkg/query/rank.go:46-62</code>; <code>pkg/query/budget.go</code>;
+<code>pkg/temperature/decay.go:20-28</code>.</li>
+<li><strong>Temperature.</strong>
+<code>pkg/temperature/tracker.go:114-143</code>,
+<code>cold.go:12-53</code>, <code>config.go:23-36</code>; boost on read
+in <code>pkg/mcp/tools/deps.go:96-109</code>; decay and cold selection
+in <code>pkg/store/queries.go:351-356</code>.</li>
+<li><strong>History.</strong> <code>pkg/store/snapshot.go</code>:
+restore <code>:288-326</code>, prune <code>:378-397</code>;
+<code>pkg/mcp/tools/history.go:20-63</code>; delta and diff in
+<code>pkg/query/engine.go:143-179</code>.</li>
+<li><strong>MCP surface.</strong> Tool registration
+<code>pkg/mcp/server.go:329-418</code>; the cold notice
+<code>:260-327</code>; resources under
+<code>pkg/mcp/resources/</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <code>nodes</code> row carries <code>id</code> (11 base62
+characters), <code>parent_id</code> with <code>ON DELETE CASCADE</code>,
+<code>source_file</code>, <code>node_type</code>, <code>depth</code>,
+<code>label</code>, <code>content</code>, <code>format</code>
+(<code>plain</code> or <code>toon</code>), <code>token_count</code>,
+<code>content_hash</code>, <code>temperature</code>,
+<code>access_count</code>, <code>last_accessed_at</code>,
+<code>created_at</code>, <code>updated_at</code> and <code>pinned</code>
+(<code>migrations/0001_init.sql:1-17</code>,
+<code>0004_node_pin.sql:1</code>). There is no scope column, no status
+and no validity time.</p>
+<p>A <code>snapshots</code> row is an id, an opaque
+<code>cursor_hash</code>, a parent snapshot, a message such as
+<code>write:&lt;id&gt;</code>, <code>forget:cascade:&lt;id&gt;</code> or
+<code>rescan</code>, a <code>compile_root</code> and a time. A
+<code>diffs</code> row is snapshot, node, <code>op</code>
+(<code>add</code>, <code>mod</code>, <code>rem</code>), old and new
+hash, and old and new content. Since migration 0005 it also holds the
+old parent, source, type, depth, label, format and token count, which is
+what lets a rollback undo a reparent or a rename
+(<code>migrations/0005_diff_metadata.sql</code>). Neither table records
+which session or client made the change.</p>
+<p><code>relations</code> hold directed weighted edges with an origin of
+<code>parsed</code> (from a <code>[[Label; w=2.5]]</code> in a compiled
+file) or <code>manual</code> (<code>MemoryRelate</code>). An edge whose
+target is not yet compiled waits in <code>pending_relations</code>, and
+a trigger moves a deleted node's incoming edges back there, keyed on its
+label and file (<code>migrations/0003_relations.sql:30-38</code>).
+Relations and pins are outside the snapshot log by design.</p>
+<p>Temporal fields are record times only. <code>created_at</code> and
+<code>updated_at</code> default to <code>unixepoch()</code>, and
+<code>updated_at</code> moves on every temperature change as well as on
+content changes (<code>pkg/store/queries.go:337-366</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is tool-mediated; nothing is injected into a prompt. The
+agent orients with <code>MemoryTree</code>, searches, then fetches.</p>
+<p><code>MemorySearch</code> rewrites a plain query into quoted terms
+joined by <code>OR</code>, passes through a query that contains an FTS5
+operator, and retries with every term quoted if FTS5 rejects the syntax
+(<code>pkg/store/search.go:56-113</code>). It takes the top 50 rows by
+BM25 (<code>pkg/query/engine.go:38</code>,
+<code>pkg/store/queries.go:185-191</code>) and re-scores each as
+<code>-rank × (0.3 + 0.7 × temperature) × recency</code>. Recency is
+<code>1 / (1 + hours since last access / 24)</code>, and 1.0 for a node
+never accessed (<code>pkg/query/rank.go:46-62</code>,
+<code>pkg/temperature/decay.go:20-28</code>). A budget keeps nodes in
+score order whose content would fit and skips the rest
+(<code>pkg/query/budget.go</code>). The response lists type, label, id,
+file, score, temperature and token count per node, not content
+(<code>pkg/query/format.go:27-39</code>), and every listed node gets the
+0.15 access boost (<code>pkg/mcp/tools/search.go:26</code>).</p>
+<p>The recency factor penalises a node for having been read. At the
+defaults, take two nodes at 0.5, one read once and the other never. A
+day of server uptime later the read node has temperature about 0.20 and
+recency 0.5, a weight of about 0.22. The unread one has temperature 0.15
+and recency 1.0, a weight of about 0.41. With equal BM25 the unread node
+ranks first. The README says <em>"Hot nodes rank higher in search"</em>
+(<code>README.md:42</code>); the formula is stated in
+<code>docs/search.md:19</code>, and the inversion follows from it.</p>
+<p><code>MemoryFetch</code> returns an anchor with its ancestors,
+children and siblings to a depth, ranks that context by the same score,
+fills the budget and puts the anchor last
+(<code>pkg/query/engine.go:40-73</code>). <code>MemoryRelated</code>
+walks relations up to five hops in either direction above a minimum
+weight, ordered by summed path weight and then temperature
+(<code>pkg/store/queries.go:304-332</code>). Search, fetch and batch
+fetch have no budget unless the workspace configures one
+(<code>pkg/mcp/tools/search.go:18</code>, <code>fetch.go:19</code>);
+<code>MemoryRelated</code> defaults to 1,000 tokens.</p>
+<p>The read paths select by FTS match, by id or by tree position, and by
+nothing else.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Compile.</strong> The compiler parses files in parallel and
+transforms them. It loads the previous nodes for those files, or for a
+directory compile the nodes whose latest diff was written under that
+compile root, and diffs. Then, in one transaction, it upserts and
+deletes nodes, writes a snapshot and its diffs, advances HEAD and
+resolves relations (<code>pkg/compiler/compiler.go:150-288</code>,
+<code>:621-641</code>). A compile or a write that changes nothing writes
+no snapshot (<code>pkg/emitter/emitter.go:45-65</code>).</p>
+<p><strong>The redactor is not on every compile.</strong>
+<code>Transform</code> scrubs content before hashing with whatever
+redactor it is given, and a nil redactor returns its input unchanged
+(<code>pkg/transformer/transformer.go:25-28</code>,
+<code>internal/redaction/redact.go:49-52</code>). The CLI compile and
+the <code>MemoryCompile</code> tool pass one
+(<code>cmd/remindb/compile.go:85</code>,
+<code>pkg/mcp/tools/compile.go:42</code>). The initial compile of an
+empty store calls <code>CompileDir</code> with a logger only
+(<code>pkg/mcp/initial.go:29</code>), and the rescan loop builds its
+options without one (<code>pkg/mcp/rescan/rescan.go:324-331</code>,
+<code>cmd/remindb/serve.go:190-195</code>).</p>
+<p>So a file holding an AWS key compiled by <code>remindb compile</code>
+is stored with the marker. The first scan of the next <code>serve</code>
+recompiles it unscrubbed, sees a different hash and stores the key, with
+the scrubbed text as the diff's old content.
+<code>docs/configuration.md:93</code> says the scrubber is <em>"applied
+on ingest by both <code>compile</code> and <code>serve</code>"</em>.</p>
+<p><strong>Agent writes</strong> take <code>OpMu</code>, scrub the
+payload, compute the delta against the stored node and emit one snapshot
+(<code>pkg/mcp/tools/deps.go:112-132</code>). They block the call for
+one SQLite transaction and are searchable when it commits, since
+triggers keep the FTS index.</p>
+<p><strong>Forget</strong> builds one <code>rem</code> delta per removed
+node and, for <code>reparent</code>, a <code>mod</code> per moved child
+whose hash does not change, then emits them
+(<code>pkg/mcp/tools/forget.go:76-121</code>). The removed text stays in
+the diffs.</p>
+<p><strong>Rollback</strong> computes the state at the target by
+reverse-applying diffs and writes the difference as one snapshot. With
+<code>drop_after</code> it then deletes every diff and snapshot after
+the target except the new one
+(<code>pkg/mcp/tools/rollback.go:52-111</code>,
+<code>pkg/store/snapshot.go:378-397</code>). The <code>memorize</code>
+skill recommends that flag for leaked secrets
+(<code>skills/memorize/references/lifecycle.md:43</code>). It is the
+only path that removes text from the history.</p>
+<p><strong>What reverts a write.</strong> The rescan's first scan
+compiles every supported file (section 2). For each node the agent
+changed in a file-derived subtree, the parse differs from the stored
+content and the compiler emits a <code>mod</code> back to the file. For
+each one it forgot, the id is missing from the previous state and it
+emits an <code>add</code>. A summarized node keeps the temperature its
+summary set while its content returns, because the upsert keeps the
+stored temperature unless the compile seeds one
+(<code>pkg/store/queries.go:109</code>). It cools again and is offered
+for summary again.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Writes are synchronous and model-free. A new memory is retrievable
+when its transaction commits. The temperature tick updates every
+unpinned row every five minutes
+(<code>pkg/store/queries.go:351-352</code>). Each <code>serve</code>
+process runs its own tracker, so with two sessions on one database every
+tick is applied twice. With a source root, each <code>serve</code> start
+re-parses every file under it. Nothing is injected per turn; a search
+response is one line per node, and a fetch without a budget returns the
+anchor's whole neighbourhood.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers 17 tools, <code>MemoryCompile</code> only
+with a source root (<code>pkg/mcp/server.go:329-418</code>), and
+read-only resources that never boost temperature. The agent holds every
+verb, <code>MemoryRollback</code> with <code>drop_after</code>
+included.</p>
+<p>The plugins mount the server and add nothing else. The Claude Code,
+Codex and Gemini CLI manifests are an MCP entry, and the OpenClaw and
+OpenCode files are shims of eleven and eight lines. The Hermes Agent
+provider spawns <code>remindb serve</code> as a subprocess and proxies
+<code>tools/list</code> and <code>tools/call</code>, with no prefetch or
+turn sync, so retrieval there is tool-driven too
+(<code>plugins/hermes-agent/memory/remindb/__init__.py:175-301</code>).</p>
+<p>Four skills carry the usage contract: <code>remember</code> routes
+intent, <code>remind</code> covers reads, <code>memorize</code> covers
+writes and lifecycle, and <code>remindb-setup</code> writes
+<code>.remindb/</code> and wires the host. The cold-node notice goes out
+as an MCP <code>notifications/message</code> at <code>warning</code>
+with up to 50 node ids and a suggested <code>MemorySummarize</code>
+(<code>pkg/mcp/server.go:260-327</code>). Whether it reaches the model
+depends on the host.</p>
+<p>Each stdio client starts its own <code>serve</code>, so on a host
+that spawns one per session, every new session recompiles the source
+root before its first call.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-source-wins-and-the-agent-is-told-only-part-of-it">The
+source wins, and the agent is told only part of it</h3>
+<p>The compile plane is authoritative, and that is a coherent design:
+notes live in files a person edits, and the database is a compiled view
+of them. The cost is that three of the agent's verbs are provisional on
+file-derived nodes. A <code>MemoryForget</code> returns at the next
+session start, a <code>MemorySummarize</code> reverts, and a
+<code>MemoryWrite</code> reverts, which the skill does say. The README
+describes the summary as compaction <em>"in place — same anchor, same
+history, fewer tokens"</em> (<code>README.md:44</code>).</p>
+<p>Every unpinned node decays, and an unread node falls from 0.5 below
+the 0.1 cold threshold after about 32 hours of uptime. Most of what the
+notice asks the agent to summarize is therefore file-derived and will
+revert. No test compiles a file after an agent change to one of its
+nodes.</p>
+<h3 id="history-is-kept-and-is-also-the-agents-to-delete">History is
+kept, and is also the agent's to delete</h3>
+<p>The diff log is the strongest part of the system. Every content
+change through the emitter writes old and new content and old metadata
+in the same transaction as the change. Rollback is a forward snapshot,
+and <code>MemoryHistory</code> reads the trail of a node that no longer
+exists (<code>pkg/mcp/tools/history.go:32-35</code>).</p>
+<p>Three things keep it from being an audit record.
+<code>drop_after=true</code> on <code>MemoryRollback</code>, an agent
+tool, hard-deletes diffs and snapshots
+(<code>pkg/store/queries.go:170-172</code>). <code>doctor --fix</code>
+deletes dangling diffs and the HEAD cursor (<code>:398-401</code>). And
+a snapshot names no actor or session. Pins, relations and temperature
+change outside the log.</p>
+<h3 id="forget-is-not-erasure">Forget is not erasure</h3>
+<p>A forgotten node's content stays in <code>diffs.old_content</code>,
+readable through <code>MemoryHistory</code>, <code>MemoryDelta</code>
+and <code>MemoryDiff</code>, and restorable by rollback. The only
+removal is <code>drop_after</code>, which deletes every change after the
+target, not the one node. The rescan and initial compile store secrets
+that the CLI compile scrubbed (section 7).</p>
+<h3 id="concurrency">Concurrency</h3>
+<p><code>OpMu</code> serialises tools, rescan and decay within one
+process. Two processes on one file, which is the stdio default for two
+sessions, each run a rescan, a tracker and the startup recompile against
+the same rows, with SQLite's busy timeout as the only coordination.</p>
+<h3 id="transport">Transport</h3>
+<p>Stdio has no network surface. Loopback HTTP has no authentication by
+default, and <code>pkg/mcp/http.go</code> passes no options to the SDK's
+streamable handler and adds no <code>Origin</code> or <code>Host</code>
+check of its own (<code>:51</code>). Off loopback the server refuses to
+start without a token or the explicit opt-out.
+<code>MemoryCompile</code> rejects paths outside the source root after
+resolving symlinks (<code>pkg/mcp/tools/compile.go:63-96</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>negative_eval</code> — earned.</strong> Three
+committed cases require particular material absent from a populated
+read: a scrubbed key from a search that must return the node, a
+rolled-away value from a search beside a hit for the restored one, and a
+forgotten leaf from a tree that must keep its parent
+(<code>pkg/mcp/tools/tools_test.go:443-481</code>,
+<code>:2422-2445</code>,
+<code>mcp_integration_test.go:1715-1745</code>). Each runs against the
+real SQLite store in memory. The cascade case's search assertion would
+pass on an empty store by itself.</li>
+<li><strong><code>audit_log</code> — withheld</strong>, on the
+append-only clause, because the agent can delete the log through
+<code>MemoryRollback</code>. With that flag off the tool surface, the
+diffs would carry the mark with the missing actor as its caveat.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Forget is keyed
+on a node id, and the next compile of the file re-adds the id. An
+<code>mcp:write</code> node written again with the same text gets the
+same id back.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> Temperature is
+a float used for ranking and for the cold notice, and
+<code>pinned</code> exempts a node from decay. Neither withholds a node
+from any read.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> No scope
+column exists; the boundary is the database file.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong> Record times
+only.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Every verb is
+an agent tool and nothing waits.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the tests; the counts are from reading. CI runs gofmt,
+golangci-lint, <code>go mod tidy</code> drift, <code>make build</code>
+and <code>go test -race ./...</code>
+(<code>.github/workflows/ci.yml</code>). Fuzz targets cover the parser,
+compiler, transformer, redaction, path matching, query rewriting and
+temperature.</p>
+<p>The memory tests are in three files: 94 functions in
+<code>pkg/mcp/tools/tools_test.go</code>, 27 in
+<code>mcp_integration_test.go</code> driving the MCP server through an
+in-process client, and 55 in <code>pkg/store/store_test.go</code>. They
+cover each forget mode, rollback chains and reparent reversal, FTS
+staying in step with rollback, delta truncation, diff consolidation and
+redaction on write and summarize.
+<code>pkg/compiler/compiler_atomicity_test.go</code> makes the relations
+step fail inside the compile transaction and requires no snapshot to
+survive. <code>TestRescanLoop_RunCatchesStaleEditsAtStartup</code>
+asserts the startup recompile.</p>
+<p>Not tested: a forget, summary or write on a file-derived node
+followed by a compile of its file; the rescan or initial compile with a
+secret in the file; two processes on one database; and the ranking
+inversion above. The Hermes script is a smoke test of provider discovery
+and config, not of memory.</p>
+<p>The README's token savings, 43.9% to 99.8% across six corpora, are
+committed only as drawings, in <code>assets/bench.svg</code> and
+<code>assets/excalidraw/benchmarks.excalidraw</code>. The largest
+corpus, an Obsidian vault of about 450 files, is not in the tree.
+<code>internal/bench/scenarios.go</code> measures tokens: the naive side
+is a directory listing plus every file's content at four characters a
+token, against remindb's tree, search, fetch and delta output. It does
+not score whether the answer was in what was returned. There is no paper
+reference in the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One snapshot per call, with old content and old metadata in
+the diff.</strong> Delta resync, per-node history, rollback of a rename
+or reparent and forensic diffs all come from one table, written inside
+the transaction that made the change.</li>
+<li><strong>A structural id for compiled content.</strong> Hashing file,
+parent and sibling index keeps an anchor through an edit, which is what
+lets the compiler emit a <code>mod</code> instead of a delete and an
+add.</li>
+<li><strong>Search that returns anchors, and a fetch that spends the
+budget.</strong> A list of labels and token counts is cheap to read and
+lets the agent choose what to pay for.</li>
+<li><strong>Pending edges keyed on label and file.</strong> A link to a
+node not yet compiled, or just deleted, waits and resolves on the next
+compile instead of being dropped.</li>
+<li><strong>Fail closed on a public bind.</strong> The server refuses a
+non-loopback address with no token unless an ugly flag says
+otherwise.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two writable planes where one silently wins.</strong> If a
+compiled view is authoritative, refuse agent edits to compiled nodes,
+write them back to the source, or keep them as an overlay the compiler
+reads.</li>
+<li><strong>A scrubber passed as an option.</strong> A nil default made
+the redactor optional on the two paths that run unattended.</li>
+<li><strong>A history-delete flag on the agent's tool.</strong> Erasure
+belongs to the person who owns the store.</li>
+<li><strong>A recency term that is 1.0 for never.</strong> A node nobody
+read should not outrank one read a day earlier.</li>
+<li><strong>A decay tick per process</strong> on a shared file.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single developer whose notes already live in Markdown
+and who wants an agent to read them cheaply: one binary, no service, no
+key, and the notes stay the editable truth. It suits that reader best if
+the agent's tools are treated as read-mostly and anything worth
+remembering goes in a file. It does not suit anyone who wants the
+agent's own conclusions, corrections or deletions to persist against the
+files it read them from. Nor does it suit anyone who needs a secret kept
+out of the database once it is in a note, or a team sharing one
+database, which has no scope and recompiles everything at each session's
+start.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the go-sdk v1.8.0 streamable HTTP handler check
+<code>Origin</code> or <code>Host</code> by default?
+<code>pkg/mcp/http.go</code> passes no options and adds no check.</li>
+<li>Do Claude Code, Codex and Gemini CLI show an MCP
+<code>notifications/message</code> at <code>warning</code> to the model,
+or only in a log? The summarize loop depends on it.</li>
+<li>Is the startup recompile meant to override agent summaries and
+forgets? The skill warns about <code>MemoryWrite</code> only.</li>
+<li>What were the vault benchmark's raw numbers and corpus? Only the
+rendered percentages are committed.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>migrations/0001_init.sql</code> to
+<code>0005_diff_metadata.sql</code></td>
+<td>Nodes, FTS5 and triggers, snapshots, diffs, cursors, relations,
+pins, diff metadata</td>
+</tr>
+<tr>
+<td><code>pkg/compiler/compiler.go</code></td>
+<td>Compile of files and directories, previous state, the emit and
+relations transaction</td>
+</tr>
+<tr>
+<td><code>pkg/transformer/transformer.go</code></td>
+<td>Whitespace, scrub, hash, label, token estimate, structural ids</td>
+</tr>
+<tr>
+<td><code>internal/contentid/contentid.go</code></td>
+<td><code>IdentifyNode</code> and <code>IdentifyPayload</code></td>
+</tr>
+<tr>
+<td><code>internal/redaction/redact.go</code></td>
+<td>The secret scrubber and its nil no-op</td>
+</tr>
+<tr>
+<td><code>pkg/diff/engine.go</code></td>
+<td><code>DiffFlat</code></td>
+</tr>
+<tr>
+<td><code>pkg/emitter/emitter.go</code></td>
+<td>One snapshot, its diffs and its node changes per call</td>
+</tr>
+<tr>
+<td><code>pkg/store/queries.go</code></td>
+<td>Every SQL statement, including decay, prune and the doctor
+fixes</td>
+</tr>
+<tr>
+<td><code>pkg/store/snapshot.go</code></td>
+<td>Restore by reverse diffs, prune</td>
+</tr>
+<tr>
+<td><code>pkg/store/search.go</code></td>
+<td>FTS5 query rewrite and retry</td>
+</tr>
+<tr>
+<td><code>pkg/query/engine.go</code>, <code>rank.go</code>,
+<code>budget.go</code>, <code>format.go</code></td>
+<td>Search, fetch, delta, diff; scoring; budget fill; output</td>
+</tr>
+<tr>
+<td><code>pkg/temperature/</code></td>
+<td>Defaults, boost, decay tick, cold selection</td>
+</tr>
+<tr>
+<td><code>pkg/mcp/rescan/rescan.go</code></td>
+<td>Rescan loop, startup recompile, deleted-file purge</td>
+</tr>
+<tr>
+<td><code>pkg/mcp/initial.go</code></td>
+<td>Initial compile of an empty store</td>
+</tr>
+<tr>
+<td><code>pkg/mcp/server.go</code>, <code>http.go</code></td>
+<td>Tool registration, cold notice, HTTP transport and bearer auth</td>
+</tr>
+<tr>
+<td><code>pkg/mcp/tools/</code></td>
+<td>The 17 tools</td>
+</tr>
+<tr>
+<td><code>cmd/remindb/serve.go</code></td>
+<td>Process wiring</td>
+</tr>
+<tr>
+<td><code>plugins/hermes-agent/memory/remindb/__init__.py</code></td>
+<td>Hermes memory provider</td>
+</tr>
+<tr>
+<td><code>skills/memorize/references/write-paths.md</code>,
+<code>lifecycle.md</code></td>
+<td>The agent's write and lifecycle contract</td>
+</tr>
+<tr>
+<td><code>pkg/mcp/tools/tools_test.go</code>,
+<code>mcp_integration_test.go</code>,
+<code>pkg/mcp/rescan/rescan_test.go</code></td>
+<td>Tool, MCP and rescan tests</td>
+</tr>
+<tr>
+<td><code>internal/bench/scenarios.go</code></td>
+<td>Token-savings scenarios and the naive baseline</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Two delete statements on the log, beside the node
+writes.</strong>
+<code>git grep -n -E 'DELETE FROM|UPDATE (diffs|snapshots|nodes|cursors|relations)' -- '*.go' ':!*_test.go'</code>
+returns node deletes, reparent and temperature updates, pending-relation
+deletes, <code>qDeleteDiffsAfter</code> and
+<code>qDeleteSnapshotsAfter</code> at
+<code>pkg/store/queries.go:170</code> and <code>:172</code>, and the
+doctor fixes at <code>:398-401</code>.</li>
+<li><strong>The redactor reaches two of the four compile paths.</strong>
+<code>git grep -n 'WithRedactor' -- '*.go' ':!*_test.go'</code> returns
+<code>cmd/remindb/compile.go:85</code>,
+<code>cmd/remindb/serve.go:137</code> (the server, for agent writes),
+the two option definitions and <code>pkg/mcp/tools/compile.go:42</code>;
+<code>git grep -n -i 'redact' -- pkg/mcp/rescan pkg/mcp/initial.go</code>
+returns nothing.</li>
+<li><strong>No test redacts on rescan or initial compile.</strong>
+<code>git grep -n -i -E 'redact|scrub|AKIA' -- pkg/mcp/rescan cmd/remindb/serve_test.go pkg/mcp/initial_test.go integration_test.go</code>
+returns only <code>applyRedactionOverrides</code> cases in
+<code>cmd/remindb/serve_test.go</code>;
+<code>git grep -c -i 'AKIA' -- pkg/mcp/tools/tools_test.go</code>
+returns 6.</li>
+<li><strong>No test combines an agent edit with a recompile.</strong>
+<code>git grep -n -E 'HandleForget|MemoryForget|HandleSummarize|MemorySummarize' -- pkg/mcp/rescan pkg/compiler integration_test.go</code>
+returns nothing;
+<code>git grep -n 'compiler.CompileDir' -- pkg/mcp/rescan/rescan_test.go</code>
+matches.</li>
+<li><strong>No scope key.</strong>
+<code>git grep -n -i -E 'user_id|tenant|namespace|agent_id|project_id|workspace_id|owner' -- '*.go' '*.sql' ':!*_test.go'</code>
+returns only the <code>namespace</code> parameter of
+<code>IdentifyPayload</code> in
+<code>internal/contentid/contentid.go:35-37</code>;
+<code>git grep -c source_file -- '*.sql'</code> matches three
+migrations.</li>
+<li><strong>No status column.</strong>
+<code>git grep -n -i -E 'status|verified|confidence|trust' -- migrations</code>
+returns nothing.</li>
+<li><strong>No tombstone or validity time.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist|suppress|rejected' -- '*.go' '*.sql' ':!*_test.go'</code>
+returns two comments in <code>pkg/mcp/tools/compile.go</code> about a
+rejected path;
+<code>git grep -n -i -E 'valid_from|valid_to|valid_at|valid_until|effective_' -- '*.go' '*.sql'</code>
+returns nothing.</li>
+<li><strong>No review verb.</strong>
+<code>git grep -n -i -E 'approve|approval|review' -- '*.go' ':!*_test.go'</code>
+returns only <code>textPreview</code> in
+<code>internal/mcptest/mcptest.go</code>.</li>
+<li><strong>No embeddings or model call.</strong>
+<code>git grep -n -i -E 'embedding|vector|cosine' -- '*.go'</code>
+returns nothing;
+<code>git grep -n -i -E 'openai|anthropic|ollama|chat/completions' -- '*.go'</code>
+returns only redaction patterns and their tests.</li>
+<li><strong>Three tools boost through results, and one
+directly.</strong>
+<code>git grep -n 'boostResultNodes' -- '*.go' ':!*_test.go'</code>
+returns <code>fetch.go:31</code>, <code>fetch_batch.go:35</code> and
+<code>search.go:26</code>;
+<code>git grep -n 'RecordAccess' -- '*.go' ':!*_test.go'</code> adds
+<code>related.go:71</code>.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|doi\.org|CITATION' -- .</code>
+returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-27</strong> — <a
+href="https://github.com/radimsem/remindb/commit/af0e0a84e58a5830f892727176ace73fa9516928"><code class="commit-id" title="af0e0a84e58a5830f892727176ace73fa9516928">af0e0a84…</code></a>.
+First reading, read only, from a full clone at the head of
+<code>main</code>, the commit triage selected. Screened first: four
+auto-run surfaces (<code>.claude-plugin/</code>,
+<code>.githooks/</code>,
+<code>plugins/claude-code/.claude-plugin/plugin.json</code>,
+<code>plugins/claude-code/.mcp.json</code>), <code>go.mod</code> and
+<code>go.sum</code> inside the seven-day cooldown, build-time execution
+in the <code>Makefile</code>, no unpinned surface;
+<code>CLAUDE.md</code> and the <code>.claude/</code> agents, rules and
+skills read as data. Nothing was installed, built or run, and the 759 Go
+test functions were not run. One mark, <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>);
+<code>audit_log</code> withheld because <code>MemoryRollback</code> can
+delete the diff log.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

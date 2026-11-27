@@ -458,6 +458,21 @@ leave its old statement in the page's Update record, and nothing checks
 that an edit did. The correction also stops at the page: the search
 index serves the Update record and superseded leaves as ordinary
 sections, so the old value is found as readily as the new one.</p>
+<p><strong><a href="../../systems/remindb/">remindb</a> has two editing
+surfaces, and the one the agent holds loses at every session
+start.</strong> Notes are files a person edits, compiled into nodes
+whose id is file, parent and sibling index, and the agent holds
+<code>MemoryWrite</code>, <code>MemorySummarize</code> and
+<code>MemoryForget</code> on the same rows. The rescan's first scan
+after each <code>serve</code> start compiles every file, so an edit or
+summary on a file-derived node goes back to the file's text and a
+forgotten one comes back (<code>pkg/mcp/rescan/rescan.go:136</code>,
+<code>:273-277</code>, <code>pkg/diff/engine.go:14-64</code>); only
+nodes under the pseudo-file <code>mcp:write</code> keep the agent's
+change. The <code>memorize</code> skill warns about the write and not
+about the summary or the forget, which the server's cold-node notice
+asks for. <strong>When a compiled view is authoritative, an editor on
+the view has to write back to the source or be refused.</strong></p>
 <h2 id="tests-to-write-first">Tests to write first</h2>
 <ul>
 <li>Edit a unit, then run the automatic pass, and assert the edit

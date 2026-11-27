@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 908 reports.**
+**This page covers all 909 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8403,3 +8403,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0; 207,830 lines of Python in `entroly/` and 82,825 of Rust, in 2,342 commits from 22 May to 26 November 2026, nearly all under four author names, with 76 tags; 6,201 Python and 878 Rust test functions, none run here, with no case asserting that a stale belief stays out of either read. Four marks: `trust_state`, `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: you keep summaries of a codebase as memory and need them to lose standing when the code moves, or want a write guard that refuses a weaker claim without discarding it.
 - Do not copy when: more than one entry point writes or reads the store, or a second injection path exists that parses the body and not the header.
+
+### [`remindb`](../systems/remindb/)
+- Best idea: **one snapshot per call whose diffs carry the old content and the old metadata.** Every compile, write, summary, forget and rollback runs through one emitter that upserts or deletes nodes, writes the snapshot and its diffs and advances HEAD in one transaction, so `MemoryDelta` resyncs a returning agent, `MemoryHistory` reads a deleted node's trail, and a rollback reverses a reparent or a rename exactly.
+- Second idea: structural ids for compiled content. A node's id hashes its file, parent and sibling index, so an edited paragraph keeps its anchor and the compiler emits a `mod`; search returns labelled anchors with token counts, and fetch spends the budget.
+- Biggest risk: **the files undo the agent.** The rescan loop's first scan after each `serve` start compiles every file, and the diff against the stored nodes reverts a `MemorySummarize` or `MemoryWrite` on a file-derived node and re-adds one it forgot; the skill warns only about the write, and the cold-node notice asks for summaries of what will revert.
+- Second risk: the unattended compiles skip the scrubber, and the agent can delete history. The initial compile and the rescan pass no redactor, so a key the CLI compile scrubbed is stored at the next start though the docs say `serve` scrubs; `MemoryRollback` with `drop_after` hard-deletes diffs and snapshots, forgotten text otherwise stays readable, and the recency term ranks a node read a day earlier below an unread one.
+- Most reusable component: the emitter in `pkg/emitter/emitter.go:45-138` with the diff metadata of `migrations/0005_diff_metadata.sql`, the reverse-apply restore in `pkg/store/snapshot.go:288-326`, and `IdentifyNode` in `internal/contentid/contentid.go:28`.
+- Maturity impression: MIT; 16,391 lines of Go and 24,407 of Go tests, in 306 commits from 15 April to 26 November 2026, nearly all by one author, with 24 tags; 759 Go test functions and 13 fuzz targets that CI runs with `-race`, none run here; the token-savings figures are committed only as drawings. One mark: `negative_eval`.
+- Study when: you compile notes from files into a store an agent reads and want delta resync, per-node history and exact rollback from one diff table.
+- Do not copy when: the agent's own summaries, corrections or deletions must hold against the files, a secret must stay out of the store, or several sessions share one database.

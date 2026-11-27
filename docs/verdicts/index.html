@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 908 reports.</strong></p>
+<p><strong>This page covers all 909 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37750,6 +37750,53 @@ a weaker claim without discarding it.</li>
 <li>Do not copy when: more than one entry point writes or reads the
 store, or a second injection path exists that parses the body and not
 the header.</li>
+</ul>
+<h3 id="remindb"><a
+href="../systems/remindb/"><code>remindb</code></a></h3>
+<ul>
+<li>Best idea: <strong>one snapshot per call whose diffs carry the old
+content and the old metadata.</strong> Every compile, write, summary,
+forget and rollback runs through one emitter that upserts or deletes
+nodes, writes the snapshot and its diffs and advances HEAD in one
+transaction, so <code>MemoryDelta</code> resyncs a returning agent,
+<code>MemoryHistory</code> reads a deleted node's trail, and a rollback
+reverses a reparent or a rename exactly.</li>
+<li>Second idea: structural ids for compiled content. A node's id hashes
+its file, parent and sibling index, so an edited paragraph keeps its
+anchor and the compiler emits a <code>mod</code>; search returns
+labelled anchors with token counts, and fetch spends the budget.</li>
+<li>Biggest risk: <strong>the files undo the agent.</strong> The rescan
+loop's first scan after each <code>serve</code> start compiles every
+file, and the diff against the stored nodes reverts a
+<code>MemorySummarize</code> or <code>MemoryWrite</code> on a
+file-derived node and re-adds one it forgot; the skill warns only about
+the write, and the cold-node notice asks for summaries of what will
+revert.</li>
+<li>Second risk: the unattended compiles skip the scrubber, and the
+agent can delete history. The initial compile and the rescan pass no
+redactor, so a key the CLI compile scrubbed is stored at the next start
+though the docs say <code>serve</code> scrubs;
+<code>MemoryRollback</code> with <code>drop_after</code> hard-deletes
+diffs and snapshots, forgotten text otherwise stays readable, and the
+recency term ranks a node read a day earlier below an unread one.</li>
+<li>Most reusable component: the emitter in
+<code>pkg/emitter/emitter.go:45-138</code> with the diff metadata of
+<code>migrations/0005_diff_metadata.sql</code>, the reverse-apply
+restore in <code>pkg/store/snapshot.go:288-326</code>, and
+<code>IdentifyNode</code> in
+<code>internal/contentid/contentid.go:28</code>.</li>
+<li>Maturity impression: MIT; 16,391 lines of Go and 24,407 of Go tests,
+in 306 commits from 15 April to 26 November 2026, nearly all by one
+author, with 24 tags; 759 Go test functions and 13 fuzz targets that CI
+runs with <code>-race</code>, none run here; the token-savings figures
+are committed only as drawings. One mark:
+<code>negative_eval</code>.</li>
+<li>Study when: you compile notes from files into a store an agent reads
+and want delta resync, per-node history and exact rollback from one diff
+table.</li>
+<li>Do not copy when: the agent's own summaries, corrections or
+deletions must hold against the files, a secret must stay out of the
+store, or several sessions share one database.</li>
 </ul>
         </article>
       </div>

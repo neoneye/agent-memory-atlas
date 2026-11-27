@@ -951,6 +951,20 @@ job that demotes unused memories (<code>PLANO.md:360</code>); the only
 periodic memory job deletes expired rows (<code>:298-304</code>).
 <strong>A use signal written by the injector measures what was injected,
 and ranking on it freezes the selection.</strong></p>
+<p><strong><a href="../../systems/remindb/">remindb</a> reinforces every
+listed search hit and ranks a node read yesterday below one never
+read.</strong> A tick every five minutes multiplies each unpinned node's
+temperature by <code>exp(-0.05 per hour)</code>, and a search, fetch or
+relation walk adds 0.15 to everything it lists
+(<code>pkg/store/queries.go:351-352</code>,
+<code>pkg/mcp/tools/deps.go:96-109</code>). Ranking multiplies BM25 by
+<code>0.3 + 0.7 x temperature</code> and by
+<code>1 / (1 + hours since last access / 24)</code>, which is 1.0 for a
+node never accessed (<code>pkg/query/rank.go:46-62</code>), so a day
+after one read the read node weighs about 0.22 and an unread one about
+0.41. Decay advances only while a <code>serve</code> process runs, and
+each process on the shared file runs its own tick. <strong>A recency
+term needs a value for never that is not its maximum.</strong></p>
 <p><strong><a href="../../systems/kairn/">Kairn</a> calibrates its
 half-lives on a real access tail, reinforces only what it delivered, and
 lets each surface choose its own forgetting point.</strong> Relevance is
