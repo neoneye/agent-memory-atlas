@@ -1,0 +1,1082 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local MCP knowledge engine for
+coding assistants: permanent graph nodes and decaying experiences in one
+SQLite file per workspace, recalled by FTS5 BM25.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Kairn — Agent Memory Atlas">
+    <meta property="og:description" content="A local MCP knowledge
+engine for coding assistants: permanent graph nodes and decaying
+experiences in one SQLite file per workspace, recalled by FTS5 BM25.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Kairn — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local MCP knowledge
+engine for coding assistants: permanent graph nodes and decaying
+experiences in one SQLite file per workspace, recalled by FTS5 BM25.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Kairn — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Kairn",
+      "description": "A local MCP knowledge engine for coding assistants: permanent graph nodes and decaying experiences in one SQLite file per workspace, recalled by FTS5 BM25.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Permanent graph nodes and decaying
+experiences in one SQLite file, ranked by BM25 times term coverage</p>
+          <h1>Kairn</h1>
+          <p class="document-deck">A local MCP knowledge engine for
+coding assistants: permanent graph nodes and decaying experiences in one
+SQLite file per workspace, recalled by FTS5 BM25.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/primeline-ai/kairn">
+              <span>Source</span>
+              <strong>primeline-ai/kairn</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/primeline-ai/kairn/commit/435753e5926475026ae5e00fb2ba9f4d240365ad" title="435753e5926475026ae5e00fb2ba9f4d240365ad">
+              <span>Analyzed revision</span>
+              <code>435753e5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-27</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/primeline-ai--kairn" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>primeline-ai--kairn</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE and plugin/LICENSE, matching pyproject.toml, both plugin
+manifests and the bundle manifest; no restriction</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>11,316
+lines of Python in 38 files under src/kairn and three SQL schema files;
+server.py, cli.py, sqlite_store.py, intelligence.py and experience.py
+hold 6,902 of them; 17,097 lines of tests in 48 files</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>211
+commits from 7 February to 7 November 2026: 146 under PrimeLineDirekt,
+56 under Robin (37 of them merges) and 9 from Dependabot; tags v0.2.0 (7
+July), v0.3.0 (11 October) through v0.3.2 (7 November), and five plugin
+and gate tags</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>849
+test functions under tests/ and 16 under packaging/mcpb/tests; ci.yml
+runs tests/ on Linux, macOS and Windows for Python 3.11 to 3.13 and the
+bundle tests in a separate job; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Kairn is a local MCP server for coding assistants that keeps two
+kinds of memory in one SQLite file per workspace: permanent graph nodes
+and experiences that decay on a half-life per type, both searched by
+FTS5 BM25. What is notable is the ranking work: the reported score is
+the sort key, access is credited only to rows the caller received, and
+the code records each defect it fixed and the test that pins it. What is
+weak is correction: <code>kn_remove</code> soft-deletes a node and
+leaves the experience written beside it, and no tool deletes one
+experience, so a wrong fact keeps being recalled.</p>
+<p>The headline mechanisms are smaller than the README's words for them.
+The "context router" is a keyword-to-node-ids table whose every row
+carries the constant confidence 0.5, so ranking happens afterwards, by
+BM25 over the routed ids (<code>src/kairn/core/router.py:110-127</code>,
+<code>src/kairn/core/intelligence.py:1072-1171</code>). "Progressive
+disclosure" is a <code>detail</code> argument of <code>summary</code> or
+<code>full</code>. The graph edges are mostly <code>auto_related</code>,
+up to three per new node, found by an FTS query over its own text
+(<code>src/kairn/core/graph.py:250-296</code>).</p>
+<p>Several declared mechanisms have no producer or no consumer. The
+bi-temporal search, <code>search_bitemporal</code>, has no caller
+outside tests, which <code>BENCHMARKS.md</code> reports as a measured
+decision. The RBAC module's docstring says no execution path consults
+it, and a tripwire test keeps that true
+(<code>src/kairn/auth/permissions.py:1-9</code>,
+<code>tests/test_weakness_audit_wave3.py:204-227</code>). The event bus
+says every emission is a no-op until something subscribes
+(<code>src/kairn/events/bus.py:1-8</code>). Namespace is written on
+every row and applied by none of the recall surfaces.</p>
+<p><strong>Licence.</strong> MIT, in <code>LICENSE</code> and an
+identical <code>plugin/LICENSE</code>, and named the same way in
+<code>pyproject.toml</code>, both plugin manifests and the bundle
+manifest. The copyright holder is <em>Kairn Contributors</em>. Nothing
+restricts use. The LongMemEval dataset and harness are not in the
+tree.</p>
+<p>One mark is earned: <code>negative_eval</code>, on populated tests
+that require a removed node and a below-floor node to be absent from
+<code>kn_context</code> and recall. Section 9 gives the reason for each
+of the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is either a <strong>node</strong>, a named thing with a
+description that never decays, or an <strong>experience</strong>, a
+sentence of content with a type and a confidence whose relevance falls
+as <code>exp(-decay_rate × days)</code> from <code>created_at</code>
+(<code>src/kairn/models/experience.py:50-57</code>). Nothing judges
+whether either is true. Both are served the moment they are written.</p>
+<p><code>kn_learn</code> decides which kind by the confidence the model
+passes. At <code>high</code> it writes a node and an experience with the
+same text; at <code>medium</code> or <code>low</code> an experience
+only, decaying at twice or four times the type's rate
+(<code>src/kairn/core/intelligence.py:460-484</code>,
+<code>src/kairn/core/experience.py:64-69</code>, <code>:365-368</code>).
+The half-lives were calibrated on 13 June 2026 against the access tail
+of a 6,483-experience store: solution 120 days, pattern 90, decision
+100, workaround 40, gotcha 70, and preference 180 as a stated estimate
+(<code>src/kairn/core/experience.py:31-55</code>).</p>
+<p>An experience becomes a node by being read. Each recall, crossref or
+context call increments <code>access_count</code> on the experiences it
+returned, a trigger sets <code>needs_promotion</code> at five, and
+<code>kn_promote_pending</code> or an explicit <code>access</code>
+creates a <code>promoted_experience</code> node in namespace
+<code>knowledge</code>
+(<code>src/kairn/schema/triggers.sql:53-58</code>,
+<code>src/kairn/core/experience.py:1021-1074</code>). A high-confidence
+fact that is recalled five times therefore exists three times: the
+learned node, the experience and the promoted node.</p>
+<p>Memories stop being served three ways, none of them a judgement. A
+node is soft-deleted by <code>kn_remove</code>; its experience and any
+promoted copy stay. An experience is hard-deleted by
+<code>kn_prune</code> once its decay falls below a threshold. And an old
+experience drops out of <code>kn_context</code>,
+<code>kn_crossref</code>, the <code>kn://memories</code> resource and
+the <code>kn_bootup</code> prompt, which gate on decay at 0.1, 0.1, 0.1
+and 0.3, while <code>kn_recall</code> and <code>kn_memories</code> gate
+at 0.0 by default (<code>src/kairn/core/intelligence.py:970</code>,
+<code>:1247</code>, <code>src/kairn/server.py:1274-1277</code>,
+<code>:1316</code>). A high-confidence decision reaches 0.1 at 332 days
+and 0.3 at 174; a low-confidence workaround reaches 0.1 at 33 days.</p>
+<p><code>kn_judge</code> lets the model record that one node
+<code>supersedes</code> or <code>conflicts_with</code> another, as an
+edge with a reason and a weight. Nothing reads the edge type except
+<code>kn_related</code>'s optional filter, so a superseded node is
+recalled exactly as before.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three writers fill one experiences table, kn_learn at high confidence also writes a node with routes, five delivered reads promote an experience to a second node, kn_remove soft-deletes only the node and kn_prune hard-deletes only by age, recall reads both tables with no namespace predicate, and the validity filter sits on a search with no caller</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three writers fill one experiences table, kn_learn at high confidence also writes a node with routes, five delivered reads promote an experience to a second node, kn_remove soft-deletes only the node and kn_prune hard-deletes only by age, recall reads both tables with no namespace predicate, and the validity filter sits on a search with no caller
+flowchart TD
+    subgraph W[&quot;Writers&quot;]
+        direction TB
+        L[&quot;kn_learn high&lt;br/&gt;node + experience&quot;]
+        S[&quot;kn_learn medium/low,&lt;br/&gt;kn_save, kn_preference&quot;]
+        I[&quot;kairn import git,&lt;br/&gt;claude-code&quot;]
+        L ~~~ S ~~~ I
+    end
+    W --&gt; E[(&quot;experiences&lt;br/&gt;no status, decays&lt;br/&gt;from created_at&quot;)]
+    L --&gt; N[(&quot;nodes&lt;br/&gt;deleted_at only&quot;)]
+    N --&gt; RT[&quot;routes: keyword to ids&lt;br/&gt;confidence always 0.5&quot;]
+    E --&gt; T[&quot;5 delivered reads:&lt;br/&gt;trigger flags promotion&quot;]
+    T --&gt; P[&quot;kn_promote_pending:&lt;br/&gt;new node, namespace&lt;br/&gt;knowledge, no routes&quot;]
+    P --&gt; N
+    X[&quot;kn_remove node&quot;] --&gt; N
+    X -.-&gt;|&quot;experience kept&quot;| E
+    D[&quot;kn_prune threshold:&lt;br/&gt;hard delete by age&quot;] --&gt; E
+    N --&gt; Q[&quot;recall, crossref,&lt;br/&gt;memories: no namespace&quot;]
+    E --&gt; Q
+    RT --&gt; C[&quot;kn_context: routed ids&lt;br/&gt;ranked by BM25&quot;]
+    E --&gt; C
+    B[&quot;search_bitemporal:&lt;br/&gt;as_of on valid_from&quot;] -.-&gt;|&quot;tests only&quot;| E</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Python package, <code>kairn-ai</code>, whose
+<code>kairn serve &lt;path&gt;</code> starts a FastMCP server over stdio
+against <code>&lt;path&gt;/kairn.db</code>, created by
+<code>kairn init</code> or by <code>serve --init</code>. The engines are
+thin: <code>GraphEngine</code>, <code>ContextRouter</code>,
+<code>ExperienceEngine</code>, <code>ProjectMemory</code>,
+<code>IdeaEngine</code> and an <code>IntelligenceLayer</code> that
+composes them, all over one <code>SQLiteStore</code> opened lazily on
+the first tool call (<code>src/kairn/server.py:118-172</code>). The
+store sets WAL, <code>foreign_keys</code> and a five-second
+<code>busy_timeout</code>, then applies the schema, the triggers and
+idempotent column migrations
+(<code>src/kairn/storage/sqlite_store.py:114-246</code>).</p>
+<p>Concurrency is left to SQLite. The server's lock covers only lazy
+start and teardown, and the docstring of <code>_migrate_schema</code>
+states the assumption of one process per workspace
+(<code>src/kairn/server.py:81-86</code>,
+<code>src/kairn/storage/sqlite_store.py:151-164</code>). Promotion is
+the one multi-statement write wrapped in a transaction with a
+compare-and-swap
+(<code>src/kairn/storage/sqlite_store.py:918-987</code>).</p>
+<p>Team mode is a second database, <code>metadata.db</code>, holding
+users, organisations, workspaces and members with roles, written by
+<code>kairn workspace create</code> and <code>join</code>, the latter
+after verifying an HS256 JWT against <code>KAIRN_JWT_SECRET</code>
+(<code>src/kairn/schema/metadata.sql:7-46</code>,
+<code>src/kairn/cli.py:301-363</code>). A team workspace is another
+<code>ws_&lt;id&gt;</code> SQLite file. No tool reads the roles.</p>
+<p>Semantic recall is opt-in through <code>config.yaml</code>. With it
+on, each node write embeds name and description through a local Ollama
+server over <code>urllib</code> and stores a float32 blob with the model
+name, and recall reranks the FTS node candidates by cosine
+(<code>src/kairn/storage/sqlite_store.py:275-314</code>,
+<code>src/kairn/core/intelligence.py:665-750</code>). Experiences are
+never embedded. Nothing in the package calls a language model; the
+<code>ai</code> extra in <code>pyproject.toml</code> names
+<code>anthropic</code> and no source file imports it.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to be running but the MCP client.
+<code>pip install kairn-ai</code> and
+<code>kairn serve --init ~/brain</code> is the whole install, and the
+plugin's <code>.mcp.json</code> runs
+<code>uvx --from kairn-ai==0.3.2 kairn serve --init</code>, a pinned
+release fetched at first start. It runs fully offline; semantic recall
+needs a local Ollama with <code>bge-m3</code>. No API key is needed to
+store anything. The store is one SQLite file a person can open with
+<code>sqlite3</code>, and <code>kn_doctor</code> runs five read-only
+checks on it, including FTS parity and orphan edges
+(<code>src/kairn/diagnostic/checks.py</code>).</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema.</strong>
+<code>src/kairn/schema/workspace.sql</code>: nodes <code>:8-29</code>,
+edges <code>:32-41</code>, experiences <code>:44-66</code>, projects and
+progress <code>:69-92</code>, ideas <code>:95-106</code>, routes
+<code>:109-113</code>, activity log <code>:116-124</code>.
+<code>src/kairn/schema/triggers.sql</code>: FTS sync <code>:5-49</code>,
+the promotion flag <code>:53-58</code>.</li>
+<li><strong>Write.</strong> <code>src/kairn/server.py</code>:
+<code>kn_add</code> <code>:174-223</code>, <code>kn_save</code>
+<code>:664-709</code>, <code>kn_preference</code> <code>:711-772</code>,
+<code>kn_learn</code> <code>:1024-1078</code>.
+<code>src/kairn/core/intelligence.py</code>: <code>learn</code>
+<code>:417-523</code>, <code>_scan_candidates</code>
+<code>:525-589</code>. <code>src/kairn/core/experience.py</code>:
+<code>save</code> <code>:319-400</code>.
+<code>src/kairn/core/graph.py</code>: <code>add_node</code>
+<code>:28-54</code>, <code>_auto_link</code> <code>:250-296</code>.
+<code>src/kairn/core/router.py</code>:
+<code>update_routes_for_node</code> <code>:110-127</code>.</li>
+<li><strong>Import.</strong>
+<code>src/kairn/importers/git.py:156-209</code>;
+<code>src/kairn/importers/claude_code.py:303-370</code>;
+<code>redact.py</code> for both.</li>
+<li><strong>Retrieval.</strong>
+<code>src/kairn/core/intelligence.py</code>:
+<code>_node_relevance</code> <code>:115-138</code>,
+<code>_allocate_across_sources</code> <code>:301-345</code>,
+<code>_keyword_node_recall</code> <code>:614-663</code>,
+<code>_semantic_node_recall</code> <code>:665-750</code>,
+<code>recall</code> <code>:752-891</code>, <code>crossref</code>
+<code>:893-1030</code>, <code>context</code> <code>:1032-1284</code>.
+<code>src/kairn/core/experience.py</code>: <code>_match_strength</code>
+<code>:286-317</code>, <code>search</code> <code>:416-553</code>.
+<code>src/kairn/core/fts.py</code>: <code>bm25_match</code>
+<code>:170-187</code>, <code>term_coverage</code> <code>:190-212</code>,
+<code>blend_match_and_recency</code> <code>:219-237</code>.
+<code>src/kairn/storage/sqlite_store.py</code>:
+<code>_query_nodes_fts</code> <code>:456-515</code>,
+<code>_query_nodes_fts_by_ids</code> <code>:517-616</code>,
+<code>query_experiences</code> <code>:735-768</code>.</li>
+<li><strong>Correction and deletion.</strong>
+<code>src/kairn/server.py</code>: <code>kn_judge</code>
+<code>:266-344</code>, <code>kn_remove</code> <code>:421-490</code>,
+<code>kn_prune</code> <code>:849-873</code>.
+<code>src/kairn/core/experience.py</code>: <code>prune</code>
+<code>:903-939</code>. <code>src/kairn/storage/sqlite_store.py</code>:
+<code>soft_delete_node</code> <code>:370-376</code>,
+<code>restore_node</code> <code>:378-384</code>,
+<code>delete_experience</code> <code>:863-866</code>,
+<code>delete_experiences_by_namespace</code> <code>:868-873</code>.</li>
+<li><strong>Promotion.</strong>
+<code>src/kairn/core/experience.py</code>: <code>touch_accessed</code>
+<code>:839-861</code>, <code>access</code> <code>:863-901</code>,
+<code>promote_pending</code> <code>:941-1019</code>,
+<code>_promote</code> <code>:1021-1074</code>.</li>
+<li><strong>Session context.</strong> <code>src/kairn/server.py</code>:
+<code>kn://memories</code> <code>:1270-1293</code>,
+<code>kn_bootup</code> <code>:1297-1344</code>, <code>kn_review</code>
+<code>:1346-1398</code>.</li>
+<li><strong>Unwired.</strong> <code>search_bitemporal</code> and
+<code>group_by_entity</code> in
+<code>src/kairn/core/experience.py:555-689</code>,
+<code>:825-837</code>; <code>src/kairn/auth/permissions.py</code>;
+<code>ContextRouter.context</code>
+<code>src/kairn/core/router.py:129-172</code>, whose docstring says it
+has no caller.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <strong>node</strong> row carries <code>namespace</code> (default
+<code>knowledge</code>), <code>type</code>, <code>name</code>,
+<code>description</code>, JSON <code>properties</code> and
+<code>tags</code>, <code>created_by</code>, <code>visibility</code>
+(default <code>workspace</code>), <code>source_type</code>,
+<code>source_ref</code>, <code>created_at</code>,
+<code>updated_at</code>, <code>deleted_at</code>, and the optional
+<code>embedding</code> and <code>embedding_model</code>
+(<code>src/kairn/schema/workspace.sql:8-29</code>). No tool sets
+<code>created_by</code> or <code>visibility</code> on a node, and no
+tool passes <code>visibility</code> to a query; the column is indexed
+and filters nothing.</p>
+<p>An <strong>experience</strong> row carries <code>namespace</code>,
+<code>type</code>, <code>content</code>, <code>context</code>,
+<code>confidence</code>, <code>score</code> (always 1.0),
+<code>decay_rate</code>, <code>tags</code>, <code>properties</code>,
+<code>access_count</code>, <code>promoted_to_node_id</code>,
+<code>created_at</code>, <code>last_accessed</code>,
+<code>valid_from</code>, <code>valid_to</code> and
+<code>entity_key</code>, the first tag lowercased
+(<code>src/kairn/schema/workspace.sql:44-66</code>,
+<code>src/kairn/core/experience.py:128-147</code>). A comment records
+that <code>score</code>, <code>access_count</code> and
+<code>last_accessed</code> do not reach relevance, kept inert because
+the benchmark could not measure them
+(<code>src/kairn/core/experience.py:57-62</code>).</p>
+<p>An <strong>edge</strong> is keyed on source, target and type, with a
+weight, JSON properties and <code>created_by</code>, which
+<code>kn_connect</code> takes from the caller
+(<code>src/kairn/schema/workspace.sql:32-41</code>,
+<code>src/kairn/server.py:238-241</code>). <code>kn_judge</code> writes
+one of five verbs with its reason in <code>properties.reason</code> and
+its confidence as the weight.</p>
+<p><strong>Routes</strong> map a keyword to a JSON array of node ids and
+a confidence; every route is written at 0.5, and soft-deleted ids stay
+in the arrays so a restore would keep them routable
+(<code>src/kairn/storage/sqlite_store.py:1183-1224</code>,
+<code>src/kairn/core/router.py:70-99</code>).</p>
+<p><strong>Temporal fields.</strong> <code>created_at</code> is record
+time for both kinds and the decay origin. The importers set
+<code>created_at</code> to the commit or session time and
+<code>valid_from</code> to the same value
+(<code>src/kairn/importers/git.py:175</code>, <code>:198</code>;
+<code>src/kairn/importers/claude_code.py:315</code>, <code>:357</code>).
+<code>ExperienceEngine.save</code> accepts <code>valid_from</code> and
+<code>valid_to</code>, and no MCP tool or CLI command passes either. The
+only read that filters on <code>valid_from</code> is
+<code>search_bitemporal</code>, which no product path calls.</p>
+<p><strong>Identity.</strong> Node and experience ids are the first
+eight characters of a UUID4; the importers instead hash the source
+reference to sixteen hex characters, which makes a re-import skip rows
+already present (<code>src/kairn/importers/git.py:173-209</code>). A row
+that <code>kn_prune</code> has deleted is no longer present, so the next
+import writes it again.</p>
+<p><strong>The activity log</strong> receives one row per node returned
+by recall, crossref and context, with <code>activity_type</code>
+<code>node_recall</code>, <code>node_crossref</code> or
+<code>node_context</code> and a null user
+(<code>src/kairn/core/intelligence.py:388-415</code>). It records reads,
+not changes, and no code reads it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Free text is shaped by <code>to_fts_query</code> into an OR of quoted
+keywords with stop words removed, so any one word matches, and BM25 is
+saturated as <code>s / (s + 5)</code>
+(<code>src/kairn/core/fts.py:120-187</code>). Because an OR match cannot
+tell one term from six, the score is multiplied by the share of query
+terms present. <strong>That share has two implementations.</strong> The
+node path of <code>kn_recall</code> and <code>kn_crossref</code>, and
+every experience score, use <code>core.fts.term_coverage</code>, a
+substring test (<code>src/kairn/core/fts.py:190-212</code>,
+<code>src/kairn/core/intelligence.py:136</code>,
+<code>src/kairn/core/experience.py:315</code>). <code>kn_context</code>
+ranks nodes with <code>intelligence._term_coverage</code>, which folds
+diacritics, splits on underscores and compares token sets, and whose own
+docstring describes the substring test's false positives and negatives
+(<code>src/kairn/core/intelligence.py:231-300</code>,
+<code>:1159</code>). The module binds <code>_term_coverage</code> to the
+substring version at <code>:173</code> and redefines it at
+<code>:231</code>, so the name means different functions above and below
+that line.</p>
+<p><strong>Nodes in recall.</strong> <code>_keyword_node_recall</code>
+fetches <code>max(30, 4 × limit)</code> FTS candidates, scores each by
+saturated BM25 times coverage, filters on <code>min_relevance</code>,
+sorts on that score and truncates
+(<code>src/kairn/core/intelligence.py:106-112</code>,
+<code>:614-663</code>). With semantic recall on, the FTS pool is
+reranked by cosine and anything under
+<code>max(min_relevance, 0.5)</code> is dropped; an embedder failure
+falls back to the keyword path (<code>:665-750</code>).</p>
+<p><strong>Experiences.</strong> <code>ExperienceEngine.search</code>
+loads every FTS match, up to 100,000 rows, into Python, gates each on
+decay against <code>min_relevance</code> and optionally on match
+strength against <code>experience_min_match</code>, and sorts on match
+strength times a factor between 0.9 and 1.1 set by decay
+(<code>src/kairn/core/experience.py:478-553</code>,
+<code>src/kairn/core/fts.py:219-237</code>). Without text it sorts on
+decay alone. It takes no namespace, and neither does
+<code>SQLiteStore.query_experiences</code>
+(<code>src/kairn/storage/sqlite_store.py:735-768</code>).</p>
+<p><strong>Recall</strong> returns nodes and experiences as two ranked
+lists interleaved one from each, nodes first, up to <code>limit</code>;
+the comment gives the measurement that made the allocation necessary,
+<code>limit=6</code> returning 72 nodes and no experience across twelve
+queries (<code>src/kairn/core/intelligence.py:839-865</code>,
+<code>:301-345</code>). Only the rows returned are then credited with an
+access. <strong>Crossref</strong> sorts the union on relevance before
+the same allocation, and gates experiences at decay 0.1
+(<code>:970</code>, <code>:1001-1006</code>).</p>
+<p><strong>Context</strong> takes every node id the router finds for the
+keywords, scores exactly that set by BM25 restricted with an
+<code>IN (...)</code> list chunked at 900 bind variables, and tops up
+with unscored routed nodes at 0.0; experiences come from
+<code>search</code> at decay 0.1
+(<code>src/kairn/core/intelligence.py:1123-1250</code>,
+<code>src/kairn/storage/sqlite_store.py:517-616</code>). The comment
+records the cost: median 203 ms and 402 ms on a 3,350-candidate pool on
+a 12.9k-node store. <code>promoted_experience</code> nodes get no
+routes, so context reaches them only through its FTS fallback when the
+router finds nothing.</p>
+<p><strong>Nothing in recall is scoped.</strong> No recall surface takes
+a namespace, so imported commits, session summaries and every namespace
+the model has named compete in one pool. The <code>namespace</code>
+field is returned on every row, and the comments say it is there for
+<em>downstream namespace-based access filters</em>
+(<code>src/kairn/server.py:404-407</code>); no such filter is in this
+tree.</p>
+<p><strong>Budget.</strong> Results are capped by <code>limit</code> (at
+most 50 on the tools), with <code>kn_context</code> truncating
+experience content to 200 characters in summary mode.
+<code>kn_bootup</code> injects the active project, five progress lines,
+five experiences above decay 0.3 cut to 80 characters, and three ideas
+in the <code>implementing</code> state, when the client requests the
+prompt (<code>src/kairn/server.py:1297-1344</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is a synchronous tool call. <code>kn_learn</code> at high
+confidence inserts a node and commits, then runs
+<code>_auto_link</code>: an FTS query of the node's own words and up to
+three <code>auto_related</code> edges at weight 0.5. It merges the node
+id into the route of each of up to twenty keywords, one statement and
+one commit per keyword. It then inserts the experience and scans for
+five FTS-matched nodes in the same namespace for the model to judge
+(<code>src/kairn/core/intelligence.py:460-523</code>,
+<code>src/kairn/core/graph.py:250-296</code>,
+<code>src/kairn/core/router.py:110-127</code>). With semantic recall on,
+the node write also blocks on an Ollama embedding; a failure leaves the
+vector null and the write in place
+(<code>src/kairn/storage/sqlite_store.py:275-314</code>). A memory is
+retrievable when the call returns.</p>
+<p>There is no extraction model. The calling model writes the sentence;
+<code>kn_preference</code>'s field description tells it so: <em>"You,
+the calling model, are the extractor"</em>
+(<code>src/kairn/server.py:716-720</code>). There is no deduplication: a
+repeated <code>kn_learn</code> writes another node and another
+experience. Conflict handling is the candidate list and
+<code>kn_judge</code>, which records an edge and changes no read.</p>
+<p><strong>Update.</strong> No tool edits a node or an experience.
+<code>GraphEngine.update_node</code> exists with no caller.
+<code>kn_project</code> and <code>kn_idea</code> update their own rows,
+ideas through a status workflow with a compare-and-set
+(<code>src/kairn/core/ideas.py:20-33</code>,
+<code>src/kairn/storage/sqlite_store.py:1103-1141</code>).</p>
+<p><strong>Delete.</strong> <code>kn_remove</code> soft-deletes a node
+or hard-deletes an edge. Its docstring says <em>"Supports undo"</em>;
+<code>restore_node</code> has no caller on any surface
+(<code>src/kairn/server.py:448</code>). <code>kn_prune</code>
+hard-deletes every experience whose decay is below
+<code>threshold</code>, default 0.01, over the whole store; its
+docstring says <em>"archive first"</em> and the code writes a log line
+before the delete (<code>src/kairn/server.py:864</code>,
+<code>src/kairn/core/experience.py:920-928</code>). At the default a
+high-confidence decision is deleted at 664 days, a workaround at 266. No
+tool deletes one experience by id.</p>
+<p><strong>Import.</strong> <code>kairn import git</code> writes one
+experience per non-merge commit, typed by its conventional-commit
+prefix, and <code>kairn import claude-code</code> one per session from
+its title and first prompt. Both redact secrets first and offer
+<code>--dry-run</code>, and the second asks for confirmation unless
+<code>--yes</code> is passed
+(<code>src/kairn/importers/git.py:156-209</code>,
+<code>src/kairn/importers/claude_code.py:303-370</code>,
+<code>src/kairn/cli.py:1691-1777</code>). Both write into their own
+namespace, and the package docstring says a bad import <em>"is always
+reversible via a namespace-scoped delete"</em>
+(<code>src/kairn/importers/__init__.py:5-7</code>). That delete is
+<code>delete_experiences_by_namespace</code>, which no command or tool
+calls. Because decay starts at the commit date, a repository's older
+history is already below the 0.1 that context and crossref require.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A write blocks on several SQLite commits and, with semantic recall,
+one local embedding call. No background pass exists; promotion and
+pruning run when a tool is called. Each experience search reads every
+FTS match up to 100,000 rows into Python and scores it there, and a
+browse reads every experience, so <code>kn_bootup</code> and
+<code>kn://memories</code> scan the whole table. Injection is bounded by
+<code>limit</code> and by the client's choice to call a prompt; nothing
+is injected automatically.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP surface is 22 tools, three resources and the
+<code>kn_bootup</code> and <code>kn_review</code> prompts
+(<code>src/kairn/server.py:174-1398</code>):</p>
+<ul>
+<li>graph: <code>kn_add</code>, <code>kn_connect</code>,
+<code>kn_judge</code>, <code>kn_query</code>, <code>kn_remove</code>,
+<code>kn_status</code>;</li>
+<li>projects: <code>kn_project</code>, <code>kn_projects</code>,
+<code>kn_log</code>;</li>
+<li>experiences: <code>kn_save</code>, <code>kn_preference</code>,
+<code>kn_memories</code>, <code>kn_prune</code>,
+<code>kn_promote_pending</code>;</li>
+<li>ideas: <code>kn_idea</code>, <code>kn_ideas</code>;</li>
+<li>intelligence: <code>kn_learn</code>, <code>kn_recall</code>,
+<code>kn_crossref</code>, <code>kn_context</code>,
+<code>kn_related</code>; and <code>kn_doctor</code>.</li>
+</ul>
+<p>The module's first line still reads <em>"Gate 3: 18 tools"</em>.</p>
+<p>The model holds every verb, destructive ones included:
+<code>kn_prune</code> with <code>threshold=1.0</code> deletes every
+experience in the store, and its description warns that raising it
+deletes older rows. <code>kn_crossref</code>'s description tells the
+model it finds <em>"similar solutions from other workspaces"</em>; the
+code searches the current one and labels every row
+<code>"workspace": "default"</code>
+(<code>src/kairn/server.py:1128</code>,
+<code>src/kairn/core/intelligence.py:899-902</code>,
+<code>:931</code>).</p>
+<p>The plugin under <code>plugin/</code> registers the MCP server
+through <code>uvx</code> and one skill, <code>kairn-memory</code>, which
+asks the model to call <code>kn_recall</code> before starting work and
+<code>kn_learn</code> after a fix or decision, and never to save secrets
+(<code>plugin/.mcp.json</code>,
+<code>plugin/skills/kairn-memory/SKILL.md</code>). It ships no hooks, so
+every read and write is the model's choice. The <code>.mcpb</code>
+bundle contains an entry point that resolves
+<code>KAIRN_WORKSPACE</code> and runs the PyPI release, refusing
+unsubstituted host placeholders and relative paths
+(<code>packaging/mcpb/src/server.py:22-73</code>).</p>
+<p>Adapting it to another agent is a matter of pointing an MCP client at
+<code>kairn serve</code>. The CLI mirrors the tools, so a hook or script
+can recall without MCP.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="correction-does-not-reach-the-copies">Correction does not reach
+the copies</h3>
+<p>A fact learned at high confidence is a node and an experience with
+the same text, and after five delivered reads a second node.
+<code>kn_remove</code> reaches the first. The experience is still
+recalled, crossref still finds it, and its promoted node is a live node
+in <code>knowledge</code> with no route. The only way to remove the
+experience is <code>kn_prune</code> at a threshold above its current
+decay, which deletes every experience at least as old. A wrong
+preference, stored with the longest half-life, has no removal short of
+that or of deleting the file, which is what
+<code>plugin/PRIVACY.md</code> advises for removing everything.</p>
+<h3 id="provenance">Provenance</h3>
+<p>Nodes record <code>source_type</code> (<code>learn</code>,
+<code>manual</code>) and importers record
+<code>properties.source_ref</code>, the commit or transcript path.
+Nothing records which agent, session or user wrote a row:
+<code>created_by</code> is null on every node and experience the tools
+write, and on edges it is the caller's string.</p>
+<h3 id="injection-and-privacy">Injection and privacy</h3>
+<p>Writes are the calling model's words, unscreened. The importers
+redact API keys, bearer headers, <code>password=</code>-style
+assignments, vendor key shapes, private-key blocks and URL credentials
+before both the preview and the insert, and the transcript importer
+reads the user's prompts and not tool output, with a test for each
+(<code>src/kairn/importers/redact.py</code>,
+<code>tests/test_importers_claude_code.py:135-141</code>). The tool path
+applies no redaction; the skill asks the model not to save secrets.</p>
+<h3 id="auth-and-scope">Auth and scope</h3>
+<p>The store has no authentication: whoever can start
+<code>kairn serve</code> on a path reads and writes it. The README's
+<em>"JWT auth and role-based access control (owner / maintainer /
+contributor / reader) ship for team deployments"</em> describes a
+membership table and token check used by
+<code>kairn workspace join</code>; no read or write consults a role, as
+<code>permissions.py</code> itself says. Isolation between projects is a
+choice of database path.</p>
+<h3 id="concurrency">Concurrency</h3>
+<p>WAL, a five-second busy timeout, single-statement route merges and a
+compare-and-swap promotion cover the races the code names. The chunked
+id-restricted query documents that a writer between chunks can produce a
+merged result no snapshot held
+(<code>src/kairn/storage/sqlite_store.py:572-577</code>).</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>negative_eval</code> — earned.</strong> Populated
+cases on the <code>kn_context</code> path, the router and the semantic
+recall path each require a removed or below-floor node to be absent
+while a live one is present; section 10 lists them.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> Deletion is a
+soft-delete stamp on a node row or a hard delete of an experience. The
+importers' hashed ids skip a row that is present and not one that was
+deleted, so a pruned commit returns on the next import, and a repeated
+<code>kn_learn</code> stores the same text again.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> No memory has
+a status. <code>confidence</code> sets the decay multiplier and whether
+a node is written; <code>supersedes</code> and
+<code>conflicts_with</code> edges are read by no recall path. Ideas have
+a workflow status that <code>kn_bootup</code> filters on, and an idea is
+the agent's plan, not a belief.</li>
+<li><strong><code>bitemporal</code> — withheld.</strong>
+<code>valid_from</code> and <code>valid_to</code> are columns whose only
+product writers, the importers, copy the record time into
+<code>valid_from</code>; the only reader that filters on them,
+<code>search_bitemporal</code>'s <code>as_of</code>, has no caller.
+Declared and unwired, by a decision the project records with its
+measurement (section 10).</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> Namespace
+is stored on every row and applied only by <code>kn_query</code> and the
+learn candidate scan when the caller names one. Recall, memories,
+crossref and context take no namespace, and no read carries a user or
+agent key. The workspace file is a physical partition.</li>
+<li><strong><code>audit_log</code> — withheld.</strong>
+<code>activity_log</code> records node reads, nothing reads it, and no
+write or delete appends to it. The event bus has no subscriber.</li>
+<li><strong><code>human_review</code> — withheld.</strong> Nothing
+waits. The import confirmation is a yes-or-no over a whole batch at the
+CLI, skipped by <code>--yes</code>, and the imported rows are served at
+once.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites. The counts are from reading: 849 test
+functions under <code>tests/</code> and 16 under
+<code>packaging/mcpb/tests</code>. CI runs <code>pytest tests/</code> on
+Ubuntu, macOS and Windows for Python 3.11, 3.12 and 3.13, and the bundle
+tests with a <code>mcpb pack</code> in a separate job
+(<code>.github/workflows/ci.yml</code>). <code>tests/conftest.py</code>
+only builds a temporary store.</p>
+<p>The suite is largest where the code comments are longest: ranking,
+abstention floors, coverage and allocation, in files named for the
+review round that found each defect (<code>test_p5_review_*</code>,
+<code>test_weakness_audit_wave3</code>,
+<code>test_experience_floor_*</code>). Several tests check the code's
+own claims rather than behaviour: a tripwire that fails if anything
+calls the RBAC module, a census that fails if a new site reports pure
+decay, and tests that the README's CLI lines match <code>--help</code>
+(<code>tests/test_weakness_audit_wave3.py:204-227</code>,
+<code>tests/test_readme_matches_cli.py</code>).</p>
+<p>The negative assertions that earn the mark:</p>
+<ul>
+<li><code>test_soft_deleted_candidates_do_not_reach_the_caller</code>
+writes a live and a dead node with the same text, soft-deletes one,
+routes both under one keyword and requires <code>context()</code> to
+return exactly <code>["live"]</code>
+(<code>tests/test_context_node_ranking.py:369-380</code>).</li>
+<li><code>test_soft_deleted_nodes_do_not_starve_route_limit</code>
+writes eight routed nodes, removes four and requires the four live ids,
+no more and no fewer
+(<code>tests/test_weakness_audit_wave3.py:91-121</code>).</li>
+<li><code>test_weak_match_below_floor_is_dropped</code> seeds two nodes
+under a mapped stub embedder and requires recall to return the aligned
+one and not the orthogonal one
+(<code>tests/test_semantic_recall.py:126-138</code>).</li>
+</ul>
+<p><code>tests/test_bitemporal.py:258-271</code> requires a future-dated
+experience absent from an <code>as_of</code> search beside a present
+earlier one; it tests a function with no product caller.
+<code>test_kn_remove_node</code> requires an empty <code>kn_query</code>
+after removing the only node, which a query returning nothing would pass
+(<code>tests/test_server.py:198-206</code>).</p>
+<p>No test removes a learned node and then asks whether its experience
+is recalled, imports after a prune, or runs recall with two namespaces
+in the store. No test pins <code>kn_recall</code>'s node coverage to the
+token semantics that <code>kn_context</code> uses.</p>
+<p><strong>LongMemEval-S.</strong> The README reports 56.2% on 500
+questions, a GPT-4o reader and judge, one run on 12 June 2026, with
+per-category accuracies. No per-question rows are committed, on this
+branch or in the history of any fetched branch, and
+<code>BENCHMARKS.md</code> says the harness lives in a separate research
+tree. The six category accuracies times their counts give 281 correct
+answers in 500, which is the headline; that checks the table against
+itself and nothing more. The run predates every tag: it was published in
+commit <code>d546f65</code>, whose <code>pyproject.toml</code> reads
+version 0.1.0, and the README says it has not been re-measured on 0.3.0.
+The measured path is <code>ExperienceEngine.search</code>, experiences
+only, with each turn truncated to about 1,800 characters; it is not
+<code>kn_recall</code>, which interleaves nodes.</p>
+<p><code>BENCHMARKS.md</code> publishes a negative result: the
+bi-temporal mode regressed a 50-question pilot from 0.54 to 0.38, and
+the density-preserving diversifier lost one multi-session question in
+thirteen, so both shipped library-only. The pilot rows are not committed
+either. <code>scripts/kairn-recall-adversarial.py</code> runs 30
+externally written abstain-or-return queries against a store the user
+points it at, labelled for the author's own corpus; it is a harness, not
+a committed result. There is no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the reported score the sort key.</strong> Kairn sorts
+on the number it returns, after the coverage scaling, and records the
+case where raw BM25 order put a one-word note above a four-of-four
+match.</li>
+<li><strong>Credit only what the caller received.</strong> Increment
+access counts after truncation, or promotion rewards rows nobody saw;
+the comment measured five unseen experiences pushed toward promotion per
+call at <code>limit=10</code>.</li>
+<li><strong>Score a candidate set as a set.</strong> Restricting the FTS
+<code>MATCH</code> to the routed ids makes coverage complete;
+intersecting with a global top-K makes the result a function of K, which
+the code measured from 12.5% to 100%.</li>
+<li><strong>Allocate a mixed result budget.</strong> Two ranked lists of
+different kinds need interleaving, not concatenation, or the first eats
+the limit.</li>
+<li><strong>Refuse an impossible floor when the store opens.</strong> A
+match floor above 1.0 is rejected with the reachable range in the
+message, because an empty result is answer-shaped.</li>
+<li><strong>Hash the source reference into the id</strong> for
+idempotent imports, with a dry run that shows post-redaction text.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Writing one fact as two records with no shared
+identity.</strong> If a node and an experience carry the same sentence,
+removal has to reach both, and promotion should find the node it would
+duplicate.</li>
+<li><strong>A destructive verb whose description promises a safety it
+lacks.</strong> "Archive first" and "Supports undo" are read by the
+model as facts.</li>
+<li><strong>A decay gate per surface.</strong> One fact visible to
+recall and invisible to context and crossref after 332 days is a
+retrieval difference the user cannot see.</li>
+<li><strong>Two implementations of one score.</strong> The coverage in
+<code>kn_context</code> and in <code>kn_recall</code> disagree on
+accents, underscores and substrings.</li>
+<li><strong>A scope label returned for someone else to enforce.</strong>
+If the server writes the key, the server's reads should apply it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Kairn fits one developer who wants a local, dependency-light store
+their coding agent writes to by tool call, and who will rarely need to
+take something back. For that reader the value is in the ranking code
+and its comments, which document a long sequence of measured defects in
+BM25-based recall and the fix for each. It does not fit anyone who needs
+to correct memory, separate projects inside one store, or share a store
+between people: the deletion surface is a node stamp and an age
+threshold, scope is a path, and the team features stop at a membership
+table.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Which downstream component applies the <em>"namespace-based access
+filters"</em> the comments name? None is in this tree.</li>
+<li>Was the 56.2% run's ingestion namespaced, and would it change if run
+through <code>kn_recall</code>, which interleaves nodes?</li>
+<li>Is the promotion of a high-confidence experience into a second node
+intended, given that the learned node already exists?</li>
+<li>Does a deployment sync two workspaces through
+<code>kairn query --since</code>, which the store's docstring says
+powers bidirectional sync? No sync script is in the tree.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/kairn/schema/workspace.sql</code></td>
+<td>Node, edge, experience, route, project, idea and activity
+tables</td>
+</tr>
+<tr>
+<td><code>src/kairn/schema/triggers.sql</code></td>
+<td>FTS5 sync triggers and the promotion flag</td>
+</tr>
+<tr>
+<td><code>src/kairn/storage/sqlite_store.py</code></td>
+<td>All SQL: queries, chunked id restriction, soft delete, atomic
+promotion, route merge</td>
+</tr>
+<tr>
+<td><code>src/kairn/core/experience.py</code></td>
+<td>Half-lives, save, decay-gated search, bi-temporal search, prune,
+promotion</td>
+</tr>
+<tr>
+<td><code>src/kairn/core/intelligence.py</code></td>
+<td>learn, recall, crossref, context, coverage and allocation</td>
+</tr>
+<tr>
+<td><code>src/kairn/core/fts.py</code></td>
+<td>Query shaping, BM25 saturation, substring coverage, recency
+blend</td>
+</tr>
+<tr>
+<td><code>src/kairn/core/router.py</code></td>
+<td>Keyword routes and live-node collection</td>
+</tr>
+<tr>
+<td><code>src/kairn/core/graph.py</code></td>
+<td>Node and edge CRUD, auto-link, BFS</td>
+</tr>
+<tr>
+<td><code>src/kairn/server.py</code></td>
+<td>The 22 MCP tools, resources and prompts</td>
+</tr>
+<tr>
+<td><code>src/kairn/cli.py</code></td>
+<td>CLI mirror, workspace team commands, importers</td>
+</tr>
+<tr>
+<td><code>src/kairn/importers/git.py</code>,
+<code>claude_code.py</code>, <code>redact.py</code></td>
+<td>Zero-LLM import and secret redaction</td>
+</tr>
+<tr>
+<td><code>src/kairn/auth/permissions.py</code></td>
+<td>RBAC helpers marked unwired</td>
+</tr>
+<tr>
+<td><code>plugin/.mcp.json</code>,
+<code>plugin/skills/kairn-memory/SKILL.md</code></td>
+<td>Plugin launch and the recall-and-save skill</td>
+</tr>
+<tr>
+<td><code>BENCHMARKS.md</code></td>
+<td>LongMemEval-S result, diagnoses and the bi-temporal negative
+result</td>
+</tr>
+<tr>
+<td><code>tests/test_context_node_ranking.py</code></td>
+<td>Restricted ranking and the soft-delete exclusion</td>
+</tr>
+<tr>
+<td><code>tests/test_semantic_recall.py</code></td>
+<td>Cosine rerank and floor</td>
+</tr>
+<tr>
+<td><code>tests/test_bitemporal.py</code></td>
+<td>Tests of the unwired bi-temporal search</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>The bi-temporal search has no product caller.</strong>
+<code>git grep -n -E 'search_bitemporal|group_by_entity' -- src scripts packaging</code>
+returns a docstring at <code>src/kairn/core/experience.py:307</code> and
+the two definitions at <code>:555</code> and <code>:825</code>; the same
+pattern over <code>tests</code> matches 37 lines in four files.</li>
+<li><strong>No surface passes a validity time.</strong>
+<code>git grep -n -E 'as.of|valid.from|valid_to|KAIRN_BITEMPORAL' -- src/kairn/cli.py src/kairn/server.py packaging</code>
+returns nothing;
+<code>git grep -n -E 'valid_from|valid_to' -- src/kairn/importers</code>
+matches the two importers.</li>
+<li><strong>The experience engine reads no namespace.</strong>
+<code>git grep -n -w namespace -- src/kairn/core/experience.py</code>
+returns the <code>save</code> parameter at <code>:327</code>, its
+docstring, the model field at <code>:372</code> and the promoted node's
+<code>"knowledge"</code> at <code>:1042</code>.</li>
+<li><strong>Nothing reads a judgement edge type.</strong>
+<code>git grep -n -E 'supersedes|conflicts_with' -- src</code> returns
+the vocabulary in <code>src/kairn/models/edge.py</code>, the CLI choice
+list, a docstring in <code>intelligence.py</code> and the
+<code>kn_judge</code> description.</li>
+<li><strong>The activity log has one writer and no reader.</strong>
+<code>git grep -n -E 'log_activit|get_activity_log' -- src</code>
+returns the interface and SQLite definitions and one call,
+<code>intelligence.py:413</code>.</li>
+<li><strong>Nothing restores a node.</strong>
+<code>git grep -n restore_node -- src packaging</code> returns the
+definitions in <code>graph.py</code>, <code>base.py</code> and
+<code>sqlite_store.py</code> and a comment in
+<code>router.py</code>.</li>
+<li><strong>One experience delete, by age.</strong>
+<code>git grep -n -E 'delete_experience(s_by_namespace)?\(' -- src packaging</code>
+returns the call in <code>prune</code> at <code>experience.py:928</code>
+and the definitions.</li>
+<li><strong>The RBAC helpers have no caller.</strong>
+<code>git grep -n -E 'check_permission|can_read|can_write|can_admin' -- src</code>
+returns only <code>src/kairn/auth/permissions.py</code>.</li>
+<li><strong>The promotion threshold in config is unread.</strong>
+<code>git grep -n -w promotion_access_count -- src</code> returns
+<code>config.py:65</code>; the trigger hardcodes 5 at
+<code>triggers.sql:54</code>.</li>
+<li><strong>No tool passes node visibility.</strong>
+<code>git grep -n visibility -- src/kairn/server.py src/kairn/cli.py</code>
+returns nothing; <code>git grep -n 'visibility=' -- src</code> matches
+the engine and store.</li>
+<li><strong>No hooks or submodules.</strong>
+<code>git ls-files | grep -i -E 'hook|\.gitmodules'</code> returns
+nothing.</li>
+<li><strong>No language-model client.</strong>
+<code>git grep -n -i -E 'import anthropic|from anthropic|openai' -- src</code>
+returns two redaction rule names in <code>redact.py</code>.</li>
+<li><strong>No committed benchmark rows.</strong>
+<code>git ls-files | grep -i -E 'result|runs/|jsonl'</code> returns
+nothing, and
+<code>git log --all --diff-filter=A --format=%h -- '*longmemeval*' '*runs/*' '*.jsonl'</code>
+returns nothing; <code>git log -S full-500-s-fixed --format=%h</code>
+matches.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org' -- .</code>
+returns nothing;
+<code>git grep -n -i longmemeval -- BENCHMARKS.md</code> matches.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-27</strong> — <a
+href="https://github.com/primeline-ai/kairn/commit/435753e5926475026ae5e00fb2ba9f4d240365ad"><code class="commit-id" title="435753e5926475026ae5e00fb2ba9f4d240365ad">435753e5…</code></a>.
+First reading at 435753e, read only, from a full clone at the head of
+<code>main</code>, the commit triage selected. Screened first: four
+auto-run surfaces (<code>.claude-plugin/</code>,
+<code>plugin/.claude-plugin/plugin.json</code>,
+<code>plugin/.mcp.json</code>, which launches the pinned
+<code>kairn-ai==0.3.2</code> through <code>uvx</code>, and
+<code>server.json</code>); nothing inside the seven-day cooldown; one
+build-time execution point, <code>tests/conftest.py</code>;
+<code>pyproject.toml</code> unpinned, with
+<code>packaging/mcpb/uv.lock</code> unchanged for 20 days. Manifests and
+the skill were read as data. Nothing was installed, built or run, and
+the 849 and 16 test functions were not run. One mark:
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

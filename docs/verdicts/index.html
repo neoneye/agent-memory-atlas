@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 905 reports.</strong></p>
+<p><strong>This page covers all 906 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37592,6 +37592,53 @@ server.</li>
 <li>Do not copy when: a superseded rule must stop reaching the model,
 transcripts may not leave the machine, or recall must be separated by
 project.</li>
+</ul>
+<h3 id="kairn"><a href="../systems/kairn/"><code>kairn</code></a></h3>
+<ul>
+<li>Best idea: <strong>make the reported score the sort key, and credit
+only what was delivered.</strong> Recall scores nodes by saturated BM25
+times query-term coverage over <code>max(30, 4 × limit)</code>
+candidates and sorts on that same number; experiences add a recency
+factor bounded to 0.9 to 1.1; and access counts, which drive promotion,
+are incremented only on rows that survived the result allocation, with
+the measured defect behind each change recorded beside it and pinned by
+a test.</li>
+<li>Second idea: score a routed candidate set as a set.
+<code>kn_context</code> restricts the FTS <code>MATCH</code> to the
+router's ids with a bind-safe chunked <code>IN</code> list instead of
+intersecting them with a global top-K, whose matched share the code
+measured at 12.5% for K=20 and 100% for K=20,000.</li>
+<li>Biggest risk: <strong>a wrong fact cannot be removed.</strong>
+<code>kn_learn</code> at high confidence writes the sentence as a node
+and an experience, five delivered reads add a promoted node,
+<code>kn_remove</code> soft-deletes one node, and no tool or command
+deletes or edits one experience; <code>kn_prune</code> deletes by age
+across the whole store, and its description promises an archive the code
+does not write.</li>
+<li>Second risk: namespace is a label. No recall, memories, crossref or
+context read applies it, so imported commits and every namespace the
+model names share one pool. Context and crossref gate experiences at
+decay 0.1, which hides a high-confidence decision after 332 days that
+recall still shows. The bi-temporal search and the RBAC module have no
+caller, and recall and context score coverage with two different
+implementations.</li>
+<li>Most reusable component: <code>_keyword_node_recall</code> and
+<code>_allocate_across_sources</code> in
+<code>src/kairn/core/intelligence.py:614-663</code> and
+<code>:301-345</code>, <code>_query_nodes_fts_by_ids</code> in
+<code>src/kairn/storage/sqlite_store.py:517-616</code>, and
+<code>promote_experience_atomic</code> at <code>:918-987</code>.</li>
+<li>Maturity impression: MIT; 11,316 lines of Python in 211 commits from
+7 February to 7 November 2026 under two author names and Dependabot,
+pre-1.0 at v0.3.2; 849 test functions that CI runs on three operating
+systems, none run here; the LongMemEval-S 56.2% was measured on the
+0.1.0 tree on 12 June 2026, through the experience search only, with no
+per-question rows committed. One mark: <code>negative_eval</code>.</li>
+<li>Study when: you are tuning BM25-based recall and want a record of
+the ways a reported score, an abstention floor and a result budget drift
+apart, each with a test.</li>
+<li>Do not copy when: memory has to be corrected or forgotten on
+request, or projects that must not see each other share a store.</li>
 </ul>
         </article>
       </div>

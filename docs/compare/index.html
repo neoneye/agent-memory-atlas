@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-905, generated from each report's frontmatter —
+906, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-905, generated from each report's frontmatter —
+906, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-905, generated from each report's frontmatter —
+906, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 905, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 906, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-905, generated from each report's frontmatter —
+906, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 905 systems by the seven mechanisms
+filters all 906 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -16631,6 +16631,64 @@ memories untouched for 30 days with no tombstone or audit, over only the
 100 newest per user; the pinned lane ignores supersedes edges; any
 non-viewer member can shadow another member's memory; audit covers
 agent-bound keys only</td>
+</tr>
+<tr>
+<td><a href="../systems/kairn/"><code>kairn</code></a></td>
+<td>Two kinds: a permanent graph node (type, name, description,
+namespace, tags, soft-delete stamp, optional embedding) and a decaying
+experience (one of six types, content, context, confidence high, medium
+or low, decay rate, access count, namespace, optional validity window);
+beside them projects with progress logs, ideas with a status workflow,
+and keyword routes</td>
+<td>One SQLite file per workspace path (kairn.db, WAL, 5 s busy timeout)
+holding nodes, edges, experiences, routes, projects, progress, ideas and
+an activity log, with FTS5 indexes on nodes and experiences kept by
+triggers; a separate metadata.db for team users, organisations and
+members</td>
+<td>FTS5 BM25 over an OR of quoted keywords, scaled by query-term
+coverage; experiences blended with a recency factor between 0.9 and 1.1
+and gated on decay; recall interleaves nodes and experiences one each up
+to the limit; kn_context ranks the router's keyword candidates by BM25
+restricted to their ids; optional cosine rerank of FTS node candidates
+from a local Ollama model above a 0.5 floor; breadth-first search over
+edges in kn_related</td>
+<td>Synchronous tool calls: kn_learn at high confidence writes a node,
+its routes and an experience, at medium or low an experience only;
+kn_save, kn_preference and kn_add write directly; auto-link adds up to
+three auto_related edges found by FTS; zero-LLM importers write git
+commits and Claude Code session summaries into their own namespaces with
+ids hashed from the source reference</td>
+<td>kn_remove soft-deletes a node or deletes an edge and leaves the
+node's experience and any promoted copy; no tool edits a node or deletes
+or edits one experience; kn_prune hard-deletes every experience below a
+decay threshold; node restore and namespace delete exist in the store
+with no caller</td>
+<td>Physical partition: one database file per workspace path; namespace
+is a write label applied only by kn_query and the learn candidate scan
+when supplied, and never by recall, memories, crossref or context; the
+RBAC module states it is unwired</td>
+<td>FastMCP stdio server of 22 tools, 3 resources and 2 prompts; a CLI
+mirroring the tools plus importers; a Claude Code and Codex plugin that
+launches the pinned PyPI release through uvx with a recall-and-save
+skill; an MCP bundle for Claude Desktop</td>
+<td>None scheduled; a SQL trigger flags an experience at five delivered
+reads, promotion runs on kn_promote_pending or an explicit access, and
+pruning on kn_prune</td>
+<td>No epistemic status; confidence sets the decay multiplier and
+whether a node is written; kn_judge stores conflicts_with and supersedes
+as edge types that no read consults</td>
+<td>Ranking defects documented and pinned in comments and tests: the
+reported score is the sort order, access is credited only to rows the
+caller received, routed candidates are scored as a restricted set rather
+than a global top-K; zero-LLM importers with redaction, dry run and a
+confirmation gate; an out-of-range experience floor refused when the
+store opens</td>
+<td>A wrong fact cannot be removed: kn_remove leaves its experience and
+any promoted copy, and no tool deletes one experience; context and
+crossref drop experiences below decay 0.1, which a high-confidence
+decision reaches at 332 days; namespace is never applied on recall; the
+bi-temporal path has no caller; recall and context score coverage with
+two different implementations</td>
 </tr>
 <tr>
 <td><a href="../systems/kaisen/"><code>kaisen</code></a></td>
@@ -41088,7 +41146,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>87 of 905:</em> <a
+<p><em>87 of 906:</em> <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -41179,7 +41237,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>231 of 905:</em> <a
+<p><em>231 of 906:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -41419,7 +41477,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>153 of 905:</em> <a
+<p><em>153 of 906:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -41583,7 +41641,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>398 of 905:</em> <a
+<p><em>398 of 906:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -42001,7 +42059,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>308 of 905:</em> <a
+<p><em>308 of 906:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
@@ -42323,7 +42381,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>109 of 905:</em> <a
+<p><em>109 of 906:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -42436,7 +42494,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>589 of 905:</em> <a
+<p><em>590 of 906:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -42681,7 +42739,8 @@ href="../systems/jumbo/"><code>jumbo</code></a>, <a
 href="../systems/kaeru/"><code>kaeru</code></a>, <a
 href="../systems/kage/"><code>kage</code></a>, <a
 href="../systems/kagura-memory-cloud/"><code>kagura-memory-cloud</code></a>,
-<a href="../systems/kannaka-memory/"><code>kannaka-memory</code></a>, <a
+<a href="../systems/kairn/"><code>kairn</code></a>, <a
+href="../systems/kannaka-memory/"><code>kannaka-memory</code></a>, <a
 href="../systems/kektordb/"><code>kektordb</code></a>, <a
 href="../systems/ken/"><code>ken</code></a>, <a
 href="../systems/kenfold/"><code>kenfold</code></a>, <a
@@ -43064,8 +43123,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-589 repositories of
-905 assert that particular material must
+590 repositories of
+906 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -43138,7 +43197,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 905 is the real figure for the second kind, and
+of 906 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

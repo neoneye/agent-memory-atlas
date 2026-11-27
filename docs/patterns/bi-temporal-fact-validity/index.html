@@ -789,6 +789,21 @@ have no caller (<code>romem/RoMem.py:2469-2539</code>). The cost is that
 "what was true then" becomes a ranking, and a repeated event keeps only
 its first date, because the embedding's graph holds one time per
 distinct triple (<code>romem/kge/knowledge_graph.py:90-94</code>).</p>
+<p><a href="../../systems/kairn/">Kairn</a> built the as-of read,
+measured it and left it uncalled. Experiences carry
+<code>valid_from</code> and <code>valid_to</code> beside
+<code>created_at</code>, and <code>search_bitemporal</code> drops any
+row whose <code>valid_from</code> falls on a day after
+<code>as_of</code>, comparing day prefixes normalised across two date
+formats (<code>src/kairn/core/experience.py:555-689</code>). Nothing in
+the package calls it: a 50-question pilot recorded in
+<code>BENCHMARKS.md</code> fell from 0.54 to 0.38 with it, so the
+shipped recall is plain BM25 and decay. The only product writers of
+<code>valid_from</code> are the git and Claude Code importers, which
+copy the record time into it
+(<code>src/kairn/importers/git.py:175</code>, <code>:198</code>), and no
+tool accepts either field, so wherever both clocks are set they hold one
+value.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

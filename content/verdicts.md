@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 905 reports.**
+**This page covers all 906 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8373,3 +8373,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; about 6,600 lines of live Python beside 9,640 lines of dark M3 modules and 1,514 of dark M1 and M2; 346 commits from 21 May to 19 November 2026, 143 past the v5.13.2 tag; 878 unittest functions run in CI in an FTS-only and a vectored leg, not run here. No marks: status and drift only rank, project selects a context section, topic bases are a physical partition, and the op-log records counts rather than the cards changed.
 - Study when: you want stale memory demoted with an audit of why, declarations that cannot let a low-trust card bury a canonical one, or Claude Code's own memory files searched and injected without a server.
 - Do not copy when: a superseded rule must stop reaching the model, transcripts may not leave the machine, or recall must be separated by project.
+
+### [`kairn`](../systems/kairn/)
+- Best idea: **make the reported score the sort key, and credit only what was delivered.** Recall scores nodes by saturated BM25 times query-term coverage over `max(30, 4 × limit)` candidates and sorts on that same number; experiences add a recency factor bounded to 0.9 to 1.1; and access counts, which drive promotion, are incremented only on rows that survived the result allocation, with the measured defect behind each change recorded beside it and pinned by a test.
+- Second idea: score a routed candidate set as a set. `kn_context` restricts the FTS `MATCH` to the router's ids with a bind-safe chunked `IN` list instead of intersecting them with a global top-K, whose matched share the code measured at 12.5% for K=20 and 100% for K=20,000.
+- Biggest risk: **a wrong fact cannot be removed.** `kn_learn` at high confidence writes the sentence as a node and an experience, five delivered reads add a promoted node, `kn_remove` soft-deletes one node, and no tool or command deletes or edits one experience; `kn_prune` deletes by age across the whole store, and its description promises an archive the code does not write.
+- Second risk: namespace is a label. No recall, memories, crossref or context read applies it, so imported commits and every namespace the model names share one pool. Context and crossref gate experiences at decay 0.1, which hides a high-confidence decision after 332 days that recall still shows. The bi-temporal search and the RBAC module have no caller, and recall and context score coverage with two different implementations.
+- Most reusable component: `_keyword_node_recall` and `_allocate_across_sources` in `src/kairn/core/intelligence.py:614-663` and `:301-345`, `_query_nodes_fts_by_ids` in `src/kairn/storage/sqlite_store.py:517-616`, and `promote_experience_atomic` at `:918-987`.
+- Maturity impression: MIT; 11,316 lines of Python in 211 commits from 7 February to 7 November 2026 under two author names and Dependabot, pre-1.0 at v0.3.2; 849 test functions that CI runs on three operating systems, none run here; the LongMemEval-S 56.2% was measured on the 0.1.0 tree on 12 June 2026, through the experience search only, with no per-question rows committed. One mark: `negative_eval`.
+- Study when: you are tuning BM25-based recall and want a record of the ways a reported score, an abstention floor and a result budget drift apart, each with a test.
+- Do not copy when: memory has to be corrected or forgotten on request, or projects that must not see each other share a store.
