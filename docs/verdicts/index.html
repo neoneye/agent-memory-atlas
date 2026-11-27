@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 906 reports.</strong></p>
+<p><strong>This page covers all 907 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37639,6 +37639,63 @@ the ways a reported score, an abstention floor and a result budget drift
 apart, each with a test.</li>
 <li>Do not copy when: memory has to be corrected or forgotten on
 request, or projects that must not see each other share a store.</li>
+</ul>
+<h3 id="engrava"><a
+href="../systems/engrava/"><code>engrava</code></a></h3>
+<ul>
+<li>Best idea: <strong>make NULL an open bound on a valid-time interval,
+and retire a fact by closing it.</strong> <code>valid_from</code> and
+<code>valid_until</code> sit beside the store's <code>created_at</code>
+on thoughts and edges, start open, are kept in one canonical UTC form so
+text comparison orders instants, and refuse an inverted interval on
+construction, update, invalidate and read;
+<code>invalidate_thought</code> sets one column and a
+<code>valid_at</code> query for an earlier instant still finds the
+row.</li>
+<li>Second idea: re-apply every read exclusion after graph expansion and
+prove it with a revert. Archived, expired and out-of-filter rows are
+kept out of the FTS arm, the vector arm and the
+<code>CONSOLIDATED_FROM</code> expansion, and a test whose source cannot
+match any arm monkeypatches the expansion gate and requires the
+leak.</li>
+<li>Biggest risk: <strong>invalidation never reaches recall.</strong>
+<code>recall</code> and <code>search_hybrid</code>, the read path an
+agent loop uses, contain no reference to <code>valid_from</code> or
+<code>valid_until</code> and take no temporal argument, so an
+invalidated fact ranks exactly as before and an invalidated edge still
+boosts its neighbours; only MindQL's four predicates read the interval,
+and nothing shipped in the tree, not <code>remember</code>, the CLI, the
+examples or the benchmark runner, sets valid time.</li>
+<li>Second risk: the journal is enabled per connection handle, so a
+process or CLI command opened without the flag mutates a journalled file
+unrecorded and the chain still verifies; <code>created_at</code> is
+outside the hash and <code>restore --clear</code> empties the table.
+Content-hash dedup matches an archived row and returns it still
+archived. There is no scope key: tenants are one file each, and the
+metadata filters are caller-chosen refinements.</li>
+<li>Most reusable component: <code>_build_temporal_clause</code> in
+<code>src/engrava/mindql/executor.py:1041-1100</code>, the timestamp and
+interval helpers in <code>src/engrava/domain/models/_temporal.py</code>,
+the savepoint around write, read-back and journal append in
+<code>delete_thought</code> at
+<code>src/engrava/infrastructure/sqlite/engrava_core.py:9657-9759</code>,
+and
+<code>tests/search_contract/test_archived_retrieval_exclusion.py</code>.</li>
+<li>Maturity impression: MIT; 50,071 lines of Python in 84 files, 16,297
+in one core module, with 130,673 lines of tests; 507 commits from 1 June
+to 25 October 2026 by one author and two bots, nine tags to v0.7.2;
+4,508 test functions, run in CI on Python 3.11 to 3.14 with a 90%
+coverage floor and an upgrade suite from the last release, none run
+here. The sibling benchmark repository's LongMemEval-S row of 0.828 for
+Engrava 0.7.0 recomputes exactly from its committed judge labels. Three
+marks: <code>bitemporal</code>, <code>audit_log</code>,
+<code>negative_eval</code>.</li>
+<li>Study when: you are adding a valid-time axis to an embedded store,
+or need a write path whose change and audit row commit or roll back
+together.</li>
+<li>Do not copy when: your agent reads memory through ranked recall and
+expects a retired fact to stop appearing, or several tenants must share
+one file.</li>
 </ul>
         </article>
       </div>

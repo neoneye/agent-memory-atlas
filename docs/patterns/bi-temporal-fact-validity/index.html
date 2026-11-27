@@ -789,6 +789,23 @@ have no caller (<code>romem/RoMem.py:2469-2539</code>). The cost is that
 "what was true then" becomes a ranking, and a repeated event keeps only
 its first date, because the embedding's graph holds one time per
 distinct triple (<code>romem/kge/knowledge_graph.py:90-94</code>).</p>
+<p><a href="../../systems/engrava/">Engrava</a> keeps the interval and
+the record clock apart, and puts the read on the wrong path.
+<code>valid_from</code> and <code>valid_until</code> on thoughts and
+edges start NULL as open bounds, come only from the caller's record,
+<code>invalidate_thought</code> or Dreaming's union of member intervals,
+and are refused when inverted
+(<code>src/engrava/infrastructure/sqlite/schema_core.sql:68-72</code>,
+<code>src/engrava/infrastructure/sqlite/engrava_core.py:9453-9501</code>,
+<code>src/engrava/extensions/dreaming.py:1467-1492</code>). MindQL's
+<code>valid_now</code>, <code>valid_at</code>, <code>valid_within</code>
+and <code>valid_between</code> compile to SQL on both tables
+(<code>src/engrava/mindql/executor.py:1041-1100</code>).
+<code>recall</code> and <code>search_hybrid</code> read neither column
+and take no temporal argument, so an invalidated fact ranks as before
+unless the caller intersects the result with a MindQL query, and the
+one-call <code>remember</code> cannot set an interval at all
+(<code>engrava_core.py:8755-8801</code>, <code>:12786-12811</code>).</p>
 <p><a href="../../systems/kairn/">Kairn</a> built the as-of read,
 measured it and left it uncalled. Experiences carry
 <code>valid_from</code> and <code>valid_to</code> beside

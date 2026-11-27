@@ -1244,6 +1244,22 @@ sweep, eviction and the session-end archive move change rows with no
 entry. And <code>quarantined</code> and <code>trust_score</code> are
 outside the hash, so a direct release from quarantine verifies
 clean.</p>
+<p><a href="../../systems/engrava/">Engrava</a> journals every mutation
+path it has and leaves the switch on the connection. With
+<code>journal_enabled</code>, each thought and edge insert, update and
+delete, the dedup bump, TTL expiry, the hygiene archive and GC, and the
+CLI's <code>gc</code> append a row with full before and after JSON and a
+SHA-256 over sequence, type, target, delta and parent hash, inside the
+savepoint that makes the change, so a failed append unwinds the write
+(<code>src/engrava/infrastructure/sqlite/journal_writer.py:109-233</code>,
+<code>src/engrava/infrastructure/sqlite/engrava_core.py:9657-9759</code>,
+<code>src/engrava/cli/main.py:3726-3748</code>). The flag is a
+constructor argument and nothing stores it in the database, so a handle
+opened without it mutates a journalled file and the chain still verifies
+(<code>engrava_core.py:1719</code>, <code>:1841-1843</code>).
+<code>created_at</code> is outside the hash, and the tests pin tail
+truncation and backdating as undetected
+(<code>tests/test_journal_verification.py:192-270</code>).</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

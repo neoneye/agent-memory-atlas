@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 905 of 906 screened at the report's current pin.**
+**Progress: 906 of 907 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 438 |
+| Repositories with an auto-run surface (`RUNS`) | 439 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 405 |
-| Repositories with build-time execution (`EXEC`) | 651 |
+| Repositories with build-time execution (`EXEC`) | 652 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -165,6 +165,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`engram-nickcirv`](../../content/systems/engram-nickcirv.md) | `.cursorrules`, `server.json` |
 | [`engrama-scops`](../../content/systems/engrama-scops.md) | `mcp.json`, `server.json` |
 | [`engraphis`](../../content/systems/engraphis.md) | `.claude-plugin/`, `.githooks/` |
+| [`engrava`](../../content/systems/engrava.md) | `.cursorrules`, `.githooks/`, `.github/copilot-instructions.md` |
 | [`enquire-mcp`](../../content/systems/enquire-mcp.md) | `scripts/` |
 | [`everos`](../../content/systems/everos.md) | `.claude/settings.json` |
 | [`everything-claude-codex`](../../content/systems/everything-claude-codex.md) | `hooks/` |

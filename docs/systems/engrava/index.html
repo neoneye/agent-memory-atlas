@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An in-process Python memory
+library over one SQLite file: thoughts and typed edges, FTS5 and vector
+hybrid recall, deterministic consolidation, valid-time predicates.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Engrava — Agent Memory Atlas">
+    <meta property="og:description" content="An in-process Python memory
+library over one SQLite file: thoughts and typed edges, FTS5 and vector
+hybrid recall, deterministic consolidation, valid-time predicates.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Engrava — Agent Memory Atlas">
+    <meta name="twitter:description" content="An in-process Python
+memory library over one SQLite file: thoughts and typed edges, FTS5 and
+vector hybrid recall, deterministic consolidation, valid-time
+predicates.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Engrava — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Engrava",
+      "description": "An in-process Python memory library over one SQLite file: thoughts and typed edges, FTS5 and vector hybrid recall, deterministic consolidation, valid-time predicates.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A valid-time axis the query language reads
+and hybrid recall does not</p>
+          <h1>Engrava</h1>
+          <p class="document-deck">An in-process Python memory library
+over one SQLite file: thoughts and typed edges, FTS5 and vector hybrid
+recall, deterministic consolidation, valid-time predicates.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/sovantica/engrava">
+              <span>Source</span>
+              <strong>sovantica/engrava</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/sovantica/engrava/commit/f6a8b739d2f17a5ede18597bcaa1b2dfc509bfa6" title="f6a8b739d2f17a5ede18597bcaa1b2dfc509bfa6">
+              <span>Analyzed revision</span>
+              <code>f6a8b739…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-27</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/sovantica--engrava" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>sovantica--engrava</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE and pyproject.toml; the LongMemEval dataset is downloaded at
+run time and not bundled</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>50,071
+lines of Python in 84 files under src/, 16,297 of them in
+infrastructure/sqlite/engrava_core.py; 130,673 lines of tests in 195
+files; 16,692 lines of docs</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>507
+commits from 1 June to 25 October 2026, the first an initial public
+release: 482 by one author under three name spellings, 17 by Dependabot
+and 8 by a semantic-release bot; nine tags from v0.2.0 to v0.7.2, which
+is the pin</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>4,508
+test functions in 176 files; ci.yml runs pytest with a 90% coverage
+floor on Python 3.11 to 3.14 and an upgrade suite from the last release;
+none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Engrava calls itself <em>"The memory database for AI agents"</em>: an
+MIT, async, in-process Python library that keeps agent memory as typed
+<strong>thoughts</strong> and weighted <strong>edges</strong> in one
+SQLite file. A hybrid of FTS5, vector cosine, recency, priority and
+graph signals searches it, a deterministic Dreaming pass consolidates
+it, and an opt-in Memory Hygiene pass prunes it. What is notable is the
+second clock: <code>valid_from</code> and <code>valid_until</code> sit
+beside the store's <code>created_at</code>, NULL means an open bound,
+and MindQL queries the world-time interval with four predicates.
+<code>invalidate_thought</code> closes it without deleting the row. What
+is weak is that this axis stops at the query language.
+<code>recall</code> and <code>search_hybrid</code>, the read path an
+agent loop uses, never read <code>valid_until</code>, so an invalidated
+fact keeps ranking. Nothing shipped in this tree, the CLI, the examples
+or the benchmark runner, sets valid time at all.</p>
+<p>Nothing is extracted. The application decides what to store and when:
+<code>remember</code> writes a string as an ACTIVE <code>NOTE</code>,
+<code>create_thought</code> writes a full record, and the store's only
+judgement on the way in is an optional content-hash dedup that bumps a
+confirmation count. No model is called in the core write path. An
+embedding provider is called after the insert when one is
+configured.</p>
+<p>Consolidation and forgetting are also the caller's to run.
+<code>consolidate</code> promotes high-scoring thoughts to priority
+<code>P1</code> and builds REFLECTION thoughts from embedding clusters
+with keyphrase text and a centroid vector. <code>run_hygiene</code>
+archives cold rows reversibly and, if <code>auto_gc_enabled</code>,
+deletes them after a cycle window and a 30-day wall-clock window. The
+project's own benchmark page reports Dreaming lowering recall@5 on its
+frozen synthetic set from 0.800 to 0.700 and says it is not an
+accuracy-lift claim.</p>
+<p>An optional SHA-256 hash chain journals thought and edge mutations
+with full before and after images, in the same savepoint as each change.
+It is off by default and enabled per connection handle, not per
+database.</p>
+<p><strong>Licence.</strong> MIT in <code>LICENSE</code>, agreeing with
+<code>license = {text = "MIT"}</code> in <code>pyproject.toml</code> and
+the classifier; <code>CONTRIBUTING.md</code> asks for contributions
+under the same licence and nothing more. The code calls itself the free
+tier: the schema header reads <em>"free-tier boundary"</em>, and the
+scoping docstrings send shared-corpus access control to <em>"the
+commercial RBAC tier"</em>, which is not in this tree and has no licence
+here. The LongMemEval runner downloads its dataset at run time and
+bundles no upstream content.</p>
+<p>Three marks are earned: <code>bitemporal</code> on thoughts and
+edges, <code>audit_log</code> on the journal and
+<code>negative_eval</code> on hybrid retrieval. Section 9 gives the
+reason for each of the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>thought row the caller wrote</strong>, believed
+from the moment it is stored. There is no candidate state and no
+verification step. The store keeps three clocks and says so in a table
+(<code>docs/bitemporal.md:17-21</code>):</p>
+<ul>
+<li><strong>Record time</strong>, <code>created_at</code> and
+<code>updated_at</code>, stamped by the store when the caller omits them
+(<code>engrava_core.py:6989-7006</code>). The caller may set both.</li>
+<li><strong>Valid time</strong>, <code>valid_from</code> and
+<code>valid_until</code>, NULL by default, set only by the caller or
+derived by Dreaming
+(<code>src/engrava/domain/models/thought.py:216-250</code>).</li>
+<li><strong>The cycle</strong>, <code>created_cycle</code> and
+<code>updated_cycle</code>, an integer the caller advances per agent
+turn, which drives recency and Dreaming.</li>
+</ul>
+<p>A thought stops being served in one of four ways, and they are
+different mechanisms on different read paths:</p>
+<ul>
+<li><strong>Archived.</strong> <code>lifecycle_status = ARCHIVED</code>,
+set by a hygiene pass, a TTL sweep in <code>archive</code> mode or the
+caller. Every hybrid arm leaves it out unless
+<code>include_archived</code> is passed, and
+<code>restore_thought</code> brings it back.</li>
+<li><strong>Expired.</strong> <code>expires_at</code> in the past. Every
+hybrid arm leaves it out; the cleanup sweep archives or deletes it.</li>
+<li><strong>Invalidated.</strong> <code>valid_until</code> set. MindQL's
+<code>valid_now</code> leaves it out; hybrid recall does not.</li>
+<li><strong>Deleted.</strong> The row is gone, with its edges,
+embeddings and actions by cascade.</li>
+</ul>
+<p>Lifecycle has a state machine,
+<code>CREATED -&gt; ACTIVE -&gt; DONE -&gt; ARCHIVED</code> and
+<code>ARCHIVED -&gt; ACTIVE</code>
+(<code>src/engrava/domain/enums.py:107-126</code>). It answers "is this
+still in the working set", not "is this true". Nothing marks a thought
+as doubted or rejected. A contradiction is a <code>CONTESTED_BY</code>
+edge the caller creates, which ranking treats like any other edge
+(<code>docs/evidence-and-conflicts.md:86-96</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three writers fill one thought row, valid time comes only from the caller or from Dreaming's union of member intervals, invalidate closes the interval in place, and of the two read paths only MindQL reads it, while hybrid recall filters archived, expired and retired rows and ranks an invalidated fact as before</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three writers fill one thought row, valid time comes only from the caller or from Dreaming&#39;s union of member intervals, invalidate closes the interval in place, and of the two read paths only MindQL reads it, while hybrid recall filters archived, expired and retired rows and ranks an invalidated fact as before
+flowchart TD
+    subgraph W[&quot;Writers in the caller&#39;s process&quot;]
+        direction TB
+        R[&quot;remember(text)&lt;br/&gt;ACTIVE NOTE,&lt;br/&gt;no valid time&quot;]
+        C[&quot;create_thought(record)&lt;br/&gt;caller may set valid_from,&lt;br/&gt;valid_until, created_at&quot;]
+        D[&quot;Dreaming REFLECTION&lt;br/&gt;union of the members&#39;&lt;br/&gt;intervals&quot;]
+        R ~~~ C ~~~ D
+    end
+    W --&gt; T[(&quot;thought row&lt;br/&gt;created_at, updated_at,&lt;br/&gt;valid_from, valid_until,&lt;br/&gt;lifecycle_status,&lt;br/&gt;expires_at&quot;)]
+    W -.-&gt;|&quot;journal_enabled only&quot;| J[(&quot;journal_entry&lt;br/&gt;SHA-256 chain,&lt;br/&gt;before and after JSON&quot;)]
+    I[&quot;invalidate_thought(id, t)&lt;br/&gt;sets valid_until&lt;br/&gt;in place&quot;] --&gt; T
+    H[&quot;run_hygiene, TTL sweep&lt;br/&gt;ACTIVE to ARCHIVED&quot;] --&gt; T
+    T --&gt; Q[&quot;MindQL FIND ... WHERE&lt;br/&gt;valid_now, valid_at,&lt;br/&gt;valid_within,&lt;br/&gt;valid_between&quot;]
+    T --&gt; S[&quot;recall, search_hybrid&lt;br/&gt;BM25, cosine, recency,&lt;br/&gt;priority, graph&quot;]
+    Q --&gt; V[&quot;Answers by world time:&lt;br/&gt;what held at an instant&quot;]
+    S --&gt; F[&quot;Leaves out ARCHIVED,&lt;br/&gt;expired, retired&lt;br/&gt;REFLECTIONs&quot;]
+    F --&gt; X[&quot;valid_until unread:&lt;br/&gt;an invalidated fact&lt;br/&gt;still ranks&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A library, not a service. <code>SqliteEngravaCore</code> wraps an
+<code>aiosqlite</code> connection the caller opens, or opens and owns
+one through <code>from_config</code> and a YAML file
+(<code>src/engrava/infrastructure/sqlite/engrava_core.py:2501</code>).
+The schema is created and migrated in place on first connection, now at
+<code>user_version = 21</code>
+(<code>src/engrava/infrastructure/sqlite/schema_core.sql:381-385</code>).
+An upgrade suite in CI installs the last released wheel, populates a
+database and upgrades it.</p>
+<p>One file holds everything: <code>thought</code>, <code>edge</code>,
+<code>embedding</code>, <code>action</code>, <code>journal_entry</code>,
+<code>_metadata</code>, an external-content FTS5 table synchronised by
+three triggers (<code>schema_core.sql:197-223</code>), and with
+<code>engrava[vec]</code> a sqlite-vec <code>vec0</code> table. Without
+the extra, the vector arm is a NumPy matrix product over every stored
+embedding (<code>engrava_core.py:11500-11550</code>).
+<code>EngravaManager</code> keeps one file per service name under a data
+directory
+(<code>src/engrava/infrastructure/service_manager.py:86</code>,
+<code>:244</code>, <code>:682</code>).</p>
+<p>Embedding providers are pluggable: sentence-transformers locally, any
+OpenAI-compatible endpoint, Ollama, the Hugging Face Inference API, or a
+callback. None is configured by default, and <code>auto_embed</code>
+defaults to false (<code>engrava_core.py:1713-1720</code>), so the
+two-line quick start runs on FTS5, recency and priority alone.</p>
+<p>Writes serialise on an in-process lock and SQLite's single writer.
+Most mutations run as one savepoint holding the write, a read-back of
+the stored row and the journal entry, so a failed journal append unwinds
+the write (<code>engrava_core.py:9657-9759</code> for the delete). Rows
+carry a <code>revision</code> column that every guarded update checks
+and increments in one statement
+(<code>schema_core.sql:110-116</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install engrava</code> needs nothing running and no API
+key. It stores, searches by keyword, builds the graph and runs MindQL.
+<code>engrava[embeddings-local]</code> pulls <code>torch</code> and a
+model on first use, which the README warns can mean gigabytes of CUDA
+libraries on Linux. The store is a SQLite file, readable with any SQLite
+client, and <code>engrava snapshot</code> and
+<code>engrava export</code> write JSONL and JSON. The CLI installs as
+<code>engrava</code>. The MCP server, <code>engrava-mcp</code>, is a
+separate package in a separate repository and was not read.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema.</strong>
+<code>src/engrava/infrastructure/sqlite/schema_core.sql</code>:
+<code>thought</code> <code>:45-117</code>, <code>edge</code>
+<code>:119-143</code>, <code>embedding</code> <code>:152-161</code>,
+<code>action</code> <code>:163-176</code>, FTS5 and triggers
+<code>:197-223</code>, <code>journal_entry</code> <code>:231-244</code>,
+valid-time indexes <code>:302-310</code>, provenance indexes
+<code>:376-379</code>.</li>
+<li><strong>Models.</strong>
+<code>src/engrava/domain/models/thought.py</code>
+(<code>valid_from</code> and <code>valid_until</code>
+<code>:216-217</code>, interval validator <code>:235-250</code>),
+<code>domain/models/edge.py</code>,
+<code>domain/models/_temporal.py</code> (canonical UTC form and
+ordering), <code>domain/enums.py</code> (lifecycle
+<code>:107-126</code>, edge types <code>:157-172</code>, visibility
+<code>:270-288</code>).</li>
+<li><strong>Write.</strong> <code>SqliteEngravaCore</code> in
+<code>infrastructure/sqlite/engrava_core.py</code>:
+<code>create_thought</code> <code>:6989</code>, the dedup probe
+<code>:6433-6461</code> and its hit branch <code>:6518</code>,
+<code>_finish_create_thought</code> with auto-embedding and
+<code>on_store</code> <code>:7249-7299</code>,
+<code>get_or_create</code> <code>:7314</code>,
+<code>upsert_by_hash</code> <code>:7481</code>, <code>bulk_store</code>
+<code>:7699</code>, <code>remember</code> <code>:8755</code>.</li>
+<li><strong>Update and delete.</strong> <code>update_thought</code>
+<code>:9196</code>, <code>restore_thought</code> <code>:9339</code>,
+<code>invalidate_thought</code> <code>:9453-9501</code>,
+<code>delete_thought</code> <code>:9657</code>, <code>create_edge</code>
+<code>:9794</code>, <code>update_edge</code> <code>:9894</code>,
+<code>invalidate_edge</code> <code>:10076-10125</code>,
+<code>delete_edge</code> <code>:10183</code>,
+<code>cleanup_expired</code> <code>:8947</code>.</li>
+<li><strong>Retrieval.</strong> <code>search_similar</code>
+<code>:11235</code>, <code>search_fts</code> <code>:11564</code> with
+its SQL at <code>:11646-11660</code>, <code>execute_mindql</code>
+<code>:11744</code>, <code>_load_graph_signal</code>
+<code>:12124</code>, <code>_expand_via_consolidated_from</code>
+<code>:12243</code>, <code>search_hybrid</code> <code>:12786</code>,
+<code>recall</code> <code>:8803</code>, access buffering
+<code>:13638-13689</code>.</li>
+<li><strong>MindQL.</strong> <code>src/engrava/mindql/parser.py</code>
+and <code>executor.py</code>, the temporal clause at
+<code>executor.py:1041-1100</code>.</li>
+<li><strong>Background, caller-run.</strong> <code>run_hygiene</code>
+<code>engrava_core.py:13773</code>, <code>_hygiene_archive</code>
+<code>:14159</code>, <code>_hygiene_gc</code> <code>:14319</code>,
+<code>consolidate</code> <code>:14760</code>;
+<code>src/engrava/extensions/dreaming.py</code>
+(<code>run_consolidation</code> <code>:204</code>,
+<code>_sweep_orphan_reflections</code> <code>:358</code>,
+<code>_create_reflections</code> <code>:1102</code>, the reflection
+interval <code>:1467-1492</code>),
+<code>dreaming_reflection_extent.py:49</code>.</li>
+<li><strong>Journal.</strong>
+<code>src/engrava/infrastructure/sqlite/journal_writer.py</code>
+(<code>compute_hash</code> <code>:109</code>, <code>append</code>
+<code>:156</code>, <code>verify_integrity</code> <code>:238</code>,
+<code>get_entries</code> <code>:315</code>); <code>verify_journal</code>
+at <code>engrava_core.py:2049</code>.</li>
+<li><strong>CLI.</strong> <code>src/engrava/cli/main.py</code>
+(<code>query</code> <code>:1043</code>, <code>gc</code>
+<code>:3930</code>, the gc journal entries <code>:3726-3748</code>, the
+restore clear <code>:3130</code>) and
+<code>cli/memory_commands.py</code> (<code>remember</code>,
+<code>recall</code>, <code>link</code>).</li>
+<li><strong>Tests.</strong> <code>tests/search_contract/</code> (ranking
+goldens, archived exclusion),
+<code>tests/test_scoped_retrieval.py</code>,
+<code>tests/test_mindql.py</code>,
+<code>tests/test_invalidate.py</code>,
+<code>tests/test_journal_verification.py</code>,
+<code>tests/test_memory_hygiene.py</code>,
+<code>tests/benchmarks/</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>thought</code> row carries content and its classification
+(<code>thought_type</code>, <code>essence</code>, <code>content</code>,
+<code>priority</code>, <code>lifecycle_status</code>) and where it came
+from: <code>source</code>, a <code>source_type</code> of
+<code>EXPERIENCE</code>, <code>SEEDED_LLM</code>,
+<code>DISTILLED_LLM</code> or <code>DREAMING</code>,
+<code>confidence</code>, and an opt-in <code>provenance</code> JSON of
+session, actor, retrieval query and context ids. It also carries its use
+(<code>access_count</code>, <code>last_accessed_at</code>,
+<code>confirmation_count</code>), its lifetime (<code>expires_at</code>,
+<code>pinned</code>, <code>archived_at_cycle</code>,
+<code>archived_at</code>), the valid-time pair, and a free
+<code>metadata_json</code> (<code>schema_core.sql:45-117</code>).</p>
+<p><code>content_hash</code> is the SHA-256 of <code>content</code>,
+indexed for dedup. An edge carries a type, a weight, a
+<code>decay_multiplier</code>, its own valid-time pair and metadata, and
+is unique on <code>(from, to, type)</code>. Actions are a side table of
+things the agent did, with <code>status</code> and
+<code>verification_status</code>. An action's terminal outcome feeds
+<code>thought.action_outcome_score</code>, which the hygiene pass reads
+as a keep signal.</p>
+<p><strong>Two different things are called visibility.</strong> The
+<code>visibility</code> column holds <code>private</code>,
+<code>selective</code> or <code>public</code> for an inner and outer
+speech boundary, and <code>list_thoughts</code> filters on it
+(<code>engrava_core.py:9579-9584</code>). The
+<code>VisibilityQueryFilter</code> that <code>recall</code> and
+<code>search_hybrid</code> accept reads <code>$.visibility</code> and
+<code>$.owner</code> out of <code>metadata_json</code> instead
+(<code>src/engrava/domain/models/filters.py:381-398</code>). Recall
+therefore never consults the column.</p>
+<p>There is no scope key. The docstring of <code>create_thought</code>
+says <code>actor_id</code> <em>"is not a tenant boundary"</em>, and the
+filter's docstring that it <em>"must not be used to protect tenant
+data"</em>.</p>
+<p>Valid time is stored in one canonical UTC ISO-8601 form so that TEXT
+comparison orders instants. An inverted interval is refused on
+construction, on update, on invalidate, and on read
+(<code>src/engrava/domain/models/_temporal.py:14-48</code>,
+<code>:164-205</code>). The migration that added the columns seeded
+<code>valid_from = created_at</code> for rows that existed then
+(<code>engrava_core.py:4095-4096</code>); rows written since start
+open.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>search_hybrid</code> runs the FTS5 arm and the vector arm
+independently, each with its own top 50, min-max normalises BM25, and
+adds recency, priority and an optional graph signal
+(<code>engrava_core.py:12786-12830</code>). Default weights are FTS
+0.30, vector 0.55, recency 0.10, priority 0.05 and graph 0.00
+(<code>src/engrava/config.py:1239-1241</code>). Weights of signals that
+cannot run for a query, such as the vector arm with no provider, are
+redistributed. <code>recall</code> is the same call with fewer
+parameters.</p>
+<p>A bare query is tokenised and OR-joined, so a question matches any
+document sharing a content word. A query with quotes or upper-case
+operators passes through as FTS5 syntax
+(<code>engrava_core.py:15373-15410</code>). Recency uses either the
+cycle or a wall-clock reference, never both. After fusion,
+<code>graph_expansion_enabled</code>, on by default
+(<code>config.py:1253</code>), pulls the <code>CONSOLIDATED_FROM</code>
+sources of top-ranked REFLECTIONs into the result with a propagated
+score. The graph signal, when weighted, reads every edge type in both
+directions.</p>
+<p>Every arm applies the same exclusions: not expired, not ARCHIVED
+unless asked, and no REFLECTION outside ACTIVE. The FTS arm and the
+NumPy vector scan apply them in SQL before their limit
+(<code>engrava_core.py:11646-11660</code>, <code>:11423</code>). The
+sqlite-vec arm fetches four times <code>top_k</code>, capped at 500, and
+keeps only rows that resolve to a live thought
+(<code>:11327-11360</code>, <code>:11364-11416</code>). A metadata
+filter always sends the vector arm to the NumPy scan, so a narrow filter
+is not starved by the overfetch cap. The expansion stage re-applies the
+exclusions and the caller's filter to the sources it pulls in. A filter
+that would admit nothing is refused at construction.</p>
+<p>None of the arms reads valid time. <code>search_fts</code>,
+<code>search_similar</code>, <code>_load_graph_signal</code>,
+<code>_expand_via_consolidated_from</code> and
+<code>search_hybrid</code> contain no reference to
+<code>valid_from</code> or <code>valid_until</code>, and neither
+<code>recall</code> nor <code>search_hybrid</code> takes a temporal
+argument (recorded search in the appendix). An invalidated belief is
+ranked exactly as before its invalidation, and an invalidated edge still
+boosts its neighbours. To ask "what is true now" the caller has to run a
+MindQL <code>FIND ... WHERE valid_now</code> and intersect the ids
+itself.</p>
+<p>Reads write. <code>get_thought</code> and every hybrid search buffer
+an access for each returned id, flushed to <code>access_count</code> and
+<code>last_accessed_at</code> on close or by
+<code>flush_access_buffer</code> (<code>engrava_core.py:9193</code>,
+<code>:13638-13689</code>). The hygiene pass and Dreaming read those
+counts as the frequency signal, and <code>consolidate</code> suppresses
+tracking for its own reads.</p>
+<p>No context assembly ships. The library returns
+<code>(thought_id, score)</code> pairs and the caller fetches, formats
+and budgets the text (<code>examples/agent_loop.py</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The caller writes; nothing listens to a conversation.
+<code>remember(text)</code> builds a <code>NOTE</code> with
+<code>essence = text[:200]</code>, priority <code>P3</code>, status
+ACTIVE and source <code>remember</code>, and calls
+<code>create_thought</code> (<code>engrava_core.py:8755-8801</code>). It
+accepts metadata and a dedup flag, not valid time. To set valid time the
+caller builds a <code>ThoughtRecord</code>.</p>
+<p>With <code>deduplicate=True</code> a write whose content hash matches
+an existing row bumps that row's <code>confirmation_count</code> and
+<code>updated_at</code> and returns it. The probe is
+<code>SELECT * FROM thought WHERE content_hash = ? LIMIT 1</code>, with
+no lifecycle predicate (<code>engrava_core.py:6455</code>), and the hit
+branch updates only those two columns (<code>:6518</code>). Remembering
+again a fact that hygiene archived returns the archived row, still
+ARCHIVED and still out of default recall. <code>upsert_by_hash</code>
+instead overwrites the matched row's mutable fields, lifecycle included
+(<code>:7464-7479</code>).</p>
+<p>Updates overwrite in place. <code>update_thought</code> changes any
+mutable field under the revision guard, <code>invalidate_thought</code>
+is <code>update_thought(valid_until=...)</code> after an ordering check,
+and the previous value survives only in the journal if one is enabled.
+<code>delete_thought</code> removes the row, purges its vector and
+cascades to its edges, embeddings and actions.</p>
+<p>The <strong>Dreaming</strong> pass scores ACTIVE thoughts with a
+library of signals (frequency, confirmation, recency span, action
+outcome and others) and promotes those above a threshold to
+<code>P1</code>, under a cap on the <code>P1</code> fraction. It can
+link each promoted thought to similar earlier ones, clusters embeddings
+into REFLECTIONs whose content is built from keyphrases and whose vector
+is the centroid, and archives any REFLECTION whose sources have all left
+ACTIVE (<code>src/engrava/extensions/dreaming.py:204-351</code>,
+<code>:358</code>). A REFLECTION's interval is the union of its
+members': open on a side if any member is open there
+(<code>dreaming.py:1467-1492</code>).</p>
+<p>The <strong>Hygiene</strong> pass is off by default
+(<code>config.py:916</code>). It scores eligible thoughts with the same
+signals under hygiene weights, multiplies by the
+<code>decay_function</code> hook, and archives up to
+<code>max_evictions_per_run</code> below an eviction threshold of 0.20.
+It never archives a pinned or <code>P1</code> thought, and archives
+nothing when no usage signal is active across the pool. With
+<code>auto_gc_enabled</code> it deletes hygiene-archived rows once 10
+cycles and 2,592,000 seconds have passed
+(<code>config.py:916-928</code>,
+<code>engrava_core.py:13773-13870</code>).</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li><strong>The write blocks on the caller's await, briefly.</strong> An
+insert is one SQLite transaction. With <code>auto_embed</code> the
+embedding call runs after the insert and before
+<code>create_thought</code> returns
+(<code>engrava_core.py:7290-7299</code>), so a remote provider's latency
+lands on every write. The row is keyword-searchable as soon as the
+insert commits.</li>
+<li><strong>No lag otherwise.</strong> There is no queue and no
+extraction.</li>
+<li><strong>Dreaming and hygiene read the pool, not the corpus.</strong>
+Dreaming lists up to <code>candidates_limit</code> ACTIVE thoughts per
+run and skips clustering when too few new candidates have arrived. Both
+run only when the caller calls them, or every
+<code>schedule_every_n_cycles</code> cycles (default 100) through the
+helper. No model is called by the default signals.</li>
+<li><strong>The read is bounded by <code>top_k</code>.</strong> Nothing
+is injected anywhere: the caller chooses what to put in a prompt and
+where.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The library exposes a protocol API split into read and write halves
+(<code>src/engrava/domain/protocols/engrava_read.py</code>,
+<code>engrava_core.py</code>), a <code>ReadOnlyEngrava</code> wrapper
+that refuses every write
+(<code>src/engrava/infrastructure/read_only_store.py:77</code>), hooks
+for <code>on_store</code>, <code>on_retrieve</code> and
+<code>decay_function</code>, and an extension manifest for MindQL
+commands and extension migrations. The agent has no memory agency of its
+own in this tree. The application decides every write and every read,
+and <code>examples/agent_loop.py</code> shows the intended loop: create
+an observation, <code>search_hybrid</code> with the current cycle,
+generate, store the output, consolidate periodically.</p>
+<p>The CLI's <code>remember</code>, <code>recall</code> and
+<code>link</code> reach the same store from a shell. None of its options
+sets valid time, and there is no <code>invalidate</code> command
+(recorded search). A model can reach memory only through a host the
+application builds, or through <code>engrava-mcp</code>, which is
+outside this tree.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="valid-time-stops-at-the-query-language">Valid time stops at the
+query language</h3>
+<p>The schema, the model, the migration and four predicates treat valid
+time carefully, and the docs explain the half-open interval with worked
+boundary cases (<code>docs/bitemporal.md:91-128</code>). Three things
+limit what that buys an agent built on this library.</p>
+<ul>
+<li><strong>Recall ignores it.</strong> The default read path ranks a
+closed fact beside an open one. <code>docs/bitemporal.md</code>
+describes invalidation through MindQL only and does not mention
+recall.</li>
+<li><strong>No surface in this tree fills it.</strong>
+<code>remember</code> takes no interval, the CLI has no option for one,
+and the benchmark harness in a sibling repository stores each turn's
+session date as <code>metadata["date"]</code> rather than
+<code>valid_from</code> (<code>adapters/engrava_adapter.py:397</code> in
+<code>sovantica/engrava-benchmark</code> at <code>65e3e59</code>). The
+only producers are an application building <code>ThoughtRecord</code>s
+by hand, <code>invalidate</code>, and Dreaming propagating intervals it
+was given.</li>
+<li><strong>Record time is not guaranteed.</strong>
+<code>created_at</code> and <code>updated_at</code> are caller-settable,
+and <em>"an explicit update is not checked against the previous
+value"</em> (<code>docs/bitemporal.md:24-26</code>). There is no as-of
+read on record time. "What did the store hold on 1 March" is answerable
+only by replaying the journal, if it was on.</li>
+</ul>
+<h3 id="the-journal-records-what-its-handle-saw">The journal records
+what its handle saw</h3>
+<p><code>journal_enabled</code> is a constructor argument and a YAML
+key, not a property of the database (<code>engrava_core.py:1719</code>,
+<code>:1841-1843</code>). A second process, a script or a CLI command
+opened without the flag mutates the same file and writes no entry. The
+chain still verifies, because a missing entry is not a gap in a sequence
+that was never assigned. The CLI's <code>gc</code> journals its deletes
+only when <code>--config</code> names a journal-enabled YAML
+(<code>cli/main.py:3595-3602</code>, <code>:3664-3681</code>,
+<code>:3726-3748</code>).</p>
+<p>The hash binds sequence, type, target, delta and parent hash. It does
+not bind <code>created_at</code> or <code>entry_id</code>, so a journal
+with every timestamp rewritten still verifies
+(<code>journal_writer.py:109-154</code>). A removed tail leaves a
+verifying prefix, and <code>restore --clear</code> empties the table
+(<code>cli/main.py:3130</code>). Tests pin the first two limits as
+passing behaviour
+(<code>tests/test_journal_verification.py:192-270</code>). Embeddings,
+action creation and access counts are outside the journal, and a thought
+delete records no <code>DELETE_EDGE</code> for the edges its cascade
+removes (<code>docs/audit-trail.md:84-117</code>).</p>
+<h3 id="deletion-keeps-the-text">Deletion keeps the text</h3>
+<p>A deleted or garbage-collected thought's full row survives in the
+journal's <code>before</code> image and in every earlier insert and
+update entry. The docs say a true erasure must purge those and
+re-baseline the chain (<code>docs/data-lifecycle.md:220-263</code>). A
+REFLECTION built from a deleted source keeps its keyphrases until the
+orphan sweep archives it, and archiving keeps the text.</p>
+<h3 id="correction-does-not-hold">Correction does not hold</h3>
+<p>A fact the caller deletes or hygiene collects can be written again
+with the same content, and becomes a new live thought. Dedup looks only
+at rows that still exist. A fact that hygiene archived is the opposite
+case: dedup finds it and returns it, confirmed once more and still
+archived.</p>
+<h3 id="scope-is-the-file">Scope is the file</h3>
+<p><code>EngravaManager</code> gives each service its own file, which
+isolates absolutely and is the boundary the docs name. Inside one file,
+metadata filters are applied consistently on every arm and on graph
+expansion, and tested on each. They are filters the caller chooses to
+pass, with values the caller writes, and the code says so in every
+docstring that mentions them.</p>
+<h3 id="concurrency">Concurrency</h3>
+<p>Writes are serialised by an in-process lock and
+<code>BEGIN IMMEDIATE</code>, dedup takes a cross-connection write lock
+and retries on contention, and each update checks a row revision. A
+connection whose compensating rollback fails is quarantined, and every
+later call on it raises (<code>engrava_core.py:5963</code>). That
+defence accounts for much of the 16,297 lines of
+<code>engrava_core.py</code>.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>bitemporal</code> — earned.</strong>
+<code>valid_from</code> and <code>valid_until</code> on thoughts and
+edges are separate from <code>created_at</code> and
+<code>updated_at</code>, start NULL, and are set from the caller's
+record, <code>update_thought</code>, <code>invalidate_*</code> and
+Dreaming's member union. MindQL reads them on both tables from the API
+and the CLI. Hybrid recall does not, and no shipped surface in this tree
+writes them.</li>
+<li><strong><code>audit_log</code> — earned.</strong>
+<code>journal_entry</code> is appended by every thought and edge
+mutation path, including hygiene, TTL, dedup, restore and the CLI's
+<code>gc</code>, inside the savepoint of the change, and nothing in
+<code>src</code> updates a row. It is off by default, per handle, and
+emptied by <code>restore --clear</code>.</li>
+<li><strong><code>negative_eval</code> — earned.</strong> Populated
+cases require an archived source, an expired source and an out-of-filter
+row to be absent while a control is present, on each arm and through
+graph expansion, and a monkeypatched gate must leak.</li>
+<li><strong><code>trust_state</code> — withheld.</strong> Lifecycle
+filters retrieval, and it is a working-set state; nothing records doubt
+or rejection. Confidence, confirmation count and source type are stored
+and filter nothing.</li>
+<li><strong><code>scope_enforced</code> — withheld.</strong> No scope
+key exists on a record. Tenant isolation is one file per service, a
+physical partition, and the metadata filters are caller-chosen
+refinements.</li>
+<li><strong><code>tombstone</code> — withheld.</strong> No record of a
+rejected value exists. A deleted value can be written again, and the
+journal's before images have no reader on the write path.</li>
+<li><strong><code>human_review</code> — withheld.</strong> No memory
+waits for anyone. A thought is served from the insert.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran none of the suites, and I installed nothing. The counts come
+from reading. CI runs <code>pytest --cov --cov-fail-under=90</code> on
+Python 3.11, 3.12, 3.13 and 3.14 offline after warming a Hugging Face
+cache, plus lint, <code>mypy --strict</code>, a ranking-goldens drift
+check, <code>pip-audit --strict</code> and an upgrade suite from the
+previous release (<code>.github/workflows/ci.yml:204</code>,
+<code>:210-252</code>).</p>
+<p>The memory tests that bear on the marks are strong, and several state
+in their docstrings what a case proves:</p>
+<ul>
+<li><code>tests/search_contract/test_archived_retrieval_exclusion.py</code>
+builds a seed REFLECTION that matches the query and a source that does
+not, archives the source, and requires the REFLECTION present and the
+source absent from the default result, then present with
+<code>include_archived</code> (<code>:215-283</code>).
+<code>test_reverting_expansion_gate_leaks_archived_via_expansion_only</code>
+monkeypatches the expansion filter and requires the leak
+(<code>:317-356</code>), a negative control on the test itself. The same
+pair exists for expired sources (<code>:410-509</code>).</li>
+<li><code>tests/test_scoped_retrieval.py</code> stores two rows matching
+the same text or the same vector under two project values and requires
+exactly the in-filter one. It also requires an out-of-filter expansion
+source absent beside an in-filter one that is present
+(<code>:150-222</code>).</li>
+<li><code>tests/test_mindql.py</code> runs each temporal predicate on
+both tables against five shaped rows and asserts exact id sets
+(<code>:913-944</code>). <code>tests/test_invalidate.py</code> checks
+that an invalidated thought leaves <code>valid_now</code> and stays
+fetchable (<code>:93-107</code>).</li>
+<li><code>tests/test_journal_verification.py</code> requires a tampered
+entry detected and pins tail truncation and backdating as undetected
+(<code>:178-270</code>).</li>
+</ul>
+<p>No test asserts anything about valid time on <code>recall</code> or
+<code>search_hybrid</code>, and none dedups against an archived row
+(recorded searches).</p>
+<p>The in-package synthetic benchmark generates a frozen 50-conversation
+dataset from a fixed seed, and a test requires the committed JSON to
+equal regeneration
+(<code>tests/benchmarks/test_synthetic_frozen.py</code>). Its observed
+recall@5 values are in <code>docs/benchmarks.md:114-127</code>, and no
+per-question result is committed beside them.</p>
+<p>The README links benchmark results reproducible from a separate
+repository. I read four files of
+<code>sovantica/engrava-benchmark</code> at <a
+href="https://github.com/sovantica/engrava-benchmark/commit/65e3e59689f8b62b5a66e1276901402e3c062e31"><code class="commit-id" title="65e3e59689f8b62b5a66e1276901402e3c062e31">65e3e596…</code></a>
+through the GitHub API, without cloning or running it. The newest
+Engrava row, <code>lme-s_engrava_0.7.0_2026-10-03</code>, reports
+LongMemEval-S overall 0.828 and macro 0.836 over 500 questions. Both
+recompute exactly from its committed <code>judge_labels.jsonl</code>:
+414 judged correct, and each of the six category accuracies matches. The
+run measured Engrava 0.7.0, not the 0.7.2 pin, with OpenAI
+<code>text-embedding-3-small</code>, <code>gpt-4o-2024-08-06</code> as
+reader and as judge, <code>top_k</code> 20 and one thought per user
+turn. Its <code>verification_status</code> reads <code>verified</code>
+and its <code>provenance</code> <code>sovantica-run</code>, so the
+project ran and labelled it. The <code>engrava.ai</code> site was not
+used as evidence.</p>
+<p>There is no paper. The LongMemEval runner cites the LongMemEval paper
+(<a href="https://arxiv.org/abs/2410.10813">arXiv:2410.10813</a>) as the
+benchmark's source.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make NULL an open bound, not an unknown.</strong> Facts
+nobody annotated stay visible to every point-in-time predicate, so valid
+time can be adopted one row at a time, and the one predicate that needs
+real bounds says so.</li>
+<li><strong>Invalidate as an update to one column, with an ordering
+check on the mutation path as well as the model.</strong> The row and
+its history stay, and a past instant still finds it.</li>
+<li><strong>Re-apply the read filter after graph expansion, and test
+that path alone.</strong> A filter on the arm <code>WHERE</code> clauses
+misses rows expansion brings in; a fixture whose source cannot match any
+arm proves where a leak came from.</li>
+<li><strong>Put the write, its read-back and its journal entry in one
+savepoint.</strong> A failed append then unwinds the change instead of
+leaving it unlogged.</li>
+<li><strong>Write a test for each limit you document.</strong> Tail
+truncation and timestamp backdating pass verification here on purpose,
+and the test says so.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A second clock that only the query language reads.</strong>
+If recall is how an agent sees memory, recall is where invalidation has
+to take effect, or the feature is a reporting tool.</li>
+<li><strong>Audit on per-handle configuration.</strong> Store the
+setting in the database and refuse an unjournalled write to a journalled
+file, or every forgotten flag is a silent gap.</li>
+<li><strong>A dedup probe that ignores lifecycle.</strong> Restating an
+archived fact should restore it or create a new row, not confirm a row
+nobody can see.</li>
+<li><strong>Two fields with one name.</strong> A <code>visibility</code>
+column and a <code>$.visibility</code> metadata key that different APIs
+filter on will be confused.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a developer who wants an embedded, dependency-light store
+under an agent loop they write themselves, who will decide what to
+store, and who needs a schema and write path that do not lose data under
+concurrency or upgrade. It is a database with memory-shaped columns, and
+the README's own word for it is a database. For a single-user agent, or
+one file per tenant, it carries very little operational cost for that
+care.</p>
+<p>It does not suit a reader who wants memory to decide anything: there
+is no extraction, no correction semantics and no belief state, and the
+one temporal feature that would make an agent stop citing an old fact
+does not reach the recall path. A multi-tenant service on one file
+should walk away, as the docs themselves say.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does <code>engrava-mcp</code> expose <code>invalidate_thought</code>
+or a valid-time argument to a model, and does it apply
+<code>valid_now</code> to its search tool? It is the only place a model
+could fill or use valid time, and it is outside this tree.</li>
+<li>Is recall's indifference to valid time intended? The docs present
+invalidation as the way to retire a fact that stopped being true, and
+describe its effect only on MindQL.</li>
+<li>What does the commercial tier add? The code reserves RBAC and
+cognitive-layer methods for it, and nothing here shows their shape.</li>
+<li>Is the dedup hit on an archived row meant to count as a sighting
+that keeps the row archived?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/engrava/infrastructure/sqlite/schema_core.sql</code></td>
+<td>Head schema: thought, edge, embedding, action, journal, FTS5,
+indexes</td>
+</tr>
+<tr>
+<td><code>src/engrava/infrastructure/sqlite/engrava_core.py</code></td>
+<td><code>SqliteEngravaCore</code>: writes, dedup, updates, invalidate,
+delete, every search arm, fusion, hygiene, consolidate, migrations</td>
+</tr>
+<tr>
+<td><code>src/engrava/infrastructure/sqlite/journal_writer.py</code></td>
+<td>The hash-chained journal: hash, append, verify, read</td>
+</tr>
+<tr>
+<td><code>src/engrava/domain/models/thought.py</code></td>
+<td><code>ThoughtRecord</code>, including the valid-time pair and its
+validator</td>
+</tr>
+<tr>
+<td><code>src/engrava/domain/models/_temporal.py</code></td>
+<td>Canonical UTC timestamps and interval ordering</td>
+</tr>
+<tr>
+<td><code>src/engrava/domain/models/filters.py</code></td>
+<td><code>MetadataFilter</code>, <code>FieldPredicate</code>,
+<code>VisibilityQueryFilter</code></td>
+</tr>
+<tr>
+<td><code>src/engrava/domain/enums.py</code></td>
+<td>Lifecycle state machine, edge types, sources, visibility</td>
+</tr>
+<tr>
+<td><code>src/engrava/mindql/parser.py</code>,
+<code>executor.py</code></td>
+<td>MindQL and the four temporal predicates</td>
+</tr>
+<tr>
+<td><code>src/engrava/extensions/dreaming.py</code></td>
+<td>Promotion, dream edges, reflections, orphan sweep</td>
+</tr>
+<tr>
+<td><code>src/engrava/extensions/dreaming_reflection_extent.py</code></td>
+<td>A reflection's valid-time interval from its members</td>
+</tr>
+<tr>
+<td><code>src/engrava/infrastructure/service_manager.py</code></td>
+<td><code>EngravaManager</code>, one file per service</td>
+</tr>
+<tr>
+<td><code>src/engrava/config.py</code></td>
+<td>Search weights, Dreaming, Hygiene and Journal configuration</td>
+</tr>
+<tr>
+<td><code>src/engrava/cli/main.py</code>,
+<code>cli/memory_commands.py</code></td>
+<td>The <code>engrava</code> CLI</td>
+</tr>
+<tr>
+<td><code>docs/bitemporal.md</code>, <code>docs/audit-trail.md</code>,
+<code>docs/data-lifecycle.md</code>,
+<code>docs/evidence-and-conflicts.md</code></td>
+<td>The project's own statements of each mechanism's limits</td>
+</tr>
+<tr>
+<td><code>tests/search_contract/test_archived_retrieval_exclusion.py</code></td>
+<td>Archived and expired exclusion on every arm, with negative
+controls</td>
+</tr>
+<tr>
+<td><code>tests/test_scoped_retrieval.py</code></td>
+<td>Metadata filters per arm and through expansion</td>
+</tr>
+<tr>
+<td><code>tests/test_mindql.py</code>,
+<code>tests/test_invalidate.py</code></td>
+<td>Temporal predicates and invalidation</td>
+</tr>
+<tr>
+<td><code>tests/test_journal_verification.py</code></td>
+<td>Tamper detection and its pinned limits</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>No hybrid arm reads valid time.</strong>
+<code>git grep -n -E 'valid_(from|until)' -- src/engrava/infrastructure/sqlite/engrava_core.py</code>
+returns the timestamp canonicalisation list at <code>:225-230</code>,
+the migration at <code>:4055-4120</code>, row mapping at
+<code>:6166-6375</code> and <code>:15208-15261</code>, the edge inserts
+at <code>:8664-8677</code> and <code>:9831-9844</code>, and the two
+invalidate methods at <code>:9453-9501</code> and
+<code>:10076-10125</code>. Nothing matches between <code>:10125</code>
+and <code>:15208</code>, which holds <code>search_similar</code>,
+<code>search_fts</code>, <code>_load_graph_signal</code>,
+<code>_expand_via_consolidated_from</code> and
+<code>search_hybrid</code>.</li>
+<li><strong>Valid time has no writer in the CLI, examples, scripts or
+benchmark runners.</strong>
+<code>git grep -n -E 'valid_from|invalidate_(thought|edge)|valid_until' -- src/engrava/benchmarks src/engrava/cli examples scripts</code>
+returns only the snapshot column lists at
+<code>src/engrava/cli/snapshot_records.py:434-435</code> and
+<code>:457-458</code>.</li>
+<li><strong>Only MindQL compiles a temporal predicate.</strong>
+<code>git grep -n -i -E 'valid_at|VALID AT|AS OF|as_of|valid_time|ValidTime' -- src</code>
+returns the MindQL parser and executor and three unrelated lines in
+<code>cycle_providers.py</code>, <code>domain/exceptions.py</code> and
+<code>extensions/dreaming_cluster_quality.py</code>.</li>
+<li><strong>No test puts valid time on recall.</strong>
+<code>git grep -n -l -E 'valid_at|valid_now' -- tests</code> returns
+<code>tests/test_invalidate.py</code>,
+<code>tests/test_mindql.py</code>,
+<code>tests/test_temporal_query_performance.py</code> and
+<code>tests/test_timestamp_canonical_form.py</code>. None calls
+<code>recall</code> or <code>search_hybrid</code> with an interval,
+since neither takes one.</li>
+<li><strong>One delete of journal rows, no update.</strong>
+<code>git grep -n -E 'DELETE FROM journal_entry|UPDATE journal_entry' -- src</code>
+returns <code>src/engrava/cli/main.py:3130</code>.</li>
+<li><strong>The journal flag is not stored in the database.</strong>
+<code>git grep -n -E 'journal_enabled' -- src</code> returns the
+constructor, the config path and the CLI's <code>gc</code>;
+<code>git grep -n -E 'INSERT (OR [A-Z]+ )?INTO _metadata' -- src</code>
+matches only the embedding model name and dimension lock.</li>
+<li><strong>The dedup probe has no lifecycle predicate.</strong>
+<code>git grep -n -E 'WHERE content_hash = \?' -- src</code> returns
+<code>engrava_core.py:6455</code>, the one probe, which every dedup path
+calls.</li>
+<li><strong>Nothing documents or tests dedup against an archived
+row.</strong>
+<code>git grep -n -i -E 'dedup.*archiv|archiv.*dedup' -- src docs tests</code>
+returns nothing; <code>git grep -n -i -E 'dedup' -- docs</code> returns
+144 lines.</li>
+<li><strong>No tombstone or rejection record.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist|suppress(ed|ion)_|rejected_(value|fact|content)|forbidden_content' -- src</code>
+returns only the keyphrase sentence-starter blocklist in Dreaming.</li>
+<li><strong>No review or approval surface.</strong>
+<code>git grep -n -i -E 'approve|approval|pending_review|human.review|review_queue' -- src</code>
+returns nothing; <code>git grep -n -i review -- src</code> returns 20
+lines.</li>
+<li><strong>No status filter beyond lifecycle.</strong>
+<code>git grep -n -E "(source_type|confidence|lifecycle_status) *(=|!=|IN|NOT IN|&lt;|&gt;)" -- src/engrava/infrastructure src/engrava/extensions</code>
+returns lifecycle predicates, keyword assignments and one local variable
+in Dreaming.</li>
+<li><strong>Clarification is documentation only.</strong>
+<code>git grep -n -i clarification -- src</code> returns nothing;
+<code>git grep -n -i clarification -- docs/evidence-and-conflicts.md</code>
+matches.</li>
+<li><strong>No context assembly.</strong>
+<code>git grep -n -i -E 'def (format_context|build_context|render_context|to_prompt|context_pack)|token_budget|max_tokens' -- src</code>
+returns nothing;
+<code>git grep -n default_fts_weight -- src/engrava/config.py</code>
+matches.</li>
+<li><strong>No paper of its own.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|CITATION|doi\.org' -- .</code>
+returns the LongMemEval citation in
+<code>src/engrava/benchmarks/longmemeval/</code>, a docs test about
+commit citations, and one line of prose in
+<code>docs/evidence-and-conflicts.md</code>.</li>
+<li><strong>No submodules.</strong>
+<code>git ls-files .gitmodules</code> returns nothing.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-27</strong> — <a
+href="https://github.com/sovantica/engrava/commit/f6a8b739d2f17a5ede18597bcaa1b2dfc509bfa6"><code class="commit-id" title="f6a8b739d2f17a5ede18597bcaa1b2dfc509bfa6">f6a8b739…</code></a>.
+First reading, read only, from a blobless clone with full history at the
+head of <code>dev</code>, the default branch, tagged v0.7.2;
+<code>main</code> contains the pin. Screened first: three auto-run
+surfaces (<code>.cursorrules</code>, <code>.githooks/</code>,
+<code>.github/copilot-instructions.md</code>), nothing inside the
+cooldown, three build-time execution points (<code>Makefile</code>,
+<code>tests/conftest.py</code>,
+<code>tests/search_contract/conftest.py</code>), and
+<code>pyproject.toml</code> unpinned with no lockfile;
+<code>.cursorrules</code>, <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> read as data. Nothing was installed, built or
+run, and the 4,508 test functions were not run. Three marks:
+<code>bitemporal</code>, <code>audit_log</code>,
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

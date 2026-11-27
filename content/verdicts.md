@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 906 reports.**
+**This page covers all 907 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8383,3 +8383,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 11,316 lines of Python in 211 commits from 7 February to 7 November 2026 under two author names and Dependabot, pre-1.0 at v0.3.2; 849 test functions that CI runs on three operating systems, none run here; the LongMemEval-S 56.2% was measured on the 0.1.0 tree on 12 June 2026, through the experience search only, with no per-question rows committed. One mark: `negative_eval`.
 - Study when: you are tuning BM25-based recall and want a record of the ways a reported score, an abstention floor and a result budget drift apart, each with a test.
 - Do not copy when: memory has to be corrected or forgotten on request, or projects that must not see each other share a store.
+
+### [`engrava`](../systems/engrava/)
+- Best idea: **make NULL an open bound on a valid-time interval, and retire a fact by closing it.** `valid_from` and `valid_until` sit beside the store's `created_at` on thoughts and edges, start open, are kept in one canonical UTC form so text comparison orders instants, and refuse an inverted interval on construction, update, invalidate and read; `invalidate_thought` sets one column and a `valid_at` query for an earlier instant still finds the row.
+- Second idea: re-apply every read exclusion after graph expansion and prove it with a revert. Archived, expired and out-of-filter rows are kept out of the FTS arm, the vector arm and the `CONSOLIDATED_FROM` expansion, and a test whose source cannot match any arm monkeypatches the expansion gate and requires the leak.
+- Biggest risk: **invalidation never reaches recall.** `recall` and `search_hybrid`, the read path an agent loop uses, contain no reference to `valid_from` or `valid_until` and take no temporal argument, so an invalidated fact ranks exactly as before and an invalidated edge still boosts its neighbours; only MindQL's four predicates read the interval, and nothing shipped in the tree, not `remember`, the CLI, the examples or the benchmark runner, sets valid time.
+- Second risk: the journal is enabled per connection handle, so a process or CLI command opened without the flag mutates a journalled file unrecorded and the chain still verifies; `created_at` is outside the hash and `restore --clear` empties the table. Content-hash dedup matches an archived row and returns it still archived. There is no scope key: tenants are one file each, and the metadata filters are caller-chosen refinements.
+- Most reusable component: `_build_temporal_clause` in `src/engrava/mindql/executor.py:1041-1100`, the timestamp and interval helpers in `src/engrava/domain/models/_temporal.py`, the savepoint around write, read-back and journal append in `delete_thought` at `src/engrava/infrastructure/sqlite/engrava_core.py:9657-9759`, and `tests/search_contract/test_archived_retrieval_exclusion.py`.
+- Maturity impression: MIT; 50,071 lines of Python in 84 files, 16,297 in one core module, with 130,673 lines of tests; 507 commits from 1 June to 25 October 2026 by one author and two bots, nine tags to v0.7.2; 4,508 test functions, run in CI on Python 3.11 to 3.14 with a 90% coverage floor and an upgrade suite from the last release, none run here. The sibling benchmark repository's LongMemEval-S row of 0.828 for Engrava 0.7.0 recomputes exactly from its committed judge labels. Three marks: `bitemporal`, `audit_log`, `negative_eval`.
+- Study when: you are adding a valid-time axis to an embedded store, or need a write path whose change and audit row commit or roll back together.
+- Do not copy when: your agent reads memory through ranked recall and expects a retired fact to stop appearing, or several tenants must share one file.
