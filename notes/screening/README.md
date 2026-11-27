@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 903 of 904 screened at the report's current pin.**
+**Progress: 904 of 905 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 436 |
+| Repositories with an auto-run surface (`RUNS`) | 437 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 405 |
-| Repositories with build-time execution (`EXEC`) | 649 |
+| Repositories with build-time execution (`EXEC`) | 650 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 9 |
 | Repositories that could not be screened | 0 |
 
@@ -155,6 +155,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`dynamics-memory`](../../content/systems/dynamics-memory.md) | `.opencode/` |
 | [`ecc`](../../content/systems/ecc.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
 | [`egc`](../../content/systems/egc.md) | `.codex/config.toml`, `.cursor/rules/`, `.githooks/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `hooks/`, `hooks/hooks.json` |
+| [`eidetic`](../../content/systems/eidetic.md) | `.claude/settings.json`, `hooks/` |
 | [`elizaos`](../../content/systems/elizaos.md) | `.gitmodules` |
 | [`empirica`](../../content/systems/empirica.md) | `.cursorrules`, `.github/copilot-instructions.md`, `.gitmodules` |
 | [`emulo`](../../content/systems/emulo.md) | `.claude-plugin/`, `server.json`, `smithery.yaml` |

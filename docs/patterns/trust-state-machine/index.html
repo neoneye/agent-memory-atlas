@@ -971,6 +971,19 @@ the <code>candidate</code> state has no producer
 (<code>sql/migrate_09_metacognition.sql:29-30</code>,
 <code>api/clusters.py:1011-1041</code>,
 <code>api/cell_worker.py:1327</code>).</p>
+<p><a href="../../systems/eidetic/">Eidetic</a> derives a status from
+declarations and spends it only as rank. <code>status</code> is an
+explicit frontmatter value or <code>superseded</code> when another
+card's qualifying <code>supersedes:</code> names this one, recomputed on
+every reindex with the author's own value kept in a separate column
+(<code>bin/index_impl.py:670-686</code>, <code>:1207-1326</code>). Every
+serving read multiplies it in, 0.35 for superseded and 0.25 for
+archived, and caps the hit's confidence label at medium, which is never
+low enough to suppress a result (<code>bin/search_impl.py:21-31</code>,
+<code>:556-564</code>). The comment on the dark confidence fold states
+the intent: <em>"a card is never made unretrievable by the
+lifecycle"</em> (<code>bin/confidence.py:15</code>). No
+<code>trust_state</code> mark follows.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

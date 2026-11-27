@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 904 reports.</strong></p>
+<p><strong>This page covers all 905 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37544,6 +37544,54 @@ which retrieval legs a filter has to reach.</li>
 <li>Do not copy when: projects or tenants that must not see each other
 share a database, or the tamper log has to stand as evidence before the
 verifier reads the table directly.</li>
+</ul>
+<h3 id="eidetic"><a
+href="../systems/eidetic/"><code>eidetic</code></a></h3>
+<ul>
+<li>Best idea: <strong>drift findings that wait a run and refuse a mass
+resolve.</strong> Broken wikilinks, age past a per-kind threshold, three
+agent-only updates and declared contradictions become rows in
+<code>drift_state.db</code> that penalize from their second detection
+(declared ones at once), multiply when distinct, floor at 0.1, resolve
+themselves when the cause goes, and refuse to resolve in one run if that
+would clear more than half of the active penalized findings.</li>
+<li>Second idea: declared supersession and contradiction resolved inside
+the declarer's project or agent namespace and applied only when the
+declarer is at least as new and of equal or higher source tier; a
+refused claim is recorded as a non-penalizing finding, and removing the
+line clears the target on the next reindex.</li>
+<li>Biggest risk: <strong>staleness only ranks.</strong> Search filters
+on type alone and the session-start context on type, project and age, so
+superseded, archived and contradicted cards are still retrieved and
+injected, and every feedback rule is listed under ALWAYS APPLY with no
+status shown. A card with no <code>source:</code> field, which includes
+Claude Code's own memory files, parses as user-explicit, so the
+self-referential discount reaches only the hook's signals files.</li>
+<li>Second risk: the Stop hook runs at every assistant stop, sends up to
+20 unredacted turns to Claude or Codex each time, and runs the Claude
+route before checking the local-only switch documented to forbid it. The
+context builder derives the project slug by replacing <code>/</code>
+while the writer replaces every non-alphanumeric character, so a cwd
+with <code>_</code> or <code>.</code> injects none of its project's
+cards.</li>
+<li>Most reusable component: <code>bin/drift_check.py:400-543</code>
+(escalation, declared contradictions, write, auto-resolve with the bulk
+valve) with the grace gate in <code>bin/search_impl.py:159-210</code>,
+and the authority gate in <code>bin/index_impl.py:1187-1326</code>.</li>
+<li>Maturity impression: MIT; about 6,600 lines of live Python beside
+9,640 lines of dark M3 modules and 1,514 of dark M1 and M2; 346 commits
+from 21 May to 19 November 2026, 143 past the v5.13.2 tag; 878 unittest
+functions run in CI in an FTS-only and a vectored leg, not run here. No
+marks: status and drift only rank, project selects a context section,
+topic bases are a physical partition, and the op-log records counts
+rather than the cards changed.</li>
+<li>Study when: you want stale memory demoted with an audit of why,
+declarations that cannot let a low-trust card bury a canonical one, or
+Claude Code's own memory files searched and injected without a
+server.</li>
+<li>Do not copy when: a superseded rule must stop reaching the model,
+transcripts may not leave the machine, or recall must be separated by
+project.</li>
 </ul>
         </article>
       </div>

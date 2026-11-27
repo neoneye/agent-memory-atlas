@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 904 reports.**
+**This page covers all 905 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8363,3 +8363,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 52,306 lines of TypeScript in `src/`, 10,353 of them in one class, and 2,781 lines of Python, in 483 commits from 20 March to 24 November 2026 by one author and dependabot, with five tags; 1,345 jest cases mostly against a stub embedder, none run here; the LongMemEval-S headline recomputes exactly from its committed rows, measured with Ollama's nomic-embed-text rather than the shipped default. Five marks: `trust_state`, `scope_enforced`, `audit_log`, `bitemporal`, `negative_eval`.
 - Study when: you want one SQLite file to hold a poisoned-write quarantine, a mutation hash chain and validity windows, and need to see which retrieval legs a filter has to reach.
 - Do not copy when: projects or tenants that must not see each other share a database, or the tamper log has to stand as evidence before the verifier reads the table directly.
+
+### [`eidetic`](../systems/eidetic/)
+- Best idea: **drift findings that wait a run and refuse a mass resolve.** Broken wikilinks, age past a per-kind threshold, three agent-only updates and declared contradictions become rows in `drift_state.db` that penalize from their second detection (declared ones at once), multiply when distinct, floor at 0.1, resolve themselves when the cause goes, and refuse to resolve in one run if that would clear more than half of the active penalized findings.
+- Second idea: declared supersession and contradiction resolved inside the declarer's project or agent namespace and applied only when the declarer is at least as new and of equal or higher source tier; a refused claim is recorded as a non-penalizing finding, and removing the line clears the target on the next reindex.
+- Biggest risk: **staleness only ranks.** Search filters on type alone and the session-start context on type, project and age, so superseded, archived and contradicted cards are still retrieved and injected, and every feedback rule is listed under ALWAYS APPLY with no status shown. A card with no `source:` field, which includes Claude Code's own memory files, parses as user-explicit, so the self-referential discount reaches only the hook's signals files.
+- Second risk: the Stop hook runs at every assistant stop, sends up to 20 unredacted turns to Claude or Codex each time, and runs the Claude route before checking the local-only switch documented to forbid it. The context builder derives the project slug by replacing `/` while the writer replaces every non-alphanumeric character, so a cwd with `_` or `.` injects none of its project's cards.
+- Most reusable component: `bin/drift_check.py:400-543` (escalation, declared contradictions, write, auto-resolve with the bulk valve) with the grace gate in `bin/search_impl.py:159-210`, and the authority gate in `bin/index_impl.py:1187-1326`.
+- Maturity impression: MIT; about 6,600 lines of live Python beside 9,640 lines of dark M3 modules and 1,514 of dark M1 and M2; 346 commits from 21 May to 19 November 2026, 143 past the v5.13.2 tag; 878 unittest functions run in CI in an FTS-only and a vectored leg, not run here. No marks: status and drift only rank, project selects a context section, topic bases are a physical partition, and the op-log records counts rather than the cards changed.
+- Study when: you want stale memory demoted with an audit of why, declarations that cannot let a low-trust card bury a canonical one, or Claude Code's own memory files searched and injected without a server.
+- Do not copy when: a superseded rule must stop reaching the model, transcripts may not leave the machine, or recall must be separated by project.
