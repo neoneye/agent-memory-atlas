@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-907, generated from each report's frontmatter —
+908, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-907, generated from each report's frontmatter —
+908, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-907, generated from each report's frontmatter —
+908, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 907, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 908, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-907, generated from each report's frontmatter —
+908, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 907 systems by the seven mechanisms
+filters all 908 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -11835,6 +11835,74 @@ so a note a linter reformats is newly young. The repository also ships
 llms.txt, llms-ctx.txt and an AGENTS.md addressed to reading agents,
 which is worth knowing when an agent summarises this project from its
 own documentation</td>
+</tr>
+<tr>
+<td><a href="../systems/entroly/"><code>entroly</code></a></td>
+<td>A belief file per code entity (status, confidence, sources,
+last_checked, markdown body) compiled from source by AST or written by
+the model; a MemoryOS entry (agent, tier, authority, role, temporal
+class, supersession links); a shared-memory JSONL line; a work-graph
+MemoryRecord holding a content reference rather than text</td>
+<td>Markdown belief files and an append-only hash-chained JSONL ledger
+with content-addressed bodies under a vault directory inside the
+checkpoint directory for the MCP server and ./.entroly/vault for the
+CLI; MemoryOS as one atomically written JSON file; shared memory as
+entries.jsonl; the work graph as repo-keyed JSON under a lock</td>
+<td>Beliefs: substring or TF-IDF search returning every status,
+entity-matched task-dream recall that skips stale and low-confidence
+beliefs, an opt-in Jaccard projection with the same filter, and a Rust
+bridge that attaches belief bodies to code fragments by file stem with
+no status check; MemoryOS: term overlap times retention, frequency, tier
+and temporal boosts under a token budget, with an optional BM25 and
+entity-graph fusion</td>
+<td>The belief compiler writes one inferred belief per module at
+confidence 0.75 from compile_beliefs, entroly compile and the workspace
+listener; the model writes beliefs with any status through
+vault_write_belief; a weaker claim is refused and kept in the ledger;
+MemoryOS takes CLI writes and an episode per model-reported test,
+command, CI or edit success; shared memory takes any agent's write
+unless SimHash finds a near-duplicate</td>
+<td>A changed source marks matching beliefs stale in place; a belief
+whose sources are all gone becomes ungrounded at confidence 0.0; no path
+deletes a belief file, and ledger redaction deletes historical bodies
+while the current file stays; MemoryOS supersedes by id with an
+authority check and forgets by decay and capacity; shared memory forget
+rewrites the file without the entry</td>
+<td>agent_id on MemoryOS entries, applied on recall and chosen by the
+caller; one vault directory per project path hash for the MCP server;
+shared memory filters by agent only when asked; work-graph records are
+bound to a repository id</td>
+<td>An MCP server of 74 tools in its full profile and 22 in the public
+profile every plugin config selects, including optimize_context,
+vault_write_belief, vault_query, vault_search, vault_time_travel,
+refresh_beliefs, sync_workspace_changes, prepare_task_dream,
+memory_recall and shared_memory_*; the entroly, entroly-memory and
+entroly-work CLIs; an HTTP proxy; a Python SDK; Claude Code, Codex,
+Cursor and VS Code integrations whose prompt hook does context selection
+and no memory recall; the public profile hides every vault,
+MemoryOS-recall and shared-memory tool</td>
+<td>On an active full-profile server, an index pass and belief autoseed
+at start and a workspace listener every 120 seconds that marks beliefs
+stale and recompiles changed files; an evolution daemon for skills;
+passive mode, which plugin configs set, runs none of these; no
+consolidation pass over beliefs; MemoryOS consolidation and forgetting
+run when a caller asks</td>
+<td>Belief status, with stale and ungrounded withheld from the task
+dream and the opt-in coupling; a source trust class that the shipped
+configuration never activates; MemoryOS authority levels inferred from
+the source label, clamped across derivation, blocking a lower-authority
+supersession and gating authorize_action; work-graph admissibility
+computed once at write and read by nothing</td>
+<td>Code beliefs that a file change marks stale and a deleted file
+retracts; a refusal to let a weaker claim overwrite a stronger one, with
+the loser kept in a hash-chained ledger; MemoryOS non-amplification
+across derivation with populated tests</td>
+<td>The default belief bridge pastes a belief's body over code with no
+status check; the MCP server, CLI and coupling resolve three different
+vault paths; memory_recall reads a fabric the server never loads; the
+Rust writer on a default install bypasses the ledger; a verified task
+memory rests on the model's own passed=true; redaction leaves the
+current belief file in place</td>
 </tr>
 <tr>
 <td><a href="../systems/everos/"><code>everos</code></a></td>
@@ -41203,7 +41271,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>87 of 907:</em> <a
+<p><em>87 of 908:</em> <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -41294,7 +41362,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>231 of 907:</em> <a
+<p><em>232 of 908:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -41363,6 +41431,7 @@ href="../systems/engram-format/"><code>engram-format</code></a>, <a
 href="../systems/engram-mcp/"><code>engram-mcp</code></a>, <a
 href="../systems/engram-provable/"><code>engram-provable</code></a>, <a
 href="../systems/engraphis/"><code>engraphis</code></a>, <a
+href="../systems/entroly/"><code>entroly</code></a>, <a
 href="../systems/fava-trails/"><code>fava-trails</code></a>, <a
 href="../systems/feltstate/"><code>feltstate</code></a>, <a
 href="../systems/fernme/"><code>fernme</code></a>, <a
@@ -41534,7 +41603,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>154 of 907:</em> <a
+<p><em>154 of 908:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -41699,7 +41768,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>398 of 907:</em> <a
+<p><em>399 of 908:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -41825,6 +41894,7 @@ href="../systems/engram-cognitive/"><code>engram-cognitive</code></a>,
 <a href="../systems/engram-provable/"><code>engram-provable</code></a>,
 <a href="../systems/engrama-scops/"><code>engrama-scops</code></a>, <a
 href="../systems/engraphis/"><code>engraphis</code></a>, <a
+href="../systems/entroly/"><code>entroly</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/evox-genesis/"><code>evox-genesis</code></a>, <a
 href="../systems/exomem/"><code>exomem</code></a>, <a
@@ -42117,7 +42187,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>309 of 907:</em> <a
+<p><em>310 of 908:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
@@ -42213,6 +42283,7 @@ href="../systems/engram-cognitive/"><code>engram-cognitive</code></a>,
 <a href="../systems/engram-provable/"><code>engram-provable</code></a>,
 <a href="../systems/engraphis/"><code>engraphis</code></a>, <a
 href="../systems/engrava/"><code>engrava</code></a>, <a
+href="../systems/entroly/"><code>entroly</code></a>, <a
 href="../systems/exomem/"><code>exomem</code></a>, <a
 href="../systems/feltstate/"><code>feltstate</code></a>, <a
 href="../systems/fernme/"><code>fernme</code></a>, <a
@@ -42440,7 +42511,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>109 of 907:</em> <a
+<p><em>109 of 908:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -42553,7 +42624,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>591 of 907:</em> <a
+<p><em>592 of 908:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -42727,6 +42798,7 @@ href="../systems/engrama-scops/"><code>engrama-scops</code></a>, <a
 href="../systems/engraphis/"><code>engraphis</code></a>, <a
 href="../systems/engrava/"><code>engrava</code></a>, <a
 href="../systems/enquire-mcp/"><code>enquire-mcp</code></a>, <a
+href="../systems/entroly/"><code>entroly</code></a>, <a
 href="../systems/everos/"><code>everos</code></a>, <a
 href="../systems/exomem/"><code>exomem</code></a>, <a
 href="../systems/fava-trails/"><code>fava-trails</code></a>, <a
@@ -43183,8 +43255,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-591 repositories of
-907 assert that particular material must
+592 repositories of
+908 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -43257,7 +43329,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 907 is the real figure for the second kind, and
+of 908 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

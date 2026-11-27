@@ -971,6 +971,24 @@ the <code>candidate</code> state has no producer
 (<code>sql/migrate_09_metacognition.sql:29-30</code>,
 <code>api/clusters.py:1011-1041</code>,
 <code>api/cell_worker.py:1327</code>).</p>
+<p><a href="../../systems/entroly/">Entroly</a> filters on its state
+where the reader is Python and loses it where the reader is Rust. A
+belief compiled from code carries a status, which a changed source file
+rewrites to <code>stale</code> through the workspace listener and
+<code>refresh_beliefs</code>, and a belief whose every source is gone
+becomes <code>ungrounded</code> at confidence 0.0
+(<code>entroly/vault.py:945-1021</code>, <code>:1109-1236</code>). The
+task dream that <code>optimize_context</code> builds skips
+<code>stale</code> and anything under 0.5, and the opt-in coupling
+projection does the same at 0.6
+(<code>entroly/task_dream.py:608-640</code>,
+<code>entroly/coupling.py:168-183</code>). The Rust bridge that attaches
+belief bodies to code fragments, and can return one in place of the
+code, strips the frontmatter without parsing it
+(<code>entroly-core/src/lib.rs:4688-4788</code>). <code>verified</code>
+is a label the model gives through <code>vault_write_belief</code>,
+since no shipped producer writes the <code>confirmed</code> verification
+that would promote one.</p>
 <p><a href="../../systems/eidetic/">Eidetic</a> derives a status from
 declarations and spends it only as rank. <code>status</code> is an
 explicit frontmatter value or <code>superseded</code> when another

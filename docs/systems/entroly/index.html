@@ -1,0 +1,1023 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local context-selection layer
+for coding agents that keeps a vault of beliefs compiled from code, a
+task memory and a hash-chained belief ledger.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Entroly — Agent Memory Atlas">
+    <meta property="og:description" content="A local context-selection
+layer for coding agents that keeps a vault of beliefs compiled from
+code, a task memory and a hash-chained belief ledger.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Entroly — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local context-selection
+layer for coding agents that keeps a vault of beliefs compiled from
+code, a task memory and a hash-chained belief ledger.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Entroly — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Entroly",
+      "description": "A local context-selection layer for coding agents that keeps a vault of beliefs compiled from code, a task memory and a hash-chained belief ledger.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Code beliefs that go stale when a file
+changes, filtered on the task path and pasted over code on another</p>
+          <h1>Entroly</h1>
+          <p class="document-deck">A local context-selection layer for
+coding agents that keeps a vault of beliefs compiled from code, a task
+memory and a hash-chained belief ledger.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/juyterman1000/entroly">
+              <span>Source</span>
+              <strong>juyterman1000/entroly</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/juyterman1000/entroly/commit/42324c50c3520e0e239220383014b41c54b805b9" title="42324c50c3520e0e239220383014b41c54b805b9">
+              <span>Analyzed revision</span>
+              <code>42324c50…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-27</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/juyterman1000--entroly" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>juyterman1000--entroly</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>Apache-2.0
+in the root LICENSE and in each package directory (entroly-core,
+entroly-wasm, both npm packages, the VS Code extension), agreeing with
+every manifest</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>207,830
+lines of Python in 420 files under entroly/ and 82,825 lines of Rust in
+85 files; the memory path read here (vault, ledger, hygiene, belief
+compiler, coupling, MemoryOS, fabric, memory CLI, memory graph, shared
+memory, task dream) is 8,025 lines in eleven Python modules, plus the
+CogOps and belief-bridge code in entroly-core and the work-graph memory
+contract in entroly-engine</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>2,342
+commits from 22 May to 26 November 2026, 2,258 of them under the author
+names Jupiter-Guy, juyterman1000, Jupyterman and Jupyter and the rest
+from one other contributor and bots; 76 tags, the latest
+entroly-v1.0.91</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>6,201
+Python test functions, 6,101 of them in 674 files under tests/ and 105
+of those in the six files that hold the memory cases cited here, and 878
+Rust #[test] functions; ci.yml runs pytest over tests/ and cargo test
+over the engine and core; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Entroly is a local context layer for coding agents. It picks code and
+tool output to fit a token budget, records what it left out, and can
+recover the exact bytes, as its README lead says. Most of the tree is
+that context machinery and is not memory in this atlas's sense. The
+memory is a vault of <em>beliefs</em>: one Markdown file per code
+entity, compiled from the source by AST or written by the model, which a
+file change marks <code>stale</code> and a deleted source marks
+<code>ungrounded</code>. The strongest part is that lifecycle and the
+refusal to let a weaker claim overwrite a stronger one. The weakest part
+is that the injection path loaded by default ignores it: a Rust bridge
+attaches belief bodies to code fragments by file name and can put a
+stale summary where the current code would have gone.</p>
+<p>Beside the vault sit three smaller stores. MemoryOS is a JSON file of
+agent memories with tiers, decay, supersession and authority levels. The
+MCP server writes one episode to it each time the model reports a test,
+command, CI or edit success. A cross-agent shared memory is a JSONL file
+deduplicated by SimHash. A work-graph <code>MemoryRecord</code> contract
+computes admissibility at write time. No reader in the tree consumes it,
+and only tests build a record.</p>
+<p>Four marks are earned, on two subsystems. <code>trust_state</code>
+and <code>audit_log</code> belong to the vault: the status filter on the
+task-dream and coupling reads, and the hash-chained ledger of belief
+writes. <code>scope_enforced</code> and <code>negative_eval</code>
+belong to MemoryOS: the <code>agent_id</code> predicate on recall, and
+populated cases asserting that a superseded or role-filtered memory
+stays out. Section 9 gives the reason for each of the three
+withheld.</p>
+<p>How much of this runs depends on how the server was started.
+<code>entroly init</code> and <code>entroly go</code> register the full
+tool surface with background work on: an index pass, a belief autoseed
+and a workspace listener that recompiles changed files every 120
+seconds. Every marketplace and plugin config in the tree sets
+<code>ENTROLY_MCP_PROFILE=public</code> and
+<code>ENTROLY_MCP_PASSIVE=1</code>, which hide the vault,
+MemoryOS-recall and shared-memory tools and stop the listener. There,
+the live memory loop is MemoryOS: <code>record_test_result</code> stores
+an episode and the next <code>optimize_context</code> recalls it.</p>
+<p>The defects that matter most are path disagreements. With neither
+<code>ENTROLY_DIR</code> nor <code>ENTROLY_VAULT</code> set, the MCP
+server keeps its vault under a hashed directory in
+<code>~/.entroly/checkpoints/</code>. The startup autoseed and
+<code>entroly compile</code> write <code>./.entroly/vault</code>, and
+the opt-in coupling reads <code>./.entroly/vault</code> whatever the
+environment says. <code>memory_recall</code> reads a MemoryOS instance
+that the server constructs empty and never loads from disk. On a default
+install, which pulls the native <code>entroly-core</code> wheel,
+<code>compile_beliefs</code> and <code>refresh_beliefs</code> run in
+Rust and write belief files with no ledger record.</p>
+<p><strong>Licence.</strong> Apache-2.0, in the root
+<code>LICENSE</code> and in every package directory, agreeing with each
+manifest; there is no contributor agreement.
+<code>long_term_memory.py</code> imports
+<code>hippocampus_sharp_memory</code>, a package that no dependency
+group declares and whose terms the tree does not state.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>belief</strong> is the vault's claim about what a piece of
+code is. Its file carries a <code>claim_id</code>, an
+<code>entity</code>, a <code>status</code>, a <code>confidence</code>
+from 0 to 1, a list of <code>sources</code> such as
+<code>src/auth.rs:142</code>, a <code>last_checked</code> timestamp, a
+<code>derived_from</code> list and a Markdown body
+(<code>entroly/vault.py:285-308</code>). <code>write_belief</code>
+accepts seven statuses: <code>hypothesis</code>,
+<code>unsupported</code>, <code>stale</code>, <code>inferred</code>,
+<code>observed</code>, <code>verified</code> and <code>ungrounded</code>
+(<code>entroly/vault.py:455-457</code>).</p>
+<p>A belief comes into being by one of two routes.</p>
+<ul>
+<li><strong>Compilation.</strong> <code>BeliefCompiler</code> parses a
+module's classes, functions and imports and writes one belief per module
+as <code>inferred</code> at 0.75, with the lines it read as sources
+(<code>entroly/belief_compiler.py:745-750</code>). The Rust
+<code>CogOpsEngine</code> compiler does the same with its own writer
+(<code>entroly-core/src/cogops.rs:980-989</code>).</li>
+<li><strong>The model.</strong> <code>vault_write_belief</code> takes
+the status, confidence and sources as arguments
+(<code>entroly/server.py:3022-3057</code>). A <code>verified</code>
+belief citing nothing is stored as <code>unsupported</code>
+(<code>entroly/vault.py:681-682</code>). Any cited string counts as a
+source, since the source policy that resolves citations against a
+trusted root is never configured by the server or the CLI.</li>
+</ul>
+<p>A belief is weakened in three ways, all in place.</p>
+<ul>
+<li><strong>A source file changes.</strong>
+<code>mark_beliefs_stale_for_files</code> rewrites the status line to
+<code>stale</code> for every belief citing a changed path or stem
+(<code>entroly/vault.py:945-1021</code>). The workspace listener,
+<code>sync_workspace_changes</code> and <code>refresh_beliefs</code>
+call it (<code>entroly/change_listener.py:155</code>,
+<code>entroly/server.py:3660-3677</code>). The listener then recompiles
+each changed file in the same pass, which replaces that module's
+compiled belief with a fresh <code>inferred</code> one
+(<code>entroly/change_listener.py:153-176</code>). The mark persists on
+beliefs about deleted files, on beliefs the model wrote that cite the
+file, and after <code>refresh_beliefs</code>, which recompiles
+nothing.</li>
+<li><strong>Every source is gone.</strong>
+<code>mark_beliefs_ungrounded</code> sets <code>ungrounded</code> and
+confidence 0.0, and is called by <code>entroly compile</code> unless
+<code>--no-retract</code> is given
+(<code>entroly/vault.py:1109-1236</code>,
+<code>entroly/cli.py:6703-6704</code>).</li>
+<li><strong>An outcome is observed.</strong> With
+<code>ENTROLY_VAULT_COUPLING=1</code>, a reported outcome moves the
+confidence of the beliefs injected into that request by a Bayesian
+update, and a failure marks them <code>stale</code>
+(<code>entroly/coupling.py:353-457</code>).</li>
+</ul>
+<p>A belief becomes stronger only by being overwritten with a higher
+rank or confidence. <code>_weaker_than_current</code> refuses an update
+that is lower in status rank, lower in confidence and cites no new
+source, and appends the refused claim to the ledger as a competing claim
+(<code>entroly/vault.py:556-611</code>, <code>:695-731</code>). The path
+that promotes <code>inferred</code> to <code>verified</code> on a
+<code>confirmed</code> verification has no producer: the verification
+engine and change pipeline write <code>contradictions_found</code>,
+<code>staleness_detected</code>, <code>pass</code>,
+<code>issues_found</code> and <code>change_detected</code>
+(<code>entroly/vault.py:871-875</code>,
+<code>entroly/verification_engine.py:491-540</code>). Outside the
+model's own write, nothing in the tree produces
+<code>verified</code>.</p>
+<p>Nothing deletes a belief. A <strong>MemoryOS entry</strong> has a
+different life: it decays by retention unless it is semantic, can be
+superseded by a memory of equal or higher authority, and is removed by
+<code>forget</code> or by the capacity pruner
+(<code>entroly/memory.py:700-711</code>, <code>:1192-1216</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — How a vault belief is written, weakened to stale or ungrounded, and which read paths honour that status.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: How a vault belief is written, weakened to stale or ungrounded, and which read paths honour that status.
+flowchart TD
+  subgraph WR[&quot;Writers&quot;]
+    direction TB
+    W1[&quot;Python compiler&lt;br/&gt;inferred at 0.75&lt;br/&gt;ledger record&quot;]
+    W2[&quot;Rust CogOps compiler&lt;br/&gt;inferred at 0.75&lt;br/&gt;no ledger record&quot;]
+    W3[&quot;vault_write_belief&lt;br/&gt;model sets status&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  G{&quot;weaker on every&lt;br/&gt;axis than current?&quot;}
+  L[&quot;kept in ledger&lt;br/&gt;as competing claim&quot;]
+  F[&quot;beliefs/entity.md&lt;br/&gt;status, confidence,&lt;br/&gt;sources&quot;]
+  S[&quot;status: stale&lt;br/&gt;rewritten in place&quot;]
+  U[&quot;status: ungrounded&lt;br/&gt;confidence 0.0&quot;]
+  subgraph RD[&quot;Readers&quot;]
+    direction TB
+    R1[&quot;task dream, default&lt;br/&gt;skips stale and&lt;br/&gt;confidence under 0.5&quot;]
+    R2[&quot;coupling, opt-in&lt;br/&gt;skips stale and&lt;br/&gt;confidence under 0.6&quot;]
+    R3[&quot;Rust belief bridge&lt;br/&gt;no status check,&lt;br/&gt;body replaces code&quot;]
+    R4[&quot;vault_search, vault_query&lt;br/&gt;every status returned&quot;]
+    R1 ~~~ R2 ~~~ R3 ~~~ R4
+  end
+  WR --&gt; G
+  G --&gt;|yes| L
+  G --&gt;|no| F
+  F --&gt;|&quot;cited file changed&quot;| S
+  F --&gt;|&quot;every source gone&quot;| U
+  F --&gt; RD
+  S --&gt; RD
+  U --&gt; RD</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs in one Python process per agent session, the MCP
+server started by <code>entroly go</code> or a host's MCP config, with
+the native <code>entroly-core</code> extension loaded when its wheel is
+present. <code>pyproject.toml</code> declares that wheel a required
+dependency (<code>pyproject.toml:42-61</code>), so a default install
+runs the Rust <code>CogOpsEngine</code> for compilation, refresh, search
+and change processing (<code>entroly/server.py:3251-3258</code>).</p>
+<p>State is files:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Location</th>
+<th>Writer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vault beliefs, verification, actions, skills</td>
+<td><code>ENTROLY_VAULT</code>, else
+<code>&lt;checkpoint_dir&gt;/vault</code> for the server
+(<code>entroly/server.py:2956-2960</code>); <code>ENTROLY_VAULT</code>,
+else <code>(ENTROLY_DIR or ./.entroly)/vault</code> for the CLI and the
+startup autoseed (<code>entroly/cli.py:6655-6659</code>,
+<code>entroly/belief_autoseed.py:56-61</code>)</td>
+<td>compilers, model tools, listener, autoseed</td>
+</tr>
+<tr>
+<td>Belief ledger</td>
+<td><code>&lt;vault&gt;/ledger/</code> JSONL, head file,
+<code>objects/&lt;sha256&gt;.md</code>
+(<code>entroly/vault_time.py:1-41</code>)</td>
+<td>Python <code>write_belief</code>, <code>redact</code>,
+<code>seed</code></td>
+</tr>
+<tr>
+<td>MemoryOS</td>
+<td><code>ENTROLY_MEMORY</code>, else
+<code>&lt;checkpoint_dir&gt;/memory.json</code> for the server
+(<code>entroly/server.py:3382-3384</code>) and
+<code>./.entroly/memory.json</code> for <code>entroly-memory</code>
+(<code>entroly/memory_cli.py:35-36</code>)</td>
+<td>outcome tools, CLI</td>
+</tr>
+<tr>
+<td>Shared memory</td>
+<td><code>(ENTROLY_DIR or .entroly)/shared_memory/entries.jsonl</code>
+(<code>entroly/shared_memory.py:144-151</code>)</td>
+<td><code>shared_memory_write</code></td>
+</tr>
+<tr>
+<td>Work graph</td>
+<td>repo-keyed JSON under an exclusive-create lock
+(<code>entroly/work_graph_store.py:1-40</code>)</td>
+<td><code>work_*</code> tools</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>checkpoint_dir</code> is <code>ENTROLY_DIR</code> or
+<code>~/.entroly/checkpoints/&lt;first 12 hex of sha256(cwd)&gt;</code>
+(<code>entroly/config.py:15-35</code>). The coupling path constructs
+<code>VaultConfig()</code> with no base, which resolves to
+<code>./.entroly/vault</code> and reads neither variable
+(<code>entroly/vault.py:62-65</code>,
+<code>entroly/server.py:1245-1248</code>,
+<code>entroly/proxy.py:920-923</code>). With no variables set, the
+server's tools, listener, task dream and belief bridge use one vault,
+while the autoseed, the CLI and coupling use another. With
+<code>ENTROLY_DIR</code> set, as <code>entroly attach</code> does
+(<code>entroly/session_attach.py:597</code>), the server, CLI and
+autoseed agree and coupling still reads the working directory's. The
+config that <code>entroly init</code> writes sets
+<code>ENTROLY_SOURCE</code> and the working directory, not either
+variable (<code>entroly/cli.py:548-558</code>).</p>
+<p>The server runs in one of two shapes. <code>_mcp_profile_name</code>
+defaults to <code>full</code>, and <code>public</code> cuts the surface
+to an allowlist of 22 tools (<code>entroly/server.py:151-179</code>,
+<code>:534-557</code>). Passive mode skips the evolution daemon, the
+index pass, the autoseed and the listener
+(<code>entroly/server.py:3296</code>, <code>:5094-5099</code>). The
+Claude Code plugin, the Codex and Gemini packages,
+<code>.mcp.json</code>, <code>mcp.json</code> and
+<code>smithery.yaml</code> all set both
+(<code>.claude-plugin/plugin.json:17-22</code>);
+<code>entroly init</code> and <code>.vscode/mcp.json</code> start the
+full, active server.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to be running beyond the MCP server; no database, no
+vector service and no API key are needed to store anything.
+<code>pip install entroly</code> installs the native wheel from PyPI,
+and without a wheel for the platform the pure-Python fallback runs every
+vault tool in Python. The vault is human-readable Markdown and can be
+edited or deleted by hand, and the ledger's <code>verify_chain</code>
+reports an edited record. A hand edit to a belief file is not recorded
+anywhere.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Belief write (Python).</strong>
+<code>vault_write_belief</code> builds a <code>BeliefArtifact</code> and
+calls <code>VaultManager.write_belief</code>
+(<code>entroly/server.py:3022-3057</code>), which validates entity,
+confidence and status, downgrades an unsourced <code>verified</code>,
+runs <code>_weaker_than_current</code>, picks a collision-safe file
+name, writes atomically and appends to the ledger
+(<code>entroly/vault.py:639-770</code>). The Python compiler reaches the
+same function (<code>entroly/belief_compiler.py:608</code>,
+<code>:621</code>).</p>
+<p><strong>Belief write (Rust).</strong> <code>compile_beliefs</code> on
+a default install calls <code>_cogops.compile_beliefs</code>
+(<code>entroly/server.py:3432-3460</code>). Its
+<code>write_belief_artifact</code> names the file
+<code>&lt;entity&gt;_&lt;first 8 hex of claim_id&gt;.md</code> and
+writes it with <code>fs::write</code>
+(<code>entroly-core/src/cogops.rs:669-699</code>). The claim id is the
+hex of the current nanosecond time
+(<code>entroly-core/src/cogops.rs:662-667</code>), so the first eight
+digits change about every four seconds. Each compile more than a few
+seconds after the last therefore adds a second file for the same entity
+rather than replacing the first. This is an inference from the format
+string; no run checked it.</p>
+<p><strong>Staleness.</strong>
+<code>WorkspaceChangeListener.scan_once</code> calls
+<code>ChangePipeline.refresh_docs</code>, which calls
+<code>mark_beliefs_stale_for_files</code>
+(<code>entroly/change_listener.py:155</code>,
+<code>entroly/change_pipeline.py:348-354</code>). The Rust
+<code>refresh_beliefs</code> replaces the literal strings
+<code>status: verified</code> and <code>status: inferred</code> with
+<code>status: stale</code>, leaving <code>observed</code> and
+<code>hypothesis</code> untouched
+(<code>entroly-core/src/cogops.rs:1955-2002</code>).</p>
+<p><strong>Task dream read.</strong> <code>optimize_context</code> calls
+<code>_task_dreamer.prepare</code> with <code>agent_id="default"</code>
+whenever a query is given, the budget is at least 1,024 tokens and
+<code>ENTROLY_TASK_DREAM</code> is not <code>0</code>
+(<code>entroly/server.py:1361-1380</code>).
+<code>_related_beliefs</code> lists beliefs, skips <code>stale</code>
+and confidence under 0.5, matches the remaining entities to the task
+terms and loads the top five
+(<code>entroly/task_dream.py:608-640</code>).
+<code>_recall_memories</code> recalls MemoryOS under the same agent id
+(<code>entroly/task_dream.py:444-470</code>).</p>
+<p><strong>Belief bridge read.</strong> On the first
+<code>optimize_context</code> of a process,
+<code>engine._rust.load_vault_beliefs(&lt;vault&gt;/beliefs)</code>
+reads every top-level <code>.md</code> file not prefixed
+<code>arch_</code> or <code>doc_</code>, strips the frontmatter without
+parsing it, and attaches the body to each fragment whose source file
+stem matches the belief's file name
+(<code>entroly/server.py:1219-1233</code>,
+<code>entroly-core/src/lib.rs:4688-4788</code>). When the selector picks
+the belief resolution, the belief body is returned in place of the
+fragment's code (<code>entroly-core/src/lib.rs:3349-3360</code>).</p>
+<p><strong>Coupling.</strong> With
+<code>ENTROLY_VAULT_COUPLING=1</code>, <code>project_beliefs</code>
+filters and ranks beliefs by confidence, recency and Jaccard overlap,
+and <code>inject_vault_beliefs</code> ingests them as engine fragments
+(<code>entroly/coupling.py:134-294</code>, <code>:460-462</code>).</p>
+<p><strong>MemoryOS.</strong> <code>MemoryOS.remember</code> scans for
+secrets and injection, infers authority from the source label, clamps it
+to the minimum of any parents, deduplicates exact repeats, and records
+supersession only when the new authority is at least the old one
+(<code>entroly/memory.py:559-713</code>). <code>recall</code> applies
+the agent, tier, retention, authority, role, supersession and temporal
+filters and fills the budget by score per token
+(<code>entroly/memory.py:715-889</code>). The server's verified-outcome
+write is <code>remember_verified_outcome</code>, reached from
+<code>record_test_result</code>, <code>record_command_exit</code>,
+<code>record_ci_result</code> and <code>record_edit_outcome</code> when
+the request id matches the last optimization
+(<code>entroly/server.py:1994-2015</code>,
+<code>entroly/task_dream.py:309-395</code>).</p>
+<p><strong>Ledger.</strong> <code>BeliefLedger.record</code> writes the
+body object, then under an exclusive lock reads the tail, builds a
+record with <code>prev_sha256</code> and appends it with the head
+(<code>entroly/vault_time.py:530-617</code>). <code>redact</code>
+deletes body objects and appends a redaction record
+(<code>entroly/vault_time.py:694-783</code>).</p>
+<p><strong>Work-graph memory.</strong> <code>work_record_memory</code>
+parses a commitment-verified <code>MemoryRecord</code> and records it as
+a graph event with its admissibility
+(<code>entroly/work_graph_mcp.py:811-837</code>,
+<code>entroly-engine/src/work_graph.rs:1363-1399</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Beliefs</strong> are flat frontmatter parsed line by line.
+Every scalar is flattened to one line before writing, after an entity
+containing a newline was able to rewrite the <code>claim_id</code>
+(<code>entroly/vault.py:310-359</code>). The Rust writer formats the
+same keys without that flattening
+(<code>entroly-core/src/cogops.rs:693-697</code>).
+<code>trust_class</code> (trusted, untrusted, mixed, unknown) is written
+only when it is not <code>unknown</code>, and is computed only when
+<code>trusted_source_root</code> is configured
+(<code>entroly/vault.py:613-637</code>); no <code>VaultConfig</code> in
+<code>server.py</code> or <code>cli.py</code> passes it, so every belief
+reads as eligible.</p>
+<p><strong>Ledger records</strong> carry <code>seq</code>,
+<code>tx_time</code>, <code>valid_time</code> (the belief's
+<code>last_checked</code>), <code>claim_id</code>, <code>entity</code>,
+<code>status</code>, <code>confidence</code>, <code>sources</code>,
+<code>title</code>, <code>body_sha256</code>, <code>backfilled</code>,
+<code>prev_sha256</code>, a writer digest and a <code>serialized</code>
+flag (<code>entroly/vault_time.py:579-603</code>).</p>
+<p><strong>MemoryOS entries</strong> carry <code>agent_id</code>,
+<code>tier</code> (working, episodic, semantic),
+<code>importance</code>, <code>salience</code>,
+<code>temporal_class</code>, <code>valid_from</code>,
+<code>valid_until</code>, <code>supersedes</code>,
+<code>superseded_by</code>, <code>entities</code>,
+<code>authority</code> (six levels from <code>untrusted</code> to
+<code>host_attested</code>), <code>memory_role</code>,
+<code>derived_from</code>, <code>origin_digest</code> and
+<code>blocked_supersedes</code>
+(<code>entroly/memory.py:370-398</code>). <code>valid_from</code> is
+<code>time.time()</code> at write and <code>valid_until</code> is the
+time of supersession (<code>entroly/memory.py:691</code>,
+<code>:706</code>), so both are record times.</p>
+<p><strong>Work-graph <code>MemoryRecord</code></strong> has no text: a
+<code>content_reference</code> and <code>content_commitment</code>,
+<code>evidence_ids</code>, a <code>trust_state</code>,
+<code>created_at_ms</code>, <code>observed_at_ms</code>,
+<code>valid_until_ms</code>, <code>supersedes</code> and
+<code>contradicted_by</code>
+(<code>entroly-engine/src/engine_contracts.rs:1019-1046</code>).
+<code>admissibility</code> returns <code>Contradicted</code>,
+<code>Expired</code>, <code>Unsupported</code> or
+<code>Admissible</code>, treating an <code>Inferred</code> or
+<code>Verified</code> record with no evidence as unsupported
+(<code>entroly-engine/src/engine_contracts.rs:1195-1234</code>).</p>
+<p><strong>Scoping.</strong> MemoryOS has <code>agent_id</code> plus a
+<code>shared</code> pseudo-agent. The vault has no scope key and is
+partitioned by directory. Shared memory has an <code>agent_id</code>
+field filtered only when a caller passes one. The work graph refuses a
+record whose <code>repository_id</code> differs from the graph's
+(<code>entroly-engine/src/work_graph.rs:1369-1374</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The vault is read five ways, with three different answers to "is this
+belief current".</p>
+<ul>
+<li><code>vault_search</code> runs a TF-IDF over entity (3x), title (2x)
+and body in Rust, or a substring match in Python, and returns status
+with each hit, filtering none
+(<code>entroly-core/src/cogops.rs:2484-2560</code>,
+<code>entroly/server.py:3805-3843</code>).</li>
+<li><code>vault_query</code> returns one belief by entity or lists all
+(<code>entroly/server.py:3060-3085</code>).</li>
+<li>The task dream skips <code>stale</code> and confidence under
+0.5.</li>
+<li>Coupling skips <code>stale</code>, <code>retracted</code> and
+<code>refuted</code> and confidence under 0.6; <code>retracted</code>
+and <code>refuted</code> are not writable statuses, and
+<code>ungrounded</code> is excluded by its 0.0 confidence
+(<code>entroly/coupling.py:168-173</code>).</li>
+<li>The Rust bridge reads no frontmatter.</li>
+</ul>
+<p>MemoryOS ranking is term overlap scaled from 0.2 to 1.0, times
+retention <code>exp(-age/salience)</code> in ticks, a recall-frequency
+factor, a tier bonus, a temporal boost of 1.3 or 0.7, and
+<code>0.5 + importance</code>. Candidates are sorted by score per token
+and packed under the budget, each omission recorded with a reason
+(<code>entroly/memory.py:785-889</code>). A superseded memory is dropped
+only when the query matches the current-state regex
+(<code>entroly/memory.py:779-781</code>, <code>:124-140</code>).
+<code>memory_recall</code> adds optional BM25 and entity-graph fusion by
+reciprocal rank; the fabric constructs <code>HybridRetriever</code> with
+no encoder, so the neural arm is off
+(<code>entroly/memory_fabric.py:103-131</code>,
+<code>entroly/hybrid_retriever.py:162-215</code>).</p>
+<p><code>memory_recall</code> and <code>memory_graph_query</code> read
+<code>_task_memory</code>, the <code>MemoryFabric</code> constructed
+empty at server start (<code>entroly/server.py:3385-3389</code>,
+<code>:4779</code>, <code>:4817</code>). The task dreamer reloads
+<code>memory.json</code> when its modification time changes and assigns
+the result to its own <code>memory_fabric</code> attribute
+(<code>entroly/task_dream.py:282-307</code>). <code>_task_memory</code>
+is never reassigned, so after a restart these two tools see nothing
+persisted by an earlier session.</p>
+<p>Shared memory search is BM25 over every agent's entries
+(<code>entroly/shared_memory.py:203-216</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Belief writes are synchronous file writes on the tool call and
+retrievable immediately; the Python path also takes the ledger lock,
+with a 30-second timeout (<code>entroly/vault_time.py:64</code>). On an
+active server the listener polls every 120 seconds, up to 100 changed
+files a pass, marks matching beliefs stale and recompiles them, so a
+stale mark can lag an edit by two minutes
+(<code>entroly/server.py:5143-5152</code>). No pass rewrites the whole
+vault, though <code>mark_beliefs_stale_for_files</code> and
+<code>mark_beliefs_ungrounded</code> read every belief file on each
+call.</p>
+<p>MemoryOS writes from the server are one episode per model-reported
+success. <code>remember_verified_outcome</code> accepts
+<code>test_result passed</code>, <code>command_exit success</code>,
+<code>ci_result passed</code> and <code>edit_outcome accepted</code>,
+stores the task, evidence and related fragments as an episodic memory at
+importance 0.9 tagged <code>verified</code>, and saves the file
+atomically (<code>entroly/task_dream.py:309-395</code>). The tools that
+trigger it take the outcome as an argument:
+<code>record_test_result</code> takes <code>passed: bool</code> from the
+caller (<code>entroly/server.py:2023-2047</code>). Its docstring calls
+agent self-reports <em>"intentionally excluded"</em>; the exclusion
+covers <code>record_outcome</code>, and the four strong-signal tools are
+the agent's own report under another name.</p>
+<p><code>entroly-memory remember</code> defaults <code>--source</code>
+to <code>manual</code> (<code>entroly/memory_cli.py:183</code>), which
+<code>infer_authority</code> maps to <code>user_direct</code>
+(<code>entroly/memory.py:246</code>). Anything that shells out to the
+CLI, an agent included, writes at the second-highest authority unless it
+names a source.</p>
+<p>Shared memory refuses a write whose SimHash is within Hamming
+distance 6 of any existing entry, from any agent, and returns
+<code>deduplicated</code> (<code>entroly/shared_memory.py:142</code>,
+<code>:170-177</code>, <code>:295-304</code>). A restatement that
+changes one token of a long entry can be refused that way; this is
+inferred from the threshold and was not run.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No write calls a model. The task dream adds up to 1,600 tokens to an
+<code>optimize_context</code> call and subtracts them from the budget
+(<code>entroly/server.py:1368-1380</code>). Belief bodies replace
+fragments inside the selected context rather than being prepended, so
+they do not sit in a stable prefix.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server registers 74 tools in <code>server.py</code>, the
+work-graph tools and, optionally, <code>brain_execute_script</code>
+(<code>entroly/server.py:1096-1149</code>, <code>:4686-4688</code>). The
+memory surface is <code>vault_status</code>,
+<code>vault_write_belief</code>, <code>vault_query</code>,
+<code>vault_search</code>, <code>vault_write_action</code>,
+<code>vault_time_travel</code>, <code>vault_hygiene_scan</code>,
+<code>compile_beliefs</code>, <code>verify_beliefs</code>,
+<code>refresh_beliefs</code>, <code>sync_workspace_changes</code>,
+<code>start_workspace_listener</code>, <code>prepare_task_dream</code>,
+<code>memory_recall</code>, <code>memory_graph_query</code>, the five
+<code>shared_memory_*</code> tools and <code>work_record_memory</code>.
+Under the full profile every one is on the model's tool list, including
+<code>vault_time_travel</code> with <code>action="redact"</code>. Under
+the public profile none of them is; the model keeps
+<code>optimize_context</code>, <code>record_test_result</code>,
+<code>remember_fragment</code>, <code>recall_relevant</code>,
+<code>checkpoint_state</code>, <code>resume_state</code> and the
+work-graph tools (<code>entroly/server.py:154-179</code>).</p>
+<p>Injection is automatic only through <code>optimize_context</code>,
+which the tool description calls <em>"the core tool"</em>. The Claude
+Code plugin's <code>UserPromptSubmit</code> hook runs
+<code>activation hook</code>, which indexes and selects context and
+touches no vault or MemoryOS code (<code>hooks/hooks.json:1-17</code>,
+<code>entroly/agent_activation.py:216</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>trust_state — earned on the vault.</strong> The status is a
+discrete field. On an active full-profile server a changed file moves it
+to <code>stale</code> through the listener and through two tools, and
+the task dream that <code>optimize_context</code> builds by default
+leaves a stale belief out. Coupling does too, behind a flag that is off
+by default. A passive public-profile server has no producer of
+<code>stale</code>, since the listener is off and both tools are hidden.
+The mark carries three limits. The Rust bridge, the injection path that
+replaces code, does not read the status at all. <code>hypothesis</code>
+and <code>unsupported</code> pass every filter given enough confidence.
+<code>verified</code> is whatever the model says it is.</p>
+<p><strong>audit_log — earned on the ledger.</strong> Every Python
+belief write and every refused weaker claim appends a chained record,
+and redaction appends rather than rewrites. The record misses most
+mutations that matter for trust: staleness, retraction and confidence
+updates are in-place rewrites, and the Rust compile and refresh paths
+that a default install runs write no record.</p>
+<p><strong>scope_enforced — earned on MemoryOS, weakly.</strong>
+<code>agent_id</code> is a stored key and <code>recall</code> applies
+it. The value is a caller's string, and the server writes and reads
+everything as <code>default</code>.</p>
+<p><strong>negative_eval — earned on MemoryOS.</strong> Two populated
+cases, named in the frontmatter, assert that a superseded memory and a
+role-filtered memory stay out of the selection while their neighbours
+are selected.</p>
+<p><strong>tombstone — withheld.</strong> The ledger's redaction record
+is keyed on a claim id or entity and deletes bodies; it does not stop
+the compiler writing the same claim again on the next pass, and the
+current belief file is not touched by <code>redact</code>
+(<code>entroly/vault_time.py:694-783</code>). A redaction requested as
+<code>user_requested_erasure</code> therefore leaves the operative copy
+of the content in <code>beliefs/</code>. MemoryOS
+<code>blocked_supersedes</code> records a refused supersession, not a
+rejected value.</p>
+<p><strong>bitemporal — withheld.</strong> The ledger names
+<code>valid_time</code> and <code>tx_time</code> as two axes, and
+<code>as_of</code> can query either
+(<code>entroly/vault_time.py:9-14</code>). <code>valid_time</code> is
+<code>last_checked</code>, which every product writer stamps with the
+current time, so the two axes differ only for records
+<code>seed_from_current</code> backfills from existing files
+(<code>entroly/vault_time.py:619-648</code>). MemoryOS
+<code>valid_from</code> and <code>valid_until</code> are write and
+supersession times. The work-graph record's <code>observed_at_ms</code>
+and <code>valid_until_ms</code> are caller-supplied, but no shipped code
+builds such a record outside tests and nothing reads it back.</p>
+<p><strong>human_review — withheld.</strong> Nothing waits for a person.
+<code>work_acknowledge_recovery</code> and
+<code>work_record_review</code> are model tools that record an agent's
+acceptance or review
+(<code>entroly/work_graph_mcp_server.py:293-314</code>).</p>
+<p><strong>Provenance and injection.</strong>
+<code>remember_fragment</code> runs the context firewall and rejects
+high-risk content before storage
+(<code>entroly/server.py:1117-1138</code>). MemoryOS scans for six
+secret shapes, email addresses, phone numbers and three injection
+phrasings, and refuses any match under its default policy
+(<code>entroly/memory.py:90-105</code>, <code>:537-557</code>). The task
+dream rejects recalled text that reads as an instruction
+(<code>tests/test_task_dream.py:173-208</code>). Beliefs from the model
+are not scanned on write; the compiler derives them from source the user
+already has.</p>
+<p><strong>Work-graph admissibility, declared and unread.</strong> The
+contract's design is the most careful in the tree: no similarity score
+can enter admissibility, and a caller's <code>verified</code> label
+without evidence is unsupported. The verdict is computed once at write
+and stored as a node attribute, so an <code>Expired</code> horizon
+passing later does not change it. <code>NodeKind::Memory</code> appears
+only where the record and its superseded predecessors are written
+(<code>entroly-engine/src/work_graph.rs:2896</code>, <code>:2970</code>,
+<code>:3002-3006</code>). The builder
+<code>memory_record_build_json</code> is called from tests only.</p>
+<p><strong>Concurrency.</strong> The ledger lock records whether each
+append was serialized and classifies chain breaks as lost races or
+alterations (<code>entroly/vault_time.py:104-175</code>,
+<code>:861-920</code>). Belief files are written atomically with retries
+(<code>entroly/vault.py:75-118</code>); stale and confidence rewrites
+read and write with no lock, so two processes can interleave them.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>I ran no tests. The memory cases read for this report are in
+<code>tests/test_memory_os.py</code>,
+<code>tests/test_memory_graph_retrieval.py</code>,
+<code>tests/test_memory_provenance_firewall.py</code>,
+<code>tests/test_vault_time.py</code>,
+<code>tests/test_coupling.py</code> and
+<code>tests/test_task_dream.py</code>, 105 functions together, and
+<code>ci.yml</code> runs <code>pytest tests/</code>
+(<code>.github/workflows/ci.yml:420</code>).</p>
+<ul>
+<li><strong>Supersession and roles.</strong> Both negative cases are
+populated, with the replacement or the other two memories required
+present (<code>tests/test_memory_graph_retrieval.py:97-113</code>,
+<code>tests/test_memory_provenance_firewall.py:134-147</code>).</li>
+<li><strong>Ledger.</strong> Version history, as-of on both axes, tamper
+and parse-failure detection, redaction that keeps the chain verifiable,
+and shared-body retention
+(<code>tests/test_vault_time.py:32-180</code>). The valid-axis case
+injects <code>last_checked</code> by hand.</li>
+<li><strong>Coupling.</strong> A 0.30 hypothesis is absent beside a
+selected belief, and a failure marks a verified belief stale
+(<code>tests/test_coupling.py:97-101</code>, <code>:226-231</code>). No
+case writes a stale belief and asserts that projection leaves it
+out.</li>
+<li><strong>Task dream.</strong> The fixture vault lists a stale
+<code>auth::obsolete</code> at 0.99, but the fake
+<code>read_belief</code> returns nothing for it and no assertion names
+it, so the stale filter is not exercised
+(<code>tests/test_task_dream.py:30-52</code>).</li>
+</ul>
+<p>There is no memory benchmark.
+<code>benchmarks/memory_stress_test.py</code> and
+<code>benchmarks/memory_fabric_stress_test.py</code> are load tests, and
+the published results in <code>benchmarks/results/</code> measure
+context selection and compression. No paper describes Entroly;
+<code>CITATION.cff</code> cites the software, and the literature map
+under <code>docs/research/</code> cites other work.</p>
+<p>Tests I would want first: a stale belief must not reach the selected
+context through the Rust bridge; the server, CLI and coupling must
+resolve one vault; <code>memory_recall</code> must return a memory
+written by an earlier process.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Mark a derived summary stale when its source changes, and
+retract it when its source is gone.</strong> A belief that cites files
+can be invalidated mechanically; the cost is a scan over citations on
+every change.</li>
+<li><strong>Refuse an update that is weaker on every axis, and keep
+it.</strong> Lower status, lower confidence and no new source together
+mean regression, not correction; storing the loser as a competing claim
+keeps the disagreement inspectable.</li>
+<li><strong>Clamp authority across derivation.</strong> A memory derived
+from an external observation cannot rise above it, a missing parent
+fails to <code>untrusted</code>, and a lower-authority write cannot
+supersede a higher one.</li>
+<li><strong>Make admissibility a function that cannot take a
+score.</strong> The work-graph contract's signature enforces the rule
+that similarity does not imply truth.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A second injection path that reads the body and not the
+header.</strong> The status filter sits on the two Python read paths;
+the Rust path that replaces code parses no frontmatter.</li>
+<li><strong>Resolving the store's location separately in each entry
+point.</strong> Three defaults for one vault, one of which ignores the
+environment, make the lifecycle invisible to the reader that is meant to
+honour it.</li>
+<li><strong>Calling a model-reported outcome verified.</strong> A
+boolean argument on an agent's tool is the agent's claim.</li>
+<li><strong>An audit record on the write function and not on the
+mutations.</strong> The rewrites that change what a belief is trusted to
+mean are the ones the ledger never sees.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Entroly is a context-efficiency product with a belief vault attached,
+and it is maintained at a pace of about four hundred commits a month. A
+reader who wants agent memory should take the vault's lifecycle ideas
+and leave the system. The memory surfaces overlap without sharing a
+store or a path convention, and the default install routes compilation,
+refresh and search through a Rust implementation that skips the ledger
+and the weaker-claim guard. A reader who wants budgeted, receipted
+context selection over a repository is the intended user, and can treat
+the vault as an optional cache of summaries.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the Rust compiler in practice leave several files per entity,
+and which does <code>read_belief</code> return when both a Python and a
+Rust file exist for one entity? Running two compiles and listing
+<code>beliefs/</code> would answer it.</li>
+<li>Do the Python compiler's file names match the Rust bridge's stem
+rule, so that Python-compiled beliefs attach to fragments at all? The
+bridge strips an eight-hex suffix and compares the rest with a
+fragment's file stem.</li>
+<li>How often does a model call <code>record_test_result</code>
+unprompted? The public profile's live memory loop depends on it, and
+only a run would say.</li>
+<li>Is <code>hippocampus_sharp_memory</code> published, and under what
+terms?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Storage and schema: <code>entroly/vault.py</code>,
+<code>entroly/vault_time.py</code>, <code>entroly/memory.py</code>,
+<code>entroly/shared_memory.py</code>,
+<code>entroly/work_graph_store.py</code>,
+<code>entroly-engine/src/engine_contracts.rs</code>.</li>
+<li>Write path: <code>entroly/belief_compiler.py</code>,
+<code>entroly-core/src/cogops.rs</code>,
+<code>entroly/task_dream.py</code>,
+<code>entroly/memory_cli.py</code>.</li>
+<li>Retrieval: <code>entroly/coupling.py</code>,
+<code>entroly/task_dream.py</code>,
+<code>entroly-core/src/lib.rs</code>,
+<code>entroly/memory_fabric.py</code>,
+<code>entroly/hybrid_retriever.py</code>.</li>
+<li>Lifecycle and background: <code>entroly/change_listener.py</code>,
+<code>entroly/change_pipeline.py</code>,
+<code>entroly/verification_engine.py</code>,
+<code>entroly/vault_hygiene.py</code>.</li>
+<li>MCP and CLI: <code>entroly/server.py</code>,
+<code>entroly/work_graph_mcp.py</code>,
+<code>entroly/work_graph_mcp_server.py</code>,
+<code>entroly/cli.py</code>, <code>entroly/config.py</code>.</li>
+<li>Tests: <code>tests/test_memory_os.py</code>,
+<code>tests/test_memory_graph_retrieval.py</code>,
+<code>tests/test_memory_provenance_firewall.py</code>,
+<code>tests/test_vault_time.py</code>,
+<code>tests/test_coupling.py</code>,
+<code>tests/test_task_dream.py</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the clone root at the pinned commit.</p>
+<pre class="sh"><code># Positive control for the pattern style below: hits vault_time.py&#39;s redaction record
+git grep -n -i -E &#39;tombstone&#39; -- entroly/vault_time.py
+# Value-keyed rejection records: only the ledger redaction record, plus unrelated comments in request_attribution.py and session_journal.py
+git grep -n -i -E &#39;tombstone|rejected_value|never_relearn|do_not_store&#39; -- entroly entroly-core/src entroly-engine/src
+# Nothing deletes a belief file: only the temp-file cleanup, the lock and the body objects
+git grep -n -E &#39;unlink|\.remove\(|rmtree&#39; -- entroly/vault.py entroly/vault_time.py entroly/vault_hygiene.py
+# Every ledger writer: vault.py write_belief twice, server.py vault_time_travel, vault_hygiene.py
+git grep -n -E &#39;BeliefLedger\(&#39; -- &#39;entroly/*.py&#39;
+# No ledger in the Rust CogOps writer
+git grep -n -i &#39;ledger&#39; -- entroly-core/src/cogops.rs
+# No shipped producer of a confirmed verification
+git grep -n -E &#39;result=&quot;confirmed&quot;&#39; -- &#39;entroly/*.py&#39;
+# Only status literals the compilers write
+git grep -n -E &#39;status:[[:space:]]*&quot;(inferred|verified|observed)&#39; -- &#39;entroly-core/src/*.rs&#39;
+git grep -n -E &#39;status=&quot;(verified|observed)&quot;&#39; -- &#39;entroly/*.py&#39;
+# The Rust bridge parses no status: the only hit in load_vault_beliefs is the comment that strips the frontmatter
+sed -n &#39;4688,4788p&#39; entroly-core/src/lib.rs | grep -n -i -E &#39;status|frontmatter&#39;
+# Coupling is opt-in
+git grep -n &#39;ENTROLY_VAULT_COUPLING&#39; -- entroly
+# trusted_source_root is never passed in the product package
+git grep -n -E &#39;trusted_source_root=&#39; -- entroly
+# _task_memory is assigned once
+git grep -n -E &#39;_task_memory[[:space:]]*=&#39; -- entroly
+# Readers of work-graph memory nodes and admissibility: writers only in Rust; the Python hits are e_value.py and ravs/router.py, unrelated
+git grep -n -E &#39;NodeKind::Memory&#39; -- entroly-engine/src
+git grep -n -i &#39;admissib&#39; -- entroly &#39;:!*.md&#39;
+git grep -n -E &#39;memory_record_build_json&#39; -- entroly tests entroly-core/src
+# No approve or promote verb for memory content
+git grep -n -i -E &#39;def [a-z_]*(approve|promote)[a-z_]*\(&#39; -- &#39;entroly/*.py&#39;
+# No MemoryOS case recalls as a second agent
+git grep -h -o -E &#39;agent_id=&quot;[a-z_-]+&quot;&#39; -- tests/test_memory_os.py tests/test_memory_graph_retrieval.py tests/test_memory_provenance_firewall.py tests/test_memory_fabric.py | sort | uniq -c
+# The vault paths each entry point resolves
+git grep -n -E &#39;VaultConfig\(&#39; -- entroly/server.py entroly/cli.py entroly/proxy.py
+# No submodules
+git ls-files .gitmodules</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-11-27</strong> — <a
+href="https://github.com/juyterman1000/entroly/commit/42324c50c3520e0e239220383014b41c54b805b9"><code class="commit-id" title="42324c50c3520e0e239220383014b41c54b805b9">42324c50…</code></a>.
+First reading, read only, from a full clone at the head of
+<code>main</code>, the commit triage selected. Screened first: thirteen
+auto-run surfaces (<code>.claude-plugin/</code> and its
+<code>plugin.json</code>, <code>.claude/settings.json</code> hooks,
+<code>.devcontainer/devcontainer.json</code> postCreateCommand,
+<code>.githooks/</code>, <code>.mcp.json</code> launching an npx
+package, <code>.vscode/mcp.json</code>,
+<code>.vscode/settings.json</code>, <code>hooks/</code> and
+<code>hooks/hooks.json</code> with a UserPromptSubmit hook,
+<code>mcp.json</code>, <code>server.json</code> and
+<code>smithery.yaml</code> launching npx or uvx packages), all read as
+data, as were <code>AGENTS.md</code>, <code>CLAUDE.md</code> and
+<code>GEMINI.md</code>. It also found 21 manifests and lockfiles inside
+the seven-day cooldown, three build-time execution points
+(<code>conftest.py</code>, <code>entroly-core/tests/conftest.py</code>,
+<code>ui/desktop/build.rs</code>) and three floating manifests. Nothing
+was installed, built or run, and the 6,201 Python and 878 Rust test
+functions were not run. Four marks: <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

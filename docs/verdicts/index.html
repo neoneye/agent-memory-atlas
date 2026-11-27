@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 907 reports.</strong></p>
+<p><strong>This page covers all 908 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -37696,6 +37696,60 @@ together.</li>
 <li>Do not copy when: your agent reads memory through ranked recall and
 expects a retired fact to stop appearing, or several tenants must share
 one file.</li>
+</ul>
+<h3 id="entroly"><a
+href="../systems/entroly/"><code>entroly</code></a></h3>
+<ul>
+<li>Best idea: <strong>a derived summary that knows which files it was
+derived from.</strong> Each compiled belief cites the lines it read, a
+changed file rewrites the status of every belief citing it to
+<code>stale</code>, a belief whose every source is gone becomes
+<code>ungrounded</code> at confidence 0.0, and the task dream that
+<code>optimize_context</code> builds by default skips both
+(<code>entroly/vault.py:945-1021</code>, <code>:1109-1236</code>,
+<code>entroly/task_dream.py:608-640</code>).</li>
+<li>Second idea: an overwrite guard that keeps the loser.
+<code>_weaker_than_current</code> refuses an update lower in status
+rank, lower in confidence and citing no new source, and appends it to a
+hash-chained JSONL ledger as a competing claim, so recency cannot
+outrank evidence and the disagreement stays on record
+(<code>entroly/vault.py:556-611</code>, <code>:695-731</code>,
+<code>entroly/vault_time.py:530-617</code>).</li>
+<li>Biggest risk: <strong>the injection path that replaces code reads no
+status.</strong> <code>load_vault_beliefs</code> strips each belief
+file's frontmatter unparsed and attaches the body to fragments by file
+stem, and a belief selection returns that body in place of the code, so
+a stale or ungrounded summary can stand in for the current source
+(<code>entroly-core/src/lib.rs:4688-4788</code>,
+<code>:3349-3360</code>); <code>vault_search</code> and
+<code>vault_query</code> return every status too.</li>
+<li>Second risk: three vault locations and a recall that never loads.
+With no <code>ENTROLY_DIR</code> or <code>ENTROLY_VAULT</code>, the
+server uses <code>~/.entroly/checkpoints/&lt;hash&gt;/vault</code> while
+the autoseed and <code>entroly compile</code> write
+<code>./.entroly/vault</code> and coupling reads it regardless;
+<code>memory_recall</code> reads a MemoryOS fabric the server constructs
+empty; the Rust compile and refresh paths a default install runs write
+no ledger record; and a <code>verified</code> task memory rests on the
+model's own <code>passed=true</code>.</li>
+<li>Most reusable component: the staleness and retraction scans in
+<code>entroly/vault.py:945-1236</code>, the weaker-claim guard at
+<code>entroly/vault.py:556-611</code>, the ledger in
+<code>entroly/vault_time.py</code>, and MemoryOS's authority clamp
+across derivation at <code>entroly/memory.py:559-713</code>.</li>
+<li>Maturity impression: Apache-2.0; 207,830 lines of Python in
+<code>entroly/</code> and 82,825 of Rust, in 2,342 commits from 22 May
+to 26 November 2026, nearly all under four author names, with 76 tags;
+6,201 Python and 878 Rust test functions, none run here, with no case
+asserting that a stale belief stays out of either read. Four marks:
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Study when: you keep summaries of a codebase as memory and need them
+to lose standing when the code moves, or want a write guard that refuses
+a weaker claim without discarding it.</li>
+<li>Do not copy when: more than one entry point writes or reads the
+store, or a second injection path exists that parses the body and not
+the header.</li>
 </ul>
         </article>
       </div>

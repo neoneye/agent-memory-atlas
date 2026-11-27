@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 907 reports.**
+**This page covers all 908 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8393,3 +8393,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 50,071 lines of Python in 84 files, 16,297 in one core module, with 130,673 lines of tests; 507 commits from 1 June to 25 October 2026 by one author and two bots, nine tags to v0.7.2; 4,508 test functions, run in CI on Python 3.11 to 3.14 with a 90% coverage floor and an upgrade suite from the last release, none run here. The sibling benchmark repository's LongMemEval-S row of 0.828 for Engrava 0.7.0 recomputes exactly from its committed judge labels. Three marks: `bitemporal`, `audit_log`, `negative_eval`.
 - Study when: you are adding a valid-time axis to an embedded store, or need a write path whose change and audit row commit or roll back together.
 - Do not copy when: your agent reads memory through ranked recall and expects a retired fact to stop appearing, or several tenants must share one file.
+
+### [`entroly`](../systems/entroly/)
+- Best idea: **a derived summary that knows which files it was derived from.** Each compiled belief cites the lines it read, a changed file rewrites the status of every belief citing it to `stale`, a belief whose every source is gone becomes `ungrounded` at confidence 0.0, and the task dream that `optimize_context` builds by default skips both (`entroly/vault.py:945-1021`, `:1109-1236`, `entroly/task_dream.py:608-640`).
+- Second idea: an overwrite guard that keeps the loser. `_weaker_than_current` refuses an update lower in status rank, lower in confidence and citing no new source, and appends it to a hash-chained JSONL ledger as a competing claim, so recency cannot outrank evidence and the disagreement stays on record (`entroly/vault.py:556-611`, `:695-731`, `entroly/vault_time.py:530-617`).
+- Biggest risk: **the injection path that replaces code reads no status.** `load_vault_beliefs` strips each belief file's frontmatter unparsed and attaches the body to fragments by file stem, and a belief selection returns that body in place of the code, so a stale or ungrounded summary can stand in for the current source (`entroly-core/src/lib.rs:4688-4788`, `:3349-3360`); `vault_search` and `vault_query` return every status too.
+- Second risk: three vault locations and a recall that never loads. With no `ENTROLY_DIR` or `ENTROLY_VAULT`, the server uses `~/.entroly/checkpoints/<hash>/vault` while the autoseed and `entroly compile` write `./.entroly/vault` and coupling reads it regardless; `memory_recall` reads a MemoryOS fabric the server constructs empty; the Rust compile and refresh paths a default install runs write no ledger record; and a `verified` task memory rests on the model's own `passed=true`.
+- Most reusable component: the staleness and retraction scans in `entroly/vault.py:945-1236`, the weaker-claim guard at `entroly/vault.py:556-611`, the ledger in `entroly/vault_time.py`, and MemoryOS's authority clamp across derivation at `entroly/memory.py:559-713`.
+- Maturity impression: Apache-2.0; 207,830 lines of Python in `entroly/` and 82,825 of Rust, in 2,342 commits from 22 May to 26 November 2026, nearly all under four author names, with 76 tags; 6,201 Python and 878 Rust test functions, none run here, with no case asserting that a stale belief stays out of either read. Four marks: `trust_state`, `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: you keep summaries of a codebase as memory and need them to lose standing when the code moves, or want a write guard that refuses a weaker claim without discarding it.
+- Do not copy when: more than one entry point writes or reads the store, or a second injection path exists that parses the body and not the header.

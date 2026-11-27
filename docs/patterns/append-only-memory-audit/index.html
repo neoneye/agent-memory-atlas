@@ -1244,6 +1244,21 @@ sweep, eviction and the session-end archive move change rows with no
 entry. And <code>quarantined</code> and <code>trust_score</code> are
 outside the hash, so a direct release from quarantine verifies
 clean.</p>
+<p><a href="../../systems/entroly/">Entroly</a> records every write of a
+belief and none of the rewrites that change whether it is believed.
+<code>BeliefLedger.record</code> appends a hash-chained JSONL record per
+Python <code>write_belief</code>, including an update refused as weaker,
+and redaction deletes bodies and appends a chained record rather than
+editing history (<code>entroly/vault_time.py:530-617</code>,
+<code>:694-783</code>). Marking a belief stale, retracting it as
+ungrounded and moving its confidence after an outcome or a verification
+all rewrite the file in place with no record
+(<code>entroly/vault.py:945-1021</code>, <code>:1109-1236</code>,
+<code>:1239-1273</code>, <code>entroly/coupling.py:353-457</code>). On a
+default install the Rust compile and refresh paths write belief files
+with no record either (<code>entroly-core/src/cogops.rs:669-699</code>,
+<code>:1955-2002</code>). Redaction leaves the current belief file in
+place.</p>
 <p><a href="../../systems/engrava/">Engrava</a> journals every mutation
 path it has and leaves the switch on the connection. With
 <code>journal_enabled</code>, each thought and edge insert, update and
