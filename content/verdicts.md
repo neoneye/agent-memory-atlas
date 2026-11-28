@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 909 reports.**
+**This page covers all 910 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8413,3 +8413,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT; 16,391 lines of Go and 24,407 of Go tests, in 306 commits from 15 April to 26 November 2026, nearly all by one author, with 24 tags; 759 Go test functions and 13 fuzz targets that CI runs with `-race`, none run here; the token-savings figures are committed only as drawings. One mark: `negative_eval`.
 - Study when: you compile notes from files into a store an agent reads and want delta resync, per-node history and exact rollback from one diff table.
 - Do not copy when: the agent's own summaries, corrections or deletions must hold against the files, a secret must stay out of the store, or several sessions share one database.
+
+### [`joebro`](../systems/joebro/)
+- Best idea: **the project key comes from where the agent is, not from what it says.** The MCP server sends the main checkout's path and origin remote, computed with git from its own working directory, and the backend keys on the normalised remote, so a worktree shares its repository's memory and no tool argument names a project; recall, the brief and browse all put that key in the SQL predicate.
+- Second idea: a session brief with a hard 400-token cap that does not count as use. The SessionStart hook injects the project's strongest facts once, reading them leaves strength alone, and only an explicit recall reinforces; supersede inserts a new row and keeps the old one with `valid_to` and a link each way.
+- Biggest risk: **similarity alone retires facts.** A new sentence at Jaccard 0.5 to an active fact with a compatible topic, and `memory_remember` usually sends none, supersedes it, so "the staging deploy uses scripts/release.sh" is retired by the production one; the digit guard on the 0.8 dedupe looks at a word set from which single characters were already dropped, so "Module 3" and "Module 4" dedupe into one.
+- Second risk: the personal scope is walled off on one route of three. `caller_of` runs only in the shared-memory router and falls back to the User-Agent because nothing sets the app token, while `GET /api/memory` and `/api/muse` return user facts to any loopback caller on a token-less port; archived facts are invisible to the next write of the same words, and Night Shift facts are stored before the morning review.
+- Most reusable component: `resolve_project` and `norm_remote` in `JoeBro/Backend/jb_sharedmem.py:105-155` with `project_ctx` in joebro-plugins `bin/joebro-agents:750-757`, and `brief` at `jb_sharedmem.py:371-396`.
+- Maturity impression: GPL-3.0; 24,145 lines of Python backend and 23,587 of Swift in 133 commits from 16 June to 24 November 2026, 106 of them in November and nearly all by one author; Shared Memory first committed on 12 November 2026; 119 unittest functions, none run here, and no CI. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
+- Study when: several coding agents on one machine should converge on one project memory without a model or a server, and you want the scope derived from the checkout.
+- Do not copy when: two facts that share a subject must both survive, a forgotten fact must stay forgotten, or the personal scope must be kept from an agent that holds a shell.

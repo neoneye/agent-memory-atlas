@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local macOS agent workspace
+whose shared memory keeps project, global and personal facts in one
+SQLite table that coding agents reach over MCP.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="JoeBro — Agent Memory Atlas">
+    <meta property="og:description" content="A local macOS agent
+workspace whose shared memory keeps project, global and personal facts
+in one SQLite table that coding agents reach over MCP.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="JoeBro — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local macOS agent
+workspace whose shared memory keeps project, global and personal facts
+in one SQLite table that coding agents reach over MCP.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>JoeBro — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "JoeBro",
+      "description": "A local macOS agent workspace whose shared memory keeps project, global and personal facts in one SQLite table that coding agents reach over MCP.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One project memory for every coding agent,
+kept by arithmetic, with the personal scope walled off on one route of
+three</p>
+          <h1>JoeBro</h1>
+          <p class="document-deck">A local macOS agent workspace whose
+shared memory keeps project, global and personal facts in one SQLite
+table that coding agents reach over MCP.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/joexk1/JoeBro">
+              <span>Source</span>
+              <strong>joexk1/JoeBro</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/joexk1/JoeBro/commit/2f50631bfef6d5922c4cfba6b60e7d8f73a102fc" title="2f50631bfef6d5922c4cfba6b60e7d8f73a102fc">
+              <span>Analyzed revision</span>
+              <code>2f50631b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/joexk1--JoeBro" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>joexk1--JoeBro</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>GPL-3.0,
+the full text in LICENSE; the MCP server and hooks the memory is reached
+through live in the separate joebro-plugins repository under
+MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>24,145
+lines of Python in 46 backend modules and 1,993 in 14 test files; 23,587
+lines of Swift in 65 files; the memory is jb_sharedmem.py (783),
+jb_usermem.py (243), jb_memory.py (221) and jb_muse.py
+(359)</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>133
+commits from 16 June to 24 November 2026, 106 of them in November; 129
+under three names that share an address and 4 from a second contributor;
+nine tags, the latest v1.6.0; Shared Memory first committed on 12
+November 2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>119
+unittest functions in 14 files, 12 in test_sharedmem.py and 9 in
+test_usermem.py; no CI workflow in the tree; none run for this
+reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>JoeBro is a local macOS workspace for coding agents and chat models,
+a Swift app with a Python standard-library backend, whose <strong>Shared
+Memory</strong> is one SQLite table of short facts that Claude Code,
+Codex, OpenCode and Antigravity read and write through an MCP server.
+Notable: no model runs anywhere in that store's write or upkeep path.
+Deduplication, supersession, decay and the nightly merge are token-set
+arithmetic. Weak: the arithmetic decides too much. A new fact that
+shares half its words with a different one retires it, and the wall
+around the personal scope stands on one route of three.</p>
+<p>A fact is one sentence keyed to a project, the normalised git remote
+or the checkout path, or to the reserved <code>global</code> and
+<code>user</code> scopes. A coding agent gets at most 400 tokens of its
+project's strongest facts at session start and pulls the rest with
+<code>memory_recall</code>. Recall raises a fact's strength. Strength
+halves every 30 days from the last recall, and a nightly pass merges and
+archives what has faded. Nothing is hard-deleted: supersede keeps the
+old row with a link both ways, and archive is a status.</p>
+<p>The <code>user</code> scope holds the person's own facts, migrated
+from two older stores (the desktop "Brain" table and the phone agent's
+Markdown files). It is withheld from callers the backend classifies as
+agents on <code>/api/shared-memory</code>, with populated tests. The
+same rows are returned with no classification by
+<code>GET /api/memory</code> and <code>GET /api/muse</code>. The
+classification itself falls back to the User-Agent header, because
+nothing in the app sets the token that would replace it.</p>
+<p>The rest of the app (chats, email, calendar, documents, Night Shift's
+overnight coding runs, the iPhone companion) is context here and carries
+no mark. The MCP server and the agents' hooks are in the separate
+<code>joebro-plugins</code> repository, read through the GitHub API at
+<code>9fd43bb</code> for the surface only.</p>
+<p><strong>Licence.</strong> GPL-3.0, the stock text in
+<code>LICENSE</code>; no source file carries a notice choosing "only" or
+"or later", and the README says "GPLv3". The MCP server and hooks that
+make the memory reachable by an agent are MIT, in another
+repository.</p>
+<p>Three marks: <code>scope_enforced</code> on the project key and the
+user-scope gate, <code>audit_log</code> on <code>shared_log</code>, and
+<code>negative_eval</code> on the user-scope tests. <a
+href="#9-reliability-safety-and-trust">Section 9</a> gives the reason
+for each of the four withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>one durable sentence an agent learned while
+working</strong>: a decision and why, a gotcha, something tried that
+failed. <code>_clean</code> refuses text under 12 or over 400 characters
+and anything a credential regex matches
+(<code>JoeBro/Backend/jb_sharedmem.py:43</code>, <code>:50-51</code>,
+<code>:207-215</code>). The row carries a topic, a kind from eight
+values, a pin flag, a strength from 0 to 1 and the caller's provenance
+(<code>:82-87</code>).</p>
+<p>A sentence becomes a fact by <strong>comparison with the project's
+active facts</strong>, never by a model's judgement
+(<code>remember</code>, <code>:245-269</code>). Both sides are reduced
+to word sets: lowercased tokens longer than one character, a trailing
+<code>s</code> stripped, a stop list removed (<code>:63-71</code>).
+Jaccard similarity picks the closest active fact.</p>
+<ul>
+<li><strong>At 0.8 or more, or an identical lowercased text</strong>,
+the new sentence is dropped and the old fact reinforced, unless the two
+differ in a token containing a digit (<code>:255-260</code>).</li>
+<li><strong>At 0.5 or more</strong>, when either topic is empty or the
+topics match, the old fact is <strong>superseded</strong>: a new row is
+inserted with at least the old strength, and the old one becomes
+<code>superseded</code> with <code>valid_to</code> and a forward link
+(<code>:262-263</code>, <code>:272-282</code>). An import never takes
+this branch (<code>:261</code>).</li>
+<li><strong>Otherwise</strong> the sentence is added at strength 0.5,
+and the 150-fact cap archives the weakest unpinned facts of the project
+(<code>:264-268</code>, <code>:321-330</code>).</li>
+</ul>
+<p>A fact lives by being recalled. <code>reinforce</code> moves strength
+a quarter of the way to 1.0 and stamps <code>last_used</code>;
+<code>effective</code> halves it every 30 days since then, and a pin
+freezes it (<code>:180-185</code>, <code>:239-242</code>). Of the reads,
+only <code>POST /recall</code> reinforces, and a deduplicated write does
+too. The session brief deliberately does not
+(<code>:371-374</code>).</p>
+<p>A fact stops counting three ways, and all three are status changes on
+the row (<code>:285-300</code>):</p>
+<ul>
+<li><strong>superseded</strong>, by a later sentence or an explicit
+<code>memory_supersede</code>;</li>
+<li><strong>archived</strong>, by an agent's <code>memory_forget</code>,
+the person's archive button, the cap, a nightly merge into a stronger
+fact, or fading below 0.12 in the nightly pass;</li>
+<li>and either can be <strong>restored</strong> to active by
+<code>restore</code>.</li>
+</ul>
+<p>Only <code>active</code> rows reach recall, the brief or the dedupe
+comparison (<code>:235-236</code>, <code>:341</code>). An archived
+sentence is therefore invisible to the next write of the same
+sentence.</p>
+<p>The <code>user</code> scope is the same table with a different set of
+writers. The desktop chat extracts up to three facts per turn with a
+model and <strong>overwrites</strong> a matching fact's text in place
+(<code>JoeBro/Backend/jb_memory.py:126-153</code>); the phone agent
+keeps a fact only when its supporting quote is a substring of the user's
+message (<code>JoeBro/Backend/jb_muse.py:344-345</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a sentence becomes a fact by word-set similarity to the project's active facts alone; recall strengthens it, time weakens it, and archived or superseded rows are invisible to the next write of the same sentence</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a sentence becomes a fact by word-set similarity to the project&#39;s active facts alone; recall strengthens it, time weakens it, and archived or superseded rows are invisible to the next write of the same sentence
+flowchart TD
+  subgraph writers[&quot;Writers to a project&quot;]
+    direction TB
+    W1[&quot;memory_remember over MCP:&lt;br/&gt;project from the agent&#39;s&lt;br/&gt;own checkout&quot;]
+    W2[&quot;Night Shift: up to three&lt;br/&gt;LEARNED lines per run,&lt;br/&gt;before the morning review&quot;]
+    W3[&quot;import of CLAUDE.md and&lt;br/&gt;AGENTS.md, the app,&lt;br/&gt;the phone&quot;]
+    W1 ~~~ W2 ~~~ W3
+  end
+  writers --&gt; CL{&quot;12 to 400 chars,&lt;br/&gt;no credential shape?&quot;}
+  CL --&gt;|&quot;no&quot;| REF[&quot;refused&quot;]
+  CL --&gt;|&quot;yes&quot;| SIM{&quot;Jaccard to the closest&lt;br/&gt;ACTIVE fact&quot;}
+  SIM --&gt;|&quot;0.8 or more,&lt;br/&gt;no digit token differs&quot;| DED[&quot;deduped: old fact&lt;br/&gt;reinforced, new text&lt;br/&gt;dropped&quot;]
+  SIM --&gt;|&quot;0.5 or more,&lt;br/&gt;topics compatible&quot;| SUP[&quot;superseded: new row,&lt;br/&gt;old row keeps text,&lt;br/&gt;valid_to and a link&quot;]
+  SIM --&gt;|&quot;below 0.5&quot;| ADD[&quot;added at strength 0.5;&lt;br/&gt;over 150 facts, the&lt;br/&gt;weakest is archived&quot;]
+  SUP --&gt; ACT[&quot;active fact&quot;]
+  ADD --&gt; ACT
+  ACT --&gt; RD[&quot;recall: project + global,&lt;br/&gt;active only, reinforces;&lt;br/&gt;brief: 400 tokens once,&lt;br/&gt;never reinforces&quot;]
+  ACT --&gt; DEC[&quot;strength halves every&lt;br/&gt;30 days from last recall&quot;]
+  DEC --&gt; NIGHT[&quot;nightly 02:00 to 05:59:&lt;br/&gt;merge weak look-alikes,&lt;br/&gt;archive below 0.12&quot;]
+  NIGHT --&gt; ARC[&quot;archived: kept,&lt;br/&gt;restorable, unread&lt;br/&gt;by the dedupe&quot;]
+  ARC --&gt; GAP[&quot;the same sentence written&lt;br/&gt;again is compared with&lt;br/&gt;active rows only: added&quot;]
+  GAP --&gt; SIM</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The backend is one Python process, <code>joebro_backend.py</code>,
+started by the Swift app with the system <code>python3</code> and bound
+to <code>127.0.0.1:8765</code>
+(<code>JoeBro/JoeBroApp.swift:33-38</code>,
+<code>JoeBro/Backend/joebro_backend.py:1140-1166</code>). It uses only
+the standard library: <code>ThreadingHTTPServer</code>,
+<code>sqlite3</code>, <code>subprocess</code> for git. The store is
+<code>joebro.sqlite3</code> in
+<code>~/Library/Application Support/JoeBro</code>, chmod 0600, shared by
+every feature of the app
+(<code>JoeBro/Backend/jb_core.py:1459-1473</code>).
+<code>Store.exec</code> opens a connection per statement under one
+process-wide <code>RLock</code> and commits each statement alone
+(<code>:1903-1922</code>).</p>
+<ul>
+<li><strong><code>jb_sharedmem.py</code></strong> holds the shared
+store, its HTTP routes under <code>/api/shared-memory</code>, the caller
+classification, the nightly consolidation, the import and the Markdown
+mirror.</li>
+<li><strong><code>jb_usermem.py</code></strong> maps the older Brain and
+muse surfaces onto the <code>user</code> scope and migrates their data
+once at boot
+(<code>JoeBro/Backend/joebro_backend.py:1192-1197</code>).</li>
+<li><strong><code>jb_memory.py</code></strong> and
+<strong><code>jb_muse.py</code></strong> are the user-scope readers and
+writers for the desktop chat and the phone agent.</li>
+<li><strong><code>jb_nightshift.py</code></strong> writes facts from
+overnight runs; <strong><code>jb_coding.py</code></strong> records one
+summary per coding session and runs the nightly pass from its loop
+(<code>JoeBro/Backend/jb_coding.py:200-209</code>,
+<code>:1029-1033</code>).</li>
+<li><strong><code>jb_janitor.py</code></strong> deletes artifacts and
+scratch files and never touches the database's content
+(<code>JoeBro/Backend/jb_janitor.py:2-10</code>).</li>
+</ul>
+<p>Outside this tree:</p>
+<ul>
+<li><strong>joebro-plugins</strong> carries
+<code>bin/joebro-agents</code>, a stdio MCP server whose five memory
+tools are thin HTTP calls to the backend, and the hooks that inject the
+brief at <code>SessionStart</code> and nudge a session that did work and
+saved nothing (read at <code>9fd43bb</code>:
+<code>bin/joebro-agents:861-884</code>, <code>:1198-1208</code>,
+<code>:679-685</code>, <code>:810-834</code>;
+<code>claude-code/hooks/hooks.json</code>).</li>
+<li><strong>JoeBro-Mobile</strong> is the iPhone app. It reaches the
+same store through the second listener in <code>jb_mobile.py</code> and
+was not read.</li>
+</ul>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to run beyond the app: no database server, no vector
+service, no model for the shared store. A model endpoint is needed only
+for the user scope's automatic extraction. It runs offline. The store is
+a SQLite file a person can open; the mirror writes each project's live
+and archived facts as Markdown, regenerated on every write and never
+read back (<code>JoeBro/Backend/jb_sharedmem.py:541-580</code>). Install
+is a signed DMG or a <code>curl | bash</code> script hosted outside the
+tree; the agents are linked by installing joebro-plugins. Shared Memory
+needs macOS 26 for the app, though the backend is plain Python.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Agent write.</strong> <code>memory_remember</code> posts
+<code>project_ctx()</code> (path and origin remote of the main checkout)
+and <code>provenance()</code> from the MCP process's environment to
+<code>POST /api/shared-memory</code>
+(<code>joebro-plugins bin/joebro-agents:750-757</code>,
+<code>:764-768</code>, <code>:861-865</code>).
+<code>_dispatch_inner</code> resolves the key and calls
+<code>remember</code>
+(<code>JoeBro/Backend/jb_sharedmem.py:684-687</code>), which logs,
+enforces the cap and rewrites the mirror.</li>
+<li><strong>Project key.</strong> <code>resolve_project</code> takes an
+explicit key, then a registered path, then the git toplevel (the main
+checkout for a worktree), and keys on the normalised remote when there
+is one, the path otherwise (<code>:120-155</code>).
+<code>norm_remote</code> strips scheme, user and <code>.git</code> and
+lowercases (<code>:105-109</code>), so
+<code>git@github.com:Acme/API.git</code> becomes
+<code>github.com/acme/api</code>.</li>
+<li><strong>Night Shift.</strong> The overnight runner parses up to
+three <code>LEARNED:</code> lines from the agent's final output and
+<code>remember</code>s each into the repository's project when the run
+ends, before the task is reviewed
+(<code>JoeBro/Backend/jb_nightworker.py:175</code>,
+<code>JoeBro/Backend/jb_nightshift.py:439-444</code>,
+<code>:593-598</code>).</li>
+<li><strong>Import.</strong> <code>split_facts</code> turns headings
+into topics and paragraphs, bullets and short code blocks into facts;
+<code>import_files</code> remembers each with source
+<code>import</code>, which dedupes and never supersedes, and returns a
+token comparison and the pointer block for CLAUDE.md
+(<code>:455-537</code>).</li>
+<li><strong>Recall.</strong> <code>POST /recall</code> searches the key
+and <code>global</code>, active only unless
+<code>include_archived</code>, and reinforces each returned active fact
+(<code>:688-696</code>, <code>:338-357</code>).</li>
+<li><strong>Brief.</strong> <code>GET /brief</code> ranks pinned first,
+then by decayed strength, takes the project's facts and five global
+ones, skips faded unpinned ones and stops at 400 tokens
+(<code>:371-396</code>). The SessionStart hook prepends a guide and
+returns it as additional context
+(<code>joebro-plugins bin/joebro-agents:679-685</code>,
+<code>:786-789</code>).</li>
+<li><strong>Correction.</strong> <code>memory_supersede</code> and
+<code>memory_forget</code> post to <code>/&lt;id&gt;/supersede</code>
+and <code>/&lt;id&gt;/archive</code> (<code>:706-715</code>); the app's
+edit of a fact's text is a supersede with the app as author
+(<code>:303-318</code>).</li>
+<li><strong>Maintenance.</strong> <code>nightly</code> runs
+<code>consolidate</code> once a day in the 02:00 to 05:59 window
+(<code>:440-451</code>, <code>:400-437</code>).</li>
+<li><strong>User scope.</strong> Desktop chat injects pinned and
+top-scoring user facts into every turn and extracts after it
+(<code>JoeBro/Backend/jb_chat.py:700</code>, <code>:263-268</code>,
+<code>JoeBro/Backend/jb_assistant.py:260-292</code>); the phone chat
+injects <code>about-me</code> always and matching lines per message
+(<code>JoeBro/Backend/jb_muse.py:240-264</code>).</li>
+<li><strong>Tests.</strong>
+<code>JoeBro/Backend/test_sharedmem.py</code>,
+<code>JoeBro/Backend/test_usermem.py</code>, and one Night Shift case at
+<code>JoeBro/Backend/test_nightshift.py:348</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>shared_facts</code> is the only fact table
+(<code>JoeBro/Backend/jb_sharedmem.py:82-88</code>).
+<code>project</code> holds the key; <code>status</code> is
+<code>active</code>, <code>superseded</code> or <code>archived</code>;
+<code>supersedes</code>, <code>superseded_by</code> and
+<code>merged_from</code> link rows; <code>created</code>,
+<code>updated</code>, <code>last_used</code> and <code>valid_to</code>
+are epoch seconds. <code>jb_usermem</code> adds an <code>extra</code>
+JSON column for the Brain's entity labels
+(<code>JoeBro/Backend/jb_usermem.py:41-47</code>).
+<code>shared_projects</code> maps a key to a name, a remote and the last
+eight checkout paths. <code>shared_log</code> is the event table.
+<code>shared_sessions</code> keeps the ten newest session summaries per
+project, 240 characters each with a credential check, as records that
+are never in a brief or decayed
+(<code>JoeBro/Backend/jb_sharedmem.py:740-772</code>).</p>
+<p><strong>Scopes are values of one column, not separate
+stores.</strong> The README's "one store per project" is a stored key
+applied on reads: <code>_active</code>, <code>search</code>,
+<code>brief</code> and <code>browse</code> all put <code>project</code>
+in the SQL predicate (<code>:235-236</code>, <code>:342-343</code>,
+<code>:384-386</code>, <code>:363-365</code>). <code>global</code> joins
+every project's recall and brief; <code>user</code> is read only as
+itself (<code>_scopes</code>, <code>:333-335</code>).</p>
+<p><strong>Times.</strong> <code>fact_out</code> reports
+<code>valid_from</code> as the row's <code>created</code>
+(<code>:194</code>). <code>valid_to</code> is stamped at supersede or
+archive with the current time and cleared by restore (<code>:278</code>,
+<code>:289</code>, <code>:297</code>). Both are record times.</p>
+<p><strong>Provenance</strong> is five strings the caller sends, clipped
+(<code>_prov</code>, <code>:218-221</code>). When an agent sends its
+harness and host without a model, <code>_fill_provenance</code> copies
+the model and session from the newest live coding-agent row on that host
+(<code>:584-595</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is lexical and in Python. <code>search</code> loads every
+active row of the allowed keys and scores one point per query word found
+in the fact's word set, half a point for a substring match between words
+over three characters. It divides by the query's word count, multiplies
+by <code>0.6 + 0.4 x effective strength</code> and by 0.6 for a
+non-active row, and returns the top <code>limit</code>, 5 by default and
+at most 20 (<code>:338-357</code>). The MCP tool caps it at 10
+(<code>joebro-plugins bin/joebro-agents:868-871</code>). Each recall
+reads the project's and global's rows, bounded by the 150-fact cap per
+key; the only index is on <code>(project, status)</code>
+(<code>:88</code>).</p>
+<p>The brief is the main delivery path and is fixed per session:
+injected once at <code>SessionStart</code>, ranked by strength rather
+than by the task, capped at 400 tokens by a four-characters-per-token
+estimate, with lines over 200 characters cut
+(<code>JoeBro/Backend/jb_sharedmem.py:54-56</code>,
+<code>:376-396</code>). Because the brief does not reinforce, a fact an
+agent reads in every session's brief and never recalls decays like an
+unused one: from 0.5 it falls below 0.3 after about 22 days and below
+0.12 after about 62, when the nightly pass archives it unless a merge
+took it first (<code>:388</code>, <code>:429-433</code>).</p>
+<p>The user scope has its own scorers. Desktop chat's
+<code>_score_memories</code> weights shared words by rarity, doubles
+topic and entity labels and requires two distinctive words or one of
+eight characters, then injects every pinned fact (up to six) plus the
+top three (<code>JoeBro/Backend/jb_memory.py:69-116</code>). The phone
+agent's <code>about-me</code> file is injected whole on every turn,
+fenced as data (<code>JoeBro/Backend/jb_muse.py:240-253</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The supersession rule acts on similarity alone. A copy of
+<code>_words</code> and the thresholds, run outside the tree on example
+sentences, gives these results:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>First fact</th>
+<th>Second fact</th>
+<th>Jaccard</th>
+<th>Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Module 3 owns the billing code.</td>
+<td>Module 4 owns the billing code.</td>
+<td>1.0</td>
+<td>deduped: the second is dropped</td>
+</tr>
+<tr>
+<td>The staging deploy uses the release script in
+scripts/release.sh.</td>
+<td>The production deploy uses the release script in
+scripts/release.sh.</td>
+<td>0.667</td>
+<td>staging fact superseded</td>
+</tr>
+<tr>
+<td>The billing service retries failed charges three times.</td>
+<td>The billing service retries failed webhooks five times.</td>
+<td>0.556</td>
+<td>charges fact superseded</td>
+</tr>
+<tr>
+<td>Tests run with make test against Postgres on port 5432.</td>
+<td>Tests run with make test against Postgres on port 5433.</td>
+<td>0.75</td>
+<td>superseded, as intended</td>
+</tr>
+</tbody>
+</table></div>
+<p>The comment on the digit guard names "module 3" and "module 4" as
+different facts (<code>JoeBro/Backend/jb_sharedmem.py:255</code>).
+Single characters are dropped from the word set before the guard looks,
+so those two have identical sets (<code>:69</code>). The guard also
+applies only to the dedupe branch; supersession needs a compatible
+topic, and <code>memory_remember</code> usually sends none, which counts
+as compatible (<code>:262</code>). The two rows in the middle are
+distinct facts, and the first is retired with no model or person
+consulted.</p>
+<p>Consolidation merges without merging text. Weak facts under 0.3 of
+one topic at Jaccard 0.4 or more are grouped; the strongest keeps its
+text and gains the group's strength, and the rest are archived with a
+pointer to it (<code>:408-428</code>). What the archived ones said that
+the survivor does not is out of recall.</p>
+<p>The user-scope Brain path does the opposite of the shared store's
+rule. A model-extracted fact at Jaccard 0.6 to an active fact on the
+same topic, or whose words are a subset or superset of it,
+<strong>replaces its text in place</strong>, with no superseded row and
+no log entry (<code>JoeBro/Backend/jb_memory.py:141-150</code>,
+<code>JoeBro/Backend/jb_usermem.py:134-141</code>).
+<code>mem_write</code> also sets <code>status='active'</code>, so a
+<code>manage_memory</code> edit or a
+<code>PUT /api/memory/&lt;id&gt;</code> naming an archived id brings it
+back (<code>:140</code>). That path has no credential check:
+<code>_SECRET</code> is used in <code>jb_sharedmem.py</code> and
+<code>_SECRET_RE</code> in <code>jb_muse.py</code>, and neither is
+reached from <code>retain_memory</code> or
+<code>upsert_memory</code>.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Writes are synchronous HTTP calls with no model: a read of the
+project's active rows, a few inserts and a mirror rewrite. A fact is
+recallable when the call returns. The user-scope extraction is one model
+call per desktop chat turn on a background thread, after the reply. The
+nightly pass reads every active row of every project once a day. A
+session's injection is bounded at 400 tokens plus the guide, once, at
+session start; a recall returns five short facts.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent's surface is five MCP tools: <code>memory_recall</code>,
+<code>memory_remember</code> (with <code>scope</code> of
+<code>project</code> or <code>global</code>),
+<code>memory_supersede</code>, <code>memory_forget</code> and
+<code>memory_project_brief</code>
+(<code>joebro-plugins bin/joebro-agents:1198-1208</code>). The model
+never names a project. The tool descriptions ask it to save as soon as
+it learns something durable, and a Stop hook blocks the end of a session
+once, after three or more editing or shell tool calls with no save,
+asking for facts (<code>:793-834</code>).</p>
+<p>The SessionStart hook injects the guide and brief for Claude Code,
+Codex and Antigravity; OpenCode's integration is a separate plugin file
+not read here. <code>joebro-agents memory import --write</code> moves
+Claude Code's learned memory into the store and adds a pointer block to
+CLAUDE.md and AGENTS.md
+(<code>JoeBro/Backend/jb_sharedmem.py:501-506</code>,
+<code>CHANGELOG.md:7</code>).</p>
+<p>The person's surface is the Shared Memory panel in the Mac app:
+browse by project, search, edit (a supersede), pin, archive, restore and
+view a fact's chain and log
+(<code>JoeBro/FeatureModels.swift:154-174</code>). A
+<code>GET /api/shared-memory/review</code> route lists unpinned facts
+below strength 0.2 and has no caller in the Swift tree
+(<code>JoeBro/Backend/jb_sharedmem.py:655-657</code>).</p>
+<p>The phone reaches memory through a second listener, off until
+switched on, that requires a bearer token on every request, compares it
+with <code>hmac.compare_digest</code> and sleeps 0.3 seconds on a
+failure (<code>JoeBro/Backend/jb_mobile.py:165-180</code>,
+<code>JoeBro/Backend/joebro_backend.py:172-182</code>). It binds the
+Tailscale address by default and can bind the Wi-Fi address or all
+interfaces, over plain HTTP
+(<code>JoeBro/Backend/jb_mobile.py:115-128</code>). Its requests are
+classified as the app, so the phone reads and writes every scope;
+<code>lan_denied</code> blocks MCP, plugin, tool, model-endpoint, email
+and calendar connection and secret-preference writes, and nothing under
+<code>/api/shared-memory</code> (<code>:213-230</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-personal-wall-has-a-side-door">The personal wall has a side
+door</h3>
+<p><code>caller_of</code> is the only place the backend distinguishes a
+coding agent from the person, and only <code>jb_sharedmem.route</code>
+calls it (<code>JoeBro/Backend/jb_sharedmem.py:598-613</code>,
+<code>:731</code>). With no <code>JOEBRO_APP_TOKEN</code> in the
+environment, a User-Agent containing <code>CFNetwork</code> or starting
+<code>JoeBro</code> is the app; the test suite asserts exactly that
+(<code>JoeBro/Backend/test_usermem.py:134-136</code>). The Swift app
+starts the backend with its own environment plus
+<code>PYTHONUNBUFFERED</code>, and nothing in the tree sets the token
+(<code>JoeBro/JoeBroApp.swift:36-38</code>). A coding agent with a shell
+can therefore reach the user scope through
+<code>/api/shared-memory</code> by setting a header.</p>
+<p>It does not need to. <code>GET /api/memory</code> returns every
+active non-muse user fact, <code>GET /api/muse</code> and
+<code>/api/muse/&lt;file&gt;</code> the phone's, and
+<code>PUT /api/memory/&lt;id&gt;</code> rewrites one, all without a
+caller check (<code>JoeBro/Backend/joebro_backend.py:422-423</code>,
+<code>:218-222</code>, <code>:999-1000</code>). The main listener has no
+authentication by default; its guard refuses browser requests by
+<code>Origin</code> and <code>Sec-Fetch-Site</code> and checks the
+<code>Host</code> header against DNS rebinding (<code>:155-189</code>).
+The MCP server's own tools never touch those routes, so the README's
+"your personal facts never reach a repo or a coding agent" holds for
+what the tools expose and the mirror writes, and not for an agent that
+can run <code>curl</code> against the loopback port. The SQLite file is
+also readable by the same user.</p>
+<h3 id="correction-does-not-hold">Correction does not hold</h3>
+<p>Every correction is a status on a row, and <code>remember</code>
+compares a new sentence with active rows only
+(<code>JoeBro/Backend/jb_sharedmem.py:251</code>). A fact an agent
+archived as wrong comes back as a new active fact the next time any
+agent, a Night Shift run or an import writes the same words. The phone
+agent's reflection skips a turn that mentions forgetting, which keeps
+that turn's text out and does not stop the next one
+(<code>JoeBro/Backend/jb_muse.py:327</code>).</p>
+<p>Night Shift's facts are written when the run ends and the task enters
+review; rejecting the task discards its worktree and branch and leaves
+the facts (<code>JoeBro/Backend/jb_nightshift.py:436-444</code>,
+<code>:634-636</code>).</p>
+<h3 id="scope-by-id">Scope by id</h3>
+<p>Supersede, archive, pin, edit and DELETE take a fact id and check
+neither the caller's project nor the fact's, only that an agent caller
+is not touching a user fact
+(<code>JoeBro/Backend/jb_sharedmem.py:622-635</code>,
+<code>:678-719</code>). A <code>GET</code> with <code>q</code> and no
+project searches every non-user project (<code>:669-672</code>).
+<code>memory_remember</code> with <code>scope: global</code> writes a
+fact that the next brief of every project on the machine carries
+(<code>:385-386</code>).</p>
+<h3 id="atomicity">Atomicity</h3>
+<p><code>supersede</code> inserts the new row, then updates the old one,
+then logs, as three separate commits (<code>:272-282</code>,
+<code>JoeBro/Backend/jb_core.py:1918-1922</code>). The
+<code>RLock</code> serialises them within the process, and a crash
+between the first two leaves both facts active.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>scope_enforced</code>: earned.</strong>
+<code>project</code> is stored on every fact and is a SQL predicate on
+recall, the brief and browse; the MCP server derives it from its
+checkout with git rather than from a tool argument, and the
+<code>user</code> value is refused or filtered for agent callers on
+every shared-memory route, with populated tests. The limits are above:
+the User-Agent fallback, the Brain and muse routes, unscoped id verbs
+and the unscoped <code>q</code> search.</li>
+<li><strong><code>audit_log</code>: earned.</strong>
+<code>shared_log</code> gets one inserted row from each of remember,
+dedupe, supersede, archive, restore, edit and consolidate, and no
+statement in the tree updates or deletes it
+(<code>JoeBro/Backend/jb_sharedmem.py:99-101</code>). The Brain and muse
+paths write user facts through <code>_put</code>, <code>mem_write</code>
+and <code>mem_pin</code> without it, and the actor field is whatever the
+request said.</li>
+<li><strong><code>negative_eval</code>: earned</strong> on
+<code>test_usermem.py:145-163</code> and
+<code>test_sharedmem.py:158-171</code>, which seed user, global and
+project facts and require user facts absent from agent recall, lists and
+the brief beside a required project or global hit.</li>
+<li><strong><code>trust_state</code>: withheld.</strong> The three
+statuses filter every read, and they are lifecycle values: replaced,
+removed, live. Every write lands <code>active</code>, including a Night
+Shift line and a model's extraction, and no state says "on record, not
+yet believed".</li>
+<li><strong><code>tombstone</code>: withheld.</strong> Archive and
+supersede are keyed on the row id, and the write path's comparison skips
+them, so a retired sentence is stored again.</li>
+<li><strong><code>bitemporal</code>: withheld.</strong>
+<code>valid_from</code> is <code>created</code>, and
+<code>valid_to</code> is the moment of supersession or archive.</li>
+<li><strong><code>human_review</code>: withheld.</strong> Nothing waits
+for a person. The panel edits and archives after the write; the review
+route lists weak facts and has no caller; the Night Shift review is of
+the diff, and its facts are already stored.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The two memory suites are plain <code>unittest</code> against a
+temporary <code>Store</code>, no network and no model.
+<code>test_sharedmem.py</code> covers supersede links and history,
+dedupe and supersede thresholds on one pair each, credential and length
+refusal, decay and pinning, a dry-run and real consolidation, the cap,
+the brief's hard 400-token budget and that reading it does not
+reinforce, import dedupe across CLAUDE.md and AGENTS.md, the opt-in repo
+mirror, and session records. <code>test_usermem.py</code> covers the
+one-time migration, the Brain and muse aliases, and the caller gate.</p>
+<p>The caller-gate tests are the strongest cases in the tree: each
+negative is beside a positive on the same store
+(<code>JoeBro/Backend/test_usermem.py:145-152</code>).
+<code>test_user_scope_never_reaches_projects_but_agent_can_recall_across</code>
+uses <code>all(...)</code> over a search for words no project fact
+contains, which passes on an empty result (<code>:111</code>).</p>
+<p>What is not tested: a distinct fact superseding another (the
+threshold tests use one deliberately similar pair each,
+<code>test_sharedmem.py:58-66</code>); a single-digit difference; an
+archived fact written again; one project's fact absent from another's
+recall; the Brain and muse routes' exposure; any row of
+<code>shared_log</code>. The CHANGELOG reports a 1,460-token CLAUDE.md
+becoming 454 tokens per session "in testing"; the import test asserts
+only that the fixture shrinks by more than 2.5 times and prints its
+numbers, and no committed output records the figure
+(<code>test_sharedmem.py:138-156</code>, <code>CHANGELOG.md:14</code>).
+No paper is cited, no benchmark is committed, and there is no CI
+workflow. I ran none of the 119 test functions.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Derive the scope key from where the agent is, not from what
+it says.</strong> The MCP server computes the project from its own
+working directory and origin remote, and a worktree maps to its main
+checkout, so the model has no argument to get wrong.</li>
+<li><strong>A session brief with a hard token cap that does not count as
+use.</strong> Reading the brief leaves strength alone, so the brief does
+not feed back into what it shows next time. Pair it with a recall path
+that does.</li>
+<li><strong>Supersede by inserting, never by updating.</strong> The old
+row keeps its text, gets <code>valid_to</code> and a forward link, and
+the chain is one query away.</li>
+<li><strong>A Stop-hook nudge counted on real work.</strong> Ask once
+per session, only after editing or shell calls, and only if nothing was
+saved.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Retiring a fact on similarity alone.</strong> Word-set
+Jaccard cannot tell a restatement from a sibling fact about a different
+environment or field; a supersede needs a shared subject that is a key,
+or a person, or the explicit verb.</li>
+<li><strong>A digit guard on a tokenizer that drops single
+characters.</strong> Check the guard against the tokens it will actually
+see.</li>
+<li><strong>A privacy boundary implemented at one router.</strong> If
+the boundary is a scope, put it in the read function every route calls,
+and authenticate the caller rather than read its User-Agent.</li>
+<li><strong>Dedupe against live rows only.</strong> Without a check
+against what was retired, "forget that" lasts until the next write.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer on one Mac who runs several coding agents
+across a few repositories and wants their notes to converge without
+running a model or a server for it. The cost is that the arithmetic, not
+anyone's judgement, decides which of two facts survives, and the
+150-fact cap and 30-day half-life suit a small, active project memory,
+not a long-lived reference. Anyone who needs the personal scope kept
+from agents that hold a shell should not rely on the current boundary.
+Anyone sharing the Mac with other accounts, or a team, is outside the
+design: there is one person, and every agent on the machine is trusted
+with every project.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the Brain and muse routes are meant to be app-only, and
+whether the app is meant to set <code>JOEBRO_APP_TOKEN</code> when it
+starts the backend.</li>
+<li>Whether automatic supersession is meant to fire on an empty topic,
+which is what <code>memory_remember</code> usually sends.</li>
+<li>Whether Night Shift's facts are meant to wait for the review, or be
+archived on reject.</li>
+<li>How the OpenCode plugin and the iPhone app call the memory routes;
+neither was read.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Shared store, routes, caller gate, consolidation, import, mirror:
+<code>JoeBro/Backend/jb_sharedmem.py</code></li>
+<li>User scope and migration: <code>JoeBro/Backend/jb_usermem.py</code>,
+<code>JoeBro/Backend/jb_memory.py</code>,
+<code>JoeBro/Backend/jb_muse.py</code></li>
+<li>Extraction and injection for chat:
+<code>JoeBro/Backend/jb_assistant.py</code>,
+<code>JoeBro/Backend/jb_chat.py</code></li>
+<li>Night Shift and the coding loop:
+<code>JoeBro/Backend/jb_nightshift.py</code>,
+<code>JoeBro/Backend/jb_nightworker.py</code>,
+<code>JoeBro/Backend/jb_coding.py</code></li>
+<li>Server, guard and routes:
+<code>JoeBro/Backend/joebro_backend.py</code>,
+<code>JoeBro/Backend/jb_core.py</code></li>
+<li>Phone listener: <code>JoeBro/Backend/jb_mobile.py</code></li>
+<li>App: <code>JoeBro/JoeBroApp.swift</code>,
+<code>JoeBro/FeatureModels.swift</code>,
+<code>JoeBro/SharedMemoryPanel.swift</code></li>
+<li>Tests: <code>JoeBro/Backend/test_sharedmem.py</code>,
+<code>JoeBro/Backend/test_usermem.py</code>,
+<code>JoeBro/Backend/test_nightshift.py</code></li>
+<li>Outside the tree, joebro-plugins at
+<code class="commit-id" title="9fd43bb3d645bbeeeeb7a1a9811e79ff6769888e">9fd43bb3…</code>:
+<code>bin/joebro-agents</code>,
+<code>claude-code/hooks/hooks.json</code>,
+<code>claude-code/.mcp.json</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Nothing sets the app token.</strong>
+<code>git grep -n -E 'JOEBRO_APP_TOKEN' -- . ':!JoeBro/Backend/test_usermem.py'</code>
+returns <code>JoeBro/Backend/jb_sharedmem.py:600</code> and
+<code>:608</code>, the docstring and the read.</li>
+<li><strong>Only the shared-memory router classifies the
+caller.</strong>
+<code>git grep -n -E 'caller_of' -- . ':!JoeBro/Backend/test_usermem.py'</code>
+returns the definition at <code>jb_sharedmem.py:598</code> and the call
+at <code>:731</code>.</li>
+<li><strong>No caller of the review route in the app.</strong>
+<code>git grep -n -E 'shared-memory/review|/review"' -- JoeBro ':!JoeBro/Backend'</code>
+returns nothing; the control
+<code>git grep -n -E 'shared-memory/sessions' -- JoeBro ':!JoeBro/Backend'</code>
+matches <code>JoeBro/NewCodingAgentSheet.swift:204</code>.</li>
+<li><strong>The log is insert-only.</strong>
+<code>git grep -n -i -E 'DROP TABLE|DELETE FROM shared|UPDATE shared_log' -- .</code>
+returns only the session trim at <code>jb_sharedmem.py:770</code>;
+<code>git grep -n -E 'INSERT INTO shared_log' -- .</code> returns
+<code>:100</code>.</li>
+<li><strong>No other writer bypasses jb_sharedmem except
+jb_usermem.</strong>
+<code>git grep -n -E 'shared_log|shared_facts' -- .</code> outside
+<code>jb_sharedmem.py</code> returns <code>jb_usermem.py</code> and the
+two test files.</li>
+<li><strong>No candidate or verified status.</strong>
+<code>git grep -n -o -E "status='[a-z]+'" -- JoeBro/Backend/jb_sharedmem.py JoeBro/Backend/jb_usermem.py</code>
+returns <code>active</code>, <code>superseded</code> and
+<code>archived</code>.</li>
+<li><strong>No value-keyed refusal.</strong>
+<code>git grep -n -i -E 'tombstone|blocklist|denylist|do_not_remember|never_again' -- .</code>
+returns nothing;
+<code>git grep -n -i -E 'tombstone|archive' -- JoeBro/Backend/jb_sharedmem.py</code>
+matches the docstring, so the pattern can match.</li>
+<li><strong>No credential check on the Brain path.</strong>
+<code>git grep -n -i -E 'secret' -- JoeBro/Backend/jb_memory.py JoeBro/Backend/jb_usermem.py</code>
+returns nothing; the same pattern counts 5 lines in
+<code>jb_sharedmem.py</code>.</li>
+<li><strong>valid_from has no writer.</strong>
+<code>git grep -n -E 'valid_from' -- .</code> returns only
+<code>jb_sharedmem.py:194</code>, the output mapping.</li>
+<li><strong>No submodules, no CI.</strong> <code>.gitmodules</code> is
+absent; <code>git ls-files | grep -i -E 'workflow|\.github'</code>
+returns nothing.</li>
+<li><strong>No paper reference.</strong>
+<code>git grep -n -i -E 'arxiv|bibtex|@article|@misc|doi\.org|zenodo' -- .</code>
+returns one line, <code>JoeBro/Backend/jb_tools.py:56</code>, a
+research-query classifier pattern; <code>CITATION.cff</code> is
+absent.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-28</strong> — <a
+href="https://github.com/joexk1/JoeBro/commit/2f50631bfef6d5922c4cfba6b60e7d8f73a102fc"><code class="commit-id" title="2f50631bfef6d5922c4cfba6b60e7d8f73a102fc">2f50631b…</code></a>.
+First reading, read at the user's request, from a full clone at the head
+of <code>main</code>, read only. The screen could not parse the tree and
+reported nothing scanned, so the surfaces were checked by hand. No
+shell-script build phase in
+<code>JoeBro.xcodeproj/project.pbxproj</code>. One Swift package,
+Sparkle, up to next major from 2.6.0, resolved to 2.9.3 at
+<code>d46d456</code> in <code>Package.resolved</code>, unchanged since
+19 June 2026. No Python requirements or pyproject file;
+<code>scripts/release.sh</code> is a release script;
+<code>Config/Secrets.xcconfig.example</code>;
+<code>Resources/BackdropSkill/SKILL.md</code> read as data. The
+joebro-plugins MCP server and hooks were read through the GitHub API at
+<code>9fd43bb</code>. Nothing was installed, built or run, and the 119
+test functions were not run. Three marks: <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code> (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
