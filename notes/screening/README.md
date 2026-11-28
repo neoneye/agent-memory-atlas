@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 909 of 910 screened at the report's current pin.**
+**Progress: 910 of 911 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 1 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 442 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 407 |
-| Repositories with build-time execution (`EXEC`) | 654 |
+| Repositories with an auto-run surface (`RUNS`) | 443 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 408 |
+| Repositories with build-time execution (`EXEC`) | 655 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 10 |
 | Repositories that could not be screened | 0 |
 
@@ -218,6 +218,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`kagura-memory-cloud`](../../content/systems/kagura-memory-cloud.md) | `.claude-plugin/`, `.claude/settings.json`, `.github/copilot-instructions.md`, `claude-hooks/hooks.json`, `server.json` |
 | [`kairn`](../../content/systems/kairn.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `server.json` |
 | [`kannaka-memory`](../../content/systems/kannaka-memory.md) | `.claude-plugin/` |
+| [`keepfold`](../../content/systems/keepfold.md) | `.claude-plugin/`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/hooks/`, `plugin/hooks/hooks.json`, `server.json` |
 | [`kenfold`](../../content/systems/kenfold.md) | `server.json` |
 | [`khoj`](../../content/systems/khoj.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`kimetsu`](../../content/systems/kimetsu.md) | `.githooks/` |

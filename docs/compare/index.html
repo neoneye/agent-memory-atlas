@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-910, generated from each report's frontmatter —
+911, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-910, generated from each report's frontmatter —
+911, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-910, generated from each report's frontmatter —
+911, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 910, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 911, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-910, generated from each report's frontmatter —
+911, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 910 systems by the seven mechanisms
+filters all 911 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -17028,6 +17028,68 @@ CORS open to any origin; any caller can widen the scope configuration or
 retract another identity's fact; a retraction leaves the episodic source
 searchable and feeds consolidation; CI runs no tests and several scope
 tests exercise copies of the code</td>
+</tr>
+<tr>
+<td><a href="../systems/keepfold/"><code>keepfold</code></a></td>
+<td>A Markdown page of one of roughly twenty kinds (concept, note,
+decision, loop, journal, person, chat, browse day and more) with YAML
+frontmatter, and on the seven me/ claim pages a list line with a
+server-stamped ^c- id, optional (confirmed), (since) and (until) stamps
+and an authorship tier folded from the event log</td>
+<td>A vault folder the person picks, optionally a git repository,
+holding the pages, catalog.yaml, inbox.md and one events JSONL file per
+session under events/YYYY/MM; .keepfold/ holds a SQLite vector store,
+the chat-import state, the browse store, ledgers and caches; the FTS5
+index is in memory, rebuilt per process from a snapshot</td>
+<td>0.7 times cosine over bge-small-en-v1.5 chunks with a 0.62 floor
+plus 0.3 times BM25 scaled to the best hit, weighted down for chats and
+for superseded decisions and archived projects, boosted for recent dated
+pages, optionally reranked by a MiniLM cross-encoder over the top 30,
+then link hops at half weight each; about-me lines reach the model
+through keepfold_prime and a prompt hook, ranked by tier</td>
+<td>Fifteen MCP tools, keepfold_patch and keepfold_add for pages and
+claims; //pref, //fact, //tag and //forget typed in a prompt; a local
+model harvesting verbatim first-person facts from recent chats as
+guesses; importers for chat exports, browser history, Zotero, watched
+folders, Anki, voice memos and PDFs; the app's Review clicks; every
+write through a locked atomic temp-file replace with a secret scan</td>
+<td>A claim is revised or retired into ## Past with an until day and a
+link to its successor, or rejected into ## Not me; near-copies and
+recorded pairs are retired by a tidy pass with undo; forget removes a
+page or line from every store Keepfold owns, redacts events in place and
+returns a receipt naming what it cannot remove, git history and backups
+among it</td>
+<td>One vault per person; me/ pages and sections map to nine scopes, and
+each MCP client's profile, matched on its declared name, decides which
+reach it; private pages never reach an MCP client; a reader role sees
+only pages shared with work; an excluded folder gets no tools</td>
+<td>A stdio MCP server, keepfold mcp, for Claude Desktop, Claude Code,
+Cursor, VS Code, Codex, Gemini CLI and others; Claude Code plugin hooks
+on UserPromptSubmit, SessionStart, PreCompact, SessionEnd and
+PostToolUse; a Keepfold block written into Cursor, VS Code and Codex
+rules files; a desktop app on Windows, macOS and Ubuntu over a
+token-guarded loopback HTTP server</td>
+<td>The app's periodic pass imports browser history and chats, runs the
+fact harvester and the safety net with a local model, sweeps queued
+//forget lines and closes idle sessions; a tidy pass retires near-copies
+and settles recorded pairs; nothing runs without the app or a CLI
+command</td>
+<td>Each claim's tier, typed, legacy, confirmed, agent or exposed, folds
+from server-stamped change events; agent, exposed and relayed lines are
+served labelled (ask), held from other apps and never said as the user;
+lines changed outside Keepfold, older lines of a recorded pair and lines
+holding a command are held until the owner keeps them; a PostToolUse
+hook marks a chat exposed after any web or other MCP tool</td>
+<td>Authorship is stamped by the server and moved only by events, and a
+relayed yes is downgraded unless the user's own words say the line; the
+teaching contract changes only by a click the model cannot make; ## Not
+me stops the harvester re-proposing a rejected line; a forget that
+reaches every store and lists what it could not reach</td>
+<td>A model that starts a reflect session itself can promote its own
+guess to confirmed; a line written into a claim page file folds to
+typed; keepfold_read returns Past, Not me and held lines; the client
+name choosing the scope is self-declared and matched as a substring; a
+forgotten line leaves no tombstone</td>
 </tr>
 <tr>
 <td><a href="../systems/kektordb/"><code>kektordb</code></a></td>
@@ -41395,7 +41457,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>87 of 910:</em> <a
+<p><em>88 of 911:</em> <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -41418,6 +41480,7 @@ href="../systems/goodmemory/"><code>goodmemory</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/hive-mind/"><code>hive-mind</code></a>, <a
 href="../systems/inspeximus/"><code>inspeximus</code></a>, <a
+href="../systems/keepfold/"><code>keepfold</code></a>, <a
 href="../systems/kenfold/"><code>kenfold</code></a>, <a
 href="../systems/kibisis/"><code>kibisis</code></a>, <a
 href="../systems/lokalbot/"><code>lokalbot</code></a>, <a
@@ -41486,7 +41549,7 @@ href="../systems/zeroshot/"><code>zeroshot</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>232 of 910:</em> <a
+<p><em>233 of 911:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a
@@ -41588,6 +41651,7 @@ href="../systems/inspeximus/"><code>inspeximus</code></a>, <a
 href="../systems/invalidate/"><code>invalidate</code></a>, <a
 href="../systems/kage/"><code>kage</code></a>, <a
 href="../systems/kannaka-memory/"><code>kannaka-memory</code></a>, <a
+href="../systems/keepfold/"><code>keepfold</code></a>, <a
 href="../systems/kenfold/"><code>kenfold</code></a>, <a
 href="../systems/kibisis/"><code>kibisis</code></a>, <a
 href="../systems/kimetsu/"><code>kimetsu</code></a>, <a
@@ -41727,7 +41791,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>154 of 910:</em> <a
+<p><em>155 of 911:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -41785,6 +41849,7 @@ href="../systems/inspeximus/"><code>inspeximus</code></a>, <a
 href="../systems/ironrag/"><code>ironrag</code></a>, <a
 href="../systems/janus-graph/"><code>janus-graph</code></a>, <a
 href="../systems/kannaka-memory/"><code>kannaka-memory</code></a>, <a
+href="../systems/keepfold/"><code>keepfold</code></a>, <a
 href="../systems/kibisis/"><code>kibisis</code></a>, <a
 href="../systems/kimetsu/"><code>kimetsu</code></a>, <a
 href="../systems/knowl/"><code>knowl</code></a>, <a
@@ -41892,7 +41957,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>400 of 910:</em> <a
+<p><em>401 of 911:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -42061,6 +42126,7 @@ href="../systems/ironrag/"><code>ironrag</code></a>, <a
 href="../systems/joebro/"><code>joebro</code></a>, <a
 href="../systems/kagura-memory-cloud/"><code>kagura-memory-cloud</code></a>,
 <a href="../systems/katra/"><code>katra</code></a>, <a
+href="../systems/keepfold/"><code>keepfold</code></a>, <a
 href="../systems/kenfold/"><code>kenfold</code></a>, <a
 href="../systems/khoj/"><code>khoj</code></a>, <a
 href="../systems/kibisis/"><code>kibisis</code></a>, <a
@@ -42312,7 +42378,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>311 of 910:</em> <a
+<p><em>312 of 911:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/aelfrice/"><code>aelfrice</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
@@ -42449,7 +42515,8 @@ href="../systems/joebro/"><code>joebro</code></a>, <a
 href="../systems/jumbo/"><code>jumbo</code></a>, <a
 href="../systems/kaeru/"><code>kaeru</code></a>, <a
 href="../systems/kagura-memory-cloud/"><code>kagura-memory-cloud</code></a>,
-<a href="../systems/ken/"><code>ken</code></a>, <a
+<a href="../systems/keepfold/"><code>keepfold</code></a>, <a
+href="../systems/ken/"><code>ken</code></a>, <a
 href="../systems/kibisis/"><code>kibisis</code></a>, <a
 href="../systems/kimetsu/"><code>kimetsu</code></a>, <a
 href="../systems/kirocrew/"><code>kirocrew</code></a>, <a
@@ -42637,7 +42704,7 @@ href="../systems/zizkadb/"><code>zizkadb</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>109 of 910:</em> <a
+<p><em>110 of 911:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agentic-graphrag/"><code>agentic-graphrag</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
@@ -42675,6 +42742,7 @@ href="../systems/huqan/"><code>huqan</code></a>, <a
 href="../systems/intaris/"><code>intaris</code></a>, <a
 href="../systems/invalidate/"><code>invalidate</code></a>, <a
 href="../systems/kage/"><code>kage</code></a>, <a
+href="../systems/keepfold/"><code>keepfold</code></a>, <a
 href="../systems/kenfold/"><code>kenfold</code></a>, <a
 href="../systems/khabeer/"><code>khabeer</code></a>, <a
 href="../systems/kibisis/"><code>kibisis</code></a>, <a
@@ -42750,7 +42818,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>595 of 910:</em> <a
+<p><em>596 of 911:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/active-memory-index/"><code>active-memory-index</code></a>,
@@ -43000,6 +43068,7 @@ href="../systems/kage/"><code>kage</code></a>, <a
 href="../systems/kagura-memory-cloud/"><code>kagura-memory-cloud</code></a>,
 <a href="../systems/kairn/"><code>kairn</code></a>, <a
 href="../systems/kannaka-memory/"><code>kannaka-memory</code></a>, <a
+href="../systems/keepfold/"><code>keepfold</code></a>, <a
 href="../systems/kektordb/"><code>kektordb</code></a>, <a
 href="../systems/ken/"><code>ken</code></a>, <a
 href="../systems/kenfold/"><code>kenfold</code></a>, <a
@@ -43384,8 +43453,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-595 repositories of
-910 assert that particular material must
+596 repositories of
+911 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -43458,7 +43527,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 910 is the real figure for the second kind, and
+of 911 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

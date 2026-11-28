@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 910 reports.**
+**This page covers all 911 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -8423,3 +8423,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: GPL-3.0; 24,145 lines of Python backend and 23,587 of Swift in 133 commits from 16 June to 24 November 2026, 106 of them in November and nearly all by one author; Shared Memory first committed on 12 November 2026; 119 unittest functions, none run here, and no CI. Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
 - Study when: several coding agents on one machine should converge on one project memory without a model or a server, and you want the scope derived from the checkout.
 - Do not copy when: two facts that share a subject must both survive, a forgotten fact must stay forgotten, or the personal scope must be kept from an agent that holds a shell.
+
+### [`keepfold`](../systems/keepfold/)
+- Best idea: **authorship is a server-stamped tier, not a flag.** Every claim write records whether the model guessed, guessed after reading outside text, relayed a yes, or the person clicked; a relayed yes from 17 November is served `(ask)` unless the chat's logged user turns hold the line, and an `agent` guess is held from every AI app but the one that wrote it.
+- Second idea: a rejection list in the page itself. `## Not me` keeps the rejected line's text, the inferred write path and the proposal path both refuse a normalised match, and the fact harvester writes through that path; the teaching contract changes only through an Approve on the app's token-guarded loopback server, which no MCP tool reaches.
+- Biggest risk: **the model can vouch for its own guess.** `keepfold_start(mode="reflect")` is a model argument, and a reconfirm yes in that session promotes an `agent` line to `confirmed`, act-grade and served to every app; the committed test performs that sequence from one client and treats it as the user's reflect.
+- Second risk: provenance assumed from absence, and a read path without the filter. A line written into a claim page file with no event folds to `typed`, the person's own, on five of the seven pages; `keepfold_read` returns Past, Not me and held lines; the scope profile is chosen by a self-declared client name matched as a substring; forget leaves no tombstone.
+- Most reusable component: `tiers`, `late_relay` and `act_grade` in `src/keepfold/claims.py:507-576` with `served_claims`, `held` and `cross_app` in `src/keepfold/prime.py:180-239`.
+- Maturity impression: MIT; 58,312 lines of Python in 887 commits from 18 to 28 November 2026, nearly all by one author; called Cortex before 0.6.2; 2,891 pytest functions run in CI, none run here. Seven marks: `tombstone`, `trust_state`, `bitemporal`, `scope_enforced`, `audit_log`, `human_review`, `negative_eval`.
+- Study when: several AI apps on one machine share one person's memory and a model's guess, a relayed yes and the person's own word must stay distinct all the way to the prompt.
+- Do not copy when: agents write files in the vault, a promotion must require the person, or apps must be kept from each other's slice against a client that misstates its name.

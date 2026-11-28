@@ -470,6 +470,8 @@ evidence-derived ladder this page argues for, without the field, so no
 
 [Eidetic](../../systems/eidetic/) derives a status from declarations and spends it only as rank. `status` is an explicit frontmatter value or `superseded` when another card's qualifying `supersedes:` names this one, recomputed on every reindex with the author's own value kept in a separate column (`bin/index_impl.py:670-686`, `:1207-1326`). Every serving read multiplies it in, 0.35 for superseded and 0.25 for archived, and caps the hit's confidence label at medium, which is never low enough to suppress a result (`bin/search_impl.py:21-31`, `:556-564`). The comment on the dark confidence fold states the intent: *"a card is never made unretrievable by the lifecycle"* (`bin/confidence.py:15`). No `trust_state` mark follows.
 
+[Keepfold](../../systems/keepfold/) puts the state on authorship and lets the model reach the top of it. Each claim write stamps a server-computed tier on its change event, `agent` for an unasked line, `exposed` after the chat read outside text, `confirmed` with how the yes arrived, and the latest event per claim decides (`src/keepfold/claims.py:507-576`, `src/keepfold/mcp_server.py:3471-3481`). An `agent`, `exposed` or relayed line is served `(ask)`, never pinned or said as the person, and held from every app but its writer (`src/keepfold/prime.py:180-239`). A yes in a reflect session promotes a guess to `confirmed`, and the mode is an argument of `keepfold_start`, so the writing model can start the reflect and log the yes itself (`mcp_server.py:2465-2481`, `:974-986`). A line with no event folds to `typed`, the person's own.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.

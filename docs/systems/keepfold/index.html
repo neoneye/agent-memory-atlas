@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first memory of Markdown
+pages and a JSONL event log that Claude, Cursor, Codex and other AI apps
+share over MCP.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Keepfold — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first memory of
+Markdown pages and a JSONL event log that Claude, Cursor, Codex and
+other AI apps share over MCP.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Keepfold — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first memory of
+Markdown pages and a JSONL event log that Claude, Cursor, Codex and
+other AI apps share over MCP.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Keepfold — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Keepfold",
+      "description": "A local-first memory of Markdown pages and a JSONL event log that Claude, Cursor, Codex and other AI apps share over MCP.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One memory for every AI app, where each
+line about the person says who vouched for it, and the model can vouch
+for its own</p>
+          <h1>Keepfold</h1>
+          <p class="document-deck">A local-first memory of Markdown
+pages and a JSONL event log that Claude, Cursor, Codex and other AI apps
+share over MCP.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/alenissacsam-2/keepfold">
+              <span>Source</span>
+              <strong>alenissacsam-2/keepfold</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/alenissacsam-2/keepfold/commit/a54acc5dcdb65ccb1121dcb148644c392b34b891" title="a54acc5dcdb65ccb1121dcb148644c392b34b891">
+              <span>Analyzed revision</span>
+              <code>a54acc5d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-11-28</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/alenissacsam-2--keepfold" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>alenissacsam-2--keepfold</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT
+in LICENSE and pyproject.toml; the bundled d3 carries its own licence in
+src/keepfold/assets/LICENSE-d3.txt</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>58,312
+lines of Python in 113 files under src/keepfold, with 12,548 lines of
+the app's HTML, CSS and JavaScript beside them; 65,451 lines in 214 test
+files; the memory is claims.py (650), review.py (1,181), prime.py (630),
+forget.py (720), events.py and mcp_server.py (4,464)</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>887
+commits from 18 November to 28 November 2026, 886 under one name and one
+from a second contributor; 18 tags, the latest v0.7.0; called Cortex
+before 0.6.2 on 26 November, when the repository was renamed from
+cortex-learner</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>2,891
+pytest functions in 214 files, with an e2e directory against a fake
+Ollama; CI runs ruff and the suite without the slow marker on every push
+to main; none run for this reading</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Keepfold is a local-first memory that several AI apps share: Claude
+Desktop, Claude Code, Cursor, VS Code, Codex and Gemini CLI read it and
+add to it over one MCP server. It started as a learner model for
+students, which is why concepts, grades and a teaching contract sit
+beside notes, decisions and imported chats. Everything is plain Markdown
+in a folder the person picks, plus an append-only JSONL event log.
+Notable: every line about the person carries a server-stamped authorship
+tier. A model's guess, a guess written after the chat read outside text,
+a yes the model relayed and a click the person made are four different
+things, and each is served differently. Weak: the most trusted tier a
+model can reach on its own is one level too high.</p>
+<p>A <strong>claim</strong> is one list line on one of seven
+<code>me/</code> pages: personality, preferences, goals, profile, voice,
+core and setup. It has an id like <code>^c-ab2cd</code> and optional
+stamps. A model writes one with <code>keepfold_patch</code>; on most
+pages it lands at once at tier <code>agent</code> and is served with an
+<code>(ask)</code> label. Lines bound for the pages Keepfold copies into
+other apps' rules files, <code>me/core</code> and <code>me/setup</code>,
+wait in <code>inbox.md</code> instead, as do the portrait and the
+teaching contract. Retiring a line moves it under <code>## Past</code>
+with an <code>until</code> day. Rejecting one moves it under
+<code>## Not me</code>, and later proposals of the same normalised text
+are refused.</p>
+<p>The repository is eleven days old at the pin, with 887 commits and
+2,891 test functions. The suite is unusually specific about provenance:
+one test proves that a <code>confirm: clicked</code> sent by the model
+is ignored, and another that a contract rule sent twice with
+<code>user_confirmed=true</code> still waits. The gap is beside those
+tests. <code>keepfold_start(mode="reflect")</code> is an argument the
+model passes, and a reconfirm yes inside that session promotes an
+<code>agent</code> line to <code>confirmed</code> with no check that a
+person asked for the reflect.</p>
+<p>All seven marks are present, each with a stated limit (<a
+href="#9-reliability-safety-and-trust">section 9</a>).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A claim line is text plus an id, and its standing comes from two
+places.</p>
+<p><strong>The section it sits under</strong> is stored in the page.
+<code>parse</code> gives each line the status <code>live</code>,
+<code>past</code> or <code>not_me</code> from its <code>## </code>
+heading (<code>src/keepfold/claims.py:21</code>, <code>:324-343</code>).
+Only live lines reach a model through the serving paths; Past and Not me
+lines stay on the page as history and as the rejection list.</p>
+<p><strong>Its authorship tier</strong> is stored in the event log. Each
+claim write appends a change event stamped by the server with
+<code>tier</code> and, for a yes, <code>confirm</code>
+(<code>src/keepfold/mcp_server.py:3471-3481</code>). <code>tiers</code>
+replays the events and takes the latest per claim id
+(<code>claims.py:518-576</code>).</p>
+<ul>
+<li><code>typed</code> and <code>legacy</code>: the line has no event
+writing it, so the person typed it into the file, now or before the
+baseline was taken.</li>
+<li><code>confirmed</code>, with a <code>confirm</code> of
+<code>clicked</code> (Keepfold's own elicitation dialog or the app),
+<code>reflected</code> (a yes in a reflect session), <code>tagged</code>
+(a <code>//pref</code> the person typed), or <code>relayed</code> (the
+model said the user agreed).</li>
+<li><code>agent</code>: the model wrote it unasked.</li>
+<li><code>exposed</code>: written in a chat that had read outside text,
+a web page, a raw source or another MCP tool's output, which a
+PostToolUse hook marks.</li>
+</ul>
+<p>A line is <strong>act-grade</strong>, allowed to be said as the
+person, when it is <code>typed</code> or <code>confirmed</code> and not
+labelled <code>(ask)</code> (<code>claims.py:23</code>,
+<code>:513-515</code>). A <code>confirmed</code> line whose yes was
+relayed on or after 17 November 2026 is a late relay and gets
+<code>(ask)</code> (<code>:26</code>, <code>:507-510</code>).
+<code>served_claims</code> labels agent, exposed and late-relayed lines
+<code>(ask)</code> at half weight
+(<code>src/keepfold/prime.py:180-190</code>).</p>
+<p>On top of the tier, <code>held</code> mutes three kinds of line on
+every serving path until a person keeps them in the app: the older line
+of a recorded update pair, a line that holds a command to run, and a
+line on <code>me/core</code>, <code>me/setup</code> or the contract that
+Keepfold did not write (<code>prime.py:193-215</code>).
+<code>cross_app</code> holds an <code>agent</code> or
+<code>exposed</code> line from every AI app except the one whose session
+wrote it (<code>:223-239</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a claim line's path from a model's write to what other apps are served; the tier comes from server-stamped events, the section from the page, and the reflect promotion is the one step the writing model can take itself</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a claim line&#39;s path from a model&#39;s write to what other apps are served; the tier comes from server-stamped events, the section from the page, and the reflect promotion is the one step the writing model can take itself
+flowchart TD
+  W[&quot;keepfold_patch&lt;br/&gt;append_to_section&quot;] --&gt; CHK{&quot;instruction-shaped,&lt;br/&gt;a command or a secret?&quot;}
+  CHK --&gt;|&quot;yes&quot;| REF[&quot;refused,&lt;br/&gt;nothing written&quot;]
+  CHK --&gt;|&quot;no&quot;| NM{&quot;normalised text&lt;br/&gt;under ## Not me?&quot;}
+  NM --&gt;|&quot;yes&quot;| REF2[&quot;refused: do not&lt;br/&gt;propose it again&quot;]
+  NM --&gt;|&quot;no&quot;| PG{&quot;which page?&quot;}
+  PG --&gt;|&quot;teaching contract,&lt;br/&gt;portrait, core, setup&quot;| INBOX[&quot;proposal in inbox.md:&lt;br/&gt;served nowhere&quot;]
+  INBOX --&gt; APP[&quot;Approve in the app:&lt;br/&gt;loopback HTTP, per-launch&lt;br/&gt;token, app_clicks set&lt;br/&gt;in-process&quot;]
+  APP --&gt; CL[&quot;confirmed, clicked:&lt;br/&gt;act-grade, pinned to core&lt;br/&gt;and rules files&quot;]
+  PG --&gt;|&quot;other claim page&quot;| AG[&quot;written now at tier&lt;br/&gt;agent, or exposed after&lt;br/&gt;outside text&quot;]
+  AG --&gt; ASK[&quot;served (ask), half weight;&lt;br/&gt;held from other apps;&lt;br/&gt;never said as the user&quot;]
+  ASK --&gt;|&quot;Still true clicked&lt;br/&gt;in the app&quot;| CL
+  ASK --&gt;|&quot;keepfold_start reflect&lt;br/&gt;+ reconfirm yes,&lt;br/&gt;both model calls&quot;| RFX[&quot;confirmed, reflected:&lt;br/&gt;act-grade&quot;]
+  CL --&gt; RET[&quot;retire or revise:&lt;br/&gt;## Past (until DAY)&quot;]
+  RFX --&gt; RET
+  ASK --&gt;|&quot;reject&quot;| NOT[&quot;## Not me (rejected DAY)&quot;]
+  NOT -.-&gt;|&quot;read by the next write&quot;| NM</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Keepfold is one Python 3.12 package with three front ends over one
+vault:</p>
+<ul>
+<li><strong><code>keepfold mcp</code></strong>, a stdio MCP server built
+on the <code>mcp</code> 2.x SDK, that registers fifteen
+<code>keepfold_*</code> methods as tools, plus
+<code>keepfold_browse_search</code> under <code>--private</code> for
+local models (<code>mcp_server.py:3984</code>,
+<code>:4186-4227</code>);</li>
+<li><strong>the desktop app</strong>, a standard-library HTTP server on
+<code>127.0.0.1</code> with one page, a per-launch token and a webview
+on Windows (<code>src/keepfold/app/</code>);</li>
+<li><strong>the CLI</strong>, a Typer app of several dozen commands
+(<code>src/keepfold/cli.py</code>).</li>
+</ul>
+<p>Each process builds its own in-memory SQLite FTS5 index over the
+vault at start, off the MCP handshake's path, from a snapshot when one
+is current (<code>src/keepfold/index.py:276</code>). Vectors live in
+<code>.keepfold/vectors.db</code>; the embedder and the reranker are
+fastembed ONNX models that only <code>keepfold model download</code>
+fetches, so a tool call never reaches the network for them.</p>
+<p>Every vault mutation goes through <code>keepfold.vault</code>, which
+takes a file lock, writes a temp file and <code>os.replace</code>s it
+with retries, and scans for secrets first
+(<code>src/keepfold/vault.py:740-757</code> for the field writer). A
+session's close can commit the vault to git when the vault is a
+repository.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The installer puts the app and the <code>keepfold</code> command on
+the machine; the app connects each AI app in one click by writing its
+MCP config, with a backup, and for Claude Code installs the plugin's
+hooks. The person never runs a server by hand. The cost is process
+count: each AI app spawns its own <code>keepfold mcp</code>, each with
+its own index, and they share the vault through the file lock, with
+writes waiting up to five seconds.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>A model saves a preference.</strong>
+<code>keepfold_patch(id="me/preferences", op="append_to_section", target="Coding", text="Prefers tabs")</code>:</p>
+<ol type="1">
+<li>A <code>&lt;private&gt;</code> span is dropped and the text is
+checked for instruction-shaped phrases, hidden characters, credential
+paths and commands to run (<code>mcp_server.py:2933</code>,
+<code>:2951-2952</code>; <code>claims.py:173-248</code>).</li>
+<li>If the chat read outside text, a write to the contract or profile is
+refused (<code>mcp_server.py:2955-2960</code>).</li>
+<li>A relayed <code>user_confirmed</code> is downgraded unless one
+logged user turn in this chat holds at least 60% of the line's content
+words (<code>:2962-2981</code>, <code>:845-869</code>).</li>
+<li>The text is compared with <code>## Not me</code> and refused on a
+match (<code>:3068-3072</code>).</li>
+<li><code>_settle_new</code> retires near-copies or the line this one
+updates, and the line is appended with a fresh id under the vault lock
+(<code>:3074-3099</code>).</li>
+<li>The change event records tool, page, op, target, claim id and tier
+(<code>:3122-3137</code>).</li>
+</ol>
+<p><strong>A rule for the teaching contract.</strong> The same call with
+<code>id="me/teaching-contract"</code> reaches
+<code>contract and not self.app_clicks</code>, which refuses anything
+but an append and forces <code>user_confirmed</code> to false
+(<code>:2987-2993</code>). The propose branch writes it to
+<code>inbox.md</code> under <code>## About me (unconfirmed)</code> and
+returns <code>queued: true</code> (<code>:3019-3058</code>). The app's
+<code>review_approve</code> replays the same <code>keepfold_patch</code>
+call with <code>user_confirmed=True</code> on an instance whose
+<code>app_clicks</code> it set itself
+(<code>src/keepfold/app/server.py:1036-1053</code>,
+<code>:1109-1129</code>).</p>
+<p><strong>A prompt in Claude Code.</strong> The UserPromptSubmit hook
+runs <code>keepfold prime-hook</code>, which builds the prime from the
+vault and the event log without importing the MCP SDK, the embedder or
+the index (<code>src/keepfold/prime.py:1-10</code>,
+<code>:562-630</code>). It serves the pinned core, the profile, the
+contract's core, preferences ranked by the prompt, and the related
+pages, under a 2,000-character cap, all wrapped in
+<code>&lt;untrusted_note&gt;</code>.</p>
+<p><strong>A forget.</strong>
+<code>keepfold forget me/preferences^c-ab2cd</code> drops the line and
+the Past lines that led to it, sweeps every event, cache, kept
+transcript and Keepfold page for its text, prunes vectors, runs
+<code>VACUUM</code> on the SQLite stores, rewrites the AI apps' rules
+files, and prints a receipt
+(<code>src/keepfold/forget.py:133-153</code>, <code>:344-388</code>,
+<code>:589-640</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The vault holds Markdown pages under one folder per kind, with YAML
+frontmatter; <code>catalog.yaml</code> holds the concept tree;
+<code>inbox.md</code> holds proposals; <code>Today.md</code>,
+<code>index.md</code> and <code>log.md</code> are pages Keepfold writes
+itself. The memory this report reads is the seven claim pages in
+<code>me/</code> (<code>claims.py:20</code>) and the event log.</p>
+<p>A claim page is ordinary Markdown:</p>
+<pre class="text"><code>## Coding
+- Neovim (confirmed 2026-11-28) (since 2026-11-28) ^c-q3kxa
+## Past
+- Vim (confirmed 2026-01-01) (until 2026-11-28 → ^c-q3kxa) ^c-7mbzd
+## Not me
+- Night owl (rejected 2026-11-28)</code></pre>
+<p>The id is server-written: <code>add_ids</code> strips any id the
+caller wrote and mints one from page, text and day
+(<code>claims.py:311-360</code>). A line without an id, typed by hand,
+gets a derived one on parse.</p>
+<p>An event is one JSON line in
+<code>events/YYYY/MM/&lt;session&gt;.jsonl</code> with server-stamped
+<code>id</code>, <code>ts</code>, <code>day</code>,
+<code>session</code>, <code>kind</code>, <code>mode</code>,
+<code>source</code>, <code>predicted_p</code> and <code>grader</code>,
+which tool input can never set
+(<code>src/keepfold/events.py:38-39</code>). Ten kinds exist; claim
+writes are <code>change</code> events and confirmations are
+<code>log</code> events of kind <code>reconfirm</code>
+(<code>:23-24</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There are two read surfaces, and they treat claims differently.</p>
+<p><strong>Search over pages.</strong> <code>keepfold_recall</code>
+scores 0.7 × cosine over <code>BAAI/bge-small-en-v1.5</code> chunks,
+with a 0.62 floor, plus 0.3 × BM25 scaled to the best hit; a keyword hit
+under the cosine floor must cover half the query's terms
+(<code>src/keepfold/semantic.py:57</code>, <code>:72</code>,
+<code>:79-80</code>, <code>:1125-1145</code>). Weights then multiply in:
+0.6 for imported chats, 0.5 for a superseded or retired decision, an
+archived project or a dropped loop, and a recency boost of up to 12%, or
+30% when the query asks how things stand now (<code>:84-98</code>). A
+MiniLM cross-encoder reranks the top 30 when installed, and link hops
+add neighbours at half weight per hop (<code>:58-59</code>,
+<code>:82</code>). Superseded decisions are ranked down here, not
+removed.</p>
+<p><strong>Serving about-me lines.</strong> <code>keepfold_prime</code>,
+<code>keepfold_context</code>, the prompt hooks, the packs and the rules
+files read claims through <code>claims.tiers</code>, keep only live
+lines not past their own <code>until</code> day, drop <code>held</code>
+and <code>cross_app</code> lines, and label the rest by tier
+(<code>prime.py:180-239</code>, <code>:457-476</code>,
+<code>:581</code>). <code>keepfold_as_me</code>, which drafts text in
+the person's voice, uses only act-grade lines and counts the rest as
+unconfirmed (<code>mcp_server.py:1930-1945</code>).</p>
+<p><strong>What the second path does not cover.</strong> The claim pages
+are also pages, and for a client whose profile is <code>all</code> they
+are in the index. <code>Index.read</code> returns a page's body sliced
+by offset or section with no reference to claim status
+(<code>src/keepfold/index.py:656-700</code>), so
+<code>keepfold_read me/preferences</code> returns the Past and Not me
+lines and any held line. They arrive under their headings and inside
+<code>&lt;untrusted_note&gt;</code>, so a careful model can tell them
+apart; nothing makes it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writers, by how far each is trusted:</p>
+<ul>
+<li><strong>The person in the app.</strong> Approve, Dismiss, Still
+true, Retire and Keep run through <code>_click</code>, which sets
+<code>app_clicks</code> on its own instance, so each write is stamped
+<code>confirm: clicked</code>.</li>
+<li><strong>The person in a prompt.</strong> <code>//pref</code>,
+<code>//fact</code>, <code>//tag</code> and <code>//forget</code> are
+parsed by the prompt hook and written at tier <code>tagged</code>; a
+<code>//forget</code> retires the line and queues a sweep the app runs
+later (<code>src/keepfold/tags.py:1-30</code>).</li>
+<li><strong>The model.</strong> <code>keepfold_patch</code> and
+<code>keepfold_add</code>, with the checks in section 4; its unasked
+lines are <code>agent</code>, or <code>exposed</code> after outside
+text.</li>
+<li><strong>The fact harvester.</strong> A loaded local model names up
+to three facts per recent public chat; code keeps one only if its quote
+is verbatim, first person and not a question, and saves it through the
+same inferred path, in a <code>harvest</code> session the app can undo
+as one (<code>src/keepfold/fact_harvest.py:57</code>,
+<code>:445</code>). A producer whose passes are mostly undone pauses
+itself.</li>
+<li><strong>Importers.</strong> Chat exports, browser history behind a
+privacy filter, Zotero, watched folders, Anki and voice memos write
+pages, not claims.</li>
+</ul>
+<p>A write's change event is appended <strong>after</strong> the write,
+and <code>_persist</code> swallows a failure to append with a warning so
+that the write it records never fails
+(<code>src/keepfold/session.py:247-258</code>). A crash or a full disk
+between the two leaves a line with no event, which then folds to
+<code>typed</code>.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing runs a cloud model unless the person turns one on. Embedding
+is local ONNX on CPU, budgeted at about a second per recall for missing
+chunks (<code>semantic.py:69-71</code>); the reranker and embedder
+unload after ten idle minutes (<code>:194</code>). The harvester and the
+safety net need a local model in Ollama or LM Studio and run in the
+app's periodic pass, or right after a local Chat turn under a time
+budget.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The Claude Code plugin registers <code>keepfold mcp</code> and five
+hooks (<code>plugin/hooks/hooks.json</code>). UserPromptSubmit serves
+the prime once per chat; SessionStart serves it again after compaction,
+resume or clear, and PreCompact asks for durable items to be recorded
+first. SessionEnd closes Keepfold sessions whose server has exited.
+PostToolUse runs <code>keepfold taint</code> after WebFetch, WebSearch
+or any MCP tool not on an allowlist, which writes a marker the server
+reads as exposure.</p>
+<p>Codex and Gemini CLI get the prime through their own hook entries,
+and Cursor, VS Code and Codex's <code>AGENTS.md</code> get a Keepfold
+block in their rules files holding the approved core, rewritten by the
+app when it changes. Every other MCP client gets the context only by
+calling tools.</p>
+<p>Which pages a client sees depends on its profile, chosen by the
+client name the MCP handshake declares
+(<code>mcp_server.py:673-676</code>). The defaults give names containing
+<code>claude</code> or <code>lmstudio</code> everything, the coding apps
+the core, coding, projects and environment scopes, and any other name
+the core alone (<code>src/keepfold/profiles.py:21-41</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<h3 id="the-model-can-vouch-for-its-own-guess">The model can vouch for
+its own guess</h3>
+<p><code>_log_reconfirm</code> stamps <code>promote: true</code> on a
+yes when the session's mode is <code>reflect</code> and the chat is not
+exposed (<code>mcp_server.py:2465-2481</code>). The docstring calls it
+"a reflect the user started". The mode is set by
+<code>keepfold_start(mode=...)</code>, an ordinary argument on a tool
+the model holds (<code>:974-986</code>), and nothing checks who chose
+it. A model that saved "Prefers tables over prose" unasked can end the
+session, start a reflect, and log a reconfirm yes on its own line in
+three calls.</p>
+<p><code>tiers</code> then folds the line to <code>confirmed</code>,
+<code>reflected</code>, which is not a late relay
+(<code>claims.py:507-510</code>, <code>:543-548</code>). The line is
+served plain, is act-grade for <code>keepfold_as_me</code>, and leaves
+<code>cross_app</code>, so other apps get it too. The committed test
+performs exactly this sequence from one MCP client and asserts the
+promotion (<code>tests/test_claims.py:282-310</code>). The defence it
+does have is real: a reflect in an exposed chat does not promote.</p>
+<h3 id="what-the-file-system-can-write">What the file system can
+write</h3>
+<p>A line with no change event folds to <code>typed</code>, the person's
+own and act-grade (<code>claims.py:568-571</code>). That is right for a
+person editing the page in Obsidian, and it is also what happens when
+any agent with file access appends to <code>me/preferences.md</code>
+directly. The outside-edit guard catches this only on
+<code>me/core</code>, <code>me/setup</code> and the contract
+(<code>src/keepfold/review.py:625</code>). Since Claude Code and Codex
+edit files as a matter of course, the other five claim pages accept
+unprovenanced lines at the top tier.</p>
+<h3 id="the-scope-is-a-declared-name">The scope is a declared name</h3>
+<p>The profile is matched as a substring of a normalised client name,
+and the first match wins (<code>profiles.py:88-92</code>). The name
+comes from the MCP <code>initialize</code> request, or from a request's
+<code>_meta</code> envelope in stateless MCP. Any client can claim to be
+<code>claude</code> and get every non-private page. An unknown name
+failing closed to the core is the right default. What the profile
+protects against is one well-behaved app reading another's slice, not a
+hostile one.</p>
+<h3 id="forget-and-the-tombstone-are-different-verbs">Forget and the
+tombstone are different verbs</h3>
+<p>A forget is the most thorough in its family: page, Past chain, every
+event string, caches, transcripts, vectors, compacted SQLite, rules
+files, and a receipt that names git history, backups, raw exports, sync
+folders and the AI apps' own copies as left behind
+(<code>forget.py:1-43</code>, <code>:600-640</code>). It writes no Not
+me line, and it deletes the dismiss and line hashes of what it forgot
+(<code>:146-150</code>). The harvester's next pass over a new chat that
+says the same thing will save it again. Reject keeps the text and blocks
+it, and forget erases the text and blocks nothing; nothing does
+both.</p>
+<h3 id="marks">Marks</h3>
+<ul>
+<li><strong><code>tombstone</code>: earned.</strong>
+<code>## Not me</code> holds the rejected line's text, keyed by
+<code>norm</code>, and the inferred write path and the proposal path
+both refuse a match (<code>mcp_server.py:3030-3036</code>,
+<code>:3068-3072</code>). The harvester writes through that path. The
+key is exact after folding, a confirmed write passes it, and forget
+writes none.</li>
+<li><strong><code>trust_state</code>: earned.</strong> The tier is a
+stored, server-stamped field on each claim's events, moved only by later
+events; <code>agent</code> and <code>exposed</code> keep a line from
+being said as the person and from other apps, and Past and Not me keep
+it from every serving path. The reflect promotion is the defect
+above.</li>
+<li><strong><code>bitemporal</code>: earned, narrowly.</strong> A Past
+line's <code>until</code> is the day the fact stopped holding, which the
+caller may set to any past day, while the event keeps the record time; a
+replacement's <code>since</code> is the day the new fact started, kept
+across restatements; and the change timeline reads the stamps rather
+than the event times. No read asks what held on a day.</li>
+<li><strong><code>scope_enforced</code>: earned.</strong> Pages and
+sections map to stored scopes and <code>scope:</code> fields,
+<code>private:</code> and <code>share:</code> are stored keys, and the
+index every read uses withholds what the client's profile lacks
+(<code>mcp_server.py:608-646</code>). The client name choosing the
+profile is self-declared.</li>
+<li><strong><code>audit_log</code>: earned.</strong> The event log is
+append-only for every writer but forget, which redacts in place, keeping
+every row and its ids and saying so in the receipt. Change events carry
+no text, can be lost when the append fails, and forgets outside the
+queued sweep write none.</li>
+<li><strong><code>human_review</code>: earned on the teaching
+contract.</strong> The proposal waits in <code>inbox.md</code>, which
+nothing serves; only <code>review_approve</code> on the app's
+token-guarded loopback server applies it, with <code>app_clicks</code>
+set in-process; no MCP tool approves; a repeated
+<code>user_confirmed=true</code> still waits
+(<code>tests/test_review.py:110-128</code>). The portrait and core
+proposals can be written directly on the model's word, and the token
+file is readable by any process of the user's, the general-shell
+case.</li>
+<li><strong><code>negative_eval</code>: earned</strong> on four
+committed cases that require a retired, rejected, out-of-scope or other
+app's line absent beside a required present line (<a
+href="#10-tests-evals-and-benchmarks">section 10</a>).</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is pytest with <code>anyio</code> and an in-process MCP
+<code>Client</code>, run in CI with <code>-m "not slow"</code> on every
+push to main. A fake embedder and a fake Ollama replace the models, so
+no network is needed.</p>
+<p>The provenance cases are the strongest in the tree:</p>
+<ul>
+<li><code>test_a_model_sent_confirm_is_ignored</code> sends
+<code>confirm: "clicked"</code> and a <code>click</code> argument from
+the model and requires every resulting row to be a late relay
+(<code>tests/test_review.py:86-108</code>).</li>
+<li><code>test_a_contract_rule_over_mcp_waits_for_approve</code> sends a
+rule twice with <code>user_confirmed=true</code>, requires it absent
+from the page and present once in the Review, then approves and requires
+<code>confirm: clicked</code> (<code>:110-128</code>).</li>
+<li><code>test_revise_retire_reject_and_not_me</code> requires the
+context to carry the revision and omit the old, retired and rejected
+lines, and requires a re-proposal of the rejected line in different case
+and spacing to be refused
+(<code>tests/test_claims.py:117-168</code>).</li>
+<li><code>test_each_apps_hook_serves_its_own_guesses_not_another_apps</code>
+requires a Codex guess in Codex's hook and absent from Gemini's and
+Claude Code's (<code>tests/test_app_hooks.py:201-219</code>).</li>
+<li><code>test_canary_leaves_every_store</code> plants a canary in a
+page, claims, a chat and a browse page and requires it gone from every
+file under the vault and the temporary home after the forgets
+(<code>tests/test_forget.py:55-133</code>).</li>
+</ul>
+<p>What is not covered: <code>keepfold_read</code> or
+<code>keepfold_recall</code> of a claim page with Past, Not me or held
+lines; a reflect started by the same caller that wrote the line, which
+the promotion test treats as the user's; a paraphrased Not me line; a
+line appended to a claim page file by another process.
+<code>keepfold eval recall</code> and
+<code>keepfold eval harvest-facts</code> measure retrieval and
+extraction on the person's own usage log; no result is committed. I ran
+none of the 2,891 test functions.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Stamp authorship on the server and fold it from
+events.</strong> The tier is never a tool argument, a relayed yes is a
+different value from a click, and a yes relayed after a fixed day is
+downgraded unless the user's own logged words carry the line.</li>
+<li><strong>Hold a model's guess from every app but its writer.</strong>
+<code>cross_app</code> keeps one app's inference from becoming another
+app's fact until a person says so.</li>
+<li><strong>A Not me section in the page itself.</strong> The rejection
+list is visible to the person, editable by hand, and read by every
+inferred write.</li>
+<li><strong>A forget receipt that lists what it could not
+reach.</strong> Git history, backups, sync folders and the other apps'
+own memory, named with the command to finish the job.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A promotion gate keyed on a mode the model chooses.</strong>
+If a session type means "the person asked", take it from the person's
+own message or the app, not from <code>keepfold_start</code>.</li>
+<li><strong>Treating "no event" as "the person typed it".</strong> Where
+agents can edit files, an absent record is the weakest provenance, not
+the strongest.</li>
+<li><strong>Two read surfaces with two filters.</strong> Serving paths
+drop Past, Not me and held lines; <code>keepfold_read</code> does not.
+Put the status filter where the page is read.</li>
+<li><strong>Forget that clears the rejection.</strong> Write the value's
+key to the rejection list when the text goes, or the harvester brings it
+back.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits one person who uses several AI apps on one computer and
+wants them to share what they know, kept in files the person can read
+and edit, with no account and no server. The tiering is the reason to
+study it: a model's guess, a relayed yes and a click stay
+distinguishable all the way to the prompt. It is not a multi-tenant
+store, the per-app scope is a courtesy between cooperating apps, and
+anyone whose agents write files should guard every claim page, not
+three.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether a reflect is meant to promote only when the person typed
+<code>/keepfold reflect</code>, and whether the prompt hook could stamp
+that.</li>
+<li>Whether <code>keepfold_read</code> is meant to show Past and Not me
+lines to every client whose profile is <code>all</code>.</li>
+<li>Whether forget is meant to leave a hash in Not me when it removes a
+claim.</li>
+<li>How the macOS and Ubuntu apps start the server and where they keep
+the token; only the shared Python server was read.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Claims, tiers, Past and Not me:
+<code>src/keepfold/claims.py</code></li>
+<li>The tools, the write checks, tiers and the reflect promotion:
+<code>src/keepfold/mcp_server.py</code></li>
+<li>Serving, held and cross-app lines, the prime:
+<code>src/keepfold/prime.py</code>,
+<code>src/keepfold/prime_hook.py</code>,
+<code>src/keepfold/export_context.py</code></li>
+<li>Review cards, pairs, the outside-edit guard:
+<code>src/keepfold/review.py</code></li>
+<li>Scopes and profiles: <code>src/keepfold/access.py</code>,
+<code>src/keepfold/profiles.py</code>,
+<code>src/keepfold/share.py</code></li>
+<li>Event log and sessions: <code>src/keepfold/events.py</code>,
+<code>src/keepfold/session.py</code></li>
+<li>Forget: <code>src/keepfold/forget.py</code>,
+<code>src/keepfold/browse/forget.py</code></li>
+<li>Search: <code>src/keepfold/index.py</code>,
+<code>src/keepfold/semantic.py</code>,
+<code>src/keepfold/vecstore.py</code></li>
+<li>Harvesting and tags: <code>src/keepfold/fact_harvest.py</code>,
+<code>src/keepfold/tags.py</code>,
+<code>src/keepfold/taint.py</code></li>
+<li>The app server and its Review routes:
+<code>src/keepfold/app/server.py</code></li>
+<li>Plugin: <code>plugin/hooks/hooks.json</code>,
+<code>plugin/.mcp.json</code></li>
+<li>Tests: <code>tests/test_claims.py</code>,
+<code>tests/test_review.py</code>, <code>tests/test_app_hooks.py</code>,
+<code>tests/test_agent_context.py</code>,
+<code>tests/test_forget.py</code></li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Run from the repository root at the pinned commit with
+<code>/usr/bin/git grep</code>.</p>
+<ul>
+<li><strong>Forget writes no Not me line.</strong>
+<code>git grep -n -E 'add_not_me' -- src</code> returns the definition
+at <code>src/keepfold/claims.py:447</code> and one caller, the reject
+branch at <code>src/keepfold/mcp_server.py:3596</code>.</li>
+<li><strong>No MCP-side path reaches the Review routes.</strong>
+<code>git grep -n -E 'review_approve|api/review' -- src/keepfold/mcp_server.py src/keepfold/prime_hook.py src/keepfold/tags.py</code>
+returns nothing; the control
+<code>git grep -c -E 'api/review' -- src/keepfold/app/server.py</code>
+counts 19.</li>
+<li><strong>The page reader and the search apply no claim
+status.</strong>
+<code>git grep -n -E 'not_me|claims\.held|prime\.held|is_live' -- src/keepfold/index.py src/keepfold/semantic.py</code>
+returns nothing; the control
+<code>git grep -c -E 'is_live' -- src/keepfold/prime.py</code> counts
+1.</li>
+<li><strong>Three pages are guarded against outside edits.</strong>
+<code>git grep -n -E '^GUARDED' -- src/keepfold/review.py</code> returns
+<code>review.py:625</code>, core, setup and teaching-contract.</li>
+<li><strong>The promotion reads only the mode.</strong>
+<code>git grep -n -E 'session\.mode == "reflect"' -- src</code> returns
+<code>mcp_server.py:2473</code>.</li>
+<li><strong>No submodules, no paper.</strong> <code>.gitmodules</code>
+is absent;
+<code>git grep -n -i -E 'arxiv|doi\.org|bibtex|@article|@misc' -- . ':!uv.lock'</code>
+returns one line, a domain list in
+<code>src/keepfold/browse/lists.py:224</code>; <code>CITATION.cff</code>
+is absent.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-11-28</strong> — <a
+href="https://github.com/alenissacsam-2/keepfold/commit/a54acc5dcdb65ccb1121dcb148644c392b34b891"><code class="commit-id" title="a54acc5dcdb65ccb1121dcb148644c392b34b891">a54acc5d…</code></a>.
+First reading, read at the user's request, from a blobless clone at the
+head of <code>main</code>, read only. Screened: six auto-run surfaces
+(<code>.claude-plugin/</code>,
+<code>plugin/.claude-plugin/plugin.json</code>,
+<code>plugin/.mcp.json</code>, <code>plugin/hooks/</code> and its
+<code>hooks.json</code>, and <code>server.json</code>, which launches
+the package through <code>uvx</code>), <code>pyproject.toml</code> and
+<code>uv.lock</code> inside the cooldown, two pytest
+<code>conftest.py</code> files, and <code>CLAUDE.md</code> read as data.
+Nothing was installed, built or run, and the 2,891 test functions were
+not run. Seven marks (<a href="#9-reliability-safety-and-trust">section
+9</a>).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
