@@ -1,21 +1,26 @@
 ---
 title: "LongMemory"
 eyebrow: "Truth as of a time"
-description: "The system formerly called OpenMemory, rewritten as a TypeScript engine that publishes its recall contract as named SQL and then enforces a second copy of it in code — the published query is never executed, and the copy that runs admits two of the five statuses it refuses."
+description: "A TypeScript memory engine, formerly OpenMemory, whose strict recall gate refuses superseded, contradicted and ungrounded facts while its published SQL contract never runs."
 root: ../..
 page_kind: system
 source_name: "CaviraOSS/LongMemory"
 source_url: https://github.com/CaviraOSS/LongMemory
 archive_name: "CaviraOSS--LongMemory"
-revision: 4da4986d0069dbaa59d9209a84e2267749a67b3f
-revision_url: https://github.com/CaviraOSS/LongMemory/commit/4da4986d0069dbaa59d9209a84e2267749a67b3f
-analyzed_at: 2026-09-19
-capabilities: "scope_enforced, bitemporal, trust_state, audit_log"
+revision: 9d1deee08df6f0e519aeb014390ab1429d11eebf
+revision_url: https://github.com/CaviraOSS/LongMemory/commit/9d1deee08df6f0e519aeb014390ab1429d11eebf
+analyzed_at: 2026-11-28
+licence: "Apache-2.0 in LICENSE, repeated beside the VS Code extension, the Python package and six host integrations; the n8n node is MIT in its own LICENSE and package.json, and the rest of the tree falls under the root file"
+size: "32,447 lines of TypeScript in 371 files under src/ outside tests and 3,010 in 18 test files; the strict gate is src/core/recall/mode_gates.ts (177), the query table src/stores/sqlite/queries.ts (71), the control plane src/control/control_db.ts (500) and space_catalog.ts (229)"
+activity: "402 commits from 19 October 2025 to 26 November 2026 under 60 author names; 12 since 19 September 2026, carrying the token-authenticated control plane, personal and team spaces, two outside fixes and the package at 2.1.0"
+tests: "102 node:test cases in 18 files under src/, on the control plane, spaces, MCP tools, CLI and project hierarchy, none on the strict gate, temporal logic or store queries; 84 more in the integrations and tools; CI runs tools/check-recall.ts and a benchmark smoke run, not the src suite; none run for this reading"
+capabilities: "scope_enforced, bitemporal, trust_state, audit_log, negative_eval"
 capability_evidence:
-  scope_enforced: "every store query — tenant and user composed unconditionally into the WHERE | src/stores/sqlite/queries.ts:16-58 | `hydro_nodes`, `hydro_edges`, `contradictions` and `entity_aliases` all carry `tenant_id` and `user_id` columns, and every query in the store's query table opens `WHERE tenant_id = ? AND user_id = ?` with no `IS NULL OR` escape — unlike `world_id`, which is optional. The values are bound per `createMemory` instance: `create_memory.ts:195` defaults both to `default`, the MCP runtime takes them from server config (`src/server/app.ts:111-112`), and the HTTP ingest route requires `user_id` in the body. So the predicate is always present and a caller cannot omit it to widen; what a caller can do on HTTP ingest is assert an identity, because it is not derived from authentication | no committed test exists in the repository"
-  bitemporal: "strict and historical recall — an as-of query over valid time, with recorded time kept separately, tested per node at read time | src/core/temporal/bitemporal.ts:19-25 (`is_valid_at`, `is_recorded_at`), :41 and :51, src/core/recall/mode_gates.ts:116-130 (`can_use_in_historical_recall`), src/core/temporal/mvcc.ts:59-82, src/stores/sqlite/queries.ts:21-32 (`current_truth` and `historical_truth`, unused) | a node carries valid_from, valid_to, observed_at, recorded_at and superseded_at. Historical recall takes an at or an as_of and answers with `is_valid_at` or `is_recorded_at`, so the question asked is what was believed true at that moment rather than what is newest, and the two clocks stay separate predicates. Supersession closes a node MVCC-style through `close_transaction` rather than overwriting it, and ARCHITECTURE.md states the invariant: Recorded time and valid time are distinct. The SQL `current_truth` and `historical_truth` express the same contract in the store and are not the mechanism that runs — like `strict_candidates`, their store methods have no callers, because recall reads an in-memory index hydrated once at construction | no committed test exists in the repository"
-  trust_state: "strict recall — a per-node gate in TypeScript, not the SQL the store publishes | src/core/recall/mode_gates.ts:86-113 `can_use_in_strict_recall`, :30-36 (`is_superseded`, `is_contradicted`), src/core/types/node_state.ts:16-21 (the vocabulary), src/core/recall/strict_recall.ts:52 and :69-80 (the loop), src/core/recall/candidate_selection.ts:43-48 (`active_nodes`), src/stores/sqlite/queries.ts:33-56 (`strict_candidates`, unused) | Eligibility is decided per node by `can_use_in_strict_recall`, which refuses a superseded or contradicted status, an unresolved contradiction, confidence under the threshold, a contract with use_for_reasoning false, an ungrounded node that requires grounding, an expired one, a missing required source and a denied source permission — recording each refusal with its reason in an explain trace rather than dropping the node silently. That is a discrete state used for filtering, which is the mark. Two things a reader should know. The candidates it gates come from an in-memory index (`active_nodes` filters by world, not by status, despite the name), so the named SQL `strict_candidates` is a published contract nothing executes — `query_strict_candidates` is declared, implemented and called from nowhere. And the two copies disagree: the SQL requires status = active while the live gate refuses only two of the five declared statuses, so a node marked draft, or marked expired with an open valid_to, passes the gate the SQL would have stopped | no committed test exists in the repository"
-  audit_log: "the MCP surface — one append-only line per tool call, allowed, denied or failed | src/mcp/security/audit.ts:47, src/mcp/runtime.ts:81 | `mcp_audit_log.record` appends `JSON.stringify(entry)` with `appendFileSync` to `<db_path>.mcp-audit.jsonl`, and an entry carries `tool`, `user_id`, `project_id`, `outcome` (`allowed`, `denied`, `error`), `dry_run`, timestamps and the error. It covers the thirteen MCP tools; the HTTP routes and the library API do not write to it, so a memory ingested over HTTP leaves no audit row | no committed test exists in the repository"
+  scope_enforced: "every store query, and in control mode an identity derived from a bearer token per request | src/stores/sqlite/queries.ts:16-58, src/server/middleware/auth.ts:36-47, src/control/control_db.ts:364-383, src/control/space_catalog.ts:61-64, :124-142, :191-207, src/server/routes/ingest.ts:38-44 | `hydro_nodes`, `hydro_edges`, `contradictions` and `entity_aliases` all carry `tenant_id` and `user_id`, and every query in the store's table opens `WHERE tenant_id = ? AND user_id = ?` with no `IS NULL OR` escape; `world_id` alone is optional. The key is bound per `createMemory` instance, and the space catalog keeps one instance per partition: the caller's `personal_partition`, or `team:<id>` for each enabled membership. With `LONGMEMORY_CONTROL_DB` set, every `/v1/` and `/mcp` request must carry a token whose hashed secret, revocation, expiry and the user's disabled flag are checked before the identity and its spaces are built; an ingest naming another `user_id` fails with `identity_mismatch`, and a viewer's space refuses writes. Without a control database the server runs one configured identity, defaulting to `default`, behind an optional shared API key | src/server/control_mode.test.ts:131-163, src/mcp/tools/write_tools.test.ts:92-111, src/control/space_catalog.test.ts:101-111"
+  bitemporal: "strict and historical recall — an as-of query over valid time, with recorded time kept separately, tested per node at read time | src/core/temporal/bitemporal.ts:19-25 (`is_valid_at`, `is_recorded_at`), :41 and :51, src/core/recall/mode_gates.ts:116-130 (`can_use_in_historical_recall`), src/core/temporal/mvcc.ts:59-82, src/stores/sqlite/queries.ts:21-32 (`current_truth` and `historical_truth`, unused) | a node carries valid_from, valid_to, observed_at, recorded_at and superseded_at. Historical recall takes an at or an as_of and answers with `is_valid_at` or `is_recorded_at`, so the question asked is what was believed true at that moment rather than what is newest, and the two clocks stay separate predicates. Supersession closes a node MVCC-style through `close_transaction` rather than overwriting it, and ARCHITECTURE.md states the invariant: Recorded time and valid time are distinct. The SQL `current_truth` and `historical_truth` express the same contract in the store and are not the mechanism that runs — like `strict_candidates`, their store methods have no callers, because recall reads an in-memory index hydrated once at construction | no committed test covers the temporal predicates; tools/check-recall.ts:35 requires historical recall to return a superseded node"
+  trust_state: "strict recall — a per-node gate in TypeScript, not the SQL the store publishes | src/core/recall/mode_gates.ts:86-113 `can_use_in_strict_recall`, :30-36 (`is_superseded`, `is_contradicted`), src/core/types/node_state.ts:16-21 (the vocabulary), src/core/recall/strict_recall.ts:52 and :69-80 (the loop), src/core/recall/candidate_selection.ts:43-48 (`active_nodes`), src/stores/sqlite/queries.ts:33-56 (`strict_candidates`, unused) | Eligibility is decided per node by `can_use_in_strict_recall`, which refuses a superseded or contradicted status, an unresolved contradiction, confidence under the threshold, a contract with use_for_reasoning false, an ungrounded node that requires grounding, an expired one, a missing required source and a denied source permission — recording each refusal with its reason in an explain trace rather than dropping the node silently. That is a discrete state used for filtering, which is the mark. Two things a reader should know. The candidates it gates come from an in-memory index (`active_nodes` filters by world, not by status, despite the name), so the named SQL `strict_candidates` is a published contract nothing executes — `query_strict_candidates` is declared, implemented and called from nowhere. And the two copies disagree: the SQL requires status = active while the live gate refuses only two of the five declared statuses, so a node marked draft, or marked expired with an open valid_to, passes the gate the SQL would have stopped | no committed test exercises the gate's refusals"
+  audit_log: "the MCP surface — one append-only line per tool call, allowed, denied or failed | src/mcp/security/audit.ts:48, src/mcp/tools/common.ts:55-89, src/server/app.ts:153-161 | `mcp_audit_log.record` appends `JSON.stringify(entry)` with `appendFileSync` to `<db_path>.mcp-audit.jsonl`, and an entry carries `tool`, `user_id`, `project_id`, `space`, `outcome` (`allowed`, `denied`, `error`), `dry_run`, timestamps and the error. Every MCP tool call passes through the wrapper in `common.ts`, which records success and failure. The HTTP routes build the same runtime and never call it, so a memory ingested over `/v1/ingest` leaves no row, and the library API writes none; a space refusal or an identity mismatch is recorded as `error`, because the wrapper classifies `denied` by matching the message against not allowed, read-only and permission denied | no committed test asserts an audit row"
+  negative_eval: "personal and team spaces — another partition's memory absent beside a required hit | src/mcp/tools/write_tools.test.ts:92-111, src/server/control_mode.test.ts:131-152, src/control/space_catalog.test.ts:101-111 | `a member writes to team core and readers do not see it from personal` ingests into `team:core` and runs the same strict query in both spaces, requiring at least one hit in the team space and zero in Alice's personal space. `personal memory stays private and team memory is shared` has Alice ingest a personal note over HTTP and requires Bob's personal recall to return no items, beside required team hits for both users. `personal and team partitions never share memory` requires a historical recall in the team space to carry no timeline entry for a note written to the personal one. All three assert a scope boundary; nothing asserts that strict recall omits a superseded, contradicted or draft node | src/mcp/tools/write_tools.test.ts:92-111, src/server/control_mode.test.ts:131-152, src/control/space_catalog.test.ts:101-111"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -23,21 +28,21 @@ matrix:
   memory_unit: "An immutable, content-addressed `HydroNode` with a facet, a world, provenance, a reasoning contract and five timestamps; mutable lifecycle state is stored beside it"
   storage: "SQLite `hydro_nodes`, `hydro_edges`, `contradictions` and `entity_aliases`, keyed on tenant and user; an in-memory store for embedded use"
   retrieval: "Several recall modes over one engine — current, historical and strict SQL candidates, plus graph traversal over executable edges — returned within a token bound"
-  write: "An immutable ingest pipeline shared by the library, CLI, HTTP server and MCP transports; connectors import external sources and sync their deletions"
+  write: "An immutable ingest pipeline shared by the library, CLI, HTTP server and MCP transports, writing into one space per call and refusing the aggregate space; connectors import external sources and sync their deletions"
   update_delete: "Supersession closes a node's transaction and records `superseded_at`; a deleted connector source is ingested as a non-reasoning marker with a `supersedes` edge"
-  scoping: "`tenant_id` and `user_id` in every query, unconditionally; `world_id` optional beneath them; identity bound per engine instance rather than per request"
-  integration: "A TypeScript package, CLI, authenticated HTTP API, thirteen MCP tools, a Next.js dashboard, a VS Code extension and host plugins"
+  scoping: "`tenant_id` and `user_id` in every query, unconditionally, with `world_id` optional beneath; the user key is a personal partition or `team:<id>`, one engine instance each, resolved per request from a hashed bearer token in control mode and fixed by configuration otherwise"
+  integration: "A TypeScript package, CLI with user, team and token commands, an HTTP API, fifteen MCP tools over stdio, HTTP or a stdio proxy to a remote server, a Next.js dashboard, a VS Code extension and host plugins"
   background: "Consolidation and reconsolidation passes over the hydrograph"
   trust: "A read-time gate in code — status, use_for_reasoning, confidence, grounding, source requirement, expiry and source permission decide eligibility per node; the SQL that states the same policy is never executed and is stricter than the gate that is"
   strengths: "Strict recall asks what was true at a time and refuses a fact under unresolved contradiction, in one legible query"
-  risks: "No committed test exists anywhere in the tree, and the fourteen stated invariants are returned as strings rather than asserted"
+  risks: "No committed test covers the strict gate, the temporal predicates or the store queries, and the fourteen stated invariants are returned as strings rather than asserted"
 ---
 
 ## 1. Executive Summary
 
-LongMemory is the system this atlas reported on as **OpenMemory**. The repository was renamed from `CaviraOSS/OpenMemory` to `CaviraOSS/LongMemory` on 31 August 2026, with a `MIGRATION.md` moving the npm package, CLI, environment prefix and routes to the new name. It is Apache-2.0, version 1.0.0, about 28,400 lines of TypeScript under `src/`, plus a Next.js dashboard, a VS Code extension, host integrations, and a benchmark harness for LongMemEval, LoCoMo and BEAM.
+LongMemory, formerly **OpenMemory**, is a TypeScript memory engine over SQLite whose strict recall decides, one fact at a time, whether a fact may be reasoned from — and the SQL it publishes as that contract is never executed. Personal and team memory are separate partitions of one store, chosen per request from a bearer token, and the three committed tests that pin that boundary are the only cases in the tree requiring a memory to be absent from a read.
 
-**It is a rewrite, not a rename.** The report's previous pin read `packages/openmemory-js/`, whose README announced a rewrite in progress on another branch. That rewrite is on `main`: `packages/openmemory-js` is gone, every file the previous appendix cited is gone, and the hand-typed sectoral interdependence matrix at the centre of that reading survives only as a mapping inside `src/core/migration/legacy_cleaner.ts`. The new engine's own invariant list rejects the old shape in so many words — *"worlds are recursive containers, not flat sectors"*.
+**It is a rewrite, not a rename.** The repository was renamed from `CaviraOSS/OpenMemory` to `CaviraOSS/LongMemory` on 31 August 2026, with a `MIGRATION.md` moving the npm package, CLI, environment prefix and routes to the new name. Until then the engine was `packages/openmemory-js/`, whose README announced a rewrite on another branch; that rewrite replaced it, and the hand-typed sectoral interdependence matrix at its centre survives only as a mapping inside `src/core/migration/legacy_cleaner.ts`. The new engine's own invariant list rejects the old shape in so many words — *"worlds are recursive containers, not flat sectors"*. Around it sit a Next.js dashboard, a VS Code extension, host integrations, and a benchmark harness for LongMemEval, LoCoMo and BEAM.
 
 What replaced it is worth the report, and what decides its central claim is not
 in the file the design points you at. The store publishes its recall contract
@@ -66,14 +71,14 @@ interface (`src/stores/index.ts:46`) and implemented over the string
 (`src/stores/sqlite/sqlite_store.ts:324-325`), and nothing calls it — nor
 `query_current_truth`, nor `query_historical_truth`. All four recall modes
 retrieve from an in-memory index instead
-(`src/core/recall/strict_recall.ts:52` and the same line in
-`associative_recall.ts`, `historical_recall.ts` and `grounded_recall.ts`), whose
-`active_nodes` filters by world and, despite the name, not by status
-(`src/core/recall/candidate_selection.ts:43-48`). The index is hydrated once from
-`store.load_nodes()` when the engine is constructed
-(`src/core/create_memory.ts:261-277`), which is where the tenant and user
-predicate is actually applied — so scoping holds, it just happens at startup
-rather than per query.
+(`src/core/recall/strict_recall.ts:52`, and the same `deps.index.active_nodes`
+call at `historical_recall.ts:77`, `grounded_recall.ts:97` and
+`associative_recall.ts:584`), whose `active_nodes` filters by world and, despite
+the name, not by status (`src/core/recall/candidate_selection.ts:43-48`). The
+index is hydrated once from `store.load_nodes()` when the engine is constructed
+(`src/core/create_memory.ts:265-280`), which is where the tenant and user
+predicate is applied — so scoping holds, binding when an engine instance starts
+rather than per query, and the server keeps one instance per partition.
 
 The eligibility decision lives in TypeScript, one node at a time:
 `can_use_in_strict_recall` (`src/core/recall/mode_gates.ts:86-113`). It is a good
@@ -96,7 +101,15 @@ vestigial. A predicate written twice is a predicate that will differ; here the
 copy a reader is invited to check is the one that cannot be wrong, because it is
 not executed.
 
-**Nor is any of it tested.** There is no test file anywhere in the repository and no `test` script in `package.json`. The previous reading's `negative_eval` rested on `packages/openmemory-js/tests/test_project_isolation.ts`, which was deleted with the package it tested, and nothing replaced it. The engine's fourteen invariants — *"durable nodes are immutable"*, *"strict recall cannot use superseded facts"*, *"benchmarks define correctness"* — are exported as an array and handed back by `invariants: () => hydrograph_invariants`; the function named `assert_hydrograph_invariants` returns the list and asserts nothing. The last invariant is the stated substitute: the benchmark scorecard gates a `stale_leakage` rate, which measures a model's answers over external datasets rather than pinning the query's behaviour to a fixture.
+**The gate is not tested; the partition boundary is.** `package.json` runs `tsx --test "src/**/*.test.ts"` over 102 cases in 18 files, and every one is about the control plane, spaces, MCP tools, the CLI or the project hierarchy — none is in `src/core/recall`, `src/core/temporal` or `src/stores`, and none asserts that strict recall omits a superseded, contradicted or draft node. CI does not run that suite: `ci.yml` runs `release:check`, whose `recall:check` is `tools/check-recall.ts`, a smoke script that requires strict recall to surface an ingested node and historical recall to keep a superseded one, and asserts no omission.
+
+The engine's fourteen invariants — *"durable nodes are immutable"*, *"strict recall cannot use superseded facts"*, *"benchmarks define correctness"* — are exported as an array and handed back by `invariants: () => hydrograph_invariants`; the function named `assert_hydrograph_invariants` returns the list and asserts nothing. The last invariant is the stated substitute: the benchmark scorecard gates a `stale_leakage` rate, which measures a model's answers over external datasets rather than pinning the query's behaviour to a fixture.
+
+**Spaces are partitions of the same key.** With `LONGMEMORY_CONTROL_DB` set, the server authenticates every `/v1/` and `/mcp` request with a bearer token of the form `lm_<id>_<secret>`, checking the hashed secret in constant time, then revocation, expiry and whether the user is disabled (`src/control/control_db.ts:364-383`), and rebuilds the caller's memberships on each request. The space catalog turns that identity into spaces — `personal`, mapped to the user's `personal_partition`, and `team:<id>` per enabled membership — and opens one `createMemory` instance per partition with the partition as its `user_id` (`src/control/space_catalog.ts:124-142`, `:191-207`). A partition containing `:` is refused for personal and legacy users, so a personal partition cannot collide with a team one (`:59-87`).
+
+Reads default to `all`, which runs each space separately and merges the results with each tagged (`src/mcp/tools/read_scope.ts`); writes go to one space and refuse `all` and a viewer's space. An HTTP ingest naming another `user_id` fails with `identity_mismatch`, and a recall's `permission_context` can narrow the token's teams but not add to them (`src/server/routes/recall.ts:28-49`). Three committed cases require a space's memory to be absent from another space beside a required hit (`src/mcp/tools/write_tools.test.ts:92-111`, `src/server/control_mode.test.ts:131-152`, `src/control/space_catalog.test.ts:101-111`), and those carry `negative_eval`.
+
+Without a control database the server runs the configured identity, `default` unless set, behind an optional shared API key, and refuses to start without one when `LONGMEMORY_HOST` is not loopback or MCP over HTTP is on (`src/server/config.ts:63-76`). Its loopback set includes `::`, which is the unspecified address rather than a loopback one: a server bound to `::` listens on every interface and starts with no key, serving every memory in the configured partition to any caller that can reach it.
 
 ## 2. Mental Model
 
@@ -144,7 +157,8 @@ One TypeScript package, `src/`, with a shared engine created by `createMemory`. 
 - `src/stores` — the SQLite store and its query table, and an in-memory store
 - `src/answering`, `src/connectors` — recall assembly and external source import
 - `src/server` — HTTP routes (`ingest`, `recall`, `explain`, `timeline`, `worlds`, `entities`, `stats`) and middleware (auth, rate limit, CORS, concurrency, telemetry)
-- `src/mcp` — thirteen governed tools, resources, prompts, transports, and `security/audit.ts`
+- `src/control` — the control database of users, teams, memberships and tokens, and the space catalog that maps an identity to partitions
+- `src/mcp` — fifteen governed tools, resources, prompts, the stdio, HTTP and remote-proxy transports, and `security/audit.ts`
 
 ### Deployment and ergonomics
 
@@ -162,7 +176,7 @@ One TypeScript package, `src/`, with a shared engine created by `createMemory`. 
 
 ### Connector deletion, which is not a tombstone
 
-When an imported source item is deleted upstream, `src/core/create_memory.ts:661-690` ingests a marker node — text *"Source item deleted: …"*, `use_for_reasoning: false`, `metadata.source_deleted: true` — and a `supersedes` edge from it to the node it replaces. That is delete-sync recorded as supersession, which is the correct and auditable behaviour for a connector and is not a rejected-value tombstone: nothing keys on the content to stop it being ingested again from another source.
+When an imported source item is deleted upstream, `src/core/create_memory.ts:677-712` ingests a marker node — text *"Source item deleted: …"*, `use_for_reasoning: false`, `metadata.source_deleted: true` — and a `supersedes` edge from it to the node it replaces. That is delete-sync recorded as supersession, which is the correct and auditable behaviour for a connector and is not a rejected-value tombstone: nothing keys on the content to stop it being ingested again from another source.
 
 ### Contradictions as a gate
 
@@ -182,11 +196,11 @@ Lexical, vector and graph arms feed the recall modes, and results are returned w
 
 ## 7. Write Mechanics
 
-One immutable ingest pipeline for every surface. The HTTP ingest route requires `user_id` in the body; the MCP runtime and a library `createMemory` bind `tenant_id` and `user_id` at construction, defaulting both to `default`. Consolidation and reconsolidation passes run over the graph; supersession is written as a closed transaction plus an edge, never as an update in place.
+One immutable ingest pipeline for every surface, writing into the engine instance of one space. The HTTP and MCP ingest paths resolve the space from the call's `space` argument, the `X-LongMemory-Space` header or the token's default, and refuse `all` and a viewer's space; a library `createMemory` binds `tenant_id` and `user_id` at construction, defaulting both to `default`. Consolidation and reconsolidation passes run over the graph; supersession is written as a closed transaction plus an edge, never as an update in place.
 
 ## 8. Agent Integration
 
-Thirteen MCP tools behind `src/mcp/security`, with an audit log of every call; an authenticated HTTP API; a CLI with a deterministic JSON mode that the VS Code extension consumes; host plugins and MCP configurations under `integrations/`. Because every surface shares one engine, a fact ingested through one is recalled identically through another.
+Fifteen MCP tools sit behind `src/mcp/security`, with an audit log of every call, beside an HTTP API and a CLI with a deterministic JSON mode that the VS Code extension consumes. The CLI's `auth`, `users`, `teams` and `tokens` commands manage the control database. `longmemory mcp` either serves a local store over stdio or, given a server and a token file, proxies stdio to a remote `/mcp` so the server's token decides the spaces. Host plugins and MCP configurations live under `integrations/`. Because every surface shares one engine per space, a fact ingested through one is recalled identically through another.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -198,19 +212,20 @@ Strengths:
 - **Grounding and source requirements gate reasoning**, not only ranking.
 - **Nodes are immutable and supersession closes rather than overwrites**, so the historical read is real.
 - **Tenant and user are in every query without an escape.**
+- **Personal and team memory are partitions chosen by a verified token**, and committed cases require each to stay out of the other.
 - **Every MCP tool call is audited**, including denials.
 
 Gaps:
 
-- **No committed test exists.** Not one file, and no test script. Every property above is established by reading the query text.
+- **Nothing tests the gate's refusals.** The committed suite covers the partition boundary and the control plane; every property of strict and historical recall above is established by reading the code, and CI does not run the suite.
 - **The invariants are not asserted.** `assert_hydrograph_invariants` returns the list; nothing checks any entry.
-- **Identity is not derived from authentication.** It is fixed per engine instance from configuration, and asserted by the caller in the HTTP ingest body; a deployed server is effectively one identity for recall.
-- **Only the MCP surface is audited.** Ingest over HTTP and the library API leave no audit row.
+- **Identity comes from the token only in control mode.** Without a control database the server is one configured identity behind an optional shared key, and a bind to `::` counts as loopback, so it starts on every interface with no key.
+- **Only the MCP surface is audited.** Ingest over HTTP and the library API leave no audit row, and a space refusal or identity mismatch over MCP is recorded as `error`, not `denied`.
 - **No rejected-value tombstone.** A fact a user wants gone can be superseded, but nothing keys on its content to stop it returning from another source.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**I ran nothing**, and there is nothing to run: no `*.test.*`, no `*.spec.*`, no `tests/` or `__tests__/` directory, and no `test` script. The previous pin's isolation test was deleted with `packages/openmemory-js`.
+**I ran nothing.** `npm test` runs `tsx --test "src/**/*.test.ts"`: 102 cases in 18 files, on the control database, the space catalog, the MCP runtime, tools, resources and remote proxy, the CLI's auth and MCP commands, the HTTP control mode and the project hierarchy. Another 84 sit in `integrations/kilo-longmemory/test`, `integrations/opencode-longmemory/test` and `tools/`. The negative cases are the three partition tests named in section 1; each asserts zero items, or zero timeline entries, in one space beside a required hit in another. No file under `src/core/recall`, `src/core/temporal` or `src/stores` has a test beside it. CI's `release:check` runs `tools/check-recall.ts`, which requires strict recall to surface an ingested node, historical recall to keep a superseded one and associative recall to follow a supersession chain, and asserts no omission.
 
 `benchmarks/` is a harness for LongMemEval, LoCoMo and BEAM with a scorecard and a `FAILURE_ANALYSIS.md`. Its gates include a `stale_leakage` rate — an answer scores only if it is correct **and** does not use stale material, and a provider passes only if the leakage rate is at or below `stale_leakage_max`. That is the right metric for a system whose central claim is not using superseded facts. It is also a measurement of a model's answers over external datasets, requiring a provider to run, rather than a committed case that fails when the strict gate loses its supersession test — so it does not carry `negative_eval`, and the invariant *"benchmarks define correctness"* is doing work a four-line fixture test would do more cheaply.
 
@@ -230,50 +245,67 @@ Gaps:
 
 - **Stating invariants you do not check.** A list named `assert_…` that returns strings reads as a control and is not one.
 - **Replacing tests with benchmarks.** A benchmark gate over a model's answers cannot tell you which clause of your query regressed.
-- **Deleting the test with the package.** The isolation property the previous version tested still holds by reading, and nothing now fails if it stops holding.
+- **Testing the boundary you added and not the one you published.** The partition tests arrived with the control plane; the strict gate, the repository's central claim, has none, and the suite is not in CI.
 - **Auditing one surface of several.** If three surfaces share an engine, audit at the engine.
 
 ### Fit
 
-Read this for the recall contract — it is one of the clearest statements in the corpus of what a memory should refuse to reason from. Adopt it with tests of your own, because the repository ships none, and with identity derived from your authentication rather than from configuration.
+Read this for the recall contract — it is one of the clearest statements in the corpus of what a memory should refuse to reason from. Adopt it with a fixture per clause of your own, because the repository's tests stop at the partition boundary. The control plane is worth reading as the scope half: one engine instance per partition, chosen per request from a verified token.
 
 ## 12. Open Questions
 
 - Will the invariants become assertions, and will the strict gate get a fixture test per clause?
 - Are the three unused recall queries intended to become the implementation, or documentation of it? They are the clearer statement of the policy, and they are stricter than the code that runs.
 - How is a contradiction resolved, and by whom — and does resolution record which side won?
-- Should identity for recall be derived from the authenticated request rather than bound per engine instance?
+- Is `::` in the loopback set meant to cover `::1`, or to let a dual-stack bind start without a key?
 - Why is the audit log on the MCP surface only, when every surface shares the engine?
-- What does the `stale_leakage` rate measure in practice — are benchmark results committed anywhere?
+- What does the `stale_leakage` rate measure in practice? `.gitignore` excludes `benchmarks/runs/`, so no result is committed.
 
 ## Appendix: File Index
 
 - **Recall contract:** `src/stores/sqlite/queries.ts`, `src/stores/sqlite/sqlite_store.ts`.
 - **Temporal logic:** `src/core/temporal/bitemporal.ts`, `src/core/temporal/mvcc.ts`, `src/core/memory/reconsolidation.ts`.
 - **Model:** `src/core/types/hydro_node.ts`, `src/core/invariants.ts`.
-- **Engine and connectors:** `src/core/create_memory.ts` (identity defaults :195, connector deletion :661-690, invariants getter :815), `src/connectors/`.
-- **Surfaces:** `src/server/app.ts`, `src/server/routes/`, `src/server/middleware/auth.ts`, `src/mcp/runtime.ts`, `src/mcp/security/audit.ts`.
+- **Engine and connectors:** `src/core/create_memory.ts` (identity defaults :198, hydration :265-280, connector deletion :677-712, invariants getter :827), `src/connectors/`.
+- **Control plane and spaces:** `src/control/control_db.ts`, `src/control/token.ts`, `src/control/space_catalog.ts`, `src/mcp/tools/read_scope.ts`, `src/server/config.ts` (exposed-bind check :63-76).
+- **Surfaces:** `src/server/app.ts`, `src/server/routes/`, `src/server/middleware/auth.ts`, `src/mcp/runtime.ts`, `src/mcp/tools/common.ts`, `src/mcp/security/audit.ts`, `src/mcp/transports/remote_proxy.ts`.
+- **Tests:** `src/**/*.test.ts`, `tools/check-recall.ts`, `.github/workflows/ci.yml`.
 - **Migration:** `MIGRATION.md`, `src/core/migration/legacy_cleaner.ts`.
 - **Benchmarks:** `benchmarks/src/scorecard.ts`, `benchmarks/src/report.ts`, `benchmarks/FAILURE_ANALYSIS.md`.
 
 ### Searches behind the absence claims
 
 ```sh
-# no test file and no test script anywhere
-find . \( -name '*.test.*' -o -name '*.spec.*' -o -path '*/tests/*' -o -path '*/__tests__/*' \) -not -path '*/node_modules/*'
-grep -n '"test' package.json
+# no test beside the recall, temporal or store code, no status named in a src test, and no omission asserted by the smoke check
+# (memory-absence assertions in the tree: the three partition cases; the rest assert on output, config and file changes)
+git grep -n -E 'ok[(]!|doesNotMatch|length, 0|notEqual' -- '*.test.ts' '*.test.mjs'
+git ls-files 'src/core/recall' 'src/core/temporal' 'src/stores' | grep -E '[.]test[.]'
+git grep -n -E 'superseded|contradicted|draft' -- 'src/**/*.test.ts'
+grep -n -E 'assert' tools/check-recall.ts
+
+# CI runs release:check, not the src suite
+grep -n 'run:' .github/workflows/*.yml
+
+# the three named recall queries have no caller outside the store
+git grep -n -E 'query_(strict_candidates|current_truth|historical_truth)' -- src
+
+# the HTTP routes never record an audit row
+git grep -n 'audit' -- src/server ':!*.test.ts'
 
 # the invariants are exported and returned, not asserted
 grep -rn 'hydrograph_invariants' --include='*.ts' src/
 
-# the audit log is written only from the MCP security module
+# the audit log is written only from the MCP security module, and recorded only by the MCP tool wrapper
 grep -rn 'appendFileSync' --include='*.ts' src/
+git grep -n 'audit[.]record' -- src ':!*.test.ts'
 
 # the only sector code left is the legacy migration
 grep -rniE 'sectoral|interdependence|SECTOR' --include='*.ts' src/
 ```
 
 ## History
+
+**2026-11-28** — [`9d1deee08df6f0e519aeb014390ab1429d11eebf`](https://github.com/CaviraOSS/LongMemory/commit/9d1deee08df6f0e519aeb014390ab1429d11eebf) — 12 commits on. The recall gate, query table, temporal code and store are byte-identical; what moved is a token-authenticated control plane with personal and team spaces as partitions of the same tenant and user key, and the repository's first tests. `negative_eval` is **added** on three partition cases, each a miss in one space beside a hit in another ([section 1](#1-executive-summary)); none covers the strict gate, and CI does not run the suite. `scope_enforced` holds with identity from the token in control mode. Two defects found: a bind to `::` counts as loopback and starts with no key, and MCP space refusals audit as `error`. The other recall modes' candidate reads are at their own lines, not strict recall's. Screened; nothing installed or run.
 
 **2026-09-19** — [`4da4986d0069dbaa59d9209a84e2267749a67b3f`](https://github.com/CaviraOSS/LongMemory/commit/4da4986d0069dbaa59d9209a84e2267749a67b3f) — `trust_state` re-tested at an unchanged pin, and the mark holds on a different mechanism than the one recorded. The previous reading rested it — and most of this report — on `strict_candidates`, the named SQL in `src/stores/sqlite/queries.ts`. That query is never executed. `query_strict_candidates` is declared on the store interface (`src/stores/index.ts:46`), implemented (`src/stores/sqlite/sqlite_store.ts:324-325`) and called from nowhere, and the same is true of `query_current_truth` and `query_historical_truth`. All four recall modes retrieve from an in-memory index (`src/core/recall/candidate_selection.ts:43-48`) whose `active_nodes` filters by world and, despite the name, not by status; the index is hydrated once from `store.load_nodes()` at engine construction (`src/core/create_memory.ts:261-277`), which is where the tenant and user predicate is applied — so `scope_enforced` is unaffected, it just binds at startup rather than per query. The gate that does run is `can_use_in_strict_recall` (`src/core/recall/mode_gates.ts:86-113`), and it is a good one: it refuses a superseded or contradicted node, an unresolved contradiction, low confidence, a contract forbidding reasoning, an ungrounded node that required grounding, an expired one, a missing required source and a denied source permission, and returns the reasons so `strict_recall` can record each rejection in an explain trace (`:69-80`) instead of dropping it silently. The two copies of the policy disagree, and the live one is the looser. The SQL requires `status = 'active'`; the gate tests only `is_superseded` and `is_contradicted` (`:30-36`) while `NodeStatus` declares five values — active, superseded, contradicted, expired, draft (`src/core/types/node_state.ts:16-21`). A node marked `draft` passes, and one marked `expired` passes unless its `valid_to` or `max_valid_duration` independently refuses it; the consolidation pass reads `status === 'expired'` as a live case (`src/core/memory/consolidation.ts:104-110`), so the value is not vestigial. `bitemporal` is re-anchored the same way: the as-of test that runs is `is_valid_at` / `is_recorded_at` (`src/core/temporal/bitemporal.ts:19-25`) applied in `can_use_in_historical_recall`, not the `historical_truth` SQL. Section 1, the diagram, sections 5 through 8, the reusable-ideas list and the open questions were rewritten. Two path anchors corrected: `create_memory.ts` is `src/core/create_memory.ts`, and the connector deletion marker is at `:682`. Re-read from a fresh clone; nothing was installed and no suite was run.
 

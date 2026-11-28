@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 441 |
+| Repositories with an auto-run surface (`RUNS`) | 442 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 407 |
 | Repositories with build-time execution (`EXEC`) | 654 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 10 |
@@ -347,6 +347,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`openkb`](../../content/systems/openkb.md) | `.claude-plugin/` |
 | [`openmasq`](../../content/systems/openmasq.md) | `.githooks/` |
 | [`openmem`](../../content/systems/openmem.md) | `server.json` |
+| [`openmemory`](../../content/systems/openmemory.md) | `.claude-plugin/`, `integrations/claude-code-longmemory/.claude-plugin/plugin.json`, `integrations/claude-code-longmemory/.mcp.json` |
 | [`opensre`](../../content/systems/opensre.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
 | [`openviking`](../../content/systems/openviking.md) | `.claude-plugin/`, `examples/claude-code-memory-plugin/.claude-plugin/plugin.json`, `examples/claude-code-memory-plugin/.mcp.json`, `examples/claude-code-memory-plugin/hooks/`, `examples/claude-code-memory-plugin/hooks/hooks.json` |
 | [`operator-memory`](../../content/systems/operator-memory.md) | `.claude-plugin/`, `.githooks/`, `packages/claude-code/.claude-plugin/plugin.json`, `packages/claude-code/hooks/`, `packages/claude-code/hooks/hooks.json` |

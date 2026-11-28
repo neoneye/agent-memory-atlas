@@ -7877,11 +7877,12 @@ reads an in-memory index instead. The copy that runs is stricter in one
 place and looser in another — the SQL requires
 <code>status = 'active'</code> while the gate refuses only two of the
 five declared statuses, so a <code>draft</code> node passes. Beneath
-that, <strong>nothing checks either.</strong> There is no test file
-anywhere in the repository and no <code>test</code> script; the
-isolation test the previous version shipped was deleted with its
-package. The fourteen invariants — "strict recall cannot use superseded
-facts" among them — are exported as an array, and the function named
+that, <strong>nothing checks either.</strong> The repository's 102
+committed cases test the control plane and the partition boundary
+between personal and team spaces, none touches the strict gate or the
+store queries, and CI does not run them. The fourteen invariants —
+"strict recall cannot use superseded facts" among them — are exported as
+an array, and the function named
 <code>assert_hydrograph_invariants</code> returns the list. The
 benchmark scorecard's <code>stale_leakage</code> gate is the stated
 substitute, and it measures a model's answers over external datasets
@@ -7890,19 +7891,19 @@ rather than failing when a clause of the query is removed.</li>
 names which clause refused it, carried into an explain trace with the
 rejected candidate, turns an eligibility rule into something a reader
 can audit after the fact — and costs a string array.</li>
-<li>Maturity impression: Apache-2.0, version 1.0.0, about 28,400 lines
-of TypeScript after a rewrite that renamed the project from OpenMemory
-to LongMemory on 31 August 2026 and removed every file this atlas
-previously cited. One engine behind the library, CLI, authenticated HTTP
-API and thirteen MCP tools, an append-only audit of MCP calls including
-denials, and identity bound per engine instance from configuration
-rather than per request.</li>
+<li>Maturity impression: Apache-2.0, package 2.1.0, 32,447 lines of
+TypeScript under <code>src/</code> after a rewrite that renamed the
+project from OpenMemory to LongMemory on 31 August 2026. One engine per
+space behind the library, CLI, HTTP API and fifteen MCP tools; in
+control mode a hashed bearer token picks the caller's personal and team
+partitions per request, and without it the server is one configured
+identity. An append-only audit covers MCP calls, not HTTP ingest.</li>
 <li>Study when: you need to decide what a memory should refuse to reason
 from, and want the conditions written as one legible query.</li>
 <li>Do not copy when: you would ship it without tests — write a fixture
-per clause of the strict gate first, because the repository offers none;
-and do not copy the shape of publishing a contract as SQL the engine
-does not execute.</li>
+per clause of the strict gate first, because the repository's tests stop
+at the partition boundary; and do not copy the shape of publishing a
+contract as SQL the engine does not execute.</li>
 </ul>
 <h3 id="ori-mnemos"><a
 href="../systems/ori-mnemos/"><code>ori-mnemos</code></a></h3>
